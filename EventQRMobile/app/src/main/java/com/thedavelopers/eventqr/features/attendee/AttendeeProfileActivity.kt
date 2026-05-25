@@ -3,7 +3,6 @@ package com.thedavelopers.eventqr.features.attendee
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.thedavelopers.eventqr.R
@@ -24,8 +23,13 @@ open class AttendeeProfileActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnEditProfile).setOnClickListener {
             startActivity(Intent(this, AttendeeEditProfileActivity::class.java))
         }
-        findViewById<ImageView>(R.id.btnProfileNotifications).setOnClickListener {
-            startActivity(Intent(this, AttendeeNotificationsActivity::class.java))
+        findViewById<Button>(R.id.btnProfileLogout).setOnClickListener {
+            sessionManager.clearSession()
+            startActivity(
+                Intent(this, com.thedavelopers.eventqr.SignIn::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            )
+            finish()
         }
 
         configureAttendeeBottomNav(AttendeeBottomNavItem.PROFILE)

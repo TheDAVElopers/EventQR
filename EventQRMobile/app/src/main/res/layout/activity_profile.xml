@@ -30,29 +30,6 @@
                     android:textColor="#000000"
                     android:textSize="30sp"
                     android:textStyle="bold" />
-
-                <FrameLayout
-                    android:layout_width="44dp"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="end">
-
-                    <ImageView
-                        android:id="@+id/btnProfileNotifications"
-                        android:layout_width="25dp"
-                        android:layout_height="25dp"
-                        android:layout_gravity="center"
-                        android:contentDescription="Notifications"
-                        android:src="@drawable/notification_bell"
-                        android:tint="#111111" />
-
-                    <View
-                        android:layout_width="7dp"
-                        android:layout_height="7dp"
-                        android:layout_gravity="top|end"
-                        android:layout_marginTop="8dp"
-                        android:layout_marginEnd="7dp"
-                        android:background="@drawable/bg_circle_blue" />
-                </FrameLayout>
             </FrameLayout>
 
             <LinearLayout
@@ -105,6 +82,19 @@
                 <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="30dp" android:gravity="center" android:text="Member since: January 2024" android:textColor="#000000" android:textSize="20sp" />
                 <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="30dp" android:gravity="center" android:text="Account ID: #ATD-12345" android:textColor="#000000" android:textSize="20sp" />
             </LinearLayout>
+
+            <Button
+                android:id="@+id/btnProfileLogout"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="28dp"
+                android:background="@drawable/bg_logout_button"
+                android:elevation="4dp"
+                android:text="Logout"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:textStyle="bold" />
         </LinearLayout>
     </ScrollView>
 
