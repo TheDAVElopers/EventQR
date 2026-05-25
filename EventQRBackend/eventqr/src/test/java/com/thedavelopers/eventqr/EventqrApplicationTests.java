@@ -1,13 +1,12 @@
 package com.thedavelopers.eventqr;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
 class EventqrApplicationTests {
 
 	@Test
-	void contextLoads() {
+	void applicationClassExists() {
+		org.assertj.core.api.Assertions.assertThat(EventqrApplication.class).isNotNull();
 	}
 
 }

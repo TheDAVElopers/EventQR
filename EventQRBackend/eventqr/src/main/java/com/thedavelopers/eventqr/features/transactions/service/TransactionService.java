@@ -1,0 +1,211 @@
+package com.thedavelopers.eventqr.features.transactions.service;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionRequest;
+import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse;
+import com.thedavelopers.eventqr.features.transactions.model.entity.TransactionLog;
+import com.thedavelopers.eventqr.features.transactions.model.entity.TransactionRule;
+import com.thedavelopers.eventqr.features.transactions.repository.TransactionLogRepository;
+import com.thedavelopers.eventqr.features.transactions.repository.TransactionRuleRepository;
+import com.thedavelopers.eventqr.shared.constants.AccountRole;
+import com.thedavelopers.eventqr.shared.constants.EventStatus;
+import com.thedavelopers.eventqr.shared.constants.RegistrationStatus;
+import com.thedavelopers.eventqr.shared.constants.TransactionResult;
+import com.thedavelopers.eventqr.shared.constants.TransactionType;
+import com.thedavelopers.eventqr.shared.event.TransactionRecordedEvent;
+import com.thedavelopers.eventqr.shared.exception.ConflictException;
+import com.thedavelopers.eventqr.shared.exception.ForbiddenException;
+import com.thedavelopers.eventqr.shared.exception.ResourceNotFoundException;
+import com.thedavelopers.eventqr.shared.port.AttendeeDirectoryPort;
+import com.thedavelopers.eventqr.shared.port.EventLookupPort;
+import com.thedavelopers.eventqr.shared.port.QrCredentialPort;
+import com.thedavelopers.eventqr.shared.port.RegistrationCommandPort;
+import com.thedavelopers.eventqr.shared.port.RegistrationLookupPort;
+import com.thedavelopers.eventqr.shared.port.ScanPurposePort;
+
+@Service
+@Transactional
+public class TransactionService {
+
+    private final TransactionLogRepository transactionLogRepository;
+    private final TransactionRuleRepository transactionRuleRepository;
+    private final EventLookupPort eventLookupPort;
+    private final ScanPurposePort scanPurposePort;
+    private final QrCredentialPort qrCredentialPort;
+    private final RegistrationLookupPort registrationLookupPort;
+    private final RegistrationCommandPort registrationCommandPort;
+    private final AttendeeDirectoryPort attendeeDirectoryPort;
+    private final ApplicationEventPublisher applicationEventPublisher;
+
+    public TransactionService(TransactionLogRepository transactionLogRepository,
+                              TransactionRuleRepository transactionRuleRepository,
+                              EventLookupPort eventLookupPort,
+                              ScanPurposePort scanPurposePort,
+                              QrCredentialPort qrCredentialPort,
+                              RegistrationLookupPort registrationLookupPort,
+                              RegistrationCommandPort registrationCommandPort,
+                              AttendeeDirectoryPort attendeeDirectoryPort,
+                              ApplicationEventPublisher applicationEventPublisher) {
+        this.transactionLogRepository = transactionLogRepository;
+        this.transactionRuleRepository = transactionRuleRepository;
+        this.eventLookupPort = eventLookupPort;
+        this.scanPurposePort = scanPurposePort;
+        this.qrCredentialPort = qrCredentialPort;
+        this.registrationLookupPort = registrationLookupPort;
+        this.registrationCommandPort = registrationCommandPort;
+        this.attendeeDirectoryPort = attendeeDirectoryPort;
+        this.applicationEventPublisher = applicationEventPublisher;
+    }
+
+    public TransactionResponse record(TransactionRequest request) {
+        var eventSnapshot = eventLookupPort.requireEvent(request.eventId());
+        if (eventSnapshot.status() == EventStatus.REJECTED || eventSnapshot.status() == EventStatus.CANCELLED) {
+            throw new ForbiddenException("Event is not available for scan transactions");
+        }
+
+        var purpose = scanPurposePort.requireActive(request.scanPurposeId());
+        validateStaff(request.staffUserId());
+
+        var qrSnapshot = qrCredentialPort.findByQrValue(request.qrValue())
+                .orElseThrow(() -> new ResourceNotFoundException("Invalid QR credential"));
+        if (!qrSnapshot.active()) {
+            return reject(eventSnapshot.eventId(), qrSnapshot.attendeeUserId(), qrSnapshot.registrationId(),
+                    qrSnapshot.qrCredentialId(), purpose.scanPurposeId(), request.staffUserId(), "Inactive QR credential",
+                    TransactionType.valueOf(purpose.code().name()), 0);
+        }
+        if (!eventSnapshot.eventId().equals(qrSnapshot.eventId())) {
+            return reject(eventSnapshot.eventId(), qrSnapshot.attendeeUserId(), qrSnapshot.registrationId(),
+                    qrSnapshot.qrCredentialId(), purpose.scanPurposeId(), request.staffUserId(), "Wrong event QR",
+                    TransactionType.valueOf(purpose.code().name()), 0);
+        }
+
+        var registration = registrationLookupPort.findByQrCredentialId(qrSnapshot.qrCredentialId())
+                .orElseThrow(() -> new ResourceNotFoundException("Registration not found for QR credential"));
+        TransactionRule rule = transactionRuleRepository.findByEventIdAndScanPurposeId(request.eventId(), request.scanPurposeId())
+                .orElseGet(() -> defaultRule(request.eventId(), request.scanPurposeId()));
+
+        String duplicateReason = determineDuplicateReason(purpose.code().name(), registration, rule.isAllowDuplicate());
+        if (duplicateReason != null) {
+            return reject(eventSnapshot.eventId(), registration.attendeeUserId(), registration.registrationId(),
+                    registration.qrCredentialId(), purpose.scanPurposeId(), request.staffUserId(), duplicateReason,
+                    TransactionType.valueOf(purpose.code().name()), 0);
+        }
+
+        TransactionType transactionType = TransactionType.valueOf(purpose.code().name());
+        int pointsDelta = purpose.trackingOnly() ? 0 : Math.max(0, rule.getPointsAwarded());
+        TransactionLog log = createLog(eventSnapshot.eventId(), registration.attendeeUserId(), registration.registrationId(),
+                registration.qrCredentialId(), purpose.scanPurposeId(), request.staffUserId(), TransactionResult.APPROVED,
+                transactionType, pointsDelta, null);
+
+        applyTransactionEffects(transactionType, registration.registrationId());
+
+        TransactionLog saved = transactionLogRepository.save(log);
+        applicationEventPublisher.publishEvent(new TransactionRecordedEvent(saved.getId(), saved.getEventId(),
+                saved.getAttendeeUserId(), saved.getRegistrationId(), saved.getQrCredentialId(), saved.getScanPurposeId(),
+                saved.getTransactionType(), saved.getTransactionResult(), saved.getPointsDelta(), saved.getStaffUserId(),
+                saved.getReason()));
+        return toResponse(saved);
+    }
+
+    public List<TransactionResponse> findByEvent(UUID eventId) {
+        return transactionLogRepository.findByEventId(eventId).stream().map(this::toResponse).toList();
+    }
+
+    private void validateStaff(UUID staffUserId) {
+        if (staffUserId == null) {
+            throw new ForbiddenException("Staff user is required for scan transactions");
+        }
+        var staff = attendeeDirectoryPort.findById(staffUserId)
+                .orElseThrow(() -> new ForbiddenException("Staff user not found"));
+        if (staff.status() != com.thedavelopers.eventqr.shared.constants.AccountStatus.ACTIVE
+                || (staff.role() != AccountRole.STAFF && staff.role() != AccountRole.ORGANIZER && staff.role() != AccountRole.ADMIN)) {
+            throw new ForbiddenException("Staff user is not authorized for this scan");
+        }
+    }
+
+    private TransactionRule defaultRule(UUID eventId, UUID scanPurposeId) {
+        TransactionRule rule = new TransactionRule();
+        rule.setEventId(eventId);
+        rule.setScanPurposeId(scanPurposeId);
+        rule.setActive(true);
+        rule.setAllowDuplicate(false);
+        rule.setRequiresStaffAssignment(true);
+        rule.setPointsAwarded(0);
+        return rule;
+    }
+
+    private String determineDuplicateReason(String purposeCode, RegistrationLookupPort.RegistrationSnapshot registration,
+                                            boolean allowDuplicate) {
+        if (allowDuplicate) {
+            return null;
+        }
+        if ("ENTRY".equals(purposeCode) && registration.status() == RegistrationStatus.ENTERED) {
+            return "Duplicate entry is not allowed";
+        }
+        if ("EXIT".equals(purposeCode) && registration.status() == RegistrationStatus.EXITED) {
+            return "Duplicate exit is not allowed";
+        }
+        if ("ATTENDANCE".equals(purposeCode) && registration.attendedAt() != null) {
+            return "Duplicate attendance is not allowed";
+        }
+        return null;
+    }
+
+    private void applyTransactionEffects(TransactionType transactionType, UUID registrationId) {
+        if (transactionType == TransactionType.ENTRY) {
+            registrationCommandPort.markEntered(registrationId);
+            return;
+        }
+        if (transactionType == TransactionType.EXIT) {
+            registrationCommandPort.markExited(registrationId);
+            return;
+        }
+        if (transactionType == TransactionType.ATTENDANCE) {
+            registrationCommandPort.markAttended(registrationId);
+        }
+    }
+
+    private TransactionResponse reject(UUID eventId, UUID attendeeUserId, UUID registrationId, UUID qrCredentialId,
+                                       UUID scanPurposeId, UUID staffUserId, String reason,
+                                       TransactionType transactionType, int pointsDelta) {
+        TransactionLog log = createLog(eventId, attendeeUserId, registrationId, qrCredentialId, scanPurposeId, staffUserId,
+                TransactionResult.REJECTED, transactionType, pointsDelta, reason);
+        TransactionLog saved = transactionLogRepository.save(log);
+        applicationEventPublisher.publishEvent(new TransactionRecordedEvent(saved.getId(), saved.getEventId(),
+                saved.getAttendeeUserId(), saved.getRegistrationId(), saved.getQrCredentialId(), saved.getScanPurposeId(),
+                saved.getTransactionType(), saved.getTransactionResult(), saved.getPointsDelta(), saved.getStaffUserId(),
+                saved.getReason()));
+        return toResponse(saved);
+    }
+
+    private TransactionLog createLog(UUID eventId, UUID attendeeUserId, UUID registrationId, UUID qrCredentialId,
+                                     UUID scanPurposeId, UUID staffUserId, TransactionResult result,
+                                     TransactionType transactionType, int pointsDelta, String reason) {
+        TransactionLog log = new TransactionLog();
+        log.setEventId(eventId);
+        log.setAttendeeUserId(attendeeUserId);
+        log.setRegistrationId(registrationId);
+        log.setQrCredentialId(qrCredentialId);
+        log.setScanPurposeId(scanPurposeId);
+        log.setStaffUserId(staffUserId);
+        log.setTransactionType(transactionType);
+        log.setTransactionResult(result);
+        log.setPointsDelta(pointsDelta);
+        log.setReason(reason);
+        log.setScannedAt(Instant.now());
+        return log;
+    }
+
+    private TransactionResponse toResponse(TransactionLog log) {
+        return new TransactionResponse(log.getId(), log.getEventId(), log.getAttendeeUserId(), log.getRegistrationId(),
+                log.getQrCredentialId(), log.getScanPurposeId(), log.getTransactionType(), log.getTransactionResult(),
+                log.getPointsDelta(), log.getReason(), log.getScannedAt());
+    }
+}

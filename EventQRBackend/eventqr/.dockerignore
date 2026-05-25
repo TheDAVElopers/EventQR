@@ -1,0 +1,15 @@
+target/
+build/
+.gradle/
+.git/
+.idea/
+.vscode/
+*.iml
+*.log
+.env
+.env.*
+docker-compose.yml
+README.md
+README
+Thumbs.db
+Desktop.ini
