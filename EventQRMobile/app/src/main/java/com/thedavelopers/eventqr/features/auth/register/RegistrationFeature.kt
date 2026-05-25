@@ -151,7 +151,7 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
                 emailInput.text.toString(),
                 phoneInput.text.toString(),
                 passwordInput.text.toString(),
-                confirmPasswordInput.text.toString(),
+                passwordInput.text.toString(),
             )
         }
 

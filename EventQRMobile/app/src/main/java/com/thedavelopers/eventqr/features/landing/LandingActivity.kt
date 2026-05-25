@@ -14,16 +14,14 @@ import com.thedavelopers.eventqr.SignIn
 
 open class LandingActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        val splashScreen = installSplashScreen()
+        installSplashScreen()
         super.onCreate(savedInstanceState)
 
-        splashScreen.setKeepOnScreenCondition { true }
         setContentView(R.layout.activity_splash_modern)
         enableEdgeToEdge()
 
         Handler(Looper.getMainLooper()).postDelayed({
             showLandingContent()
-            splashScreen.setKeepOnScreenCondition { false }
         }, 2000)
     }
 
