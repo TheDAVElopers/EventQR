@@ -2,147 +2,119 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eventqr_bg"
+    android:background="#FFFFFF"
     android:orientation="vertical">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/bg_eventqr_gradient"
-        android:orientation="vertical"
-        android:paddingHorizontal="24dp"
-        android:paddingTop="30dp"
-        android:paddingBottom="18dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Rewards"
-            android:textColor="@color/eventqr_card"
-            android:textSize="30sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/txtRewardsBalance"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Points: 0"
-            android:textColor="#E5E7EB"
-            android:textSize="14sp" />
-
-        <TextView
-            android:id="@+id/txtRewardsLoading"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Loading rewards..."
-            android:textColor="#E5E7EB"
-            android:visibility="gone" />
-    </LinearLayout>
-
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:paddingHorizontal="24dp"
-        android:paddingTop="18dp">
-
-        <EditText
-            android:id="@+id/edtRewardsEventId"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:background="@drawable/bg_input"
-            android:hint="Select event"
-            android:paddingHorizontal="16dp"
-            android:textColor="@color/eventqr_text"
-            android:textColorHint="@color/eventqr_muted" />
-
-        <Button
-            android:id="@+id/btnLoadRewards"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/bg_primary_button"
-            android:text="Load Rewards"
-            android:textAllCaps="false"
-            android:textColor="@color/eventqr_card"
-            android:textStyle="bold" />
+        android:layout_weight="1">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/bg_reward_points"
             android:orientation="vertical"
-            android:padding="18dp">
+            android:paddingHorizontal="26dp"
+            android:paddingTop="36dp"
+            android:paddingBottom="24dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Points Summary"
-                android:textColor="#DDD6FE"
-                android:textStyle="bold" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Rewards" android:textColor="#000000" android:textSize="30sp" android:textStyle="bold" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="Available rewards for your selected event"
-                android:textColor="@color/eventqr_card"
-                android:textSize="14sp" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="34dp" android:text="Select Event" android:textColor="#000000" android:textSize="18sp" android:textStyle="bold" />
+            <EditText
+                android:id="@+id/edtRewardsEventId"
+                android:layout_width="match_parent"
+                android:layout_height="51dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_soft_gray_pill"
+                android:drawableEnd="@android:drawable/arrow_down_float"
+                android:hint="AI Summit 2024"
+                android:paddingHorizontal="20dp"
+                android:textColor="#111111"
+                android:textColorHint="#111111"
+                android:textSize="16sp" />
+
+            <Button android:id="@+id/btnLoadRewards" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="144dp"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/bg_reward_points"
+                android:elevation="5dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="26dp">
+
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Available Points" android:textColor="#FFFFFF" android:textSize="16sp" />
+                    <TextView android:id="@+id/txtRewardsBalance" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:text="50" android:textColor="#FFFFFF" android:textSize="42sp" android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="AI Summit 2024" android:textColor="#FFFFFF" android:textSize="16sp" />
+                </LinearLayout>
+
+                <TextView android:layout_width="76dp" android:layout_height="76dp" android:background="@drawable/bg_circle_purple_soft" android:gravity="center" android:text="★" android:textColor="#FACC15" android:textSize="28sp" />
+            </LinearLayout>
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:gravity="center_vertical" android:orientation="horizontal">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Available Rewards" android:textColor="#000000" android:textSize="22sp" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="View Claimed" android:textColor="#000000" android:textSize="16sp" android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="182dp" android:layout_marginTop="24dp" android:background="@drawable/bg_card" android:orientation="horizontal" android:padding="22dp">
+                <View android:layout_width="76dp" android:layout_height="76dp" android:layout_marginTop="0dp" android:background="@drawable/bg_icon_placeholder" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_marginStart="18dp" android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Event T-Shirt" android:textColor="#9A9AA1" android:textSize="21sp" android:textStyle="bold" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="Official AI Summit 2024 branded t-shirt" android:textColor="#B0B0B8" android:textSize="15sp" />
+                    <TextView android:layout_width="112dp" android:layout_height="30dp" android:layout_marginTop="18dp" android:background="@drawable/bg_outline_button" android:gravity="center" android:text="Merchandise" android:textColor="#9A9AA1" android:textSize="14sp" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:gravity="end" android:text="🪙 100 pts" android:textColor="#9A9AA1" android:textSize="16sp" android:textStyle="bold" />
+                </LinearLayout>
+                <TextView android:layout_width="22dp" android:layout_height="match_parent" android:gravity="top|center_horizontal" android:text="♙" android:textColor="#B0B0B8" android:textSize="20sp" />
+            </LinearLayout>
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="182dp" android:layout_marginTop="18dp" android:background="@drawable/bg_card" android:orientation="horizontal" android:padding="22dp">
+                <View android:layout_width="76dp" android:layout_height="76dp" android:background="@drawable/bg_icon_placeholder" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_marginStart="18dp" android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="VIP Lounge Access" android:textColor="#9A9AA1" android:textSize="21sp" android:textStyle="bold" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="Access to exclusive VIP lounge area" android:textColor="#B0B0B8" android:textSize="15sp" />
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:orientation="horizontal">
+                        <TextView android:layout_width="80dp" android:layout_height="30dp" android:background="@drawable/bg_outline_button" android:gravity="center" android:text="Access" android:textColor="#9A9AA1" android:textSize="14sp" />
+                        <TextView android:layout_width="112dp" android:layout_height="30dp" android:layout_marginStart="10dp" android:background="@drawable/bg_soft_gray_pill" android:gravity="center" android:text="Out of Stock" android:textColor="#9A9AA1" android:textSize="14sp" />
+                    </LinearLayout>
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:gravity="end" android:text="🪙 200 pts" android:textColor="#9A9AA1" android:textSize="16sp" android:textStyle="bold" />
+                </LinearLayout>
+                <TextView android:layout_width="22dp" android:layout_height="match_parent" android:gravity="top|center_horizontal" android:text="♙" android:textColor="#B0B0B8" android:textSize="20sp" />
+            </LinearLayout>
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="150dp" android:layout_marginTop="18dp" android:background="@drawable/bg_card" android:orientation="horizontal" android:padding="22dp">
+                <View android:layout_width="76dp" android:layout_height="76dp" android:background="@drawable/bg_icon_placeholder" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="18dp" android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Free Lunch Voucher" android:textColor="#000000" android:textSize="21sp" android:textStyle="bold" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="Complimentary lunch at event cafeteria" android:textColor="#8B8E98" android:textSize="15sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView android:id="@+id/txtRewardsLoading" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:gravity="center" android:text="Loading rewards..." android:textColor="@color/eventqr_muted" android:visibility="gone" />
+            <TextView android:id="@+id/txtRewardsEmpty" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="No rewards available." android:visibility="gone" />
+            <androidx.recyclerview.widget.RecyclerView android:id="@+id/recyclerRewards" android:layout_width="match_parent" android:layout_height="0dp" android:visibility="gone" />
         </LinearLayout>
+    </ScrollView>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Available Rewards"
-                android:textColor="@color/eventqr_text"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_chip"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="6dp"
-                android:text="View Claimed"
-                android:textColor="@color/eventqr_indigo"
-                android:textStyle="bold" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="76dp" android:background="@drawable/bg_bottom_nav" android:gravity="center" android:orientation="horizontal" android:paddingHorizontal="38dp">
+        <LinearLayout android:id="@+id/navDashboard" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+            <ImageView android:layout_width="39dp" android:layout_height="39dp" android:background="@drawable/bg_nav_icon_inactive" android:contentDescription="Dashboard" android:padding="9dp" android:src="@drawable/ic_nav_home" android:tint="#000000" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="7dp" android:text="Dashboard" android:textColor="#333333" android:textSize="13sp" android:textStyle="bold" />
         </LinearLayout>
-
-        <TextView
-            android:id="@+id/txtRewardsEmpty"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="No rewards configured for this event yet."
-            android:textColor="@color/eventqr_muted" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerRewards"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginTop="8dp"
-            android:layout_weight="1"
-            android:clipToPadding="false"
-            android:paddingBottom="10dp" />
+        <LinearLayout android:id="@+id/navEvents" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+            <ImageView android:layout_width="39dp" android:layout_height="39dp" android:background="@drawable/bg_nav_icon_inactive" android:contentDescription="Events" android:padding="8dp" android:src="@drawable/ic_nav_calendar" android:tint="#000000" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="7dp" android:text="Events" android:textColor="#333333" android:textSize="13sp" android:textStyle="bold" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/navRewards" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+            <ImageView android:layout_width="39dp" android:layout_height="39dp" android:background="@drawable/bg_nav_icon_active" android:contentDescription="Rewards" android:padding="8dp" android:src="@drawable/ic_nav_gift" android:tint="#FFFFFF" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="7dp" android:text="Rewards" android:textColor="#333333" android:textSize="13sp" android:textStyle="bold" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/navProfile" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+            <ImageView android:layout_width="39dp" android:layout_height="39dp" android:background="@drawable/bg_nav_icon_inactive" android:contentDescription="Profile" android:padding="8dp" android:src="@drawable/ic_nav_profile" android:tint="#000000" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="7dp" android:text="Profile" android:textColor="#333333" android:textSize="13sp" android:textStyle="bold" />
+        </LinearLayout>
     </LinearLayout>
-
-    <include
-        android:id="@+id/nav_view_container"
-        layout="@layout/layout_bottom_nav"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
 </LinearLayout>

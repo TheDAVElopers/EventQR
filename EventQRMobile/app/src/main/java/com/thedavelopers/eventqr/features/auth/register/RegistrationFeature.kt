@@ -2,6 +2,10 @@ package com.thedavelopers.eventqr.features.auth.register
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.InputType
+import android.text.TextWatcher
+import android.view.MotionEvent
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -81,8 +85,8 @@ class RegistrationPresenter(
         } else {
             view?.showFieldError("phone", null)
         }
-        if (!Validators.isValidPassword(passwordValue)) {
-            view?.showFieldError("password", "Password must be at least 6 characters")
+        if (!Validators.isValidSignUpPassword(passwordValue)) {
+            view?.showFieldError("password", "Password must meet all requirements")
             valid = false
         } else {
             view?.showFieldError("password", null)
@@ -127,6 +131,11 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
     private lateinit var confirmPasswordInput: EditText
     private lateinit var registerButton: Button
     private lateinit var signInButton: Button
+    private lateinit var passwordLengthRequirement: TextView
+    private lateinit var passwordCapitalRequirement: TextView
+    private lateinit var passwordSpecialRequirement: TextView
+    private lateinit var passwordSmallRequirement: TextView
+    private lateinit var passwordNumberRequirement: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -143,6 +152,22 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
         confirmPasswordInput = findViewById(R.id.edtConfirmPassword)
         registerButton = findViewById(R.id.btnRegister)
         signInButton = findViewById(R.id.btnSignIn)
+        passwordLengthRequirement = findViewById(R.id.txtPasswordLengthRequirement)
+        passwordCapitalRequirement = findViewById(R.id.txtPasswordCapitalRequirement)
+        passwordSpecialRequirement = findViewById(R.id.txtPasswordSpecialRequirement)
+        passwordSmallRequirement = findViewById(R.id.txtPasswordSmallRequirement)
+        passwordNumberRequirement = findViewById(R.id.txtPasswordNumberRequirement)
+
+        configurePasswordToggle(passwordInput)
+        configurePasswordToggle(confirmPasswordInput)
+        passwordInput.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                updatePasswordRequirements(s?.toString().orEmpty())
+            }
+            override fun afterTextChanged(s: Editable?) = Unit
+        })
+        updatePasswordRequirements(passwordInput.text.toString())
 
         registerButton.setOnClickListener {
             presenter.submitRegistration(
@@ -166,7 +191,7 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
     }
 
     override fun showLoading(isLoading: Boolean) {
-        registerButton.isEnabled = !isLoading
+        registerButton.isEnabled = !isLoading && Validators.isValidSignUpPassword(passwordInput.text.toString())
         registerButton.text = if (isLoading) "Creating account..." else "Create Account"
     }
 
@@ -188,5 +213,38 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
     override fun navigateToSignIn() {
         startActivity(Intent(this, SignIn::class.java))
         finish()
+    }
+
+    private fun updatePasswordRequirements(password: String) {
+        val requirements = Validators.passwordRequirements(password)
+        updateRequirement(passwordLengthRequirement, "8 characters long", requirements.hasMinLength)
+        updateRequirement(passwordCapitalRequirement, "1 Capital", requirements.hasCapital)
+        updateRequirement(passwordSpecialRequirement, "1 Special", requirements.hasSpecial)
+        updateRequirement(passwordSmallRequirement, "1 Small", requirements.hasSmall)
+        updateRequirement(passwordNumberRequirement, "1 Number", requirements.hasNumber)
+        registerButton.isEnabled = requirements.isValid
+    }
+
+    private fun updateRequirement(view: TextView, label: String, isMet: Boolean) {
+        view.text = "${if (isMet) "[x]" else "[ ]"} $label"
+        view.setTextColor(getColor(if (isMet) R.color.eventqr_success else R.color.eventqr_muted))
+    }
+
+    private fun configurePasswordToggle(input: EditText) {
+        input.setOnTouchListener { view, event ->
+            if (event.action == MotionEvent.ACTION_UP && event.rawX >= input.right - input.compoundPaddingEnd) {
+                val isHidden = input.inputType and InputType.TYPE_TEXT_VARIATION_PASSWORD == InputType.TYPE_TEXT_VARIATION_PASSWORD
+                input.inputType = if (isHidden) {
+                    InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                } else {
+                    InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+                }
+                input.setSelection(input.text.length)
+                view.performClick()
+                true
+            } else {
+                false
+            }
+        }
     }
 }

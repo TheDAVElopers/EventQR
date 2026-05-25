@@ -1,7 +1,9 @@
 package com.thedavelopers.eventqr.features.auth.login
 
 import android.content.Intent
+import android.text.InputType
 import android.os.Bundle
+import android.view.MotionEvent
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -116,6 +118,7 @@ open class LoginActivity : AppCompatActivity(), LoginContract.View {
         signInButton = findViewById(R.id.btnSignIn)
         registerButton = findViewById(R.id.btnRegister)
         forgotPasswordLink = findViewById(R.id.txtForgotPassword)
+        configurePasswordToggle(passwordInput)
 
         signInButton.setOnClickListener {
             presenter.submitLogin(emailInput.text.toString(), passwordInput.text.toString())
@@ -137,7 +140,7 @@ open class LoginActivity : AppCompatActivity(), LoginContract.View {
 
     override fun showLoading(isLoading: Boolean) {
         signInButton.isEnabled = !isLoading
-        signInButton.text = if (isLoading) "Signing in..." else "Sign in"
+        signInButton.text = if (isLoading) "Signing in..." else "Sign In"
     }
 
     override fun showEmailError(message: String?) {
@@ -167,5 +170,23 @@ open class LoginActivity : AppCompatActivity(), LoginContract.View {
 
     override fun navigateToForgotPassword() {
         startActivity(Intent(this, com.thedavelopers.eventqr.ForgotPassword::class.java))
+    }
+
+    private fun configurePasswordToggle(input: EditText) {
+        input.setOnTouchListener { view, event ->
+            if (event.action == MotionEvent.ACTION_UP && event.rawX >= input.right - input.compoundPaddingEnd) {
+                val isHidden = input.inputType and InputType.TYPE_TEXT_VARIATION_PASSWORD == InputType.TYPE_TEXT_VARIATION_PASSWORD
+                input.inputType = if (isHidden) {
+                    InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                } else {
+                    InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+                }
+                input.setSelection(input.text.length)
+                view.performClick()
+                true
+            } else {
+                false
+            }
+        }
     }
 }

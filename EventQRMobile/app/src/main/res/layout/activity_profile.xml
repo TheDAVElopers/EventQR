@@ -2,166 +2,124 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eventqr_bg"
+    android:background="#FFFFFF"
     android:orientation="vertical">
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/bg_eventqr_gradient"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingHorizontal="24dp"
-        android:paddingTop="30dp"
-        android:paddingBottom="18dp">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Profile"
-            android:textColor="@color/eventqr_card"
-            android:textSize="30sp"
-            android:textStyle="bold" />
-
-        <ImageView
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:contentDescription="Notifications"
-            android:src="@drawable/notification_bell"
-            android:tint="@color/eventqr_card" />
-    </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:fillViewport="true">
+        android:layout_weight="1">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="24dp"
-            android:paddingTop="18dp"
-            android:paddingBottom="20dp">
+            android:paddingHorizontal="28dp"
+            android:paddingTop="36dp"
+            android:paddingBottom="28dp">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:text="Profile"
+                    android:textColor="#000000"
+                    android:textSize="30sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="300dp"
+                android:layout_marginTop="48dp"
                 android:background="@drawable/bg_card"
-                android:gravity="center_horizontal"
-                android:orientation="vertical"
-                android:padding="20dp">
+                android:elevation="5dp"
+                android:gravity="center"
+                android:orientation="vertical">
 
-                <View
-                    android:layout_width="84dp"
-                    android:layout_height="84dp"
-                    android:background="@drawable/bg_chip" />
+                <FrameLayout
+                    android:layout_width="116dp"
+                    android:layout_height="116dp">
+                    <FrameLayout android:layout_width="116dp" android:layout_height="116dp" android:background="@drawable/bg_circle_avatar">
+                        <View android:layout_width="44dp" android:layout_height="44dp" android:layout_gravity="top|center_horizontal" android:layout_marginTop="18dp" android:background="@drawable/bg_circle_blue" />
+                        <View android:layout_width="94dp" android:layout_height="58dp" android:layout_gravity="bottom|center_horizontal" android:background="@drawable/bg_circle_blue" />
+                    </FrameLayout>
+                </FrameLayout>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="Full Name"
-                    android:textColor="@color/eventqr_text"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Attendee"
-                    android:textColor="@color/eventqr_muted" />
-
-                <Button
-                    android:layout_width="match_parent"
-                    android:layout_height="50dp"
-                    android:layout_marginTop="14dp"
-                    android:background="@drawable/bg_outline_button"
-                    android:text="Edit Profile"
-                    android:textAllCaps="false"
-                    android:textColor="@color/eventqr_indigo"
-                    android:textStyle="bold" />
+                <TextView android:id="@+id/txtProfileName" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="Darell Dave" android:textColor="#000000" android:textSize="26sp" android:textStyle="bold" />
+                <TextView android:id="@+id/txtProfileRole" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Attendee" android:textColor="#000000" android:textSize="14sp" />
+                <Button android:id="@+id/btnEditProfile" android:layout_width="104dp" android:layout_height="42dp" android:layout_marginTop="22dp" android:background="@drawable/bg_profile_button" android:elevation="4dp" android:text="Edit Profile" android:textAllCaps="false" android:textColor="#FFFFFF" android:textSize="12sp" android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_height="190dp"
+                android:layout_marginTop="52dp"
                 android:background="@drawable/bg_card"
+                android:elevation="5dp"
                 android:orientation="vertical"
-                android:padding="18dp">
+                android:padding="22dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Contact Information"
-                    android:textColor="@color/eventqr_text"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Email: user@example.com"
-                    android:textColor="@color/eventqr_muted" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Phone: +63 900 000 0000"
-                    android:textColor="@color/eventqr_muted" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Contact Information" android:textColor="#000000" android:textSize="24sp" android:textStyle="bold" />
+                <TextView android:id="@+id/txtProfileEmail" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="30dp" android:gravity="center" android:text="john.doe@example.com" android:textColor="#000000" android:textSize="20sp" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="28dp" android:gravity="center" android:text="+1 234 567 8900" android:textColor="#000000" android:textSize="20sp" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_height="190dp"
+                android:layout_marginTop="28dp"
                 android:background="@drawable/bg_card"
+                android:elevation="5dp"
                 android:orientation="vertical"
-                android:padding="18dp">
+                android:padding="22dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Account Details"
-                    android:textColor="@color/eventqr_text"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Role: Attendee"
-                    android:textColor="@color/eventqr_muted" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Member since: 2026"
-                    android:textColor="@color/eventqr_muted" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Account Details" android:textColor="#000000" android:textSize="24sp" android:textStyle="bold" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="30dp" android:gravity="center" android:text="Member since: January 2024" android:textColor="#000000" android:textSize="20sp" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="30dp" android:gravity="center" android:text="Account ID: #ATD-12345" android:textColor="#000000" android:textSize="20sp" />
             </LinearLayout>
 
             <Button
+                android:id="@+id/btnProfileLogout"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/bg_outline_button"
+                android:layout_height="52dp"
+                android:layout_marginTop="28dp"
+                android:background="@drawable/bg_logout_button"
+                android:elevation="4dp"
                 android:text="Logout"
                 android:textAllCaps="false"
-                android:textColor="@color/eventqr_error"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
                 android:textStyle="bold" />
         </LinearLayout>
     </ScrollView>
 
-    <include
-        android:id="@+id/nav_view_container"
-        layout="@layout/layout_bottom_nav"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
+        android:layout_height="76dp"
+        android:background="@drawable/bg_bottom_nav"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingHorizontal="38dp">
+        <LinearLayout android:id="@+id/navDashboard" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+            <ImageView android:layout_width="39dp" android:layout_height="39dp" android:background="@drawable/bg_nav_icon_inactive" android:contentDescription="Dashboard" android:padding="9dp" android:src="@drawable/ic_nav_home" android:tint="#000000" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="7dp" android:text="Dashboard" android:textColor="#333333" android:textSize="13sp" android:textStyle="bold" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/navEvents" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+            <ImageView android:layout_width="39dp" android:layout_height="39dp" android:background="@drawable/bg_nav_icon_inactive" android:contentDescription="Events" android:padding="8dp" android:src="@drawable/ic_nav_calendar" android:tint="#000000" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="7dp" android:text="Events" android:textColor="#333333" android:textSize="13sp" android:textStyle="bold" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/navRewards" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+            <ImageView android:layout_width="39dp" android:layout_height="39dp" android:background="@drawable/bg_nav_icon_inactive" android:contentDescription="Rewards" android:padding="8dp" android:src="@drawable/ic_nav_gift" android:tint="#000000" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="7dp" android:text="Rewards" android:textColor="#333333" android:textSize="13sp" android:textStyle="bold" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/navProfile" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+            <ImageView android:layout_width="39dp" android:layout_height="39dp" android:background="@drawable/bg_nav_icon_active" android:contentDescription="Profile" android:padding="8dp" android:src="@drawable/ic_nav_profile" android:tint="#FFFFFF" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="7dp" android:text="Profile" android:textColor="#333333" android:textSize="13sp" android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
 </LinearLayout>

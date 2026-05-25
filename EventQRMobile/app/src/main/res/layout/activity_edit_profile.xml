@@ -2,157 +2,105 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eventqr_bg"
+    android:background="#FFFFFF"
     android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingHorizontal="24dp"
-        android:paddingTop="24dp"
-        android:paddingBottom="24dp">
+        android:paddingHorizontal="26dp"
+        android:paddingTop="32dp"
+        android:paddingBottom="10dp">
 
-        <LinearLayout
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:layout_height="54dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:text="‹  Edit Profile"
+                android:textColor="#000000"
+                android:textSize="29sp"
+                android:textStyle="bold" />
+        </FrameLayout>
 
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:contentDescription="Back"
-                android:src="@android:drawable/ic_media_previous"
-                android:tint="@color/eventqr_indigo" />
+        <FrameLayout
+            android:layout_width="130dp"
+            android:layout_height="130dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="78dp">
+
+            <FrameLayout
+                android:layout_width="122dp"
+                android:layout_height="122dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_circle_avatar">
+                <View android:layout_width="48dp" android:layout_height="48dp" android:layout_gravity="top|center_horizontal" android:layout_marginTop="18dp" android:background="@drawable/bg_circle_blue" />
+                <View android:layout_width="98dp" android:layout_height="62dp" android:layout_gravity="bottom|center_horizontal" android:background="@drawable/bg_circle_blue" />
+            </FrameLayout>
 
             <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_weight="1"
-                android:text="Edit Profile"
-                android:textColor="@color/eventqr_text"
-                android:textSize="22sp"
-                android:textStyle="bold" />
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="bottom|end"
+                android:background="@drawable/bg_circle_dark"
+                android:gravity="center"
+                android:text="▣"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp" />
+        </FrameLayout>
 
-            <ImageView
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:contentDescription="Save"
-                android:src="@android:drawable/ic_menu_save"
-                android:tint="@color/eventqr_indigo" />
-        </LinearLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="30dp"
+            android:text="Change Photo"
+            android:textColor="#000000"
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
-        <LinearLayout
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="64dp"
+            android:text="Full Name"
+            android:textColor="#000000"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <EditText
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/bg_card"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
-            android:padding="20dp">
+            android:layout_height="60dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_soft_input_no_stroke"
+            android:hint="Darell Dave"
+            android:paddingHorizontal="18dp"
+            android:textColor="#111111"
+            android:textColorHint="#111111"
+            android:textSize="18sp" />
 
-            <View
-                android:layout_width="82dp"
-                android:layout_height="82dp"
-                android:background="@drawable/bg_chip" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:text="Email" android:textColor="#000000" android:textSize="17sp" android:textStyle="bold" />
+        <EditText android:layout_width="match_parent" android:layout_height="60dp" android:layout_marginTop="10dp" android:background="@drawable/bg_soft_input_no_stroke" android:enabled="false" android:hint="john.doe@example.com" android:paddingHorizontal="18dp" android:textColorHint="#8B8E98" android:textSize="18sp" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="Email cannot be changed" android:textColor="#6B7280" android:textSize="16sp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="Change Photo"
-                android:textColor="@color/eventqr_indigo"
-                android:textStyle="bold" />
-        </LinearLayout>
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:text="Phone Number" android:textColor="#000000" android:textSize="17sp" android:textStyle="bold" />
+        <EditText android:layout_width="match_parent" android:layout_height="60dp" android:layout_marginTop="10dp" android:background="@drawable/bg_soft_input_no_stroke" android:hint="+63 912 3456 789" android:paddingHorizontal="18dp" android:textColorHint="#8B8E98" android:textSize="18sp" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/bg_card"
-            android:orientation="vertical"
-            android:padding="20dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Full Name"
-                android:textColor="@color/eventqr_text"
-                android:textStyle="bold" />
-
-            <EditText
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_input"
-                android:hint="Enter full name"
-                android:paddingHorizontal="16dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:text="Email"
-                android:textColor="@color/eventqr_text"
-                android:textStyle="bold" />
-
-            <EditText
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_input"
-                android:enabled="false"
-                android:hint="email@example.com"
-                android:paddingHorizontal="16dp"
-                android:textColor="@color/eventqr_muted" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:text="Phone"
-                android:textColor="@color/eventqr_text"
-                android:textStyle="bold" />
-
-            <EditText
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_input"
-                android:hint="Enter phone number"
-                android:inputType="phone"
-                android:paddingHorizontal="16dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:text="Bio"
-                android:textColor="@color/eventqr_text"
-                android:textStyle="bold" />
-
-            <EditText
-                android:layout_width="match_parent"
-                android:layout_height="112dp"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_input"
-                android:gravity="top"
-                android:hint="Tell people about your event interests"
-                android:inputType="textMultiLine"
-                android:padding="16dp" />
-        </LinearLayout>
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:text="Bio / Description" android:textColor="#000000" android:textSize="17sp" android:textStyle="bold" />
+        <EditText android:layout_width="match_parent" android:layout_height="122dp" android:layout_marginTop="10dp" android:background="@drawable/bg_soft_input_no_stroke" android:gravity="top" android:hint="Tell us about yourself" android:inputType="textMultiLine" android:padding="18dp" android:textColorHint="#6B7280" android:textSize="18sp" />
 
         <Button
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="16dp"
+            android:layout_height="62dp"
+            android:layout_marginTop="18dp"
             android:background="@drawable/bg_primary_button"
             android:text="Save Changes"
             android:textAllCaps="false"
-            android:textColor="@color/eventqr_card"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
             android:textStyle="bold" />
     </LinearLayout>
-
 </ScrollView>

@@ -4,13 +4,15 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.session.SessionManager
+import com.thedavelopers.eventqr.features.attendee.AttendeeBottomNavItem
+import com.thedavelopers.eventqr.features.attendee.configureAttendeeBottomNav
 import com.thedavelopers.eventqr.features.auth.AuthRepository
 import com.thedavelopers.eventqr.features.dashboard.model.dto.DashboardSummary
 import kotlinx.coroutines.Job
@@ -91,43 +93,56 @@ class DashboardPresenter(
     }
 }
 
-open class DashboardActivity : com.thedavelopers.eventqr.core.ui.BaseNavActivity(), DashboardContract.View {
+open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     private lateinit var presenter: DashboardPresenter
     private lateinit var sessionManager: SessionManager
     private lateinit var welcomeText: TextView
-    private lateinit var dashboardName: TextView
+    private lateinit var roleText: TextView
     private lateinit var summaryEvents: TextView
     private lateinit var summaryRegistrations: TextView
     private lateinit var summaryTransactions: TextView
     private lateinit var summaryRewards: TextView
     private lateinit var summaryNotifications: TextView
     private lateinit var loadingText: TextView
-    private lateinit var upcomingEvents : TextView
-    private lateinit var recentEvents : TextView
-
+    private lateinit var attendeeCard: Button
+    private lateinit var staffCard: Button
+    private lateinit var organizerCard: Button
+    private lateinit var notificationsCard: Button
+    private lateinit var rewardsCard: Button
+    private lateinit var reportsCard: Button
+    private lateinit var logoutCard: Button
+    private lateinit var notificationBell: ImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
+        configureAttendeeBottomNav(AttendeeBottomNavItem.DASHBOARD)
 
         sessionManager = SessionManager(this)
         presenter = DashboardPresenter(this, DashboardRepository(this), sessionManager)
         presenter.attach(this)
 
         welcomeText = findViewById(R.id.txtDashboardWelcome)
-        dashboardName = findViewById(R.id.txtDashboardFullName)
+        roleText = findViewById(R.id.txtDashboardRole)
         summaryEvents = findViewById(R.id.txtTotalEvents)
         summaryRegistrations = findViewById(R.id.txtTotalRegistrations)
         summaryTransactions = findViewById(R.id.txtTotalTransactions)
         summaryRewards = findViewById(R.id.txtTotalRewards)
         summaryNotifications = findViewById(R.id.txtTotalNotifications)
         loadingText = findViewById(R.id.txtDashboardLoading)
-        upcomingEvents = findViewById(R.id.txtbtnUpcomingEvents)
-        recentEvents = findViewById(R.id.txtbtnRecentActivity)
+        attendeeCard = findViewById(R.id.btnAttendeeHub)
+        staffCard = findViewById(R.id.btnStaffHub)
+        organizerCard = findViewById(R.id.btnOrganizerHub)
+        notificationsCard = findViewById(R.id.btnNotificationsHub)
+        rewardsCard = findViewById(R.id.btnRewardsHub)
+        reportsCard = findViewById(R.id.btnReportsHub)
+        logoutCard = findViewById(R.id.btnLogout)
+        notificationBell = findViewById(R.id.btnDashboardNotifications)
+        notificationBell.setOnClickListener {
+            startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.AttendeeNotificationsActivity::class.java))
+        }
 
-        val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation) ?: findViewById<BottomNavigationView>(R.id.nav_view_container)
-        setupBottomNavigation(bottomNav)
-        updateBottomNavSelection(bottomNav, R.id.nav_dashboard)
+        configureActions(sessionManager.getUserRole())
 
         presenter.loadDashboard()
     }
@@ -162,7 +177,67 @@ open class DashboardActivity : com.thedavelopers.eventqr.core.ui.BaseNavActivity
     }
 
     override fun updateHeader(role: String?, name: String?) {
-        welcomeText.text = "Welcome to EventQR!"
-        dashboardName.text = if(name.isNullOrBlank()) "John Doe" else "$name"
+        welcomeText.text = "Welcome back!"
+        roleText.text = name?.takeIf { it.isNotBlank() } ?: "Dharell Dave"
+    }
+
+    private fun configureActions(role: String?) {
+        val normalizedRole = role?.uppercase().orEmpty()
+        when (normalizedRole) {
+            "STAFF" -> {
+                attendeeCard.text = "Scanner"
+                staffCard.text = "Transactions"
+                organizerCard.text = "ID Printing"
+                notificationsCard.text = "Event Registrations"
+                rewardsCard.text = "Notifications"
+                reportsCard.visibility = View.GONE
+                logoutCard.visibility = View.VISIBLE
+
+                attendeeCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.staff.ScannerActivity::class.java)) }
+                staffCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.staff.StaffTransactionsActivity::class.java)) }
+                organizerCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.staff.IdPrintingActivity::class.java)) }
+                notificationsCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.staff.EventRegistrationsActivity::class.java)) }
+                rewardsCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.AttendeeNotificationsActivity::class.java)) }
+                logoutCard.setOnClickListener { performLogout() }
+            }
+            "ORGANIZER", "ADMIN" -> {
+                attendeeCard.text = "Manage Events"
+                staffCard.text = "Manage Users"
+                organizerCard.text = "Scan Purposes"
+                notificationsCard.text = "Rewards"
+                rewardsCard.text = "Reports"
+                reportsCard.text = "Notifications"
+                reportsCard.visibility = View.VISIBLE
+                logoutCard.visibility = View.VISIBLE
+
+                attendeeCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.organizer.ManageEventsActivity::class.java)) }
+                staffCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.organizer.ManageUsersActivity::class.java)) }
+                organizerCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.organizer.ManageScanPurposesActivity::class.java)) }
+                notificationsCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.organizer.ManageRewardsActivity::class.java)) }
+                rewardsCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.organizer.ReportsActivity::class.java)) }
+                reportsCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.organizer.NotificationManagementActivity::class.java)) }
+                logoutCard.setOnClickListener { performLogout() }
+            }
+            else -> {
+                attendeeCard.text = "Browse Events"
+                staffCard.text = "My Events"
+                organizerCard.text = "Rewards"
+                notificationsCard.text = "Request Event"
+                rewardsCard.visibility = View.GONE
+                reportsCard.visibility = View.GONE
+                logoutCard.visibility = View.GONE
+
+                attendeeCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.AttendeeEventsActivity::class.java)) }
+                staffCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.RegisteredEventsActivity::class.java)) }
+                organizerCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.AttendeeRewardsActivity::class.java)) }
+                notificationsCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.RequestEventActivity::class.java)) }
+            }
+        }
+    }
+
+    private fun performLogout() {
+        sessionManager.clearSession()
+        startActivity(Intent(this, com.thedavelopers.eventqr.SplashScreen::class.java))
+        finish()
     }
 }

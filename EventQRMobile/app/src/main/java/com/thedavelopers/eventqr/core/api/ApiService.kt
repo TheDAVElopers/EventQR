@@ -29,7 +29,6 @@ import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResp
 import com.thedavelopers.eventqr.features.users.model.dto.UserRequest
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
-import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import okhttp3.ResponseBody
 import retrofit2.http.Body
 import retrofit2.http.GET

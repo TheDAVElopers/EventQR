@@ -91,6 +91,7 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_events)
+        configureAttendeeBottomNav(AttendeeBottomNavItem.EVENTS)
 
         presenter = EventsPresenter(this, AttendeeRepository(this))
         recyclerView = findViewById(R.id.recyclerEvents)
@@ -622,6 +623,7 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_rewards)
+        configureAttendeeBottomNav(AttendeeBottomNavItem.REWARDS)
 
         presenter = RewardsPresenter(this, AttendeeRepository(this))
         adapter = RewardAdapter { reward -> presenter.redeem(eventId, attendeeUserId, reward.rewardId.toString()) }
