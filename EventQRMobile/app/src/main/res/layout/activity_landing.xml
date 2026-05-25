@@ -53,7 +53,7 @@
                 android:background="@drawable/bg_card"
                 android:text="Sign In"
                 android:textAllCaps="false"
-                android:textColor="@color/eventqr_indigo"
+                android:textColor="@color/eventqr_purple"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -65,7 +65,7 @@
                 android:background="@drawable/bg_outline_button"
                 android:text="Create Account"
                 android:textAllCaps="false"
-                android:textColor="@color/eventqr_card"
+                android:textColor="@color/eventqr_purple"
                 android:textSize="16sp"
                 android:textStyle="bold" />
         </LinearLayout>

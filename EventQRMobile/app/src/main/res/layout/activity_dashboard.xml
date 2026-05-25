@@ -5,6 +5,156 @@
     android:background="@color/eventqr_bg"
     android:orientation="vertical">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_eventqr_gradient"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="32dp"
+        android:paddingBottom="22dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/txtDashboardWelcome"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Welcome back!"
+                    android:textColor="@color/eventqr_card"
+                    android:textSize="25sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/txtDashboardFullName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Dharell Dave"
+                    android:textColor="@color/white"
+                    android:textSize="15sp"/>
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/btnNotification"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:contentDescription="Notifications"
+                android:src="@drawable/notification_bell"
+                android:tint="@color/white"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtDashboardLoading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Loading dashboard..."
+            android:textColor="#E5E7EB"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_stat_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:id="@+id/txtTotalRegistrations"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="0"
+                    android:textColor="@color/eventqr_card"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Registered"
+                    android:textColor="#E5E7EB"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_stat_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:id="@+id/txtTotalEvents"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="0"
+                    android:textColor="@color/eventqr_card"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Events"
+                    android:textColor="#E5E7EB"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_stat_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:id="@+id/txtTotalRewards"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="0"
+                    android:textColor="@color/eventqr_card"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Points"
+                    android:textColor="#E5E7EB"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -16,155 +166,6 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingBottom="20dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_eventqr_gradient"
-                android:orientation="vertical"
-                android:paddingHorizontal="24dp"
-                android:paddingTop="32dp"
-                android:paddingBottom="22dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/txtDashboardRole"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/bg_stat_card"
-                            android:paddingHorizontal="10dp"
-                            android:paddingVertical="5dp"
-                            android:text="ATTENDEE"
-                            android:textAllCaps="true"
-                            android:textColor="@color/eventqr_card"
-                            android:textSize="11sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/txtDashboardWelcome"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="12dp"
-                            android:text="Welcome back!"
-                            android:textColor="@color/eventqr_card"
-                            android:textSize="29sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <ImageView
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:contentDescription="Notifications"
-                        android:src="@android:drawable/ic_dialog_info"
-                        android:tint="@color/eventqr_card" />
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/txtDashboardLoading"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Loading dashboard..."
-                    android:textColor="#E5E7EB"
-                    android:textSize="12sp"
-                    android:visibility="gone" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:orientation="horizontal">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_stat_card"
-                        android:orientation="vertical"
-                        android:padding="14dp">
-
-                        <TextView
-                            android:id="@+id/txtTotalRegistrations"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="0"
-                            android:textColor="@color/eventqr_card"
-                            android:textSize="24sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Registered"
-                            android:textColor="#E5E7EB"
-                            android:textSize="12sp" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="4dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_stat_card"
-                        android:orientation="vertical"
-                        android:padding="14dp">
-
-                        <TextView
-                            android:id="@+id/txtTotalEvents"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="0"
-                            android:textColor="@color/eventqr_card"
-                            android:textSize="24sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Events"
-                            android:textColor="#E5E7EB"
-                            android:textSize="12sp" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_stat_card"
-                        android:orientation="vertical"
-                        android:padding="14dp">
-
-                        <TextView
-                            android:id="@+id/txtTotalRewards"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="0"
-                            android:textColor="@color/eventqr_card"
-                            android:textSize="24sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Points"
-                            android:textColor="#E5E7EB"
-                            android:textSize="12sp" />
-                    </LinearLayout>
-                </LinearLayout>
-            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -192,97 +193,6 @@
                         android:layout_weight="1" />
                 </LinearLayout>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Quick Actions"
-                    android:textColor="@color/eventqr_text"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:orientation="vertical">
-
-                    <Button
-                        android:id="@+id/btnAttendeeHub"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:background="@drawable/bg_primary_button"
-                        android:text="Browse Events"
-                        android:textAllCaps="false"
-                        android:textColor="@color/eventqr_card"
-                        android:textStyle="bold" />
-
-                    <Button
-                        android:id="@+id/btnStaffHub"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:layout_marginTop="10dp"
-                        android:background="@drawable/bg_outline_button"
-                        android:text="My Events"
-                        android:textAllCaps="false"
-                        android:textColor="@color/eventqr_indigo"
-                        android:textStyle="bold" />
-
-                    <Button
-                        android:id="@+id/btnRewardsHub"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:layout_marginTop="10dp"
-                        android:background="@drawable/bg_outline_button"
-                        android:text="Rewards"
-                        android:textAllCaps="false"
-                        android:textColor="@color/eventqr_indigo"
-                        android:textStyle="bold" />
-
-                    <Button
-                        android:id="@+id/btnOrganizerHub"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:layout_marginTop="10dp"
-                        android:background="@drawable/bg_outline_button"
-                        android:text="Request Event"
-                        android:textAllCaps="false"
-                        android:textColor="@color/eventqr_indigo"
-                        android:textStyle="bold" />
-
-                    <Button
-                        android:id="@+id/btnNotificationsHub"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:layout_marginTop="10dp"
-                        android:background="@drawable/bg_outline_button"
-                        android:text="Recent Activity"
-                        android:textAllCaps="false"
-                        android:textColor="@color/eventqr_indigo"
-                        android:textStyle="bold" />
-
-                    <Button
-                        android:id="@+id/btnReportsHub"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:layout_marginTop="10dp"
-                        android:background="@drawable/bg_outline_button"
-                        android:text="Reports"
-                        android:textAllCaps="false"
-                        android:textColor="@color/eventqr_indigo"
-                        android:textStyle="bold" />
-
-                    <Button
-                        android:id="@+id/btnLogout"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:layout_marginTop="10dp"
-                        android:background="@drawable/bg_outline_button"
-                        android:text="Logout"
-                        android:textAllCaps="false"
-                        android:textColor="@color/eventqr_error"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -294,10 +204,182 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Upcoming Events"
+                        android:text="Quick Actions"
                         android:textColor="@color/eventqr_text"
-                        android:textSize="16sp"
+                        android:textSize="20sp"
                         android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:id="@+id/btnBrowseEvents"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="8dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_quick_action"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:paddingVertical="20dp">
+
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:src="@drawable/ic_search"
+                                android:tint="@color/eventqr_text" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:text="Browse Events"
+                                android:textColor="@color/eventqr_text"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/btnMyEvents"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="8dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_quick_action"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:paddingVertical="20dp">
+
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:src="@drawable/ic_calendar"
+                                android:tint="@color/black" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:text="My Events"
+                                android:textColor="@color/eventqr_text"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:id="@+id/btnRewards"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="8dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_quick_action"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:paddingVertical="20dp">
+
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:src="@drawable/ic_gift"
+                                android:tint="@color/eventqr_text" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:text="Rewards"
+                                android:textColor="@color/eventqr_text"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/btnRequestEvent"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="8dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_quick_action"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:paddingVertical="20dp">
+
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:src="@drawable/ic_fileedit"
+                                android:tint="@color/black" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:text="Request Event"
+                                android:textColor="@color/eventqr_text"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:background="@drawable/bg_card"
+                    android:orientation="vertical"
+                    android:padding="18dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Upcoming Events"
+                                android:textColor="@color/eventqr_text"
+                                android:textSize="20sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/txtbtnUpcomingEvents"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:clickable="true"
+                            android:text="View All"
+                            android:textColor="@color/eventqr_text"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
 
                     <TextView
                         android:layout_width="match_parent"
@@ -307,50 +389,63 @@
                         android:textColor="@color/eventqr_muted"
                         android:textSize="14sp" />
                 </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:background="@drawable/bg_card"
+                    android:orientation="vertical"
+                    android:padding="18dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Recent Activity"
+                                android:textColor="@color/eventqr_text"
+                                android:textSize="20sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/txtbtnRecentActivity"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:clickable="true"
+                            android:text="View All"
+                            android:textColor="@color/eventqr_text"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Your recent activities will appear here."
+                        android:textColor="@color/eventqr_muted"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
 
-    <LinearLayout
+    <include
+        android:id="@+id/nav_view_container"
+        layout="@layout/layout_bottom_nav"
         android:layout_width="match_parent"
-        android:layout_height="72dp"
-        android:background="@drawable/bg_bottom_nav"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:paddingHorizontal="12dp">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="Dashboard"
-            android:textColor="@color/eventqr_indigo"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="Events"
-            android:textColor="@color/eventqr_muted" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="Rewards"
-            android:textColor="@color/eventqr_muted" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="Profile"
-            android:textColor="@color/eventqr_muted" />
-    </LinearLayout>
+        android:layout_height="wrap_content" />
 
 </LinearLayout>

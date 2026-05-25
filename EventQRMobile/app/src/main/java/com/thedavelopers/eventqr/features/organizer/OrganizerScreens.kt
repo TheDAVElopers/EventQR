@@ -11,6 +11,7 @@ import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
@@ -99,7 +100,7 @@ interface ManageEventsContract {
     }
 }
 
-open class ManageEventsActivity : AppCompatActivity(), ManageEventsContract.View {
+open class ManageEventsActivity : com.thedavelopers.eventqr.core.ui.BaseNavActivity(), ManageEventsContract.View {
     private lateinit var presenter: ManageEventsPresenter
     private lateinit var adapter: EventAdapter
 
@@ -132,6 +133,10 @@ open class ManageEventsActivity : AppCompatActivity(), ManageEventsContract.View
         findViewById<Button>(R.id.btnActivateManageEvent).setOnClickListener {
             presenter.activate(findViewById<EditText>(R.id.edtManageEventId).text.toString())
         }
+
+        val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation) ?: findViewById<BottomNavigationView>(R.id.nav_view_container)
+        setupBottomNavigation(bottomNav)
+        updateBottomNavSelection(bottomNav, R.id.nav_events)
 
         presenter.load()
     }
@@ -408,7 +413,7 @@ interface ManageRewardsContract {
     }
 }
 
-open class ManageRewardsActivity : AppCompatActivity(), ManageRewardsContract.View {
+open class ManageRewardsActivity : com.thedavelopers.eventqr.core.ui.BaseNavActivity(), ManageRewardsContract.View {
     private lateinit var presenter: ManageRewardsPresenter
     private lateinit var adapter: RewardAdapter
     private lateinit var rewardsText: TextView
@@ -430,6 +435,10 @@ open class ManageRewardsActivity : AppCompatActivity(), ManageRewardsContract.Vi
         }
         findViewById<Button>(R.id.btnCreateReward).setOnClickListener { presenter.createReward(readRewardRequest()) }
         findViewById<Button>(R.id.btnCreatePointRule).setOnClickListener { presenter.createPointRule(readPointRuleRequest()) }
+
+        val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation) ?: findViewById<BottomNavigationView>(R.id.nav_view_container)
+        setupBottomNavigation(bottomNav)
+        updateBottomNavSelection(bottomNav, R.id.nav_rewards)
     }
 
     private fun readRewardRequest(): RewardRequest {

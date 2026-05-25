@@ -7,6 +7,7 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.session.SessionManager
@@ -90,24 +91,20 @@ class DashboardPresenter(
     }
 }
 
-open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
+open class DashboardActivity : com.thedavelopers.eventqr.core.ui.BaseNavActivity(), DashboardContract.View {
     private lateinit var presenter: DashboardPresenter
     private lateinit var sessionManager: SessionManager
     private lateinit var welcomeText: TextView
-    private lateinit var roleText: TextView
+    private lateinit var dashboardName: TextView
     private lateinit var summaryEvents: TextView
     private lateinit var summaryRegistrations: TextView
     private lateinit var summaryTransactions: TextView
     private lateinit var summaryRewards: TextView
     private lateinit var summaryNotifications: TextView
     private lateinit var loadingText: TextView
-    private lateinit var attendeeCard: Button
-    private lateinit var staffCard: Button
-    private lateinit var organizerCard: Button
-    private lateinit var notificationsCard: Button
-    private lateinit var rewardsCard: Button
-    private lateinit var reportsCard: Button
-    private lateinit var logoutCard: Button
+    private lateinit var upcomingEvents : TextView
+    private lateinit var recentEvents : TextView
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -118,22 +115,19 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         presenter.attach(this)
 
         welcomeText = findViewById(R.id.txtDashboardWelcome)
-        roleText = findViewById(R.id.txtDashboardRole)
+        dashboardName = findViewById(R.id.txtDashboardFullName)
         summaryEvents = findViewById(R.id.txtTotalEvents)
         summaryRegistrations = findViewById(R.id.txtTotalRegistrations)
         summaryTransactions = findViewById(R.id.txtTotalTransactions)
         summaryRewards = findViewById(R.id.txtTotalRewards)
         summaryNotifications = findViewById(R.id.txtTotalNotifications)
         loadingText = findViewById(R.id.txtDashboardLoading)
-        attendeeCard = findViewById(R.id.btnAttendeeHub)
-        staffCard = findViewById(R.id.btnStaffHub)
-        organizerCard = findViewById(R.id.btnOrganizerHub)
-        notificationsCard = findViewById(R.id.btnNotificationsHub)
-        rewardsCard = findViewById(R.id.btnRewardsHub)
-        reportsCard = findViewById(R.id.btnReportsHub)
-        logoutCard = findViewById(R.id.btnLogout)
+        upcomingEvents = findViewById(R.id.txtbtnUpcomingEvents)
+        recentEvents = findViewById(R.id.txtbtnRecentActivity)
 
-        configureActions(sessionManager.getUserRole())
+        val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation) ?: findViewById<BottomNavigationView>(R.id.nav_view_container)
+        setupBottomNavigation(bottomNav)
+        updateBottomNavSelection(bottomNav, R.id.nav_dashboard)
 
         presenter.loadDashboard()
     }
@@ -168,71 +162,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     }
 
     override fun updateHeader(role: String?, name: String?) {
-        welcomeText.text = if (name.isNullOrBlank()) "Welcome to EventQR" else "Welcome, $name"
-        roleText.text = role?.replace('_', ' ') ?: "ATTENDEE"
-    }
-
-    private fun configureActions(role: String?) {
-        val normalizedRole = role?.uppercase().orEmpty()
-        when (normalizedRole) {
-            "STAFF" -> {
-                attendeeCard.text = "Scanner"
-                staffCard.text = "Transactions"
-                organizerCard.text = "ID Printing"
-                notificationsCard.text = "Event Registrations"
-                rewardsCard.text = "Notifications"
-                reportsCard.visibility = View.GONE
-                logoutCard.visibility = View.VISIBLE
-
-                attendeeCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.staff.ScannerActivity::class.java)) }
-                staffCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.staff.StaffTransactionsActivity::class.java)) }
-                organizerCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.staff.IdPrintingActivity::class.java)) }
-                notificationsCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.staff.EventRegistrationsActivity::class.java)) }
-                rewardsCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.AttendeeNotificationsActivity::class.java)) }
-                logoutCard.setOnClickListener { performLogout() }
-            }
-            "ORGANIZER", "ADMIN" -> {
-                attendeeCard.text = "Manage Events"
-                staffCard.text = "Manage Users"
-                organizerCard.text = "Scan Purposes"
-                notificationsCard.text = "Rewards"
-                rewardsCard.text = "Reports"
-                reportsCard.text = "Notifications"
-                reportsCard.visibility = View.VISIBLE
-                logoutCard.visibility = View.VISIBLE
-
-                attendeeCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.organizer.ManageEventsActivity::class.java)) }
-                staffCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.organizer.ManageUsersActivity::class.java)) }
-                organizerCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.organizer.ManageScanPurposesActivity::class.java)) }
-                notificationsCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.organizer.ManageRewardsActivity::class.java)) }
-                rewardsCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.organizer.ReportsActivity::class.java)) }
-                reportsCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.organizer.NotificationManagementActivity::class.java)) }
-                logoutCard.setOnClickListener { performLogout() }
-            }
-            else -> {
-                attendeeCard.text = "Browse Events"
-                staffCard.text = "My Registered Events"
-                organizerCard.text = "My QR"
-                notificationsCard.text = "Rewards"
-                rewardsCard.text = "Transactions"
-                reportsCard.text = "Notifications"
-                reportsCard.visibility = View.VISIBLE
-                logoutCard.visibility = View.VISIBLE
-
-                attendeeCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.AttendeeEventsActivity::class.java)) }
-                staffCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.RegisteredEventsActivity::class.java)) }
-                organizerCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.AttendeeQrCredentialActivity::class.java)) }
-                notificationsCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.AttendeeRewardsActivity::class.java)) }
-                rewardsCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.AttendeeTransactionsActivity::class.java)) }
-                reportsCard.setOnClickListener { startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.AttendeeNotificationsActivity::class.java)) }
-                logoutCard.setOnClickListener { performLogout() }
-            }
-        }
-    }
-
-    private fun performLogout() {
-        sessionManager.clearSession()
-        startActivity(Intent(this, com.thedavelopers.eventqr.Landing::class.java))
-        finish()
+        welcomeText.text = "Welcome to EventQR!"
+        dashboardName.text = if(name.isNullOrBlank()) "John Doe" else "$name"
     }
 }

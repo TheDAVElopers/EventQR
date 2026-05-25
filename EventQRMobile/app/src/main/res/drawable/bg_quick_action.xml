@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#1F000000"> <!-- Ripple color -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/eventqr_card" />
+            <corners android:radius="16dp" />
+            <stroke
+                android:width="1dp"
+                android:color="@color/eventqr_border" />
+        </shape>
+    </item>
+</ripple>
