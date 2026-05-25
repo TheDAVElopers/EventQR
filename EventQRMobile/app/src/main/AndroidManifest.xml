@@ -12,6 +12,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.EventQR">
         <activity
+            android:name=".ForgotPassword"
+            android:exported="false" />
+        <activity
+            android:name=".ChangePassword"
+            android:exported="false" />
+        <activity
             android:name=".Dashboard"
             android:exported="false" />
         <activity
