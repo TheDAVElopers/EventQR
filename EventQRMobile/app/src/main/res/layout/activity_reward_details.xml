@@ -2,173 +2,115 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eventqr_bg"
+    android:background="#FFFFFF"
     android:orientation="vertical">
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:fillViewport="true">
+        android:layout_weight="1">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="24dp"
-            android:paddingTop="24dp"
-            android:paddingBottom="24dp">
+            android:paddingHorizontal="28dp"
+            android:paddingTop="36dp"
+            android:paddingBottom="30dp">
 
-            <LinearLayout
+            <TextView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="48dp"
                 android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:contentDescription="Back"
-                    android:src="@android:drawable/ic_media_previous"
-                    android:tint="@color/eventqr_indigo" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:text="Reward Details"
-                    android:textColor="@color/eventqr_text"
-                    android:textSize="22sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
+                android:text="‹  Reward Details"
+                android:textColor="#000000"
+                android:textSize="28sp"
+                android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_height="366dp"
+                android:layout_marginTop="36dp"
                 android:background="@drawable/bg_card"
+                android:elevation="5dp"
                 android:orientation="vertical"
-                android:padding="18dp">
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="150dp"
-                    android:background="@drawable/bg_chip" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="Reward Title"
-                    android:textColor="@color/eventqr_text"
-                    android:textSize="19sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:text="Reward description goes here for attendees to review."
-                    android:textColor="@color/eventqr_muted" />
+                android:padding="28dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
                     android:orientation="horizontal">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_chip"
-                        android:paddingHorizontal="12dp"
-                        android:paddingVertical="6dp"
-                        android:text="Category"
-                        android:textColor="@color/eventqr_indigo"
-                        android:textStyle="bold" />
+                    <View
+                        android:layout_width="118dp"
+                        android:layout_height="118dp"
+                        android:background="@drawable/bg_icon_placeholder" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:background="@drawable/bg_chip"
-                        android:paddingHorizontal="12dp"
-                        android:paddingVertical="6dp"
-                        android:text="Event"
-                        android:textColor="@color/eventqr_indigo"
-                        android:textStyle="bold" />
+                        android:layout_marginStart="20dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Event T-Shirt" android:textColor="#000000" android:textSize="24sp" android:textStyle="bold" />
+                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:lineSpacingExtra="4dp" android:text="Official AI Summit 2024\nbranded t-shirt" android:textColor="#6B7280" android:textSize="18sp" />
+                        <TextView android:layout_width="122dp" android:layout_height="30dp" android:layout_marginTop="18dp" android:background="@drawable/bg_outline_button" android:gravity="center" android:text="Merchandise" android:textColor="#000000" android:textSize="14sp" android:textStyle="bold" />
+                        <TextView android:layout_width="142dp" android:layout_height="30dp" android:layout_marginTop="8dp" android:background="@drawable/bg_soft_gray_pill" android:gravity="center" android:text="AI Summit 2024" android:textColor="#000000" android:textSize="14sp" android:textStyle="bold" />
+                    </LinearLayout>
                 </LinearLayout>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:background="@drawable/bg_reward_points"
-                    android:padding="12dp"
-                    android:text="Points Required: 120"
-                    android:textColor="@color/eventqr_card"
-                    android:textStyle="bold" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:background="@drawable/bg_error_box"
-                    android:orientation="vertical"
-                    android:padding="12dp">
+                    android:layout_height="78dp"
+                    android:layout_marginTop="34dp"
+                    android:background="@drawable/bg_primary_button"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="26dp">
 
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="You do not have enough points for this reward yet."
-                        android:textColor="@color/eventqr_error"
-                        android:textStyle="bold" />
+                    <TextView android:layout_width="48dp" android:layout_height="match_parent" android:gravity="center" android:text="🪙" android:textSize="22sp" />
+                    <TextView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center_vertical" android:text="Points Required" android:textColor="#FFFFFF" android:textSize="20sp" android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="match_parent" android:gravity="center_vertical" android:text="100" android:textColor="#FFFFFF" android:textSize="34sp" android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_height="144dp"
+                android:layout_marginTop="22dp"
+                android:background="@drawable/bg_red_warning"
+                android:orientation="horizontal"
+                android:padding="20dp">
+
+                <TextView android:layout_width="36dp" android:layout_height="match_parent" android:gravity="top|center_horizontal" android:text="!" android:textColor="#E11D48" android:textSize="22sp" android:textStyle="bold" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Not enough points" android:textColor="#000000" android:textSize="22sp" android:textStyle="bold" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:lineSpacingExtra="5dp" android:text="You need 50 more points to redeem this\nreward. Current balance: 50 points." android:textColor="#6B7280" android:textSize="16sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="298dp"
+                android:layout_marginTop="26dp"
                 android:background="@drawable/bg_card"
+                android:elevation="5dp"
                 android:orientation="vertical"
-                android:padding="18dp">
+                android:padding="20dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="What's Included"
-                    android:textColor="@color/eventqr_text"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="• Priority entrance lane"
-                    android:textColor="@color/eventqr_muted" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="• Exclusive attendee perk"
-                    android:textColor="@color/eventqr_muted" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="ⓘ  What's Included" android:textColor="#000000" android:textSize="23sp" android:textStyle="bold" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="28dp" android:text="✓  Premium quality cotton material" android:textColor="#000000" android:textSize="18sp" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:text="✓  Available in sizes S, M, L, XL" android:textColor="#000000" android:textSize="18sp" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:text="✓  Limited edition design" android:textColor="#000000" android:textSize="18sp" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:lineSpacingExtra="4dp" android:text="✓  Must be collected at event merchandise\n    booth" android:textColor="#000000" android:textSize="18sp" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
 
     <Button
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_marginHorizontal="24dp"
-        android:layout_marginBottom="18dp"
-        android:alpha="0.55"
-        android:background="@drawable/bg_primary_button"
-        android:enabled="false"
-        android:text="Redeem Reward"
-        android:textAllCaps="false"
-        android:textColor="@color/eventqr_card"
-        android:textStyle="bold" />
-
+        android:layout_height="0dp"
+        android:visibility="gone"
+        android:text="Redeem Reward" />
 </LinearLayout>

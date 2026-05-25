@@ -2,98 +2,146 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eventqr_bg"
+    android:background="#F7F7FA"
     android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="94dp"
+        android:background="#FFFFFF"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="24dp"
-        android:paddingTop="24dp"
-        android:paddingBottom="14dp">
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:contentDescription="Back"
-            android:src="@android:drawable/ic_media_previous"
-            android:tint="@color/eventqr_indigo" />
+        android:paddingHorizontal="26dp">
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:text="Claimed Rewards"
-            android:textColor="@color/eventqr_text"
-            android:textSize="22sp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:text="‹  Claimed Rewards"
+            android:textColor="#000000"
+            android:textSize="25sp"
             android:textStyle="bold" />
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="24dp"
-        android:background="@drawable/bg_reward_points"
-        android:orientation="horizontal"
-        android:padding="16dp">
+        android:layout_height="188dp"
+        android:background="@drawable/bg_eventqr_gradient"
+        android:orientation="vertical"
+        android:paddingHorizontal="28dp"
+        android:paddingTop="38dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Rewards Summary"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:layout_marginTop="36dp"
+            android:orientation="horizontal">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Total Rewards"
-                android:textColor="#DDD6FE"
-                android:textStyle="bold" />
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Total Rewards" android:textColor="#FFFFFF" android:textSize="18sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:text="3" android:textColor="#FFFFFF" android:textSize="36sp" android:textStyle="bold" />
+            </LinearLayout>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="0"
-                android:textColor="@color/eventqr_card"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Points Used"
-                android:textColor="#DDD6FE"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="0"
-                android:textColor="@color/eventqr_card"
-                android:textSize="24sp"
-                android:textStyle="bold" />
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Points Used" android:textColor="#FFFFFF" android:textSize="18sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:text="300" android:textColor="#FFFFFF" android:textSize="36sp" android:textStyle="bold" />
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerClaimedRewards"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:paddingHorizontal="24dp"
-        android:paddingTop="16dp"
-        android:clipToPadding="false"
-        android:paddingBottom="12dp" />
+        android:layout_weight="1">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="23dp"
+            android:paddingTop="24dp"
+            android:paddingBottom="28dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="365dp"
+                android:background="@drawable/bg_card"
+                android:elevation="4dp"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <FrameLayout android:layout_width="match_parent" android:layout_height="58dp">
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal">
+                        <TextView android:layout_width="120dp" android:layout_height="30dp" android:background="@drawable/bg_purple_pill" android:gravity="center" android:text="Merchandise" android:textColor="#7C3AED" android:textSize="15sp" android:textStyle="bold" />
+                        <TextView android:layout_width="104dp" android:layout_height="30dp" android:layout_marginStart="10dp" android:background="@drawable/bg_green_pill" android:gravity="center" android:text="Redeemed" android:textColor="#166534" android:textSize="15sp" android:textStyle="bold" />
+                    </LinearLayout>
+                    <TextView android:layout_width="52dp" android:layout_height="52dp" android:layout_gravity="end|center_vertical" android:background="@drawable/bg_circle_green" android:gravity="center" android:text="✓" android:textColor="#FFFFFF" android:textSize="34sp" android:textStyle="bold" />
+                </FrameLayout>
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="Event T-Shirt" android:textColor="#000000" android:textSize="23sp" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="Student Leadership Seminar" android:textColor="#6B7280" android:textSize="18sp" />
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="24dp" android:background="#E5E7EB" />
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:orientation="horizontal">
+                    <TextView android:layout_width="32dp" android:layout_height="wrap_content" android:text="▣" android:textColor="#9CA3AF" android:textSize="20sp" />
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Claimed" android:textColor="#6B7280" android:textSize="18sp" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="May 17, 03:45 PM" android:textColor="#000000" android:textSize="17sp" android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:orientation="horizontal">
+                    <TextView android:layout_width="32dp" android:layout_height="wrap_content" android:text="⊙" android:textColor="#9CA3AF" android:textSize="20sp" />
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Redeemed" android:textColor="#6B7280" android:textSize="18sp" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="May 17, 03:50 PM" android:textColor="#000000" android:textSize="17sp" android:textStyle="bold" />
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="24dp" android:background="#E5E7EB" />
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:orientation="horizontal">
+                    <TextView android:layout_width="32dp" android:layout_height="wrap_content" android:text="🪙" android:textSize="18sp" />
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Points Used" android:textColor="#6B7280" android:textSize="18sp" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="-100" android:textColor="#EF4444" android:textSize="17sp" />
+                </LinearLayout>
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:orientation="horizontal">
+                    <TextView android:layout_width="32dp" android:layout_height="wrap_content" android:text="⌘" android:textColor="#000000" android:textSize="18sp" />
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Reference" android:textColor="#111827" android:textSize="16sp" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="RWD-2026-001" android:textColor="#111827" android:textSize="16sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="365dp"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/bg_card"
+                android:elevation="4dp"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <FrameLayout android:layout_width="match_parent" android:layout_height="58dp">
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal">
+                        <TextView android:layout_width="66dp" android:layout_height="30dp" android:background="@drawable/bg_purple_pill" android:gravity="center" android:text="Food" android:textColor="#7C3AED" android:textSize="15sp" android:textStyle="bold" />
+                        <TextView android:layout_width="104dp" android:layout_height="30dp" android:layout_marginStart="10dp" android:background="@drawable/bg_green_pill" android:gravity="center" android:text="Redeemed" android:textColor="#166534" android:textSize="15sp" android:textStyle="bold" />
+                    </LinearLayout>
+                    <TextView android:layout_width="52dp" android:layout_height="52dp" android:layout_gravity="end|center_vertical" android:background="@drawable/bg_circle_green" android:gravity="center" android:text="✓" android:textColor="#FFFFFF" android:textSize="34sp" android:textStyle="bold" />
+                </FrameLayout>
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="Coffee Voucher" android:textColor="#000000" android:textSize="23sp" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="Spring Career Fair 2026" android:textColor="#6B7280" android:textSize="18sp" />
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="24dp" android:background="#E5E7EB" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="▣    Claimed                                      May 10, 12:30 PM" android:textColor="#000000" android:textSize="17sp" android:textStyle="bold" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="⊙    Redeemed                                 May 10, 01:00 PM" android:textColor="#000000" android:textSize="17sp" android:textStyle="bold" />
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="24dp" android:background="#E5E7EB" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="🪙    Points Used                                             -50" android:textColor="#EF4444" android:textSize="17sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
 </LinearLayout>
