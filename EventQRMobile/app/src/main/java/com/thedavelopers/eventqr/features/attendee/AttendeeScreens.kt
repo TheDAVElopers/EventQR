@@ -218,16 +218,16 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
             (item.eventStartAt != null && item.eventEndAt != null &&
                 !item.eventStartAt.isAfter(now) && !item.eventEndAt.isBefore(now))
     }
+}
 
-    private fun computedStatusLabel(item: AttendeeEventResponse): String {
-        val now = Instant.now()
-        return when {
-            item.eventEndAt?.isBefore(now) == true -> "Completed"
-            item.eventStartAt?.isAfter(now) == true -> "Upcoming"
-            item.eventStartAt != null && item.eventEndAt != null &&
-                !item.eventStartAt.isAfter(now) && !item.eventEndAt.isBefore(now) -> "Ongoing"
-            else -> "Scheduled"
-        }
+fun computedStatusLabel(item: AttendeeEventResponse): String {
+    val now = Instant.now()
+    return when {
+        item.eventEndAt?.isBefore(now) == true -> "Completed"
+        item.eventStartAt?.isAfter(now) == true -> "Upcoming"
+        item.eventStartAt != null && item.eventEndAt != null &&
+            !item.eventStartAt.isAfter(now) && !item.eventEndAt.isBefore(now) -> "Ongoing"
+        else -> "Scheduled"
     }
 }
 
@@ -248,6 +248,38 @@ class EventDetailPresenter(
         view = null
     }
 
+    fun loadEventDetails(eventId: String) {
+        view?.showLoading(true)
+        job = kotlinx.coroutines.MainScope().launch {
+            val result = repository.getEvent(eventId)
+            view?.showLoading(false)
+            when (result) {
+                is NetworkResult.Success -> {
+                    view?.renderEvent(result.data)
+                    checkRegistrationStatus(eventId)
+                }
+                is NetworkResult.Error -> {
+                    view?.showMessage("Unable to load event details: ${result.message}")
+                }
+                else -> Unit
+            }
+        }
+    }
+
+    private fun checkRegistrationStatus(eventId: String) {
+        val context = (view as? AppCompatActivity) ?: return
+        val sessionManager = SessionManager(context)
+        val userId = sessionManager.getUserId() ?: return
+
+        kotlinx.coroutines.MainScope().launch {
+            val result = repository.getRegistrationsByEvent(eventId)
+            if (result is NetworkResult.Success) {
+                val isRegistered = result.data.any { it.attendeeUserId.toString() == userId }
+                view?.updateRegistrationStatus(isRegistered)
+            }
+        }
+    }
+
     fun registerForEvent(eventId: String, eventTitle: String) {
         val sessionManager = SessionManager((view as? AppCompatActivity) ?: return)
         val email = sessionManager.getEmail().orEmpty()
@@ -263,6 +295,8 @@ class EventDetailPresenter(
 
 interface EventDetailContract {
     interface View : AttendeeView {
+        fun renderEvent(event: AttendeeEventResponse)
+        fun updateRegistrationStatus(isRegistered: Boolean)
         fun openRegistration(eventId: String, eventTitle: String, email: String, fullName: String)
     }
 }
@@ -270,6 +304,7 @@ interface EventDetailContract {
 open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     private lateinit var presenter: EventDetailPresenter
     private lateinit var eventId: String
+    private var currentEvent: AttendeeEventResponse? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -280,31 +315,109 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
 
         findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
 
+        // Initial setup from intent extras to avoid blank screen
         findViewById<TextView>(R.id.txtDetailTitle).text = intent.getStringExtra(EXTRA_EVENT_TITLE).orEmpty()
         findViewById<TextView>(R.id.txtDetailDescription).text = intent.getStringExtra(EXTRA_EVENT_DESCRIPTION).orEmpty()
-        findViewById<TextView>(R.id.txtDetailVenue).text = intent.getStringExtra(EXTRA_EVENT_LOCATION).orEmpty().ifBlank { "Location not set" }
+        findViewById<TextView>(R.id.txtDetailVenue).text = intent.getStringExtra(EXTRA_EVENT_LOCATION).orEmpty().ifBlank { "Location not specified" }
         findViewById<TextView>(R.id.txtDetailStart).text = intent.getStringExtra(EXTRA_EVENT_START).orEmpty()
-        findViewById<TextView>(R.id.txtDetailEnd).text = intent.getStringExtra(EXTRA_EVENT_END).orEmpty()
         findViewById<TextView>(R.id.txtDetailStatus).text = intent.getStringExtra(EXTRA_EVENT_STATUS).orEmpty()
-        findViewById<TextView>(R.id.txtDetailCapacity).text = "${intent.getStringExtra(EXTRA_EVENT_COUNT).orEmpty()}/${intent.getStringExtra(EXTRA_EVENT_CAPACITY).orEmpty()}"
+        findViewById<TextView>(R.id.txtDetailCapacity).text = "${intent.getStringExtra(EXTRA_EVENT_COUNT).orEmpty()} / ${intent.getStringExtra(EXTRA_EVENT_CAPACITY).orEmpty()} Registered"
 
-        findViewById<Button>(R.id.btnRegisterForEvent).setOnClickListener {
-            presenter.registerForEvent(eventId, intent.getStringExtra(EXTRA_EVENT_TITLE).orEmpty())
+        // Set default button state while loading
+        findViewById<Button>(R.id.btnRegisterForEvent).apply {
+            isEnabled = false
+            text = "Loading..."
+            setBackgroundResource(R.drawable.bg_disabled_button)
         }
-        findViewById<Button>(R.id.btnViewTransactions).setOnClickListener {
-            startActivity(Intent(this, AttendeeTransactionsActivity::class.java).putExtra(EXTRA_EVENT_ID, eventId))
+
+        // Hide non-existent fields as per requirements
+        findViewById<View>(R.id.txtTagCategory)?.visibility = View.GONE
+        findViewById<View>(R.id.txtBadgeFeatured)?.visibility = View.GONE
+        findViewById<View>(R.id.layoutDetailRewards)?.visibility = View.GONE
+        findViewById<View>(R.id.layoutDetailAgenda)?.visibility = View.GONE
+        
+        findViewById<Button>(R.id.btnRegisterForEvent).setOnClickListener {
+            currentEvent?.let { event ->
+                presenter.registerForEvent(eventId, event.title)
+            } ?: presenter.registerForEvent(eventId, intent.getStringExtra(EXTRA_EVENT_TITLE).orEmpty())
         }
         findViewById<Button>(R.id.btnViewRewards).setOnClickListener {
             startActivity(Intent(this, AttendeeRewardsActivity::class.java).putExtra(EXTRA_EVENT_ID, eventId))
         }
+
+        if (eventId.isNotBlank()) {
+            presenter.loadEventDetails(eventId)
+        } else {
+            showMessage("Missing event information.")
+        }
     }
 
-    override fun onDestroy() {
-        presenter.detach()
-        super.onDestroy()
+    override fun renderEvent(event: AttendeeEventResponse) {
+        currentEvent = event
+        findViewById<TextView>(R.id.txtDetailTitle).text = event.title
+        findViewById<TextView>(R.id.txtDetailDescription).text = event.description?.takeIf { it.isNotBlank() } ?: "No event description provided."
+        findViewById<TextView>(R.id.txtDetailVenue).text = event.location?.takeIf { it.isNotBlank() } ?: "Location not specified."
+        
+        val startStr = DateFormatters.formatInstant(event.eventStartAt)
+        val endStr = if (event.eventEndAt != null) " - ${DateFormatters.formatInstant(event.eventEndAt)}" else ""
+        findViewById<TextView>(R.id.txtDetailStart).text = if (event.eventStartAt != null) "$startStr$endStr" else "Date and time not specified."
+        
+        findViewById<TextView>(R.id.txtDetailStatus).text = computedStatusLabel(event)
+        findViewById<TextView>(R.id.txtDetailCapacity).text = "${event.currentAttendeeCount} / ${event.capacity} Registered"
+        
+        updateRegisterButton(event)
     }
 
-    override fun showLoading(isLoading: Boolean) = Unit
+    private fun updateRegisterButton(event: AttendeeEventResponse) {
+        val btn = findViewById<Button>(R.id.btnRegisterForEvent)
+        val now = Instant.now()
+        
+        val isFull = event.currentAttendeeCount >= event.capacity
+        val isCompleted = event.eventEndAt?.isBefore(now) == true
+        val registrationNotOpen = event.registrationOpenAt?.isAfter(now) == true
+        val registrationClosed = event.registrationCloseAt?.isBefore(now) == true
+        
+        when {
+            isCompleted -> {
+                btn.isEnabled = false
+                btn.text = "Event Completed"
+                btn.setBackgroundResource(R.drawable.bg_disabled_button)
+            }
+            isFull -> {
+                btn.isEnabled = false
+                btn.text = "Event Full"
+                btn.setBackgroundResource(R.drawable.bg_disabled_button)
+            }
+            registrationNotOpen -> {
+                btn.isEnabled = false
+                btn.text = "Registration Not Open"
+                btn.setBackgroundResource(R.drawable.bg_disabled_button)
+            }
+            registrationClosed -> {
+                btn.isEnabled = false
+                btn.text = "Registration Closed"
+                btn.setBackgroundResource(R.drawable.bg_disabled_button)
+            }
+            else -> {
+                btn.isEnabled = true
+                btn.text = "Register"
+                btn.setBackgroundResource(R.drawable.bg_eventqr_gradient) // Assuming this is the active style
+            }
+        }
+    }
+
+    override fun updateRegistrationStatus(isRegistered: Boolean) {
+        if (isRegistered) {
+            val btn = findViewById<Button>(R.id.btnRegisterForEvent)
+            btn.isEnabled = false
+            btn.text = "Already Registered"
+            btn.setBackgroundResource(R.drawable.bg_disabled_button)
+        }
+    }
+
+    override fun showLoading(isLoading: Boolean) {
+        // Could show a progress bar here
+    }
 
     override fun showMessage(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()

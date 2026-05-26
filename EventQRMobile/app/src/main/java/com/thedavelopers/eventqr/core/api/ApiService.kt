@@ -72,6 +72,9 @@ interface ApiService {
     @GET("events/attendee-visible")
     suspend fun getAttendeeVisibleEvents(): ApiResponse<List<AttendeeEventResponse>>
 
+    @GET("events/{eventId}")
+    suspend fun getEventById(@Path("eventId") eventId: String): ApiResponse<AttendeeEventResponse>
+
     @POST("registrations")
     suspend fun createRegistration(@Body request: RegistrationRequest): ApiResponse<RegistrationResponse>
 

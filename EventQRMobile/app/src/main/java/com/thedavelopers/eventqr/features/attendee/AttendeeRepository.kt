@@ -19,9 +19,11 @@ import java.util.UUID
 
 class AttendeeRepository(context: Context) {
     private val apiService = ApiClient.getService(context)
-    suspend fun getEvents(): NetworkResult<List<AttendeeEventResponse>> = safeApiCall { apiService.getAttendeeVisibleEvents() }
+    suspend fun getEvents() = safeApiCall { apiService.getAttendeeVisibleEvents() }
+    suspend fun getEvent(eventId: String) = safeApiCall { apiService.getEventById(eventId) }
     suspend fun createRegistration(request: RegistrationRequest) = safeApiCall { apiService.createRegistration(request) }
     suspend fun getRegistration(registrationId: String) = safeApiCall { apiService.getRegistration(registrationId) }
+    suspend fun getRegistrationsByEvent(eventId: String) = safeApiCall { apiService.getRegistrationsByEvent(eventId) }
     suspend fun getQrCredentialByRegistration(registrationId: String) = safeApiCall { apiService.getQrCredentialByRegistration(registrationId) }
     suspend fun markQrDisplayed(qrCredentialId: String) = safeApiCall { apiService.markQrDisplayed(qrCredentialId) }
     suspend fun markQrDownloaded(qrCredentialId: String) = safeApiCall { apiService.markQrDownloaded(qrCredentialId) }

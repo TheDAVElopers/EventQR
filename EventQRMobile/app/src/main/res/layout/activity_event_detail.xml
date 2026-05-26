@@ -224,6 +224,7 @@
 
             <!-- Rewards -->
             <LinearLayout
+                android:id="@+id/layoutDetailRewards"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
@@ -295,6 +296,7 @@
 
         <!-- Agenda Section -->
         <LinearLayout
+            android:id="@+id/layoutDetailAgenda"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
