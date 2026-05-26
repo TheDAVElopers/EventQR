@@ -23,6 +23,7 @@ import com.thedavelopers.eventqr.features.registrations.RegistrationAdapter
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResponse
 import com.thedavelopers.eventqr.features.transactions.TransactionAdapter
+import com.thedavelopers.eventqr.features.transactions.TransactionLogAdapter
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionRequest
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
 import kotlinx.coroutines.Job
@@ -129,8 +130,17 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View {
         adapter = TransactionAdapter()
         staffUserId = SessionManager(this).getUserId()
 
-        findViewById<View>(R.id.btnBack)?.setOnClickListener {
-            onBackPressed()
+        findViewById<View>(R.id.navDashboard)?.setOnClickListener {
+            startActivity(Intent(this, StaffDashboardActivity::class.java))
+            finish()
+        }
+
+        findViewById<View>(R.id.navLogs)?.setOnClickListener {
+            startActivity(Intent(this, StaffTransactionsActivity::class.java))
+        }
+
+        findViewById<View>(R.id.navProfile)?.setOnClickListener {
+            startActivity(Intent(this, StaffProfileActivity::class.java))
         }
 
         findViewById<RecyclerView>(R.id.recyclerScannerResults).apply {
@@ -236,7 +246,7 @@ interface StaffTransactionsContract {
 
 open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsContract.View {
     private lateinit var presenter: StaffTransactionsPresenter
-    private lateinit var adapter: TransactionAdapter
+    private lateinit var adapter: TransactionLogAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -248,15 +258,17 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
             return
         }
 
-        setContentView(R.layout.activity_staff_transactions)
+        setContentView(R.layout.activity_staff_transaction_logs)
 
         presenter = StaffTransactionsPresenter(this, StaffRepository(this))
-        adapter = TransactionAdapter()
+        adapter = TransactionLogAdapter()
 
         findViewById<RecyclerView>(R.id.recyclerStaffTransactions).apply {
             layoutManager = LinearLayoutManager(this@StaffTransactionsActivity)
             adapter = this@StaffTransactionsActivity.adapter
         }
+        
+        findViewById<View>(R.id.btnBack)?.setOnClickListener { finish() }
 
         findViewById<Button>(R.id.btnLoadStaffTransactions).setOnClickListener {
             presenter.load(findViewById<EditText>(R.id.edtStaffTransactionsEventId).text.toString())
@@ -270,6 +282,9 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
 
     override fun renderTransactions(items: List<TransactionResponse>) {
         adapter.submitItems(items)
+        findViewById<TextView>(R.id.txtTotalScans).text = items.size.toString()
+        findViewById<TextView>(R.id.txtSuccessfulScans).text = items.count { it.transactionResult.name == "APPROVED" || it.transactionResult.name == "SUCCESS" }.toString()
+        findViewById<TextView>(R.id.txtRejectedScans).text = items.count { it.transactionResult.name != "APPROVED" && it.transactionResult.name != "SUCCESS" }.toString()
     }
 
     override fun showMessage(message: String) {
@@ -502,7 +517,7 @@ interface StaffDashboardContract {
 
 open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.View {
     private lateinit var presenter: StaffDashboardPresenter
-    private lateinit var adapter: TransactionAdapter
+    private lateinit var adapter: TransactionLogAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -517,7 +532,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
         setContentView(R.layout.activity_staff_dashboard)
 
         presenter = StaffDashboardPresenter(this, StaffRepository(this))
-        adapter = TransactionAdapter()
+        adapter = TransactionLogAdapter()
 
         findViewById<RecyclerView>(R.id.recyclerRecentScans).apply {
             layoutManager = LinearLayoutManager(this@StaffDashboardActivity)

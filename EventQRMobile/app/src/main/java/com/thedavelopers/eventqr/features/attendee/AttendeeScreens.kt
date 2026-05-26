@@ -94,7 +94,7 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_events)
+        setContentView(R.layout.activity_user_events)
         configureAttendeeBottomNav(AttendeeBottomNavItem.EVENTS)
 
         presenter = EventsPresenter(this, AttendeeRepository(this))
@@ -764,7 +764,7 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_registered_events)
+        setContentView(R.layout.activity_user_registered_events)
 
         presenter = RegisteredEventsPresenter(this, AttendeeRepository(this))
         loadingView = findViewById(R.id.txtRegisteredEventsEmpty) // Using empty text as loading for now
@@ -848,7 +848,7 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_transaction_history)
+        setContentView(R.layout.activity_user_transaction_history)
 
         presenter = TransactionHistoryPresenter(this, AttendeeRepository(this))
         
@@ -985,7 +985,7 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_rewards)
+        setContentView(R.layout.activity_user_rewards)
         configureAttendeeBottomNav(AttendeeBottomNavItem.REWARDS)
 
         presenter = RewardsPresenter(this, AttendeeRepository(this))
@@ -1142,7 +1142,7 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_reward_details)
+        setContentView(R.layout.activity_user_reward_details)
 
         presenter = RewardsPresenter(this, AttendeeRepository(this))
         eventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty()
