@@ -34,17 +34,13 @@ class RewardAdapter(
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val titleView: TextView = itemView.findViewById(R.id.txtRewardTitle)
         private val detailView: TextView = itemView.findViewById(R.id.txtRewardDetails)
-        private val statusView: TextView = itemView.findViewById(R.id.txtRewardStatus)
+        private val pointsView: TextView = itemView.findViewById(R.id.txtRewardPoints)
 
         fun bind(item: RewardResponse) {
             titleView.text = item.name
-            detailView.text = buildString {
-                append("Points required: ")
-                append(item.pointsRequired)
-                append("\nStock: ")
-                append(item.stockQuantity?.toString() ?: "Unlimited")
-            }
-            statusView.text = item.status.name
+            detailView.text = "Official ${item.name} for the event" // Placeholder description
+            pointsView.text = "🪙 ${item.pointsRequired} pts"
+
             itemView.setOnClickListener { onClick(item) }
         }
     }

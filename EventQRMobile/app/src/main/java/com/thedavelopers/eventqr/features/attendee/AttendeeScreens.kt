@@ -187,6 +187,8 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         presenter = EventDetailPresenter(this, AttendeeRepository(this))
         eventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty()
 
+        findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
+
         findViewById<TextView>(R.id.txtDetailTitle).text = intent.getStringExtra(EXTRA_EVENT_TITLE).orEmpty()
         findViewById<TextView>(R.id.txtDetailDescription).text = intent.getStringExtra(EXTRA_EVENT_DESCRIPTION).orEmpty()
         findViewById<TextView>(R.id.txtDetailVenue).text = intent.getStringExtra(EXTRA_EVENT_LOCATION).orEmpty().ifBlank { "Location not set" }
@@ -626,13 +628,26 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         configureAttendeeBottomNav(AttendeeBottomNavItem.REWARDS)
 
         presenter = RewardsPresenter(this, AttendeeRepository(this))
-        adapter = RewardAdapter { reward -> presenter.redeem(eventId, attendeeUserId, reward.rewardId.toString()) }
+        adapter = RewardAdapter { reward ->
+            startActivity(
+                Intent(this, RewardDetailsActivity::class.java)
+                    .putExtra(EXTRA_EVENT_ID, eventId)
+                    .putExtra(EXTRA_REWARD_ID, reward.rewardId.toString())
+                    .putExtra(EXTRA_REWARD_NAME, reward.name)
+                    .putExtra(EXTRA_REWARD_POINTS, reward.pointsRequired)
+                    .putExtra(EXTRA_REWARD_STOCK, reward.stockQuantity ?: -1)
+            )
+        }
         loadingText = findViewById(R.id.txtRewardsLoading)
         balanceText = findViewById(R.id.txtRewardsBalance)
 
         findViewById<RecyclerView>(R.id.recyclerRewards).apply {
             layoutManager = LinearLayoutManager(this@AttendeeRewardsActivity)
             adapter = this@AttendeeRewardsActivity.adapter
+        }
+
+        findViewById<View>(R.id.btnViewClaimed).setOnClickListener {
+            startActivity(Intent(this, ClaimedRewardsActivity::class.java).putExtra(EXTRA_EVENT_ID, eventId))
         }
 
         eventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty()
@@ -663,7 +678,7 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
     }
 
     override fun showBalance(balance: com.thedavelopers.eventqr.features.rewards.model.dto.PointBalanceResponse) {
-        balanceText.text = "Balance: ${balance.pointsBalance} points"
+        balanceText.text = balance.pointsBalance.toString()
     }
 
     override fun renderRewards(items: List<RewardResponse>) {
@@ -758,6 +773,136 @@ open class AttendeeNotificationsActivity : AppCompatActivity(), NotificationsCon
     }
 }
 
+open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
+    private lateinit var presenter: RewardsPresenter
+    private var eventId: String = ""
+    private var rewardId: String = ""
+    private var pointsRequired: Int = 0
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_reward_details)
+
+        presenter = RewardsPresenter(this, AttendeeRepository(this))
+        eventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty()
+        rewardId = intent.getStringExtra(EXTRA_REWARD_ID).orEmpty()
+        pointsRequired = intent.getIntExtra(EXTRA_REWARD_POINTS, 0)
+
+        findViewById<View>(R.id.btnBack)?.setOnClickListener { finish() }
+        
+        findViewById<TextView>(R.id.txtRewardTitle)?.text = intent.getStringExtra(EXTRA_REWARD_NAME)
+        findViewById<TextView>(R.id.txtPointsValue)?.text = pointsRequired.toString()
+        
+        val userId = SessionManager(this).getUserId()
+        if (eventId.isNotBlank() && userId != null) {
+            presenter.load(eventId, userId)
+        }
+
+        findViewById<Button>(R.id.btnRedeemReward)?.setOnClickListener {
+            presenter.redeem(eventId, userId, rewardId)
+        }
+    }
+
+    override fun showLoading(isLoading: Boolean) = Unit
+    override fun showMessage(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
+    override fun showBalance(balance: com.thedavelopers.eventqr.features.rewards.model.dto.PointBalanceResponse) {
+        if (balance.pointsBalance < pointsRequired) {
+            findViewById<View>(R.id.warningBox)?.visibility = View.VISIBLE
+            findViewById<TextView>(R.id.txtWarningMessage)?.text = 
+                "You need ${pointsRequired - balance.pointsBalance} more points to redeem this reward. Current balance: ${balance.pointsBalance} points."
+            findViewById<Button>(R.id.btnRedeemReward)?.isEnabled = false
+            findViewById<Button>(R.id.btnRedeemReward)?.alpha = 0.5f
+        } else {
+            findViewById<View>(R.id.warningBox)?.visibility = View.GONE
+            findViewById<Button>(R.id.btnRedeemReward)?.isEnabled = true
+            findViewById<Button>(R.id.btnRedeemReward)?.alpha = 1.0f
+        }
+    }
+
+    override fun renderRewards(items: List<RewardResponse>) = Unit
+}
+
+class ClaimedRewardsPresenter(
+    private var view: ClaimedRewardsContract.View?,
+    private val repository: AttendeeRepository,
+) {
+    private var job: Job? = null
+
+    fun detach() {
+        job?.cancel()
+        view = null
+    }
+
+    fun loadRedemptions(eventId: String) {
+        view?.showLoading(true)
+        job = kotlinx.coroutines.MainScope().launch {
+            when (val result = repository.getRewardRedemptions(eventId)) {
+                is NetworkResult.Success -> {
+                    view?.showLoading(false)
+                    view?.renderRedemptions(result.data)
+                }
+                is NetworkResult.Error -> {
+                    view?.showLoading(false)
+                    view?.showMessage(result.message)
+                }
+                NetworkResult.Loading -> Unit
+            }
+        }
+    }
+}
+
+interface ClaimedRewardsContract {
+    interface View : AttendeeView {
+        fun renderRedemptions(items: List<com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResponse>)
+    }
+}
+
+open class ClaimedRewardsActivity : AppCompatActivity(), ClaimedRewardsContract.View {
+    private lateinit var presenter: ClaimedRewardsPresenter
+    private lateinit var adapter: com.thedavelopers.eventqr.features.rewards.ClaimedRewardAdapter
+    private var eventId: String = ""
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_claimed_rewards)
+
+        presenter = ClaimedRewardsPresenter(this, AttendeeRepository(this))
+        adapter = com.thedavelopers.eventqr.features.rewards.ClaimedRewardAdapter()
+        
+        eventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty()
+
+        findViewById<View>(R.id.btnBack)?.setOnClickListener { finish() }
+        
+        findViewById<RecyclerView>(R.id.recyclerClaimedRewards)?.apply {
+            layoutManager = LinearLayoutManager(this@ClaimedRewardsActivity)
+            adapter = this@ClaimedRewardsActivity.adapter
+        }
+
+        if (eventId.isNotBlank()) {
+            presenter.loadRedemptions(eventId)
+        }
+    }
+
+    override fun onDestroy() {
+        presenter.detach()
+        super.onDestroy()
+    }
+
+    override fun showLoading(isLoading: Boolean) = Unit
+    override fun showMessage(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
+    override fun renderRedemptions(items: List<com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResponse>) {
+        adapter.submitItems(items)
+        findViewById<TextView>(R.id.txtTotalRewardsValue)?.text = items.size.toString()
+        findViewById<TextView>(R.id.txtPointsUsedValue)?.text = items.sumOf { it.pointsSpent }.toString()
+    }
+}
+
 private const val EXTRA_EVENT_ID = "extra_event_id"
 private const val EXTRA_EVENT_TITLE = "extra_event_title"
 private const val EXTRA_EVENT_LOCATION = "extra_event_location"
@@ -770,3 +915,7 @@ private const val EXTRA_EVENT_COUNT = "extra_event_count"
 private const val EXTRA_PREFILL_EMAIL = "extra_prefill_email"
 private const val EXTRA_PREFILL_FULL_NAME = "extra_prefill_full_name"
 private const val EXTRA_REGISTRATION_ID = "extra_registration_id"
+private const val EXTRA_REWARD_ID = "extra_reward_id"
+private const val EXTRA_REWARD_NAME = "extra_reward_name"
+private const val EXTRA_REWARD_POINTS = "extra_reward_points"
+private const val EXTRA_REWARD_STOCK = "extra_reward_stock"

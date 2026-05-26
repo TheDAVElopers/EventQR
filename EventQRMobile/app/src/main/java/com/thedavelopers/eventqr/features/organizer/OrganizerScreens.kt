@@ -612,3 +612,90 @@ open class NotificationManagementActivity : AppCompatActivity(), NotificationMan
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 }
+
+open class OrganizerDashboardActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_organizer_dashboard)
+
+        findViewById<View>(R.id.btnAttendeeManagement).setOnClickListener {
+            startActivity(Intent(this, AttendeeManagementActivity::class.java))
+        }
+
+        findViewById<View>(R.id.btnStaffManagement).setOnClickListener {
+            startActivity(Intent(this, ManageUsersActivity::class.java))
+        }
+
+        findViewById<View>(R.id.btnScanPurposes).setOnClickListener {
+            startActivity(Intent(this, ManageScanPurposesActivity::class.java))
+        }
+
+        findViewById<View>(R.id.btnRewardManagement).setOnClickListener {
+            startActivity(Intent(this, ManageRewardsActivity::class.java))
+        }
+
+        findViewById<View>(R.id.btnReportsAnalytics).setOnClickListener {
+            startActivity(Intent(this, EventReportsActivity::class.java))
+        }
+    }
+}
+
+open class AttendeeManagementActivity : AppCompatActivity() {
+    private lateinit var adapter: AttendeeManagementAdapter
+    private lateinit var repository: OrganizerRepository
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_attendee_management)
+        repository = OrganizerRepository(this)
+        
+        findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
+        
+        adapter = AttendeeManagementAdapter { attendee ->
+            startActivity(Intent(this, AttendeeDetailsActivity::class.java).putExtra("extra_attendee_id", attendee.registrationId.toString()))
+        }
+        
+        findViewById<RecyclerView>(R.id.recyclerAttendees).apply {
+            layoutManager = LinearLayoutManager(this@AttendeeManagementActivity)
+            adapter = this@AttendeeManagementActivity.adapter
+        }
+        
+        loadAttendees()
+    }
+    
+    private fun loadAttendees() {
+        // Implementation to fetch attendees for active event
+        kotlinx.coroutines.MainScope().launch {
+            // For now, load all registrations as a placeholder
+            when (val result = repository.getRegistrationsByEvent("some-event-id")) {
+                is NetworkResult.Success -> adapter.submitItems(result.data)
+                else -> Unit
+            }
+        }
+    }
+}
+
+open class AttendeeDetailsActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_attendee_details)
+        findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
+        
+        val attendeeId = intent.getStringExtra("extra_attendee_id")
+        // Load details using repository
+    }
+}
+
+open class EventReportsActivity : AppCompatActivity() {
+    private lateinit var repository: OrganizerRepository
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_event_reports)
+        repository = OrganizerRepository(this)
+        
+        findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
+        
+        // Setup placeholders or load real data
+    }
+}

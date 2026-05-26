@@ -415,3 +415,136 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 }
+
+class StaffDashboardPresenter(
+    private var view: StaffDashboardContract.View?,
+    private val repository: StaffRepository,
+) {
+    private var job: Job? = null
+
+    fun detach() {
+        job?.cancel()
+        view = null
+    }
+
+    fun loadData() {
+        job = kotlinx.coroutines.MainScope().launch {
+            when (val result = repository.getEvents()) {
+                is NetworkResult.Success -> {
+                    view?.renderEvents(result.data.take(2))
+                    // For demo, we just show some transactions as recent scans
+                    if (result.data.isNotEmpty()) {
+                        val firstEventId = result.data.first().eventId.toString()
+                        when (val trans = repository.getTransactionsByEvent(firstEventId)) {
+                            is NetworkResult.Success -> {
+                                view?.renderRecentScans(trans.data.take(3))
+                                view?.updateStats(trans.data.size, trans.data.count { it.transactionType.name == "CHECK_IN" })
+                            }
+                            else -> Unit
+                        }
+                    }
+                }
+                is NetworkResult.Error -> view?.showMessage(result.message)
+                NetworkResult.Loading -> Unit
+            }
+        }
+    }
+}
+
+interface StaffDashboardContract {
+    interface View {
+        fun renderEvents(items: List<com.thedavelopers.eventqr.features.events.model.dto.EventResponse>)
+        fun renderRecentScans(items: List<TransactionResponse>)
+        fun updateStats(scans: Int, checkins: Int)
+        fun showMessage(message: String)
+    }
+}
+
+open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.View {
+    private lateinit var presenter: StaffDashboardPresenter
+    private lateinit var adapter: TransactionAdapter
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_staff_dashboard)
+
+        presenter = StaffDashboardPresenter(this, StaffRepository(this))
+        adapter = TransactionAdapter()
+
+        findViewById<RecyclerView>(R.id.recyclerRecentScans).apply {
+            layoutManager = LinearLayoutManager(this@StaffDashboardActivity)
+            adapter = this@StaffDashboardActivity.adapter
+        }
+
+        val sessionManager = SessionManager(this)
+        findViewById<TextView>(R.id.txtStaffName).text = sessionManager.getFullName() ?: "Dharell Dave"
+
+        findViewById<View>(R.id.txtScansToday).setOnClickListener {
+            startActivity(Intent(this, ScannerActivity::class.java))
+        }
+
+        findViewById<View>(R.id.txtCheckinsToday).setOnClickListener {
+            startActivity(Intent(this, EventRegistrationsActivity::class.java))
+        }
+
+        findViewById<View>(R.id.navEvents).setOnClickListener {
+            startActivity(Intent(this, StaffTransactionsActivity::class.java))
+        }
+
+        findViewById<View>(R.id.navRewards).setOnClickListener {
+            startActivity(Intent(this, IdPrintingActivity::class.java))
+        }
+
+        findViewById<View>(R.id.navProfile).setOnClickListener {
+            startActivity(Intent(this, StaffProfileActivity::class.java))
+        }
+
+        presenter.loadData()
+    }
+
+    override fun onDestroy() {
+        presenter.detach()
+        super.onDestroy()
+    }
+
+    override fun renderEvents(items: List<com.thedavelopers.eventqr.features.events.model.dto.EventResponse>) {
+        findViewById<TextView>(R.id.txtAssignedCount).text = items.size.toString()
+    }
+
+    override fun renderRecentScans(items: List<TransactionResponse>) {
+        adapter.submitItems(items)
+    }
+
+    override fun updateStats(scans: Int, checkins: Int) {
+        // Find by parent to avoid ID collision if Scans Today is also a TextView ID
+        findViewById<TextView>(R.id.txtScansToday).text = scans.toString()
+        findViewById<TextView>(R.id.txtCheckinsToday).text = checkins.toString()
+    }
+
+    override fun showMessage(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+}
+
+open class StaffProfileActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_profile)
+        
+        val sessionManager = SessionManager(this)
+        findViewById<TextView>(R.id.txtProfileName).text = sessionManager.getFullName() ?: "Staff User"
+        findViewById<TextView>(R.id.txtProfileRole).text = "Staff"
+        findViewById<TextView>(R.id.txtProfileEmail).text = sessionManager.getEmail() ?: "staff@eventqr.com"
+        
+        findViewById<Button>(R.id.btnProfileLogout).setOnClickListener {
+            sessionManager.clearSession()
+            startActivity(Intent(this, com.thedavelopers.eventqr.SignIn::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
+            finish()
+        }
+
+        findViewById<View>(R.id.navDashboard).setOnClickListener {
+            startActivity(Intent(this, StaffDashboardActivity::class.java))
+            finish()
+        }
+    }
+}

@@ -64,9 +64,28 @@
                 android:orientation="vertical"
                 android:padding="22dp">
 
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Contact Information" android:textColor="#000000" android:textSize="24sp" android:textStyle="bold" />
-                <TextView android:id="@+id/txtProfileEmail" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="30dp" android:gravity="center" android:text="john.doe@example.com" android:textColor="#000000" android:textSize="20sp" />
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="28dp" android:gravity="center" android:text="+1 234 567 8900" android:textColor="#000000" android:textSize="20sp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Contact Information"
+                    android:textColor="#000000"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/txtProfileEmail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="30dp"
+                    android:text="john.doe@example.com"
+                    android:textColor="#000000"
+                    android:textSize="20sp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="28dp"
+                    android:text="+1 234 567 8900"
+                    android:textColor="#000000"
+                    android:textSize="20sp" />
             </LinearLayout>
 
             <LinearLayout
@@ -78,9 +97,27 @@
                 android:orientation="vertical"
                 android:padding="22dp">
 
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Account Details" android:textColor="#000000" android:textSize="24sp" android:textStyle="bold" />
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="30dp" android:gravity="center" android:text="Member since: January 2024" android:textColor="#000000" android:textSize="20sp" />
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="30dp" android:gravity="center" android:text="Account ID: #ATD-12345" android:textColor="#000000" android:textSize="20sp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Account Details"
+                    android:textColor="#000000"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="30dp"
+                    android:text="Member since: January 2024"
+                    android:textColor="#000000"
+                    android:textSize="20sp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="30dp"
+                    android:text="Account ID: #ATD-12345"
+                    android:textColor="#000000"
+                    android:textSize="20sp" />
             </LinearLayout>
 
             <Button

@@ -3,6 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -18,6 +22,8 @@
         <activity android:name=".features.attendee.AttendeeProfileActivity" android:exported="false" />
         <activity android:name=".features.attendee.AttendeeNotificationsActivity" android:exported="false" />
         <activity android:name=".features.attendee.AttendeeRewardsActivity" android:exported="false" />
+        <activity android:name=".features.attendee.ClaimedRewardsActivity" android:exported="false" />
+        <activity android:name=".features.attendee.RewardDetailsActivity" android:exported="false" />
         <activity android:name=".features.attendee.AttendeeTransactionsActivity" android:exported="false" />
         <activity android:name=".features.attendee.RegisteredEventsActivity" android:exported="false" />
         <activity android:name=".features.attendee.AttendeeQrCredentialActivity" android:exported="false" />
@@ -28,12 +34,18 @@
         <activity android:name=".features.staff.IdPrintingActivity" android:exported="false" />
         <activity android:name=".features.staff.StaffTransactionsActivity" android:exported="false" />
         <activity android:name=".features.staff.ScannerActivity" android:exported="false" />
+        <activity android:name=".features.staff.StaffDashboardActivity" android:exported="false" />
+        <activity android:name=".features.staff.StaffProfileActivity" android:exported="false" />
         <activity android:name=".features.organizer.NotificationManagementActivity" android:exported="false" />
         <activity android:name=".features.organizer.ReportsActivity" android:exported="false" />
         <activity android:name=".features.organizer.ManageRewardsActivity" android:exported="false" />
         <activity android:name=".features.organizer.ManageScanPurposesActivity" android:exported="false" />
         <activity android:name=".features.organizer.ManageUsersActivity" android:exported="false" />
         <activity android:name=".features.organizer.ManageEventsActivity" android:exported="false" />
+        <activity android:name=".features.organizer.OrganizerDashboardActivity" android:exported="false" />
+        <activity android:name=".features.organizer.AttendeeManagementActivity" android:exported="false" />
+        <activity android:name=".features.organizer.AttendeeDetailsActivity" android:exported="false" />
+        <activity android:name=".features.organizer.EventReportsActivity" android:exported="false" />
         <activity
             android:name=".ForgotPassword"
             android:exported="false" />

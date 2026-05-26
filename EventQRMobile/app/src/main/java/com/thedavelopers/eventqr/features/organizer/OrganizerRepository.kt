@@ -24,6 +24,8 @@ class OrganizerRepository(context: Context) {
     suspend fun createUser(request: UserRequest) = safeApiCall { apiService.createUser(request) }
     suspend fun changeUserRole(userId: String, role: com.thedavelopers.eventqr.core.api.dto.AccountRole) = safeApiCall { apiService.changeUserRole(userId, role) }
 
+    suspend fun getRegistrationsByEvent(eventId: String) = safeApiCall { apiService.getRegistrationsByEvent(eventId) }
+
     suspend fun createScanPurpose(request: ScanPurposeRequest) = safeApiCall { apiService.createScanPurpose(request) }
     suspend fun getScanPurposesByEvent(eventId: String) = safeApiCall { apiService.getScanPurposesByEvent(eventId) }
 

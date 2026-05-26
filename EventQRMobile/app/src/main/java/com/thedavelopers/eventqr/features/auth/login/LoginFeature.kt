@@ -10,7 +10,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.Dashboard
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
@@ -109,7 +108,7 @@ open class LoginActivity : AppCompatActivity(), LoginContract.View {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
+        setContentView(R.layout.activity_signin)
 
         presenter = LoginPresenter(this, AuthRepository(this))
         presenter.attach(this)
@@ -157,8 +156,14 @@ open class LoginActivity : AppCompatActivity(), LoginContract.View {
     }
 
     override fun navigateToDashboard(role: String?) {
+        val normalizedRole = role?.uppercase()
+        val destination = when (normalizedRole) {
+            AccountRole.STAFF.name -> com.thedavelopers.eventqr.features.staff.StaffDashboardActivity::class.java
+            AccountRole.ORGANIZER.name, AccountRole.ADMIN.name -> com.thedavelopers.eventqr.features.organizer.OrganizerDashboardActivity::class.java
+            else -> Dashboard::class.java
+        }
         startActivity(
-            Intent(this, Dashboard::class.java)
+            Intent(this, destination)
                 .putExtra("extra_role", role)
         )
         finish()
