@@ -2,150 +2,289 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
+    android:background="#F7F7FA"
     android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingHorizontal="26dp"
-        android:paddingTop="34dp"
-        android:paddingBottom="30dp">
+        android:paddingHorizontal="20dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="32dp">
+
+        <TextView
+            android:id="@+id/backText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingVertical="8dp"
+            android:text="‹  Request Event Creation"
+            android:textColor="#111827"
+            android:textSize="24sp"
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:gravity="center_vertical"
-            android:text="‹  Request Event Creation"
-            android:textColor="#000000"
-            android:textSize="27sp"
-            android:textStyle="bold" />
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Submit the event details for admin review."
+            android:textColor="#6B7280"
+            android:textSize="15sp" />
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/formMessageText"
             android:layout_width="match_parent"
-            android:layout_height="154dp"
-            android:layout_marginTop="36dp"
-            android:background="@drawable/bg_card"
-            android:orientation="horizontal"
-            android:padding="20dp">
-
-            <TextView android:layout_width="34dp" android:layout_height="match_parent" android:gravity="top|center_horizontal" android:text="ⓘ" android:textColor="#111111" android:textSize="23sp" />
-            <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Request Organizer Access" android:textColor="#000000" android:textSize="18sp" android:textStyle="bold" />
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:lineSpacingExtra="6dp" android:text="Submit your event details to request organizer\nprivileges. Once approved by an admin, you'll\nbe able to create and manage your own events." android:textColor="#6B7280" android:textSize="16sp" />
-            </LinearLayout>
-        </LinearLayout>
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_info_card"
+            android:padding="12dp"
+            android:textColor="#111827"
+            android:textSize="14sp"
+            android:visibility="gone" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="18dp"
             android:background="@drawable/bg_card"
             android:orientation="vertical"
-            android:padding="18dp">
+            android:padding="16dp">
 
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Your Information" android:textColor="#000000" android:textSize="24sp" android:textStyle="bold" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Event Information"
+                android:textColor="#111827"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="28dp" android:text="Full Name *" android:textColor="#000000" android:textSize="16sp" android:textStyle="bold" />
-            <EditText android:layout_width="match_parent" android:layout_height="60dp" android:layout_marginTop="12dp" android:background="@drawable/bg_soft_input_no_stroke" android:hint="John Doe" android:paddingHorizontal="18dp" android:textColorHint="#8B8E98" android:textSize="18sp" />
+            <TextView style="@style/RequestEventLabel" android:text="Event Name *" />
+            <EditText
+                android:id="@+id/eventNameInput"
+                style="@style/RequestEventInput"
+                android:hint="Event name" />
 
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="22dp" android:text="Email *" android:textColor="#000000" android:textSize="16sp" android:textStyle="bold" />
-            <EditText android:layout_width="match_parent" android:layout_height="60dp" android:layout_marginTop="12dp" android:background="@drawable/bg_soft_input_no_stroke" android:hint="john.doe@example.com" android:inputType="textEmailAddress" android:paddingHorizontal="18dp" android:textColorHint="#8B8E98" android:textSize="18sp" />
+            <TextView style="@style/RequestEventLabel" android:text="Event Description *" />
+            <EditText
+                android:id="@+id/eventDescriptionInput"
+                style="@style/RequestEventInput.Multi"
+                android:hint="Describe the event"
+                android:inputType="textMultiLine" />
 
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="22dp" android:text="Phone Number *" android:textColor="#000000" android:textSize="16sp" android:textStyle="bold" />
-            <EditText android:layout_width="match_parent" android:layout_height="60dp" android:layout_marginTop="12dp" android:background="@drawable/bg_soft_input_no_stroke" android:hint="+63 912 3456 789" android:inputType="phone" android:paddingHorizontal="18dp" android:textColorHint="#8B8E98" android:textSize="18sp" />
+            <TextView style="@style/RequestEventLabel" android:text="Event Category *" />
+            <EditText
+                android:id="@+id/eventCategoryInput"
+                style="@style/RequestEventInput"
+                android:hint="Technology, business, education" />
 
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="22dp" android:text="Organization / Company *" android:textColor="#000000" android:textSize="16sp" android:textStyle="bold" />
-            <EditText android:layout_width="match_parent" android:layout_height="60dp" android:layout_marginTop="12dp" android:background="@drawable/bg_soft_input_no_stroke" android:hint="Enter your organization name" android:paddingHorizontal="18dp" android:textColorHint="#6B7280" android:textSize="16sp" />
+            <TextView style="@style/RequestEventLabel" android:text="Target Audience" />
+            <EditText
+                android:id="@+id/targetAudienceInput"
+                style="@style/RequestEventInput"
+                android:hint="Students, professionals, community members" />
 
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="22dp" android:text="Your Role *" android:textColor="#000000" android:textSize="16sp" android:textStyle="bold" />
-            <EditText android:layout_width="match_parent" android:layout_height="60dp" android:layout_marginTop="12dp" android:background="@drawable/bg_soft_input_no_stroke" android:hint="e.g., Event Manager, Community Lead" android:paddingHorizontal="18dp" android:textColorHint="#6B7280" android:textSize="16sp" />
+            <TextView style="@style/RequestEventLabel" android:text="Expected Attendees / Capacity *" />
+            <EditText
+                android:id="@+id/capacityInput"
+                style="@style/RequestEventInput"
+                android:hint="100"
+                android:inputType="number" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="40dp"
+            android:layout_marginTop="14dp"
             android:background="@drawable/bg_card"
             android:orientation="vertical"
-            android:padding="18dp">
+            android:padding="16dp">
 
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Proposed Event Details" android:textColor="#000000" android:textSize="20sp" android:textStyle="bold" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Schedule and Location"
+                android:textColor="#111827"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="Event Title *" android:textColor="#000000" android:textSize="13sp" android:textStyle="bold" />
-            <EditText android:layout_width="match_parent" android:layout_height="60dp" android:layout_marginTop="8dp" android:background="@drawable/bg_soft_input_no_stroke" android:hint="Enter event title" android:paddingHorizontal="14dp" android:textColorHint="#6B7280" android:textSize="14sp" />
+            <TextView style="@style/RequestEventLabel" android:text="Venue / Location *" />
+            <EditText
+                android:id="@+id/venueInput"
+                style="@style/RequestEventInput"
+                android:hint="Venue or address" />
 
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="Event Category *" android:textColor="#000000" android:textSize="13sp" android:textStyle="bold" />
-            <EditText android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginTop="8dp" android:background="@drawable/bg_soft_input_no_stroke" android:hint="e.g., Technology, Business, Education" android:paddingHorizontal="14dp" android:textColorHint="#6B7280" android:textSize="14sp" />
+            <TextView style="@style/RequestEventLabel" android:text="Start Date and Time *" />
+            <EditText
+                android:id="@+id/startDateTimeInput"
+                style="@style/RequestEventInput"
+                android:hint="yyyy-MM-dd HH:mm"
+                android:inputType="datetime" />
 
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="Event Description *" android:textColor="#000000" android:textSize="13sp" android:textStyle="bold" />
-            <EditText android:layout_width="match_parent" android:layout_height="64dp" android:layout_marginTop="8dp" android:background="@drawable/bg_soft_input_no_stroke" android:gravity="top" android:hint="Provide a detailed description of your\nproposed event" android:inputType="textMultiLine" android:padding="14dp" android:textColorHint="#6B7280" android:textSize="14sp" />
+            <TextView style="@style/RequestEventLabel" android:text="End Date and Time *" />
+            <EditText
+                android:id="@+id/endDateTimeInput"
+                style="@style/RequestEventInput"
+                android:hint="yyyy-MM-dd HH:mm"
+                android:inputType="datetime" />
 
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:orientation="horizontal">
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Expected Attendees *" android:textColor="#000000" android:textSize="13sp" android:textStyle="bold" />
-                    <EditText android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginTop="8dp" android:background="@drawable/bg_soft_input_no_stroke" android:hint="e.g., 100" android:inputType="number" android:paddingHorizontal="12dp" android:textColorHint="#6B7280" android:textSize="14sp" />
-                </LinearLayout>
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:orientation="vertical">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Planned Date *" android:textColor="#000000" android:textSize="13sp" android:textStyle="bold" />
-                    <EditText android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginTop="8dp" android:background="@drawable/bg_soft_input_no_stroke" android:hint="dd/mm/yyyy" android:paddingHorizontal="12dp" android:textColorHint="#111111" android:textSize="14sp" />
-                </LinearLayout>
-            </LinearLayout>
+            <TextView style="@style/RequestEventLabel" android:text="Registration Start Date" />
+            <EditText
+                android:id="@+id/registrationStartDateTimeInput"
+                style="@style/RequestEventInput"
+                android:hint="yyyy-MM-dd HH:mm"
+                android:inputType="datetime" />
 
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="Event Location *" android:textColor="#000000" android:textSize="13sp" android:textStyle="bold" />
-            <EditText android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginTop="8dp" android:background="@drawable/bg_soft_input_no_stroke" android:hint="Enter venue or address" android:paddingHorizontal="14dp" android:textColorHint="#6B7280" android:textSize="14sp" />
+            <TextView style="@style/RequestEventLabel" android:text="Registration End Date" />
+            <EditText
+                android:id="@+id/registrationEndDateTimeInput"
+                style="@style/RequestEventInput"
+                android:hint="yyyy-MM-dd HH:mm"
+                android:inputType="datetime" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="40dp"
+            android:layout_marginTop="14dp"
             android:background="@drawable/bg_card"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:padding="16dp">
 
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Experience &amp; Justification" android:textColor="#000000" android:textSize="24sp" android:textStyle="bold" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:text="Event Management Experience" android:textColor="#000000" android:textSize="16sp" android:textStyle="bold" />
-            <EditText android:layout_width="match_parent" android:layout_height="86dp" android:layout_marginTop="10dp" android:background="@drawable/bg_soft_input_no_stroke" android:gravity="top" android:hint="Describe your previous event management\nexperience (optional)" android:inputType="textMultiLine" android:padding="16dp" android:textColorHint="#6B7280" android:textSize="16sp" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="22dp" android:text="Why do you want to organize this event? *" android:textColor="#000000" android:textSize="16sp" android:textStyle="bold" />
-            <EditText android:layout_width="match_parent" android:layout_height="86dp" android:layout_marginTop="10dp" android:background="@drawable/bg_soft_input_no_stroke" android:gravity="top" android:hint="Explain your motivation and goals for this\nevent" android:inputType="textMultiLine" android:padding="16dp" android:textColorHint="#6B7280" android:textSize="16sp" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="22dp" android:text="Website / Social Media (Optional)" android:textColor="#000000" android:textSize="16sp" android:textStyle="bold" />
-            <EditText android:layout_width="match_parent" android:layout_height="60dp" android:layout_marginTop="10dp" android:background="@drawable/bg_soft_input_no_stroke" android:hint="https://example.com" android:paddingHorizontal="16dp" android:textColorHint="#6B7280" android:textSize="16sp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Requester Information"
+                android:textColor="#111827"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView style="@style/RequestEventLabel" android:text="Requester Name *" />
+            <EditText
+                android:id="@+id/requesterNameInput"
+                style="@style/RequestEventInput"
+                android:hint="Full name" />
+
+            <TextView style="@style/RequestEventLabel" android:text="Contact Email *" />
+            <EditText
+                android:id="@+id/contactEmailInput"
+                style="@style/RequestEventInput"
+                android:hint="name@example.com"
+                android:inputType="textEmailAddress" />
+
+            <TextView style="@style/RequestEventLabel" android:text="Contact Number *" />
+            <EditText
+                android:id="@+id/contactNumberInput"
+                style="@style/RequestEventInput"
+                android:hint="+63 912 345 6789"
+                android:inputType="phone" />
         </LinearLayout>
 
-        <CheckBox
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:buttonTint="#CBD5E1"
-            android:lineSpacingExtra="6dp"
-            android:text="I certify that the information provided is\naccurate and I understand that my request\nwill be reviewed by administrators. I agree to\ncomply with all platform terms and event\nmanagement guidelines."
-            android:textColor="#000000"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Event Setup"
+                android:textColor="#111827"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView style="@style/RequestEventLabel" android:text="Requested Features" />
+
+            <CheckBox android:id="@+id/featureQrRegistration" style="@style/RequestEventCheckbox" android:text="QR registration" />
+            <CheckBox android:id="@+id/featureQrCheckIn" style="@style/RequestEventCheckbox" android:text="QR check-in / entry logging" />
+            <CheckBox android:id="@+id/featureAttendanceTracking" style="@style/RequestEventCheckbox" android:text="Attendance tracking" />
+            <CheckBox android:id="@+id/featureBenefitClaiming" style="@style/RequestEventCheckbox" android:text="Benefit claiming" />
+            <CheckBox android:id="@+id/featureBoothTracking" style="@style/RequestEventCheckbox" android:text="Booth/session tracking" />
+            <CheckBox android:id="@+id/featureRewardsPoints" style="@style/RequestEventCheckbox" android:text="Rewards and points" />
+            <CheckBox android:id="@+id/featureIdPrinting" style="@style/RequestEventCheckbox" android:text="ID printing" />
+
+            <TextView style="@style/RequestEventLabel" android:text="Event Poster / Logo" />
+            <EditText
+                android:id="@+id/eventLogoInput"
+                style="@style/RequestEventInput"
+                android:hint="Optional image URL"
+                android:inputType="textUri" />
+
+            <TextView style="@style/RequestEventLabel" android:text="Additional Notes" />
+            <EditText
+                android:id="@+id/additionalNotesInput"
+                style="@style/RequestEventInput.Multi"
+                android:hint="Anything else admins should know"
+                android:inputType="textMultiLine" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Reason for Request"
+                android:textColor="#111827"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView style="@style/RequestEventLabel" android:text="Reason for Request *" />
+            <EditText
+                android:id="@+id/reasonForRequestInput"
+                style="@style/RequestEventInput.Multi"
+                android:hint="Why should this event be created?"
+                android:inputType="textMultiLine" />
+        </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/submitProgress"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="18dp"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/submitRequestButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="18dp"
+            android:background="@drawable/button_rounded"
+            android:text="Submit Request"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
             android:textSize="16sp"
             android:textStyle="bold" />
 
         <Button
+            android:id="@+id/viewMyRequestsButton"
             android:layout_width="match_parent"
-            android:layout_height="62dp"
-            android:layout_marginTop="20dp"
-            android:background="@drawable/button_rounded"
-            android:enabled="false"
-            android:text="Submit Request"
+            android:layout_height="52dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_outline_button"
+            android:text="View My Event Requests"
             android:textAllCaps="false"
-            android:textColor="#FFFFFF"
-            android:textSize="17sp"
-            android:textStyle="bold" />
+            android:textColor="#25215F"
+            android:textSize="15sp"
+            android:visibility="gone" />
 
         <Button
+            android:id="@+id/cancelButton"
             android:layout_width="match_parent"
-            android:layout_height="62dp"
-            android:layout_marginTop="14dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="12dp"
             android:background="@drawable/bg_logout_button"
             android:text="Cancel"
             android:textAllCaps="false"
             android:textColor="#FFFFFF"
-            android:textSize="17sp"
-            android:textStyle="bold" />
+            android:textSize="15sp" />
     </LinearLayout>
 </ScrollView>
