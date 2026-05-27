@@ -23,6 +23,9 @@ import com.thedavelopers.eventqr.features.users.model.dto.UserStatusRequest;
 import com.thedavelopers.eventqr.features.users.model.dto.UserRequest;
 import com.thedavelopers.eventqr.features.users.service.UserService;
 import com.thedavelopers.eventqr.features.audit.service.AuditLogService;
+import com.thedavelopers.eventqr.features.events.model.dto.EventRequestDecisionRequest;
+import com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse;
+import com.thedavelopers.eventqr.features.events.service.EventCreationRequestService;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
 import com.thedavelopers.eventqr.shared.security.JwtService;
@@ -34,11 +37,14 @@ public class AdminController {
     private final UserService userService;
     private final JwtService jwtService;
     private final AuditLogService auditLogService;
+    private final EventCreationRequestService eventCreationRequestService;
 
-    public AdminController(UserService userService, JwtService jwtService, AuditLogService auditLogService) {
+    public AdminController(UserService userService, JwtService jwtService, AuditLogService auditLogService,
+                           EventCreationRequestService eventCreationRequestService) {
         this.userService = userService;
         this.jwtService = jwtService;
         this.auditLogService = auditLogService;
+        this.eventCreationRequestService = eventCreationRequestService;
     }
 
     @GetMapping("/users")
@@ -93,33 +99,44 @@ public class AdminController {
     }
 
     @GetMapping("/event-requests")
-    public ResponseEntity<ApiResponse<Void>> listEventRequests(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<List<EventRequestResponse>>> listEventRequests(HttpServletRequest request) {
         requireAdmin(request);
-        return notImplemented("Event request persistence is not wired yet");
+        return ResponseEntity.ok(ApiResponse.success(eventCreationRequestService.findAllForAdmin()));
     }
 
     @GetMapping("/event-requests/{requestId}")
-    public ResponseEntity<ApiResponse<Void>> findEventRequest(HttpServletRequest request, @PathVariable UUID requestId) {
+    public ResponseEntity<ApiResponse<EventRequestResponse>> findEventRequest(HttpServletRequest request, @PathVariable UUID requestId) {
         requireAdmin(request);
-        return notImplemented("Event request persistence is not wired yet");
+        return ResponseEntity.ok(ApiResponse.success(eventCreationRequestService.findOneForAdmin(requestId)));
     }
 
     @PatchMapping("/event-requests/{requestId}/approve")
-    public ResponseEntity<ApiResponse<Void>> approveEventRequest(HttpServletRequest request, @PathVariable UUID requestId) {
+    public ResponseEntity<ApiResponse<EventRequestResponse>> approveEventRequest(HttpServletRequest request,
+                                                                                @PathVariable UUID requestId,
+                                                                                @RequestBody(required = false) EventRequestDecisionRequest body) {
         requireAdmin(request);
-        return notImplemented("Event request approval is not wired yet");
+        UUID adminUserId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
+        String remarks = body == null ? null : body.adminRemarks();
+        return ResponseEntity.ok(ApiResponse.success("Event request approved",
+                eventCreationRequestService.approve(requestId, adminUserId, remarks)));
     }
 
     @PatchMapping("/event-requests/{requestId}/reject")
-    public ResponseEntity<ApiResponse<Void>> rejectEventRequest(HttpServletRequest request, @PathVariable UUID requestId) {
+    public ResponseEntity<ApiResponse<EventRequestResponse>> rejectEventRequest(HttpServletRequest request,
+                                                                               @PathVariable UUID requestId,
+                                                                               @RequestBody(required = false) EventRequestDecisionRequest body) {
         requireAdmin(request);
-        return notImplemented("Event request rejection is not wired yet");
+        UUID adminUserId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
+        String remarks = body == null ? null : body.adminRemarks();
+        return ResponseEntity.ok(ApiResponse.success("Event request rejected",
+                eventCreationRequestService.reject(requestId, adminUserId, remarks)));
     }
 
     @PatchMapping("/event-requests/{requestId}/upgrade-organizer")
-    public ResponseEntity<ApiResponse<Void>> upgradeOrganizer(HttpServletRequest request, @PathVariable UUID requestId) {
+    public ResponseEntity<ApiResponse<EventRequestResponse>> upgradeOrganizer(HttpServletRequest request, @PathVariable UUID requestId) {
         requireAdmin(request);
-        return notImplemented("Event request organizer upgrade is not wired yet");
+        return ResponseEntity.ok(ApiResponse.success("Requester upgraded to organizer",
+                eventCreationRequestService.upgradeOrganizer(requestId)));
     }
 
     @GetMapping("/audit-logs")
@@ -134,7 +151,4 @@ public class AdminController {
         }
     }
 
-    private ResponseEntity<ApiResponse<Void>> notImplemented(String message) {
-        return ResponseEntity.status(501).body(new ApiResponse<>(false, message, null, java.time.Instant.now()));
-    }
 }
