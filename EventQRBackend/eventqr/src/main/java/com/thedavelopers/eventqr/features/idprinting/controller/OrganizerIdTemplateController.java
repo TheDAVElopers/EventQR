@@ -12,12 +12,16 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdPrintResponse;
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdTemplateRequest;
 import com.thedavelopers.eventqr.features.idprinting.model.entity.IdTemplate;
 import com.thedavelopers.eventqr.features.idprinting.service.IdPrintingService;
+import com.thedavelopers.eventqr.features.uploads.model.dto.StoredFileResponse;
+import com.thedavelopers.eventqr.features.uploads.service.FileStorageService;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
 import com.thedavelopers.eventqr.shared.security.JwtService;
@@ -28,10 +32,13 @@ public class OrganizerIdTemplateController {
 
     private final IdPrintingService idPrintingService;
     private final JwtService jwtService;
+    private final FileStorageService fileStorageService;
 
-    public OrganizerIdTemplateController(IdPrintingService idPrintingService, JwtService jwtService) {
+    public OrganizerIdTemplateController(IdPrintingService idPrintingService, JwtService jwtService,
+                                         FileStorageService fileStorageService) {
         this.idPrintingService = idPrintingService;
         this.jwtService = jwtService;
+        this.fileStorageService = fileStorageService;
     }
 
     @GetMapping("/organizer/events/{eventId}/id-templates")
@@ -62,8 +69,9 @@ public class OrganizerIdTemplateController {
     }
 
     @PostMapping("/organizer/events/{eventId}/id-template/logo")
-    public ResponseEntity<ApiResponse<Void>> uploadLogo() {
-        return ResponseEntity.status(501).body(new ApiResponse<>(false, "Logo upload is not wired yet", null, java.time.Instant.now()));
+    public ResponseEntity<ApiResponse<StoredFileResponse>> uploadLogo(@PathVariable UUID eventId,
+                                                                       @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(ApiResponse.success("Logo stored", fileStorageService.store(eventId, "id-template-logo", file)));
     }
 
     @PostMapping("/staff/events/{eventId}/attendees/{attendeeId}/id-preview")

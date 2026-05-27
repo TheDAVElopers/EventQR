@@ -12,38 +12,42 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.thedavelopers.eventqr.features.uploads.model.dto.StoredFileResponse;
+import com.thedavelopers.eventqr.features.uploads.service.FileStorageService;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
 
 @RestController
 @RequestMapping("/api/v1")
 public class UploadController {
 
+    private final FileStorageService fileStorageService;
+
+    public UploadController(FileStorageService fileStorageService) {
+        this.fileStorageService = fileStorageService;
+    }
+
     @PostMapping("/uploads/event-logo")
-    public ResponseEntity<ApiResponse<Void>> uploadEventLogo(@RequestParam("file") MultipartFile file) {
-        return notImplemented("File upload storage is not wired yet");
+    public ResponseEntity<ApiResponse<StoredFileResponse>> uploadEventLogo(@RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(ApiResponse.success("Event logo stored", fileStorageService.store(null, "event-logo", file)));
     }
 
     @PostMapping("/uploads/id-template-assets")
-    public ResponseEntity<ApiResponse<Void>> uploadTemplateAsset(@RequestParam("file") MultipartFile file) {
-        return notImplemented("File upload storage is not wired yet");
+    public ResponseEntity<ApiResponse<StoredFileResponse>> uploadTemplateAsset(@RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(ApiResponse.success("ID template asset stored", fileStorageService.store(null, "id-template-asset", file)));
     }
 
     @PostMapping("/uploads/profile-photo")
-    public ResponseEntity<ApiResponse<Void>> uploadProfilePhoto(@RequestParam("file") MultipartFile file) {
-        return notImplemented("File upload storage is not wired yet");
+    public ResponseEntity<ApiResponse<StoredFileResponse>> uploadProfilePhoto(@RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(ApiResponse.success("Profile photo stored", fileStorageService.store(null, "profile-photo", file)));
     }
 
     @GetMapping("/files/{fileId}")
-    public ResponseEntity<ApiResponse<Void>> getFile(@PathVariable UUID fileId) {
-        return notImplemented("File retrieval storage is not wired yet");
+    public ResponseEntity<ApiResponse<StoredFileResponse>> getFile(@PathVariable UUID fileId) {
+        return ResponseEntity.ok(ApiResponse.success(fileStorageService.find(fileId)));
     }
 
     @DeleteMapping("/files/{fileId}")
-    public ResponseEntity<ApiResponse<Void>> deleteFile(@PathVariable UUID fileId) {
-        return notImplemented("File deletion storage is not wired yet");
-    }
-
-    private ResponseEntity<ApiResponse<Void>> notImplemented(String message) {
-        return ResponseEntity.status(501).body(new ApiResponse<>(false, message, null, java.time.Instant.now()));
+    public ResponseEntity<ApiResponse<StoredFileResponse>> deleteFile(@PathVariable UUID fileId) {
+        return ResponseEntity.ok(ApiResponse.success("File deleted", fileStorageService.delete(fileId)));
     }
 }

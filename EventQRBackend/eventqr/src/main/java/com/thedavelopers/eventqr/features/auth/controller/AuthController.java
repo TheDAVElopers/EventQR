@@ -14,8 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.thedavelopers.eventqr.features.auth.model.dto.LoginRequest;
 import com.thedavelopers.eventqr.features.auth.model.dto.LoginResponse;
+import com.thedavelopers.eventqr.features.auth.model.dto.ForgotPasswordRequest;
 import com.thedavelopers.eventqr.features.auth.model.dto.RegisterRequest;
+import com.thedavelopers.eventqr.features.auth.model.dto.ResetPasswordRequest;
 import com.thedavelopers.eventqr.features.auth.service.AuthService;
+import com.thedavelopers.eventqr.features.auth.service.PasswordResetService;
 import com.thedavelopers.eventqr.features.users.model.dto.PasswordChangeRequest;
 import com.thedavelopers.eventqr.features.users.model.dto.UserRequest;
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse;
@@ -31,11 +34,14 @@ public class AuthController {
     private final AuthService authService;
     private final UserService userService;
     private final JwtService jwtService;
+    private final PasswordResetService passwordResetService;
 
-    public AuthController(AuthService authService, UserService userService, JwtService jwtService) {
+    public AuthController(AuthService authService, UserService userService, JwtService jwtService,
+                          PasswordResetService passwordResetService) {
         this.authService = authService;
         this.userService = userService;
         this.jwtService = jwtService;
+        this.passwordResetService = passwordResetService;
     }
 
     @PostMapping("/register")
@@ -68,12 +74,14 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse<Void>> forgotPassword() {
-        return ResponseEntity.status(501).body(new ApiResponse<>(false, "Password reset workflow is not wired yet", null, java.time.Instant.now()));
+    public ResponseEntity<ApiResponse<String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        PasswordResetService.PasswordResetResponse response = passwordResetService.requestReset(request.email());
+        return ResponseEntity.accepted().body(ApiResponse.success("Password reset token generated", response.resetToken()));
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<ApiResponse<Void>> resetPassword() {
-        return ResponseEntity.status(501).body(new ApiResponse<>(false, "Password reset workflow is not wired yet", null, java.time.Instant.now()));
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        passwordResetService.resetPassword(request.email(), request.resetToken(), request.newPassword());
+        return ResponseEntity.ok(ApiResponse.success("Password reset completed", null));
     }
 }

@@ -22,6 +22,8 @@ import com.thedavelopers.eventqr.features.users.model.dto.UserRequest;
 import com.thedavelopers.eventqr.features.users.model.dto.ProfileUpdateRequest;
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse;
 import com.thedavelopers.eventqr.features.users.service.UserService;
+import com.thedavelopers.eventqr.features.uploads.model.dto.StoredFileResponse;
+import com.thedavelopers.eventqr.features.uploads.service.FileStorageService;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
 import com.thedavelopers.eventqr.shared.security.JwtService;
@@ -32,10 +34,12 @@ public class UserController {
 
     private final UserService userService;
     private final JwtService jwtService;
+    private final FileStorageService fileStorageService;
 
-    public UserController(UserService userService, JwtService jwtService) {
+    public UserController(UserService userService, JwtService jwtService, FileStorageService fileStorageService) {
         this.userService = userService;
         this.jwtService = jwtService;
+        this.fileStorageService = fileStorageService;
     }
 
     @PostMapping
@@ -62,8 +66,10 @@ public class UserController {
     }
 
     @PostMapping("/me/avatar")
-    public ResponseEntity<ApiResponse<Void>> updateAvatar(@RequestParam("file") MultipartFile file) {
-        return ResponseEntity.status(501).body(new ApiResponse<>(false, "Avatar upload is not wired yet", null, java.time.Instant.now()));
+    public ResponseEntity<ApiResponse<StoredFileResponse>> updateAvatar(HttpServletRequest request,
+                                                                        @RequestParam("file") MultipartFile file) {
+        UUID userId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
+        return ResponseEntity.ok(ApiResponse.success("Avatar stored", fileStorageService.store(userId, "profile-photo", file)));
     }
 
     @PutMapping("/{userId}/role/{role}")
