@@ -811,17 +811,31 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
     private lateinit var presenter: RegisteredEventsPresenter
     private lateinit var adapter: RegisteredEventAdapter
     private lateinit var loadingView: View
+    private lateinit var chipAll: TextView
+    private lateinit var chipRegistered: TextView
+    private lateinit var chipCompleted: TextView
+    
+    private var allItems: List<Pair<AttendeeEventResponse, RegistrationResponse>> = emptyList()
+    private var selectedFilter: RegistrationFilter = RegistrationFilter.ALL
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_registered_events)
 
         presenter = RegisteredEventsPresenter(this, AttendeeRepository(this))
-        loadingView = findViewById(R.id.txtRegisteredEventsEmpty) // Using empty text as loading for now
+        loadingView = findViewById(R.id.txtRegisteredEventsEmpty)
 
         findViewById<ImageButton>(R.id.btnBack).setOnClickListener {
             finish()
         }
+
+        chipAll = findViewById(R.id.chipAll)
+        chipRegistered = findViewById(R.id.chipRegistered)
+        chipCompleted = findViewById(R.id.chipCompleted)
+
+        chipAll.setOnClickListener { selectFilter(RegistrationFilter.ALL) }
+        chipRegistered.setOnClickListener { selectFilter(RegistrationFilter.REGISTERED) }
+        chipCompleted.setOnClickListener { selectFilter(RegistrationFilter.COMPLETED) }
 
         adapter = RegisteredEventAdapter()
         findViewById<RecyclerView>(R.id.recyclerRegisteredEvents).apply {
@@ -829,7 +843,51 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
             adapter = this@RegisteredEventsActivity.adapter
         }
         
+        updateFilterUI()
         presenter.load()
+    }
+
+    private fun selectFilter(filter: RegistrationFilter) {
+        selectedFilter = filter
+        updateFilterUI()
+        renderFilteredEvents()
+    }
+
+    private fun updateFilterUI() {
+        val activeBg = R.drawable.bg_nav_active
+        val inactiveBg = R.drawable.bg_soft_input_no_stroke
+        val activeColor = Color.WHITE
+        val inactiveColor = Color.parseColor("#6B7280")
+
+        chipAll.setBackgroundResource(if (selectedFilter == RegistrationFilter.ALL) activeBg else inactiveBg)
+        chipAll.setTextColor(if (selectedFilter == RegistrationFilter.ALL) activeColor else inactiveColor)
+        
+        chipRegistered.setBackgroundResource(if (selectedFilter == RegistrationFilter.REGISTERED) activeBg else inactiveBg)
+        chipRegistered.setTextColor(if (selectedFilter == RegistrationFilter.REGISTERED) activeColor else inactiveColor)
+        
+        chipCompleted.setBackgroundResource(if (selectedFilter == RegistrationFilter.COMPLETED) activeBg else inactiveBg)
+        chipCompleted.setTextColor(if (selectedFilter == RegistrationFilter.COMPLETED) activeColor else inactiveColor)
+    }
+
+    private fun renderFilteredEvents() {
+        val now = Instant.now()
+        val filtered = when (selectedFilter) {
+            RegistrationFilter.ALL -> allItems
+            RegistrationFilter.REGISTERED -> allItems.filter { it.first.eventEndAt?.isAfter(now) ?: true }
+            RegistrationFilter.COMPLETED -> allItems.filter { it.first.eventEndAt?.isBefore(now) ?: false }
+        }
+        adapter.submitItems(filtered)
+        findViewById<View>(R.id.txtRegisteredEventsEmpty).visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
+        
+        // Ensure all chips are visible
+        chipAll.visibility = View.VISIBLE
+        chipRegistered.visibility = View.VISIBLE
+        chipCompleted.visibility = View.VISIBLE
+
+        // Update counts in chips
+        chipAll.text = "All (${allItems.size})"
+        chipRegistered.text = "Registered (${allItems.count { it.first.eventEndAt?.isAfter(now) ?: true }})"
+        chipCompleted.text = "Completed (${allItems.count { it.first.eventEndAt?.isBefore(now) ?: false }})"
     }
 
     override fun onDestroy() {
@@ -838,7 +896,7 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
     }
 
     override fun showLoading(isLoading: Boolean) {
-        // Handle loading state
+        // Handle loading state if needed
     }
 
     override fun showMessage(message: String) {
@@ -846,9 +904,15 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
     }
 
     override fun showRegisteredEvents(items: List<Pair<AttendeeEventResponse, RegistrationResponse>>) {
-        adapter.submitItems(items)
-        findViewById<View>(R.id.txtRegisteredEventsEmpty).visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
+        allItems = items
+        renderFilteredEvents()
     }
+}
+
+private enum class RegistrationFilter {
+    ALL,
+    REGISTERED,
+    COMPLETED
 }
 
 class TransactionHistoryPresenter(

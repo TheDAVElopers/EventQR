@@ -12,6 +12,7 @@ class SessionManager(context: Context) {
             .putString(KEY_AUTH_TOKEN, loginResponse.accessToken)
             .putString(KEY_USER_ID, loginResponse.userId.toString())
             .putString(KEY_EMAIL, loginResponse.email)
+            .putString(KEY_PHONE, loginResponse.phone)
             .putString(KEY_FULL_NAME, loginResponse.fullName)
             .putString(KEY_ROLE, loginResponse.role?.name)
             .apply()
@@ -19,6 +20,13 @@ class SessionManager(context: Context) {
 
     fun saveRole(role: AccountRole?) {
         sharedPreferences.edit().putString(KEY_ROLE, role?.name).apply()
+    }
+
+    fun updateProfile(fullName: String, phone: String?) {
+        sharedPreferences.edit()
+            .putString(KEY_FULL_NAME, fullName)
+            .putString(KEY_PHONE, phone)
+            .apply()
     }
 
     fun clearSession() {
@@ -33,6 +41,8 @@ class SessionManager(context: Context) {
 
     fun getEmail(): String? = sharedPreferences.getString(KEY_EMAIL, null)
 
+    fun getPhone(): String? = sharedPreferences.getString(KEY_PHONE, null)
+
     fun getFullName(): String? = sharedPreferences.getString(KEY_FULL_NAME, null)
 
     fun hasUsableToken(): Boolean {
@@ -45,6 +55,7 @@ class SessionManager(context: Context) {
         private const val KEY_USER_ID = "user_id"
         private const val KEY_ROLE = "role"
         private const val KEY_EMAIL = "email"
+        private const val KEY_PHONE = "phone"
         private const val KEY_FULL_NAME = "full_name"
     }
 }

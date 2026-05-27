@@ -25,6 +25,9 @@ class AttendeeRepository(context: Context) {
     suspend fun createEventRequest(request: EventCreationRequestDto) = safeApiCall { apiService.createEventRequest(request) }
     suspend fun getMyEventRequests() = safeApiCall { apiService.getMyEventRequests() }
     suspend fun getMyProfile() = safeApiCall { apiService.getUsersMe() }
+    suspend fun updateProfile(fullName: String, phoneNumber: String?) = safeApiCall {
+        apiService.updateUsersMe(com.thedavelopers.eventqr.features.users.model.dto.ProfileUpdateRequest(fullName, phoneNumber))
+    }
     suspend fun createRegistration(eventId: String, request: RegistrationRequest) = safeApiCall { apiService.createRegistration(eventId, request) }
     suspend fun getMyRegistrations() = safeApiCall { apiService.getMyRegistrations() }
     suspend fun createQrCredential(registrationId: String) = safeApiCall { apiService.createQrCredential(registrationId) }

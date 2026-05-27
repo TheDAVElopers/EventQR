@@ -12,6 +12,7 @@ data class LoginResponse(
     val accessToken: String,
     val userId: UUID,
     val email: String,
+    val phone: String? = null,
     val fullName: String,
     val role: AccountRole?,
     val message: String? = null,
@@ -19,6 +20,7 @@ data class LoginResponse(
 
 data class RegisterRequest(
     val email: String,
+    val phone: String? = null,
     val fullName: String,
     val phoneNumber: String? = null,
     val password: String
