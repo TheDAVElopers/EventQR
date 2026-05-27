@@ -75,52 +75,47 @@
                 android:textSize="14sp" />
         </LinearLayout>
 
-        <HorizontalScrollView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:scrollbars="none">
+            android:gravity="start|center_vertical"
+            android:orientation="horizontal">
 
-            <LinearLayout
+            <TextView
+                android:id="@+id/chipAll"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/bg_nav_active"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="10dp"
+                android:text="All"
+                android:textColor="@color/white"
+                android:textStyle="bold" />
 
-                <TextView
-                    android:id="@+id/chipAll"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="12dp"
-                    android:background="@drawable/bg_nav_active"
-                    android:paddingHorizontal="20dp"
-                    android:paddingVertical="10dp"
-                    android:text="All (3)"
-                    android:textColor="@color/white"
-                    android:textStyle="bold" />
+            <TextView
+                android:id="@+id/chipRegistered"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/bg_soft_input_no_stroke"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="10dp"
+                android:text="Registered"
+                android:textColor="@color/eventqr_muted" />
 
-                <TextView
-                    android:id="@+id/chipRegistered"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="12dp"
-                    android:background="@drawable/bg_soft_input_no_stroke"
-                    android:paddingHorizontal="20dp"
-                    android:paddingVertical="10dp"
-                    android:text="Registered (1)"
-                    android:textColor="@color/eventqr_muted" />
+            <TextView
+                android:id="@+id/chipCompleted"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_soft_input_no_stroke"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="10dp"
+                android:text="Completed"
+                android:textColor="@color/eventqr_muted" />
 
-                <TextView
-                    android:id="@+id/chipCompleted"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_soft_input_no_stroke"
-                    android:paddingHorizontal="20dp"
-                    android:paddingVertical="10dp"
-                    android:text="Completed (1)"
-                    android:textColor="@color/eventqr_muted" />
-
-            </LinearLayout>
-        </HorizontalScrollView>
+        </LinearLayout>
     </LinearLayout>
 
     <View

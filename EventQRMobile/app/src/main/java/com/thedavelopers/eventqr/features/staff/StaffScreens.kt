@@ -736,10 +736,12 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
 }
 
 open class StaffProfileActivity : AppCompatActivity() {
+    private lateinit var sessionManager: SessionManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        val sessionManager = SessionManager(this)
+        sessionManager = SessionManager(this)
         if (RoleMapper.normalizeRole(sessionManager.getUserRole()) != AccountRole.STAFF.name) {
             Toast.makeText(this, "Access Denied: Staff only", Toast.LENGTH_LONG).show()
             finish()
@@ -747,10 +749,6 @@ open class StaffProfileActivity : AppCompatActivity() {
         }
 
         setContentView(R.layout.activity_profile)
-
-        findViewById<TextView>(R.id.txtProfileName).text = sessionManager.getFullName() ?: "Staff User"
-        findViewById<TextView>(R.id.txtProfileRole).text = "Staff"
-        findViewById<TextView>(R.id.txtProfileEmail).text = sessionManager.getEmail() ?: "staff@eventqr.com"
         
         setupStaffBottomNav()
 
@@ -759,6 +757,22 @@ open class StaffProfileActivity : AppCompatActivity() {
             startActivity(Intent(this, com.thedavelopers.eventqr.SignIn::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
             finish()
         }
+
+        findViewById<Button>(R.id.btnEditProfile)?.setOnClickListener {
+            startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.AttendeeEditProfileActivity::class.java))
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshProfile()
+    }
+
+    private fun refreshProfile() {
+        findViewById<TextView>(R.id.txtProfileName).text = sessionManager.getFullName() ?: "Staff User"
+        findViewById<TextView>(R.id.txtProfileRole).text = "Staff"
+        findViewById<TextView>(R.id.txtProfileEmail).text = sessionManager.getEmail() ?: "staff@eventqr.com"
+        findViewById<TextView>(R.id.txtPhone).text = sessionManager.getPhone() ?: "N/A"
     }
 
     private fun setupStaffBottomNav() {
