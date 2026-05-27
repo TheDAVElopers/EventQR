@@ -22,7 +22,6 @@ import com.thedavelopers.eventqr.features.users.model.dto.UserRoleRequest;
 import com.thedavelopers.eventqr.features.users.model.dto.UserStatusRequest;
 import com.thedavelopers.eventqr.features.users.model.dto.UserRequest;
 import com.thedavelopers.eventqr.features.users.service.UserService;
-import com.thedavelopers.eventqr.features.audit.service.AuditLogService;
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequestDecisionRequest;
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse;
 import com.thedavelopers.eventqr.features.events.service.EventCreationRequestService;
@@ -36,14 +35,12 @@ public class AdminController {
 
     private final UserService userService;
     private final JwtService jwtService;
-    private final AuditLogService auditLogService;
     private final EventCreationRequestService eventCreationRequestService;
 
-    public AdminController(UserService userService, JwtService jwtService, AuditLogService auditLogService,
+    public AdminController(UserService userService, JwtService jwtService,
                            EventCreationRequestService eventCreationRequestService) {
         this.userService = userService;
         this.jwtService = jwtService;
-        this.auditLogService = auditLogService;
         this.eventCreationRequestService = eventCreationRequestService;
     }
 
@@ -137,12 +134,6 @@ public class AdminController {
         requireAdmin(request);
         return ResponseEntity.ok(ApiResponse.success("Requester upgraded to organizer",
                 eventCreationRequestService.upgradeOrganizer(requestId)));
-    }
-
-    @GetMapping("/audit-logs")
-    public ResponseEntity<ApiResponse<List<com.thedavelopers.eventqr.features.audit.model.dto.AuditLogResponse>>> auditLogs(HttpServletRequest request) {
-        requireAdmin(request);
-        return ResponseEntity.ok(ApiResponse.success(auditLogService.findAll()));
     }
 
     private void requireAdmin(HttpServletRequest request) {

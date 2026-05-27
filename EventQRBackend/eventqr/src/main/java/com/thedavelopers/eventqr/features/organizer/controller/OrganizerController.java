@@ -14,9 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequest;
 import com.thedavelopers.eventqr.features.events.model.dto.EventResponse;
@@ -240,12 +238,6 @@ public class OrganizerController {
                                            @Valid @RequestBody RewardSettingsRequest body) {
         return ResponseEntity.ok(ApiResponse.success("Reward settings updated",
             organizerService.updateRewardSettings(currentUserId(request), eventId, body)));
-    }
-
-    @PostMapping("/events/{eventId}/id-template/logo")
-    public ResponseEntity<ApiResponse<Void>> uploadIdTemplateLogo(@PathVariable UUID eventId,
-                                                                  @RequestParam("file") MultipartFile file) {
-        return ResponseEntity.status(501).body(new ApiResponse<>(false, "ID template logo upload is not wired yet", null, java.time.Instant.now()));
     }
 
     private UUID currentUserId(HttpServletRequest request) {
