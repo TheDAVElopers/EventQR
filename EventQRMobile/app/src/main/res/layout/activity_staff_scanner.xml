@@ -164,10 +164,7 @@
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textSize="17sp"
-                android:textStyle="bold"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                app:cornerRadius="12dp" />
+                android:textStyle="bold" />
 
             <ProgressBar
                 android:id="@+id/progressScanner"

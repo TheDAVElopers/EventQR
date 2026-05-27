@@ -30,6 +30,7 @@ class AttendeeRepository(context: Context) {
     }
     suspend fun createRegistration(eventId: String, request: RegistrationRequest) = safeApiCall { apiService.createRegistration(eventId, request) }
     suspend fun getMyRegistrations() = safeApiCall { apiService.getMyRegistrations() }
+    suspend fun getMyEventTransactions(eventId: String) = safeApiCall { apiService.getMyEventTransactions(eventId) }
     suspend fun createQrCredential(registrationId: String) = safeApiCall { apiService.createQrCredential(registrationId) }
     suspend fun linkQrCredential(registrationId: String) = safeApiCall { apiService.linkQrCredential(registrationId) }
     suspend fun getRegistration(registrationId: String) = safeApiCall { apiService.getRegistration(registrationId) }

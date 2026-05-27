@@ -773,29 +773,13 @@ class RegisteredEventsPresenter(
     fun load() {
         view?.showLoading(true)
         job = kotlinx.coroutines.MainScope().launch {
-            val sessionManager = SessionManager((view as? AppCompatActivity) ?: return@launch)
-            val userId = sessionManager.getUserId().orEmpty()
-            
-            // First get all registrations for the user
-            // Note: The backend might need an endpoint for registrations by user. 
-            // If not available, we get all events and filter.
-            val eventsResult = repository.getEvents()
-            if (eventsResult is NetworkResult.Success) {
-                val registeredEvents = mutableListOf<Pair<AttendeeEventResponse, RegistrationResponse>>()
-                for (event in eventsResult.data) {
-                    val regsResult = repository.getRegistrationsByEvent(event.eventId.toString())
-                    if (regsResult is NetworkResult.Success) {
-                        val userReg = regsResult.data.find { it.attendeeUserId.toString() == userId }
-                        if (userReg != null) {
-                            registeredEvents.add(event to userReg)
-                        }
-                    }
-                }
+            val regsResult = repository.getMyRegistrations()
+            if (regsResult is NetworkResult.Success) {
                 view?.showLoading(false)
-                view?.showRegisteredEvents(registeredEvents)
-            } else if (eventsResult is NetworkResult.Error) {
+                view?.showRegisteredEvents(regsResult.data)
+            } else if (regsResult is NetworkResult.Error) {
                 view?.showLoading(false)
-                view?.showMessage(eventsResult.message)
+                view?.showMessage(regsResult.message)
             }
         }
     }
@@ -803,7 +787,7 @@ class RegisteredEventsPresenter(
 
 interface RegisteredEventsContract {
     interface View : AttendeeView {
-        fun showRegisteredEvents(items: List<Pair<AttendeeEventResponse, RegistrationResponse>>)
+        fun showRegisteredEvents(items: List<RegistrationResponse>)
     }
 }
 
@@ -815,7 +799,7 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
     private lateinit var chipRegistered: TextView
     private lateinit var chipCompleted: TextView
     
-    private var allItems: List<Pair<AttendeeEventResponse, RegistrationResponse>> = emptyList()
+    private var allItems: List<RegistrationResponse> = emptyList()
     private var selectedFilter: RegistrationFilter = RegistrationFilter.ALL
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -873,8 +857,8 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
         val now = Instant.now()
         val filtered = when (selectedFilter) {
             RegistrationFilter.ALL -> allItems
-            RegistrationFilter.REGISTERED -> allItems.filter { it.first.eventEndAt?.isAfter(now) ?: true }
-            RegistrationFilter.COMPLETED -> allItems.filter { it.first.eventEndAt?.isBefore(now) ?: false }
+            RegistrationFilter.REGISTERED -> allItems.filter { it.eventStartAt?.isAfter(now) ?: true }
+            RegistrationFilter.COMPLETED -> allItems.filter { it.eventStartAt?.isBefore(now) ?: false }
         }
         adapter.submitItems(filtered)
         findViewById<View>(R.id.txtRegisteredEventsEmpty).visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
@@ -886,8 +870,8 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
 
         // Update counts in chips
         chipAll.text = "All (${allItems.size})"
-        chipRegistered.text = "Registered (${allItems.count { it.first.eventEndAt?.isAfter(now) ?: true }})"
-        chipCompleted.text = "Completed (${allItems.count { it.first.eventEndAt?.isBefore(now) ?: false }})"
+        chipRegistered.text = "Registered (${allItems.count { it.eventStartAt?.isAfter(now) ?: true }})"
+        chipCompleted.text = "Completed (${allItems.count { it.eventStartAt?.isBefore(now) ?: false }})"
     }
 
     override fun onDestroy() {
@@ -896,14 +880,15 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
     }
 
     override fun showLoading(isLoading: Boolean) {
-        // Handle loading state if needed
+        loadingView.visibility = if (isLoading) View.VISIBLE else View.GONE
+        findViewById<RecyclerView>(R.id.recyclerRegisteredEvents).visibility = if (isLoading) View.GONE else View.VISIBLE
     }
 
     override fun showMessage(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
-    override fun showRegisteredEvents(items: List<Pair<AttendeeEventResponse, RegistrationResponse>>) {
+    override fun showRegisteredEvents(items: List<RegistrationResponse>) {
         allItems = items
         renderFilteredEvents()
     }
@@ -929,7 +914,7 @@ class TransactionHistoryPresenter(
     fun load(eventId: String) {
         view?.showLoading(true)
         job = kotlinx.coroutines.MainScope().launch {
-            when (val result = repository.getTransactionsByEvent(eventId)) {
+            when (val result = repository.getMyEventTransactions(eventId)) {
                 is NetworkResult.Success -> {
                     view?.showLoading(false)
                     view?.renderTransactions(result.data)

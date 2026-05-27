@@ -16,8 +16,8 @@ public interface EventLookupPort {
     List<EventSnapshot> listAll();
 
     record EventSnapshot(UUID eventId, String title, String location, EventStatus status, Instant registrationOpenAt,
-                         Instant registrationCloseAt, int capacity, int currentAttendeeCount, boolean rewardsEnabled,
-                         UUID organizerUserId) {
+                         Instant registrationCloseAt, Instant eventStartAt, Instant eventEndAt, int capacity,
+                         int currentAttendeeCount, boolean rewardsEnabled, UUID organizerUserId) {
 
         public boolean registrationOpen() {
             Instant now = Instant.now();

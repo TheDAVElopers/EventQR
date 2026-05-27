@@ -25,6 +25,7 @@ import com.thedavelopers.eventqr.features.idprinting.model.dto.IdPrintRequest
 import com.thedavelopers.eventqr.features.registrations.RegistrationAdapter
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResponse
+import com.thedavelopers.eventqr.features.staff.model.dto.ScanVerificationResponse
 import com.thedavelopers.eventqr.features.transactions.TransactionAdapter
 import com.thedavelopers.eventqr.features.transactions.TransactionLogAdapter
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionRequest
@@ -106,19 +107,28 @@ class ScannerPresenter(
         }
         view?.showLoading(true)
         job = kotlinx.coroutines.MainScope().launch {
-            when (val result = repository.createTransaction(
-                TransactionRequest(
-                    eventId = UUID.fromString(eventId),
-                    scanPurposeId = purpose.scanPurposeId,
-                    qrValue = qrValue.trim(),
-                    staffUserId = staffUserId?.takeIf { it.isNotBlank() }?.let(UUID::fromString),
-                    notes = notes.ifBlank { null },
-                ),
-                purpose.code
-            )) {
-                is NetworkResult.Success -> view?.appendScanResult(result.data)
-                is NetworkResult.Error -> view?.showScanError(result.message)
-                NetworkResult.Loading -> Unit
+            val request = TransactionRequest(
+                eventId = UUID.fromString(eventId),
+                scanPurposeId = purpose.scanPurposeId,
+                qrValue = qrValue.trim(),
+                staffUserId = staffUserId?.takeIf { it.isNotBlank() }?.let(UUID::fromString),
+                notes = notes.ifBlank { null },
+            )
+            when (purpose.code) {
+                com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.REGISTRATION_LOOKUP -> {
+                    when (val result = repository.verifyScan(request)) {
+                        is NetworkResult.Success -> view?.showVerificationResult(result.data)
+                        is NetworkResult.Error -> view?.showScanError(result.message)
+                        NetworkResult.Loading -> Unit
+                    }
+                }
+                else -> {
+                    when (val result = repository.createTransaction(request, purpose.code)) {
+                        is NetworkResult.Success -> view?.appendScanResult(result.data)
+                        is NetworkResult.Error -> view?.showScanError(result.message)
+                        NetworkResult.Loading -> Unit
+                    }
+                }
             }
             view?.showLoading(false)
         }
@@ -130,6 +140,7 @@ interface ScannerContract {
         fun showEvents(items: List<EventSpinnerOption>)
         fun showPurposes(items: List<ScanPurposeResponse>)
         fun appendScanResult(result: TransactionResponse)
+        fun showVerificationResult(result: ScanVerificationResponse)
         fun showScanError(message: String)
         fun showMessage(message: String)
         fun showLoading(isLoading: Boolean)
@@ -265,19 +276,30 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View {
     }
 
     override fun appendScanResult(result: TransactionResponse) {
-        val details = StringBuilder()
-        details.append("${result.transactionResult.name} • ${result.transactionType.name}\n")
-        result.attendeeName?.let { details.append("Attendee: $it\n") }
-        result.registrationStatus?.let { details.append("Status: $it\n") }
-        if (result.pointsDelta != 0) {
-            details.append("Points: ${if (result.pointsDelta > 0) "+" else ""}${result.pointsDelta}")
+        resultText.text = buildString {
+            append("${result.transactionResult.name} • ${result.transactionType.name}\n")
+            result.attendeeName?.let { append("Attendee: $it\n") }
+            result.registrationStatus?.let { append("Status: $it\n") }
+            if (result.pointsDelta != 0) {
+                append("Points: ${if (result.pointsDelta > 0) "+" else ""}${result.pointsDelta}")
+            }
         }
-        
-        resultText.text = details.toString()
         resultText.visibility = View.VISIBLE
         
         adapter.submitItems(listOf(result) + adapter.getItems())
         Toast.makeText(this, "Scan recorded", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun showVerificationResult(result: ScanVerificationResponse) {
+        resultText.text = buildString {
+            append("${result.message ?: "Verification successful"}\n")
+            append("Attendee: ${result.attendeeName ?: "Unknown attendee"}\n")
+            append("Email: ${result.attendeeEmail ?: "Unknown email"}\n")
+            append("Status: ${result.registrationStatus.name}\n")
+            append("QR Active: ${if (result.qrActive) "Yes" else "No"}")
+        }
+        resultText.visibility = View.VISIBLE
+        Toast.makeText(this, result.message ?: "QR verified", Toast.LENGTH_SHORT).show()
     }
 
     override fun showScanError(message: String) {
@@ -737,11 +759,14 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
 
 open class StaffProfileActivity : AppCompatActivity() {
     private lateinit var sessionManager: SessionManager
+    private lateinit var repository: com.thedavelopers.eventqr.features.attendee.AttendeeRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
         sessionManager = SessionManager(this)
+        repository = com.thedavelopers.eventqr.features.attendee.AttendeeRepository(this)
+        
         if (RoleMapper.normalizeRole(sessionManager.getUserRole()) != AccountRole.STAFF.name) {
             Toast.makeText(this, "Access Denied: Staff only", Toast.LENGTH_LONG).show()
             finish()
@@ -765,12 +790,27 @@ open class StaffProfileActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        refreshProfile()
+        loadProfile()
     }
 
-    private fun refreshProfile() {
+    private fun loadProfile() {
+        renderProfile()
+        
+        kotlinx.coroutines.MainScope().launch {
+            when (val result = repository.getMyProfile()) {
+                is NetworkResult.Success -> {
+                    val user = result.data
+                    sessionManager.updateProfile(user.fullName, user.phoneNumber)
+                    renderProfile()
+                }
+                else -> Unit
+            }
+        }
+    }
+
+    private fun renderProfile() {
         findViewById<TextView>(R.id.txtProfileName).text = sessionManager.getFullName() ?: "Staff User"
-        findViewById<TextView>(R.id.txtProfileRole).text = "Staff"
+        findViewById<TextView>(R.id.txtProfileRole).text = RoleMapper.getDisplayName(sessionManager.getUserRole())
         findViewById<TextView>(R.id.txtProfileEmail).text = sessionManager.getEmail() ?: "staff@eventqr.com"
         findViewById<TextView>(R.id.txtPhone).text = sessionManager.getPhone() ?: "N/A"
     }

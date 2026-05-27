@@ -25,6 +25,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.thedavelopers.eventqr.SignIn
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.session.SessionManager
+import com.thedavelopers.eventqr.core.util.DateFormatters
+import com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpDataSource
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpEvent
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpLoad
@@ -142,10 +144,58 @@ class AdminEventApprovalActivity : AppCompatActivity() {
         eventList.removeAllViews()
         eventList.addView(loadingState("Fetching event requests..."))
         MainScope().launch {
-            eventsSource = repository.loadAllEventRequests()
+            val result = repository.loadAllEventRequests()
+            eventsSource = when (result) {
+                is NetworkResult.Success -> {
+                    OrganizerMvpLoad(
+                        result.data.map { it.toMvpEvent() },
+                        OrganizerMvpDataSource.BACKEND
+                    )
+                }
+                is NetworkResult.Error -> {
+                    OrganizerMvpLoad(
+                        emptyList(),
+                        OrganizerMvpDataSource.MOCK,
+                        result.message
+                    )
+                }
+                NetworkResult.Loading -> OrganizerMvpLoad(emptyList(), OrganizerMvpDataSource.MOCK)
+            }
             render()
         }
     }
+
+    private fun EventRequestResponse.toMvpEvent(): OrganizerMvpEvent = OrganizerMvpEvent(
+        id = eventRequestId.toString(),
+        title = eventName,
+        organizerName = requesterName ?: "Unknown Organizer",
+        dateTime = listOf(DateFormatters.formatInstant(startDateTime), DateFormatters.formatInstant(endDateTime))
+            .filter { it != "-" }
+            .joinToString(" - ")
+            .ifBlank { "-" },
+        shortDate = DateFormatters.formatInstant(startDateTime),
+        venue = venue ?: "TBD",
+        status = status.name.lowercase().replaceFirstChar { it.uppercase() },
+        submittedDate = DateFormatters.formatInstant(createdAt),
+        adminRemarks = adminRemarks ?: "No remarks yet.",
+        additionalOrganizers = emptyList(),
+        registeredCount = capacity,
+        enteredCount = 0,
+        attendedCount = 0,
+        exitedCount = 0,
+        noShowCount = 0,
+        totalTransactions = 0,
+        successfulScans = 0,
+        rejectedScans = 0,
+        benefitClaims = 0,
+        boothSessionVisits = 0,
+        rewardRedemptions = 0,
+        totalPointsAwarded = 0,
+        idTemplateStatus = "Pending",
+        rewardsStatus = if (requestedFeatures?.contains("Rewards") == true) "Requested" else "Not requested",
+        staffCount = 0,
+        scanPurposesCount = 0
+    )
 
     private fun render() {
         val q = search.text.toString()
@@ -273,7 +323,7 @@ class AdminEventApprovalActivity : AppCompatActivity() {
             val result = if (approve) {
                 repository.approveEvent(eventId, sessionManager.getUserId())
             } else {
-                repository.rejectEvent(eventId, reason ?: "Rejected by admin.", sessionManager.getUserId())
+                repository.rejectEvent(eventId, reason ?: "Rejected by admin.")
             }
             
             when (result) {

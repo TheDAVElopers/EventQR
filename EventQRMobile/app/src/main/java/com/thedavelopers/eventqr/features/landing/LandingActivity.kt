@@ -14,13 +14,17 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.Dashboard
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.Registration
 import com.thedavelopers.eventqr.SignIn
+import com.thedavelopers.eventqr.features.auth.AuthRepository
+import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import kotlinx.coroutines.launch
 
 open class LandingActivity : AppCompatActivity() {
     private lateinit var sessionManager: SessionManager
@@ -41,7 +45,7 @@ open class LandingActivity : AppCompatActivity() {
 
         sessionManager = SessionManager(this)
         if (sessionManager.hasUsableToken()) {
-            navigateToDashboard(sessionManager.getUserRole())
+            refreshSessionAndNavigate()
             return
         }
 
@@ -97,5 +101,19 @@ open class LandingActivity : AppCompatActivity() {
                 .putExtra("extra_role", normalizedRole)
         )
         finish()
+    }
+
+    private fun refreshSessionAndNavigate() {
+        lifecycleScope.launch {
+            when (val result = AuthRepository(this@LandingActivity).getAuthMe()) {
+                is NetworkResult.Success -> {
+                    sessionManager.saveRole(result.data.role)
+                    sessionManager.updateProfile(result.data.fullName, result.data.phoneNumber)
+                    navigateToDashboard(result.data.role?.name)
+                }
+                is NetworkResult.Error -> navigateToDashboard(sessionManager.getUserRole())
+                NetworkResult.Loading -> navigateToDashboard(sessionManager.getUserRole())
+            }
+        }
     }
 }

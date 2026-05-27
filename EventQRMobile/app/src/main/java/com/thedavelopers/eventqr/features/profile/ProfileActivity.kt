@@ -2,21 +2,20 @@ package com.thedavelopers.eventqr.features.profile
 
 import android.os.Bundle
 import android.widget.TextView
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
+import kotlinx.coroutines.launch
 
 class ProfileActivity : com.thedavelopers.eventqr.core.ui.BaseNavActivity() {
     private lateinit var sessionManager: com.thedavelopers.eventqr.core.session.SessionManager
+    private lateinit var repository: com.thedavelopers.eventqr.features.attendee.AttendeeRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profile)
 
         sessionManager = com.thedavelopers.eventqr.core.session.SessionManager(this)
+        repository = com.thedavelopers.eventqr.features.attendee.AttendeeRepository(this)
 
         val bottomNav = findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottom_navigation) ?: findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.nav_view_container)
         setupBottomNavigation(bottomNav)
@@ -35,12 +34,27 @@ class ProfileActivity : com.thedavelopers.eventqr.core.ui.BaseNavActivity() {
 
     override fun onResume() {
         super.onResume()
-        refreshProfile()
+        loadProfile()
     }
 
-    private fun refreshProfile() {
+    private fun loadProfile() {
+        renderProfile()
+        
+        lifecycleScope.launch {
+            when (val result = repository.getMyProfile()) {
+                is com.thedavelopers.eventqr.core.api.NetworkResult.Success -> {
+                    val user = result.data
+                    sessionManager.updateProfile(user.fullName, user.phoneNumber)
+                    renderProfile()
+                }
+                else -> Unit
+            }
+        }
+    }
+
+    private fun renderProfile() {
         findViewById<TextView>(R.id.txtProfileName).text = sessionManager.getFullName() ?: "User"
-        findViewById<TextView>(R.id.txtProfileRole).text = sessionManager.getUserRole() ?: "Member"
+        findViewById<TextView>(R.id.txtProfileRole).text = com.thedavelopers.eventqr.core.util.RoleMapper.getDisplayName(sessionManager.getUserRole())
         findViewById<TextView>(R.id.txtProfileEmail).text = sessionManager.getEmail() ?: ""
         findViewById<TextView>(R.id.txtPhone).text = sessionManager.getPhone() ?: "N/A"
     }

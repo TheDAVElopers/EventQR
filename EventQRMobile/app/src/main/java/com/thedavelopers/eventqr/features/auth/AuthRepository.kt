@@ -22,7 +22,7 @@ class AuthRepository(context: Context) {
     suspend fun login(email: String, password: String): NetworkResult<LoginResponse> =
         safeApiCall { apiService.login(LoginRequest(email, password)) }
 
-    suspend fun getAuthMe(): NetworkResult<LoginResponse> =
+        suspend fun getAuthMe(): NetworkResult<UserResponse> =
         safeApiCall { apiService.getAuthMe() }
 
     suspend fun getUserProfile(): NetworkResult<UserResponse> =

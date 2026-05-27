@@ -20,4 +20,8 @@ data class RegistrationResponse(
     val status: RegistrationStatus,
     val qrCredentialId: UUID? = null,
     val registeredAt: Instant? = null,
+    val eventTitle: String? = null,
+    val eventLocation: String? = null,
+    val eventStartAt: Instant? = null,
+    val eventEndAt: Instant? = null,
 )

@@ -60,7 +60,7 @@ public class Event extends BaseEntity {
 
     public EventSnapshot toSnapshot() {
         return new EventSnapshot(getId(), title, location, status, registrationOpenAt, registrationCloseAt,
-                capacity == null ? 0 : capacity, currentAttendeeCount == null ? 0 : currentAttendeeCount,
+                eventStartAt, eventEndAt, capacity == null ? 0 : capacity, currentAttendeeCount == null ? 0 : currentAttendeeCount,
                 rewardsEnabled, organizerUserId);
     }
 }

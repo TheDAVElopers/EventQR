@@ -45,6 +45,7 @@ import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRequest
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeRequest
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResponse
+import com.thedavelopers.eventqr.features.staff.model.dto.ScanVerificationResponse
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionRequest
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
 import com.thedavelopers.eventqr.features.users.model.dto.UserRequest
@@ -83,7 +84,7 @@ interface ApiService {
     suspend fun changePassword(@Body request: PasswordChangeRequest): ApiResponse<UserResponse>
 
     @GET("auth/me")
-    suspend fun getAuthMe(): ApiResponse<LoginResponse>
+    suspend fun getAuthMe(): ApiResponse<UserResponse>
 
     @GET("users/me")
     suspend fun getUsersMe(): ApiResponse<UserResponse>
@@ -223,6 +224,9 @@ interface ApiService {
     @GET("registrations/me")
     suspend fun getMyRegistrations(): ApiResponse<List<RegistrationResponse>>
 
+    @GET("attendees/me/events/{eventId}/transactions")
+    suspend fun getMyEventTransactions(@Path("eventId") eventId: String): ApiResponse<List<TransactionResponse>>
+
     @POST("events/{eventId}/registrations")
     suspend fun createRegistration(
         @Path("eventId") eventId: String,
@@ -337,7 +341,7 @@ interface ApiService {
     suspend fun verifyScan(
         @Path("eventId") eventId: String,
         @Body request: TransactionRequest
-    ): ApiResponse<TransactionResponse>
+    ): ApiResponse<ScanVerificationResponse>
 
     @POST("staff/events/{eventId}/scan/entry")
     suspend fun logEntry(

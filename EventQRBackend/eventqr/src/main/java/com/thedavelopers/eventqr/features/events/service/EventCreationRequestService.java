@@ -9,11 +9,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.thedavelopers.eventqr.features.events.model.dto.EventCreationRequestDto;
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse;
+import com.thedavelopers.eventqr.features.events.model.entity.Event;
 import com.thedavelopers.eventqr.features.events.model.entity.EventCreationRequest;
 import com.thedavelopers.eventqr.features.events.repository.EventCreationRequestRepository;
+import com.thedavelopers.eventqr.features.events.repository.EventRepository;
 import com.thedavelopers.eventqr.features.users.repository.UserProfileRepository;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.EventRequestStatus;
+import com.thedavelopers.eventqr.shared.constants.EventStatus;
 import com.thedavelopers.eventqr.shared.exception.BadRequestException;
 import com.thedavelopers.eventqr.shared.exception.ForbiddenException;
 import com.thedavelopers.eventqr.shared.exception.ResourceNotFoundException;
@@ -24,11 +27,14 @@ public class EventCreationRequestService {
 
     private final EventCreationRequestRepository eventRequestRepository;
     private final UserProfileRepository userProfileRepository;
+    private final EventRepository eventRepository;
 
     public EventCreationRequestService(EventCreationRequestRepository eventRequestRepository,
-                                       UserProfileRepository userProfileRepository) {
+                                       UserProfileRepository userProfileRepository,
+                                       EventRepository eventRepository) {
         this.eventRequestRepository = eventRequestRepository;
         this.userProfileRepository = userProfileRepository;
+        this.eventRepository = eventRepository;
     }
 
     public EventRequestResponse create(UUID requesterUserId, EventCreationRequestDto request) {
@@ -91,7 +97,35 @@ public class EventCreationRequestService {
         request.setAdminRemarks(trimToNull(remarks));
         request.setReviewedByUserId(adminUserId);
         request.setReviewedAt(Instant.now());
-        return toResponse(eventRequestRepository.save(request));
+        EventCreationRequest savedRequest = eventRequestRepository.save(request);
+
+        Event event = eventRepository.findFirstByOrganizerUserIdAndTitleAndEventStartAtAndLocation(
+                savedRequest.getRequesterUserId(),
+                savedRequest.getEventName(),
+                savedRequest.getStartDateTime(),
+                savedRequest.getVenue())
+                .orElseGet(Event::new);
+
+        event.setTitle(savedRequest.getEventName());
+        event.setDescription(savedRequest.getEventDescription());
+        event.setLocation(savedRequest.getVenue());
+        event.setRegistrationOpenAt(savedRequest.getRegistrationStartDateTime());
+        event.setRegistrationCloseAt(savedRequest.getRegistrationEndDateTime());
+        event.setEventStartAt(savedRequest.getStartDateTime());
+        event.setEventEndAt(savedRequest.getEndDateTime());
+        event.setCapacity(savedRequest.getCapacity());
+        if (event.getCurrentAttendeeCount() == null) {
+            event.setCurrentAttendeeCount(0);
+        }
+        event.setStatus(EventStatus.APPROVED);
+        event.setRewardsEnabled(savedRequest.getRequestedFeatures() != null &&
+                savedRequest.getRequestedFeatures().stream().anyMatch(f -> f.equalsIgnoreCase("Rewards")));
+        event.setOrganizerUserId(savedRequest.getRequesterUserId());
+        event.setApprovedByUserId(adminUserId);
+        event.setApprovedAt(savedRequest.getReviewedAt());
+        eventRepository.save(event);
+
+        return toResponse(savedRequest);
     }
 
     public EventRequestResponse reject(UUID requestId, UUID adminUserId, String remarks) {

@@ -15,12 +15,14 @@ import kotlinx.coroutines.launch
 
 open class AttendeeProfileActivity : AppCompatActivity() {
     private lateinit var sessionManager: SessionManager
+    private lateinit var repository: AttendeeRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profile)
 
         sessionManager = SessionManager(this)
+        repository = AttendeeRepository(this)
         
         findViewById<Button>(R.id.btnEditProfile).setOnClickListener {
             startActivity(Intent(this, AttendeeEditProfileActivity::class.java))
@@ -39,10 +41,29 @@ open class AttendeeProfileActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        refreshProfile()
+        loadProfile()
     }
 
-    private fun refreshProfile() {
+    private fun loadProfile() {
+        // Initial sync from session
+        renderProfile()
+
+        // Fresh fetch from backend
+        lifecycleScope.launch {
+            when (val result = repository.getMyProfile()) {
+                is com.thedavelopers.eventqr.core.api.NetworkResult.Success -> {
+                    val user = result.data
+                    sessionManager.updateProfile(user.fullName, user.phoneNumber)
+                    // If login didn't provide role/email or it changed, update it too
+                    // Note: SessionManager doesn't have an update for these yet, but render will use what's there
+                    renderProfile()
+                }
+                else -> Unit
+            }
+        }
+    }
+
+    private fun renderProfile() {
         findViewById<TextView>(R.id.txtProfileName).text =
             sessionManager.getFullName()?.takeIf { it.isNotBlank() } ?: "Attendee"
         findViewById<TextView>(R.id.txtProfileRole).text =

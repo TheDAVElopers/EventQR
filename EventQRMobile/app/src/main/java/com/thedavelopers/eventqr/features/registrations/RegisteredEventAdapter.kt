@@ -13,15 +13,13 @@ import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.features.attendee.AttendeeTransactionsActivity
 import com.thedavelopers.eventqr.features.attendee.EXTRA_EVENT_ID
 import com.thedavelopers.eventqr.features.attendee.EXTRA_EVENT_TITLE
-import com.thedavelopers.eventqr.features.attendee.EventDetailActivity
-import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 
 class RegisteredEventAdapter : RecyclerView.Adapter<RegisteredEventAdapter.ViewHolder>() {
 
-    private val items = mutableListOf<Pair<AttendeeEventResponse, RegistrationResponse>>()
+    private val items = mutableListOf<RegistrationResponse>()
 
-    fun submitItems(newItems: List<Pair<AttendeeEventResponse, RegistrationResponse>>) {
+    fun submitItems(newItems: List<RegistrationResponse>) {
         items.clear()
         items.addAll(newItems)
         notifyDataSetChanged()
@@ -33,7 +31,7 @@ class RegisteredEventAdapter : RecyclerView.Adapter<RegisteredEventAdapter.ViewH
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(items[position].first, items[position].second)
+        holder.bind(items[position])
     }
 
     override fun getItemCount(): Int = items.size
@@ -48,8 +46,8 @@ class RegisteredEventAdapter : RecyclerView.Adapter<RegisteredEventAdapter.ViewH
         private val btnTransactions: Button = itemView.findViewById(R.id.btnTransactionHistory)
         private val btnDetails: Button = itemView.findViewById(R.id.btnEventDetails)
 
-        fun bind(event: AttendeeEventResponse, registration: RegistrationResponse) {
-            titleView.text = event.title
+        fun bind(registration: RegistrationResponse) {
+            titleView.text = registration.eventTitle ?: "Registered event"
             statusView.text = registration.status.name.lowercase().replaceFirstChar { it.uppercase() }
             
             val (statusColor, statusBg) = when (registration.status) {
@@ -62,8 +60,8 @@ class RegisteredEventAdapter : RecyclerView.Adapter<RegisteredEventAdapter.ViewH
             statusView.setTextColor(android.graphics.Color.parseColor(statusColor))
             statusView.setBackgroundResource(statusBg)
 
-            dateTimeView.text = DateFormatters.formatInstant(event.eventStartAt)
-            locationView.text = event.location ?: "Location not specified"
+            dateTimeView.text = registration.eventStartAt?.let(DateFormatters::formatInstant) ?: "Date not specified"
+            locationView.text = registration.eventLocation ?: "Location not specified"
             regDateView.text = "Registered: ${registration.registeredAt?.let { DateFormatters.formatInstant(it) } ?: "N/A"}"
             
             // Points would ideally come from the registration or a separate balance call
@@ -72,20 +70,13 @@ class RegisteredEventAdapter : RecyclerView.Adapter<RegisteredEventAdapter.ViewH
             btnTransactions.setOnClickListener {
                 val context = itemView.context
                 val intent = Intent(context, AttendeeTransactionsActivity::class.java).apply {
-                    putExtra(EXTRA_EVENT_ID, event.eventId.toString())
-                    putExtra(EXTRA_EVENT_TITLE, event.title)
+                    putExtra(EXTRA_EVENT_ID, registration.eventId.toString())
+                    putExtra(EXTRA_EVENT_TITLE, registration.eventTitle.orEmpty())
                 }
                 context.startActivity(intent)
             }
 
-            btnDetails.setOnClickListener {
-                val context = itemView.context
-                val intent = Intent(context, EventDetailActivity::class.java).apply {
-                    putExtra(EXTRA_EVENT_ID, event.eventId.toString())
-                    putExtra(EXTRA_EVENT_TITLE, event.title)
-                }
-                context.startActivity(intent)
-            }
+            btnDetails.visibility = View.GONE
         }
     }
 }

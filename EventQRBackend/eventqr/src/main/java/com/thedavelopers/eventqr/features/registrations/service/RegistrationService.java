@@ -16,13 +16,12 @@ import com.thedavelopers.eventqr.shared.constants.RegistrationStatus;
 import com.thedavelopers.eventqr.shared.exception.ConflictException;
 import com.thedavelopers.eventqr.shared.exception.ForbiddenException;
 import com.thedavelopers.eventqr.shared.exception.ResourceNotFoundException;
-import com.thedavelopers.eventqr.shared.port.RegistrationCommandPort;
 import com.thedavelopers.eventqr.shared.port.AttendeeDirectoryPort;
-import com.thedavelopers.eventqr.shared.port.AttendeeDirectoryPort.AttendeeSnapshot;
 import com.thedavelopers.eventqr.shared.port.EventLookupPort;
 import com.thedavelopers.eventqr.shared.port.EventLookupPort.EventSnapshot;
 import com.thedavelopers.eventqr.shared.port.QrCredentialPort;
 import com.thedavelopers.eventqr.shared.port.QrCredentialPort.QrCredentialSnapshot;
+import com.thedavelopers.eventqr.shared.port.RegistrationCommandPort;
 import com.thedavelopers.eventqr.shared.port.RegistrationLookupPort;
 import com.thedavelopers.eventqr.shared.port.RegistrationLookupPort.RegistrationSnapshot;
 
@@ -203,9 +202,12 @@ public class RegistrationService implements RegistrationLookupPort, Registration
     }
 
     private RegistrationResponse toResponse(EventRegistration registration) {
+        EventSnapshot eventSnapshot = eventLookupPort.findById(registration.getEventId())
+            .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + registration.getEventId()));
         return new RegistrationResponse(registration.getId(), registration.getEventId(), registration.getAttendeeUserId(),
                 registration.getAttendeeEmail(), registration.getAttendeeName(), registration.getStatus(),
-                registration.getQrCredentialId(), registration.getRegisteredAt());
+            registration.getQrCredentialId(), registration.getRegisteredAt(), eventSnapshot.title(),
+            eventSnapshot.location(), eventSnapshot.eventStartAt(), eventSnapshot.eventEndAt());
     }
 
     private RegistrationSnapshot toSnapshot(EventRegistration registration) {
