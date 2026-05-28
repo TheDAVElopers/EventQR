@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.thedavelopers.eventqr.features.qrcredentials.service.QrCredentialService;
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationRequest;
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse;
+import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationSubmissionResponse;
 import com.thedavelopers.eventqr.features.registrations.service.RegistrationService;
 import com.thedavelopers.eventqr.shared.port.QrCredentialPort.QrCredentialSnapshot;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
@@ -37,7 +38,7 @@ public class RegistrationController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<RegistrationResponse>> register(@Valid @RequestBody RegistrationRequest request) {
+    public ResponseEntity<ApiResponse<RegistrationSubmissionResponse>> register(@Valid @RequestBody RegistrationRequest request) {
         return ResponseEntity.ok(ApiResponse.success("Registration completed", registrationService.register(request)));
     }
 

@@ -98,7 +98,8 @@ public class TransactionService {
         }
 
         var purpose = scanPurposePort.requireActive(request.scanPurposeId());
-        validateStaff(request.eventId(), request.staffUserId());
+        TransactionRule rule = loadRule(request.eventId(), request.scanPurposeId());
+        validateStaff(request.eventId(), request.staffUserId(), rule.isRequiresStaffAssignment());
 
         var qrSnapshot = qrCredentialPort.findByQrValue(request.qrValue())
                 .orElseThrow(() -> new ResourceNotFoundException("Invalid QR credential"));
@@ -115,7 +116,6 @@ public class TransactionService {
 
         var registration = registrationLookupPort.findByQrCredentialId(qrSnapshot.qrCredentialId())
                 .orElseThrow(() -> new ResourceNotFoundException("Registration not found for QR credential"));
-    validateStaff(request.eventId(), request.staffUserId(), rule.isRequiresStaffAssignment());
 
     String duplicateReason = determineDuplicateReason(purpose.code().name(), registration, rule);
         if (duplicateReason != null) {

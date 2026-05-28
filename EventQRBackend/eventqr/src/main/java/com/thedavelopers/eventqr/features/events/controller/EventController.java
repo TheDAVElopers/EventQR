@@ -20,6 +20,7 @@ import com.thedavelopers.eventqr.features.events.model.dto.EventRequest;
 import com.thedavelopers.eventqr.features.events.model.dto.EventResponse;
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationRequest;
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse;
+import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationSubmissionResponse;
 import com.thedavelopers.eventqr.features.registrations.service.RegistrationService;
 import com.thedavelopers.eventqr.features.events.service.EventService;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
@@ -68,8 +69,8 @@ public class EventController {
     }
 
     @PostMapping("/{eventId}/registrations")
-    public ResponseEntity<ApiResponse<RegistrationResponse>> register(@PathVariable UUID eventId,
-                                                                      @Valid @RequestBody RegistrationRequest request) {
+    public ResponseEntity<ApiResponse<RegistrationSubmissionResponse>> register(@PathVariable UUID eventId,
+                                                                                @Valid @RequestBody RegistrationRequest request) {
         RegistrationRequest normalized = new RegistrationRequest(eventId, request.email(), request.fullName(), request.phoneNumber());
         return ResponseEntity.ok(ApiResponse.success("Registration completed", registrationService.register(normalized)));
     }
