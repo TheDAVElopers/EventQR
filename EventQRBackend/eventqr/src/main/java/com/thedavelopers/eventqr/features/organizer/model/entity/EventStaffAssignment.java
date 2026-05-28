@@ -28,10 +28,10 @@ public class EventStaffAssignment extends BaseEntity {
     private UUID staffUserId;
 
     @Column(name = "role_label", nullable = false)
-    private String roleLabel = "Scanner";
+    private String roleLabel = "Staff";
 
     @Column(name = "staff_role", nullable = false)
-    private String staffRole = "SCANNER";
+    private String staffRole = "STAFF";
 
     @Column(nullable = false)
     private boolean active = true;
@@ -61,10 +61,10 @@ public class EventStaffAssignment extends BaseEntity {
     @PreUpdate
     void ensureDefaults() {
         if (roleLabel == null || roleLabel.isBlank()) {
-            roleLabel = "Scanner";
+            roleLabel = "Staff";
         }
-        if (staffRole == null || staffRole.isBlank()) {
-            staffRole = "SCANNER";
+        if (staffRole == null || staffRole.isBlank() || !"STAFF".equalsIgnoreCase(staffRole)) {
+            staffRole = "STAFF";
         }
         if (permissions == null || permissions.isBlank()) {
             permissions = "Scan QR,View attendee details";

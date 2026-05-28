@@ -5,7 +5,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -52,8 +51,8 @@ import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
 public class OrganizerService {
 
     private static final List<String> DEFAULT_PERMISSIONS = List.of("Scan QR", "View attendee details");
-    private static final String DEFAULT_ROLE_LABEL = "Scanner";
-    private static final String DEFAULT_STAFF_ROLE = "SCANNER";
+    private static final String DEFAULT_ROLE_LABEL = "Staff";
+    private static final String DEFAULT_STAFF_ROLE = "STAFF";
     private static final Logger log = LoggerFactory.getLogger(OrganizerService.class);
 
     private final EventRepository eventRepository;
@@ -757,48 +756,30 @@ public class OrganizerService {
     }
 
     private String normalizeRoleLabel(String value) {
-        String normalized = blankToDefault(value, DEFAULT_ROLE_LABEL);
-        if (normalized.equalsIgnoreCase(DEFAULT_STAFF_ROLE)) {
+        if (value == null || value.isBlank()) {
             return DEFAULT_ROLE_LABEL;
         }
-        return normalized;
+        String normalized = value.trim();
+        return switch (normalized.toUpperCase()) {
+            case "SCANNER", "REGISTRATION_STAFF", "ID_PRINTER", "REWARD_STAFF", "EVENT_MANAGER", "STAFF" -> DEFAULT_ROLE_LABEL;
+            default -> normalized;
+        };
     }
 
     private String toStaffRole(String roleLabel) {
-        String normalized = blankToDefault(roleLabel, DEFAULT_ROLE_LABEL);
-        if (normalized.equalsIgnoreCase(DEFAULT_ROLE_LABEL) || normalized.equalsIgnoreCase(DEFAULT_STAFF_ROLE)) {
-            return DEFAULT_STAFF_ROLE;
-        }
-        return normalized.trim().toUpperCase(Locale.ROOT).replace(' ', '_');
+        return DEFAULT_STAFF_ROLE;
     }
 
     private String resolveRoleLabel(EventStaffAssignment assignment) {
         String roleLabel = assignment.getRoleLabel();
-        if (roleLabel != null && !roleLabel.isBlank()) {
-            if (roleLabel.equalsIgnoreCase(DEFAULT_STAFF_ROLE)) {
-                return DEFAULT_ROLE_LABEL;
-            }
-            return roleLabel.trim();
-        }
-        String staffRole = assignment.getStaffRole();
-        if (staffRole == null || staffRole.isBlank()) {
+        if (roleLabel == null || roleLabel.isBlank()) {
             return DEFAULT_ROLE_LABEL;
         }
-        String[] tokens = staffRole.toLowerCase(Locale.ROOT).replace('_', ' ').split(" ");
-        StringBuilder builder = new StringBuilder();
-        for (String token : tokens) {
-            if (token.isBlank()) {
-                continue;
-            }
-            if (builder.length() > 0) {
-                builder.append(' ');
-            }
-            builder.append(Character.toUpperCase(token.charAt(0)));
-            if (token.length() > 1) {
-                builder.append(token.substring(1));
-            }
-        }
-        return builder.length() == 0 ? DEFAULT_ROLE_LABEL : builder.toString();
+        String normalized = roleLabel.trim();
+        return switch (normalized.toUpperCase()) {
+            case "SCANNER", "REGISTRATION_STAFF", "ID_PRINTER", "REWARD_STAFF", "EVENT_MANAGER", "STAFF" -> DEFAULT_ROLE_LABEL;
+            default -> normalized;
+        };
     }
 
     private void applyPermissionOverrides(EventStaffAssignment assignment, List<String> permissions) {
