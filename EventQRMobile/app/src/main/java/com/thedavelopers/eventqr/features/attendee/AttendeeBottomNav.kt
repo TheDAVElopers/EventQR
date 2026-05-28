@@ -3,8 +3,8 @@ package com.thedavelopers.eventqr.features.attendee
 import android.content.Intent
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import com.thedavelopers.eventqr.Dashboard
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.features.dashboard.DashboardActivity
 
 enum class AttendeeBottomNavItem {
     DASHBOARD,
@@ -14,7 +14,7 @@ enum class AttendeeBottomNavItem {
 }
 
 fun AppCompatActivity.configureAttendeeBottomNav(selectedItem: AttendeeBottomNavItem) {
-    bindBottomNavItem(R.id.navDashboard, selectedItem == AttendeeBottomNavItem.DASHBOARD, Dashboard::class.java)
+    bindBottomNavItem(R.id.navDashboard, selectedItem == AttendeeBottomNavItem.DASHBOARD, DashboardActivity::class.java)
     bindBottomNavItem(R.id.navEvents, selectedItem == AttendeeBottomNavItem.EVENTS, AttendeeEventsActivity::class.java)
     bindBottomNavItem(R.id.navRewards, selectedItem == AttendeeBottomNavItem.REWARDS, AttendeeRewardsActivity::class.java)
     bindBottomNavItem(R.id.navProfile, selectedItem == AttendeeBottomNavItem.PROFILE, AttendeeProfileActivity::class.java)

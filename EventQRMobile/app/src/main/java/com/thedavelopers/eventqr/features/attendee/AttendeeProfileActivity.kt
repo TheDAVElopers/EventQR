@@ -30,7 +30,7 @@ open class AttendeeProfileActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnProfileLogout).setOnClickListener {
             sessionManager.clearSession()
             startActivity(
-                Intent(this, com.thedavelopers.eventqr.SignIn::class.java)
+                Intent(this, com.thedavelopers.eventqr.features.auth.login.LoginActivity::class.java)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
             )
             finish()

@@ -92,7 +92,7 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
 
     private fun bindNavigation() {
         navDashboard.setOnClickListener {
-            startActivity(Intent(this, com.thedavelopers.eventqr.Dashboard::class.java))
+            startActivity(Intent(this, com.thedavelopers.eventqr.features.dashboard.DashboardActivity::class.java))
             finish()
         }
 

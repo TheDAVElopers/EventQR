@@ -15,15 +15,15 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
-import com.thedavelopers.eventqr.Dashboard
 import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.Registration
-import com.thedavelopers.eventqr.SignIn
 import com.thedavelopers.eventqr.features.auth.AuthRepository
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.features.auth.login.LoginActivity
+import com.thedavelopers.eventqr.features.auth.register.RegistrationActivity
+import com.thedavelopers.eventqr.features.dashboard.DashboardActivity
 import kotlinx.coroutines.launch
 
 open class LandingActivity : AppCompatActivity() {
@@ -78,12 +78,12 @@ open class LandingActivity : AppCompatActivity() {
         val btnCreateAccount = findViewById<Button>(R.id.btnCreateAccount)
 
         btnSignIn.setOnClickListener {
-            startActivity(Intent(this, SignIn::class.java))
+            startActivity(Intent(this, LoginActivity::class.java))
             finish()
         }
 
         btnCreateAccount.setOnClickListener {
-            startActivity(Intent(this, Registration::class.java))
+            startActivity(Intent(this, RegistrationActivity::class.java))
             finish()
         }
     }
@@ -94,7 +94,7 @@ open class LandingActivity : AppCompatActivity() {
             AccountRole.STAFF.name -> com.thedavelopers.eventqr.features.staff.StaffDashboardActivity::class.java
             AccountRole.ORGANIZER.name, AccountRole.ADMIN.name, AccountRole.SUPER_ADMIN.name ->
                 com.thedavelopers.eventqr.features.organizer.OrganizerDashboardActivity::class.java
-            else -> Dashboard::class.java
+            else -> DashboardActivity::class.java
         }
         startActivity(
             Intent(this, destination)

@@ -62,22 +62,22 @@
         <activity android:name=".features.organizer.TransactionLogsActivity" android:exported="false" />
         <activity android:name=".features.organizer.EventReportsActivity" android:exported="false" />
         <activity
-            android:name=".ForgotPassword"
+            android:name=".features.auth.forgotpassword.ForgotPasswordActivity"
             android:exported="false" />
         <activity
             android:name=".features.common.ComingSoonActivity"
             android:exported="false" />
         <activity
-            android:name=".ChangePassword"
+            android:name=".features.auth.changepassword.ChangePasswordActivity"
             android:exported="false" />
         <activity
-            android:name=".Dashboard"
+            android:name=".features.dashboard.DashboardActivity"
             android:exported="false" />
         <activity
-            android:name=".Registration"
+            android:name=".features.auth.register.RegistrationActivity"
             android:exported="false" />
         <activity
-            android:name=".SplashScreen"
+            android:name=".features.landing.LandingActivity"
             android:exported="true"
             android:theme="@style/Theme.App.Starting">
             <intent-filter>
@@ -87,7 +87,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".SignIn"
+            android:name=".features.auth.login.LoginActivity"
             android:exported="false" />
     </application>
 

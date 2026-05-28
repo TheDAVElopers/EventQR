@@ -22,7 +22,7 @@ import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.thedavelopers.eventqr.SignIn
+import com.thedavelopers.eventqr.features.auth.login.LoginActivity
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.DateFormatters

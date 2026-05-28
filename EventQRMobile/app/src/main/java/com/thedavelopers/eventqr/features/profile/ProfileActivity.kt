@@ -27,7 +27,7 @@ class ProfileActivity : com.thedavelopers.eventqr.core.ui.BaseNavActivity() {
 
         findViewById<android.widget.Button>(R.id.btnProfileLogout)?.setOnClickListener {
             sessionManager.clearSession()
-            startActivity(android.content.Intent(this, com.thedavelopers.eventqr.SignIn::class.java).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK))
+            startActivity(android.content.Intent(this, com.thedavelopers.eventqr.features.auth.login.LoginActivity::class.java).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK))
             finish()
         }
     }

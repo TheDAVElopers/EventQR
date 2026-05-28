@@ -4,7 +4,6 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.Dashboard
 import com.thedavelopers.eventqr.features.dashboard.DashboardActivity
 import com.thedavelopers.eventqr.features.events.EventsActivity
 import com.thedavelopers.eventqr.features.profile.ProfileActivity
@@ -17,7 +16,7 @@ abstract class BaseNavActivity : AppCompatActivity() {
             when (item.itemId) {
                 R.id.nav_dashboard -> {
                     if (this !is DashboardActivity) {
-                        startActivity(Intent(this, Dashboard::class.java))
+                        startActivity(Intent(this, DashboardActivity::class.java))
                         finish()
                     }
                     true
