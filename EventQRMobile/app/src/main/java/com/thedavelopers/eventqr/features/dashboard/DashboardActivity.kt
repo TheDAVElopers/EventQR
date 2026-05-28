@@ -144,7 +144,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
             return
         }
 
-        items.forEach { item ->
+        items.take(3).forEach { item ->
             recentActivityLayout.addView(createTransactionPreviewRow(item))
         }
     }
@@ -410,9 +410,8 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
                 staffCard.text = "My Registered Events"
                 organizerCard.text = "Transaction History"
                 notificationsCard.text = "Request Event"
-                configureStandaloneAction(rewardsCard, "Rewards") {
-                    startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.AttendeeRewardsActivity::class.java))
-                }
+                
+                rewardsCard.visibility = View.GONE
                 reportsCard.visibility = View.GONE
                 logoutCard.visibility = View.GONE
 

@@ -169,7 +169,7 @@
                 android:orientation="vertical"
                 android:paddingHorizontal="17dp"
                 android:paddingTop="30dp"
-                android:paddingBottom="30dp">
+                android:paddingBottom="40dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"

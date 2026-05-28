@@ -131,10 +131,10 @@
                             android:layout_height="56dp"
                             android:layout_weight="1"
                             android:layout_marginStart="8dp"
-                            android:background="@drawable/bg_card"
+                            android:background="@drawable/bg_scanner_button"
                             android:gravity="center"
                             android:text="Registrations"
-                            android:textColor="#1F2937"
+                            android:textColor="@color/white"
                             android:textStyle="bold" />
                     </LinearLayout>
 
@@ -151,10 +151,10 @@
                             android:layout_height="56dp"
                             android:layout_weight="1"
                             android:layout_marginEnd="8dp"
-                            android:background="@drawable/bg_card"
+                            android:background="@drawable/bg_scanner_button"
                             android:gravity="center"
                             android:text="Transaction Logs"
-                            android:textColor="#1F2937"
+                            android:textColor="@color/white"
                             android:textStyle="bold" />
 
                         <TextView
@@ -163,10 +163,10 @@
                             android:layout_height="56dp"
                             android:layout_weight="1"
                             android:layout_marginStart="8dp"
-                            android:background="@drawable/bg_card"
+                            android:background="@drawable/bg_scanner_button"
                             android:gravity="center"
                             android:text="ID Printing"
-                            android:textColor="#1F2937"
+                            android:textColor="@color/white"
                             android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
@@ -219,7 +219,8 @@
                                 android:layout_width="32dp"
                                 android:layout_height="32dp"
                                 android:src="@drawable/ic_qr_scan"
-                                android:layout_marginBottom="8dp"/>
+                                android:layout_marginBottom="8dp"
+                                android:tint="@color/black"/>
 
                             <TextView
                                 android:id="@+id/txtScansToday"
