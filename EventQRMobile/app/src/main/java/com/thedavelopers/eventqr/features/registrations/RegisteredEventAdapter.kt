@@ -70,6 +70,7 @@ class RegisteredEventAdapter : RecyclerView.Adapter<RegisteredEventAdapter.ViewH
                 val context = itemView.context
                 val intent = Intent(context, AttendeeQrCredentialActivity::class.java).apply {
                     putExtra(EXTRA_REGISTRATION_ID, registration.registrationId.toString())
+                    putExtra(com.thedavelopers.eventqr.features.attendee.EXTRA_QR_CREDENTIAL_ID, registration.qrCredentialId?.toString().orEmpty())
                 }
                 context.startActivity(intent)
             }

@@ -4,15 +4,19 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.thedavelopers.eventqr.features.events.service.EventService;
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationRequest;
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse;
+import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationSubmissionResponse;
 import com.thedavelopers.eventqr.features.registrations.model.entity.EventRegistration;
 import com.thedavelopers.eventqr.features.registrations.repository.EventRegistrationRepository;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
+import com.thedavelopers.eventqr.shared.constants.EventStatus;
 import com.thedavelopers.eventqr.shared.constants.RegistrationStatus;
 import com.thedavelopers.eventqr.shared.exception.ConflictException;
 import com.thedavelopers.eventqr.shared.exception.ForbiddenException;
@@ -29,6 +33,9 @@ import com.thedavelopers.eventqr.shared.port.RegistrationLookupPort.Registration
 @Service
 @Transactional
 public class RegistrationService implements RegistrationLookupPort, RegistrationCommandPort {
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     private final EventRegistrationRepository registrationRepository;
     private final AttendeeDirectoryPort attendeeDirectoryPort;
@@ -48,21 +55,32 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         this.eventService = eventService;
     }
 
-    public RegistrationResponse register(RegistrationRequest request) {
+    public RegistrationSubmissionResponse register(RegistrationRequest request) {
         EventLookupPort.EventSnapshot eventSnapshot = eventLookupPort.findById(request.eventId())
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + request.eventId()));
-        if (!eventSnapshot.registrationOpen()) {
-            throw new ForbiddenException("Registration is closed or event is not approved");
+        Instant now = Instant.now();
+        boolean registrationWindowOpen = (eventSnapshot.registrationOpenAt() == null || !now.isBefore(eventSnapshot.registrationOpenAt()))
+                && (eventSnapshot.registrationCloseAt() == null || !now.isAfter(eventSnapshot.registrationCloseAt()));
+        if (eventSnapshot.status() != EventStatus.ACTIVE) {
+            throw new ForbiddenException("Event is not active");
+        }
+        if (!registrationWindowOpen) {
+            throw new ForbiddenException("Registration is closed");
         }
         if (eventSnapshot.isFull()) {
             throw new ConflictException("Event is at capacity");
         }
-        if (registrationRepository.existsByEventIdAndAttendeeUserId(request.eventId(), attendeeSnapshot.userId())) {
-            throw new ConflictException("Duplicate registration for this event and email");
+        String normalizedEmail = request.email().trim();
+        if (registrationRepository.existsByEventIdAndAttendeeEmailIgnoreCase(request.eventId(), normalizedEmail)) {
+            throw new ConflictException("Duplicate registration for this event and attendee");
         }
 
         AttendeeDirectoryPort.AttendeeSnapshot attendeeSnapshot = attendeeDirectoryPort.findOrCreateAttendee(
-                request.email(), request.fullName(), request.phoneNumber(), AccountRole.ATTENDEE);
+                normalizedEmail, request.fullName(), request.phoneNumber(), AccountRole.ATTENDEE);
+
+        if (registrationRepository.existsByEventIdAndAttendeeUserId(request.eventId(), attendeeSnapshot.userId())) {
+            throw new ConflictException("Duplicate registration for this event and attendee");
+        }
 
         EventRegistration registration = new EventRegistration();
         registration.setEventId(request.eventId());
@@ -71,18 +89,20 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         registration.setAttendeeName(attendeeSnapshot.fullName());
         registration.setStatus(RegistrationStatus.REGISTERED);
         registration.setRegisteredAt(Instant.now());
-        registration = registrationRepository.save(registration);
+        registration = registrationRepository.saveAndFlush(registration);
 
         eventService.incrementCurrentAttendeeCount(request.eventId());
 
-        QrCredentialPort.QrCredentialSnapshot qrCredential = qrCredentialPort.issueOrReturnExisting(request.eventId(),
-                attendeeSnapshot.userId(), registration.getId(), attendeeSnapshot.email());
-        qrCredentialPort.markEmailQueued(qrCredential.qrCredentialId());
+        entityManager.flush();
+        entityManager.clear();
 
-        registration.setQrCredentialId(qrCredential.qrCredentialId());
-        registration = registrationRepository.save(registration);
+        UUID registrationId = registration.getId();
+        EventRegistration savedRegistration = registrationRepository.findById(registrationId)
+            .orElseThrow(() -> new ResourceNotFoundException("Registration not found: " + registrationId));
+        QrCredentialSnapshot qrCredential = qrCredentialPort.findByRegistrationId(savedRegistration.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("QR credential not found for registration: " + savedRegistration.getId()));
 
-        return toResponse(registration);
+        return new RegistrationSubmissionResponse(toResponse(savedRegistration), qrCredential);
     }
 
     public List<RegistrationResponse> findByEvent(UUID eventId) {

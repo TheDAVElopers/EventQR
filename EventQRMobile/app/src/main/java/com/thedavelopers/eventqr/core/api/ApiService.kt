@@ -36,6 +36,7 @@ import com.thedavelopers.eventqr.features.organizer.model.dto.StaffAssignmentUpd
 import com.thedavelopers.eventqr.features.qrcredential.model.dto.QrCredentialSnapshot
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationRequest
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
+import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationSubmissionResponse
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportSnapshot
 import com.thedavelopers.eventqr.features.rewards.model.dto.PointBalanceResponse
 import com.thedavelopers.eventqr.features.rewards.model.dto.PointRuleRequest
@@ -266,13 +267,16 @@ interface ApiService {
     suspend fun getMyTransactions(): ApiResponse<List<TransactionResponse>>
 
     @POST("registrations")
-    suspend fun createRegistration(@Body request: RegistrationRequest): ApiResponse<RegistrationResponse>
+    suspend fun createRegistration(@Body request: RegistrationRequest): ApiResponse<RegistrationSubmissionResponse>
 
     @POST("registrations/{registrationId}/qr")
     suspend fun createQrCredential(@Path("registrationId") registrationId: String): ApiResponse<QrCredentialSnapshot>
 
     @POST("registrations/{registrationId}/qr/link")
     suspend fun linkQrCredential(@Path("registrationId") registrationId: String): ApiResponse<QrCredentialSnapshot>
+
+    @GET("qr-credentials/{qrCredentialId}")
+    suspend fun getQrCredentialById(@Path("qrCredentialId") qrCredentialId: String): ApiResponse<QrCredentialSnapshot>
 
     @GET("registrations/{registrationId}")
     suspend fun getRegistration(@Path("registrationId") registrationId: String): ApiResponse<RegistrationResponse>

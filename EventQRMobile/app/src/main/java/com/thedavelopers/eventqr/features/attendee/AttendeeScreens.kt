@@ -491,25 +491,13 @@ class RegistrationPresenter(
             
             when (regResult) {
                 is NetworkResult.Success -> {
-                    val registration = regResult.data
-                    val registrationId = registration.registrationId.toString()
+                    val submission = regResult.data
+                    val registrationId = submission.registration.registrationId.toString()
+                    val qrCredentialId = submission.qrCredential.qrCredentialId.toString()
 
                     view?.showLoading(false)
                     view?.showMessage("Registration successful")
-                    if (registration.qrCredentialId != null) {
-                        view?.openQr(registrationId)
-                    } else {
-                        val qrResult = repository.createQrCredential(registrationId)
-                        if (qrResult is NetworkResult.Success) {
-                            view?.openQr(registrationId)
-                        } else {
-                            view?.showMessage("Registered successfully, but QR generation failed. Please try again later.")
-                            (view as? AppCompatActivity)?.let {
-                                it.startActivity(Intent(it, RegisteredEventsActivity::class.java))
-                                it.finish()
-                            }
-                        }
-                    }
+                    view?.openQr(registrationId, qrCredentialId)
                 }
                 is NetworkResult.Error -> {
                     view?.showLoading(false)
@@ -524,7 +512,7 @@ class RegistrationPresenter(
 interface RegistrationContract {
     interface View : AttendeeView {
         fun showFieldError(field: String, message: String?)
-        fun openQr(registrationId: String)
+        fun openQr(registrationId: String, qrCredentialId: String)
     }
 }
 
@@ -631,8 +619,10 @@ open class AttendeeRegistrationActivity : AppCompatActivity(), RegistrationContr
         }
     }
 
-    override fun openQr(registrationId: String) {
-        startActivity(Intent(this, AttendeeQrCredentialActivity::class.java).putExtra(EXTRA_REGISTRATION_ID, registrationId))
+    override fun openQr(registrationId: String, qrCredentialId: String) {
+        startActivity(Intent(this, AttendeeQrCredentialActivity::class.java)
+            .putExtra(EXTRA_REGISTRATION_ID, registrationId)
+            .putExtra(EXTRA_QR_CREDENTIAL_ID, qrCredentialId))
         finish()
     }
 }
@@ -648,14 +638,18 @@ class QrCredentialPresenter(
         view = null
     }
 
-    fun load(registrationId: String) {
+    fun load(registrationId: String, qrCredentialId: String? = null) {
         view?.showLoading(true)
         job = kotlinx.coroutines.MainScope().launch {
-            // Ensure QR exists/is linked before rendering
-            val qrResult = repository.getQrCredentialByRegistration(registrationId)
+            val qrResult = when {
+                !qrCredentialId.isNullOrBlank() -> repository.getQrCredentialById(qrCredentialId)
+                registrationId.isNotBlank() -> repository.getQrCredentialByRegistration(registrationId)
+                else -> NetworkResult.Error("Missing registration information")
+            }
             
             if (qrResult is NetworkResult.Success) {
-                val regResult = repository.getRegistration(registrationId)
+                val qrCredential = qrResult.data
+                val regResult = repository.getRegistration(qrCredential.registrationId.toString())
                 var eventTitle: String? = null
                 if (regResult is NetworkResult.Success) {
                     val eventResult = repository.getEvent(regResult.data.eventId.toString())
@@ -666,20 +660,14 @@ class QrCredentialPresenter(
                 
                 view?.showLoading(false)
                 view?.renderQr(
-                    qrResult.data,
+                    qrCredential,
                     (regResult as? NetworkResult.Success)?.data,
                     eventTitle
                 )
-                qrResult.data.qrCredentialId.toString().also { repository.markQrDisplayed(it) }
-            } else {
-                // If get failed, try creating it again (one-time fallback)
-                val createResult = repository.createQrCredential(registrationId)
-                if (createResult is NetworkResult.Success) {
-                    load(registrationId) // Recursive call to retry render after creation
-                } else if (createResult is NetworkResult.Error) {
-                    view?.showLoading(false)
-                    view?.showMessage("Unable to load QR: ${createResult.message}")
-                }
+                qrCredential.qrCredentialId.toString().also { repository.markQrDisplayed(it) }
+            } else if (qrResult is NetworkResult.Error) {
+                view?.showLoading(false)
+                view?.showMessage(qrResult.message)
             }
         }
     }
@@ -727,13 +715,19 @@ open class AttendeeQrCredentialActivity : AppCompatActivity(), QrCredentialContr
         findViewById<View>(R.id.btnCloseQr)?.setOnClickListener { finish() }
 
         findViewById<Button>(R.id.btnLoadQr).setOnClickListener {
-            presenter.load(findViewById<EditText>(R.id.edtQrRegistrationId).text.toString())
+            presenter.load(
+                findViewById<EditText>(R.id.edtQrRegistrationId).text.toString(),
+                intent.getStringExtra(EXTRA_QR_CREDENTIAL_ID)
+            )
         }
 
         val registrationId = intent.getStringExtra(EXTRA_REGISTRATION_ID).orEmpty()
+        val qrCredentialId = intent.getStringExtra(EXTRA_QR_CREDENTIAL_ID).orEmpty()
         if (registrationId.isNotBlank()) {
             findViewById<EditText>(R.id.edtQrRegistrationId).setText(registrationId)
-            presenter.load(registrationId)
+            presenter.load(registrationId, qrCredentialId.ifBlank { null })
+        } else if (qrCredentialId.isNotBlank()) {
+            presenter.load("", qrCredentialId)
         }
 
         markDownloadedButton.setOnClickListener {
@@ -1416,6 +1410,7 @@ const val EXTRA_EVENT_CATEGORY = "extra_event_category"
 const val EXTRA_PREFILL_EMAIL = "extra_prefill_email"
 const val EXTRA_PREFILL_FULL_NAME = "extra_prefill_full_name"
 const val EXTRA_REGISTRATION_ID = "extra_registration_id"
+const val EXTRA_QR_CREDENTIAL_ID = "extra_qr_credential_id"
 const val EXTRA_REWARD_ID = "extra_reward_id"
 const val EXTRA_REWARD_NAME = "extra_reward_name"
 const val EXTRA_REWARD_POINTS = "extra_reward_points"
