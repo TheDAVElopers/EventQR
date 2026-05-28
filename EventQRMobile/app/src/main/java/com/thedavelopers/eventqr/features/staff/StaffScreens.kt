@@ -1,6 +1,8 @@
 package com.thedavelopers.eventqr.features.staff
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
@@ -11,7 +13,9 @@ import android.widget.ImageView
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
@@ -25,6 +29,7 @@ import com.thedavelopers.eventqr.features.idprinting.model.dto.IdPrintRequest
 import com.thedavelopers.eventqr.features.registrations.RegistrationAdapter
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResponse
+import com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResponse
 import com.thedavelopers.eventqr.features.staff.model.dto.ScanVerificationResponse
 import com.thedavelopers.eventqr.features.transactions.TransactionAdapter
 import com.thedavelopers.eventqr.features.transactions.TransactionLogAdapter
@@ -34,12 +39,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.util.UUID
 
-data class EventSpinnerOption(val id: String, val label: String)
+data class EventSpinnerOption(val id: String, val label: String, val canScan: Boolean)
 
-class StaffEventAdapter(private val onEventClick: (com.thedavelopers.eventqr.features.events.model.dto.EventResponse) -> Unit) : RecyclerView.Adapter<StaffEventAdapter.ViewHolder>() {
-    private val items = mutableListOf<com.thedavelopers.eventqr.features.events.model.dto.EventResponse>()
+class StaffEventAdapter(private val onEventClick: (StaffAssignedEventResponse) -> Unit) : RecyclerView.Adapter<StaffEventAdapter.ViewHolder>() {
+    private val items = mutableListOf<StaffAssignedEventResponse>()
 
-    fun submitItems(newItems: List<com.thedavelopers.eventqr.features.events.model.dto.EventResponse>) {
+    fun submitItems(newItems: List<StaffAssignedEventResponse>) {
         items.clear()
         items.addAll(newItems)
         notifyDataSetChanged()
@@ -80,7 +85,7 @@ class ScannerPresenter(
         view?.showLoading(true)
         job = kotlinx.coroutines.MainScope().launch {
             when (val result = repository.getEvents()) {
-                is NetworkResult.Success -> view?.showEvents(result.data.map { EventSpinnerOption(it.eventId.toString(), it.title) })
+                is NetworkResult.Success -> view?.showEvents(result.data.map { EventSpinnerOption(it.eventId.toString(), it.title, it.canScan) })
                 is NetworkResult.Error -> view?.showMessage(result.message)
                 NetworkResult.Loading -> Unit
             }
@@ -153,6 +158,20 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View {
     private val eventOptions = mutableListOf<EventSpinnerOption>()
     private val purposeOptions = mutableListOf<ScanPurposeResponse>()
     private var preselectedEventId: String? = null
+    private val cameraScanLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val scannedValue = result.data?.getStringExtra(StaffScreenExtras.EXTRA_QR_VALUE)
+        if (result.resultCode == RESULT_OK && !scannedValue.isNullOrBlank()) {
+            qrInput.setText(scannedValue)
+            qrInput.setSelection(scannedValue.length)
+        }
+    }
+    private val cameraPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) {
+            openCameraScanner()
+        } else {
+            Toast.makeText(this, "Camera permission is required for QR scanning", Toast.LENGTH_LONG).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -195,21 +214,27 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View {
             adapter = this@ScannerActivity.adapter
         }
 
-        // Mock Scanning Implementation
         findViewById<View>(R.id.layoutScannerPlaceholder)?.setOnClickListener {
-            qrInput.visibility = View.VISIBLE
-            qrInput.requestFocus()
-            Toast.makeText(this, "Manual input enabled for testing. Enter QR value.", Toast.LENGTH_SHORT).show()
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                openCameraScanner()
+            } else {
+                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
         }
 
         eventSpinner.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: android.widget.AdapterView<*>, view: View?, position: Int, id: Long) {
                 if (position in eventOptions.indices) {
+                    val selectedEvent = eventOptions[position]
                     findViewById<TextView>(R.id.txtScannerSelectedEvent)?.apply {
-                        text = eventOptions[position].label
+                        text = selectedEvent.label
                         visibility = View.VISIBLE
                     }
-                    presenter.loadPurposes(eventOptions[position].id)
+                    presenter.loadPurposes(selectedEvent.id)
+                    if (!selectedEvent.canScan) {
+                        findViewById<Button>(R.id.btnSubmitScan).text = "No Scan QR access for this event"
+                        findViewById<Button>(R.id.btnSubmitScan).isEnabled = false
+                    }
                 }
             }
 
@@ -217,11 +242,14 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View {
         }
 
         findViewById<Button>(R.id.btnSubmitScan).setOnClickListener {
-            val eventId = eventOptions.getOrNull(eventSpinner.selectedItemPosition)?.id.orEmpty()
+            val selectedEvent = eventOptions.getOrNull(eventSpinner.selectedItemPosition)
+            val eventId = selectedEvent?.id.orEmpty()
             val purpose = purposeOptions.getOrNull(purposeSpinner.selectedItemPosition)
             val qrValue = qrInput.text.toString().trim()
             if (eventId.isBlank()) {
                 Toast.makeText(this, "Select an assigned event", Toast.LENGTH_SHORT).show()
+            } else if (selectedEvent?.canScan != true) {
+                Toast.makeText(this, "You do not have Scan QR access for this event", Toast.LENGTH_LONG).show()
             } else if (purpose == null) {
                 Toast.makeText(this, "Select a scan purpose", Toast.LENGTH_SHORT).show()
             } else if (qrValue.isBlank()) {
@@ -264,9 +292,23 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View {
         if (items.isNotEmpty()) {
             findViewById<TextView>(R.id.txtScannerSelectedEvent).text = items.first().label
             presenter.loadPurposes(items.first().id)
+            if (!items.first().canScan) {
+                findViewById<Button>(R.id.btnSubmitScan).text = "No Scan QR access for this event"
+                findViewById<Button>(R.id.btnSubmitScan).isEnabled = false
+                Toast.makeText(this, "Assigned to event, but scan permission is disabled", Toast.LENGTH_LONG).show()
+            }
         } else {
             findViewById<Button>(R.id.btnSubmitScan).isEnabled = false
         }
+    }
+
+    private fun openCameraScanner() {
+        val selected = eventOptions.getOrNull(eventSpinner.selectedItemPosition)
+        if (selected != null && !selected.canScan) {
+            Toast.makeText(this, "You do not have Scan QR access for this event", Toast.LENGTH_LONG).show()
+            return
+        }
+        cameraScanLauncher.launch(Intent(this, StaffCameraScannerActivity::class.java))
     }
 
     override fun showPurposes(items: List<ScanPurposeResponse>) {
@@ -276,10 +318,14 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View {
         purposeSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, labels).also {
             it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         }
+        val canScan = eventOptions.getOrNull(eventSpinner.selectedItemPosition)?.canScan == true
         
-        if (items.isNotEmpty()) {
+        if (items.isNotEmpty() && canScan) {
             findViewById<Button>(R.id.btnSubmitScan)?.text = "Verify QR"
             findViewById<Button>(R.id.btnSubmitScan)?.isEnabled = true
+        } else if (items.isNotEmpty()) {
+            findViewById<Button>(R.id.btnSubmitScan)?.text = "No Scan QR access for this event"
+            findViewById<Button>(R.id.btnSubmitScan)?.isEnabled = false
         } else {
             findViewById<Button>(R.id.btnSubmitScan)?.text = "No scan purposes configured"
             findViewById<Button>(R.id.btnSubmitScan)?.isEnabled = false
@@ -781,7 +827,7 @@ class StaffDashboardPresenter(
 
 interface StaffDashboardContract {
     interface View {
-        fun renderEvents(items: List<com.thedavelopers.eventqr.features.events.model.dto.EventResponse>)
+        fun renderEvents(items: List<StaffAssignedEventResponse>)
         fun renderRecentScans(items: List<TransactionResponse>)
         fun updateStats(scans: Int, checkins: Int)
         fun showMessage(message: String)
@@ -871,14 +917,17 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
         super.onDestroy()
     }
 
-    override fun renderEvents(items: List<com.thedavelopers.eventqr.features.events.model.dto.EventResponse>) {
+    override fun renderEvents(items: List<StaffAssignedEventResponse>) {
         findViewById<TextView>(R.id.txtAssignedCount).text = items.size.toString()
         eventAdapter.submitItems(items)
         findViewById<TextView>(R.id.txtAssignedEmptyState).visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
         findViewById<RecyclerView>(R.id.recyclerAssignedEvents).visibility = if (items.isEmpty()) View.GONE else View.VISIBLE
+        findViewById<View>(R.id.btnQuickScan).isEnabled = items.any { it.canScan }
         
         if (items.isEmpty()) {
             Toast.makeText(this, "No events assigned to you yet", Toast.LENGTH_LONG).show()
+        } else if (items.none { it.canScan }) {
+            Toast.makeText(this, "No active Scan QR permission for assigned events", Toast.LENGTH_LONG).show()
         }
     }
 

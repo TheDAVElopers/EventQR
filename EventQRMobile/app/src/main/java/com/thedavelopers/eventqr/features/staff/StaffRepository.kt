@@ -10,6 +10,7 @@ import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationRe
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeRequest
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResponse
+import com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResponse
 import com.thedavelopers.eventqr.features.staff.model.dto.ScanVerificationResponse
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionRequest
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
@@ -17,7 +18,7 @@ import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResp
 class StaffRepository(context: Context) {
     private val apiService = ApiClient.getService(context)
 
-    suspend fun getEvents() = safeApiCall { apiService.getStaffEvents() }
+    suspend fun getEvents(): NetworkResult<List<StaffAssignedEventResponse>> = safeApiCall { apiService.getStaffEvents() }
 
     suspend fun getEventById(eventId: String) = safeApiCall { apiService.getStaffEventById(eventId) }
 

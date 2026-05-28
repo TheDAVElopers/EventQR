@@ -159,11 +159,16 @@ class OrganizerRepository(private val context: Context) {
     }
 
     suspend fun addStaffForMvp(event: OrganizerMvpEvent, staff: OrganizerMvpStaff): OrganizerMvpLoad<OrganizerMvpStaff> {
+        val permissionLower = staff.permissions.joinToString("|").lowercase()
         val request = StaffAssignmentRequestDto(
             staffUserId = staff.id.toUuidOrNull(),
             email = staff.email,
             name = staff.name,
             roleLabel = staff.roleLabel,
+            canScan = permissionLower.contains("scan"),
+            canPrintId = permissionLower.contains("print"),
+            canViewLogs = permissionLower.contains("log"),
+            canManageRewards = permissionLower.contains("reward"),
             permissions = staff.permissions,
         )
         return when (val result = addOrganizerStaff(event.id, request)) {
@@ -174,9 +179,14 @@ class OrganizerRepository(private val context: Context) {
     }
 
     suspend fun updateStaffForMvp(event: OrganizerMvpEvent, staff: OrganizerMvpStaff): OrganizerMvpLoad<OrganizerMvpStaff> {
+        val permissionLower = staff.permissions.joinToString("|").lowercase()
         val request = StaffAssignmentUpdateRequestDto(
             active = staff.accessStatus.equals("Active", ignoreCase = true),
             roleLabel = staff.roleLabel,
+            canScan = permissionLower.contains("scan"),
+            canPrintId = permissionLower.contains("print"),
+            canViewLogs = permissionLower.contains("log"),
+            canManageRewards = permissionLower.contains("reward"),
             permissions = staff.permissions,
         )
         return when (val result = updateOrganizerStaff(event.id, staff.id, request)) {
@@ -443,7 +453,14 @@ private fun OrganizerStaffDto.toMvpStaff(eventTitle: String): OrganizerMvpStaff 
     roleLabel = roleLabel ?: "Scanner",
     accessStatus = if (active) "Active" else "Disabled",
     addedDate = DateFormatters.formatInstant(addedAt),
-    permissions = permissions,
+    permissions = permissions.ifEmpty {
+        buildList {
+            if (canScan) add("Scan QR")
+            if (canPrintId) add("Print ID")
+            if (canViewLogs) add("View Logs")
+            if (canManageRewards) add("Manage Rewards")
+        }
+    },
 )
 
 private fun OrganizerUserSearchDto.toAvailableStaff(): OrganizerMvpStaff = OrganizerMvpStaff(

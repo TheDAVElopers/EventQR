@@ -36,6 +36,7 @@
         <activity android:name=".features.staff.EventRegistrationsActivity" android:exported="false" />
         <activity android:name=".features.staff.IdPrintingActivity" android:exported="false" />
         <activity android:name=".features.staff.StaffTransactionsActivity" android:exported="false" />
+        <activity android:name=".features.staff.StaffCameraScannerActivity" android:exported="false" />
         <activity android:name=".features.staff.ScannerActivity" android:exported="false" />
         <activity android:name=".features.staff.StaffAttendeeDetailsActivity" android:exported="false" />
         <activity android:name=".features.staff.StaffTransactionResultActivity" android:exported="false" />

@@ -166,7 +166,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="24dp"
-                        android:text="Manual QR entry is available. Camera scanning is not enabled in this build."
+                        android:text="Tap to open camera scanner. Manual QR entry remains available as fallback."
                         android:textAlignment="center"
                         android:textColor="#6B7280"
                         android:textSize="16sp" />

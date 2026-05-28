@@ -47,6 +47,7 @@ import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRequest
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeRequest
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResponse
+import com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResponse
 import com.thedavelopers.eventqr.features.staff.model.dto.ScanVerificationResponse
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionRequest
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
@@ -368,7 +369,7 @@ interface ApiService {
 
     // Staff QR Scanning Endpoints
     @GET("staff/events")
-    suspend fun getStaffEvents(): ApiResponse<List<EventResponse>>
+    suspend fun getStaffEvents(): ApiResponse<List<StaffAssignedEventResponse>>
 
     @GET("staff/events/{eventId}")
     suspend fun getStaffEventById(@Path("eventId") eventId: String): ApiResponse<EventResponse>

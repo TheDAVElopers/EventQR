@@ -110,6 +110,10 @@ data class OrganizerStaffDto(
     val email: String? = null,
     val roleLabel: String? = null,
     val active: Boolean = true,
+    val canScan: Boolean = false,
+    val canPrintId: Boolean = false,
+    val canViewLogs: Boolean = false,
+    val canManageRewards: Boolean = false,
     val permissions: List<String> = emptyList(),
     val addedAt: Instant? = null,
 )
@@ -119,12 +123,20 @@ data class StaffAssignmentRequestDto(
     val email: String? = null,
     val name: String? = null,
     val roleLabel: String? = null,
+    val canScan: Boolean? = null,
+    val canPrintId: Boolean? = null,
+    val canViewLogs: Boolean? = null,
+    val canManageRewards: Boolean? = null,
     val permissions: List<String> = emptyList(),
 )
 
 data class StaffAssignmentUpdateRequestDto(
     val active: Boolean? = null,
     val roleLabel: String? = null,
+    val canScan: Boolean? = null,
+    val canPrintId: Boolean? = null,
+    val canViewLogs: Boolean? = null,
+    val canManageRewards: Boolean? = null,
     val permissions: List<String>? = null,
 )
 
