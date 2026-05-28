@@ -338,6 +338,10 @@ public class OrganizerService {
         rule.setScanPurposeId(purpose.getId());
         rule.setActive(request.enabled());
         rule.setAllowDuplicate(request.allowDuplicate());
+        if (rule.getId() == null) {
+            rule.setDuplicateWindowMinutes(0);
+            rule.setMaxUsesPerRegistration(1);
+        }
         rule.setRequiresStaffAssignment(true);
         rule.setPointsAwarded(request.pointsEnabled() ? request.pointsValue() : 0);
         transactionRuleRepository.save(rule);
@@ -367,6 +371,10 @@ public class OrganizerService {
         rule.setEventId(eventId);
         rule.setScanPurposeId(purposeId);
         rule.setActive(enabled);
+        if (rule.getId() == null) {
+            rule.setDuplicateWindowMinutes(0);
+            rule.setMaxUsesPerRegistration(1);
+        }
         if (!enabled) {
             rule.setAllowDuplicate(false);
         }
@@ -389,6 +397,10 @@ public class OrganizerService {
         if (trackingOnly) {
             rule.setPointsAwarded(0);
         }
+        if (rule.getId() == null) {
+            rule.setDuplicateWindowMinutes(0);
+            rule.setMaxUsesPerRegistration(1);
+        }
         transactionRuleRepository.save(rule);
         return toScanPurpose(purpose);
     }
@@ -406,9 +418,19 @@ public class OrganizerService {
         rule.setScanPurposeId(request.scanPurposeId());
         rule.setActive(request.active());
         rule.setAllowDuplicate(request.allowDuplicate());
+        rule.setDuplicateWindowMinutes(normalizeNonNegative(request.duplicateWindowMinutes(), 0));
+        rule.setMaxUsesPerRegistration(normalizePositive(request.maxUsesPerRegistration(), 1));
         rule.setRequiresStaffAssignment(request.requiresStaffAssignment());
         rule.setPointsAwarded(request.pointsAwarded());
         return transactionRuleRepository.save(rule);
+    }
+
+    private int normalizeNonNegative(int value, int fallback) {
+        return value < 0 ? fallback : value;
+    }
+
+    private int normalizePositive(int value, int fallback) {
+        return value <= 0 ? fallback : value;
     }
 
     private Event requireOrganizerEvent(UUID organizerUserId, UUID eventId) {

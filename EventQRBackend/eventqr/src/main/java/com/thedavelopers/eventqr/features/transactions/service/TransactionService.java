@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.transactions.service;
 
 import java.time.Instant;
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
@@ -75,7 +76,8 @@ public class TransactionService {
         if (!eventSnapshot.eventId().equals(purpose.eventId())) {
             throw new ForbiddenException("Scan purpose does not belong to the event");
         }
-        validateStaff(request.eventId(), request.staffUserId());
+        TransactionRule rule = loadRule(request.eventId(), request.scanPurposeId());
+        validateStaff(request.eventId(), request.staffUserId(), rule.isRequiresStaffAssignment());
         var qrSnapshot = qrCredentialPort.findByQrValue(request.qrValue())
                 .orElseThrow(() -> new ResourceNotFoundException("Invalid QR credential"));
         if (!eventSnapshot.eventId().equals(qrSnapshot.eventId())) {
@@ -113,10 +115,9 @@ public class TransactionService {
 
         var registration = registrationLookupPort.findByQrCredentialId(qrSnapshot.qrCredentialId())
                 .orElseThrow(() -> new ResourceNotFoundException("Registration not found for QR credential"));
-        TransactionRule rule = transactionRuleRepository.findByEventIdAndScanPurposeId(request.eventId(), request.scanPurposeId())
-                .orElseGet(() -> defaultRule(request.eventId(), request.scanPurposeId()));
+    validateStaff(request.eventId(), request.staffUserId(), rule.isRequiresStaffAssignment());
 
-        String duplicateReason = determineDuplicateReason(purpose.code().name(), registration, rule.isAllowDuplicate());
+    String duplicateReason = determineDuplicateReason(purpose.code().name(), registration, rule);
         if (duplicateReason != null) {
             return reject(eventSnapshot.eventId(), registration.attendeeUserId(), registration.registrationId(),
                     registration.qrCredentialId(), purpose.scanPurposeId(), request.staffUserId(), duplicateReason,
@@ -180,7 +181,12 @@ public class TransactionService {
         return toResponse(log);
     }
 
-    private void validateStaff(UUID eventId, UUID staffUserId) {
+    private TransactionRule loadRule(UUID eventId, UUID scanPurposeId) {
+        return transactionRuleRepository.findByEventIdAndScanPurposeId(eventId, scanPurposeId)
+                .orElseGet(() -> defaultRule(eventId, scanPurposeId));
+    }
+
+    private void validateStaff(UUID eventId, UUID staffUserId, boolean requiresStaffAssignment) {
         if (staffUserId == null) {
             throw new ForbiddenException("Staff user is required for scan transactions");
         }
@@ -190,7 +196,7 @@ public class TransactionService {
                 || (staff.role() != AccountRole.STAFF && staff.role() != AccountRole.ORGANIZER && staff.role() != AccountRole.ADMIN)) {
             throw new ForbiddenException("Staff user is not authorized for this scan");
         }
-        if (staff.role() == AccountRole.STAFF && !eventStaffAssignmentRepository.existsByEventIdAndStaffUserId(eventId, staffUserId)) {
+        if (requiresStaffAssignment && staff.role() == AccountRole.STAFF && !eventStaffAssignmentRepository.existsByEventIdAndStaffUserId(eventId, staffUserId)) {
             throw new ForbiddenException("Staff user is not assigned to this event");
         }
     }
@@ -201,14 +207,28 @@ public class TransactionService {
         rule.setScanPurposeId(scanPurposeId);
         rule.setActive(true);
         rule.setAllowDuplicate(false);
+        rule.setDuplicateWindowMinutes(0);
+        rule.setMaxUsesPerRegistration(1);
         rule.setRequiresStaffAssignment(true);
         rule.setPointsAwarded(0);
         return rule;
     }
 
     private String determineDuplicateReason(String purposeCode, RegistrationLookupPort.RegistrationSnapshot registration,
-                                            boolean allowDuplicate) {
-        if (allowDuplicate) {
+                                            TransactionRule rule) {
+        List<TransactionLog> history = transactionLogRepository.findByRegistrationIdAndScanPurposeIdOrderByScannedAtDesc(
+                registration.registrationId(), rule.getScanPurposeId());
+        long approvedUses = history.stream().filter(log -> log.getTransactionResult() == TransactionResult.APPROVED).count();
+        if (rule.getMaxUsesPerRegistration() > 0 && approvedUses >= rule.getMaxUsesPerRegistration()) {
+            return "Scan limit reached for this registration";
+        }
+        if (rule.getDuplicateWindowMinutes() > 0 && !history.isEmpty()) {
+            Instant latestScan = history.get(0).getScannedAt();
+            if (latestScan != null && latestScan.isAfter(Instant.now().minus(Duration.ofMinutes(rule.getDuplicateWindowMinutes())))) {
+                return "Duplicate scan is not allowed within the configured window";
+            }
+        }
+        if (rule.isAllowDuplicate()) {
             return null;
         }
         if ("ENTRY".equals(purposeCode) && registration.status() == RegistrationStatus.ENTERED) {

@@ -10,6 +10,8 @@ public interface QrCredentialPort {
 
     QrCredentialSnapshot issueCredential(UUID eventId, UUID attendeeUserId, UUID registrationId, String attendeeEmail);
 
+    QrCredentialSnapshot issueOrReturnExisting(UUID eventId, UUID attendeeUserId, UUID registrationId, String attendeeEmail);
+
     Optional<QrCredentialSnapshot> findById(UUID qrCredentialId);
 
     Optional<QrCredentialSnapshot> findByRegistrationId(UUID registrationId);

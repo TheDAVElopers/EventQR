@@ -12,6 +12,8 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
 
     boolean existsByEventIdAndAttendeeEmailIgnoreCase(UUID eventId, String attendeeEmail);
 
+    boolean existsByEventIdAndAttendeeUserId(UUID eventId, UUID attendeeUserId);
+
     Optional<EventRegistration> findByEventIdAndAttendeeEmailIgnoreCase(UUID eventId, String attendeeEmail);
 
     Optional<EventRegistration> findByQrCredentialId(UUID qrCredentialId);

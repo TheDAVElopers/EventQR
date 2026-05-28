@@ -481,7 +481,6 @@ class RegistrationPresenter(
         view?.showLoading(true)
         job = kotlinx.coroutines.MainScope().launch {
             val regResult = repository.createRegistration(
-                eventId,
                 RegistrationRequest(
                     eventId = UUID.fromString(eventId),
                     email = normalizedEmail,
@@ -492,25 +491,23 @@ class RegistrationPresenter(
             
             when (regResult) {
                 is NetworkResult.Success -> {
-                    val registrationId = regResult.data.registrationId.toString()
-                    // Create QR Credential immediately after successful registration
-                    val qrResult = repository.createQrCredential(registrationId)
-                    
-                    if (qrResult is NetworkResult.Success) {
-                        // Optional linking if backend didn't do it automatically
-                        repository.linkQrCredential(registrationId)
-                        
-                        view?.showLoading(false)
-                        view?.showMessage("Registration and QR creation successful")
+                    val registration = regResult.data
+                    val registrationId = registration.registrationId.toString()
+
+                    view?.showLoading(false)
+                    view?.showMessage("Registration successful")
+                    if (registration.qrCredentialId != null) {
                         view?.openQr(registrationId)
                     } else {
-                        // Registration worked but QR failed - still show success but warn about QR
-                        view?.showLoading(false)
-                        view?.showMessage("Registered successfully, but QR generation failed. Please try again later.")
-                        // Navigate to registered events instead
-                        (view as? AppCompatActivity)?.let {
-                            it.startActivity(Intent(it, RegisteredEventsActivity::class.java))
-                            it.finish()
+                        val qrResult = repository.createQrCredential(registrationId)
+                        if (qrResult is NetworkResult.Success) {
+                            view?.openQr(registrationId)
+                        } else {
+                            view?.showMessage("Registered successfully, but QR generation failed. Please try again later.")
+                            (view as? AppCompatActivity)?.let {
+                                it.startActivity(Intent(it, RegisteredEventsActivity::class.java))
+                                it.finish()
+                            }
                         }
                     }
                 }

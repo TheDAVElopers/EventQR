@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.thedavelopers.eventqr.features.events.service.EventService;
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationRequest;
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse;
 import com.thedavelopers.eventqr.features.registrations.model.entity.EventRegistration;
@@ -33,15 +34,18 @@ public class RegistrationService implements RegistrationLookupPort, Registration
     private final AttendeeDirectoryPort attendeeDirectoryPort;
     private final EventLookupPort eventLookupPort;
     private final QrCredentialPort qrCredentialPort;
+    private final EventService eventService;
 
     public RegistrationService(EventRegistrationRepository registrationRepository,
                                AttendeeDirectoryPort attendeeDirectoryPort,
                                EventLookupPort eventLookupPort,
-                               QrCredentialPort qrCredentialPort) {
+                               QrCredentialPort qrCredentialPort,
+                               EventService eventService) {
         this.registrationRepository = registrationRepository;
         this.attendeeDirectoryPort = attendeeDirectoryPort;
         this.eventLookupPort = eventLookupPort;
         this.qrCredentialPort = qrCredentialPort;
+        this.eventService = eventService;
     }
 
     public RegistrationResponse register(RegistrationRequest request) {
@@ -53,7 +57,7 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         if (eventSnapshot.isFull()) {
             throw new ConflictException("Event is at capacity");
         }
-        if (registrationRepository.existsByEventIdAndAttendeeEmailIgnoreCase(request.eventId(), request.email())) {
+        if (registrationRepository.existsByEventIdAndAttendeeUserId(request.eventId(), attendeeSnapshot.userId())) {
             throw new ConflictException("Duplicate registration for this event and email");
         }
 
@@ -69,7 +73,9 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         registration.setRegisteredAt(Instant.now());
         registration = registrationRepository.save(registration);
 
-        QrCredentialPort.QrCredentialSnapshot qrCredential = qrCredentialPort.issueCredential(request.eventId(),
+        eventService.incrementCurrentAttendeeCount(request.eventId());
+
+        QrCredentialPort.QrCredentialSnapshot qrCredential = qrCredentialPort.issueOrReturnExisting(request.eventId(),
                 attendeeSnapshot.userId(), registration.getId(), attendeeSnapshot.email());
         qrCredentialPort.markEmailQueued(qrCredential.qrCredentialId());
 
@@ -107,8 +113,11 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         if (!registration.getAttendeeUserId().equals(attendeeUserId)) {
             throw new ForbiddenException("You can only cancel your own registration");
         }
-        registration.setStatus(RegistrationStatus.CANCELLED);
-        registrationRepository.save(registration);
+        if (registration.getStatus() != RegistrationStatus.CANCELLED) {
+            registration.setStatus(RegistrationStatus.CANCELLED);
+            registrationRepository.save(registration);
+            eventService.decrementCurrentAttendeeCount(registration.getEventId());
+        }
         if (registration.getQrCredentialId() != null) {
             qrCredentialPort.findById(registration.getQrCredentialId()).ifPresent(qr -> qrCredentialPort.markEmailQueued(qr.qrCredentialId()));
         }

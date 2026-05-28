@@ -29,6 +29,12 @@ public class TransactionRule extends BaseEntity {
     private boolean allowDuplicate;
 
     @Column(nullable = false)
+    private int duplicateWindowMinutes;
+
+    @Column(nullable = false)
+    private int maxUsesPerRegistration = 1;
+
+    @Column(nullable = false)
     private boolean requiresStaffAssignment = true;
 
     @Column(nullable = false)

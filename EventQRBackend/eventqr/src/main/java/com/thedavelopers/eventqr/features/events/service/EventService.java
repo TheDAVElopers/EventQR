@@ -144,6 +144,13 @@ public class EventService implements EventLookupPort {
         eventRepository.save(event);
     }
 
+    public void decrementCurrentAttendeeCount(UUID eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
+        event.setCurrentAttendeeCount(Math.max(0, safeCount(event.getCurrentAttendeeCount()) - 1));
+        eventRepository.save(event);
+    }
+
     private EventResponse toResponse(Event event) {
         int capacity = safeCount(event.getCapacity());
         int attendeeCount = safeCount(event.getCurrentAttendeeCount());

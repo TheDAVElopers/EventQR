@@ -43,6 +43,7 @@ public class QrCredentialService implements QrCredentialPort {
         return qrCredentialRepository.save(qrCredential).toSnapshot();
     }
 
+    @Override
     public QrCredentialSnapshot issueOrReturnExisting(UUID eventId, UUID attendeeUserId, UUID registrationId, String attendeeEmail) {
         return qrCredentialRepository.findByRegistrationId(registrationId)
                 .map(QrCredential::toSnapshot)

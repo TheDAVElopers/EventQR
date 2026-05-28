@@ -265,11 +265,8 @@ interface ApiService {
     @GET("attendees/me/transactions")
     suspend fun getMyTransactions(): ApiResponse<List<TransactionResponse>>
 
-    @POST("events/{eventId}/registrations")
-    suspend fun createRegistration(
-        @Path("eventId") eventId: String,
-        @Body request: RegistrationRequest
-    ): ApiResponse<RegistrationResponse>
+    @POST("registrations")
+    suspend fun createRegistration(@Body request: RegistrationRequest): ApiResponse<RegistrationResponse>
 
     @POST("registrations/{registrationId}/qr")
     suspend fun createQrCredential(@Path("registrationId") registrationId: String): ApiResponse<QrCredentialSnapshot>
