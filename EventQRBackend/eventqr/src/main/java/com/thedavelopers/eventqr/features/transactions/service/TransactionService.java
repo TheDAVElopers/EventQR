@@ -22,7 +22,6 @@ import com.thedavelopers.eventqr.shared.constants.RegistrationStatus;
 import com.thedavelopers.eventqr.shared.constants.TransactionResult;
 import com.thedavelopers.eventqr.shared.constants.TransactionType;
 import com.thedavelopers.eventqr.shared.event.TransactionRecordedEvent;
-import com.thedavelopers.eventqr.shared.exception.ConflictException;
 import com.thedavelopers.eventqr.shared.exception.ForbiddenException;
 import com.thedavelopers.eventqr.shared.exception.ResourceNotFoundException;
 import com.thedavelopers.eventqr.shared.port.AttendeeDirectoryPort;
@@ -270,8 +269,9 @@ public class TransactionService {
     }
 
     private TransactionResponse toResponse(TransactionLog log) {
+        String eventTitle = eventLookupPort.findById(log.getEventId()).map(EventLookupPort.EventSnapshot::title).orElse(null);
         return new TransactionResponse(log.getId(), log.getEventId(), log.getAttendeeUserId(), log.getRegistrationId(),
                 log.getQrCredentialId(), log.getScanPurposeId(), log.getTransactionType(), log.getTransactionResult(),
-                log.getPointsDelta(), log.getReason(), log.getScannedAt());
+            log.getPointsDelta(), log.getReason(), log.getScannedAt(), eventTitle);
     }
 }

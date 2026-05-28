@@ -190,7 +190,7 @@ public class OrganizerService {
     }
 
     public TransactionResponse transaction(UUID organizerUserId, UUID eventId, UUID transactionId) {
-        requireOrganizerEvent(organizerUserId, eventId);
+        Event event = requireOrganizerEvent(organizerUserId, eventId);
         TransactionLog log = transactionLogRepository.findById(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
         if (!log.getEventId().equals(eventId)) {
@@ -198,7 +198,7 @@ public class OrganizerService {
         }
         return new TransactionResponse(log.getId(), log.getEventId(), log.getAttendeeUserId(), log.getRegistrationId(),
                 log.getQrCredentialId(), log.getScanPurposeId(), log.getTransactionType(), log.getTransactionResult(),
-                log.getPointsDelta(), log.getReason(), log.getScannedAt());
+                log.getPointsDelta(), log.getReason(), log.getScannedAt(), event.getTitle());
     }
 
     @Transactional(readOnly = true)
