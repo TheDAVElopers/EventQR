@@ -20,7 +20,6 @@
         android:theme="@style/Theme.EventQR">
         <activity android:name=".features.attendee.MyEventRequestsActivity" android:exported="false" />
         <activity android:name=".features.attendee.RequestEventActivity" android:exported="false" />
-        <activity android:name=".features.attendee.EventRequestDetailActivity" android:exported="false" />
         <activity android:name=".features.attendee.AttendeeEditProfileActivity" android:exported="false" />
         <activity android:name=".features.attendee.AttendeeProfileActivity" android:exported="false" />
         <activity android:name=".features.attendee.AttendeeNotificationsActivity" android:exported="false" />
@@ -37,12 +36,28 @@
         <activity android:name=".features.staff.IdPrintingActivity" android:exported="false" />
         <activity android:name=".features.staff.StaffTransactionsActivity" android:exported="false" />
         <activity android:name=".features.staff.StaffCameraScannerActivity" android:exported="false" />
-        <activity android:name=".features.staff.ScannerActivity" android:exported="false" />
-        <activity android:name=".features.staff.StaffAttendeeDetailsActivity" android:exported="false" />
-        <activity android:name=".features.staff.StaffTransactionResultActivity" android:exported="false" />
-        <activity android:name=".features.staff.StaffScanResultActivity" android:exported="false" />
+        <activity android:name=".features.staff.scanner.ScannerActivity" android:exported="false" />
+        <activity android:name=".features.staff.details.StaffAttendeeDetailsActivity" android:exported="false" />
+        <activity android:name=".features.staff.result.StaffTransactionResultActivity" android:exported="false" />
+        <activity android:name=".features.staff.result.StaffScanResultActivity" android:exported="false" />
         <activity android:name=".features.staff.StaffDashboardActivity" android:exported="false" />
         <activity android:name=".features.staff.StaffProfileActivity" android:exported="false" />
+        <activity android:name=".features.organizer.notifications.NotificationManagementActivity" android:exported="false" />
+        <activity android:name=".features.organizer.reports.ReportsActivity" android:exported="false" />
+        <activity android:name=".features.organizer.rewards.ManageRewardsActivity" android:exported="false" />
+        <activity android:name=".features.organizer.rewards.PointRulesPlaceholderActivity" android:exported="false" />
+        <activity android:name=".features.organizer.idtemplate.IdTemplatePlaceholderActivity" android:exported="false" />
+        <activity android:name=".features.organizer.events.EventManagementHubActivity" android:exported="false" />
+        <activity android:name=".features.organizer.transactions.TransactionRulesActivity" android:exported="false" />
+        <activity android:name=".features.organizer.scanpurposes.ManageScanPurposesActivity" android:exported="false" />
+        <activity android:name=".features.organizer.staff.ManageUsersActivity" android:exported="false" />
+        <activity android:name=".features.organizer.events.ManageEventsActivity" android:exported="false" />
+        <activity android:name=".features.organizer.shared.OrganizerPlaceholderActivity" android:exported="false" />
+        <activity android:name=".features.organizer.dashboard.OrganizerDashboardActivity" android:exported="false" />
+        <activity android:name=".features.organizer.attendees.AttendeeManagementActivity" android:exported="false" />
+        <activity android:name=".features.organizer.attendees.AttendeeDetailsActivity" android:exported="false" />
+        <activity android:name=".features.organizer.transactions.TransactionLogsActivity" android:exported="false" />
+        <activity android:name=".features.organizer.reports.EventReportsActivity" android:exported="false" />
         <activity android:name=".features.organizer.NotificationManagementActivity" android:exported="false" />
         <activity android:name=".features.organizer.ReportsActivity" android:exported="false" />
         <activity android:name=".features.organizer.ManageRewardsActivity" android:exported="false" />
