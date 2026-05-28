@@ -1,5 +1,7 @@
 package com.thedavelopers.eventqr.features.attendee
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -18,10 +20,13 @@ import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.events.model.dto.EventCreationRequestDto
 import kotlinx.coroutines.launch
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
+import java.util.Calendar
 
 class RequestEventActivity : AppCompatActivity() {
     private lateinit var repository: AttendeeRepository
@@ -49,6 +54,13 @@ class RequestEventActivity : AppCompatActivity() {
     private lateinit var viewMyRequestsButton: Button
 
     private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+    private val displayDateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a")
+    private val zoneId: ZoneId = ZoneId.systemDefault()
+
+    private var startDateTimeValue: LocalDateTime? = null
+    private var endDateTimeValue: LocalDateTime? = null
+    private var registrationStartDateTimeValue: LocalDateTime? = null
+    private var registrationEndDateTimeValue: LocalDateTime? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,6 +76,58 @@ class RequestEventActivity : AppCompatActivity() {
         submitButton.setOnClickListener { submitRequest() }
         viewMyRequestsButton.setOnClickListener {
             startActivity(Intent(this, MyEventRequestsActivity::class.java))
+        }
+
+        configureDateTimeField(startDateTimeInput, { startDateTimeValue }) { value ->
+            startDateTimeValue = value
+            startDateTimeInput.setText(formatForDisplay(value))
+            startDateTimeInput.error = null
+            if (endDateTimeValue != null && !endDateTimeValue!!.isAfter(value)) {
+                endDateTimeValue = null
+                endDateTimeInput.text?.clear()
+                endDateTimeInput.error = "End date/time must be after the start"
+            }
+            if (registrationEndDateTimeValue != null && !registrationEndDateTimeValue!!.isBefore(value)) {
+                registrationEndDateTimeValue = null
+                registrationEndDateTimeInput.text?.clear()
+                registrationEndDateTimeInput.error = "Registration end must be before event start"
+            }
+        }
+        configureDateTimeField(endDateTimeInput, { endDateTimeValue }) { value ->
+            endDateTimeValue = value
+            endDateTimeInput.setText(formatForDisplay(value))
+            endDateTimeInput.error = null
+            if (startDateTimeValue != null && !value.isAfter(startDateTimeValue)) {
+                endDateTimeValue = null
+                endDateTimeInput.text?.clear()
+                endDateTimeInput.error = "End date/time must be after the start"
+            }
+        }
+        configureDateTimeField(registrationStartDateTimeInput, { registrationStartDateTimeValue }) { value ->
+            registrationStartDateTimeValue = value
+            registrationStartDateTimeInput.setText(formatForDisplay(value))
+            registrationStartDateTimeInput.error = null
+            if (registrationEndDateTimeValue != null && !registrationEndDateTimeValue!!.isAfter(value)) {
+                registrationEndDateTimeValue = null
+                registrationEndDateTimeInput.text?.clear()
+                registrationEndDateTimeInput.error = "Registration end must be after registration start"
+            }
+        }
+        configureDateTimeField(registrationEndDateTimeInput, { registrationEndDateTimeValue }) { value ->
+            registrationEndDateTimeValue = value
+            registrationEndDateTimeInput.setText(formatForDisplay(value))
+            registrationEndDateTimeInput.error = null
+            if (registrationStartDateTimeValue != null && !value.isAfter(registrationStartDateTimeValue)) {
+                registrationEndDateTimeValue = null
+                registrationEndDateTimeInput.text?.clear()
+                registrationEndDateTimeInput.error = "Registration end must be after registration start"
+                return@configureDateTimeField
+            }
+            if (startDateTimeValue != null && !value.isBefore(startDateTimeValue)) {
+                registrationEndDateTimeValue = null
+                registrationEndDateTimeInput.text?.clear()
+                registrationEndDateTimeInput.error = "Registration end must be before event start"
+            }
         }
     }
 
@@ -142,8 +206,14 @@ class RequestEventActivity : AppCompatActivity() {
         val eventDescription = eventDescriptionInput.required("Event description is required") ?: return null
         val eventCategory = eventCategoryInput.required("Event category is required") ?: return null
         val venue = venueInput.required("Venue/location is required") ?: return null
-        val startDateTime = startDateTimeInput.requiredInstant("Start date/time is required") ?: return null
-        val endDateTime = endDateTimeInput.requiredInstant("End date/time is required") ?: return null
+        val startDateTime = startDateTimeValue ?: run {
+            startDateTimeInput.error = "Start date/time is required"
+            return null
+        }
+        val endDateTime = endDateTimeValue ?: run {
+            endDateTimeInput.error = "End date/time is required"
+            return null
+        }
         val capacity = capacityInput.positiveInt("Capacity must be a positive number") ?: return null
         val requesterName = requesterNameInput.required("Requester name is required") ?: return null
         val contactEmail = contactEmailInput.required("Contact email is required") ?: return null
@@ -155,30 +225,36 @@ class RequestEventActivity : AppCompatActivity() {
             contactEmailInput.requestFocus()
             return null
         }
+        if (startDateTime.isBefore(currentLocalDateTime())) {
+            startDateTimeInput.error = "Start date/time cannot be in the past"
+            return null
+        }
         if (!endDateTime.isAfter(startDateTime)) {
             endDateTimeInput.error = "End date/time must be after the start"
-            endDateTimeInput.requestFocus()
             return null
         }
 
-        val registrationStart = if (registrationStartDateTimeInput.textString().isBlank()) {
-            null
-        } else {
-            registrationStartDateTimeInput.parseInstantOrMarkError() ?: return null
-        }
-        val registrationEnd = if (registrationEndDateTimeInput.textString().isBlank()) {
-            null
-        } else {
-            registrationEndDateTimeInput.parseInstantOrMarkError() ?: return null
+        val registrationStart = registrationStartDateTimeValue
+        val registrationEnd = registrationEndDateTimeValue
+
+        if (registrationStart != null && registrationStart.isBefore(currentLocalDateTime())) {
+            registrationStartDateTimeInput.error = "Registration start cannot be in the past"
+            return null
         }
         if (registrationStart != null && registrationEnd != null && !registrationEnd.isAfter(registrationStart)) {
             registrationEndDateTimeInput.error = "Registration end must be after registration start"
-            registrationEndDateTimeInput.requestFocus()
+            return null
+        }
+        if (registrationEnd != null && registrationEnd.isBefore(currentLocalDateTime())) {
+            registrationEndDateTimeInput.error = "Registration end cannot be in the past"
             return null
         }
         if (registrationEnd != null && registrationEnd.isAfter(endDateTime)) {
             registrationEndDateTimeInput.error = "Registration end must not be after event end"
-            registrationEndDateTimeInput.requestFocus()
+            return null
+        }
+        if (registrationEnd != null && !registrationEnd.isBefore(startDateTime)) {
+            registrationEndDateTimeInput.error = "Registration end must be before event start"
             return null
         }
 
@@ -189,10 +265,10 @@ class RequestEventActivity : AppCompatActivity() {
             targetAudience = targetAudienceInput.optionalText(),
             capacity = capacity,
             venue = venue,
-            startDateTime = startDateTime.toString(),
-            endDateTime = endDateTime.toString(),
-            registrationStartDateTime = registrationStart?.toString(),
-            registrationEndDateTime = registrationEnd?.toString(),
+            startDateTime = startDateTime.atZone(zoneId).toInstant().toString(),
+            endDateTime = endDateTime.atZone(zoneId).toInstant().toString(),
+            registrationStartDateTime = registrationStart?.atZone(zoneId)?.toInstant()?.toString(),
+            registrationEndDateTime = registrationEnd?.atZone(zoneId)?.toInstant()?.toString(),
             requesterName = requesterName,
             contactEmail = contactEmail,
             contactNumber = contactNumber,
@@ -243,6 +319,68 @@ class RequestEventActivity : AppCompatActivity() {
         ).forEach { it.error = null }
     }
 
+    private fun configureDateTimeField(
+        field: EditText,
+        getCurrentValue: () -> LocalDateTime?,
+        onSelected: (LocalDateTime) -> Unit,
+    ) {
+        field.isFocusable = false
+        field.isFocusableInTouchMode = false
+        field.isCursorVisible = false
+        field.isLongClickable = false
+        field.setTextIsSelectable(false)
+        field.setOnClickListener {
+            showDateTimePicker(
+                initialValue = getCurrentValue() ?: currentLocalDateTime(),
+                onSelected = onSelected,
+            )
+        }
+    }
+
+    private fun showDateTimePicker(
+        initialValue: LocalDateTime,
+        onSelected: (LocalDateTime) -> Unit,
+    ) {
+        val now = currentLocalDateTime()
+        DatePickerDialog(
+            this,
+            { _, year, month, dayOfMonth ->
+                val selectedDate = LocalDate.of(year, month + 1, dayOfMonth)
+                val initialTime = if (selectedDate == initialValue.toLocalDate()) {
+                    initialValue.toLocalTime().withSecond(0).withNano(0)
+                } else if (selectedDate == now.toLocalDate()) {
+                    now.toLocalTime().withSecond(0).withNano(0)
+                } else {
+                    LocalTime.of(9, 0)
+                }
+
+                TimePickerDialog(
+                    this,
+                    { _, hourOfDay, minute ->
+                        val selectedDateTime = LocalDateTime.of(selectedDate, LocalTime.of(hourOfDay, minute))
+                        if (selectedDateTime.isBefore(currentLocalDateTime())) {
+                            Toast.makeText(this, "Selected date/time cannot be in the past", Toast.LENGTH_SHORT).show()
+                            return@TimePickerDialog
+                        }
+                        onSelected(selectedDateTime)
+                    },
+                    initialTime.hour,
+                    initialTime.minute,
+                    false,
+                ).show()
+            },
+            initialValue.year,
+            initialValue.monthValue - 1,
+            initialValue.dayOfMonth,
+        ).apply {
+            datePicker.minDate = LocalDate.now(zoneId).atStartOfDay(zoneId).toInstant().toEpochMilli()
+        }.show()
+    }
+
+    private fun formatForDisplay(value: LocalDateTime): String = value.format(displayDateTimeFormatter)
+
+    private fun currentLocalDateTime(): LocalDateTime = LocalDateTime.ofInstant(Instant.now(), zoneId)
+
     private fun EditText.required(errorMessage: String): String? {
         val value = textString()
         if (value.isBlank()) {
@@ -261,27 +399,6 @@ class RequestEventActivity : AppCompatActivity() {
             return null
         }
         return value
-    }
-
-    private fun EditText.requiredInstant(requiredMessage: String): Instant? {
-        if (textString().isBlank()) {
-            error = requiredMessage
-            requestFocus()
-            return null
-        }
-        return parseInstantOrMarkError()
-    }
-
-    private fun EditText.parseInstantOrMarkError(): Instant? {
-        return try {
-            LocalDateTime.parse(textString(), dateTimeFormatter)
-                .atZone(ZoneId.systemDefault())
-                .toInstant()
-        } catch (_: DateTimeParseException) {
-            error = "Use format yyyy-MM-dd HH:mm"
-            requestFocus()
-            null
-        }
     }
 
     private fun EditText.optionalText(): String? = textString().takeIf { it.isNotBlank() }

@@ -117,29 +117,53 @@
             <EditText
                 android:id="@+id/startDateTimeInput"
                 style="@style/RequestEventInput"
-                android:hint="yyyy-MM-dd HH:mm"
-                android:inputType="datetime" />
+                android:hint="Tap to select date and time"
+                android:clickable="true"
+                android:cursorVisible="false"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:inputType="none"
+                android:longClickable="false"
+                android:textIsSelectable="false" />
 
             <TextView style="@style/RequestEventLabel" android:text="End Date and Time *" />
             <EditText
                 android:id="@+id/endDateTimeInput"
                 style="@style/RequestEventInput"
-                android:hint="yyyy-MM-dd HH:mm"
-                android:inputType="datetime" />
+                android:hint="Tap to select date and time"
+                android:clickable="true"
+                android:cursorVisible="false"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:inputType="none"
+                android:longClickable="false"
+                android:textIsSelectable="false" />
 
             <TextView style="@style/RequestEventLabel" android:text="Registration Start Date" />
             <EditText
                 android:id="@+id/registrationStartDateTimeInput"
                 style="@style/RequestEventInput"
-                android:hint="yyyy-MM-dd HH:mm"
-                android:inputType="datetime" />
+                android:hint="Tap to select date and time"
+                android:clickable="true"
+                android:cursorVisible="false"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:inputType="none"
+                android:longClickable="false"
+                android:textIsSelectable="false" />
 
             <TextView style="@style/RequestEventLabel" android:text="Registration End Date" />
             <EditText
                 android:id="@+id/registrationEndDateTimeInput"
                 style="@style/RequestEventInput"
-                android:hint="yyyy-MM-dd HH:mm"
-                android:inputType="datetime" />
+                android:hint="Tap to select date and time"
+                android:clickable="true"
+                android:cursorVisible="false"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:inputType="none"
+                android:longClickable="false"
+                android:textIsSelectable="false" />
         </LinearLayout>
 
         <LinearLayout
