@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.core.api.dto.EventRequestStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.events.model.dto.EventCreationRequestDto
@@ -49,7 +50,10 @@ class RequestEventActivity : AppCompatActivity() {
     private lateinit var formMessageText: TextView
     private lateinit var submitProgress: ProgressBar
     private lateinit var submitButton: Button
-    private lateinit var viewMyRequestsButton: Button
+    private lateinit var successContainer: View
+    private lateinit var successStatusText: TextView
+    private lateinit var successViewRequestsButton: Button
+    private lateinit var successDashboardButton: Button
 
     private val displayDateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a")
     private val zoneId: ZoneId = ZoneId.of("Asia/Manila")
@@ -72,8 +76,16 @@ class RequestEventActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.backText).setOnClickListener { finish() }
         findViewById<Button>(R.id.cancelButton).setOnClickListener { finish() }
         submitButton.setOnClickListener { submitRequest() }
-        viewMyRequestsButton.setOnClickListener {
+        successViewRequestsButton.setOnClickListener {
             startActivity(Intent(this, MyEventRequestsActivity::class.java))
+            finish()
+        }
+        successDashboardButton.setOnClickListener {
+            startActivity(
+                Intent(this, com.thedavelopers.eventqr.features.dashboard.DashboardActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            )
+            finish()
         }
 
         configureDateTimeField(startDateTimeInput, { startDateTimeValue }) { value ->
@@ -149,7 +161,11 @@ class RequestEventActivity : AppCompatActivity() {
         formMessageText = findViewById(R.id.formMessageText)
         submitProgress = findViewById(R.id.submitProgress)
         submitButton = findViewById(R.id.submitRequestButton)
-        viewMyRequestsButton = findViewById(R.id.viewMyRequestsButton)
+        successContainer = findViewById(R.id.successStateContainer)
+        successStatusText = findViewById(R.id.successStatusText)
+        successViewRequestsButton = findViewById(R.id.successViewRequestsButton)
+        successDashboardButton = findViewById(R.id.successDashboardButton)
+        successContainer.visibility = View.GONE
     }
 
     private fun prefillRequester() {
@@ -177,6 +193,7 @@ class RequestEventActivity : AppCompatActivity() {
 
     private fun submitRequest() {
         hideMessage()
+        hideSuccessState()
         val request = buildValidatedRequest() ?: return
         setLoading(true)
 
@@ -184,9 +201,7 @@ class RequestEventActivity : AppCompatActivity() {
             when (val result = repository.createEventRequest(request)) {
                 is NetworkResult.Success -> {
                     setLoading(false)
-                    showMessage("Request submitted successfully. Status: ${result.data.status.name.lowercase().replaceFirstChar { it.uppercase() }}.")
-                    viewMyRequestsButton.visibility = View.VISIBLE
-                    Toast.makeText(this@RequestEventActivity, "Event request submitted", Toast.LENGTH_SHORT).show()
+                    showSuccessState(result.data.status)
                 }
                 is NetworkResult.Error -> {
                     setLoading(false)
@@ -295,6 +310,19 @@ class RequestEventActivity : AppCompatActivity() {
         submitProgress.visibility = if (loading) View.VISIBLE else View.GONE
         submitButton.isEnabled = !loading
         submitButton.text = if (loading) "Submitting..." else "Submit Request"
+    }
+
+    private fun showSuccessState(status: EventRequestStatus) {
+        successStatusText.text = "Status: ${status.name.lowercase().replaceFirstChar { it.uppercase() }}"
+        successContainer.visibility = View.VISIBLE
+        submitButton.visibility = View.GONE
+        showMessage("Your event request has been submitted for admin review.")
+        Toast.makeText(this, "Event request submitted", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun hideSuccessState() {
+        successContainer.visibility = View.GONE
+        submitButton.visibility = View.VISIBLE
     }
 
     private fun showMessage(message: String) {

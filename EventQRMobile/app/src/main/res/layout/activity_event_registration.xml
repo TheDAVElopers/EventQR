@@ -362,45 +362,38 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Confirmation Banner -->
-            <LinearLayout
+            <!-- Registration Guidance -->
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:background="@drawable/bg_green_pill"
-                android:orientation="vertical"
-                android:padding="16dp">
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:src="@android:drawable/checkbox_on_background"
-                        app:tint="@color/eventqr_success" />
+                    android:background="@drawable/bg_blue_soft"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:text="Registration Confirmed!"
-                        android:textColor="@color/eventqr_success"
+                        android:text="Complete Your Registration"
+                        android:textColor="#2D3748"
                         android:textSize="15sp"
                         android:textStyle="bold" />
-                </LinearLayout>
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Once registered, you'll receive a QR code credential via email. You'll earn 100 points for attending this event."
-                    android:textColor="@color/eventqr_success"
-                    android:textSize="12sp" />
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Fill in the required details below to register for this event."
+                        android:textColor="#4A5568"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
             <!-- Extra space for bottom buttons -->
             <View
