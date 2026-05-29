@@ -68,6 +68,7 @@ class RequestEventActivity : AppCompatActivity() {
         bindViews()
         prefillRequester()
 
+        findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
         findViewById<TextView>(R.id.backText).setOnClickListener { finish() }
         findViewById<Button>(R.id.cancelButton).setOnClickListener { finish() }
         submitButton.setOnClickListener { submitRequest() }

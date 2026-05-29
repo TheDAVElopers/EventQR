@@ -19,7 +19,7 @@
             android:id="@+id/buttonBack"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:background="name"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Back"
             android:padding="10dp"
             android:src="@drawable/back_btn"

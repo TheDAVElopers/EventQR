@@ -19,14 +19,16 @@
             android:orientation="horizontal">
 
             <ImageButton
+                android:id="@+id/btnBack"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/back_btn"
                 android:layout_gravity="center"
-                android:background="name"
+                android:background="?attr/selectableItemBackgroundBorderless"
                 android:layout_marginRight="15dp"
                 android:layout_marginLeft="5dp"
-                android:padding="5dp"/>
+                android:padding="5dp"
+                />
 
         <TextView
             android:id="@+id/backText"
