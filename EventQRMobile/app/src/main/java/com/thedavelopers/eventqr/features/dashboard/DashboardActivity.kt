@@ -14,6 +14,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
@@ -58,6 +59,8 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     private lateinit var recentActivityLayout: LinearLayout
     private lateinit var upcomingEventsViewAll: TextView
     private lateinit var transactionHistoryViewAll: TextView
+    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+    private var isSwipeRefreshing = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -93,6 +96,12 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         recentActivityLayout = findViewById(R.id.layoutRecentActivity)
         upcomingEventsViewAll = findViewById(R.id.txtUpcomingEventsViewAll)
         transactionHistoryViewAll = findViewById(R.id.txtTransactionHistoryViewAll)
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshDashboard)
+        swipeRefreshLayout.setColorSchemeResources(R.color.eventqr_purple)
+        swipeRefreshLayout.setOnRefreshListener {
+            isSwipeRefreshing = true
+            presenter.loadDashboard()
+        }
         notificationBell.setOnClickListener {
             startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.AttendeeNotificationsActivity::class.java))
         }
@@ -116,11 +125,19 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     }
 
     override fun showLoading(isLoading: Boolean) {
+        if (isSwipeRefreshing) {
+            if (!isLoading) {
+                stopSwipeRefresh()
+            }
+            loadingText.visibility = View.GONE
+            return
+        }
         loadingText.text = "Loading dashboard..."
         loadingText.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
     override fun showSummary(summary: com.thedavelopers.eventqr.features.dashboard.model.dto.DashboardSummary) {
+        stopSwipeRefresh()
         loadingText.visibility = View.GONE
         nameText.text = summary.fullName?.takeIf { it.isNotBlank() }
             ?: sessionManager.getFullName()?.takeIf { it.isNotBlank() }
@@ -134,10 +151,14 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     }
 
     override fun showTransactionHistoryLoading(isLoading: Boolean) {
+        if (isSwipeRefreshing && isLoading) {
+            return
+        }
         renderRecentActivityState(if (isLoading) "Loading transactions..." else null, 0xFF6B7280.toInt())
     }
 
     override fun showTransactionHistory(items: List<TransactionResponse>) {
+        stopSwipeRefresh()
         while (recentActivityLayout.childCount > 1) {
             recentActivityLayout.removeViewAt(1)
         }
@@ -153,10 +174,12 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     }
 
     override fun showTransactionHistoryError(message: String) {
+        stopSwipeRefresh()
         renderRecentActivityState(message.ifBlank { "Unable to load transaction history." }, 0xFFB91C1C.toInt())
     }
 
     override fun showError(message: String) {
+        stopSwipeRefresh()
         loadingText.text = message
         loadingText.visibility = View.VISIBLE
         renderUpcomingEvents(emptyList())
@@ -535,5 +558,12 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         sessionManager.clearSession()
         startActivity(Intent(this, com.thedavelopers.eventqr.features.landing.LandingActivity::class.java))
         finish()
+    }
+
+    private fun stopSwipeRefresh() {
+        if (isSwipeRefreshing) {
+            swipeRefreshLayout.isRefreshing = false
+            isSwipeRefreshing = false
+        }
     }
 }

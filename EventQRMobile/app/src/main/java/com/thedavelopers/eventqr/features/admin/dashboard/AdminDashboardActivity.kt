@@ -9,6 +9,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
@@ -38,6 +39,8 @@ class AdminDashboardActivity : AppCompatActivity() {
     private lateinit var textAuditLogs: TextView
     private lateinit var progressLoading: ProgressBar
     private lateinit var textLoadHint: TextView
+    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+    private var isSwipeRefreshing = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,6 +49,7 @@ class AdminDashboardActivity : AppCompatActivity() {
         repository = AdminRepository(this)
         sessionManager = SessionManager(this)
         bindViews()
+        setupSwipeRefresh()
         bindActions()
         setupPortalSwitcher()
         textAdminName.text = sessionManager.getFullName().orEmpty().ifBlank { "Admin User" }
@@ -66,6 +70,15 @@ class AdminDashboardActivity : AppCompatActivity() {
         textAuditLogs = findViewById(R.id.textAuditLogsValue)
         progressLoading = findViewById(R.id.progressDashboardLoading)
         textLoadHint = findViewById(R.id.textDashboardLoadHint)
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshDashboard)
+    }
+
+    private fun setupSwipeRefresh() {
+        swipeRefreshLayout.setColorSchemeResources(R.color.eventqr_purple)
+        swipeRefreshLayout.setOnRefreshListener {
+            isSwipeRefreshing = true
+            loadSummary()
+        }
     }
 
     private fun bindActions() {
@@ -152,68 +165,77 @@ class AdminDashboardActivity : AppCompatActivity() {
     }
 
     private fun loadSummary() {
-        progressLoading.visibility = View.VISIBLE
-        textLoadHint.visibility = View.VISIBLE
+        if (!isSwipeRefreshing) {
+            progressLoading.visibility = View.VISIBLE
+            textLoadHint.visibility = View.VISIBLE
+        } else {
+            progressLoading.visibility = View.GONE
+            textLoadHint.visibility = View.GONE
+        }
 
         lifecycleScope.launch {
-            val requestsDeferred = async { repository.loadAllEventRequests() }
-            val usersDeferred = async { repository.loadUsers() }
-            val eventsDeferred = async { repository.loadEvents() }
-            val auditLogsDeferred = async { repository.loadAuditLogs() }
+            try {
+                val requestsDeferred = async { repository.loadAllEventRequests() }
+                val usersDeferred = async { repository.loadUsers() }
+                val eventsDeferred = async { repository.loadEvents() }
+                val auditLogsDeferred = async { repository.loadAuditLogs() }
 
-            val requestsResult = requestsDeferred.await()
-            val usersResult = usersDeferred.await()
-            val eventsResult = eventsDeferred.await()
-            val auditLogsResult = auditLogsDeferred.await()
+                val requestsResult = requestsDeferred.await()
+                val usersResult = usersDeferred.await()
+                val eventsResult = eventsDeferred.await()
+                val auditLogsResult = auditLogsDeferred.await()
 
-            val pendingRequests = when (requestsResult) {
-                is NetworkResult.Success -> requestsResult.data.count { it.status == EventRequestStatus.PENDING }
-                else -> 0
-            }
-            val totalAccounts = when (usersResult) {
-                is NetworkResult.Success -> usersResult.data.size
-                // TODO: keep 0 fallback for MVP if accounts endpoint is unavailable.
-                else -> 0
-            }
-            val activeEvents = when (eventsResult) {
-                is NetworkResult.Success -> eventsResult.data.count {
-                    it.status == EventStatus.ACTIVE || it.status == EventStatus.APPROVED
+                val pendingRequests = when (requestsResult) {
+                    is NetworkResult.Success -> requestsResult.data.count { it.status == EventRequestStatus.PENDING }
+                    else -> 0
                 }
-                // TODO: keep 0 fallback for MVP if events endpoint is unavailable.
-                else -> 0
-            }
-            val auditLogs = when (auditLogsResult) {
-                is NetworkResult.Success -> auditLogsResult.data.size
-                // TODO: keep 0 fallback for MVP if audit endpoint is unavailable.
-                else -> 0
-            }
+                val totalAccounts = when (usersResult) {
+                    is NetworkResult.Success -> usersResult.data.size
+                    // TODO: keep 0 fallback for MVP if accounts endpoint is unavailable.
+                    else -> 0
+                }
+                val activeEvents = when (eventsResult) {
+                    is NetworkResult.Success -> eventsResult.data.count {
+                        it.status == EventStatus.ACTIVE || it.status == EventStatus.APPROVED
+                    }
+                    // TODO: keep 0 fallback for MVP if events endpoint is unavailable.
+                    else -> 0
+                }
+                val auditLogs = when (auditLogsResult) {
+                    is NetworkResult.Success -> auditLogsResult.data.size
+                    // TODO: keep 0 fallback for MVP if audit endpoint is unavailable.
+                    else -> 0
+                }
 
-            textPendingRequests.text = pendingRequests.toString()
-            textTotalAccounts.text = totalAccounts.toString()
-            textActiveEvents.text = activeEvents.toString()
-            textAuditLogs.text = formatCount(auditLogs)
+                textPendingRequests.text = pendingRequests.toString()
+                textTotalAccounts.text = totalAccounts.toString()
+                textActiveEvents.text = activeEvents.toString()
+                textAuditLogs.text = formatCount(auditLogs)
 
-            if (pendingRequests > 0) {
-                cardPendingAlert.visibility = View.VISIBLE
-                textPendingAlert.text = if (pendingRequests == 1) {
-                    "1 event request pending review"
+                if (pendingRequests > 0) {
+                    cardPendingAlert.visibility = View.VISIBLE
+                    textPendingAlert.text = if (pendingRequests == 1) {
+                        "1 event request pending review"
+                    } else {
+                        "$pendingRequests event requests pending review"
+                    }
                 } else {
-                    "$pendingRequests event requests pending review"
+                    cardPendingAlert.visibility = View.GONE
                 }
-            } else {
-                cardPendingAlert.visibility = View.GONE
-            }
 
-            textLoadHint.text = when {
-                requestsResult is NetworkResult.Error -> "Unable to refresh pending requests right now."
-                usersResult is NetworkResult.Error ||
-                    eventsResult is NetworkResult.Error ||
-                    auditLogsResult is NetworkResult.Error ->
-                    "Some dashboard stats are currently unavailable."
-                else -> ""
+                textLoadHint.text = when {
+                    requestsResult is NetworkResult.Error -> "Unable to refresh pending requests right now."
+                    usersResult is NetworkResult.Error ||
+                        eventsResult is NetworkResult.Error ||
+                        auditLogsResult is NetworkResult.Error ->
+                        "Some dashboard stats are currently unavailable."
+                    else -> ""
+                }
+                textLoadHint.visibility = if (textLoadHint.text.isNullOrBlank()) View.GONE else View.VISIBLE
+                progressLoading.visibility = View.GONE
+            } finally {
+                stopSwipeRefresh()
             }
-            textLoadHint.visibility = if (textLoadHint.text.isNullOrBlank()) View.GONE else View.VISIBLE
-            progressLoading.visibility = View.GONE
         }
     }
 
@@ -232,5 +254,12 @@ class AdminDashboardActivity : AppCompatActivity() {
     private fun openRequests() {
         startActivity(Intent(this, AdminEventApprovalBackendActivity::class.java))
         finish()
+    }
+
+    private fun stopSwipeRefresh() {
+        if (isSwipeRefreshing) {
+            swipeRefreshLayout.isRefreshing = false
+            isSwipeRefreshing = false
+        }
     }
 }

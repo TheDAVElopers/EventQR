@@ -9,6 +9,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
@@ -22,12 +23,20 @@ import kotlinx.coroutines.launch
 open class OrganizerDashboardActivity : AppCompatActivity() {
     private lateinit var repository: OrganizerRepository
     private lateinit var sessionManager: SessionManager
+    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+    private var isSwipeRefreshing = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_organizer_dashboard)
         repository = OrganizerRepository(this)
         sessionManager = SessionManager(this)
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshDashboard)
+        swipeRefreshLayout.setColorSchemeResources(R.color.eventqr_purple)
+        swipeRefreshLayout.setOnRefreshListener {
+            isSwipeRefreshing = true
+            loadDashboard()
+        }
         setupNavigation()
         loadDashboard()
     }
@@ -175,12 +184,20 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
     }
 
     private fun loadDashboard() {
-        findViewById<ProgressBar>(R.id.progressDashboardLoading).visibility = View.VISIBLE
+        if (!isSwipeRefreshing) {
+            findViewById<ProgressBar>(R.id.progressDashboardLoading).visibility = View.VISIBLE
+        } else {
+            findViewById<ProgressBar>(R.id.progressDashboardLoading).visibility = View.GONE
+        }
         findViewById<View>(R.id.layoutDashboardError).visibility = View.GONE
         MainScope().launch {
-            val dashboard = repository.loadDashboardForMvp()
-            val load = repository.loadEventsForMvp()
-            renderDashboard(load, dashboard)
+            try {
+                val dashboard = repository.loadDashboardForMvp()
+                val load = repository.loadEventsForMvp()
+                renderDashboard(load, dashboard)
+            } finally {
+                stopSwipeRefresh()
+            }
         }
     }
 
@@ -226,6 +243,13 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
                     openOrganizerPage(EventManagementHubActivity::class.java, target.id, target.title)
                 })
             }
+        }
+    }
+
+    private fun stopSwipeRefresh() {
+        if (isSwipeRefreshing) {
+            swipeRefreshLayout.isRefreshing = false
+            isSwipeRefreshing = false
         }
     }
 }

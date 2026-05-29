@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
@@ -23,6 +24,8 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
     private lateinit var presenter: StaffDashboardPresenter
     private lateinit var adapter: TransactionLogAdapter
     private lateinit var eventAdapter: StaffEventAdapter
+    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+    private var isSwipeRefreshing = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,6 +94,13 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
 
         findViewById<View>(R.id.navProfile).setOnClickListener {
             startActivity(Intent(this, StaffProfileActivity::class.java))
+        }
+
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshDashboard)
+        swipeRefreshLayout.setColorSchemeResources(R.color.eventqr_purple)
+        swipeRefreshLayout.setOnRefreshListener {
+            isSwipeRefreshing = true
+            presenter.loadData()
         }
 
         setupPortalSwitcher(sessionManager)
@@ -223,7 +233,21 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
     }
 
     override fun showLoading(isLoading: Boolean) {
-        findViewById<View>(R.id.progressScanner)?.visibility = if (isLoading) View.VISIBLE else View.GONE
+        if (isSwipeRefreshing) {
+            if (!isLoading) {
+                stopSwipeRefresh()
+            }
+            findViewById<View>(R.id.progressScanner)?.visibility = View.GONE
+        } else {
+            findViewById<View>(R.id.progressScanner)?.visibility = if (isLoading) View.VISIBLE else View.GONE
+        }
         findViewById<View>(R.id.btnQuickScan)?.isEnabled = !isLoading
+    }
+
+    private fun stopSwipeRefresh() {
+        if (isSwipeRefreshing) {
+            swipeRefreshLayout.isRefreshing = false
+            isSwipeRefreshing = false
+        }
     }
 }
