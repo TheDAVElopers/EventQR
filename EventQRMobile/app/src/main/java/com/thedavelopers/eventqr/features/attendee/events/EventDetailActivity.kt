@@ -227,19 +227,21 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
-    override fun openRegistration(eventId: String, eventTitle: String, email: String, fullName: String) {
+    override fun openRegistration(eventId: String, eventTitle: String, email: String, fullName: String, phoneNumber: String) {
         startActivity(
             Intent(this, AttendeeRegistrationActivity::class.java)
                 .putExtra(EXTRA_EVENT_ID, eventId)
                 .putExtra(EXTRA_EVENT_TITLE, eventTitle)
                 .putExtra(EXTRA_PREFILL_EMAIL, email)
                 .putExtra(EXTRA_PREFILL_FULL_NAME, fullName)
+                .putExtra(EXTRA_PREFILL_PHONE, phoneNumber)
         )
     }
 
     override fun getSessionUserId(): String? = SessionManager(this).getUserId()
     override fun getSessionEmail(): String = SessionManager(this).getEmail().orEmpty()
     override fun getSessionFullName(): String = SessionManager(this).getFullName().orEmpty()
+    override fun getSessionPhone(): String = SessionManager(this).getPhone().orEmpty()
 
     private fun setAlreadyRegisteredState(button: Button) {
         button.isEnabled = false

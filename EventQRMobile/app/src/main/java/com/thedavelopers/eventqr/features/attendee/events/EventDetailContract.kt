@@ -6,9 +6,10 @@ interface EventDetailContract {
     interface View : AttendeeView {
         fun renderEvent(event: AttendeeEventResponse)
         fun updateRegistrationStatus(isRegistered: Boolean)
-        fun openRegistration(eventId: String, eventTitle: String, email: String, fullName: String)
+        fun openRegistration(eventId: String, eventTitle: String, email: String, fullName: String, phoneNumber: String)
         fun getSessionUserId(): String?
         fun getSessionEmail(): String
         fun getSessionFullName(): String
+        fun getSessionPhone(): String
     }
 }

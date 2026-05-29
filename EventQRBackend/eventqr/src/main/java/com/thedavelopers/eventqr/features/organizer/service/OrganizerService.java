@@ -17,7 +17,6 @@ import com.thedavelopers.eventqr.features.events.model.dto.EventRequest;
 import com.thedavelopers.eventqr.features.events.model.dto.EventResponse;
 import com.thedavelopers.eventqr.features.events.model.entity.Event;
 import com.thedavelopers.eventqr.features.events.repository.EventRepository;
-import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.*;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerAttendeeResponse;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerDashboardResponse;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerEventResponse;
@@ -464,6 +463,7 @@ public class OrganizerService {
     public List<OrganizerScanPurposeResponse> scanPurposes(UUID organizerUserId, UUID eventId) {
         requireOrganizerEvent(organizerUserId, eventId);
         List<ScanPurpose> purposes = scanPurposeRepository.findByEventId(eventId);
+        log.debug("ScanPurposePersistence eventId={} loadedCount={} names={}", eventId, purposes.size(), summarizeScanPurposeNames(purposes));
         if (purposes.isEmpty()) {
             return defaultScanPurposes(eventId);
         }
@@ -474,19 +474,14 @@ public class OrganizerService {
                                                         OrganizerScanPurposeRequest request) {
         requireOrganizerEvent(organizerUserId, eventId);
         validateScanPurpose(request);
-        ScanPurpose purpose = request.scanPurposeId() == null
-                ? scanPurposeRepository.findByEventIdAndCode(eventId, request.code()).orElseGet(ScanPurpose::new)
-                : scanPurposeRepository.findById(request.scanPurposeId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Scan purpose not found"));
+        boolean creating = request.scanPurposeId() == null;
+        ScanPurpose purpose = creating
+            ? new ScanPurpose()
+            : scanPurposeRepository.findById(request.scanPurposeId())
+                .orElseThrow(() -> new ResourceNotFoundException("Scan purpose not found"));
         if (purpose.getId() != null && !purpose.getEventId().equals(eventId)) {
             throw new ResourceNotFoundException("Scan purpose not found for event");
         }
-        UUID existingPurposeId = purpose.getId();
-        scanPurposeRepository.findByEventIdAndCode(eventId, request.code())
-                .filter(existing -> existingPurposeId == null || !existing.getId().equals(existingPurposeId))
-                .ifPresent(existing -> {
-                    throw new ConflictException("Scan purpose code already exists for this event");
-                });
         purpose.setEventId(eventId);
         purpose.setName(request.title());
         purpose.setCode(request.code());
@@ -494,6 +489,9 @@ public class OrganizerService {
         purpose.setTrackingOnly(request.trackingOnly());
         purpose.setDescription(request.description());
         purpose = scanPurposeRepository.save(purpose);
+        log.debug("ScanPurposePersistence eventId={} action={} purposeId={} name={} code={} enabled={} trackingOnly={}",
+            eventId, creating ? "create" : "update", purpose.getId(), purpose.getName(), purpose.getCode(),
+            purpose.isActive(), purpose.isTrackingOnly());
 
         TransactionRule rule = transactionRuleRepository.findByEventIdAndScanPurposeId(eventId, purpose.getId())
                 .orElseGet(TransactionRule::new);
@@ -508,7 +506,11 @@ public class OrganizerService {
         rule.setRequiresStaffAssignment(true);
         rule.setPointsAwarded(request.pointsEnabled() ? request.pointsValue() : 0);
         transactionRuleRepository.save(rule);
-        return toScanPurpose(purpose);
+        OrganizerScanPurposeResponse response = toScanPurpose(purpose);
+        log.debug("ScanPurposePersistence eventId={} backendResponse purposeId={} name={} code={} enabled={} trackingOnly={} pointsEnabled={} pointsValue={}",
+            eventId, response.scanPurposeId(), response.title(), response.code(), response.enabled(), response.trackingOnly(),
+            response.pointsEnabled(), response.pointsValue());
+        return response;
     }
 
     public void deleteScanPurpose(UUID organizerUserId, UUID eventId, UUID purposeId) {
@@ -542,7 +544,10 @@ public class OrganizerService {
             rule.setAllowDuplicate(false);
         }
         transactionRuleRepository.save(rule);
-        return toScanPurpose(purpose);
+        OrganizerScanPurposeResponse response = toScanPurpose(purpose);
+        log.debug("ScanPurposePersistence eventId={} action=toggle purposeId={} enabled={} backendResponseName={} code={}",
+                eventId, purposeId, enabled, response.title(), response.code());
+        return response;
     }
 
     public OrganizerScanPurposeResponse toggleTrackingOnly(UUID organizerUserId, UUID eventId, UUID purposeId, boolean trackingOnly) {
@@ -565,7 +570,10 @@ public class OrganizerService {
             rule.setMaxUsesPerRegistration(1);
         }
         transactionRuleRepository.save(rule);
-        return toScanPurpose(purpose);
+        OrganizerScanPurposeResponse response = toScanPurpose(purpose);
+        log.debug("ScanPurposePersistence eventId={} action=trackingOnly purposeId={} trackingOnly={} backendResponseName={} code={}",
+                eventId, purposeId, trackingOnly, response.title(), response.code());
+        return response;
     }
 
     public List<OrganizerTransactionRuleResponse> listTransactionRules(UUID organizerUserId, UUID eventId) {
@@ -733,6 +741,13 @@ public class OrganizerService {
                         defaultDuplicateRule(code), defaultRequiredSelection(code)))
                 .toList();
     }
+
+        private String summarizeScanPurposeNames(List<ScanPurpose> purposes) {
+        return purposes.stream()
+            .map(purpose -> purpose.getName() + "[" + purpose.getCode() + "]")
+            .toList()
+            .toString();
+        }
 
     private UserProfile resolveStaffUser(StaffAssignmentRequest request) {
         if (request.staffUserId() != null) {

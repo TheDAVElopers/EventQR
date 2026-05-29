@@ -53,11 +53,12 @@ class EventDetailPresenter(
     fun registerForEvent(eventId: String, eventTitle: String) {
         val email = view?.getSessionEmail().orEmpty()
         val fullName = view?.getSessionFullName().orEmpty()
+        val phoneNumber = view?.getSessionPhone().orEmpty()
         if (!Validators.isValidEmail(email) || !Validators.isNonEmpty(fullName)) {
             view?.showMessage("Open registration to enter attendee details")
-            view?.openRegistration(eventId, eventTitle, email, fullName)
+            view?.openRegistration(eventId, eventTitle, email, fullName, phoneNumber)
             return
         }
-        view?.openRegistration(eventId, eventTitle, email, fullName)
+        view?.openRegistration(eventId, eventTitle, email, fullName, phoneNumber)
     }
 }

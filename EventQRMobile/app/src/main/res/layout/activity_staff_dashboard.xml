@@ -223,14 +223,6 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <TextView
-                    android:id="@+id/txtStaffEmail"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:textColor="@color/eventqr_muted"
-                    android:textSize="13sp" />
-
                 <!-- Today's Activity Card -->
                 <LinearLayout
                     android:layout_width="match_parent"

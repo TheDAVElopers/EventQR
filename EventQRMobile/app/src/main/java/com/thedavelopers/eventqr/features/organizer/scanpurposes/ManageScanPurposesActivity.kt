@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 
 open class ManageScanPurposesActivity : AppCompatActivity() {
     private val TAG = "ManageScanPurposesActivity"
+    private val persistenceTag = "ScanPurposePersistence"
     private lateinit var repository: OrganizerRepository
     private lateinit var selectedEvent: OrganizerMvpEvent
     private lateinit var purposeHost: LinearLayout
@@ -33,6 +34,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId) ?: return showMissingEventScreen("Scan Purposes")
         
         Log.d(TAG, "Loading scan purposes for eventId: $eventId")
+        Log.d(persistenceTag, "selectedEventId=$eventId screen=ScanPurposes")
         
         val content = organizerShell(
             title = "Scan Purposes",
@@ -61,6 +63,10 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
             Log.d(
                 TAG,
                 "eventId=${selectedEvent.id} refreshCount=$refreshCount loadedCount=${source.data.size} source=${source.source} message=${source.message}"
+            )
+            Log.d(
+                persistenceTag,
+                "eventId=${selectedEvent.id} loadedCount=${source.data.size} names=${source.data.joinToString { it.label }}"
             )
             renderPurposes(scanPurposes)
             source.message?.let {
@@ -97,61 +103,43 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
 
     private fun togglePurpose(purpose: OrganizerMvpScanPurpose, enabled: Boolean) {
         MainScope().launch {
-            Log.d(
-                TAG,
-                "eventId=${selectedEvent.id} purposeId=${purpose.id ?: "null"} label=${purpose.label} toggleValue=$enabled"
-            )
-
-            if (purpose.id.isNullOrBlank()) {
-                val updatedPurpose = purpose.copy(enabled = enabled)
-                val updatedPurposes = scanPurposes.upsert(updatedPurpose)
-                val createResult = repository.saveScanPurposesForMvp(
-                    selectedEvent.id,
-                    updatedPurposes
-                )
-                Log.d(
-                    TAG,
-                    "eventId=${selectedEvent.id} purposeId=${purpose.id ?: "null"} toggleCreateResultSource=${createResult.source} message=${createResult.message} returnedCount=${createResult.data.size}"
-                )
-                if (createResult.source != OrganizerMvpDataSource.BACKEND) {
-                    Toast.makeText(
-                        this@ManageScanPurposesActivity,
-                        "Failed to update: ${createResult.message ?: "Unable to save scan purpose"}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    return@launch
-                }
-                loadRequestSerial += 1
-                scanPurposes = createResult.data.ifEmpty { updatedPurposes }
-                Toast.makeText(
-                    this@ManageScanPurposesActivity,
-                    "${purpose.label} ${if (enabled) "enabled" else "disabled"}",
-                    Toast.LENGTH_SHORT
-                ).show()
-                renderPurposes(scanPurposes)
+            val purposeId = purpose.id?.takeIf { it.isNotBlank() }
+            if (purposeId == null) {
+                Log.w(persistenceTag, "eventId=${selectedEvent.id} toggleSkipped reason=missingPurposeId name=${purpose.label}")
+                Toast.makeText(this@ManageScanPurposesActivity, "Unable to update unsaved scan purpose.", Toast.LENGTH_SHORT).show()
                 return@launch
             }
+            Log.d(
+                TAG,
+                "eventId=${selectedEvent.id} purposeId=$purposeId label=${purpose.label} toggleValue=$enabled"
+            )
+            Log.d(
+                persistenceTag,
+                "eventId=${selectedEvent.id} toggleRequest id=$purposeId name=${purpose.label} enabled=$enabled"
+            )
 
-            val result = repository.enableScanPurposeForMvp(selectedEvent.id, purpose.id, enabled)
+            val result = repository.enableScanPurposeForMvp(selectedEvent.id, purposeId, enabled)
             when (result) {
                 is NetworkResult.Success -> {
                     Log.d(
                         TAG,
-                        "eventId=${selectedEvent.id} purposeId=${purpose.id} toggleApiResult=SUCCESS active=${result.data.enabled}"
+                        "eventId=${selectedEvent.id} purposeId=$purposeId toggleApiResult=SUCCESS active=${result.data.enabled}"
                     )
-                    loadRequestSerial += 1
-                    scanPurposes = scanPurposes.upsert(purpose.copy(enabled = enabled))
+                    Log.d(
+                        persistenceTag,
+                        "eventId=${selectedEvent.id} toggleResponse id=${result.data.scanPurposeId ?: "null"} name=${result.data.title} enabled=${result.data.enabled}"
+                    )
                     Toast.makeText(
                         this@ManageScanPurposesActivity,
                         "${purpose.label} ${if (enabled) "enabled" else "disabled"}",
                         Toast.LENGTH_SHORT
                     ).show()
-                    renderPurposes(scanPurposes)
+                    loadPurposes()
                 }
                 is NetworkResult.Error -> {
                     Log.w(
                         TAG,
-                        "eventId=${selectedEvent.id} purposeId=${purpose.id} toggleApiResult=ERROR message=${result.message}"
+                        "eventId=${selectedEvent.id} purposeId=$purposeId toggleApiResult=ERROR message=${result.message}"
                     )
                     Toast.makeText(
                         this@ManageScanPurposesActivity,
@@ -236,34 +224,60 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
 
     private fun savePurpose(purpose: OrganizerMvpScanPurpose) {
         MainScope().launch {
-            val updatedPurposes = scanPurposes.upsert(purpose)
-            val source = repository.saveScanPurposesForMvp(selectedEvent.id, updatedPurposes)
-            Log.d(TAG, "Save purpose ${purpose.label} result: ${source.source}")
-            if (source.source == OrganizerMvpDataSource.BACKEND) {
-                loadRequestSerial += 1
-                scanPurposes = source.data.ifEmpty { updatedPurposes }
-                Toast.makeText(this@ManageScanPurposesActivity, "Saved successfully", Toast.LENGTH_SHORT).show()
-                renderPurposes(scanPurposes)
+            val existingPurposeId = purpose.id?.takeIf { it.isNotBlank() }
+            Log.d(
+                persistenceTag,
+                "eventId=${selectedEvent.id} saveRequest id=${existingPurposeId ?: "null"} name=${purpose.label} enabled=${purpose.enabled} trackingOnly=${purpose.trackingOnly} pointsEnabled=${purpose.pointsEnabled} pointsValue=${purpose.pointsValue}"
+            )
+            val result = if (existingPurposeId == null) {
+                repository.createOrganizerScanPurpose(selectedEvent.id, purpose.toOrganizerRequest())
             } else {
-                Toast.makeText(this@ManageScanPurposesActivity, "Failed to save: ${source.message}", Toast.LENGTH_SHORT).show()
+                repository.updateOrganizerScanPurpose(selectedEvent.id, existingPurposeId, purpose.toOrganizerRequest())
+            }
+            when (result) {
+                is NetworkResult.Success -> {
+                    Log.d(
+                        persistenceTag,
+                        "eventId=${selectedEvent.id} saveResponse id=${result.data.scanPurposeId ?: "null"} name=${result.data.title} enabled=${result.data.enabled} code=${result.data.code}"
+                    )
+                    Toast.makeText(this@ManageScanPurposesActivity, "Saved successfully", Toast.LENGTH_SHORT).show()
+                    loadPurposes()
+                }
+                is NetworkResult.Error -> {
+                    Log.w(
+                        persistenceTag,
+                        "eventId=${selectedEvent.id} saveError message=${result.message}"
+                    )
+                    Toast.makeText(this@ManageScanPurposesActivity, "Failed to save: ${result.message}", Toast.LENGTH_SHORT).show()
+                }
+                NetworkResult.Loading -> Unit
             }
         }
     }
 
-    private fun List<OrganizerMvpScanPurpose>.upsert(purpose: OrganizerMvpScanPurpose): List<OrganizerMvpScanPurpose> {
-        val existingIndex = indexOfFirst { existing ->
-            when {
-                purpose.id != null && existing.id == purpose.id -> true
-                purpose.id.isNullOrBlank() && existing.id.isNullOrBlank() ->
-                    existing.label.equals(purpose.label, ignoreCase = true) && existing.code == purpose.code
-                else -> false
-            }
-        }
+    private fun OrganizerMvpScanPurpose.toOrganizerRequest() = com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerScanPurposeRequestDto(
+        scanPurposeId = id?.let { runCatching { java.util.UUID.fromString(it) }.getOrNull() },
+        title = label,
+        code = code ?: label.toScanPurposeCode(),
+        enabled = enabled,
+        trackingOnly = trackingOnly,
+        pointsEnabled = pointsEnabled,
+        pointsValue = pointsValue,
+        allowDuplicate = duplicateRule.contains("allow", ignoreCase = true),
+        duplicateRuleSummary = duplicateRule,
+        requiredSelectionLabel = requiredSelectionLabel,
+        description = description,
+    )
 
-        return if (existingIndex >= 0) {
-            toMutableList().apply { set(existingIndex, purpose) }
-        } else {
-            plus(purpose)
-        }
+    private fun String.toScanPurposeCode(): com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode = when {
+        contains("reprint", ignoreCase = true) -> com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.REGISTRATION_LOOKUP
+        contains("print", ignoreCase = true) -> com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.ID_PRINT
+        contains("attendance", ignoreCase = true) -> com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.ATTENDANCE
+        contains("benefit", ignoreCase = true) -> com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.BENEFIT_CLAIM
+        contains("booth", ignoreCase = true) -> com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.BOOTH_VISIT
+        contains("session", ignoreCase = true) -> com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.SESSION_VISIT
+        contains("reward", ignoreCase = true) -> com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.REWARD_REDEMPTION
+        contains("exit", ignoreCase = true) -> com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.EXIT
+        else -> com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.ENTRY
     }
 }
