@@ -46,8 +46,8 @@ class TransactionLogAdapter : RecyclerView.Adapter<TransactionLogAdapter.ViewHol
         private val purposeIconView: ImageView = itemView.findViewById(R.id.imgPurposeIcon)
 
         fun bind(item: TransactionResponse) {
-            userNameView.text = "Attendee: ${item.attendeeUserId.toString().take(8)}"
-            eventNameView.text = "Event ID: ${item.eventId.toString().take(8)}"
+            userNameView.text = item.attendeeName?.takeIf { it.isNotBlank() } ?: "Attendee"
+            eventNameView.text = item.eventTitle?.takeIf { it.isNotBlank() } ?: "Event"
             transactionIdView.text = "TXN-${item.transactionId.toString().take(8).uppercase()}"
             
             val isSuccess = item.transactionResult.name == "APPROVED" || item.transactionResult.name == "SUCCESS"

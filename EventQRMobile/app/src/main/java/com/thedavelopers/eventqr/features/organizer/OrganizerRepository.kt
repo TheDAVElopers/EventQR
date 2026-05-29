@@ -625,7 +625,7 @@ private fun TransactionResponse.toMvpTransaction(
         eventId = eventId.toString(),
         eventTitle = eventTitle,
         attendeeId = attendeeUserId.toString(),
-        attendeeName = attendeeName ?: "Attendee ${attendeeUserId.toString().take(8)}",
+        attendeeName = attendeeName ?: "Attendee",
         attendeeEmail = "",
         qrId = qrCredentialId.toString(),
         staffId = "Not available",

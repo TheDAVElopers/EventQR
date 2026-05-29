@@ -49,7 +49,7 @@ class TransactionAdapter(private val eventTitle: String? = null) : RecyclerView.
             
             titleView.text = item.reason ?: (if (isEarned) "Points Earned" else "Points Redeemed")
             
-            eventView.text = item.eventTitle ?: eventTitle ?: "Attendee ID: ${item.attendeeUserId.toString().take(8)}"
+            eventView.text = item.eventTitle?.takeIf { it.isNotBlank() } ?: eventTitle ?: "Event"
             timeView.text = DateFormatters.formatInstant(item.scannedAt)
             
             val deltaPrefix = if (isEarned) "+" else ""
