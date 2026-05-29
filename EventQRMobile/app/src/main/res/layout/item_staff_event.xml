@@ -54,7 +54,7 @@
         android:layout_height="wrap_content"
         android:src="@drawable/back_btn"
         android:scaleX="-1"
-        android:background="name"
+        android:background="?attr/selectableItemBackgroundBorderless"
         android:layout_margin="5dp"
         android:padding="5dp"/>
 </LinearLayout>

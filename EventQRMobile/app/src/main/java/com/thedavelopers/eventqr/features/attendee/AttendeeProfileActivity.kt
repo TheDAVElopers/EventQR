@@ -98,6 +98,9 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.btnBack).setOnClickListener {
             finish()
         }
+        findViewById<android.view.View>(R.id.btnBackImage).setOnClickListener {
+            finish()
+        }
 
         btnSaveChanges.setOnClickListener {
             val fullName = edtFullName.text.toString()

@@ -33,7 +33,7 @@
                     android:id="@+id/btnBack"
                     android:padding="5dp"
                     android:layout_marginRight="20dp"
-                    android:background="name"/>
+                    android:background="?attr/selectableItemBackgroundBorderless"/>
 
                 <TextView
                     android:layout_width="wrap_content"
