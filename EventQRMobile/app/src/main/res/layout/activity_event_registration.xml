@@ -6,20 +6,24 @@
     android:layout_height="match_parent"
     android:background="@color/eventqr_bg">
 
-    <!-- Top Bar -->
     <LinearLayout
         android:id="@+id/layoutTopBar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
         android:gravity="center_vertical"
+        android:minHeight="56dp"
         android:orientation="horizontal"
-        android:paddingHorizontal="8dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageButton
             android:id="@+id/btnBack"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Back"
             android:src="@drawable/back_btn"
@@ -28,19 +32,21 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="Event Registration"
+            android:text="Register for Event"
             android:textColor="@color/eventqr_text"
             android:textSize="20sp"
             android:textStyle="bold" />
-
     </LinearLayout>
 
     <ScrollView
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
         android:fillViewport="true"
-        app:layout_constraintBottom_toTopOf="@+id/layoutButtons"
+        android:clipToPadding="false"
+        android:paddingBottom="120dp"
+        app:layout_constraintBottom_toTopOf="@+id/layoutBottomBar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/layoutTopBar">
 
         <LinearLayout
@@ -49,102 +55,55 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <LinearLayout
-                android:id="@+id/layoutAutofillStatus"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:visibility="gone">
-
-                <ProgressBar
-                    android:id="@+id/pbAutofillStatus"
-                    style="?android:attr/progressBarStyleSmall"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:indeterminate="true" />
-
-                <TextView
-                    android:id="@+id/txtAutofillStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="Loading saved profile..."
-                    android:textColor="@color/eventqr_muted"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <!-- Event Summary Card -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_blue_soft"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:id="@+id/txtEventTitle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Annual Tech Summit 2026"
-                    android:textColor="#2D3748"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@drawable/ic_calendar"
-                        app:tint="#4A5568" />
-
-                    <TextView
-                        android:id="@+id/txtEventDateTime"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:text="June 15, 2026 at 09:00 AM"
-                        android:textColor="#4A5568"
-                        android:textSize="14sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@android:drawable/ic_menu_mylocation"
-                        app:tint="#4A5568" />
-
-                    <TextView
-                        android:id="@+id/txtEventLocation"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:text="Main Auditorium, Building A"
-                        android:textColor="#4A5568"
-                        android:textSize="14sp" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <!-- Personal Information -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:cardCornerRadius="12dp"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="0dp"
+                app:cardUseCompatPadding="false">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_event_banner_gradient"
+                    android:orientation="vertical"
+                    android:padding="18dp">
+
+                    <TextView
+                        android:id="@+id/txtEventCategory"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Development"
+                        android:textColor="#EDE9FE"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/txtEventTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="DevFest Manila 2026"
+                        android:textColor="@color/white"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/txtEventDateTimeVenue"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Jul 20, 2026 · PICC, Pasay City"
+                        android:textColor="#F5F3FF"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                app:cardCornerRadius="18dp"
                 app:cardElevation="0dp"
                 app:cardUseCompatPadding="false">
 
@@ -152,314 +111,117 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="18dp">
 
                     <TextView
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Personal Information"
+                        android:text="Registrant Information"
                         android:textColor="@color/eventqr_text"
-                        android:textSize="16sp"
+                        android:textSize="18sp"
                         android:textStyle="bold" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:orientation="horizontal">
+                    <TextView
+                        style="@style/RequestEventLabel"
+                        android:text="Full Name *" />
 
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginEnd="8dp"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="First Name"
-                                android:textColor="@color/eventqr_muted"
-                                android:textSize="12sp" />
-
-                            <EditText
-                                android:id="@+id/edtRegistrationFirstName"
-                                android:layout_width="match_parent"
-                                android:layout_height="48dp"
-                                android:layout_marginTop="4dp"
-                                android:background="@drawable/bg_soft_input_no_stroke"
-                                android:hint="John"
-                                android:inputType="textPersonName"
-                                android:paddingHorizontal="12dp"
-                                android:textSize="14sp" />
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="Last Name"
-                                android:textColor="@color/eventqr_muted"
-                                android:textSize="12sp" />
-
-                            <EditText
-                                android:id="@+id/edtRegistrationLastName"
-                                android:layout_width="match_parent"
-                                android:layout_height="48dp"
-                                android:layout_marginTop="4dp"
-                                android:background="@drawable/bg_soft_input_no_stroke"
-                                android:hint="Doe"
-                                android:inputType="textPersonName"
-                                android:paddingHorizontal="12dp"
-                                android:textSize="14sp" />
-                        </LinearLayout>
-                    </LinearLayout>
+                    <EditText
+                        android:id="@+id/edtRegistrationFullName"
+                        style="@style/RequestEventInput"
+                        android:hint="Full name"
+                        android:imeOptions="actionNext"
+                        android:inputType="textPersonName"
+                        android:maxLines="1" />
 
                     <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:text="Email Address"
-                        android:textColor="@color/eventqr_muted"
-                        android:textSize="12sp" />
+                        style="@style/RequestEventLabel"
+                        android:text="Email Address *" />
 
                     <EditText
                         android:id="@+id/edtRegistrationEmail"
-                        android:layout_width="match_parent"
-                        android:layout_height="48dp"
-                        android:layout_marginTop="4dp"
-                        android:background="@drawable/bg_soft_input_no_stroke"
+                        style="@style/RequestEventInput"
                         android:drawableStart="@drawable/email_icon"
                         android:drawablePadding="8dp"
-                        android:hint=" john.doe@university.edu"
+                        android:hint="john.doe@university.edu"
+                        android:imeOptions="actionNext"
                         android:inputType="textEmailAddress"
-                        android:paddingHorizontal="12dp"
-                        android:textSize="14sp" />
+                        android:maxLines="1" />
 
                     <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:text="Phone Number"
-                        android:textColor="@color/eventqr_muted"
-                        android:textSize="12sp" />
+                        style="@style/RequestEventLabel"
+                        android:text="Phone Number *" />
 
                     <EditText
                         android:id="@+id/edtRegistrationPhone"
-                        android:layout_width="match_parent"
-                        android:layout_height="48dp"
-                        android:layout_marginTop="4dp"
-                        android:background="@drawable/bg_soft_input_no_stroke"
+                        style="@style/RequestEventInput"
                         android:drawableStart="@drawable/phone_icon"
                         android:drawablePadding="8dp"
-                        android:hint=" +63 912 3456 789"
+                        android:hint="+63 912 345 6789"
+                        android:imeOptions="actionDone"
                         android:inputType="phone"
-                        android:paddingHorizontal="12dp"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:text="Student ID"
-                        android:textColor="@color/eventqr_muted"
-                        android:textSize="12sp" />
-
-                    <EditText
-                        android:id="@+id/edtRegistrationStudentId"
-                        android:layout_width="match_parent"
-                        android:layout_height="48dp"
-                        android:layout_marginTop="4dp"
-                        android:background="@drawable/bg_soft_input_no_stroke"
-                        android:drawableStart="@drawable/ic_nav_profile"
-                        android:drawablePadding="8dp"
-                        android:hint="STU-2024-001"
-                        android:inputType="text"
-                        android:paddingHorizontal="12dp"
-                        android:textSize="14sp" />
-
+                        android:maxLines="1" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Additional Information -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="0dp">
+                app:cardCornerRadius="18dp"
+                app:cardElevation="0dp"
+                app:cardUseCompatPadding="false">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="18dp">
+
+                    <CheckBox
+                        android:id="@+id/chkRegistrationTerms"
+                        style="@style/RequestEventCheckbox"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:buttonTint="@color/eventqr_indigo"
+                        android:minHeight="0dp"
+                        android:minWidth="0dp" />
 
                     <TextView
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Additional Information"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:text="I agree to the event terms and conditions. My QR credential will be generated and emailed to me after successful registration."
                         android:textColor="@color/eventqr_text"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:text="Emergency Contact (Optional)"
-                        android:textColor="@color/eventqr_muted"
-                        android:textSize="12sp" />
-
-                    <EditText
-                        android:id="@+id/edtEmergencyContact"
-                        android:layout_width="match_parent"
-                        android:layout_height="48dp"
-                        android:layout_marginTop="4dp"
-                        android:background="@drawable/bg_soft_input_no_stroke"
-                        android:hint="Name and phone number"
-                        android:inputType="text"
-                        android:paddingHorizontal="12dp"
-                        android:textSize="14sp" />
-
+                        android:textSize="14sp"
+                        android:lineSpacingExtra="2dp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
-
-            <!-- Terms & Conditions -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="0dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Terms &amp; Conditions"
-                        android:textColor="@color/eventqr_text"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:background="@drawable/bg_soft_input_no_stroke"
-                        android:orientation="vertical"
-                        android:padding="16dp">
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="By registering for this event, you agree to:"
-                            android:textColor="@color/eventqr_text"
-                            android:textSize="13sp" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="• Attend the event at the scheduled time\n• Present your QR code at the event entrance\n• Follow all event rules and guidelines"
-                            android:textColor="@color/eventqr_muted"
-                            android:textSize="13sp" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="16dp"
-                            android:text="I have read and agree to the terms and conditions, event rules, and privacy policy."
-                            android:textColor="@color/eventqr_text"
-                            android:textSize="13sp" />
-
-                    </LinearLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <!-- Registration Guidance -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="0dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_blue_soft"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Complete Your Registration"
-                        android:textColor="#2D3748"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Fill in the required details below to register for this event."
-                        android:textColor="#4A5568"
-                        android:textSize="12sp" />
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <!-- Extra space for bottom buttons -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="16dp" />
-
         </LinearLayout>
     </ScrollView>
 
-    <!-- Bottom Buttons -->
     <LinearLayout
-        android:id="@+id/layoutButtons"
-        android:layout_width="match_parent"
+        android:id="@+id/layoutBottomBar"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@color/white"
         android:elevation="8dp"
-        android:orientation="horizontal"
         android:padding="16dp"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btnCancel"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginEnd="8dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_outline_button"
-            android:text="Cancel"
-            android:textAllCaps="false"
-            android:textColor="@color/eventqr_text" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnSubmitRegistration"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
             android:background="@drawable/bg_primary_button"
-            android:text="Complete Registration"
+            android:text="Confirm Registration"
             android:textAllCaps="false"
-            android:textColor="@color/white" />
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,13 +1,13 @@
 package com.thedavelopers.eventqr.features.attendee
 
+import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ImageButton
-import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -19,33 +19,26 @@ import com.thedavelopers.eventqr.core.util.Validators
 import kotlinx.coroutines.launch
 
 open class AttendeeRegistrationActivity : AppCompatActivity(), RegistrationContract.View {
-    private data class PrefillValue(val value: String, val source: String)
-
     private lateinit var presenter: RegistrationPresenter
     private lateinit var repository: AttendeeRepository
     private lateinit var sessionManager: SessionManager
     private lateinit var eventId: String
-    private lateinit var firstNameInput: EditText
-    private lateinit var lastNameInput: EditText
+    private lateinit var eventCategoryText: TextView
+    private lateinit var eventTitleText: TextView
+    private lateinit var eventDateTimeVenueText: TextView
+    private lateinit var fullNameInput: EditText
     private lateinit var emailInput: EditText
     private lateinit var phoneInput: EditText
-    private lateinit var studentIdInput: EditText
-    private lateinit var dietaryInput: EditText
-    private lateinit var emergencyInput: EditText
+    private lateinit var termsCheckbox: CheckBox
     private lateinit var submitButton: Button
-    private lateinit var autofillStatusLayout: LinearLayout
-    private lateinit var autofillStatusText: TextView
 
     private val userEditedFields = mutableMapOf(
-        FIELD_FIRST_NAME to false,
-        FIELD_LAST_NAME to false,
+        FIELD_FULL_NAME to false,
         FIELD_EMAIL to false,
         FIELD_PHONE to false,
-        FIELD_STUDENT_ID to false,
-        FIELD_EMERGENCY_CONTACT to false,
     )
-    private val lastAppliedSources = mutableMapOf<String, String>()
     private var suppressEditTracking = false
+    private var isLoading = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,69 +50,34 @@ open class AttendeeRegistrationActivity : AppCompatActivity(), RegistrationContr
         eventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty()
 
         findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
-        findViewById<Button>(R.id.btnCancel).setOnClickListener { finish() }
 
-        firstNameInput = findViewById(R.id.edtRegistrationFirstName)
-        lastNameInput = findViewById(R.id.edtRegistrationLastName)
+        eventCategoryText = findViewById(R.id.txtEventCategory)
+        eventTitleText = findViewById(R.id.txtEventTitle)
+        eventDateTimeVenueText = findViewById(R.id.txtEventDateTimeVenue)
+        fullNameInput = findViewById(R.id.edtRegistrationFullName)
         emailInput = findViewById(R.id.edtRegistrationEmail)
         phoneInput = findViewById(R.id.edtRegistrationPhone)
-        studentIdInput = findViewById(R.id.edtRegistrationStudentId)
-        emergencyInput = findViewById(R.id.edtEmergencyContact)
+        termsCheckbox = findViewById(R.id.chkRegistrationTerms)
         submitButton = findViewById(R.id.btnSubmitRegistration)
-        autofillStatusLayout = findViewById(R.id.layoutAutofillStatus)
-        autofillStatusText = findViewById(R.id.txtAutofillStatus)
 
-        restoreEditedFieldState(savedInstanceState)
-        attachUserEditTracking()
-
+        restoreState(savedInstanceState)
+        bindEventSummary()
+        attachInputTracking()
         applyInitialPrefill()
         loadLatestProfilePrefill()
 
-        submitButton.setOnClickListener {
-            val firstName = firstNameInput.text.toString().trim()
-            val lastName = lastNameInput.text.toString().trim()
-            val phoneNumber = phoneInput.text.toString().trim()
+        termsCheckbox.setOnCheckedChangeListener { _, _ -> updateSubmitButtonState() }
+        submitButton.setOnClickListener { submitRegistration() }
 
-            firstNameInput.error = null
-            lastNameInput.error = null
-            emailInput.error = null
-            phoneInput.error = null
-
-            var valid = true
-            if (!Validators.isNonEmpty(firstName)) {
-                firstNameInput.error = "First name is required"
-                valid = false
-            }
-            if (!Validators.isNonEmpty(lastName)) {
-                lastNameInput.error = "Last name is required"
-                valid = false
-            }
-            if (!Validators.isValidPhoneNumber(phoneNumber)) {
-                phoneInput.error = "Phone number must start with 63 and be 12 digits long"
-                valid = false
-            }
-            if (!valid) {
-                return@setOnClickListener
-            }
-
-            val fullName = "${firstNameInput.text} ${lastNameInput.text}".trim()
-            presenter.submit(
-                eventId,
-                fullName,
-                emailInput.text.toString(),
-                phoneNumber,
-            )
-        }
+        updateSubmitButtonState()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putBoolean(STATE_FIRST_NAME_EDITED, userEditedFields[FIELD_FIRST_NAME] == true)
-        outState.putBoolean(STATE_LAST_NAME_EDITED, userEditedFields[FIELD_LAST_NAME] == true)
+        outState.putBoolean(STATE_FULL_NAME_EDITED, userEditedFields[FIELD_FULL_NAME] == true)
         outState.putBoolean(STATE_EMAIL_EDITED, userEditedFields[FIELD_EMAIL] == true)
         outState.putBoolean(STATE_PHONE_EDITED, userEditedFields[FIELD_PHONE] == true)
-        outState.putBoolean(STATE_STUDENT_ID_EDITED, userEditedFields[FIELD_STUDENT_ID] == true)
-        outState.putBoolean(STATE_EMERGENCY_EDITED, userEditedFields[FIELD_EMERGENCY_CONTACT] == true)
+        outState.putBoolean(STATE_TERMS_CHECKED, termsCheckbox.isChecked)
     }
 
     override fun onDestroy() {
@@ -128,8 +86,9 @@ open class AttendeeRegistrationActivity : AppCompatActivity(), RegistrationContr
     }
 
     override fun showLoading(isLoading: Boolean) {
-        submitButton.isEnabled = !isLoading
-        submitButton.text = if (isLoading) "Submitting..." else "Register"
+        this.isLoading = isLoading
+        submitButton.text = if (isLoading) "Submitting..." else "Confirm Registration"
+        updateSubmitButtonState()
     }
 
     override fun showMessage(message: String) {
@@ -138,10 +97,7 @@ open class AttendeeRegistrationActivity : AppCompatActivity(), RegistrationContr
 
     override fun showFieldError(field: String, message: String?) {
         when (field) {
-            "fullName" -> {
-                firstNameInput.error = message
-                lastNameInput.error = message
-            }
+            "fullName" -> fullNameInput.error = message
             "email" -> emailInput.error = message
             "phone" -> phoneInput.error = message
         }
@@ -149,33 +105,37 @@ open class AttendeeRegistrationActivity : AppCompatActivity(), RegistrationContr
 
     override fun openQr(registrationId: String, qrCredentialId: String) {
         startActivity(
-            android.content.Intent(this, AttendeeQrCredentialActivity::class.java)
+            Intent(this, AttendeeQrCredentialActivity::class.java)
                 .putExtra(EXTRA_REGISTRATION_ID, registrationId)
                 .putExtra(EXTRA_QR_CREDENTIAL_ID, qrCredentialId)
         )
         finish()
     }
 
-    private fun restoreEditedFieldState(savedInstanceState: Bundle?) {
-        if (savedInstanceState == null) {
-            return
-        }
+    private fun restoreState(savedInstanceState: Bundle?) {
+        if (savedInstanceState == null) return
 
-        userEditedFields[FIELD_FIRST_NAME] = savedInstanceState.getBoolean(STATE_FIRST_NAME_EDITED, false)
-        userEditedFields[FIELD_LAST_NAME] = savedInstanceState.getBoolean(STATE_LAST_NAME_EDITED, false)
+        userEditedFields[FIELD_FULL_NAME] = savedInstanceState.getBoolean(STATE_FULL_NAME_EDITED, false)
         userEditedFields[FIELD_EMAIL] = savedInstanceState.getBoolean(STATE_EMAIL_EDITED, false)
         userEditedFields[FIELD_PHONE] = savedInstanceState.getBoolean(STATE_PHONE_EDITED, false)
-        userEditedFields[FIELD_STUDENT_ID] = savedInstanceState.getBoolean(STATE_STUDENT_ID_EDITED, false)
-        userEditedFields[FIELD_EMERGENCY_CONTACT] = savedInstanceState.getBoolean(STATE_EMERGENCY_EDITED, false)
+        termsCheckbox.isChecked = savedInstanceState.getBoolean(STATE_TERMS_CHECKED, false)
     }
 
-    private fun attachUserEditTracking() {
-        trackUserEdits(firstNameInput, FIELD_FIRST_NAME)
-        trackUserEdits(lastNameInput, FIELD_LAST_NAME)
+    private fun bindEventSummary() {
+        val category = intent.getStringExtra(EXTRA_EVENT_CATEGORY).orEmpty().ifBlank { "Event" }
+        val title = intent.getStringExtra(EXTRA_EVENT_TITLE).orEmpty().ifBlank { "Register for Event" }
+        val date = intent.getStringExtra(EXTRA_EVENT_START).orEmpty().ifBlank { "Date to be announced" }
+        val venue = intent.getStringExtra(EXTRA_EVENT_LOCATION).orEmpty().ifBlank { "Venue to be announced" }
+
+        eventCategoryText.text = category
+        eventTitleText.text = title
+        eventDateTimeVenueText.text = "$date · $venue"
+    }
+
+    private fun attachInputTracking() {
+        trackUserEdits(fullNameInput, FIELD_FULL_NAME)
         trackUserEdits(emailInput, FIELD_EMAIL)
         trackUserEdits(phoneInput, FIELD_PHONE)
-        trackUserEdits(studentIdInput, FIELD_STUDENT_ID)
-        trackUserEdits(emergencyInput, FIELD_EMERGENCY_CONTACT)
     }
 
     private fun trackUserEdits(editText: EditText, fieldKey: String) {
@@ -186,6 +146,7 @@ open class AttendeeRegistrationActivity : AppCompatActivity(), RegistrationContr
                 if (!suppressEditTracking) {
                     userEditedFields[fieldKey] = true
                 }
+                updateSubmitButtonState()
             }
 
             override fun afterTextChanged(s: Editable?) = Unit
@@ -196,140 +157,96 @@ open class AttendeeRegistrationActivity : AppCompatActivity(), RegistrationContr
         val fullName = intent.getStringExtra(EXTRA_PREFILL_FULL_NAME).orEmpty().ifBlank { sessionManager.getFullName().orEmpty() }
         val email = intent.getStringExtra(EXTRA_PREFILL_EMAIL).orEmpty().ifBlank { sessionManager.getEmail().orEmpty() }
         val phone = intent.getStringExtra(EXTRA_PREFILL_PHONE).orEmpty().ifBlank { sessionManager.getPhone().orEmpty() }
-        val studentId = intent.getStringExtra(EXTRA_PREFILL_STUDENT_ID).orEmpty()
-        val emergencyContact = intent.getStringExtra(EXTRA_PREFILL_EMERGENCY_CONTACT).orEmpty()
 
-        val filledFields = mutableListOf<String>()
-        if (applyFullNamePrefill(fullName, SOURCE_INTENT_SESSION)) filledFields += "fullName"
-        if (applyPrefill(emailInput, FIELD_EMAIL, email, SOURCE_INTENT_SESSION)) filledFields += "email"
-        if (applyPrefill(phoneInput, FIELD_PHONE, phone, SOURCE_INTENT_SESSION)) filledFields += "phone"
-        if (applyPrefill(studentIdInput, FIELD_STUDENT_ID, studentId, SOURCE_INTENT_SESSION)) filledFields += "studentId"
-        if (applyPrefill(emergencyInput, FIELD_EMERGENCY_CONTACT, emergencyContact, SOURCE_INTENT_SESSION)) filledFields += "emergencyContact"
-
-        logAutofillSnapshot(
-            source = SOURCE_INTENT_SESSION,
-            fieldsFilled = filledFields,
-            profileLoadSucceeded = null,
-            preservedFields = emptyList(),
-        )
+        applyPrefill(fullNameInput, FIELD_FULL_NAME, fullName)
+        applyPrefill(emailInput, FIELD_EMAIL, email)
+        applyPrefill(phoneInput, FIELD_PHONE, phone)
+        updateSubmitButtonState()
     }
 
     private fun loadLatestProfilePrefill() {
-        showAutofillLoading(true)
         lifecycleScope.launch {
-            val preservedFields = userEditedFields.filterValues { it }.keys.toList()
             when (val result = repository.getMyProfile()) {
                 is NetworkResult.Success -> {
                     val profile = result.data
-                    val fieldsFilled = mutableListOf<String>()
-                    if (applyFullNamePrefill(profile.fullName.orEmpty(), SOURCE_PROFILE)) fieldsFilled += "fullName"
-                    if (applyPrefill(emailInput, FIELD_EMAIL, profile.email.orEmpty(), SOURCE_PROFILE)) fieldsFilled += "email"
-                    if (applyPrefill(phoneInput, FIELD_PHONE, profile.phoneNumber.orEmpty(), SOURCE_PROFILE)) fieldsFilled += "phone"
-
-                    logAutofillSnapshot(
-                        source = SOURCE_PROFILE,
-                        fieldsFilled = fieldsFilled,
-                        profileLoadSucceeded = true,
-                        preservedFields = preservedFields,
-                    )
+                    applyPrefill(fullNameInput, FIELD_FULL_NAME, profile.fullName.orEmpty())
+                    applyPrefill(emailInput, FIELD_EMAIL, profile.email.orEmpty())
+                    applyPrefill(phoneInput, FIELD_PHONE, profile.phoneNumber.orEmpty())
                 }
 
-                is NetworkResult.Error -> {
-                    logAutofillSnapshot(
-                        source = SOURCE_PROFILE,
-                        fieldsFilled = emptyList(),
-                        profileLoadSucceeded = false,
-                        preservedFields = preservedFields,
-                    )
-                }
-
+                is NetworkResult.Error -> Unit
                 NetworkResult.Loading -> Unit
             }
-            showAutofillLoading(false)
+            updateSubmitButtonState()
         }
     }
 
-    private fun applyFullNamePrefill(fullName: String, source: String): Boolean {
-        if (fullName.isBlank()) {
-            return false
-        }
-
-        val parts = splitFullName(fullName)
-        val filledFirst = applyPrefill(firstNameInput, FIELD_FIRST_NAME, parts.first, source)
-        val filledLast = applyPrefill(lastNameInput, FIELD_LAST_NAME, parts.second, source)
-        return filledFirst || filledLast
-    }
-
-    private fun splitFullName(fullName: String): Pair<String, String> {
-        val trimmed = fullName.trim()
-        if (trimmed.isBlank()) {
-            return "" to ""
-        }
-
-        val parts = trimmed.split(Regex("\\s+"), limit = 2)
-        return if (parts.size == 1) {
-            parts[0] to ""
-        } else {
-            parts[0] to parts[1]
-        }
-    }
-
-    private fun applyPrefill(editText: EditText, fieldKey: String, value: String, source: String): Boolean {
+    private fun applyPrefill(editText: EditText, fieldKey: String, value: String) {
         val candidate = value.trim()
         if (candidate.isBlank() || userEditedFields[fieldKey] == true) {
-            return false
+            return
         }
 
-        val current = editText.text?.toString().orEmpty()
-        if (current == candidate) {
-            return false
+        if (editText.text?.toString().orEmpty() == candidate) {
+            return
         }
 
         suppressEditTracking = true
         editText.setText(candidate)
         suppressEditTracking = false
-        lastAppliedSources[fieldKey] = source
-        return true
     }
 
-    private fun showAutofillLoading(isLoading: Boolean) {
-        autofillStatusLayout.visibility = if (isLoading) android.view.View.VISIBLE else android.view.View.GONE
-        autofillStatusText.text = if (isLoading) "Loading saved profile..." else ""
+    private fun submitRegistration() {
+        val fullName = fullNameInput.text.toString().trim()
+        val email = emailInput.text.toString().trim()
+        val phoneNumber = phoneInput.text.toString().trim()
+
+        fullNameInput.error = null
+        emailInput.error = null
+        phoneInput.error = null
+
+        var valid = true
+        if (!Validators.isNonEmpty(fullName)) {
+            fullNameInput.error = "Full name is required"
+            valid = false
+        }
+        if (!Validators.isValidEmail(email)) {
+            emailInput.error = "Enter a valid email address"
+            valid = false
+        }
+        if (!Validators.isValidPhoneNumber(phoneNumber)) {
+            phoneInput.error = "Phone number must start with 63 and be 12 digits long"
+            valid = false
+        }
+        if (!termsCheckbox.isChecked) {
+            valid = false
+            Toast.makeText(this, "You must agree to the terms and conditions", Toast.LENGTH_SHORT).show()
+        }
+
+        if (!valid) {
+            updateSubmitButtonState()
+            return
+        }
+
+        presenter.submit(eventId, fullName, email, phoneNumber)
     }
 
-    private fun logAutofillSnapshot(
-        source: String,
-        fieldsFilled: List<String>,
-        profileLoadSucceeded: Boolean?,
-        preservedFields: List<String>,
-    ) {
-        Log.d(
-            TAG_AUTOFILL,
-            "eventId=$eventId,source=$source,fieldsFilled=${fieldsFilled.joinToString("|")}," +
-                "profileLoad=${profileLoadSucceeded?.let { if (it) "success" else "failure" } ?: "n/a"}," +
-                "preservedEditedFields=${preservedFields.joinToString("|")}," +
-                "userEditedFlags=${userEditedFields.filterValues { it }.keys.joinToString("|")}," +
-                "lastAppliedSources=${lastAppliedSources.entries.joinToString("|") { "${it.key}:${it.value}" }}"
-        )
+    private fun updateSubmitButtonState() {
+        val inputsValid = Validators.isNonEmpty(fullNameInput.text.toString()) &&
+            Validators.isValidEmail(emailInput.text.toString()) &&
+            Validators.isValidPhoneNumber(phoneInput.text.toString())
+        submitButton.isEnabled = !isLoading && inputsValid && termsCheckbox.isChecked
+        submitButton.alpha = if (submitButton.isEnabled) 1f else 0.6f
     }
 
     companion object {
-        private const val TAG_AUTOFILL = "RegistrationAutofill"
-        private const val SOURCE_INTENT_SESSION = "intent/session"
-        private const val SOURCE_PROFILE = "profile"
-
-        private const val FIELD_FIRST_NAME = "firstName"
-        private const val FIELD_LAST_NAME = "lastName"
+        private const val FIELD_FULL_NAME = "fullName"
         private const val FIELD_EMAIL = "email"
         private const val FIELD_PHONE = "phone"
-        private const val FIELD_STUDENT_ID = "studentId"
-        private const val FIELD_EMERGENCY_CONTACT = "emergencyContact"
 
-        private const val STATE_FIRST_NAME_EDITED = "state_first_name_edited"
-        private const val STATE_LAST_NAME_EDITED = "state_last_name_edited"
+        private const val STATE_FULL_NAME_EDITED = "state_full_name_edited"
         private const val STATE_EMAIL_EDITED = "state_email_edited"
         private const val STATE_PHONE_EDITED = "state_phone_edited"
-        private const val STATE_STUDENT_ID_EDITED = "state_student_id_edited"
-        private const val STATE_EMERGENCY_EDITED = "state_emergency_edited"
+        private const val STATE_TERMS_CHECKED = "state_terms_checked"
     }
 }

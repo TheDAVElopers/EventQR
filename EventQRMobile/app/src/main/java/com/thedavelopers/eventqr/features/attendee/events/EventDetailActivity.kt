@@ -228,14 +228,24 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     }
 
     override fun openRegistration(eventId: String, eventTitle: String, email: String, fullName: String, phoneNumber: String) {
-        startActivity(
-            Intent(this, AttendeeRegistrationActivity::class.java)
-                .putExtra(EXTRA_EVENT_ID, eventId)
-                .putExtra(EXTRA_EVENT_TITLE, eventTitle)
-                .putExtra(EXTRA_PREFILL_EMAIL, email)
-                .putExtra(EXTRA_PREFILL_FULL_NAME, fullName)
-                .putExtra(EXTRA_PREFILL_PHONE, phoneNumber)
-        )
+        val intent = Intent(this, AttendeeRegistrationActivity::class.java)
+            .putExtra(EXTRA_EVENT_ID, eventId)
+            .putExtra(EXTRA_EVENT_TITLE, eventTitle)
+            .putExtra(EXTRA_PREFILL_EMAIL, email)
+            .putExtra(EXTRA_PREFILL_FULL_NAME, fullName)
+            .putExtra(EXTRA_PREFILL_PHONE, phoneNumber)
+        
+        currentEvent?.let { event ->
+            intent.putExtra(EXTRA_EVENT_CATEGORY, event.category)
+            intent.putExtra(EXTRA_EVENT_LOCATION, event.location)
+            event.eventStartAt?.let {
+                val manilaZone = java.time.ZoneId.of("Asia/Manila")
+                val formatter = java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy", java.util.Locale.ENGLISH).withZone(manilaZone)
+                intent.putExtra(EXTRA_EVENT_START, formatter.format(it))
+            }
+        }
+        
+        startActivity(intent)
     }
 
     override fun getSessionUserId(): String? = SessionManager(this).getUserId()
