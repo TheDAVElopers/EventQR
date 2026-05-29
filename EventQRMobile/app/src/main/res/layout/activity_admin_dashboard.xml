@@ -148,10 +148,18 @@
                     android:orientation="vertical"
                     android:padding="14dp">
 
-                    <View
+                    <FrameLayout
                         android:layout_width="34dp"
                         android:layout_height="34dp"
-                        android:background="@drawable/bg_admin_icon_tile_yellow" />
+                        android:background="@drawable/bg_admin_icon_tile_yellow">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_admin_bell"
+                            android:tint="#F59E0B" />
+                    </FrameLayout>
 
                     <TextView
                         android:id="@+id/textPendingRequestsValue"
@@ -183,10 +191,18 @@
                     android:orientation="vertical"
                     android:padding="14dp">
 
-                    <View
+                    <FrameLayout
                         android:layout_width="34dp"
                         android:layout_height="34dp"
-                        android:background="@drawable/bg_admin_icon_tile_blue" />
+                        android:background="@drawable/bg_admin_icon_tile_blue">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_admin_users"
+                            android:tint="#4F46E5" />
+                    </FrameLayout>
 
                     <TextView
                         android:id="@+id/textTotalAccountsValue"
@@ -221,10 +237,18 @@
                     android:orientation="vertical"
                     android:padding="14dp">
 
-                    <View
+                    <FrameLayout
                         android:layout_width="34dp"
                         android:layout_height="34dp"
-                        android:background="@drawable/bg_admin_icon_tile_green" />
+                        android:background="@drawable/bg_admin_icon_tile_green">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_admin_calendar"
+                            android:tint="#10B981" />
+                    </FrameLayout>
 
                     <TextView
                         android:id="@+id/textActiveEventsValue"
@@ -256,10 +280,18 @@
                     android:orientation="vertical"
                     android:padding="14dp">
 
-                    <View
+                    <FrameLayout
                         android:layout_width="34dp"
                         android:layout_height="34dp"
-                        android:background="@drawable/bg_admin_icon_tile_pink" />
+                        android:background="@drawable/bg_admin_icon_tile_pink">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_admin_shield"
+                            android:tint="#EF4444" />
+                    </FrameLayout>
 
                     <TextView
                         android:id="@+id/textAuditLogsValue"
@@ -299,10 +331,18 @@
                 android:orientation="horizontal"
                 android:padding="14dp">
 
-                <View
+                <FrameLayout
                     android:layout_width="36dp"
                     android:layout_height="36dp"
-                    android:background="@drawable/bg_admin_icon_tile_yellow" />
+                    android:background="@drawable/bg_admin_icon_tile_yellow">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_admin_bell"
+                        android:tint="#F59E0B" />
+                </FrameLayout>
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -344,10 +384,18 @@
                 android:orientation="horizontal"
                 android:padding="14dp">
 
-                <View
+                <FrameLayout
                     android:layout_width="36dp"
                     android:layout_height="36dp"
-                    android:background="@drawable/bg_admin_icon_tile_blue" />
+                    android:background="@drawable/bg_admin_icon_tile_blue">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_admin_users"
+                        android:tint="#4F46E5" />
+                </FrameLayout>
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -389,10 +437,18 @@
                 android:orientation="horizontal"
                 android:padding="14dp">
 
-                <View
+                <FrameLayout
                     android:layout_width="36dp"
                     android:layout_height="36dp"
-                    android:background="@drawable/bg_admin_icon_tile_pink" />
+                    android:background="@drawable/bg_admin_icon_tile_pink">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_admin_shield"
+                        android:tint="#EF4444" />
+                </FrameLayout>
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -435,10 +491,18 @@
                 android:orientation="horizontal"
                 android:padding="14dp">
 
-                <View
+                <FrameLayout
                     android:layout_width="36dp"
                     android:layout_height="36dp"
-                    android:background="@drawable/bg_admin_icon_tile_purple" />
+                    android:background="@drawable/bg_admin_icon_tile_purple">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_admin_notification"
+                        android:tint="#7C3AED" />
+                </FrameLayout>
 
                 <LinearLayout
                     android:layout_width="0dp"

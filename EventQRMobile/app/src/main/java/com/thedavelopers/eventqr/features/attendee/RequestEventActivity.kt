@@ -3,19 +3,20 @@ package com.thedavelopers.eventqr.features.attendee
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
-import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
-import com.thedavelopers.eventqr.core.api.dto.EventRequestStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.events.model.dto.EventCreationRequestDto
@@ -45,15 +46,12 @@ class RequestEventActivity : AppCompatActivity() {
     private lateinit var contactEmailInput: EditText
     private lateinit var contactNumberInput: EditText
     private lateinit var eventLogoInput: EditText
-    private lateinit var additionalNotesInput: EditText
     private lateinit var reasonForRequestInput: EditText
     private lateinit var formMessageText: TextView
     private lateinit var submitProgress: ProgressBar
     private lateinit var submitButton: Button
-    private lateinit var successContainer: View
-    private lateinit var successStatusText: TextView
-    private lateinit var successViewRequestsButton: Button
-    private lateinit var successDashboardButton: Button
+    private var successDialog: AlertDialog? = null
+    private var isSubmitting = false
 
     private val displayDateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a")
     private val zoneId: ZoneId = ZoneId.of("Asia/Manila")
@@ -76,17 +74,6 @@ class RequestEventActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.backText).setOnClickListener { finish() }
         findViewById<Button>(R.id.cancelButton).setOnClickListener { finish() }
         submitButton.setOnClickListener { submitRequest() }
-        successViewRequestsButton.setOnClickListener {
-            startActivity(Intent(this, MyEventRequestsActivity::class.java))
-            finish()
-        }
-        successDashboardButton.setOnClickListener {
-            startActivity(
-                Intent(this, com.thedavelopers.eventqr.features.dashboard.DashboardActivity::class.java)
-                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-            )
-            finish()
-        }
 
         configureDateTimeField(startDateTimeInput, { startDateTimeValue }) { value ->
             startDateTimeValue = value
@@ -156,16 +143,10 @@ class RequestEventActivity : AppCompatActivity() {
         contactEmailInput = findViewById(R.id.contactEmailInput)
         contactNumberInput = findViewById(R.id.contactNumberInput)
         eventLogoInput = findViewById(R.id.eventLogoInput)
-        additionalNotesInput = findViewById(R.id.additionalNotesInput)
         reasonForRequestInput = findViewById(R.id.reasonForRequestInput)
         formMessageText = findViewById(R.id.formMessageText)
         submitProgress = findViewById(R.id.submitProgress)
         submitButton = findViewById(R.id.submitRequestButton)
-        successContainer = findViewById(R.id.successStateContainer)
-        successStatusText = findViewById(R.id.successStatusText)
-        successViewRequestsButton = findViewById(R.id.successViewRequestsButton)
-        successDashboardButton = findViewById(R.id.successDashboardButton)
-        successContainer.visibility = View.GONE
     }
 
     private fun prefillRequester() {
@@ -192,8 +173,8 @@ class RequestEventActivity : AppCompatActivity() {
     }
 
     private fun submitRequest() {
+        if (isSubmitting) return
         hideMessage()
-        hideSuccessState()
         val request = buildValidatedRequest() ?: return
         setLoading(true)
 
@@ -201,7 +182,7 @@ class RequestEventActivity : AppCompatActivity() {
             when (val result = repository.createEventRequest(request)) {
                 is NetworkResult.Success -> {
                     setLoading(false)
-                    showSuccessState(result.data.status)
+                    showSuccessDialog()
                 }
                 is NetworkResult.Error -> {
                     setLoading(false)
@@ -218,6 +199,7 @@ class RequestEventActivity : AppCompatActivity() {
         val eventName = eventNameInput.required("Event name is required") ?: return null
         val eventDescription = eventDescriptionInput.required("Event description is required") ?: return null
         val eventCategory = eventCategoryInput.required("Event category is required") ?: return null
+        val targetAudience = targetAudienceInput.required("Target audience is required") ?: return null
         val venue = venueInput.required("Venue/location is required") ?: return null
         val startDateTime = startDateTimeValue ?: run {
             startDateTimeInput.error = "Start date/time is required"
@@ -247,26 +229,32 @@ class RequestEventActivity : AppCompatActivity() {
             return null
         }
 
-        val registrationStart = registrationStartDateTimeValue
-        val registrationEnd = registrationEndDateTimeValue
+        val registrationStart = registrationStartDateTimeValue ?: run {
+            registrationStartDateTimeInput.error = "Registration start date/time is required"
+            return null
+        }
+        val registrationEnd = registrationEndDateTimeValue ?: run {
+            registrationEndDateTimeInput.error = "Registration end date/time is required"
+            return null
+        }
 
-        if (registrationStart != null && registrationStart.isBefore(currentLocalDateTime())) {
+        if (registrationStart.isBefore(currentLocalDateTime())) {
             registrationStartDateTimeInput.error = "Registration start cannot be in the past"
             return null
         }
-        if (registrationStart != null && registrationEnd != null && !registrationEnd.isAfter(registrationStart)) {
+        if (!registrationEnd.isAfter(registrationStart)) {
             registrationEndDateTimeInput.error = "Registration end must be after registration start"
             return null
         }
-        if (registrationEnd != null && registrationEnd.isBefore(currentLocalDateTime())) {
+        if (registrationEnd.isBefore(currentLocalDateTime())) {
             registrationEndDateTimeInput.error = "Registration end cannot be in the past"
             return null
         }
-        if (registrationEnd != null && registrationEnd.isAfter(endDateTime)) {
+        if (registrationEnd.isAfter(endDateTime)) {
             registrationEndDateTimeInput.error = "Registration end must not be after event end"
             return null
         }
-        if (registrationEnd != null && !registrationEnd.isBefore(startDateTime)) {
+        if (!registrationEnd.isBefore(startDateTime)) {
             registrationEndDateTimeInput.error = "Registration end must be before event start"
             return null
         }
@@ -275,54 +263,65 @@ class RequestEventActivity : AppCompatActivity() {
             eventName = eventName,
             eventDescription = eventDescription,
             eventCategory = eventCategory,
-            targetAudience = targetAudienceInput.optionalText(),
+            targetAudience = targetAudience,
             capacity = capacity,
             venue = venue,
             startDateTime = startDateTime.atZone(zoneId).toInstant().toString(),
             endDateTime = endDateTime.atZone(zoneId).toInstant().toString(),
-            registrationStartDateTime = registrationStart?.atZone(zoneId)?.toInstant()?.toString(),
-            registrationEndDateTime = registrationEnd?.atZone(zoneId)?.toInstant()?.toString(),
+            registrationStartDateTime = registrationStart.atZone(zoneId).toInstant().toString(),
+            registrationEndDateTime = registrationEnd.atZone(zoneId).toInstant().toString(),
             requesterName = requesterName,
             contactEmail = contactEmail,
             contactNumber = contactNumber,
-            requestedFeatures = selectedFeatures().ifEmpty { null },
+            requestedFeatures = null,
             eventLogoUrl = eventLogoInput.optionalText(),
-            additionalNotes = additionalNotesInput.optionalText(),
+            additionalNotes = null,
             reasonForRequest = reason,
         )
     }
 
-    private fun selectedFeatures(): List<String> {
-        return listOf(
-            R.id.featureQrRegistration to "QR registration",
-            R.id.featureQrCheckIn to "QR check-in / entry logging",
-            R.id.featureAttendanceTracking to "Attendance tracking",
-            R.id.featureBenefitClaiming to "Benefit claiming",
-            R.id.featureBoothTracking to "Booth/session tracking",
-            R.id.featureRewardsPoints to "Rewards and points",
-            R.id.featureIdPrinting to "ID printing",
-        ).mapNotNull { (id, label) ->
-            label.takeIf { findViewById<CheckBox>(id).isChecked }
-        }
-    }
-
     private fun setLoading(loading: Boolean) {
+        isSubmitting = loading
         submitProgress.visibility = if (loading) View.VISIBLE else View.GONE
         submitButton.isEnabled = !loading
         submitButton.text = if (loading) "Submitting..." else "Submit Request"
     }
 
-    private fun showSuccessState(status: EventRequestStatus) {
-        successStatusText.text = "Status: ${status.name.lowercase().replaceFirstChar { it.uppercase() }}"
-        successContainer.visibility = View.VISIBLE
-        submitButton.visibility = View.GONE
-        showMessage("Your event request has been submitted for admin review.")
-        Toast.makeText(this, "Event request submitted", Toast.LENGTH_SHORT).show()
+    private fun showSuccessDialog() {
+        if (isFinishing || isDestroyed) return
+        successDialog?.dismiss()
+
+        val dialogView = layoutInflater.inflate(R.layout.dialog_event_request_submitted, null)
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+
+        dialog.setCancelable(false)
+        dialog.setCanceledOnTouchOutside(false)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        dialogView.findViewById<Button>(R.id.successViewRequestsButton).setOnClickListener {
+            dialog.dismiss()
+            startActivity(Intent(this, MyEventRequestsActivity::class.java))
+            finish()
+        }
+        dialogView.findViewById<Button>(R.id.successDashboardButton).setOnClickListener {
+            dialog.dismiss()
+            startActivity(
+                Intent(this, com.thedavelopers.eventqr.features.dashboard.DashboardActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            )
+            finish()
+        }
+
+        successDialog = dialog
+        dialog.show()
     }
 
-    private fun hideSuccessState() {
-        successContainer.visibility = View.GONE
-        submitButton.visibility = View.VISIBLE
+    override fun onDestroy() {
+        successDialog?.dismiss()
+        successDialog = null
+        super.onDestroy()
     }
 
     private fun showMessage(message: String) {
@@ -341,7 +340,7 @@ class RequestEventActivity : AppCompatActivity() {
             capacityInput, venueInput, startDateTimeInput, endDateTimeInput,
             registrationStartDateTimeInput, registrationEndDateTimeInput,
             requesterNameInput, contactEmailInput, contactNumberInput,
-            eventLogoInput, additionalNotesInput, reasonForRequestInput,
+            eventLogoInput, reasonForRequestInput,
         ).forEach { it.error = null }
     }
 

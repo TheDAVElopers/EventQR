@@ -497,6 +497,7 @@
             android:orientation="vertical">
 
             <ImageView
+                android:id="@+id/imgNavDashboard"
                 android:layout_width="38dp"
                 android:layout_height="38dp"
                 android:background="@drawable/bg_nav_icon_active"
@@ -506,6 +507,7 @@
                 android:tint="#FFFFFF" />
 
             <TextView
+                android:id="@+id/txtNavDashboard"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
@@ -524,6 +526,7 @@
             android:orientation="vertical">
 
             <ImageView
+                android:id="@+id/imgNavEvents"
                 android:layout_width="38dp"
                 android:layout_height="38dp"
                 android:background="@drawable/bg_nav_icon_inactive"
@@ -533,6 +536,7 @@
                 android:tint="#000000" />
 
             <TextView
+                android:id="@+id/txtNavEvents"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
@@ -551,6 +555,7 @@
             android:orientation="vertical">
 
             <ImageView
+                android:id="@+id/imgNavRewards"
                 android:layout_width="39dp"
                 android:layout_height="39dp"
                 android:background="@drawable/bg_nav_icon_inactive"
@@ -560,6 +565,7 @@
                 android:tint="#000000" />
 
             <TextView
+                android:id="@+id/txtNavRewards"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="7dp"
@@ -578,6 +584,7 @@
             android:orientation="vertical">
 
             <ImageView
+                android:id="@+id/imgNavProfile"
                 android:layout_width="39dp"
                 android:layout_height="39dp"
                 android:background="@drawable/bg_nav_icon_inactive"
@@ -587,6 +594,7 @@
                 android:tint="#000000" />
 
             <TextView
+                android:id="@+id/txtNavProfile"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="7dp"

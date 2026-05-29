@@ -62,66 +62,6 @@
             android:visibility="gone" />
 
         <LinearLayout
-            android:id="@+id/successStateContainer"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/bg_card"
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:visibility="gone">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Event Request Submitted"
-                android:textColor="#111827"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Your event request has been submitted for admin review."
-                android:textColor="#4B5563"
-                android:textSize="14sp" />
-
-            <TextView
-                android:id="@+id/successStatusText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Status: Pending"
-                android:textColor="#25215F"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <Button
-                android:id="@+id/successViewRequestsButton"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginTop="14dp"
-                android:background="@drawable/button_rounded"
-                android:text="View My Event Request"
-                android:textAllCaps="false"
-                android:textColor="#FFFFFF"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-
-            <Button
-                android:id="@+id/successDashboardButton"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/bg_outline_button"
-                android:text="Back to Dashboard"
-                android:textAllCaps="false"
-                android:textColor="#25215F"
-                android:textSize="15sp" />
-        </LinearLayout>
-
-        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"
@@ -132,7 +72,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Event Information"
+                android:text="Event Details"
                 android:textColor="#111827"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -143,6 +83,12 @@
                 style="@style/RequestEventInput"
                 android:hint="Event name" />
 
+            <TextView style="@style/RequestEventLabel" android:text="Event Category *" />
+            <EditText
+                android:id="@+id/eventCategoryInput"
+                style="@style/RequestEventInput"
+                android:hint="Technology, business, education" />
+
             <TextView style="@style/RequestEventLabel" android:text="Event Description *" />
             <EditText
                 android:id="@+id/eventDescriptionInput"
@@ -150,13 +96,7 @@
                 android:hint="Describe the event"
                 android:inputType="textMultiLine" />
 
-            <TextView style="@style/RequestEventLabel" android:text="Event Category *" />
-            <EditText
-                android:id="@+id/eventCategoryInput"
-                style="@style/RequestEventInput"
-                android:hint="Technology, business, education" />
-
-            <TextView style="@style/RequestEventLabel" android:text="Target Audience" />
+            <TextView style="@style/RequestEventLabel" android:text="Target Audience *" />
             <EditText
                 android:id="@+id/targetAudienceInput"
                 style="@style/RequestEventInput"
@@ -181,7 +121,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Schedule and Location"
+                android:text="Schedule and Venue"
                 android:textColor="#111827"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -218,7 +158,7 @@
                 android:longClickable="false"
                 android:textIsSelectable="false" />
 
-            <TextView style="@style/RequestEventLabel" android:text="Registration Start Date" />
+            <TextView style="@style/RequestEventLabel" android:text="Registration Start Date and Time *" />
             <EditText
                 android:id="@+id/registrationStartDateTimeInput"
                 style="@style/RequestEventInput"
@@ -231,7 +171,7 @@
                 android:longClickable="false"
                 android:textIsSelectable="false" />
 
-            <TextView style="@style/RequestEventLabel" android:text="Registration End Date" />
+            <TextView style="@style/RequestEventLabel" android:text="Registration End Date and Time *" />
             <EditText
                 android:id="@+id/registrationEndDateTimeInput"
                 style="@style/RequestEventInput"
@@ -256,7 +196,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Requester Information"
+                android:text="Requester Details"
                 android:textColor="#111827"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -298,29 +238,12 @@
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
-            <TextView style="@style/RequestEventLabel" android:text="Requested Features" />
-
-            <CheckBox android:id="@+id/featureQrRegistration" style="@style/RequestEventCheckbox" android:text="QR registration" />
-            <CheckBox android:id="@+id/featureQrCheckIn" style="@style/RequestEventCheckbox" android:text="QR check-in / entry logging" />
-            <CheckBox android:id="@+id/featureAttendanceTracking" style="@style/RequestEventCheckbox" android:text="Attendance tracking" />
-            <CheckBox android:id="@+id/featureBenefitClaiming" style="@style/RequestEventCheckbox" android:text="Benefit claiming" />
-            <CheckBox android:id="@+id/featureBoothTracking" style="@style/RequestEventCheckbox" android:text="Booth/session tracking" />
-            <CheckBox android:id="@+id/featureRewardsPoints" style="@style/RequestEventCheckbox" android:text="Rewards and points" />
-            <CheckBox android:id="@+id/featureIdPrinting" style="@style/RequestEventCheckbox" android:text="ID printing" />
-
             <TextView style="@style/RequestEventLabel" android:text="Event Poster / Logo" />
             <EditText
                 android:id="@+id/eventLogoInput"
                 style="@style/RequestEventInput"
                 android:hint="Optional image URL"
                 android:inputType="textUri" />
-
-            <TextView style="@style/RequestEventLabel" android:text="Additional Notes" />
-            <EditText
-                android:id="@+id/additionalNotesInput"
-                style="@style/RequestEventInput.Multi"
-                android:hint="Anything else admins should know"
-                android:inputType="textMultiLine" />
         </LinearLayout>
 
         <LinearLayout
