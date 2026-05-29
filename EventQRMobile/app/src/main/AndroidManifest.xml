@@ -52,6 +52,7 @@
         <activity android:name=".features.organizer.transactions.TransactionRulesActivity" android:exported="false" />
         <activity android:name=".features.organizer.scanpurposes.ManageScanPurposesActivity" android:exported="false" />
         <activity android:name=".features.organizer.staff.ManageUsersActivity" android:exported="false" />
+        <activity android:name=".features.organizer.staff.SearchUserAccountActivity" android:exported="false" />
         <activity android:name=".features.organizer.events.ManageEventsActivity" android:exported="false" />
         <activity android:name=".features.organizer.shared.OrganizerPlaceholderActivity" android:exported="false" />
         <activity android:name=".features.organizer.dashboard.OrganizerDashboardActivity" android:exported="false" />

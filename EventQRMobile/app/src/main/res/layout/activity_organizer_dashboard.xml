@@ -181,7 +181,7 @@
                     android:layout_columnWeight="1"
                     android:layout_margin="6dp"
                     app:cardCornerRadius="16dp"
-                    app:cardElevation="1dp">
+                    app:cardElevation="2dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -190,11 +190,11 @@
                         android:padding="14dp">
 
                         <ImageView
-                            android:layout_width="38dp"
-                            android:layout_height="38dp"
-                            android:background="@drawable/bg_circle_purple_soft"
-                            android:padding="10dp"
-                            android:src="@drawable/ic_calendar"
+                            android:layout_width="42dp"
+                            android:layout_height="42dp"
+                            android:background="@drawable/bg_admin_icon_tile_blue"
+                            android:padding="11dp"
+                            android:src="@drawable/ic_admin_calendar"
                             app:tint="#4F46E5" />
 
                         <TextView
@@ -204,7 +204,7 @@
                             android:layout_marginTop="10dp"
                             android:text="0"
                             android:textColor="#0F172A"
-                            android:textSize="16sp"
+                            android:textSize="36sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -222,7 +222,7 @@
                     android:layout_columnWeight="1"
                     android:layout_margin="6dp"
                     app:cardCornerRadius="16dp"
-                    app:cardElevation="1dp">
+                    app:cardElevation="2dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -231,11 +231,11 @@
                         android:padding="14dp">
 
                         <ImageView
-                            android:layout_width="38dp"
-                            android:layout_height="38dp"
-                            android:background="@drawable/bg_success_chip"
-                            android:padding="10dp"
-                            android:src="@drawable/ic_group"
+                            android:layout_width="42dp"
+                            android:layout_height="42dp"
+                            android:background="@drawable/bg_admin_icon_tile_green"
+                            android:padding="11dp"
+                            android:src="@drawable/ic_admin_users"
                             app:tint="#059669" />
 
                         <TextView
@@ -245,7 +245,7 @@
                             android:layout_marginTop="10dp"
                             android:text="0"
                             android:textColor="#0F172A"
-                            android:textSize="16sp"
+                            android:textSize="36sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -263,7 +263,7 @@
                     android:layout_columnWeight="1"
                     android:layout_margin="6dp"
                     app:cardCornerRadius="16dp"
-                    app:cardElevation="1dp">
+                    app:cardElevation="2dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -272,10 +272,10 @@
                         android:padding="14dp">
 
                         <ImageView
-                            android:layout_width="38dp"
-                            android:layout_height="38dp"
-                            android:background="@drawable/bg_circle_purple_soft"
-                            android:padding="10dp"
+                            android:layout_width="42dp"
+                            android:layout_height="42dp"
+                            android:background="@drawable/bg_admin_icon_tile_purple"
+                            android:padding="11dp"
                             android:src="@drawable/ic_qr_scan"
                             app:tint="#7C3AED" />
 
@@ -286,7 +286,7 @@
                             android:layout_marginTop="10dp"
                             android:text="0"
                             android:textColor="#0F172A"
-                            android:textSize="16sp"
+                            android:textSize="36sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -304,7 +304,7 @@
                     android:layout_columnWeight="1"
                     android:layout_margin="6dp"
                     app:cardCornerRadius="16dp"
-                    app:cardElevation="1dp">
+                    app:cardElevation="2dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -313,10 +313,10 @@
                         android:padding="14dp">
 
                         <ImageView
-                            android:layout_width="38dp"
-                            android:layout_height="38dp"
-                            android:background="@drawable/bg_reward_points"
-                            android:padding="10dp"
+                            android:layout_width="42dp"
+                            android:layout_height="42dp"
+                            android:background="@drawable/bg_admin_icon_tile_yellow"
+                            android:padding="11dp"
                             android:src="@drawable/ic_nav_gift"
                             app:tint="#CA8A04" />
 
@@ -327,7 +327,7 @@
                             android:layout_marginTop="10dp"
                             android:text="0"
                             android:textColor="#0F172A"
-                            android:textSize="16sp"
+                            android:textSize="36sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -356,7 +356,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/bg_card"
+                android:background="@drawable/bg_admin_surface_card"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center_vertical"
@@ -366,9 +366,9 @@
                 <ImageView
                     android:layout_width="42dp"
                     android:layout_height="42dp"
-                    android:background="@drawable/bg_circle_purple_soft"
+                    android:background="@drawable/bg_admin_icon_tile_blue"
                     android:padding="10dp"
-                    android:src="@drawable/ic_calendar"
+                    android:src="@drawable/ic_admin_calendar"
                     app:tint="#4F46E5" />
 
                 <LinearLayout
@@ -383,7 +383,7 @@
                         android:layout_height="wrap_content"
                         android:text="My Events"
                         android:textColor="#0F172A"
-                        android:textSize="17sp"
+                        android:textSize="15sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -407,7 +407,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/bg_card"
+                android:background="@drawable/bg_admin_surface_card"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center_vertical"
@@ -417,9 +417,9 @@
                 <ImageView
                     android:layout_width="42dp"
                     android:layout_height="42dp"
-                    android:background="@drawable/bg_success_chip"
+                    android:background="@drawable/bg_admin_icon_tile_green"
                     android:padding="10dp"
-                    android:src="@drawable/ic_group"
+                    android:src="@drawable/ic_admin_users"
                     app:tint="#059669" />
 
                 <LinearLayout
@@ -434,7 +434,7 @@
                         android:layout_height="wrap_content"
                         android:text="Attendees"
                         android:textColor="#0F172A"
-                        android:textSize="17sp"
+                        android:textSize="15sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -458,7 +458,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/bg_card"
+                android:background="@drawable/bg_admin_surface_card"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center_vertical"
@@ -468,9 +468,9 @@
                 <ImageView
                     android:layout_width="42dp"
                     android:layout_height="42dp"
-                    android:background="@drawable/bg_circle_purple_soft"
+                    android:background="@drawable/bg_admin_icon_tile_purple"
                     android:padding="10dp"
-                    android:src="@drawable/ic_file"
+                    android:src="@drawable/ic_organizer_bar_chart"
                     app:tint="#7C3AED" />
 
                 <LinearLayout
@@ -483,9 +483,9 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Overall Reports"
+                        android:text="Reports"
                         android:textColor="#0F172A"
-                        android:textSize="17sp"
+                        android:textSize="15sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -509,7 +509,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/bg_card"
+                android:background="@drawable/bg_admin_surface_card"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center_vertical"
@@ -519,7 +519,7 @@
                 <ImageView
                     android:layout_width="42dp"
                     android:layout_height="42dp"
-                    android:background="@drawable/bg_reward_points"
+                    android:background="@drawable/bg_admin_icon_tile_yellow"
                     android:padding="10dp"
                     android:src="@drawable/ic_nav_gift"
                     app:tint="#CA8A04" />
@@ -536,7 +536,7 @@
                         android:layout_height="wrap_content"
                         android:text="Rewards"
                         android:textColor="#0F172A"
-                        android:textSize="17sp"
+                        android:textSize="15sp"
                         android:textStyle="bold" />
 
                     <TextView

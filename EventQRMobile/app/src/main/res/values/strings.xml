@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">EventQR</string>
+    <string name="back">Back</string>
+    <string name="staff_assignment_title">Staff Assignment</string>
+    <string name="staff_add_button">+ Add</string>
+    <string name="staff_remove">Remove</string>
+    <string name="staff_assignment_empty">Empty staff list. Add staff members before event day.</string>
+    <string name="staff_search_title">Search User Account</string>
+    <string name="staff_search_hint">Search by name or email...</string>
+    <string name="staff_search_empty">User not found.</string>
+    <string name="staff_assign_button">Assign as Staff</string>
+    <string name="staff_assigning">Assigning...</string>
+    <string name="staff_assigned_title">Staff Assigned!</string>
+    <string name="staff_assigned_message">The user has been assigned as event staff.</string>
+    <string name="staff_assigned_done">Done</string>
 </resources>
