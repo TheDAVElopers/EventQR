@@ -4,15 +4,19 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.hardware.Camera
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
 import android.view.Gravity
+import android.view.SurfaceHolder
+import android.view.SurfaceView
 import android.view.View
-import android.widget.ArrayAdapter
 import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.TextView
@@ -22,14 +26,21 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.BinaryBitmap
+import com.google.zxing.DecodeHintType
+import com.google.zxing.MultiFormatReader
+import com.google.zxing.NotFoundException
+import com.google.zxing.PlanarYUVLuminanceSource
+import com.google.zxing.common.HybridBinarizer
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResponse
 import com.thedavelopers.eventqr.features.staff.EventRegistrationsActivity
 import com.thedavelopers.eventqr.features.staff.EventSpinnerOption
-import com.thedavelopers.eventqr.features.staff.StaffCameraScannerActivity
 import com.thedavelopers.eventqr.features.staff.StaffDashboardActivity
 import com.thedavelopers.eventqr.features.staff.StaffRepository
 import com.thedavelopers.eventqr.features.staff.StaffScreenExtras
@@ -38,13 +49,15 @@ import com.thedavelopers.eventqr.features.staff.model.dto.ScanVerificationRespon
 import com.thedavelopers.eventqr.features.staff.result.StaffScanResultActivity
 import com.thedavelopers.eventqr.features.transactions.TransactionAdapter
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
-import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResponse
 import org.json.JSONObject
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 
-open class ScannerActivity : AppCompatActivity(), ScannerContract.View {
+@Suppress("DEPRECATION")
+open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceHolder.Callback, Camera.PreviewCallback {
     private lateinit var presenter: ScannerPresenter
     private lateinit var eventSpinner: Spinner
     private lateinit var purposeSpinner: Spinner
@@ -59,6 +72,9 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View {
     private lateinit var selectedPurposePoints: TextView
     private lateinit var purposeChevron: TextView
     private lateinit var purposeDropdown: LinearLayout
+    private lateinit var inlineCameraSurface: SurfaceView
+    private lateinit var inlineCameraStatus: TextView
+    private lateinit var scannerIcon: ImageView
     private var staffUserId: String? = null
 
     private val eventOptions = mutableListOf<EventSpinnerOption>()
@@ -68,42 +84,27 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View {
     private var lastSubmittedAtMs: Long = 0L
     private var submitInFlight: Boolean = false
     private var isPurposeDropdownOpen = false
+    private var camera: Camera? = null
+    private val decoding = AtomicBoolean(false)
+    private val decoderExecutor = Executors.newSingleThreadExecutor()
+    private val qrReader = MultiFormatReader()
+    private val decodeHints = mapOf(
+        DecodeHintType.POSSIBLE_FORMATS to listOf(BarcodeFormat.QR_CODE),
+        DecodeHintType.TRY_HARDER to true,
+        DecodeHintType.CHARACTER_SET to "UTF-8",
+    )
 
     private val tag = "StaffQrScanner"
     private val duplicateWindowMs = 2_000L
     private val dateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ENGLISH)
     private val manilaZone: ZoneId = ZoneId.of("Asia/Manila")
 
-    private val cameraScanLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode != RESULT_OK) {
-            Log.d(tag, "camera result canceled")
-            return@registerForActivityResult
-        }
-        val scannedValue = result.data?.getStringExtra(StaffScreenExtras.EXTRA_QR_VALUE)?.trim().orEmpty()
-        if (scannedValue.isBlank()) {
-            showMessage("Camera did not capture a QR value.")
-            Log.w(tag, "camera result missing raw QR value")
-            return@registerForActivityResult
-        }
-
-        Log.d(tag, "raw QR value detected: $scannedValue")
-        val parsed = parseQrPayload(scannedValue)
-        if (parsed == null || parsed.qrValue.isBlank()) {
-            showMessage("QR payload format is invalid.")
-            Log.w(tag, "invalid QR payload format raw=$scannedValue")
-            return@registerForActivityResult
-        }
-
-        Log.d(tag, "parsed QR value=${parsed.qrValue} parsedCredentialId=${parsed.qrCredentialId}")
-        qrInput.setText(parsed.qrValue)
-        qrInput.setSelection(parsed.qrValue.length)
-        submitCurrentSelection(trigger = "camera")
-    }
     private val cameraPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        Log.d(tag, "camera permission result granted=$granted")
+        Log.d(tag, "inline camera permission result granted=$granted")
         if (granted) {
-            openCameraScanner()
+            startInlineCameraIfReady()
         } else {
+            inlineCameraStatus.text = "Camera permission is required for QR scanning"
             Toast.makeText(this, "Camera permission is required for QR scanning", Toast.LENGTH_LONG).show()
         }
     }
@@ -135,8 +136,15 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View {
         selectedPurposePoints = findViewById(R.id.txtSelectedPurposePoints)
         purposeChevron = findViewById(R.id.txtPurposeChevron)
         purposeDropdown = findViewById(R.id.layoutPurposeDropdown)
+        inlineCameraSurface = findViewById(R.id.surfaceInlineCameraPreview)
+        inlineCameraStatus = findViewById(R.id.txtInlineCameraStatus)
+        scannerIcon = findViewById(R.id.imgScannerIcon)
         adapter = TransactionAdapter()
         staffUserId = SessionManager(this).getUserId()
+
+        inlineCameraSurface.holder.addCallback(this)
+        inlineCameraSurface.setZOrderMediaOverlay(false)
+        requestInlineCameraStart()
 
         findViewById<View>(R.id.navDashboard)?.setOnClickListener {
             startActivity(Intent(this, StaffDashboardActivity::class.java))
@@ -165,11 +173,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View {
         }
 
         findViewById<View>(R.id.layoutScannerPlaceholder)?.setOnClickListener {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                openCameraScanner()
-            } else {
-                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-            }
+            requestInlineCameraStart()
         }
 
         findViewById<Button>(R.id.btnSubmitScan).setOnClickListener {
@@ -179,9 +183,51 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View {
         presenter.loadEvents()
     }
 
+    override fun onResume() {
+        super.onResume()
+        requestInlineCameraStart()
+    }
+
+    override fun onPause() {
+        releaseInlineCamera()
+        super.onPause()
+    }
+
     override fun onDestroy() {
         presenter.detach()
+        releaseInlineCamera()
+        decoderExecutor.shutdownNow()
         super.onDestroy()
+    }
+
+    override fun surfaceCreated(holder: SurfaceHolder) {
+        startInlineCameraIfReady()
+    }
+
+    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+        releaseInlineCamera()
+        startInlineCameraIfReady()
+    }
+
+    override fun surfaceDestroyed(holder: SurfaceHolder) {
+        releaseInlineCamera()
+    }
+
+    override fun onPreviewFrame(data: ByteArray?, camera: Camera?) {
+        if (data == null || camera == null || submitInFlight || !decoding.compareAndSet(false, true)) return
+        val previewSize = camera.parameters.previewSize
+        val width = previewSize.width
+        val height = previewSize.height
+
+        decoderExecutor.execute {
+            val decoded = decodeFrame(data, width, height)
+            runOnUiThread {
+                if (!decoded.isNullOrBlank()) {
+                    handleInlineQrValue(decoded)
+                }
+                decoding.set(false)
+            }
+        }
     }
 
     override fun showEvents(items: List<EventSpinnerOption>) {
@@ -258,6 +304,116 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View {
     override fun showLoading(isLoading: Boolean) {
         findViewById<View>(R.id.progressScanner).visibility = if (isLoading) View.VISIBLE else View.GONE
         findViewById<Button>(R.id.btnSubmitScan).isEnabled = !isLoading
+    }
+
+    private fun requestInlineCameraStart() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            startInlineCameraIfReady()
+        } else {
+            inlineCameraStatus.text = "Allow camera access to scan QR codes"
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    private fun startInlineCameraIfReady() {
+        if (!::inlineCameraSurface.isInitialized || camera != null) return
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) return
+        if (!inlineCameraSurface.holder.surface.isValid) return
+
+        inlineCameraStatus.text = "Point camera at attendee QR code"
+        runCatching {
+            camera = Camera.open().apply {
+                val params = parameters
+                val focusModes = params.supportedFocusModes.orEmpty()
+                when {
+                    focusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE) -> params.focusMode = Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE
+                    focusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO) -> params.focusMode = Camera.Parameters.FOCUS_MODE_AUTO
+                }
+                params.previewFormat = android.graphics.ImageFormat.NV21
+                this.parameters = params
+                setPreviewDisplay(inlineCameraSurface.holder)
+                setDisplayOrientation(90)
+                setPreviewCallback(this@ScannerActivity)
+                startPreview()
+                scannerIcon.visibility = View.GONE
+                Log.d(tag, "inline camera started preview=${params.previewSize.width}x${params.previewSize.height} focus=${params.focusMode}")
+            }
+        }.onFailure {
+            inlineCameraStatus.text = "Unable to start camera"
+            scannerIcon.visibility = View.VISIBLE
+            Log.w(tag, "inline camera failed: ${it.message}", it)
+        }
+    }
+
+    private fun releaseInlineCamera() {
+        camera?.setPreviewCallback(null)
+        runCatching { camera?.stopPreview() }
+        camera?.release()
+        camera = null
+        if (::scannerIcon.isInitialized) scannerIcon.visibility = View.VISIBLE
+    }
+
+    private fun handleInlineQrValue(rawValue: String) {
+        Log.d(tag, "inline raw QR value detected: $rawValue")
+        val parsed = parseQrPayload(rawValue)
+        if (parsed == null || parsed.qrValue.isBlank()) {
+            showMessage("QR payload format is invalid.")
+            Log.w(tag, "invalid inline QR payload raw=$rawValue")
+            return
+        }
+        qrInput.setText(parsed.qrValue)
+        qrInput.setSelection(parsed.qrValue.length)
+        submitCurrentSelection(trigger = "inline-camera")
+    }
+
+    private fun decodeFrame(data: ByteArray, width: Int, height: Int): String? {
+        val ySize = width * height
+        if (data.size < ySize) return null
+        val luma = data.copyOf(ySize)
+        val rotated90 = rotateLuma90(luma, width, height)
+        val rotated180 = rotateLuma90(rotated90, height, width)
+        val rotated270 = rotateLuma90(rotated180, width, height)
+
+        val candidates = listOf(
+            Triple(luma, width, height),
+            Triple(rotated90, height, width),
+            Triple(rotated180, width, height),
+            Triple(rotated270, height, width),
+        )
+
+        for ((buffer, w, h) in candidates) {
+            val normal = decodeBinaryBitmap(buffer, w, h, invert = false)
+            if (!normal.isNullOrBlank()) return normal
+            val inverted = decodeBinaryBitmap(buffer, w, h, invert = true)
+            if (!inverted.isNullOrBlank()) return inverted
+        }
+        return null
+    }
+
+    private fun decodeBinaryBitmap(data: ByteArray, width: Int, height: Int, invert: Boolean): String? {
+        val source = PlanarYUVLuminanceSource(data, width, height, 0, 0, width, height, false)
+        val bitmap = BinaryBitmap(HybridBinarizer(if (invert) source.invert() else source))
+        return try {
+            qrReader.setHints(decodeHints)
+            qrReader.decodeWithState(bitmap).text
+        } catch (_: NotFoundException) {
+            null
+        } catch (_: Exception) {
+            null
+        } finally {
+            qrReader.reset()
+        }
+    }
+
+    private fun rotateLuma90(input: ByteArray, width: Int, height: Int): ByteArray {
+        val output = ByteArray(width * height)
+        var index = 0
+        for (x in 0 until width) {
+            for (y in height - 1 downTo 0) {
+                output[index++] = input[y * width + x]
+            }
+        }
+        return output
     }
 
     private fun loadSelectedPurposes() {
@@ -355,11 +511,6 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View {
         ScanPurposeCode.BOOTH_VISIT -> "+15 pts"
         ScanPurposeCode.EXIT -> "+25 pts"
         else -> ""
-    }
-
-    private fun openCameraScanner() {
-        Log.d(tag, "launching camera scanner")
-        cameraScanLauncher.launch(Intent(this, StaffCameraScannerActivity::class.java))
     }
 
     private fun submitCurrentSelection(trigger: String) {
