@@ -25,186 +25,39 @@
         android:paddingTop="18dp"
         android:paddingBottom="10dp">
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="126dp"
-            android:layout_marginEnd="8dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_card"
-            android:elevation="2dp"
-            android:gravity="center_vertical"
-            android:orientation="vertical"
-            android:padding="16dp">
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/bg_event_status_upcoming"
-                android:padding="10dp"
-                android:src="@drawable/ic_file"
-                app:tint="#4F46E5" />
-            <TextView
-                android:id="@+id/txtTotalScans"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="0"
-                android:textColor="#111827"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Total"
-                android:textColor="#6B7280"
-                android:textSize="13sp" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="126dp" android:layout_marginEnd="8dp" android:layout_weight="1" android:background="@drawable/bg_card" android:elevation="2dp" android:gravity="center_vertical" android:orientation="vertical" android:padding="16dp">
+            <ImageView android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/bg_event_status_upcoming" android:padding="10dp" android:src="@drawable/ic_file" app:tint="#4F46E5" />
+            <TextView android:id="@+id/txtTotalScans" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="0" android:textColor="#111827" android:textSize="24sp" android:textStyle="bold" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Total" android:textColor="#6B7280" android:textSize="13sp" />
         </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="126dp"
-            android:layout_marginHorizontal="4dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_card"
-            android:elevation="2dp"
-            android:gravity="center_vertical"
-            android:orientation="vertical"
-            android:padding="16dp">
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/bg_green_pill"
-                android:padding="10dp"
-                android:src="@drawable/ic_check"
-                app:tint="#059669" />
-            <TextView
-                android:id="@+id/txtSuccessfulScans"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="0"
-                android:textColor="#111827"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Success"
-                android:textColor="#6B7280"
-                android:textSize="13sp" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="126dp" android:layout_marginHorizontal="4dp" android:layout_weight="1" android:background="@drawable/bg_card" android:elevation="2dp" android:gravity="center_vertical" android:orientation="vertical" android:padding="16dp">
+            <ImageView android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/bg_green_pill" android:padding="10dp" android:src="@drawable/ic_staff_check" app:tint="#059669" />
+            <TextView android:id="@+id/txtSuccessfulScans" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="0" android:textColor="#111827" android:textSize="24sp" android:textStyle="bold" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Success" android:textColor="#6B7280" android:textSize="13sp" />
         </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="126dp"
-            android:layout_marginStart="8dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_card"
-            android:elevation="2dp"
-            android:gravity="center_vertical"
-            android:orientation="vertical"
-            android:padding="16dp">
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/bg_red_warning"
-                android:padding="10dp"
-                android:src="@drawable/ic_close"
-                app:tint="#DC2626" />
-            <TextView
-                android:id="@+id/txtRejectedScans"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="0"
-                android:textColor="#111827"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Rejected"
-                android:textColor="#6B7280"
-                android:textSize="13sp" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="126dp" android:layout_marginStart="8dp" android:layout_weight="1" android:background="@drawable/bg_card" android:elevation="2dp" android:gravity="center_vertical" android:orientation="vertical" android:padding="16dp">
+            <ImageView android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/bg_red_warning" android:padding="10dp" android:src="@drawable/ic_staff_close" app:tint="#DC2626" />
+            <TextView android:id="@+id/txtRejectedScans" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="0" android:textColor="#111827" android:textSize="24sp" android:textStyle="bold" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Rejected" android:textColor="#6B7280" android:textSize="13sp" />
         </LinearLayout>
     </LinearLayout>
 
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/swipeRefreshStaffTransactions"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:paddingHorizontal="16dp">
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recyclerStaffTransactions"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:paddingTop="8dp"
-                android:paddingBottom="12dp" />
-
-            <TextView
-                android:id="@+id/txtStaffTransactionsEmptyState"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:text="No transaction logs for this event yet."
-                android:textColor="#6B7280"
-                android:textSize="14sp"
-                android:visibility="gone" />
-
-            <ProgressBar
-                android:id="@+id/progressScanner"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:visibility="gone" />
-
-            <EditText
-                android:id="@+id/edtStaffTransactionsEventId"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:visibility="gone" />
-
-            <Button
-                android:id="@+id/btnLoadStaffTransactions"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:visibility="gone" />
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout android:id="@+id/swipeRefreshStaffTransactions" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
+        <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent" android:paddingHorizontal="16dp">
+            <androidx.recyclerview.widget.RecyclerView android:id="@+id/recyclerStaffTransactions" android:layout_width="match_parent" android:layout_height="match_parent" android:clipToPadding="false" android:paddingTop="8dp" android:paddingBottom="12dp" />
+            <TextView android:id="@+id/txtStaffTransactionsEmptyState" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="center" android:gravity="center" android:text="No transaction logs for this event yet." android:textColor="#6B7280" android:textSize="14sp" android:visibility="gone" />
+            <ProgressBar android:id="@+id/progressScanner" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:visibility="gone" />
+            <EditText android:id="@+id/edtStaffTransactionsEventId" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+            <Button android:id="@+id/btnLoadStaffTransactions" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
         </FrameLayout>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:background="@drawable/bg_bottom_nav"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:paddingHorizontal="12dp">
-
-        <LinearLayout android:id="@+id/navDashboard" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
-            <ImageView android:layout_width="28dp" android:layout_height="28dp" android:background="@drawable/bg_nav_icon_inactive" android:contentDescription="Dashboard" android:padding="6dp" android:src="@drawable/ic_nav_home" app:tint="#9CA3AF" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="Dashboard" android:textColor="#9CA3AF" android:textSize="11sp" />
-        </LinearLayout>
-
-        <LinearLayout android:id="@+id/navScanner" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
-            <ImageView android:layout_width="28dp" android:layout_height="28dp" android:background="@drawable/bg_nav_icon_inactive" android:contentDescription="Scan" android:padding="6dp" android:src="@drawable/ic_qr_scan" app:tint="#9CA3AF" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="Scan" android:textColor="#9CA3AF" android:textSize="11sp" />
-        </LinearLayout>
-
-        <LinearLayout android:id="@+id/navEvents" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
-            <ImageView android:layout_width="28dp" android:layout_height="28dp" android:background="@drawable/bg_nav_icon_inactive" android:contentDescription="Events" android:padding="6dp" android:src="@drawable/ic_nav_calendar" app:tint="#9CA3AF" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="Events" android:textColor="#9CA3AF" android:textSize="11sp" />
-        </LinearLayout>
-
-        <LinearLayout android:id="@+id/navLogs" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
-            <ImageView android:layout_width="28dp" android:layout_height="28dp" android:background="@drawable/bg_nav_icon_inactive" android:contentDescription="Logs" android:padding="6dp" android:src="@drawable/ic_file" app:tint="#4F46E5" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="Logs" android:textColor="#4F46E5" android:textSize="11sp" android:textStyle="bold" />
-        </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="64dp" android:background="@drawable/bg_bottom_nav" android:gravity="center" android:orientation="horizontal" android:paddingHorizontal="12dp">
+        <LinearLayout android:id="@+id/navDashboard" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical"><ImageView android:layout_width="28dp" android:layout_height="28dp" android:background="@drawable/bg_nav_icon_inactive" android:contentDescription="Dashboard" android:padding="6dp" android:src="@drawable/ic_nav_home" app:tint="#9CA3AF" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="Dashboard" android:textColor="#9CA3AF" android:textSize="11sp" /></LinearLayout>
+        <LinearLayout android:id="@+id/navScanner" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical"><ImageView android:layout_width="28dp" android:layout_height="28dp" android:background="@drawable/bg_nav_icon_inactive" android:contentDescription="Scan" android:padding="6dp" android:src="@drawable/ic_qr_scan" app:tint="#9CA3AF" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="Scan" android:textColor="#9CA3AF" android:textSize="11sp" /></LinearLayout>
+        <LinearLayout android:id="@+id/navEvents" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical"><ImageView android:layout_width="28dp" android:layout_height="28dp" android:background="@drawable/bg_nav_icon_inactive" android:contentDescription="Events" android:padding="6dp" android:src="@drawable/ic_nav_calendar" app:tint="#9CA3AF" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="Events" android:textColor="#9CA3AF" android:textSize="11sp" /></LinearLayout>
+        <LinearLayout android:id="@+id/navLogs" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical"><ImageView android:layout_width="28dp" android:layout_height="28dp" android:background="@drawable/bg_nav_icon_inactive" android:contentDescription="Logs" android:padding="6dp" android:src="@drawable/ic_file" app:tint="#4F46E5" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="Logs" android:textColor="#4F46E5" android:textSize="11sp" android:textStyle="bold" /></LinearLayout>
     </LinearLayout>
 </LinearLayout>
