@@ -42,6 +42,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         presenter = StaffTransactionsPresenter(this, StaffRepository(this))
         adapter = TransactionLogAdapter()
         swipeRefresh = findViewById(R.id.swipeRefreshStaffTransactions)
+        swipeRefresh.setColorSchemeResources(R.color.eventqr_purple)
         swipeRefresh.setOnRefreshListener { refreshTransactions() }
 
         findViewById<RecyclerView>(R.id.recyclerStaffTransactions).apply {
@@ -98,11 +99,13 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
             finish()
         }
         findViewById<View>(R.id.navScanner)?.setOnClickListener {
-            startActivity(Intent(this, ScannerActivity::class.java))
+            startActivity(Intent(this, ScannerActivity::class.java).apply {
+                selectedEventId.takeIf { it.isNotBlank() }?.let { putExtra(StaffScreenExtras.EXTRA_EVENT_ID, it) }
+            })
             finish()
         }
-        findViewById<View>(R.id.navProfile)?.setOnClickListener {
-            startActivity(Intent(this, StaffProfileActivity::class.java))
+        findViewById<View>(R.id.navEvents)?.setOnClickListener {
+            startActivity(Intent(this, StaffAssignedEventsActivity::class.java))
             finish()
         }
     }
