@@ -15,8 +15,10 @@
         android:paddingBottom="14dp">
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:text="Event Requests"
             android:textColor="#111827"
             android:textSize="28sp"
@@ -41,6 +43,7 @@
                     android:layout_height="34dp"
                     android:background="@drawable/bg_segment_selected"
                     android:gravity="center"
+                    android:minWidth="64dp"
                     android:paddingHorizontal="18dp"
                     android:text="All"
                     android:textColor="#111827"
@@ -52,6 +55,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="34dp"
                     android:gravity="center"
+                    android:minWidth="92dp"
                     android:paddingHorizontal="18dp"
                     android:text="Pending"
                     android:textColor="#4B5563"
@@ -63,6 +67,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="34dp"
                     android:gravity="center"
+                    android:minWidth="96dp"
                     android:paddingHorizontal="18dp"
                     android:text="Approved"
                     android:textColor="#4B5563"
@@ -74,6 +79,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="34dp"
                     android:gravity="center"
+                    android:minWidth="92dp"
                     android:paddingHorizontal="18dp"
                     android:text="Rejected"
                     android:textColor="#4B5563"
@@ -88,25 +94,34 @@
         android:layout_height="0dp"
         android:layout_weight="1">
 
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerRequests"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="16dp" />
+
         <ProgressBar
             android:id="@+id/loadingRequests"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="22dp"
+            android:layout_gravity="center"
             android:visibility="gone" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_gravity="top"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="12dp">
 
             <TextView
                 android:id="@+id/textError"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="12dp"
                 android:background="@drawable/bg_error_box"
                 android:padding="12dp"
                 android:textColor="@color/eventqr_error"
@@ -117,7 +132,6 @@
                 android:id="@+id/buttonRetry"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
-                android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="10dp"
                 android:background="@drawable/bg_outline_button"
                 android:text="Retry"
@@ -126,28 +140,19 @@
                 android:textSize="15sp"
                 android:textStyle="bold"
                 android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/textEmpty"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="16dp"
-                android:gravity="center"
-                android:text="No event requests yet."
-                android:textColor="@color/eventqr_muted"
-                android:textSize="15sp"
-                android:visibility="gone" />
         </LinearLayout>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerRequests"
+        <TextView
+            android:id="@+id/textEmpty"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:paddingHorizontal="16dp"
-            android:paddingTop="12dp"
-            android:paddingBottom="16dp" />
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginHorizontal="16dp"
+            android:gravity="center"
+            android:text="No event requests yet."
+            android:textColor="@color/eventqr_muted"
+            android:textSize="15sp"
+            android:visibility="gone" />
     </FrameLayout>
 
     <LinearLayout
