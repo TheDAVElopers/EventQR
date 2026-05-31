@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
@@ -27,6 +28,7 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
     private lateinit var repository: AdminRepository
     private lateinit var adapter: AdminEventRequestAdapter
 
+    private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var chipAll: TextView
     private lateinit var chipPending: TextView
     private lateinit var chipApproved: TextView
@@ -72,6 +74,7 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
     }
 
     private fun bindViews() {
+        swipeRefresh = findViewById(R.id.swipeRefreshRequests)
         chipAll = findViewById(R.id.chipAll)
         chipPending = findViewById(R.id.chipPending)
         chipApproved = findViewById(R.id.chipApproved)
@@ -89,6 +92,7 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
         navLogs = findViewById(R.id.navLogs)
 
         buttonRetry.setOnClickListener { loadRequests(showLoading = true) }
+        swipeRefresh.setOnRefreshListener { loadRequests(showLoading = false) }
     }
 
     private fun bindNavigation() {
@@ -96,16 +100,13 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
             startActivity(Intent(this, AdminDashboardActivity::class.java))
             finish()
         }
-
         navRequests.setOnClickListener {
             // current tab
         }
-
         navAccounts.setOnClickListener {
             startActivity(Intent(this, AdminAccountManagementActivity::class.java))
             finish()
         }
-
         navLogs.setOnClickListener {
             startActivity(Intent(this, AdminAuditLogsActivity::class.java))
             finish()
@@ -132,34 +133,30 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
                         loadRequests(showLoading = true)
                     }
                 }
-
-                is NetworkResult.Error -> {
-                    showError(toFriendlyError(result.message), showRetry = false)
-                }
-
+                is NetworkResult.Error -> showError(toFriendlyError(result.message), showRetry = false)
                 NetworkResult.Loading -> Unit
             }
         }
     }
 
     private fun loadRequests(showLoading: Boolean) {
-        if (showLoading) {
+        if (showLoading && !swipeRefresh.isRefreshing) {
             setLoadingState(true)
         }
 
         lifecycleScope.launch {
             when (val result = repository.loadAllEventRequests()) {
                 is NetworkResult.Success -> {
+                    swipeRefresh.isRefreshing = false
                     allRequests = result.data
                     setLoadingState(false)
                     renderList()
                 }
-
                 is NetworkResult.Error -> {
+                    swipeRefresh.isRefreshing = false
                     setLoadingState(false)
                     showError(toFriendlyError(result.message), showRetry = true)
                 }
-
                 NetworkResult.Loading -> Unit
             }
         }
@@ -173,14 +170,12 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
 
     private fun renderList() {
         hideErrorAndEmpty()
-
         val filtered = when (currentFilter) {
             EventRequestFilter.ALL -> allRequests
             EventRequestFilter.PENDING -> allRequests.filter { it.status == EventRequestStatus.PENDING }
             EventRequestFilter.APPROVED -> allRequests.filter { it.status == EventRequestStatus.APPROVED }
             EventRequestFilter.REJECTED -> allRequests.filter { it.status == EventRequestStatus.REJECTED }
         }
-
         adapter.submit(filtered)
         textEmpty.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
     }
@@ -198,7 +193,9 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
     }
 
     private fun setLoadingState(loading: Boolean) {
-        loadingRequests.visibility = if (loading) View.VISIBLE else View.GONE
+        if (!swipeRefresh.isRefreshing) {
+            loadingRequests.visibility = if (loading) View.VISIBLE else View.GONE
+        }
         recyclerRequests.visibility = if (loading) View.GONE else View.VISIBLE
         if (loading) {
             textError.visibility = View.GONE
