@@ -6,5 +6,5 @@ import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.AccountStatus;
 
 public record UserResponse(UUID userId, String email, String fullName, String phoneNumber, AccountRole role,
-                           AccountStatus status) {
+                           AccountStatus status, String avatarFileId) {
 }

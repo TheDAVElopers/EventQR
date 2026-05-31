@@ -35,6 +35,7 @@ import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerTransacti
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerUserSearchDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.StaffAssignmentRequestDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.StaffAssignmentUpdateRequestDto
+import com.thedavelopers.eventqr.features.uploads.model.dto.StoredFileResponse
 import com.thedavelopers.eventqr.features.qrcredential.model.dto.QrCredentialSnapshot
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationRequest
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
@@ -99,7 +100,10 @@ interface ApiService {
 
     @Multipart
     @POST("users/me/avatar")
-    suspend fun uploadAvatar(@Part file: MultipartBody.Part): ApiResponse<Unit>
+    suspend fun uploadAvatar(@Part file: MultipartBody.Part): ApiResponse<StoredFileResponse>
+
+    @GET("files/{fileId}")
+    suspend fun getStoredFile(@Path("fileId") fileId: String): ApiResponse<StoredFileResponse>
 
     @POST("users")
     suspend fun createUser(@Body request: UserRequest): ApiResponse<UserResponse>

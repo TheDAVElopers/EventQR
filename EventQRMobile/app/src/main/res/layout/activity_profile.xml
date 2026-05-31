@@ -37,8 +37,16 @@
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:background="@drawable/bg_circle_avatar" />
-                        <!-- Avatar placeholder with gradient -->
+                        <ImageView
+                            android:id="@+id/imgProfileAvatar"
+                            android:layout_width="100dp"
+                            android:layout_height="100dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="Profile photo"
+                            android:scaleType="centerCrop"
+                            android:visibility="gone" />
                         <View
+                            android:id="@+id/imgProfileAvatarPlaceholder"
                             android:layout_width="100dp"
                             android:layout_height="100dp"
                             android:layout_gravity="center"

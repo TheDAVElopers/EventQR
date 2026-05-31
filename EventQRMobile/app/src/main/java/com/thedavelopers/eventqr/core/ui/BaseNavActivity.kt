@@ -6,7 +6,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.dashboard.DashboardActivity
 import com.thedavelopers.eventqr.features.events.EventsActivity
-import com.thedavelopers.eventqr.features.profile.ProfileActivity
+import com.thedavelopers.eventqr.features.attendee.AttendeeProfileActivity
 import com.thedavelopers.eventqr.features.rewards.RewardsActivity
 
 abstract class BaseNavActivity : AppCompatActivity() {
@@ -36,8 +36,8 @@ abstract class BaseNavActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_profile -> {
-                    if (this !is ProfileActivity) {
-                        startActivity(Intent(this, ProfileActivity::class.java))
+                    if (this !is AttendeeProfileActivity) {
+                        startActivity(Intent(this, AttendeeProfileActivity::class.java))
                         finish()
                     }
                     true

@@ -20,6 +20,6 @@ public interface AttendeeDirectoryPort {
     AttendeeSnapshot changeRole(UUID userId, AccountRole role);
 
     record AttendeeSnapshot(UUID userId, String email, String fullName, String phoneNumber, AccountRole role,
-                             AccountStatus status) {
+                             AccountStatus status, String avatarFileId) {
     }
 }

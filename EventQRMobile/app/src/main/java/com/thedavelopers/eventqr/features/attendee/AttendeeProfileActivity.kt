@@ -1,11 +1,13 @@
 package com.thedavelopers.eventqr.features.attendee
 
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Patterns
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -22,10 +24,15 @@ import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
+import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.features.uploads.model.dto.StoredFileResponse
 import kotlinx.coroutines.launch
+import java.util.Base64
 import java.io.File
 import java.io.FileOutputStream
+
+private const val TAG = "AttendeeProfile"
 
 open class AttendeeProfileActivity : AppCompatActivity() {
     private lateinit var sessionManager: SessionManager
@@ -34,6 +41,8 @@ open class AttendeeProfileActivity : AppCompatActivity() {
     private lateinit var txtProfileRole: TextView
     private lateinit var txtProfileEmail: TextView
     private lateinit var txtPhone: TextView
+    private lateinit var imgProfileAvatar: ImageView
+    private lateinit var imgProfileAvatarPlaceholder: View
     private lateinit var progressProfileLoading: ProgressBar
     private lateinit var txtProfileError: TextView
     private lateinit var btnProfileRetry: Button
@@ -49,6 +58,8 @@ open class AttendeeProfileActivity : AppCompatActivity() {
         txtProfileRole = findViewById(R.id.txtProfileRole)
         txtProfileEmail = findViewById(R.id.txtProfileEmail)
         txtPhone = findViewById(R.id.txtPhone)
+        imgProfileAvatar = findViewById(R.id.imgProfileAvatar)
+        imgProfileAvatarPlaceholder = findViewById(R.id.imgProfileAvatarPlaceholder)
         progressProfileLoading = findViewById(R.id.progressProfileLoading)
         txtProfileError = findViewById(R.id.txtProfileError)
         btnProfileRetry = findViewById(R.id.btnProfileRetry)
@@ -95,7 +106,7 @@ open class AttendeeProfileActivity : AppCompatActivity() {
         clearErrorState()
 
         // Initial sync from session
-        renderProfile()
+        renderProfile(null)
 
         // Fresh fetch from backend
         lifecycleScope.launch {
@@ -104,7 +115,13 @@ open class AttendeeProfileActivity : AppCompatActivity() {
                     val user = result.data
                     sessionManager.updateProfile(user.fullName, user.phoneNumber, user.email)
                     sessionManager.saveRole(user.role)
-                    renderProfile()
+                    sessionManager.saveAvatarFileId(user.avatarFileId)
+                    renderProfile(user)
+                    renderAvatar(
+                        imgProfileAvatar,
+                        imgProfileAvatarPlaceholder,
+                        loadAvatarPreview(repository, filesDir, user.userId.toString(), user.avatarFileId)
+                    )
                     clearErrorState()
                 }
                 is com.thedavelopers.eventqr.core.api.NetworkResult.Error -> {
@@ -117,14 +134,14 @@ open class AttendeeProfileActivity : AppCompatActivity() {
         }
     }
 
-    private fun renderProfile() {
-        txtProfileName.text = sessionManager.getFullName().orEmpty()
-        txtProfileRole.text = sessionManager.getUserRole()
+    private fun renderProfile(user: UserResponse? = null) {
+        txtProfileName.text = user?.fullName ?: sessionManager.getFullName().orEmpty()
+        txtProfileRole.text = (user?.role?.name ?: sessionManager.getUserRole())
             ?.takeIf { it.isNotBlank() }
             ?.let { RoleMapper.getDisplayName(it) }
             .orEmpty()
-        txtProfileEmail.text = sessionManager.getEmail().orEmpty()
-        txtPhone.text = sessionManager.getPhone().orEmpty()
+        txtProfileEmail.text = user?.email ?: sessionManager.getEmail().orEmpty()
+        txtPhone.text = user?.phoneNumber ?: sessionManager.getPhone().orEmpty()
     }
 
     private fun setLoadingState(loading: Boolean) {
@@ -164,7 +181,7 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
     private var initialFullName: String = ""
     private var initialEmail: String = ""
     private var initialPhone: String = ""
-    private var initialAvatarPath: String? = null
+    private var initialAvatarFileId: String? = null
 
     private var selectedAvatarFile: File? = null
     private var avatarChanged: Boolean = false
@@ -186,7 +203,7 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
 
         selectedAvatarFile = avatarFile
         avatarChanged = true
-        renderAvatar(avatarFile)
+        renderAvatar(imgAvatar, imgAvatarPlaceholder, avatarFile)
         updateSaveButtonState()
     }
 
@@ -252,13 +269,14 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
         edtEmail.setText(sessionManager.getEmail().orEmpty())
         edtPhone.setText(sessionManager.getPhone().orEmpty())
 
-        val avatarPath = sessionManager.getAvatarLocalPath()
-        initialAvatarPath = avatarPath
-        if (!avatarPath.isNullOrBlank()) {
-            val avatarFile = File(avatarPath)
-            if (avatarFile.exists()) {
-                renderAvatar(avatarFile)
-            }
+        initialAvatarFileId = sessionManager.getAvatarFileId()
+        resolveAvatarCacheFile(filesDir, sessionManager.getUserId(), initialAvatarFileId)
+            ?.takeIf { it.exists() }
+            ?.let { renderAvatar(imgAvatar, imgAvatarPlaceholder, it) }
+
+        if (initialAvatarFileId.isNullOrBlank()) {
+            imgAvatar.setImageDrawable(null)
+            imgAvatarPlaceholder.visibility = View.VISIBLE
         }
 
         captureInitialFormSnapshot()
@@ -279,6 +297,15 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
                         fullName = user.fullName,
                         phone = user.phoneNumber,
                         email = user.email
+                    )
+                    sessionManager.saveRole(user.role)
+                    sessionManager.saveAvatarFileId(user.avatarFileId)
+                    initialAvatarFileId = user.avatarFileId
+
+                    renderAvatar(
+                        imgAvatar,
+                        imgAvatarPlaceholder,
+                        loadAvatarPreview(repository, filesDir, user.userId.toString(), user.avatarFileId)
                     )
                 }
 
@@ -337,14 +364,29 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
                                 return@launch
                             }
 
+                            is NetworkResult.Success -> {
+                                val uploadedAvatar = avatarResult.data
+                                val userId = sessionManager.getUserId()
+                                val avatarPreview = loadAvatarPreview(repository, filesDir, userId, uploadedAvatar.fileId.toString())
+                                selectedAvatarFile = avatarPreview?.cachedFile ?: selectedAvatarFile
+                                sessionManager.saveAvatarFileId(uploadedAvatar.fileId.toString())
+                                initialAvatarFileId = uploadedAvatar.fileId.toString()
+                                avatarChanged = false
+                                renderAvatar(imgAvatar, imgAvatarPlaceholder, avatarPreview)
+
+                                if (avatarPreview == null) {
+                                    Log.w(TAG, "Avatar uploaded, but backend preview data could not be rendered immediately.")
+                                }
+                            }
+
                             else -> Unit
                         }
-                        sessionManager.setAvatarLocalPath(avatarFile.absolutePath)
-                        initialAvatarPath = avatarFile.absolutePath
-                        avatarChanged = false
                     }
 
+                    refreshProfileStateFromBackend()
+
                     sessionManager.updateProfile(fullName, phone, initialEmail)
+                    sessionManager.saveAvatarFileId(initialAvatarFileId)
                     captureInitialFormSnapshot()
                     Toast.makeText(this@AttendeeEditProfileActivity, "Profile updated successfully.", Toast.LENGTH_SHORT).show()
                     setResult(RESULT_OK)
@@ -475,14 +517,121 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
         }.getOrNull()
     }
 
-    private fun renderAvatar(file: File) {
-        if (!file.exists()) {
-            imgAvatar.setImageDrawable(null)
-            imgAvatarPlaceholder.visibility = View.VISIBLE
+    private suspend fun refreshProfileStateFromBackend() {
+        when (val result = repository.getMyProfile()) {
+            is NetworkResult.Success -> {
+                val user = result.data
+                sessionManager.updateProfile(user.fullName, user.phoneNumber, user.email)
+                sessionManager.saveRole(user.role)
+                sessionManager.saveAvatarFileId(user.avatarFileId)
+                initialAvatarFileId = user.avatarFileId
+
+                val avatarPreview = loadAvatarPreview(repository, filesDir, user.userId.toString(), user.avatarFileId)
+                renderAvatar(imgAvatar, imgAvatarPlaceholder, avatarPreview)
+                if (avatarPreview == null) {
+                    Log.w(TAG, "Profile refresh succeeded, but avatar preview data was not available.")
+                }
+            }
+
+            is NetworkResult.Error -> {
+                Log.w(TAG, "Profile refresh after save failed: ${result.message}")
+            }
+
+            else -> Unit
+        }
+    }
+}
+
+private fun resolveAvatarCacheFile(filesDir: File, userId: String?, avatarFileId: String?): File? {
+    if (userId.isNullOrBlank() || avatarFileId.isNullOrBlank()) {
+        return null
+    }
+
+    val avatarDirectory = File(filesDir, "avatars")
+    if (!avatarDirectory.exists()) {
+        avatarDirectory.mkdirs()
+    }
+
+    return File(avatarDirectory, "avatar_${userId}_$avatarFileId.jpg")
+}
+
+private data class AvatarPreview(
+    val cachedFile: File? = null,
+    val storedFile: StoredFileResponse? = null,
+)
+
+private suspend fun loadAvatarPreview(
+    repository: AttendeeRepository,
+    filesDir: File,
+    userId: String?,
+    avatarFileId: String?,
+): AvatarPreview? {
+    val cacheFile = resolveAvatarCacheFile(filesDir, userId, avatarFileId)
+    if (cacheFile?.exists() == true) {
+        return AvatarPreview(cachedFile = cacheFile)
+    }
+
+    val fileId = avatarFileId ?: return null
+    return when (val result = repository.getStoredFile(fileId)) {
+        is NetworkResult.Success -> {
+            val storedFile = result.data
+            val cachedFile = cacheAvatarPayload(filesDir, userId, storedFile)
+            AvatarPreview(cachedFile = cachedFile, storedFile = storedFile)
+        }
+        else -> null
+    }
+}
+
+private fun cacheAvatarPayload(
+    filesDir: File,
+    userId: String?,
+    storedFile: StoredFileResponse,
+): File? {
+    val cacheFile = resolveAvatarCacheFile(filesDir, userId, storedFile.fileId.toString()) ?: return null
+    val encodedContent = storedFile.contentBase64?.takeIf { it.isNotBlank() } ?: return null
+
+    return runCatching {
+        val decoded = Base64.getDecoder().decode(encodedContent)
+        FileOutputStream(cacheFile).use { output ->
+            output.write(decoded)
+        }
+        cacheFile
+    }.getOrNull()
+}
+
+private fun renderAvatar(imageView: ImageView, placeholder: View, preview: AvatarPreview?) {
+    val cachedFile = preview?.cachedFile
+    if (cachedFile?.exists() == true) {
+        imageView.setImageURI(Uri.fromFile(cachedFile))
+        imageView.visibility = View.VISIBLE
+        placeholder.visibility = View.GONE
+        return
+    }
+
+    val encodedContent = preview?.storedFile?.contentBase64?.takeIf { it.isNotBlank() }
+    if (!encodedContent.isNullOrBlank()) {
+        val bitmap = runCatching {
+            val bytes = Base64.getDecoder().decode(encodedContent)
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+        }.onFailure {
+            Log.w(TAG, "Unable to decode avatar preview from backend payload.", it)
+        }.getOrNull()
+
+        if (bitmap != null) {
+            imageView.setImageBitmap(bitmap)
+            imageView.visibility = View.VISIBLE
+            placeholder.visibility = View.GONE
             return
         }
-
-        imgAvatar.setImageURI(Uri.fromFile(file))
-        imgAvatarPlaceholder.visibility = View.GONE
     }
+
+    if (cachedFile == null || !cachedFile.exists()) {
+        imageView.setImageDrawable(null)
+        imageView.visibility = View.GONE
+        placeholder.visibility = View.VISIBLE
+    }
+}
+
+private fun renderAvatar(imageView: ImageView, placeholder: View, file: File?) {
+    renderAvatar(imageView, placeholder, file?.let { AvatarPreview(cachedFile = it) })
 }

@@ -14,6 +14,7 @@ import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionRequ
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResponse
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
+import com.thedavelopers.eventqr.features.uploads.model.dto.StoredFileResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -33,11 +34,12 @@ class AttendeeRepository(context: Context) {
     suspend fun updateProfile(fullName: String, phoneNumber: String?) = safeApiCall {
         apiService.updateUsersMe(com.thedavelopers.eventqr.features.users.model.dto.ProfileUpdateRequest(fullName, phoneNumber))
     }
-    suspend fun uploadAvatar(file: File): NetworkResult<Unit> = safeApiCall {
+    suspend fun uploadAvatar(file: File): NetworkResult<StoredFileResponse> = safeApiCall {
         val requestBody = file.asRequestBody("image/*".toMediaTypeOrNull())
         val part = MultipartBody.Part.createFormData("file", file.name, requestBody)
         apiService.uploadAvatar(part)
     }
+    suspend fun getStoredFile(fileId: String) = safeApiCall { apiService.getStoredFile(fileId) }
     suspend fun createRegistration(request: RegistrationRequest) = safeApiCall { apiService.createRegistration(request) }
     suspend fun getMyRegistrations() = safeApiCall { apiService.getMyRegistrations() }
     suspend fun getMyEventTransactions(eventId: String) = safeApiCall { apiService.getMyEventTransactions(eventId) }

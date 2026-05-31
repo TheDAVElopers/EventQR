@@ -61,12 +61,12 @@ public class FileStorageService {
                                     String contentType, byte[] content, Instant storedAt) {
         StoredFileResponse toResponse(String status) {
             return new StoredFileResponse(fileId, ownerId, purpose, fileName,
-                    contentType, content == null ? 0 : content.length, status, storedAt);
+                    contentType, content == null ? 0 : content.length, status, storedAt, encode(content));
         }
     }
 
     @SuppressWarnings("unused")
-    private String encode(byte[] content) {
+    private static String encode(byte[] content) {
         return Base64.getEncoder().encodeToString(content == null ? new byte[0] : Arrays.copyOf(content, content.length));
     }
 }

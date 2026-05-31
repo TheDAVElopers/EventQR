@@ -69,7 +69,9 @@ public class UserController {
     public ResponseEntity<ApiResponse<StoredFileResponse>> updateAvatar(HttpServletRequest request,
                                                                         @RequestParam("file") MultipartFile file) {
         UUID userId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
-        return ResponseEntity.ok(ApiResponse.success("Avatar stored", fileStorageService.store(userId, "profile-photo", file)));
+        StoredFileResponse storedFile = fileStorageService.store(userId, "profile-photo", file);
+        userService.updateAvatar(userId, storedFile.fileId().toString());
+        return ResponseEntity.ok(ApiResponse.success("Avatar stored", storedFile));
     }
 
     @PutMapping("/{userId}/role/{role}")

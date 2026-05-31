@@ -64,6 +64,12 @@ public class UserService implements AttendeeDirectoryPort {
         return toResponse(userProfileRepository.save(userProfile));
     }
 
+    public UserResponse updateAvatar(UUID userId, String avatarFileId) {
+        UserProfile userProfile = requireUser(userId);
+        userProfile.setAvatarFileId(avatarFileId == null || avatarFileId.isBlank() ? null : avatarFileId.trim());
+        return toResponse(userProfileRepository.save(userProfile));
+    }
+
     public UserResponse updateStatus(UUID userId, AccountStatus status) {
         UserProfile userProfile = requireUser(userId);
         userProfile.setStatus(status);
@@ -140,7 +146,7 @@ public class UserService implements AttendeeDirectoryPort {
 
     private UserResponse toResponse(UserProfile userProfile) {
         return new UserResponse(userProfile.getId(), userProfile.getEmail(), userProfile.getFullName(),
-                userProfile.getPhoneNumber(), userProfile.getRole(), userProfile.getStatus());
+                userProfile.getPhoneNumber(), userProfile.getRole(), userProfile.getStatus(), userProfile.getAvatarFileId());
     }
 
     private UserProfile requireUser(UUID userId) {

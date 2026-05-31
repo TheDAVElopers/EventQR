@@ -27,6 +27,9 @@ public class UserProfile extends BaseEntity {
 
     private String phoneNumber;
 
+    @Column(name = "avatar_file_id")
+    private String avatarFileId;
+
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
@@ -39,6 +42,6 @@ public class UserProfile extends BaseEntity {
     private AccountStatus status = AccountStatus.ACTIVE;
 
     public AttendeeSnapshot toSnapshot() {
-        return new AttendeeSnapshot(getId(), email, fullName, phoneNumber, role, status);
+        return new AttendeeSnapshot(getId(), email, fullName, phoneNumber, role, status, avatarFileId);
     }
 }
