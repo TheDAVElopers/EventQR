@@ -7,20 +7,24 @@
     android:background="#FFFFFF"
     android:orientation="vertical">
 
-    <!-- Header Title -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="20dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="12dp"
         android:text="Events"
         android:textColor="#111827"
-        android:textSize="28sp"
+        android:textSize="26sp"
         android:textStyle="bold" />
 
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:clipToPadding="false"
         android:fillViewport="true">
 
         <LinearLayout
@@ -30,7 +34,6 @@
             android:paddingHorizontal="20dp"
             android:paddingBottom="20dp">
 
-            <!-- Assigned event selector -->
             <Spinner
                 android:id="@+id/spnScannerEvent"
                 android:layout_width="match_parent"
@@ -45,6 +48,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
+                android:ellipsize="end"
+                android:maxLines="2"
                 android:textColor="#111827"
                 android:textSize="14sp"
                 android:textStyle="bold"
@@ -62,7 +67,6 @@
                 android:textSize="14sp"
                 android:visibility="gone" />
 
-            <!-- Info Card -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -78,9 +82,10 @@
                     app:tint="#111827" />
 
                 <LinearLayout
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
+                    android:layout_weight="1"
                     android:orientation="vertical">
 
                     <TextView
@@ -101,11 +106,10 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Scan Purpose Card -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="18dp"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="4dp"
                 app:cardUseCompatPadding="true">
@@ -135,11 +139,10 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Camera Preview Placeholder Card -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="10dp"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="2dp"
                 app:cardUseCompatPadding="true">
@@ -147,36 +150,36 @@
                 <LinearLayout
                     android:id="@+id/layoutScannerPlaceholder"
                     android:layout_width="match_parent"
-                    android:layout_height="320dp"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="20dp"
+                    android:layout_height="240dp"
+                    android:background="?attr/selectableItemBackground"
                     android:clickable="true"
                     android:focusable="true"
-                    android:background="?attr/selectableItemBackground">
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="20dp">
 
                     <ImageView
                         android:id="@+id/imgScannerIcon"
-                        android:layout_width="100dp"
-                        android:layout_height="100dp"
+                        android:layout_width="82dp"
+                        android:layout_height="82dp"
                         android:src="@drawable/ic_camera"
                         app:tint="#9CA3AF" />
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="24dp"
+                        android:layout_marginTop="18dp"
+                        android:gravity="center"
                         android:text="Tap to open camera scanner. Manual QR entry remains available as fallback."
-                        android:textAlignment="center"
                         android:textColor="#6B7280"
-                        android:textSize="16sp" />
+                        android:textSize="15sp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="10dp"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="2dp"
                 app:cardUseCompatPadding="true">
@@ -188,7 +191,7 @@
                     android:padding="16dp">
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Manual QR Value *"
                         android:textColor="#374151"
@@ -204,27 +207,27 @@
                         android:hint="Paste or type attendee QR value"
                         android:inputType="text"
                         android:paddingHorizontal="16dp"
+                        android:singleLine="true"
                         android:textSize="14sp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Action Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSubmitScan"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="14dp"
                 android:background="@drawable/bg_scanner_button"
+                android:text="Manually Scan QR Code"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:textStyle="bold"
                 app:backgroundTint="@null"
                 app:icon="@drawable/ic_qr_scan"
                 app:iconGravity="textStart"
                 app:iconPadding="12dp"
-                app:iconSize="24dp"
-                android:text="Manually Scan QR Code"
-                android:textAllCaps="false"
-                android:textColor="#FFFFFF"
-                android:textSize="17sp"
-                android:textStyle="bold" />
+                app:iconSize="22dp" />
 
             <ProgressBar
                 android:id="@+id/progressScanner"
@@ -234,11 +237,10 @@
                 android:layout_marginTop="12dp"
                 android:visibility="gone" />
 
-            <!-- Scanning Tips Card -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="18dp"
                 app:cardBackgroundColor="#FFFFFF"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="1dp"
@@ -276,30 +278,30 @@
                 android:layout_height="0dp"
                 android:visibility="gone"
                 tools:ignore="MissingConstraints" />
+
             <TextView
                 android:id="@+id/txtScannerResult"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:visibility="gone"
                 tools:ignore="MissingConstraints" />
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerScannerResults"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:visibility="gone"
                 tools:ignore="MissingConstraints" />
-
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
-    <!-- Bottom Navigation -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="76dp"
         android:background="@drawable/bg_bottom_nav"
         android:gravity="center"
         android:orientation="horizontal"
-        android:paddingHorizontal="38dp">
+        android:paddingHorizontal="20dp">
 
         <LinearLayout
             android:id="@+id/navDashboard"
