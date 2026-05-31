@@ -11,9 +11,9 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.features.organizer.*
-import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerTransactionRuleDto
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
@@ -23,6 +23,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
     private lateinit var repository: OrganizerRepository
     private lateinit var selectedEvent: OrganizerMvpEvent
     private lateinit var purposeHost: LinearLayout
+    private lateinit var swipeRefresh: SwipeRefreshLayout
     private var scanPurposes: List<OrganizerMvpScanPurpose> = emptyList()
     private var loadRequestSerial: Int = 0
     private var refreshCount: Int = 0
@@ -32,28 +33,31 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         repository = OrganizerRepository(this)
         val eventId = intentEventId() ?: return showMissingEventScreen("Scan Purposes")
         selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId) ?: return showMissingEventScreen("Scan Purposes")
-        
+
         Log.d(TAG, "Loading scan purposes for eventId: $eventId")
         Log.d(persistenceTag, "selectedEventId=$eventId screen=ScanPurposes")
-        
-        val content = organizerShell(
+
+        val shell = organizerRefreshShell(
             title = "Scan Purposes",
             showBack = true,
             topRightLabel = "+ Add",
-            onTopRight = { showAddEditDialog() }
+            onTopRight = { showAddEditDialog() },
+            onRefresh = { loadPurposes(showInitialLoading = false) }
         )
-        
+        swipeRefresh = shell.swipeRefreshLayout
         purposeHost = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        content.addView(purposeHost)
-        
+        shell.content.addView(purposeHost)
+
         loadPurposes()
     }
 
-    private fun loadPurposes() {
+    private fun loadPurposes(showInitialLoading: Boolean = true) {
         refreshCount += 1
         val requestSerial = ++loadRequestSerial
-        purposeHost.removeAllViews()
-        purposeHost.addView(loadingState("Loading scan purposes..."))
+        if (showInitialLoading && !swipeRefresh.isRefreshing) {
+            purposeHost.removeAllViews()
+            purposeHost.addView(loadingState("Loading scan purposes..."))
+        }
         MainScope().launch {
             val source = repository.loadScanPurposesForMvp(selectedEvent.id)
             val persistedPurposes = source.data.filter { !it.id.isNullOrBlank() }
@@ -61,7 +65,10 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
             if (!isFinishing && !isDestroyed && requestSerial == loadRequestSerial) {
                 scanPurposes = persistedPurposes.toList()
             }
-            if (requestSerial != loadRequestSerial) return@launch
+            if (requestSerial != loadRequestSerial) {
+                swipeRefresh.isRefreshing = false
+                return@launch
+            }
             Log.d(
                 TAG,
                 "eventId=${selectedEvent.id} refreshCount=$refreshCount loadedCount=${source.data.size} persistedCount=${persistedPurposes.size} droppedWithoutId=$droppedWithoutId source=${source.source} message=${source.message}"
@@ -76,6 +83,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
                     "eventId=${selectedEvent.id} ignoredCount=$droppedWithoutId reason=missingPurposeIdOnLoad"
                 )
             }
+            swipeRefresh.isRefreshing = false
             renderPurposes(scanPurposes)
             source.message?.let {
                 Toast.makeText(this@ManageScanPurposesActivity, it, Toast.LENGTH_SHORT).show()
@@ -89,13 +97,13 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
             purposeHost.addView(emptyState("No scan purposes configured yet. Use '+ Add' to create one."))
             return
         }
-        
+
         purposes.forEach { purpose ->
             val subtitle = buildString {
                 if (purpose.pointsEnabled) append("+${purpose.pointsValue} pts · ")
                 append(if (purpose.duplicateRule.lowercase().contains("allow")) "Allows duplicates" else "No duplicates")
             }
-            
+
             purposeHost.addView(purposeCard(
                 title = purpose.label,
                 subtitle = subtitle,
@@ -117,50 +125,22 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
                 Toast.makeText(this@ManageScanPurposesActivity, "Unable to update unsaved scan purpose.", Toast.LENGTH_SHORT).show()
                 return@launch
             }
-            Log.d(
-                TAG,
-                "eventId=${selectedEvent.id} purposeId=$purposeId label=${purpose.label} toggleValue=$enabled"
-            )
-            Log.d(
-                persistenceTag,
-                "eventId=${selectedEvent.id} toggleRequest id=$purposeId name=${purpose.label} enabled=$enabled"
-            )
+            Log.d(TAG, "eventId=${selectedEvent.id} purposeId=$purposeId label=${purpose.label} toggleValue=$enabled")
+            Log.d(persistenceTag, "eventId=${selectedEvent.id} toggleRequest id=$purposeId name=${purpose.label} enabled=$enabled")
 
             val result = repository.enableScanPurposeForMvp(selectedEvent.id, purposeId, enabled)
             when (result) {
                 is NetworkResult.Success -> {
-                    Log.d(
-                        TAG,
-                        "eventId=${selectedEvent.id} purposeId=$purposeId toggleApiResult=SUCCESS active=${result.data.enabled}"
-                    )
-                    Log.d(
-                        persistenceTag,
-                        "eventId=${selectedEvent.id} toggleResponse id=${result.data.scanPurposeId ?: "null"} name=${result.data.title} enabled=${result.data.enabled}"
-                    )
-                    Toast.makeText(
-                        this@ManageScanPurposesActivity,
-                        "${purpose.label} ${if (enabled) "enabled" else "disabled"}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Log.d(TAG, "eventId=${selectedEvent.id} purposeId=$purposeId toggleApiResult=SUCCESS active=${result.data.enabled}")
+                    Log.d(persistenceTag, "eventId=${selectedEvent.id} toggleResponse id=${result.data.scanPurposeId ?: "null"} name=${result.data.title} enabled=${result.data.enabled}")
+                    Toast.makeText(this@ManageScanPurposesActivity, "${purpose.label} ${if (enabled) "enabled" else "disabled"}", Toast.LENGTH_SHORT).show()
                     loadPurposes()
                 }
                 is NetworkResult.Error -> {
-                    Log.w(
-                        TAG,
-                        "eventId=${selectedEvent.id} purposeId=$purposeId toggleApiResult=ERROR message=${result.message}"
-                    )
-                    Toast.makeText(
-                        this@ManageScanPurposesActivity,
-                        "Failed to update: ${result.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Log.w(TAG, "eventId=${selectedEvent.id} purposeId=$purposeId toggleApiResult=ERROR message=${result.message}")
+                    Toast.makeText(this@ManageScanPurposesActivity, "Failed to update: ${result.message}", Toast.LENGTH_SHORT).show()
                 }
-                NetworkResult.Loading -> {
-                    Log.d(
-                        TAG,
-                        "eventId=${selectedEvent.id} purposeId=${purpose.id} toggleApiResult=LOADING"
-                    )
-                }
+                NetworkResult.Loading -> Log.d(TAG, "eventId=${selectedEvent.id} purposeId=${purpose.id} toggleApiResult=LOADING")
             }
         }
     }
@@ -233,10 +213,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
     private fun savePurpose(purpose: OrganizerMvpScanPurpose) {
         MainScope().launch {
             val existingPurposeId = purpose.id?.takeIf { it.isNotBlank() }
-            Log.d(
-                persistenceTag,
-                "eventId=${selectedEvent.id} saveRequest id=${existingPurposeId ?: "null"} name=${purpose.label} enabled=${purpose.enabled} trackingOnly=${purpose.trackingOnly} pointsEnabled=${purpose.pointsEnabled} pointsValue=${purpose.pointsValue}"
-            )
+            Log.d(persistenceTag, "eventId=${selectedEvent.id} saveRequest id=${existingPurposeId ?: "null"} name=${purpose.label} enabled=${purpose.enabled} trackingOnly=${purpose.trackingOnly} pointsEnabled=${purpose.pointsEnabled} pointsValue=${purpose.pointsValue}")
             val result = if (existingPurposeId == null) {
                 repository.createOrganizerScanPurpose(selectedEvent.id, purpose.toOrganizerRequest())
             } else {
@@ -244,18 +221,12 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
             }
             when (result) {
                 is NetworkResult.Success -> {
-                    Log.d(
-                        persistenceTag,
-                        "eventId=${selectedEvent.id} saveResponse id=${result.data.scanPurposeId ?: "null"} name=${result.data.title} enabled=${result.data.enabled} code=${result.data.code}"
-                    )
+                    Log.d(persistenceTag, "eventId=${selectedEvent.id} saveResponse id=${result.data.scanPurposeId ?: "null"} name=${result.data.title} enabled=${result.data.enabled} code=${result.data.code}")
                     Toast.makeText(this@ManageScanPurposesActivity, "Saved successfully", Toast.LENGTH_SHORT).show()
                     loadPurposes()
                 }
                 is NetworkResult.Error -> {
-                    Log.w(
-                        persistenceTag,
-                        "eventId=${selectedEvent.id} saveError message=${result.message}"
-                    )
+                    Log.w(persistenceTag, "eventId=${selectedEvent.id} saveError message=${result.message}")
                     Toast.makeText(this@ManageScanPurposesActivity, "Failed to save: ${result.message}", Toast.LENGTH_SHORT).show()
                 }
                 NetworkResult.Loading -> Unit
