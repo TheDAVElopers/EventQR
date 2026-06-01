@@ -19,6 +19,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.EventQR">
+        <activity android:name=".features.attendee.AttendeeEventRequestDetailActivity" android:exported="false" />
         <activity android:name=".features.attendee.MyEventRequestsActivity" android:exported="false" />
         <activity android:name=".features.attendee.RequestEventActivity" android:exported="false" />
         <activity android:name=".features.attendee.AttendeeEditProfileActivity" android:exported="false" />
