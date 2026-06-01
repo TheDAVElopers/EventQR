@@ -230,7 +230,7 @@ public class StaffController {
     private EventStaffAssignment requireActiveAssignment(HttpServletRequest request, UUID eventId) {
         UUID staffUserId = currentUserId(request);
         AccountRole tokenRole = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
-        if (tokenRole == AccountRole.ORGANIZER || tokenRole == AccountRole.ADMIN || tokenRole == AccountRole.SUPER_ADMIN) {
+        if (tokenRole == AccountRole.ORGANIZER || tokenRole == AccountRole.ADMIN) {
             return null;
         }
         return eventStaffAssignmentRepository.findByEventIdAndStaffUserIdAndActiveTrue(eventId, staffUserId)
