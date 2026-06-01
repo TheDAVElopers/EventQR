@@ -17,7 +17,6 @@ import com.thedavelopers.eventqr.features.events.model.dto.EventResponse;
 import com.thedavelopers.eventqr.features.events.service.EventService;
 import com.thedavelopers.eventqr.features.organizer.model.entity.EventStaffAssignment;
 import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignmentRepository;
-import com.thedavelopers.eventqr.features.qrcredentials.service.QrCredentialService;
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse;
 import com.thedavelopers.eventqr.features.registrations.service.RegistrationService;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionRequest;
@@ -33,6 +32,7 @@ import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResp
 import com.thedavelopers.eventqr.features.transactions.service.TransactionService;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.EventStatus;
+import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.interfaces.ScanPurposePort.ScanPurposeSnapshot;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
 import com.thedavelopers.eventqr.shared.security.JwtService;
@@ -224,29 +224,27 @@ public class StaffController {
     }
 
     private UUID currentUserId(HttpServletRequest request) {
-        if (jwtService.extractRoleFromBearer(request.getHeader("Authorization")) == AccountRole.ATTENDEE) {
-            throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Staff access required");
-        }
         return jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
     }
 
     private EventStaffAssignment requireActiveAssignment(HttpServletRequest request, UUID eventId) {
         UUID staffUserId = currentUserId(request);
-        if (jwtService.extractRoleFromBearer(request.getHeader("Authorization")) != AccountRole.STAFF) {
+        AccountRole tokenRole = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
+        if (tokenRole == AccountRole.ORGANIZER || tokenRole == AccountRole.ADMIN || tokenRole == AccountRole.SUPER_ADMIN) {
             return null;
         }
         return eventStaffAssignmentRepository.findByEventIdAndStaffUserIdAndActiveTrue(eventId, staffUserId)
-                .orElseThrow(() -> new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Staff user is not actively assigned to this event"));
+                .orElseThrow(() -> new ForbiddenException("Staff user is not actively assigned to this event"));
     }
 
     private void requireScanPermission(HttpServletRequest request, UUID eventId) {
         EventStaffAssignment assignment = requireActiveAssignment(request, eventId);
         EventResponse event = eventService.findOne(eventId);
         if (event.status() == EventStatus.ENDED) {
-            throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Event has ended. Scanning is disabled.");
+            throw new ForbiddenException("Event has ended. Scanning is disabled.");
         }
         if (assignment != null && !assignment.isCanScan()) {
-            throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Staff user is not allowed to scan for this event");
+            throw new ForbiddenException("Staff user is not allowed to scan for this event");
         }
     }
 }
