@@ -195,7 +195,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         val nameInput = EditText(this).apply {
             hint = "Custom name, e.g. Sponsor Booth A"
             setText(purpose?.label.orEmpty())
-            singleLine()
+            setSingleLine(true)
         }
         val descInput = EditText(this).apply {
             hint = "Description, e.g. Track visits for Sponsor Booth A"
@@ -206,7 +206,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
             hint = "Points awarded"
             inputType = InputType.TYPE_CLASS_NUMBER
             setText(purpose?.pointsValue?.takeIf { it > 0 }?.toString() ?: "0")
-            singleLine()
+            setSingleLine(true)
         }
         val duplicateCheck = CheckBox(this).apply {
             text = "Allow duplicate scans"
