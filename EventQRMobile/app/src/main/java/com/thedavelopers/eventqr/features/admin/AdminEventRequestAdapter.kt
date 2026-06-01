@@ -42,7 +42,8 @@ class AdminEventRequestAdapter(
         private val textTitle: TextView = itemView.findViewById(R.id.textTitle)
         private val textStatus: TextView = itemView.findViewById(R.id.textStatus)
         private val textDescription: TextView = itemView.findViewById(R.id.textDescription)
-        private val textMeta: TextView = itemView.findViewById(R.id.textMeta)
+        private val textEventDate: TextView = itemView.findViewById(R.id.textEventDate)
+        private val textCapacity: TextView = itemView.findViewById(R.id.textCapacity)
         private val textSubmitted: TextView = itemView.findViewById(R.id.textSubmitted)
 
         fun bind(
@@ -55,16 +56,12 @@ class AdminEventRequestAdapter(
             textDescription.text = request.eventDescription?.takeIf { it.isNotBlank() }
                 ?: "No description provided."
 
-            textMeta.text = buildMeta(request, dateFormatter)
+            textEventDate.text = formatDate(request.startDateTime, dateFormatter)
+            textCapacity.text = "${request.capacity} expected"
             textSubmitted.text = "Submitted ${formatDate(request.createdAt, submittedFormatter)}"
             bindStatus(textStatus, request.status)
 
             itemView.setOnClickListener { onTap(request) }
-        }
-
-        private fun buildMeta(request: EventRequestResponse, dateFormatter: DateTimeFormatter): String {
-            val date = formatDate(request.startDateTime, dateFormatter)
-            return "$date   ${request.capacity} expected"
         }
 
         private fun bindStatus(view: TextView, status: EventRequestStatus) {
