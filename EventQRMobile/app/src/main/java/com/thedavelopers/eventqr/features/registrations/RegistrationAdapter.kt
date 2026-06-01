@@ -6,7 +6,6 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 
 class RegistrationAdapter(
@@ -36,19 +35,18 @@ class RegistrationAdapter(
     override fun getItemCount(): Int = items.size
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val avatarView: TextView = itemView.findViewById(R.id.txtRegistrationAvatar)
         private val titleView: TextView = itemView.findViewById(R.id.txtRegistrationTitle)
         private val detailView: TextView = itemView.findViewById(R.id.txtRegistrationDetails)
         private val statusView: TextView = itemView.findViewById(R.id.txtRegistrationStatus)
+        private val pointsView: TextView = itemView.findViewById(R.id.txtRegistrationPoints)
 
         fun bind(item: RegistrationResponse) {
-            titleView.text = item.attendeeName
-            detailView.text = buildString {
-                append(item.attendeeEmail)
-                append("\nRegistered: ")
-                append(DateFormatters.formatInstant(item.registeredAt))
-                append("\nQR: ")
-                append(item.qrCredentialId?.toString() ?: "Pending")
-            }
+            val name = item.attendeeName.ifBlank { "Attendee" }
+            avatarView.text = name.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "A"
+            titleView.text = name
+            detailView.text = item.attendeeEmail.ifBlank { "No email provided" }
+            pointsView.text = "${item.pointsEarned} pts"
             RegistrationStatusBadgeStyler.bind(statusView, item.status)
         }
     }
