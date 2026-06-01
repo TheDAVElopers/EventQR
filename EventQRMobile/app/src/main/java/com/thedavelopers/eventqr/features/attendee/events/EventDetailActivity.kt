@@ -1,10 +1,13 @@
 package com.thedavelopers.eventqr.features.attendee
 
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.util.Base64
 import android.util.Log
 import android.view.View
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -17,7 +20,6 @@ import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
 import com.thedavelopers.eventqr.features.events.model.dto.EventAvailabilityResponse
 import com.thedavelopers.eventqr.features.organizer.events.EventManagementHubActivity
 import java.time.Instant
-import java.time.ZoneId
 import kotlinx.coroutines.launch
 
 open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
@@ -85,6 +87,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         findViewById<TextView>(R.id.txtDetailTitle).text = event.title
         findViewById<TextView>(R.id.txtDetailDescription).text = event.description?.takeIf { it.isNotBlank() } ?: "No event description provided."
         findViewById<TextView>(R.id.txtDetailVenue).text = event.location?.takeIf { it.isNotBlank() } ?: "Location not specified."
+        renderEventPoster(event.eventLogoUrl)
 
         val manilaZone = java.time.ZoneId.of("Asia/Manila")
         val dateFormatter = java.time.format.DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", java.util.Locale.ENGLISH).withZone(manilaZone)
@@ -127,6 +130,51 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         findViewById<TextView>(R.id.txtDetailStatus).text = statusText
 
         checkOwnedEventThenAvailability(event)
+    }
+
+    private fun renderEventPoster(eventLogoUrl: String?) {
+        val posterView = findViewById<ImageView>(R.id.imgEventPosterHero)
+        val overlayView = findViewById<View>(R.id.viewEventPosterOverlay)
+        val fileId = eventLogoUrl?.trim().orEmpty()
+        if (fileId.isBlank()) {
+            posterView.visibility = View.GONE
+            overlayView.visibility = View.GONE
+            return
+        }
+
+        lifecycleScope.launch {
+            when (val result = repository.getStoredFile(fileId)) {
+                is NetworkResult.Success -> {
+                    val encoded = result.data.contentBase64
+                    if (encoded.isNullOrBlank()) {
+                        posterView.visibility = View.GONE
+                        overlayView.visibility = View.GONE
+                        return@launch
+                    }
+                    runCatching {
+                        val bytes = Base64.decode(encoded, Base64.DEFAULT)
+                        BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                    }.onSuccess { bitmap ->
+                        if (bitmap != null) {
+                            posterView.setImageBitmap(bitmap)
+                            posterView.visibility = View.VISIBLE
+                            overlayView.visibility = View.VISIBLE
+                        } else {
+                            posterView.visibility = View.GONE
+                            overlayView.visibility = View.GONE
+                        }
+                    }.onFailure {
+                        posterView.visibility = View.GONE
+                        overlayView.visibility = View.GONE
+                    }
+                }
+                is NetworkResult.Error -> {
+                    posterView.visibility = View.GONE
+                    overlayView.visibility = View.GONE
+                }
+                NetworkResult.Loading -> Unit
+            }
+        }
     }
 
     private fun updateRegistrationStatusUI(current: Int, capacity: Int) {
