@@ -55,6 +55,7 @@ class AdminAuditLogsActivity : AppCompatActivity() {
         recyclerLogs = findViewById(R.id.recyclerAuditLogs)
         recyclerLogs.layoutManager = LinearLayoutManager(this)
         recyclerLogs.adapter = adapter
+        swipeRefresh.setColorSchemeResources(R.color.eventqr_purple)
         swipeRefresh.setOnRefreshListener { loadLogs() }
 
         chipAll = findViewById(R.id.chipAuditAll)
@@ -112,7 +113,7 @@ class AdminAuditLogsActivity : AppCompatActivity() {
                     progressLoading.visibility = View.GONE
                     recyclerLogs.visibility = View.GONE
                     textPlaceholder.visibility = View.VISIBLE
-                    textPlaceholder.text = "Audit logs are not configured yet."
+                    textPlaceholder.text = "Unable to load audit logs. Pull down to retry."
                 }
                 NetworkResult.Loading -> Unit
             }
@@ -135,17 +136,19 @@ class AdminAuditLogsActivity : AppCompatActivity() {
 
     private fun styleChip(chip: TextView, selected: Boolean) {
         chip.setBackgroundResource(
-            if (selected) R.drawable.bg_admin_filter_chip_active
-            else R.drawable.bg_admin_filter_chip_inactive
+            if (selected) R.drawable.bg_admin_request_filter_active
+            else R.drawable.bg_admin_request_filter_inactive
         )
         chip.setTextColor(if (selected) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+        chip.elevation = if (selected) 2f else 1f
     }
 
     private fun applyFilter() {
         if (allLogs.isEmpty()) {
             recyclerLogs.visibility = View.GONE
             textPlaceholder.visibility = View.VISIBLE
-            textPlaceholder.text = "Audit logs are not configured yet."
+            textPlaceholder.text = "No audit logs yet."
+            adapter.submitItems(emptyList())
             return
         }
 
@@ -155,7 +158,7 @@ class AdminAuditLogsActivity : AppCompatActivity() {
             when (selectedFilter) {
                 AuditFilter.ALL -> true
                 AuditFilter.APPROVAL -> actionText.contains("approve") || actionText.contains("reject") || actionText.contains("request") || detailsText.contains("approve") || detailsText.contains("reject")
-                AuditFilter.ACCOUNT -> actionText.contains("account") || actionText.contains("user") || actionText.contains("role") || detailsText.contains("account") || detailsText.contains("role")
+                AuditFilter.ACCOUNT -> actionText.contains("account") || actionText.contains("user") || actionText.contains("role") || actionText.contains("suspend") || detailsText.contains("account") || detailsText.contains("role")
                 AuditFilter.SECURITY -> actionText.contains("security") || actionText.contains("suspend") || actionText.contains("permission") || detailsText.contains("security") || detailsText.contains("suspend")
                 AuditFilter.NOTIFICATION -> actionText.contains("notification") || detailsText.contains("notification")
             }
@@ -164,7 +167,7 @@ class AdminAuditLogsActivity : AppCompatActivity() {
         adapter.submitItems(filtered)
         recyclerLogs.visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
         textPlaceholder.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
-        textPlaceholder.text = if (filtered.isEmpty()) "Audit logs are not configured yet." else ""
+        textPlaceholder.text = if (filtered.isEmpty()) "No audit logs for this filter." else ""
     }
 
     private enum class AuditFilter {
