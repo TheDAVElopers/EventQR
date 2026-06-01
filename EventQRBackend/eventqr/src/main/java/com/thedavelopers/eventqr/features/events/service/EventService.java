@@ -72,10 +72,10 @@ public class EventService implements EventLookupPort {
         return eventRepository.findByStatusInOrderByEventStartAtAsc(PUBLIC_EVENT_STATUSES).stream().map(this::toResponse).toList();
     }
 
-        public EventResponse findOne(UUID eventId) {
+    public EventResponse findOne(UUID eventId) {
         return toResponse(eventRepository.findById(eventId)
             .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId)));
-        }
+    }
 
     public EventAvailabilityResponse availability(UUID eventId) {
         Event event = eventRepository.findById(eventId)
@@ -118,9 +118,9 @@ public class EventService implements EventLookupPort {
                 event.getRegistrationCloseAt());
     }
 
-        public EventResponse update(UUID eventId, EventRequest request) {
-            Event event = eventRepository.findById(eventId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
+    public EventResponse update(UUID eventId, EventRequest request) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
         event.setTitle(request.title().trim());
         event.setDescription(request.description());
         event.setLocation(request.location());
@@ -132,21 +132,18 @@ public class EventService implements EventLookupPort {
         event.setRewardsEnabled(Boolean.TRUE.equals(request.rewardsEnabled()));
         event.setOrganizerUserId(request.organizerUserId());
         return toResponse(eventRepository.save(event));
-        }
+    }
 
-        public EventResponse updateStatus(UUID eventId, EventStatus status) {
+    public EventResponse updateStatus(UUID eventId, EventStatus status) {
         Event event = eventRepository.findById(eventId)
             .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
         event.setStatus(status);
         return toResponse(eventRepository.save(event));
-        }
+    }
 
     public List<AttendeeEventResponse> findAttendeeVisibleEvents() {
         return eventRepository.findByStatusInOrderByEventStartAtAsc(PUBLIC_EVENT_STATUSES).stream()
-            .map(event -> new AttendeeEventResponse(event.getId(), event.getTitle(), event.getDescription(), event.getLocation(),
-                event.getRegistrationOpenAt(), event.getRegistrationCloseAt(), event.getEventStartAt(), event.getEventEndAt(),
-                safeCount(event.getCapacity()),
-                safeCount(event.getCurrentAttendeeCount())))
+            .map(this::toAttendeeResponse)
             .toList();
     }
 
@@ -191,8 +188,23 @@ public class EventService implements EventLookupPort {
                 event.getRejectionReason());
     }
 
+    private AttendeeEventResponse toAttendeeResponse(Event event) {
+        return new AttendeeEventResponse(
+            event.getId(),
+            event.getTitle(),
+            event.getDescription(),
+            event.getLocation(),
+            event.getRegistrationOpenAt(),
+            event.getRegistrationCloseAt(),
+            event.getEventStartAt(),
+            event.getEventEndAt(),
+            safeCount(event.getCapacity()),
+            safeCount(event.getCurrentAttendeeCount()),
+            event.getOrganizerUserId()
+        );
+    }
+
     private int safeCount(Integer value) {
         return value == null ? 0 : value;
     }
 }
-
