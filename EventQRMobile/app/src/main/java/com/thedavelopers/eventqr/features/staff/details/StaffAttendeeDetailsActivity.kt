@@ -3,7 +3,6 @@ package com.thedavelopers.eventqr.features.staff.details
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -57,8 +56,8 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
         qrCredentialId = intent.getStringExtra(StaffScreenExtras.EXTRA_QR_CREDENTIAL_ID).orEmpty()
 
         findViewById<View>(R.id.btnBackToTransactionResult).setOnClickListener { finish() }
-        findViewById<Button>(R.id.btnPrintOrReprintId).setOnClickListener { printId() }
-        findViewById<Button>(R.id.btnScanAgain).setOnClickListener {
+        findViewById<View>(R.id.btnPrintOrReprintId).setOnClickListener { printId() }
+        findViewById<View>(R.id.btnScanAgain).setOnClickListener {
             startActivity(Intent(this, ScannerActivity::class.java).apply {
                 putExtra(StaffScreenExtras.EXTRA_EVENT_ID, eventId)
             })
@@ -110,7 +109,7 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.txtDetailAttendanceStatus).text = if (item.attendedAt != null || item.enteredAt != null) "Checked In" else "Registered"
         findViewById<TextView>(R.id.txtDetailExitStatus).text = if (item.exitedAt != null) "Exited" else "Not exited"
         findViewById<TextView>(R.id.txtDetailRegistrationDate).text = item.registeredAt?.let { "Registered: ${formatTime(it)}" } ?: "Registered: Unknown"
-        findViewById<Button>(R.id.btnPrintOrReprintId).visibility = if (qrCredentialId.isBlank()) View.GONE else View.VISIBLE
+        findViewById<View>(R.id.btnPrintOrReprintId).visibility = if (qrCredentialId.isBlank()) View.GONE else View.VISIBLE
     }
 
     private fun loadTransactions() {
@@ -129,7 +128,7 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
     private fun loadPrintLogs() {
         if (qrCredentialId.isBlank()) {
             hasPrintedId = false
-            findViewById<Button>(R.id.btnPrintOrReprintId).text = "Print ID"
+            findViewById<TextView>(R.id.txtPrintOrReprintIdLabel).text = "Print ID"
             return
         }
 
@@ -137,7 +136,7 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
             when (val result = repository.getIdPrintsByEvent(eventId)) {
                 is NetworkResult.Success -> {
                     hasPrintedId = result.data.any { it.attendeeUserId.toString() == attendeeId }
-                    findViewById<Button>(R.id.btnPrintOrReprintId).text = if (hasPrintedId) "Reprint ID" else "Print ID"
+                    findViewById<TextView>(R.id.txtPrintOrReprintIdLabel).text = if (hasPrintedId) "Reprint ID" else "Print ID"
                 }
                 is NetworkResult.Error -> Unit
                 NetworkResult.Loading -> Unit
