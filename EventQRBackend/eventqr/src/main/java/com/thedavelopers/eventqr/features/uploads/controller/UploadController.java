@@ -29,7 +29,7 @@ public class UploadController {
 
     @PostMapping("/uploads/event-logo")
     public ResponseEntity<ApiResponse<StoredFileResponse>> uploadEventLogo(@RequestParam("file") MultipartFile file) {
-        return ResponseEntity.ok(ApiResponse.success("Event logo stored", fileStorageService.store(null, "event-logo", file)));
+        return ResponseEntity.ok(ApiResponse.success("Event poster stored", fileStorageService.store(null, "event-poster", file)));
     }
 
     @PostMapping("/uploads/id-template-assets")
