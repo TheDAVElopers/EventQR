@@ -42,6 +42,7 @@
             android:background="@drawable/bg_event_filter_chip_selected"
             android:drawableStart="@drawable/ic_search"
             android:drawablePadding="8dp"
+            android:drawableTint="@android:color/white"
             android:minWidth="0dp"
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
