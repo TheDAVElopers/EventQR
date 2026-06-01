@@ -39,13 +39,17 @@ class AttendeeRepository(context: Context) {
         apiService.updateUsersMe(com.thedavelopers.eventqr.features.users.model.dto.ProfileUpdateRequest(fullName, phoneNumber))
     }
     suspend fun uploadAvatar(file: File): NetworkResult<StoredFileResponse> = safeApiCall {
-        val requestBody = file.asRequestBody("image/*".toMediaTypeOrNull())
-        val part = MultipartBody.Part.createFormData("file", file.name, requestBody)
+        val contentType = detectImageMediaType(file) ?: "image/jpeg"
+        val requestBody = file.asRequestBody(contentType.toMediaTypeOrNull())
+        val uploadName = ensureImageExtension(file.name, contentType)
+        val part = MultipartBody.Part.createFormData("file", uploadName, requestBody)
         apiService.uploadAvatar(part)
     }
     suspend fun uploadEventPoster(file: File): NetworkResult<StoredFileResponse> = safeApiCall {
-        val requestBody = file.asRequestBody("image/*".toMediaTypeOrNull())
-        val part = MultipartBody.Part.createFormData("file", file.name, requestBody)
+        val contentType = detectImageMediaType(file) ?: "image/jpeg"
+        val requestBody = file.asRequestBody(contentType.toMediaTypeOrNull())
+        val uploadName = ensureImageExtension(file.name, contentType)
+        val part = MultipartBody.Part.createFormData("file", uploadName, requestBody)
         apiService.uploadEventLogo(part)
     }
     suspend fun downloadAvatar(avatarPath: String): NetworkResult<ByteArray> = withContext(Dispatchers.IO) {
@@ -89,5 +93,32 @@ class AttendeeRepository(context: Context) {
     suspend fun getDashboardSummary() = safeApiCall { apiService.getDashboard() }
     suspend fun parseUuid(value: String?): UUID? = withContext(Dispatchers.Default) {
         runCatching { UUID.fromString(value.orEmpty()) }.getOrNull()
+    }
+
+    private fun detectImageMediaType(file: File): String? {
+        val header = ByteArray(8)
+        val count = runCatching {
+            file.inputStream().use { it.read(header) }
+        }.getOrDefault(0)
+        if (count >= 3 && (header[0].toInt() and 0xFF) == 0xFF && (header[1].toInt() and 0xFF) == 0xD8 && (header[2].toInt() and 0xFF) == 0xFF) {
+            return "image/jpeg"
+        }
+        if (count >= 4 && (header[0].toInt() and 0xFF) == 0x89 && header[1] == 0x50.toByte() && header[2] == 0x4E.toByte() && header[3] == 0x47.toByte()) {
+            return "image/png"
+        }
+        val lowerName = file.name.lowercase()
+        return when {
+            lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg") -> "image/jpeg"
+            lowerName.endsWith(".png") -> "image/png"
+            else -> null
+        }
+    }
+
+    private fun ensureImageExtension(fileName: String, contentType: String): String {
+        val lowerName = fileName.lowercase()
+        return when (contentType) {
+            "image/png" -> if (lowerName.endsWith(".png")) fileName else "$fileName.png"
+            else -> if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg")) fileName else "$fileName.jpg"
+        }
     }
 }
