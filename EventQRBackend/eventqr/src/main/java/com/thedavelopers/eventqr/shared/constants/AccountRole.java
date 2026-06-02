@@ -4,5 +4,6 @@ public enum AccountRole {
     ATTENDEE,
     ORGANIZER,
     STAFF,
-    ADMIN
+    ADMIN,
+    SUPER_ADMIN
 }
