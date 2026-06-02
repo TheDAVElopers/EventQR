@@ -114,6 +114,9 @@ interface ApiService {
     @POST("users")
     suspend fun createUser(@Body request: UserRequest): ApiResponse<UserResponse>
 
+    @POST("admin/users/admins")
+    suspend fun createAdminUser(@Body request: UserRequest): ApiResponse<UserResponse>
+
     @GET("users")
     suspend fun getUsers(): ApiResponse<List<UserResponse>>
 
