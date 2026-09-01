@@ -1,6 +1,5 @@
 package com.thedavelopers.eventqr.features.organizer.reports
 
-import android.util.Log
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
@@ -26,6 +25,8 @@ import com.thedavelopers.eventqr.features.reports.model.dto.EventReportFilterSta
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportFiltersDto
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportSummaryDto
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportType
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -38,11 +39,8 @@ open class EventReportsActivity : AppCompatActivity() {
     private lateinit var selectedEvent: OrganizerMvpEvent
     private lateinit var content: LinearLayout
     private var summary: EventReportSummaryDto = EventReportSummaryDto()
+    private var loadJob: Job? = null
     private val dateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH)
-
-    companion object {
-        private const val TAG_EVENT_REPORTS_DEBUG = "EventReportsDebug"
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,30 +54,25 @@ open class EventReportsActivity : AppCompatActivity() {
         )
         val report = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         content.addView(report)
-        loadScreen("onCreate")
+        loadScreen()
     }
 
-    private fun loadScreen(source: String = "unknown") {
+    private fun loadScreen() {
+        loadJob?.cancel()
         content.removeAllViews()
 
         val summaryContainer = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         content.addView(summaryContainer)
-        summaryContainer.addView(loadingState("Loading report summary...")); reportDebugLog("[loading=true] show 'Loading report summary...' state (source=$source)")
+        summaryContainer.addView(loadingState("Loading report summary..."))
 
-        MainScope().launch {
-            reportDebugLog("[fetch-start] source=$source, event=${selectedEvent.id}, ts=${System.currentTimeMillis()}")
+        loadJob = lifecycleScope.launch {
             when (val result = reportsRepository.fetchSummary(selectedEvent.id)) {
                 is NetworkResult.Success -> {
                     summary = result.data
-                    reportDebugLog("[fetch-success] source=$source, ts=${System.currentTimeMillis()}, summary={registered=${result.data.registeredCount}, checkedIn=${result.data.checkedInCount}, exited=${result.data.exitedCount}}")
-                    reportDebugLog("[loading=false] render list (source=$source)")
                     renderList(summaryContainer)
                 }
 
                 is NetworkResult.Error -> {
-                    reportDebugLog("[fetch-failure] source=$source, ts=${System.currentTimeMillis()}, message=${result.message}")
-                    result.throwable?.let { reportDebugLog("[fetch-failure] exception=${it.javaClass.name}: ${it.message}", it) }
-                    reportDebugLog("[loading=false] render list on ERROR (source=$source)")
                     renderList(summaryContainer)
                     Toast.makeText(
                         this@EventReportsActivity,
@@ -88,16 +81,8 @@ open class EventReportsActivity : AppCompatActivity() {
                     ).show()
                 }
 
-                NetworkResult.Loading -> reportDebugLog("[fetch-loading] NetworkResult.Loading received (source=$source)")
+                NetworkResult.Loading -> Unit
             }
-        }
-    }
-
-    private fun reportDebugLog(message: String, throwable: Throwable? = null) {
-        if (throwable != null) {
-            Log.e(TAG_EVENT_REPORTS_DEBUG, message, throwable)
-        } else {
-            Log.d(TAG_EVENT_REPORTS_DEBUG, message)
         }
     }
 
@@ -107,10 +92,9 @@ open class EventReportsActivity : AppCompatActivity() {
             addView(text("Select Event", 13, false, MUTED))
             addView(eventSelector(repository.getApprovedOrganizerEvents(), selectedEvent.id) {
                 selectedEvent = it
-                reportDebugLog("[trigger] event selection changed -> ${it.id} (${it.title}); calling loadScreen(eventSelection)")
                 repository.saveSelectedEventId(it.id)
                 saveSelectedEventId(it.id)
-                loadScreen("eventSelection")
+                loadScreen()
             })
         })
         container.addView(buildSummaryHeaderCard())
