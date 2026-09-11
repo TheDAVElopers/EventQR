@@ -16,7 +16,6 @@ class AdminEventRequestAdapter(
     private val onTap: (EventRequestResponse) -> Unit,
 ) : RecyclerView.Adapter<AdminEventRequestAdapter.AdminEventRequestViewHolder>() {
 
-    private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.of("Asia/Manila"))
     private val submittedFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy").withZone(ZoneId.of("Asia/Manila"))
     private val rows = mutableListOf<EventRequestResponse>()
 
@@ -33,7 +32,7 @@ class AdminEventRequestAdapter(
     }
 
     override fun onBindViewHolder(holder: AdminEventRequestViewHolder, position: Int) {
-        holder.bind(rows[position], onTap, dateFormatter, submittedFormatter)
+        holder.bind(rows[position], onTap, submittedFormatter)
     }
 
     override fun getItemCount(): Int = rows.size
@@ -41,23 +40,14 @@ class AdminEventRequestAdapter(
     class AdminEventRequestViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val textTitle: TextView = itemView.findViewById(R.id.textTitle)
         private val textStatus: TextView = itemView.findViewById(R.id.textStatus)
-        private val textDescription: TextView = itemView.findViewById(R.id.textDescription)
-        private val textEventDate: TextView = itemView.findViewById(R.id.textEventDate)
-        private val textCapacity: TextView = itemView.findViewById(R.id.textCapacity)
         private val textSubmitted: TextView = itemView.findViewById(R.id.textSubmitted)
 
         fun bind(
             request: EventRequestResponse,
             onTap: (EventRequestResponse) -> Unit,
-            dateFormatter: DateTimeFormatter,
             submittedFormatter: DateTimeFormatter,
         ) {
             textTitle.text = request.eventName.ifBlank { "Untitled Event" }
-            textDescription.text = request.eventDescription?.takeIf { it.isNotBlank() }
-                ?: "No description provided."
-
-            textEventDate.text = formatDate(request.startDateTime, dateFormatter)
-            textCapacity.text = "${request.capacity} expected"
             textSubmitted.text = "Submitted ${formatDate(request.createdAt, submittedFormatter)}"
             bindStatus(textStatus, request.status)
 

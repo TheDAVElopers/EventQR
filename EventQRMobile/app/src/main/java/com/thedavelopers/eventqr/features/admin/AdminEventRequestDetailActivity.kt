@@ -47,7 +47,6 @@ class AdminEventRequestDetailActivity : AppCompatActivity() {
     private lateinit var upgradeContainer: LinearLayout
     private lateinit var buttonUpgradeOrganizer: Button
 
-    private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.of("Asia/Manila"))
     private val submittedFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy").withZone(ZoneId.of("Asia/Manila"))
 
     private var requestId: String = ""
@@ -153,7 +152,7 @@ class AdminEventRequestDetailActivity : AppCompatActivity() {
         textDetailTitle.text = request.eventName.ifBlank { "Untitled Event" }
         textDetailDescription.text = request.eventDescription?.takeIf { it.isNotBlank() }
             ?: "No description provided."
-        textProposedDate.text = formatDate(request.startDateTime, dateFormatter)
+        textProposedDate.text = formatDate(request.startDateTime, submittedFormatter)
         textLocation.text = request.venue?.takeIf { it.isNotBlank() } ?: "Not available"
         textExpectedAttendees.text = request.capacity.toString()
 
