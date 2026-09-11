@@ -380,6 +380,18 @@ interface ApiService {
     @PATCH("qr-credentials/{qrCredentialId}/downloaded")
     suspend fun markQrDownloaded(@Path("qrCredentialId") qrCredentialId: String): ApiResponse<QrCredentialSnapshot>
 
+    @GET("qr-credentials/attendees/me/registration/{registrationId}")
+    suspend fun getMyQrCredentialByRegistration(@Path("registrationId") registrationId: String): ApiResponse<QrCredentialSnapshot>
+
+    @GET("qr-credentials/attendees/me/{qrCredentialId}")
+    suspend fun getMyQrCredentialById(@Path("qrCredentialId") qrCredentialId: String): ApiResponse<QrCredentialSnapshot>
+
+    @PATCH("qr-credentials/attendees/me/{qrCredentialId}/displayed")
+    suspend fun markMyQrDisplayed(@Path("qrCredentialId") qrCredentialId: String): ApiResponse<QrCredentialSnapshot>
+
+    @PATCH("qr-credentials/attendees/me/{qrCredentialId}/downloaded")
+    suspend fun markMyQrDownloaded(@Path("qrCredentialId") qrCredentialId: String): ApiResponse<QrCredentialSnapshot>
+
     @Multipart
     @POST("organizer/events/{eventId}/id-template/logo")
     suspend fun uploadIdTemplateLogo(@Path("eventId") eventId: String, @Part file: MultipartBody.Part): ApiResponse<Unit>

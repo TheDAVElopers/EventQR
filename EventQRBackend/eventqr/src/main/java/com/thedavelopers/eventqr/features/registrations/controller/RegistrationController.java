@@ -164,6 +164,9 @@ public class RegistrationController {
         }
         UUID callerId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
         RegistrationResponse registration = registrationService.findOne(registrationId);
+        if (registration.attendeeUserId().equals(callerId)) {
+            return;
+        }
         if (role == AccountRole.ATTENDEE) {
             if (registration.attendeeUserId().equals(callerId)) {
                 return;

@@ -72,6 +72,35 @@ public class QrCredentialController {
         return ResponseEntity.ok(ApiResponse.success("QR download updated", qrCredentialService.markDownloaded(qrCredentialId)));
     }
 
+    @GetMapping("/attendees/me/registration/{registrationId}")
+    public ResponseEntity<ApiResponse<QrCredentialSnapshot>> findMyByRegistration(HttpServletRequest request,
+                                                                                  @PathVariable UUID registrationId) {
+        requireOwnRegistration(request, registrationId);
+        return ResponseEntity.ok(ApiResponse.success(loadByRegistrationId(registrationId)));
+    }
+
+    @GetMapping("/attendees/me/{qrCredentialId}")
+    public ResponseEntity<ApiResponse<QrCredentialSnapshot>> findMyById(HttpServletRequest request,
+                                                                        @PathVariable UUID qrCredentialId) {
+        QrCredentialSnapshot qrCredential = loadById(qrCredentialId);
+        requireOwnRegistration(request, qrCredential.registrationId());
+        return ResponseEntity.ok(ApiResponse.success(qrCredential));
+    }
+
+    @PatchMapping("/attendees/me/{qrCredentialId}/displayed")
+    public ResponseEntity<ApiResponse<QrCredentialSnapshot>> markMyDisplayed(HttpServletRequest request,
+                                                                              @PathVariable UUID qrCredentialId) {
+        requireOwnRegistration(request, loadById(qrCredentialId).registrationId());
+        return ResponseEntity.ok(ApiResponse.success("QR display updated", qrCredentialService.markDisplayedOnce(qrCredentialId)));
+    }
+
+    @PatchMapping("/attendees/me/{qrCredentialId}/downloaded")
+    public ResponseEntity<ApiResponse<QrCredentialSnapshot>> markMyDownloaded(HttpServletRequest request,
+                                                                                @PathVariable UUID qrCredentialId) {
+        requireOwnRegistration(request, loadById(qrCredentialId).registrationId());
+        return ResponseEntity.ok(ApiResponse.success("QR download updated", qrCredentialService.markDownloaded(qrCredentialId)));
+    }
+
     private QrCredentialSnapshot loadByRegistrationId(UUID registrationId) {
         return qrCredentialService.findByRegistrationId(registrationId)
                 .orElseThrow(() -> new ResourceNotFoundException("QR credential not found for registration " + registrationId));
@@ -108,5 +137,13 @@ public class QrCredentialController {
             throw new ForbiddenException("Staff user is not actively assigned to this event");
         }
         throw new ForbiddenException("Access denied to QR credential");
+    }
+
+    private void requireOwnRegistration(HttpServletRequest request, UUID registrationId) {
+        UUID callerId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
+        com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse registration = registrationService.findOne(registrationId);
+        if (!registration.attendeeUserId().equals(callerId)) {
+            throw new ForbiddenException("You can only access your own QR credential");
+        }
     }
 }

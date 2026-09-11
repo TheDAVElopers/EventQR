@@ -20,8 +20,8 @@ class QrCredentialPresenter(
         view?.showLoading(true)
         job = kotlinx.coroutines.MainScope().launch {
             val qrResult = when {
-                !qrCredentialId.isNullOrBlank() -> repository.getQrCredentialById(qrCredentialId)
-                registrationId.isNotBlank() -> repository.getQrCredentialByRegistration(registrationId)
+                !qrCredentialId.isNullOrBlank() -> repository.getMyQrCredentialById(qrCredentialId)
+                registrationId.isNotBlank() -> repository.getMyQrCredentialByRegistration(registrationId)
                 else -> NetworkResult.Error("Missing registration information")
             }
 
@@ -42,7 +42,7 @@ class QrCredentialPresenter(
                     (regResult as? NetworkResult.Success)?.data,
                     eventTitle
                 )
-                qrCredential.qrCredentialId.toString().also { repository.markQrDisplayed(it) }
+                qrCredential.qrCredentialId.toString().also { repository.markMyQrDisplayed(it) }
             } else if (qrResult is NetworkResult.Error) {
                 view?.showLoading(false)
                 view?.showMessage(toFriendlyQrError(qrResult.message))
@@ -51,6 +51,6 @@ class QrCredentialPresenter(
     }
 
     fun markDownloaded(qrCredentialId: String) {
-        job = kotlinx.coroutines.MainScope().launch { repository.markQrDownloaded(qrCredentialId) }
+        job = kotlinx.coroutines.MainScope().launch { repository.markMyQrDownloaded(qrCredentialId) }
     }
 }

@@ -79,6 +79,10 @@ class AttendeeRepository(context: Context) {
     suspend fun getQrCredentialByRegistration(registrationId: String) = safeApiCall { apiService.getQrCredentialByRegistration(registrationId) }
     suspend fun markQrDisplayed(qrCredentialId: String) = safeApiCall { apiService.markQrDisplayed(qrCredentialId) }
     suspend fun markQrDownloaded(qrCredentialId: String) = safeApiCall { apiService.markQrDownloaded(qrCredentialId) }
+    suspend fun getMyQrCredentialByRegistration(registrationId: String) = safeApiCall { apiService.getMyQrCredentialByRegistration(registrationId) }
+    suspend fun getMyQrCredentialById(qrCredentialId: String) = safeApiCall { apiService.getMyQrCredentialById(qrCredentialId) }
+    suspend fun markMyQrDisplayed(qrCredentialId: String) = safeApiCall { apiService.markMyQrDisplayed(qrCredentialId) }
+    suspend fun markMyQrDownloaded(qrCredentialId: String) = safeApiCall { apiService.markMyQrDownloaded(qrCredentialId) }
     suspend fun getTransactionsByEvent(eventId: String) = safeApiCall { apiService.getTransactionsByEvent(eventId) }
     suspend fun getRewardsByEvent(eventId: String) = safeApiCall { apiService.getAttendeeRewards(eventId) }
     suspend fun getRewardBalance(eventId: String, attendeeUserId: String) = safeApiCall { apiService.getRewardBalance(eventId, attendeeUserId) }
