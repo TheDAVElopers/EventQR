@@ -468,6 +468,9 @@ interface ApiService {
     @GET("attendees/me/events/{eventId}/claimed-rewards")
     suspend fun getMyClaimedRewards(@Path("eventId") eventId: String): ApiResponse<List<RewardRedemptionResponse>>
 
+    @GET("attendees/me/events/{eventId}/rewards")
+    suspend fun getAttendeeRewards(@Path("eventId") eventId: String): ApiResponse<List<RewardResponse>>
+
     @GET("staff/events")
     suspend fun getStaffEvents(): ApiResponse<List<StaffAssignedEventResponse>>
 

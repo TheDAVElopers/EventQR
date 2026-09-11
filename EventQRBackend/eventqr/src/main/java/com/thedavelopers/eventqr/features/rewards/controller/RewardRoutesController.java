@@ -108,6 +108,13 @@ public class RewardRoutesController {
         return ResponseEntity.ok(ApiResponse.success(rewardService.findRedemptions(eventId, userId)));
     }
 
+    @GetMapping("/attendees/me/events/{eventId}/rewards")
+    public ResponseEntity<ApiResponse<List<RewardResponse>>> attendeeRewards(HttpServletRequest request,
+                                                                              @PathVariable UUID eventId) {
+        UUID userId = currentUserId(request);
+        return ResponseEntity.ok(ApiResponse.success(rewardService.findRewards(eventId)));
+    }
+
     @GetMapping("/attendees/me/events/{eventId}/points")
     public ResponseEntity<ApiResponse<PointBalanceResponse>> attendeePoints(HttpServletRequest request,
                                                                          @PathVariable UUID eventId) {

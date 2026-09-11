@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.thedavelopers.eventqr.features.events.service.EventService;
 import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignmentRepository;
+import com.thedavelopers.eventqr.features.registrations.repository.EventRegistrationRepository;
 import com.thedavelopers.eventqr.features.rewards.model.dto.PointBalanceResponse;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionRequest;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResponse;
@@ -34,13 +35,16 @@ public class RewardController {
     private final EventService eventService;
     private final JwtService jwtService;
     private final EventStaffAssignmentRepository eventStaffAssignmentRepository;
+    private final EventRegistrationRepository eventRegistrationRepository;
 
     public RewardController(RewardService rewardService, EventService eventService,
-                            JwtService jwtService, EventStaffAssignmentRepository eventStaffAssignmentRepository) {
+                            JwtService jwtService, EventStaffAssignmentRepository eventStaffAssignmentRepository,
+                            EventRegistrationRepository eventRegistrationRepository) {
         this.rewardService = rewardService;
         this.eventService = eventService;
         this.jwtService = jwtService;
         this.eventStaffAssignmentRepository = eventStaffAssignmentRepository;
+        this.eventRegistrationRepository = eventRegistrationRepository;
     }
 
     @PostMapping
@@ -85,6 +89,12 @@ public class RewardController {
             return;
         }
         UUID callerId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
+        if (role == AccountRole.ATTENDEE) {
+            if (eventRegistrationRepository.existsByEventIdAndAttendeeUserId(eventId, callerId)) {
+                return;
+            }
+            throw new ForbiddenException("Attendee is not registered for this event");
+        }
         if (role == AccountRole.ORGANIZER) {
             if (eventService.findOne(eventId).organizerUserId().equals(callerId)) {
                 return;
