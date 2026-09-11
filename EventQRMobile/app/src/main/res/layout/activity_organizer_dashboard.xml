@@ -182,29 +182,17 @@
 
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:minHeight="96dp"
                             android:orientation="vertical"
                             android:padding="12dp">
-
-                            <FrameLayout
-                                android:layout_width="34dp"
-                                android:layout_height="34dp"
-                                android:background="@drawable/bg_admin_icon_tile_indigo">
-
-                                <ImageView
-                                    android:layout_width="18dp"
-                                    android:layout_height="18dp"
-                                    android:layout_gravity="center"
-                                    android:contentDescription="Total Events"
-                                    android:src="@drawable/ic_calendar"
-                                    app:tint="@color/icon_tint_indigo" />
-                            </FrameLayout>
 
                             <TextView
                                 android:id="@+id/txtStatTotalEvents"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
+                                android:gravity="center"
                                 android:text="0"
                                 android:textColor="@color/text_primary"
                                 android:textSize="24sp"
@@ -214,6 +202,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
+                                android:gravity="center"
                                 android:text="Total Events"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="12sp" />
@@ -233,29 +222,17 @@
 
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:minHeight="96dp"
                             android:orientation="vertical"
                             android:padding="12dp">
-
-                            <FrameLayout
-                                android:layout_width="34dp"
-                                android:layout_height="34dp"
-                                android:background="@drawable/bg_admin_icon_tile_blue">
-
-                                <ImageView
-                                    android:layout_width="18dp"
-                                    android:layout_height="18dp"
-                                    android:layout_gravity="center"
-                                    android:contentDescription="Total Attendees"
-                                    android:src="@drawable/ic_admin_users"
-                                    app:tint="@color/icon_tint_blue" />
-                            </FrameLayout>
 
                             <TextView
                                 android:id="@+id/txtStatTotalAttendees"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
+                                android:gravity="center"
                                 android:text="0"
                                 android:textColor="@color/text_primary"
                                 android:textSize="24sp"
@@ -265,6 +242,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
+                                android:gravity="center"
                                 android:text="Total Attendees"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="12sp" />
@@ -284,29 +262,17 @@
 
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:minHeight="96dp"
                             android:orientation="vertical"
                             android:padding="12dp">
-
-                            <FrameLayout
-                                android:layout_width="34dp"
-                                android:layout_height="34dp"
-                                android:background="@drawable/bg_admin_icon_tile_green">
-
-                                <ImageView
-                                    android:layout_width="18dp"
-                                    android:layout_height="18dp"
-                                    android:layout_gravity="center"
-                                    android:contentDescription="Transactions"
-                                    android:src="@drawable/ic_qr_scan"
-                                    app:tint="@color/icon_tint_green" />
-                            </FrameLayout>
 
                             <TextView
                                 android:id="@+id/txtStatTransactions"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
+                                android:gravity="center"
                                 android:text="0"
                                 android:textColor="@color/text_primary"
                                 android:textSize="24sp"
@@ -316,6 +282,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
+                                android:gravity="center"
                                 android:text="Transactions"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="12sp" />
@@ -335,29 +302,17 @@
 
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:minHeight="96dp"
                             android:orientation="vertical"
                             android:padding="12dp">
-
-                            <FrameLayout
-                                android:layout_width="34dp"
-                                android:layout_height="34dp"
-                                android:background="@drawable/bg_admin_icon_tile_yellow">
-
-                                <ImageView
-                                    android:layout_width="18dp"
-                                    android:layout_height="18dp"
-                                    android:layout_gravity="center"
-                                    android:contentDescription="Rewards Given"
-                                    android:src="@drawable/ic_nav_gift"
-                                    app:tint="@color/icon_tint_amber" />
-                            </FrameLayout>
 
                             <TextView
                                 android:id="@+id/txtStatRewardsGiven"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
+                                android:gravity="center"
                                 android:text="0"
                                 android:textColor="@color/text_primary"
                                 android:textSize="24sp"
@@ -367,6 +322,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
+                                android:gravity="center"
                                 android:text="Rewards Given"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="12sp" />
@@ -469,14 +425,8 @@
                             android:padding="12dp">
 
                             <View
-                                android:layout_width="34dp"
-                                android:layout_height="34dp"
-                                android:background="@drawable/bg_staff_skeleton_date_block" />
-
-                            <View
                                 android:layout_width="match_parent"
                                 android:layout_height="14dp"
-                                android:layout_marginTop="8dp"
                                 android:background="@drawable/bg_staff_skeleton_bar" />
 
                             <View
@@ -496,14 +446,8 @@
                             android:padding="12dp">
 
                             <View
-                                android:layout_width="34dp"
-                                android:layout_height="34dp"
-                                android:background="@drawable/bg_staff_skeleton_date_block" />
-
-                            <View
                                 android:layout_width="match_parent"
                                 android:layout_height="14dp"
-                                android:layout_marginTop="8dp"
                                 android:background="@drawable/bg_staff_skeleton_bar" />
 
                             <View
@@ -531,14 +475,8 @@
                             android:padding="12dp">
 
                             <View
-                                android:layout_width="34dp"
-                                android:layout_height="34dp"
-                                android:background="@drawable/bg_staff_skeleton_date_block" />
-
-                            <View
                                 android:layout_width="match_parent"
                                 android:layout_height="14dp"
-                                android:layout_marginTop="8dp"
                                 android:background="@drawable/bg_staff_skeleton_bar" />
 
                             <View
@@ -558,14 +496,8 @@
                             android:padding="12dp">
 
                             <View
-                                android:layout_width="34dp"
-                                android:layout_height="34dp"
-                                android:background="@drawable/bg_staff_skeleton_date_block" />
-
-                            <View
                                 android:layout_width="match_parent"
                                 android:layout_height="14dp"
-                                android:layout_marginTop="8dp"
                                 android:background="@drawable/bg_staff_skeleton_bar" />
 
                             <View

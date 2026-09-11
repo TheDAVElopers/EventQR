@@ -17,6 +17,7 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.PortalSwitcher
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.core.util.firstNameOnly
 import com.thedavelopers.eventqr.features.auth.AuthRepository
 import com.thedavelopers.eventqr.features.organizer.*
 import com.thedavelopers.eventqr.features.organizer.events.EventManagementHubActivity
@@ -238,7 +239,7 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
         val name = dashboardData?.organizerName.orEmpty().ifBlank { sessionManager.getFullName().orEmpty().ifBlank { "Organizer" } }
 
         findViewById<TextView>(R.id.txtHeaderTitle).text = PortalSwitcher.PORTAL_ORGANIZER
-        findViewById<TextView>(R.id.txtHeaderSubtitle).text = name
+        findViewById<TextView>(R.id.txtHeaderSubtitle).text = name.firstNameOnly()
 
         val events = load.data.approvedOnly()
         val activeEvents = events.filter { it.lifecycleStatus() == "Active" }

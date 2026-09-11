@@ -24,6 +24,7 @@ import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.core.util.PortalSwitcher
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.core.util.firstNameOnly
 import com.thedavelopers.eventqr.features.auth.AuthRepository
 import com.thedavelopers.eventqr.features.attendee.AttendeeBottomNavItem
 import com.thedavelopers.eventqr.features.attendee.AttendeeRepository
@@ -150,9 +151,9 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         stopSwipeRefresh()
         skeletonLoading.visibility = View.GONE
 
-        nameText.text = summary.fullName?.takeIf { it.isNotBlank() }
+        nameText.text = (summary.fullName?.takeIf { it.isNotBlank() }
             ?: sessionManager.getFullName()?.takeIf { it.isNotBlank() }
-            ?: "Attendee"
+            ?: "Attendee").firstNameOnly()
 
         summaryEvents.text = summary.totalEvents.toString()
         summaryRegistrations.text = summary.totalRegistrations.toString()
@@ -183,7 +184,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
 
     override fun updateHeader(role: String?, name: String?) {
         welcomeText.text = "Welcome back,"
-        nameText.text = name?.takeIf { it.isNotBlank() } ?: "Attendee"
+        nameText.text = (name?.takeIf { it.isNotBlank() } ?: "Attendee").firstNameOnly()
     }
 
     private fun renderUpcomingEvents(events: List<DashboardUpcomingEvent>) {

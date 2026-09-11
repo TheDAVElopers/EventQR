@@ -17,6 +17,7 @@ import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.PortalSwitcher
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.core.util.firstNameOnly
 import com.thedavelopers.eventqr.features.staff.notifications.StaffNotificationsActivity
 import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
 import com.thedavelopers.eventqr.features.transactions.TransactionLogAdapter
@@ -53,7 +54,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
             adapter = this@StaffDashboardActivity.adapter
         }
 
-        findViewById<TextView>(R.id.txtStaffName).text = sessionManager.getFullName() ?: sessionManager.getEmail() ?: "Staff User"
+        findViewById<TextView>(R.id.txtStaffName).text = (sessionManager.getFullName() ?: sessionManager.getEmail() ?: "Staff User").firstNameOnly()
         findViewById<View>(R.id.btnNotification).setOnClickListener {
             startActivity(Intent(this, StaffNotificationsActivity::class.java))
         }

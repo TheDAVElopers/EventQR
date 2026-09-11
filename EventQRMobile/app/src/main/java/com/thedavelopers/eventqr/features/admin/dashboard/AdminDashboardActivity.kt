@@ -19,6 +19,7 @@ import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.PortalSwitcher
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.core.util.firstNameOnly
 import com.thedavelopers.eventqr.features.admin.AdminBottomNavItem
 import com.thedavelopers.eventqr.features.admin.AdminEventApprovalBackendActivity
 import com.thedavelopers.eventqr.features.admin.AdminRepository
@@ -56,7 +57,7 @@ class AdminDashboardActivity : AppCompatActivity() {
         setupSwipeRefresh()
         bindActions()
         setupPortalSwitcher()
-        textAdminName.text = sessionManager.getFullName().orEmpty().ifBlank { "Admin User" }
+        textAdminName.text = sessionManager.getFullName().orEmpty().ifBlank { "Admin User" }.firstNameOnly()
         cardPendingAlert.visibility = View.GONE
         textPendingAlert.text = ""
         textPendingRequests.text = "0"
