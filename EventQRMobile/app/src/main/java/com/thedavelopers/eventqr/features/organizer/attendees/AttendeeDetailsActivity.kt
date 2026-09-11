@@ -149,7 +149,6 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
     }
 
     private fun renderTransactionHistory() {
-        findViewById<TextView>(R.id.txtRejectedScans).text = "Recent rejected scans: ${attendee.recentRejectedScans.size}"
         val container = findViewById<LinearLayout>(R.id.transactionHistoryContainer)
         val emptyText = findViewById<TextView>(R.id.txtNoTransactions)
         container.removeAllViews()
@@ -160,13 +159,23 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
             attendee.recentTransactions
                 .sortedWith(compareByDescending<OrganizerMvpTransactionEntry> { parseToLocalDateTime(it.timestamp.orEmpty()) ?: LocalDateTime.MIN })
                 .forEach { entry ->
-                    container.addView(TextView(this).apply {
+                    container.addView(LinearLayout(this).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        gravity = android.view.Gravity.CENTER_VERTICAL
+                        setPadding(0, dp(8), 0, dp(8))
                         val label = transactionTypeLabel(entry.type)
                         val time = formatEntryTimestamp(entry.timestamp)
-                        text = if (time == null) label else "$label · $time"
-                        setTextColor(getColor(R.color.text_primary))
-                        textSize = 14f
-                        setPadding(0, dp(8), 0, dp(8))
+                        addView(TextView(this@AttendeeDetailsActivity).apply {
+                            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                            text = label
+                            setTextColor(getColor(R.color.text_primary))
+                            textSize = 14f
+                        })
+                        addView(TextView(this@AttendeeDetailsActivity).apply {
+                            text = time ?: "-"
+                            setTextColor(getColor(R.color.text_secondary))
+                            textSize = 12f
+                        })
                     })
                 }
         }
