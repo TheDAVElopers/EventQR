@@ -14,6 +14,7 @@ import com.thedavelopers.eventqr.features.events.model.dto.EventApprovalRequest
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequest
 import com.thedavelopers.eventqr.features.events.model.dto.EventResponse
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationRequest
+import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerAttendeeDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDashboardDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerEventDto
@@ -325,6 +326,7 @@ class OrganizerRepository(private val context: Context) {
 
     suspend fun createNotification(request: NotificationRequest) = safeApiCall { apiService.createNotification(request) }
     suspend fun getNotificationsByEvent(eventId: String) = safeApiCall { apiService.getNotificationsByEvent(eventId) }
+    suspend fun getMyNotifications(): NetworkResult<List<NotificationResponse>> = safeApiCall { apiService.getMyNotifications() }
 
     private fun detectImageMediaType(file: File): String? {
         val header = ByteArray(8)

@@ -32,7 +32,6 @@ class AttendeeEventRequestDetailActivity : AppCompatActivity() {
     private lateinit var noteTitle: TextView
     private lateinit var noteBody: TextView
 
-    private val eventDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.of("Asia/Manila"))
     private val submittedDateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy").withZone(ZoneId.of("Asia/Manila"))
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -104,7 +103,7 @@ class AttendeeEventRequestDetailActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.txtDetailTitle).text = request.eventName.ifBlank { "Untitled Event" }
         findViewById<TextView>(R.id.txtDetailDescription).text = request.eventDescription?.takeIf { it.isNotBlank() }
             ?: "No description provided."
-        findViewById<TextView>(R.id.txtDetailDate).text = formatDate(request.startDateTime, eventDateFormatter)
+        findViewById<TextView>(R.id.txtDetailDate).text = formatDate(request.startDateTime, submittedDateFormatter)
         findViewById<TextView>(R.id.txtDetailLocation).text = request.venue?.takeIf { it.isNotBlank() } ?: "TBD"
         findViewById<TextView>(R.id.txtDetailCapacity).text = request.capacity.toString()
         findViewById<TextView>(R.id.txtDetailSubmitted).text = formatDate(request.createdAt, submittedDateFormatter)

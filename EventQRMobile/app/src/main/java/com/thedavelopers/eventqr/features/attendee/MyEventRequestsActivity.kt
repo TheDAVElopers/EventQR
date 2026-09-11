@@ -33,9 +33,6 @@ class MyEventRequestsActivity : AppCompatActivity() {
     private lateinit var btnRetry: Button
     private lateinit var adapter: MyEventRequestsAdapter
 
-    private val eventDateFormatter: DateTimeFormatter = DateTimeFormatter
-        .ofPattern("yyyy-MM-dd")
-        .withZone(ZoneId.of("Asia/Manila"))
     private val submittedDateFormatter: DateTimeFormatter = DateTimeFormatter
         .ofPattern("MMM d, yyyy")
         .withZone(ZoneId.of("Asia/Manila"))
@@ -54,7 +51,6 @@ class MyEventRequestsActivity : AppCompatActivity() {
         btnRetry = findViewById(R.id.btnMyRequestsRetry)
 
         adapter = MyEventRequestsAdapter(
-            eventDateFormatter = eventDateFormatter,
             submittedDateFormatter = submittedDateFormatter,
             onTap = { request -> onRequestTapped(request) }
         )
@@ -142,7 +138,6 @@ class MyEventRequestsActivity : AppCompatActivity() {
     }
 
     private class MyEventRequestsAdapter(
-        private val eventDateFormatter: DateTimeFormatter,
         private val submittedDateFormatter: DateTimeFormatter,
         private val onTap: (EventRequestResponse) -> Unit,
     ) : RecyclerView.Adapter<MyEventRequestsAdapter.RequestViewHolder>() {
@@ -162,7 +157,7 @@ class MyEventRequestsActivity : AppCompatActivity() {
         }
 
         override fun onBindViewHolder(holder: RequestViewHolder, position: Int) {
-            holder.bind(items[position], eventDateFormatter, submittedDateFormatter, onTap)
+            holder.bind(items[position], submittedDateFormatter, onTap)
         }
 
         override fun getItemCount(): Int = items.size
@@ -170,39 +165,30 @@ class MyEventRequestsActivity : AppCompatActivity() {
         class RequestViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             private val txtTitle: TextView = itemView.findViewById(R.id.txtRequestTitle)
             private val txtStatus: TextView = itemView.findViewById(R.id.txtRequestStatus)
-            private val txtDescription: TextView = itemView.findViewById(R.id.txtRequestDescription)
-            private val txtDate: TextView = itemView.findViewById(R.id.txtRequestDate)
-            private val txtLocation: TextView = itemView.findViewById(R.id.txtRequestLocation)
             private val txtSubmitted: TextView = itemView.findViewById(R.id.txtRequestSubmitted)
 
             fun bind(
                 request: EventRequestResponse,
-                eventDateFormatter: DateTimeFormatter,
                 submittedDateFormatter: DateTimeFormatter,
                 onTap: (EventRequestResponse) -> Unit,
             ) {
                 txtTitle.text = request.eventName.ifBlank { "Untitled Event" }
-                txtDescription.text = request.eventDescription?.takeIf { it.isNotBlank() }
-                    ?: "No description provided."
-
-                txtDate.text = request.startDateTime?.let { eventDateFormatter.format(it) } ?: "-"
-                txtLocation.text = request.venue?.takeIf { it.isNotBlank() } ?: "TBD"
                 txtSubmitted.text = "Submitted ${request.createdAt?.let { submittedDateFormatter.format(it) } ?: "-"}"
 
                 when (request.status) {
                     EventRequestStatus.APPROVED -> {
+                        txtStatus.visibility = View.VISIBLE
                         txtStatus.text = "Approved"
                         txtStatus.setBackgroundResource(R.drawable.bg_admin_approved_badge)
                         txtStatus.setTextColor(0xFF047857.toInt())
                     }
 
                     EventRequestStatus.PENDING -> {
-                        txtStatus.text = "Pending"
-                        txtStatus.setBackgroundResource(R.drawable.bg_admin_pending_badge)
-                        txtStatus.setTextColor(0xFFB45309.toInt())
+                        txtStatus.visibility = View.GONE
                     }
 
                     EventRequestStatus.REJECTED -> {
+                        txtStatus.visibility = View.VISIBLE
                         txtStatus.text = "Rejected"
                         txtStatus.setBackgroundResource(R.drawable.bg_admin_rejected_badge)
                         txtStatus.setTextColor(0xFFB91C1C.toInt())

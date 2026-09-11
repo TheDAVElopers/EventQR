@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.organizer.dashboard
 
 import android.content.Intent
+import android.graphics.Typeface
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -14,6 +15,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.core.api.dto.NotificationStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.PortalSwitcher
 import com.thedavelopers.eventqr.core.util.RoleMapper
@@ -26,6 +29,7 @@ import com.thedavelopers.eventqr.features.organizer.NAV_DASHBOARD
 import com.thedavelopers.eventqr.features.organizer.bottomNav
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDashboardDto
 import com.thedavelopers.eventqr.features.organizer.notifications.NotificationManagementActivity
+import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlin.math.min
@@ -121,16 +125,49 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
             layoutParams = FrameLayout.LayoutParams(dp(22), dp(22), android.view.Gravity.CENTER)
         })
 
-        bellContainer.addView(View(this).apply {
+        bellContainer.addView(TextView(this).apply {
+            tag = "organizer_notification_badge"
+            setBackgroundResource(R.drawable.bg_notification_badge_count)
+            setTextColor(getColor(android.R.color.white))
+            gravity = android.view.Gravity.CENTER
+            textSize = 9f
+            typeface = Typeface.DEFAULT_BOLD
+            minWidth = dp(16)
+            setPadding(dp(4), dp(1), dp(4), dp(1))
+            text = "0"
             visibility = View.GONE
-            setBackgroundResource(R.drawable.bg_red_dot)
-            layoutParams = FrameLayout.LayoutParams(dp(8), dp(8), android.view.Gravity.TOP or android.view.Gravity.END).apply {
-                topMargin = dp(5)
-                marginEnd = dp(5)
+            layoutParams = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                android.view.Gravity.TOP or android.view.Gravity.END,
+            ).apply {
+                topMargin = dp(1)
+                marginEnd = dp(1)
             }
         })
 
         header.addView(bellContainer)
+    }
+
+    private fun notificationBadge(): TextView? {
+        val contentRoot = findViewById<ViewGroup>(android.R.id.content)
+        val appRoot = contentRoot.getChildAt(0) as? LinearLayout ?: return null
+        val header = appRoot.getChildAt(0) as? RelativeLayout ?: return null
+        return header.findViewWithTag<TextView>("organizer_notification_badge")
+    }
+
+    private fun updateNotificationBadge(notifResult: NetworkResult<List<NotificationResponse>>) {
+        val badge = notificationBadge() ?: return
+        val unreadCount = when (notifResult) {
+            is NetworkResult.Success -> notifResult.data.count { it.status != NotificationStatus.READ && it.readAt == null }
+            else -> 0
+        }
+        if (unreadCount > 0) {
+            badge.text = if (unreadCount > 99) "99+" else unreadCount.toString()
+            badge.visibility = View.VISIBLE
+        } else {
+            badge.visibility = View.GONE
+        }
     }
 
     private fun setupPortalSwitcher() {
@@ -217,6 +254,7 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
                 val dashboard = repository.loadDashboardForMvp()
                 val load = repository.loadEventsForMvp()
                 renderDashboard(load, dashboard)
+                updateNotificationBadge(repository.getMyNotifications())
             } catch (error: Exception) {
                 skeletonLoading.visibility = View.GONE
                 if (!isSwipeRefreshing) findViewById<View>(R.id.statsGrid).visibility = View.GONE

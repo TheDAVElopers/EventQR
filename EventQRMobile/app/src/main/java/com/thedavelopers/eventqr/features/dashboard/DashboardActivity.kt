@@ -61,7 +61,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     private lateinit var organizerCard: View
     private lateinit var notificationsCard: View
     private lateinit var notificationBell: ImageView
-    private lateinit var notificationDot: View
+    private lateinit var notificationBadge: TextView
     private lateinit var upcomingEventsLayout: LinearLayout
     private lateinit var discoverEventsLayout: LinearLayout
     private lateinit var discoverEventsSeeAll: TextView
@@ -93,7 +93,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         organizerCard = findViewById(R.id.btnTransactionHistory)
         notificationsCard = findViewById(R.id.btnNotificationsHub)
         notificationBell = findViewById(R.id.btnDashboardNotifications)
-        notificationDot = findViewById(R.id.viewNotificationDot)
+        notificationBadge = findViewById(R.id.txtNotificationBadge)
         upcomingEventsLayout = findViewById(R.id.layoutUpcomingEvents)
         discoverEventsLayout = findViewById(R.id.layoutDiscoverEvents)
         discoverEventsSeeAll = findViewById(R.id.txtDiscoverEventsSeeAll)
@@ -158,11 +158,20 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         summaryEvents.text = summary.totalEvents.toString()
         summaryRegistrations.text = summary.totalRegistrations.toString()
         summaryCompleted.text = summary.completedEventsCount.toString()
-        notificationDot.visibility = if (summary.totalNotifications > 0) View.VISIBLE else View.GONE
+        updateNotificationBadge(summary.totalNotifications)
 
         setupPortalSwitcher()
         renderUpcomingEvents(summary.upcomingEvents.orEmpty())
         renderDiscoverEvents(summary.discoverEvents.orEmpty())
+    }
+
+    private fun updateNotificationBadge(unreadCount: Long) {
+        if (unreadCount > 0) {
+            notificationBadge.text = if (unreadCount > 99) "99+" else unreadCount.toString()
+            notificationBadge.visibility = View.VISIBLE
+        } else {
+            notificationBadge.visibility = View.GONE
+        }
     }
 
     override fun showError(message: String) {

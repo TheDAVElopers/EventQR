@@ -113,14 +113,22 @@
                     android:src="@drawable/notification_bell"
                     android:tint="#FFFFFF" />
 
-                <View
-                    android:id="@+id/viewNotificationDot"
-                    android:layout_width="8dp"
-                    android:layout_height="8dp"
+                <TextView
+                    android:id="@+id/txtNotificationBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_gravity="top|end"
-                    android:layout_marginTop="6dp"
-                    android:layout_marginEnd="6dp"
-                    android:background="@drawable/bg_red_dot"
+                    android:layout_marginTop="1dp"
+                    android:layout_marginEnd="1dp"
+                    android:background="@drawable/bg_notification_badge_count"
+                    android:gravity="center"
+                    android:minWidth="16dp"
+                    android:paddingHorizontal="4dp"
+                    android:paddingVertical="1dp"
+                    android:text="0"
+                    android:textColor="@android:color/white"
+                    android:textSize="9sp"
+                    android:textStyle="bold"
                     android:visibility="gone" />
             </FrameLayout>
         </FrameLayout>
