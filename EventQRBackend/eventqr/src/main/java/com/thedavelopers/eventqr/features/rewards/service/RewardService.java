@@ -67,6 +67,7 @@ public class RewardService {
         Reward reward = new Reward();
         reward.setEventId(request.eventId());
         reward.setName(request.name());
+        reward.setDescription(request.description());
         reward.setPointsRequired(request.pointsRequired());
         reward.setStockQuantity(request.stockQuantity());
         reward.setAllowDuplicateClaims(request.allowDuplicateClaims());
@@ -102,6 +103,7 @@ public class RewardService {
             throw new ResourceNotFoundException("Reward not found for event");
         }
         reward.setName(request.name());
+        reward.setDescription(request.description());
         reward.setPointsRequired(request.pointsRequired());
         reward.setStockQuantity(request.stockQuantity());
         reward.setAllowDuplicateClaims(request.allowDuplicateClaims());
@@ -282,7 +284,7 @@ public class RewardService {
     }
 
     private RewardResponse toResponse(Reward reward) {
-        return new RewardResponse(reward.getId(), reward.getEventId(), reward.getName(), reward.getPointsRequired(),
+        return new RewardResponse(reward.getId(), reward.getEventId(), reward.getName(), reward.getDescription(), reward.getPointsRequired(),
                 reward.getStatus(), reward.getStockQuantity(), reward.isAllowDuplicateClaims());
     }
 }

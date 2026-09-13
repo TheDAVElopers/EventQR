@@ -4,6 +4,6 @@ import java.util.UUID;
 
 import com.thedavelopers.eventqr.shared.constants.RewardStatus;
 
-public record RewardResponse(UUID rewardId, UUID eventId, String name, int pointsRequired, RewardStatus status,
-                             Integer stockQuantity, boolean allowDuplicateClaims) {
+public record RewardResponse(UUID rewardId, UUID eventId, String name, String description, int pointsRequired,
+                             RewardStatus status, Integer stockQuantity, boolean allowDuplicateClaims) {
 }

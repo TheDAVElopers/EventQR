@@ -62,14 +62,14 @@ public class DashboardService {
                 .count();
         long availableEventsCount = eventRepository.countByStatusIn(PUBLIC_EVENT_STATUSES);
         long pointsCount = attendeePointBalanceRepository.sumPointsByAttendeeUserId(userId);
-        List<DashboardUpcomingEvent> upcomingEvents = loadUpcomingEvents(now);
+        List<DashboardUpcomingEvent> upcomingEvents = loadUpcomingEvents(now, userId);
         long unreadNotifications = notificationRepository.countByRecipientUserIdAndStatusNot(userId, NotificationStatus.READ);
 
         return new DashboardSummary(availableEventsCount, registeredCount, transactionLogRepository.countByAttendeeUserId(userId),
                 pointsCount, unreadNotifications, profile.getFullName(), upcomingEvents);
     }
 
-    private List<DashboardUpcomingEvent> loadUpcomingEvents(Instant now) {
+    private List<DashboardUpcomingEvent> loadUpcomingEvents(Instant now, UUID userId) {
         return eventRepository.findTop3ByStatusInAndEventStartAtAfterOrderByEventStartAtAsc(PUBLIC_EVENT_STATUSES, now)
             .stream()
             .map(event -> new DashboardUpcomingEvent(
@@ -78,7 +78,14 @@ public class DashboardService {
                 event.getTitle() == null || event.getTitle().isBlank() ? "Untitled event" : event.getTitle(),
                 event.getLocation(),
                 event.getEventStartAt(),
-                "Upcoming"))
+                "Upcoming",
+                event.getCategory(),
+                event.getDescription(),
+                event.getEventEndAt(),
+                event.getCapacity(),
+                (int) eventRegistrationRepository.countByEventId(event.getId()),
+                userId != null && eventRegistrationRepository.existsByEventIdAndAttendeeUserId(event.getId(), userId)
+            ))
             .toList();
     }
 }

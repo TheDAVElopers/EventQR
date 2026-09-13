@@ -43,7 +43,6 @@ public class OrganizerTransactionRulesTest extends BaseTest {
     @Test
     @DisplayName("TR-2: Saving rules confirms and returns")
     void saveRulesConfirms() {
-        tapByText("Allow Manual Override");
         tapByText("Save Rules");
         assertTrue(isToastDisplayed("Rules saved successfully") || isTextDisplayed("Transaction Rules"),
                 "Saving rules should toast success (or keep the screen)");

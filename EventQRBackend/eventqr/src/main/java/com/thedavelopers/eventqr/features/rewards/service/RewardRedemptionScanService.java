@@ -90,7 +90,7 @@ public class RewardRedemptionScanService {
     }
 
     private RewardResponse toRewardResponse(Reward reward) {
-        return new RewardResponse(reward.getId(), reward.getEventId(), reward.getName(), reward.getPointsRequired(),
+        return new RewardResponse(reward.getId(), reward.getEventId(), reward.getName(), reward.getDescription(), reward.getPointsRequired(),
                 reward.getStatus(), reward.getStockQuantity(), reward.isAllowDuplicateClaims());
     }
 }

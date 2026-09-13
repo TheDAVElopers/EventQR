@@ -51,12 +51,13 @@ public class TransactionController {
     }
 
     @GetMapping("/event/{eventId}")
-    public ResponseEntity<ApiResponse<Page<TransactionResponse>>> findByEvent(HttpServletRequest request,
+    public ResponseEntity<ApiResponse<List<TransactionResponse>>> findByEvent(HttpServletRequest request,
                                                                               @PathVariable UUID eventId,
                                                                               @RequestParam(defaultValue = "0") int page,
                                                                               @RequestParam(defaultValue = "20") int size) {
         requireAdminOrEventOwner(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success(transactionService.findByEvent(eventId, PageRequest.of(page, size))));
+        Page<TransactionResponse> result = transactionService.findByEvent(eventId, PageRequest.of(page, size));
+        return ResponseEntity.ok(ApiResponse.success(result.getContent()));
     }
 
     private void requireStaffOrOrganizerForEvent(HttpServletRequest request, UUID eventId) {

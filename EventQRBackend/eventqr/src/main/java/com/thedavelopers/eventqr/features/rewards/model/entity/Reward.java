@@ -25,6 +25,9 @@ public class Reward extends BaseEntity {
     @Column(nullable = false)
     private String name;
 
+    @Column(length = 2000)
+    private String description;
+
     @Column(nullable = false)
     private int pointsRequired;
 

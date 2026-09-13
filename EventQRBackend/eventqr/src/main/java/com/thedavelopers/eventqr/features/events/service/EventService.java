@@ -42,6 +42,7 @@ public class EventService implements EventLookupPort {
         Event event = new Event();
         event.setTitle(request.title().trim());
         event.setDescription(request.description());
+        event.setCategory(request.category());
         event.setLocation(request.location());
         event.setEventLogoUrl(request.eventLogoUrl());
         event.setRegistrationOpenAt(request.registrationOpenAt());
@@ -204,7 +205,7 @@ public class EventService implements EventLookupPort {
     private EventResponse toResponse(Event event) {
         int capacity = safeCount(event.getCapacity());
         int attendeeCount = safeCount(event.getCurrentAttendeeCount());
-        return new EventResponse(event.getId(), event.getTitle(), event.getDescription(), event.getLocation(),
+        return new EventResponse(event.getId(), event.getTitle(), event.getDescription(), event.getCategory(), event.getLocation(),
                 event.getEventLogoUrl(), event.getRegistrationOpenAt(), event.getRegistrationCloseAt(), event.getEventStartAt(),
                 event.getEventEndAt(), capacity,
                 attendeeCount, event.getStatus(),
@@ -217,6 +218,7 @@ public class EventService implements EventLookupPort {
             event.getId(),
             event.getTitle(),
             event.getDescription(),
+            event.getCategory(),
             event.getLocation(),
             event.getEventLogoUrl(),
             event.getRegistrationOpenAt(),

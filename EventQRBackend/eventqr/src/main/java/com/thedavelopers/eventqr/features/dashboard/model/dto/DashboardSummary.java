@@ -9,6 +9,8 @@ public record DashboardSummary(long totalEvents, long totalRegistrations, long t
                                List<DashboardUpcomingEvent> upcomingEvents) {
 
     public record DashboardUpcomingEvent(UUID eventId, UUID registrationId, String title, String location,
-                                         Instant eventStartAt, String status) {
+                                         Instant eventStartAt, String status, String category, String description,
+                                         Instant eventEndAt, Integer capacity, Integer currentAttendeeCount,
+                                         Boolean isRegistered) {
     }
 }

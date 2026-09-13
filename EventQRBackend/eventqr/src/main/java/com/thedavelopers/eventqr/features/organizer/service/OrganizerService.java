@@ -156,6 +156,7 @@ public class OrganizerService {
         }
         event.setTitle(request.title().trim());
         event.setDescription(request.description());
+        event.setCategory(request.category());
         event.setLocation(request.location());
         event.setRegistrationOpenAt(request.registrationOpenAt());
         event.setRegistrationCloseAt(request.registrationCloseAt());
@@ -164,7 +165,7 @@ public class OrganizerService {
         event.setCapacity(request.capacity());
         event.setRewardsEnabled(Boolean.TRUE.equals(request.rewardsEnabled()));
         event.setEventLogoUrl(request.eventLogoUrl());
-        return new EventResponse(eventRepository.save(event).getId(), event.getTitle(), event.getDescription(), event.getLocation(),
+        return new EventResponse(eventRepository.save(event).getId(), event.getTitle(), event.getDescription(), event.getCategory(), event.getLocation(),
                 event.getRegistrationOpenAt(), event.getRegistrationCloseAt(), event.getEventStartAt(), event.getEventEndAt(),
                 event.getCapacity(), event.getCurrentAttendeeCount(), event.getStatus(), event.isRewardsEnabled(),
                 event.getOrganizerUserId(), event.getApprovedByUserId(), event.getApprovedAt(), event.getRejectionReason());
@@ -173,7 +174,7 @@ public class OrganizerService {
     public EventResponse updateStatus(UUID organizerUserId, UUID eventId, EventStatus status) {
         Event event = requireOrganizerEvent(organizerUserId, eventId);
         event.setStatus(status);
-        return new EventResponse(eventRepository.save(event).getId(), event.getTitle(), event.getDescription(), event.getLocation(),
+        return new EventResponse(eventRepository.save(event).getId(), event.getTitle(), event.getDescription(), event.getCategory(), event.getLocation(),
                 event.getRegistrationOpenAt(), event.getRegistrationCloseAt(), event.getEventStartAt(), event.getEventEndAt(),
                 event.getCapacity(), event.getCurrentAttendeeCount(), event.getStatus(), event.isRewardsEnabled(),
                 event.getOrganizerUserId(), event.getApprovedByUserId(), event.getApprovedAt(), event.getRejectionReason());
@@ -187,7 +188,7 @@ public class OrganizerService {
         } else {
             disableRewardRedemptionScanPurpose(eventId);
         }
-        return new EventResponse(eventRepository.save(event).getId(), event.getTitle(), event.getDescription(), event.getLocation(),
+        return new EventResponse(eventRepository.save(event).getId(), event.getTitle(), event.getDescription(), event.getCategory(), event.getLocation(),
                 event.getRegistrationOpenAt(), event.getRegistrationCloseAt(), event.getEventStartAt(), event.getEventEndAt(),
                 event.getCapacity(), event.getCurrentAttendeeCount(), event.getStatus(), event.isRewardsEnabled(),
                 event.getOrganizerUserId(), event.getApprovedByUserId(), event.getApprovedAt(), event.getRejectionReason());

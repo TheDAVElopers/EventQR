@@ -115,6 +115,7 @@ public class NotificationService {
     private NotificationResponse toResponse(Notification notification) {
         return new NotificationResponse(notification.getId(), notification.getEventId(), notification.getRecipientUserId(),
                 notification.getTitle(), notification.getMessage(), notification.getStatus(), notification.getRelatedTransactionId(),
-                notification.getRelatedRewardRedemptionId(), notification.getReadAt(), notification.getNotificationType());
+                notification.getRelatedRewardRedemptionId(), notification.getReadAt(), notification.getNotificationType(),
+                notification.getCreatedAt());
     }
 }

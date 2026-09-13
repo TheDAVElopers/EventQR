@@ -97,13 +97,6 @@ open class TransactionRulesActivity : AppCompatActivity() {
         card1.addView(requiresStaffToggle)
         card1.addView(divider())
         
-        val allowManualOverrideToggle = ruleToggle(
-            "Allow Manual Override",
-            "Staff can override duplicate/invalid rules",
-            false // Placeholder - not in backend
-        ) { }
-        card1.addView(allowManualOverrideToggle)
-        
         container.addView(card1)
 
         // Card 2: Scan Limits

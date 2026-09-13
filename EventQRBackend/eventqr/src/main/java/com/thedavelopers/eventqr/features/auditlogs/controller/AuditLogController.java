@@ -27,7 +27,7 @@ public class AuditLogController {
         return ResponseEntity.ok(ApiResponse.success(auditLogService.findAll()));
     }
 
-    @GetMapping("/organizer/events/{eventId}/audit-logs")
+    @GetMapping("/admin/events/{eventId}/audit-logs")
     public ResponseEntity<ApiResponse<List<AuditLogResponse>>> getOrganizerAuditLogs(HttpServletRequest request,
                                                                                      @PathVariable UUID eventId) {
         requireAdmin(request);
