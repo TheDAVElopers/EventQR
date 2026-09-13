@@ -8,7 +8,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationRequest;
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse;
 import com.thedavelopers.eventqr.features.notifications.model.entity.Notification;
 import com.thedavelopers.eventqr.features.notifications.repository.NotificationRepository;
@@ -26,15 +25,6 @@ public class NotificationService {
 
     public NotificationService(NotificationRepository notificationRepository) {
         this.notificationRepository = notificationRepository;
-    }
-
-    public NotificationResponse create(NotificationRequest request) {
-        Notification notification = new Notification();
-        notification.setEventId(request.eventId());
-        notification.setRecipientUserId(request.recipientUserId());
-        notification.setTitle(request.title());
-        notification.setMessage(request.message());
-        return toResponse(notificationRepository.save(notification));
     }
 
     public List<NotificationResponse> findByRecipient(UUID recipientUserId) {
@@ -71,10 +61,6 @@ public class NotificationService {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Notification not found"));
         return toResponse(notification);
-    }
-
-    public List<NotificationResponse> findByEvent(UUID eventId) {
-        return notificationRepository.findByEventId(eventId).stream().map(this::toResponse).toList();
     }
 
     public NotificationResponse markRead(UUID notificationId) {

@@ -24,7 +24,6 @@ import com.thedavelopers.eventqr.features.idprinting.model.dto.IdBatchPrintReque
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdPrintResponse
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdTemplateConfigRequest
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdTemplateConfigResponse
-import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationRequest
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerAttendeeDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDashboardDto
@@ -546,9 +545,6 @@ interface ApiService {
     @GET("staff/events/{eventId}/attendees/{attendeeId}/transactions")
     suspend fun getStaffAttendeeTransactions(@Path("eventId") eventId: String, @Path("attendeeId") attendeeId: String): ApiResponse<List<TransactionResponse>>
 
-    @POST("notifications")
-    suspend fun createNotification(@Body request: NotificationRequest): ApiResponse<NotificationResponse>
-
     @GET("notifications")
     suspend fun getMyNotifications(): ApiResponse<List<NotificationResponse>>
 
@@ -560,9 +556,6 @@ interface ApiService {
 
     @GET("notifications/recipient/{recipientUserId}")
     suspend fun getNotificationsByRecipient(@Path("recipientUserId") recipientUserId: String): ApiResponse<List<NotificationResponse>>
-
-    @GET("notifications/event/{eventId}")
-    suspend fun getNotificationsByEvent(@Path("eventId") eventId: String): ApiResponse<List<NotificationResponse>>
 
     @GET("health")
     suspend fun healthCheck(): ResponseBody

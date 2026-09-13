@@ -12,7 +12,6 @@ public class AdminDashboardPage extends BaseTest {
     private static final String TOTAL_ACCOUNTS_VALUE = "textTotalAccountsValue";
     private static final String ACTIVE_EVENTS_VALUE = "textActiveEventsValue";
     private static final String AUDIT_LOGS_VALUE = "textAuditLogsValue";
-    private static final String NOTIFICATION_MANAGEMENT_CARD = "cardAdminNotifications";
     private static final String BOTTOM_NAV_REQUESTS = "navRequests";
     private static final String BOTTOM_NAV_ACCOUNTS = "navAccounts";
     private static final String BOTTOM_NAV_LOGS = "navLogs";
@@ -103,7 +102,4 @@ public class AdminDashboardPage extends BaseTest {
         tap(id(BOTTOM_NAV_LOGS));
     }
 
-    public void tapNotificationManagement() {
-        tap(id(NOTIFICATION_MANAGEMENT_CARD));
-    }
 }

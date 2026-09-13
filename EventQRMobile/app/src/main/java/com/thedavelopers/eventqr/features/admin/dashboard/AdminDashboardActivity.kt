@@ -25,7 +25,6 @@ import com.thedavelopers.eventqr.features.admin.AdminEventApprovalBackendActivit
 import com.thedavelopers.eventqr.features.admin.AdminRepository
 import com.thedavelopers.eventqr.features.admin.configureAdminBottomNav
 import com.thedavelopers.eventqr.features.admin.logs.AdminAuditLogsActivity
-import com.thedavelopers.eventqr.features.admin.notifications.AdminNotificationManagementActivity
 import com.thedavelopers.eventqr.features.admin.users.AdminAccountManagementActivity
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -90,10 +89,7 @@ class AdminDashboardActivity : AppCompatActivity() {
     }
 
     private fun bindActions() {
-        findViewById<View>(R.id.cardAdminNotifications).setOnClickListener {
-            startActivity(Intent(this, AdminNotificationManagementActivity::class.java))
-        }
-        cardPendingAlert.setOnClickListener { openRequests() }
+   cardPendingAlert.setOnClickListener { openRequests() }
 
         configureAdminBottomNav(AdminBottomNavItem.DASHBOARD)
     }

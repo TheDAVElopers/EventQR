@@ -73,7 +73,7 @@
         <activity android:name=".features.admin.users.CreateAdminAccountActivity" android:exported="false" />
         <activity android:name=".features.admin.users.AdminAccountManagementActivity" android:exported="false" />
         <activity android:name=".features.admin.logs.AdminAuditLogsActivity" android:exported="false" />
-        <activity android:name=".features.admin.notifications.AdminNotificationManagementActivity" android:exported="false" />
+
         <activity android:name=".features.auth.forgotpassword.ForgotPasswordActivity" android:exported="false" />
         <activity
             android:name=".features.auth.resetpassword.ResetPasswordActivity"

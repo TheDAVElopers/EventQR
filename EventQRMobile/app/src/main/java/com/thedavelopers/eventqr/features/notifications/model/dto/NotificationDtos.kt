@@ -5,13 +5,6 @@ import com.thedavelopers.eventqr.core.api.dto.NotificationType
 import java.time.Instant
 import java.util.UUID
 
-data class NotificationRequest(
-    val eventId: UUID,
-    val recipientUserId: UUID,
-    val title: String,
-    val message: String,
-)
-
 data class NotificationResponse(
     val notificationId: UUID,
     val eventId: UUID,
