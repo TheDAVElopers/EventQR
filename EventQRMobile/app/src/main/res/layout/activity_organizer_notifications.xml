@@ -60,22 +60,94 @@
         android:gravity="center_vertical"
         android:elevation="2dp">
 
+        <FrameLayout
+            android:id="@+id/cardEventFilter"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_rewards_dropdown"
+            android:clickable="true"
+            android:focusable="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="14dp">
+
+                <TextView
+                    android:id="@+id/txtEventFilter"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="All events"
+                    android:textColor="@color/eventqr_text"
+                    android:textSize="15sp" />
+
+                <ImageView
+                    android:id="@+id/arrowEventFilter"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginStart="8dp"
+                    android:contentDescription="Dropdown"
+                    android:src="@drawable/ic_arrow_drop_down"
+                    android:tint="#6B7280" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/cardTypeFilter"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_rewards_dropdown"
+            android:clickable="true"
+            android:focusable="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="14dp">
+
+                <TextView
+                    android:id="@+id/txtTypeFilter"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="All types"
+                    android:textColor="@color/eventqr_text"
+                    android:textSize="15sp" />
+
+                <ImageView
+                    android:id="@+id/arrowTypeFilter"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginStart="8dp"
+                    android:contentDescription="Dropdown"
+                    android:src="@drawable/ic_arrow_drop_down"
+                    android:tint="#6B7280" />
+            </LinearLayout>
+        </FrameLayout>
+
         <Spinner
             android:id="@+id/spinnerEventFilter"
             android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_weight="1"
-            android:layout_marginEnd="8dp"
-            android:background="@drawable/bg_soft_input_no_stroke"
-            android:spinnerMode="dropdown" />
+            android:layout_height="0dp"
+            android:visibility="gone" />
 
         <Spinner
             android:id="@+id/spinnerTypeFilter"
             android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_soft_input_no_stroke"
-            android:spinnerMode="dropdown" />
+            android:layout_height="0dp"
+            android:visibility="gone" />
     </LinearLayout>
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
