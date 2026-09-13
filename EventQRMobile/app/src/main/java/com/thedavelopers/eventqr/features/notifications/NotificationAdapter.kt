@@ -100,16 +100,6 @@ class NotificationAdapter(
                     iconView.setColorFilter(0xFF10B981.toInt())
                 }
 
-                item.title.contains("reward", ignoreCase = true) || item.message.contains("reward", ignoreCase = true) -> {
-                    iconView.setImageResource(R.drawable.ic_gift)
-                    iconView.setColorFilter(0xFF10B981.toInt())
-                }
-
-                item.title.contains("reminder", ignoreCase = true) -> {
-                    iconView.setImageResource(R.drawable.ic_admin_notification)
-                    iconView.setColorFilter(0xFF4F46E5.toInt())
-                }
-
                 else -> {
                     iconView.setImageResource(R.drawable.ic_check_circle_purple)
                     iconView.setColorFilter(0xFF10B981.toInt())
