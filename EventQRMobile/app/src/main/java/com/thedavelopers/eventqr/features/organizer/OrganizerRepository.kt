@@ -13,6 +13,7 @@ import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.features.events.model.dto.EventApprovalRequest
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequest
 import com.thedavelopers.eventqr.features.events.model.dto.EventResponse
+import com.thedavelopers.eventqr.core.api.dto.NotificationType
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerAttendeeDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDashboardDto
@@ -323,7 +324,16 @@ class OrganizerRepository(private val context: Context) {
         request: TransactionRuleRequest,
     ) = safeApiCall { apiService.saveOrganizerTransactionRule(eventId, request) }
 
-    suspend fun getMyNotifications(): NetworkResult<List<NotificationResponse>> = safeApiCall { apiService.getMyNotifications() }
+    suspend fun getMyNotifications(
+        eventId: java.util.UUID? = null,
+        notificationType: NotificationType? = null,
+    ): NetworkResult<List<NotificationResponse>> = safeApiCall { apiService.getMyNotifications(eventId = eventId, notificationType = notificationType) }
+
+    suspend fun markNotificationRead(notificationId: String): NetworkResult<NotificationResponse> =
+        safeApiCall { apiService.markNotificationRead(notificationId) }
+
+    suspend fun markAllNotificationsRead(): NetworkResult<Unit> =
+        safeApiCall { apiService.markAllNotificationsRead() }
 
     private fun detectImageMediaType(file: File): String? {
         val header = ByteArray(8)

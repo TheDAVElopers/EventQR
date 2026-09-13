@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.thedavelopers.eventqr.features.events.service.EventService;
+import com.thedavelopers.eventqr.features.notifications.service.NotificationService;
 import com.thedavelopers.eventqr.features.qremail.service.QREmailService;
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationRequest;
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse;
@@ -49,6 +50,7 @@ public class RegistrationService implements RegistrationLookupPort, Registration
 
     private final EventRegistrationRepository registrationRepository;
     private final AttendeeDirectoryPort attendeeDirectoryPort;
+    private final NotificationService notificationService;
     private final EventLookupPort eventLookupPort;
     private final QrCredentialPort qrCredentialPort;
     private final EventService eventService;
@@ -57,6 +59,7 @@ public class RegistrationService implements RegistrationLookupPort, Registration
 
     public RegistrationService(EventRegistrationRepository registrationRepository,
                                AttendeeDirectoryPort attendeeDirectoryPort,
+                               NotificationService notificationService,
                                EventLookupPort eventLookupPort,
                                QrCredentialPort qrCredentialPort,
                                EventService eventService,
@@ -64,6 +67,7 @@ public class RegistrationService implements RegistrationLookupPort, Registration
                                ApplicationEventPublisher applicationEventPublisher) {
         this.registrationRepository = registrationRepository;
         this.attendeeDirectoryPort = attendeeDirectoryPort;
+        this.notificationService = notificationService;
         this.eventLookupPort = eventLookupPort;
         this.qrCredentialPort = qrCredentialPort;
         this.eventService = eventService;
@@ -124,6 +128,8 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         EventRegistration savedRegistration = registrationRepository.findById(registrationId)
             .orElseThrow(() -> new ResourceNotFoundException("Registration not found: " + registrationId));
 
+        notifyOrganizerOnRegistration(eventSnapshot, attendeeSnapshot.fullName());
+
         log.info("Generating or recovering QR credential registrationId={}", registrationId);
         QrCredentialSnapshot qrCredential = qrCredentialPort.issueOrReturnExisting(
             savedRegistration.getEventId(), savedRegistration.getAttendeeUserId(),
@@ -148,6 +154,27 @@ public class RegistrationService implements RegistrationLookupPort, Registration
             registrationId, qrCredential.qrCredentialId());
 
         return new RegistrationSubmissionResponse(toResponse(savedRegistration), qrCredential);
+    }
+
+    private void notifyOrganizerOnRegistration(EventSnapshot eventSnapshot, String attendeeName) {
+        if (eventSnapshot.organizerUserId() == null) {
+            return;
+        }
+        notificationService.createNewRegistrationNotification(
+                eventSnapshot.eventId(), eventSnapshot.organizerUserId(), eventSnapshot.title(), attendeeName);
+        int capacity = eventSnapshot.capacity();
+        if (capacity > 0) {
+            long currentCount = registrationRepository.countByEventId(eventSnapshot.eventId());
+            if (currentCount >= capacity) {
+                notificationService.createCapacityFullNotification(
+                        eventSnapshot.eventId(), eventSnapshot.organizerUserId(), eventSnapshot.title(),
+                        (int) currentCount, capacity);
+            } else if (currentCount >= capacity * 0.8) {
+                notificationService.createCapacityWarningNotification(
+                        eventSnapshot.eventId(), eventSnapshot.organizerUserId(), eventSnapshot.title(),
+                        (int) currentCount, capacity);
+            }
+        }
     }
 
     public List<RegistrationResponse> findByEvent(UUID eventId) {

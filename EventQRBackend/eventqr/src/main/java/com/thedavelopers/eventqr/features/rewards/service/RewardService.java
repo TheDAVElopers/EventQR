@@ -26,6 +26,7 @@ import com.thedavelopers.eventqr.features.rewards.repository.AttendeePointBalanc
 import com.thedavelopers.eventqr.features.rewards.repository.PointTransactionRepository;
 import com.thedavelopers.eventqr.features.rewards.repository.RewardRedemptionRepository;
 import com.thedavelopers.eventqr.features.rewards.repository.RewardRepository;
+import com.thedavelopers.eventqr.features.notifications.service.NotificationService;
 import com.thedavelopers.eventqr.features.scanning.model.entity.ScanPurpose;
 import com.thedavelopers.eventqr.features.scanning.repository.ScanPurposeRepository;
 import com.thedavelopers.eventqr.shared.constants.RedemptionStatus;
@@ -44,6 +45,7 @@ public class RewardService {
     private final AttendeePointBalanceRepository attendeePointBalanceRepository;
     private final PointTransactionRepository pointTransactionRepository;
     private final RewardRepository rewardRepository;
+    private final NotificationService notificationService;
     private final RewardRedemptionRepository rewardRedemptionRepository;
     private final EventRepository eventRepository;
     private final ScanPurposeRepository scanPurposeRepository;
@@ -53,7 +55,8 @@ public class RewardService {
                          RewardRepository rewardRepository,
                          RewardRedemptionRepository rewardRedemptionRepository,
                          EventRepository eventRepository,
-                         ScanPurposeRepository scanPurposeRepository) {
+                         ScanPurposeRepository scanPurposeRepository, NotificationService notificationService) {
+        this.notificationService = notificationService;
         this.attendeePointBalanceRepository = attendeePointBalanceRepository;
         this.pointTransactionRepository = pointTransactionRepository;
         this.rewardRepository = rewardRepository;
@@ -150,6 +153,10 @@ public class RewardService {
         transaction.setOccurredAt(Instant.now());
         transaction.setReason(reason == null || reason.isBlank() ? "Manual point assignment" : reason);
         pointTransactionRepository.save(transaction);
+        Event event = eventRepository.findById(eventId).orElse(null);
+        if (event != null && notificationService != null) {
+            notificationService.createPointsAdjustedNotification(eventId, event.getOrganizerUserId(), event.getTitle(), attendeeUserId != null ? attendeeUserId.toString() : "", points, reason == null ? "Points assigned" : reason, true);
+        }
         return new PointBalanceResponse(balance.getEventId(), balance.getAttendeeUserId(), balance.getPointsBalance());
     }
 
@@ -172,6 +179,10 @@ public class RewardService {
         transaction.setOccurredAt(Instant.now());
         transaction.setReason(reason == null || reason.isBlank() ? "Manual point deduction" : reason);
         pointTransactionRepository.save(transaction);
+        Event event = eventRepository.findById(eventId).orElse(null);
+        if (event != null && notificationService != null) {
+            notificationService.createPointsAdjustedNotification(eventId, event.getOrganizerUserId(), event.getTitle(), attendeeUserId != null ? attendeeUserId.toString() : "", points, reason == null ? "Points deducted" : reason, false);
+        }
         return new PointBalanceResponse(balance.getEventId(), balance.getAttendeeUserId(), balance.getPointsBalance());
     }
 

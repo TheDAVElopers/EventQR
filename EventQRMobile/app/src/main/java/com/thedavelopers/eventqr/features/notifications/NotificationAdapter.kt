@@ -54,6 +54,42 @@ class NotificationAdapter(
 
             iconContainer.setBackgroundResource(R.drawable.bg_notification_icon_box)
             when {
+                item.notificationType == NotificationType.STAFF_ASSIGNMENT -> {
+                    iconView.setImageResource(R.drawable.ic_group)
+                    iconView.setColorFilter(0xFF4F46E5.toInt())
+                }
+                item.notificationType == NotificationType.REGISTRATION_NEW -> {
+                    iconView.setImageResource(R.drawable.ic_check_circle_purple)
+                    iconView.setColorFilter(0xFF10B981.toInt())
+                }
+                item.notificationType == NotificationType.CAPACITY_WARNING || item.notificationType == NotificationType.CAPACITY_FULL -> {
+                    iconView.setImageResource(R.drawable.ic_admin_users)
+                    iconView.setColorFilter(0xFFB8860B.toInt())
+                }
+                item.notificationType == NotificationType.REWARD_EXHAUSTED -> {
+                    iconView.setImageResource(R.drawable.ic_gift)
+                    iconView.setColorFilter(0xFFEF4444.toInt())
+                }
+                item.notificationType == NotificationType.POINTS_ADJUSTED -> {
+                    iconView.setImageResource(R.drawable.ic_check_circle_purple)
+                    iconView.setColorFilter(0xFF4F46E5.toInt())
+                }
+                item.notificationType == NotificationType.EVENT_APPROVED -> {
+                    iconView.setImageResource(R.drawable.ic_check_circle_purple)
+                    iconView.setColorFilter(0xFF10B981.toInt())
+                }
+                item.notificationType == NotificationType.EVENT_REJECTED -> {
+                    iconView.setImageResource(R.drawable.ic_error_circle)
+                    iconView.setColorFilter(0xFFEF4444.toInt())
+                }
+                item.notificationType == NotificationType.EVENT_STARTING_SOON -> {
+                    iconView.setImageResource(R.drawable.ic_row_clock)
+                    iconView.setColorFilter(0xFF4F46E5.toInt())
+                }
+                item.notificationType == NotificationType.EVENT_COMPLETED -> {
+                    iconView.setImageResource(R.drawable.ic_check_circle_purple)
+                    iconView.setColorFilter(0xFF10B981.toInt())
+                }
                 item.notificationType == NotificationType.SCAN_REJECTED -> {
                     iconView.setImageResource(R.drawable.ic_error_circle)
                     iconView.setColorFilter(0xFFEF4444.toInt())

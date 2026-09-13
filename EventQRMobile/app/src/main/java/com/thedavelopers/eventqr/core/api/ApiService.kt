@@ -546,7 +546,11 @@ interface ApiService {
     suspend fun getStaffAttendeeTransactions(@Path("eventId") eventId: String, @Path("attendeeId") attendeeId: String): ApiResponse<List<TransactionResponse>>
 
     @GET("notifications")
-    suspend fun getMyNotifications(): ApiResponse<List<NotificationResponse>>
+    suspend fun getMyNotifications(
+        @Query("status") status: String? = null,
+        @Query("eventId") eventId: java.util.UUID? = null,
+        @Query("notificationType") notificationType: com.thedavelopers.eventqr.core.api.dto.NotificationType? = null,
+    ): ApiResponse<List<NotificationResponse>>
 
     @PATCH("notifications/{notificationId}/read")
     suspend fun markNotificationRead(@Path("notificationId") notificationId: String): ApiResponse<NotificationResponse>

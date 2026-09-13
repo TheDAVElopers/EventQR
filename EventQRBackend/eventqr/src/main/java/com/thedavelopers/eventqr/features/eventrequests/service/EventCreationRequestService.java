@@ -14,6 +14,7 @@ import com.thedavelopers.eventqr.features.eventrequests.model.dto.EventCreationR
 import com.thedavelopers.eventqr.features.eventrequests.model.dto.EventRequestResponse;
 import com.thedavelopers.eventqr.features.eventrequests.model.entity.EventCreationRequest;
 import com.thedavelopers.eventqr.features.eventrequests.repository.EventCreationRequestRepository;
+import com.thedavelopers.eventqr.features.notifications.service.NotificationService;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.EventRequestStatus;
 import com.thedavelopers.eventqr.shared.constants.EventStatus;
@@ -33,6 +34,7 @@ public class EventCreationRequestService {
     private final EventRepository eventRepository;
     private final AttendeeDirectoryPort attendeeDirectoryPort;
     private final AuditLogService auditLogService;
+    private final NotificationService notificationService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -40,11 +42,13 @@ public class EventCreationRequestService {
     public EventCreationRequestService(EventCreationRequestRepository eventRequestRepository,
                                        EventRepository eventRepository,
                                        AttendeeDirectoryPort attendeeDirectoryPort,
-                                       AuditLogService auditLogService) {
+                                       AuditLogService auditLogService,
+                                       NotificationService notificationService) {
         this.eventRequestRepository = eventRequestRepository;
         this.eventRepository = eventRepository;
         this.attendeeDirectoryPort = attendeeDirectoryPort;
         this.auditLogService = auditLogService;
+        this.notificationService = notificationService;
     }
 
     public EventRequestResponse create(UUID requesterUserId, EventCreationRequestDto request) {
@@ -118,6 +122,8 @@ public class EventCreationRequestService {
                 adminFullName,
                 linkedEvent.getId(),
                 savedRequest.getRequesterUserId());
+        notificationService.createEventApprovedNotification(
+                linkedEvent.getId(), savedRequest.getRequesterUserId(), savedRequest.getEventName());
         return toResponse(savedRequest);
     }
 
@@ -135,6 +141,8 @@ public class EventCreationRequestService {
                 adminFullName,
                 savedRequest.getEventId(),
                 savedRequest.getRequesterUserId());
+        notificationService.createEventRejectedNotification(
+                savedRequest.getEventId(), savedRequest.getRequesterUserId(), savedRequest.getEventName(), remarks);
         return toResponse(savedRequest);
     }
 

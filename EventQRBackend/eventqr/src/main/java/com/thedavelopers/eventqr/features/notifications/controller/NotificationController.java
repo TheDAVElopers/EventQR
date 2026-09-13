@@ -17,6 +17,7 @@ import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationRe
 import com.thedavelopers.eventqr.features.notifications.service.NotificationService;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.NotificationStatus;
+import com.thedavelopers.eventqr.shared.constants.NotificationType;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
 import com.thedavelopers.eventqr.shared.security.JwtService;
@@ -34,10 +35,12 @@ public class NotificationController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<NotificationResponse>>> mine(HttpServletRequest request,
-                                                                        @RequestParam(required = false) NotificationStatus status) {
+                                                                        @RequestParam(required = false) NotificationStatus status,
+                                                                        @RequestParam(required = false) UUID eventId,
+                                                                        @RequestParam(required = false) NotificationType notificationType) {
         UUID userId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
-        if (status != null) {
-            return ResponseEntity.ok(ApiResponse.success(notificationService.findByRecipientAndStatus(userId, status)));
+        if (status != null || eventId != null || notificationType != null) {
+            return ResponseEntity.ok(ApiResponse.success(notificationService.findByRecipientFiltered(userId, status, eventId, notificationType)));
         }
         return ResponseEntity.ok(ApiResponse.success(notificationService.findByRecipient(userId)));
     }
@@ -75,13 +78,6 @@ public class NotificationController {
                                                                                    @PathVariable UUID recipientUserId) {
         requireRecipientOrAdmin(request, recipientUserId);
         return ResponseEntity.ok(ApiResponse.success(notificationService.findByRecipient(recipientUserId)));
-    }
-
-    private void requireSenderRole(HttpServletRequest request) {
-        AccountRole role = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
-        if (role == AccountRole.ATTENDEE) {
-            throw new ForbiddenException("Attendees cannot create notifications");
-        }
     }
 
     private void requireNotificationAccess(HttpServletRequest request, UUID notificationId) {

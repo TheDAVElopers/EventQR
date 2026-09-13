@@ -21,7 +21,7 @@ import lombok.Setter;
 @Table(name = "notifications")
 public class Notification extends BaseEntity {
 
-    @Column(nullable = false)
+    @Column
     private UUID eventId;
 
     @Column(nullable = false)

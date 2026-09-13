@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.thedavelopers.eventqr.features.events.model.entity.Event;
+import com.thedavelopers.eventqr.features.events.repository.EventRepository;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionGrantRequest;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResultResponse;
 import com.thedavelopers.eventqr.features.rewards.model.entity.AttendeePointBalance;
@@ -23,6 +25,7 @@ import com.thedavelopers.eventqr.shared.constants.RewardStatus;
 import com.thedavelopers.eventqr.shared.constants.TransactionResult;
 import com.thedavelopers.eventqr.shared.constants.TransactionType;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
+import com.thedavelopers.eventqr.features.notifications.service.NotificationService;
 
 @Service
 @Transactional
@@ -30,22 +33,29 @@ public class RewardRedemptionService {
 
     private static final Logger log = LoggerFactory.getLogger(RewardRedemptionService.class);
 
+private final NotificationService notificationService;
+
     private final RewardRepository rewardRepository;
     private final RewardRedemptionRepository rewardRedemptionRepository;
     private final AttendeePointBalanceRepository attendeePointBalanceRepository;
     private final TransactionLogRepository transactionLogRepository;
     private final DuplicateRewardClaimChecker duplicateRewardClaimChecker;
+    private final EventRepository eventRepository;
 
     public RewardRedemptionService(RewardRepository rewardRepository,
                                    RewardRedemptionRepository rewardRedemptionRepository,
                                    AttendeePointBalanceRepository attendeePointBalanceRepository,
                                    TransactionLogRepository transactionLogRepository,
-                                   DuplicateRewardClaimChecker duplicateRewardClaimChecker) {
+                                   DuplicateRewardClaimChecker duplicateRewardClaimChecker,
+                                   EventRepository eventRepository,
+                                   NotificationService notificationService) {
+        this.notificationService = notificationService;
         this.rewardRepository = rewardRepository;
         this.rewardRedemptionRepository = rewardRedemptionRepository;
         this.attendeePointBalanceRepository = attendeePointBalanceRepository;
         this.transactionLogRepository = transactionLogRepository;
         this.duplicateRewardClaimChecker = duplicateRewardClaimChecker;
+        this.eventRepository = eventRepository;
     }
 
     public RewardRedemptionResultResponse redeem(RewardRedemptionGrantRequest request) {
@@ -80,6 +90,12 @@ public class RewardRedemptionService {
         if (reward.getStockQuantity() != null) {
             reward.setStockQuantity(reward.getStockQuantity() - 1);
             rewardRepository.save(reward);
+            if (reward.getStockQuantity() == 0 && notificationService != null) {
+                Event event = eventRepository.findById(request.eventId()).orElse(null);
+                if (event != null) {
+                    notificationService.createRewardExhaustedNotification(request.eventId(), event.getOrganizerUserId(), event.getTitle(), reward.getName());
+                }
+            }
         }
 
         RewardRedemption redemption = new RewardRedemption();
