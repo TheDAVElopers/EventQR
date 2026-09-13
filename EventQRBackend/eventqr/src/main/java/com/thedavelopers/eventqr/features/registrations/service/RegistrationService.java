@@ -129,6 +129,8 @@ public class RegistrationService implements RegistrationLookupPort, Registration
             .orElseThrow(() -> new ResourceNotFoundException("Registration not found: " + registrationId));
 
         notifyOrganizerOnRegistration(eventSnapshot, attendeeSnapshot.fullName());
+        notificationService.createRegistrationConfirmationNotification(
+                request.eventId(), attendeeSnapshot.userId(), eventSnapshot.title());
 
         log.info("Generating or recovering QR credential registrationId={}", registrationId);
         QrCredentialSnapshot qrCredential = qrCredentialPort.issueOrReturnExisting(

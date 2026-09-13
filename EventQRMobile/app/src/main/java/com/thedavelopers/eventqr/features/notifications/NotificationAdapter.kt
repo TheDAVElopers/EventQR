@@ -70,6 +70,10 @@ class NotificationAdapter(
                     iconView.setImageResource(R.drawable.ic_gift)
                     iconView.setColorFilter(0xFFEF4444.toInt())
                 }
+                item.notificationType == NotificationType.REWARD_REDEEMED -> {
+                    iconView.setImageResource(R.drawable.ic_gift)
+                    iconView.setColorFilter(0xFF10B981.toInt())
+                }
                 item.notificationType == NotificationType.POINTS_ADJUSTED -> {
                     iconView.setImageResource(R.drawable.ic_check_circle_purple)
                     iconView.setColorFilter(0xFF4F46E5.toInt())

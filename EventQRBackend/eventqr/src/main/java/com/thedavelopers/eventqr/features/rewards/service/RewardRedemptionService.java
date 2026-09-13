@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.rewards.service;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -94,6 +95,7 @@ private final NotificationService notificationService;
                 Event event = eventRepository.findById(request.eventId()).orElse(null);
                 if (event != null) {
                     notificationService.createRewardExhaustedNotification(request.eventId(), event.getOrganizerUserId(), event.getTitle(), reward.getName());
+                    notificationService.createRewardExhaustedAttendeeNotifications(List.of(event));
                 }
             }
         }
@@ -114,6 +116,11 @@ private final NotificationService notificationService;
 
         log.info("Reward redeemed attendeeUserId={} rewardId={} points={} staffUserId={}",
                 request.attendeeUserId(), reward.getId(), reward.getPointsRequired(), request.staffUserId());
+
+        Event event = eventRepository.findById(request.eventId()).orElse(null);
+        if (event != null && notificationService != null && request.attendeeUserId() != null) {
+            notificationService.createRewardRedeemedNotification(request.eventId(), request.attendeeUserId(), event.getTitle(), reward.getName(), reward.getPointsRequired());
+        }
 
         return new RewardRedemptionResultResponse(saved.getId(), reward.getId(), reward.getName(),
                 RedemptionStatus.REDEEMED, null, reward.getPointsRequired(), saved.getRedeemedAt(),

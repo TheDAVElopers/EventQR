@@ -156,6 +156,9 @@ public class RewardService {
         Event event = eventRepository.findById(eventId).orElse(null);
         if (event != null && notificationService != null) {
             notificationService.createPointsAdjustedNotification(eventId, event.getOrganizerUserId(), event.getTitle(), attendeeUserId != null ? attendeeUserId.toString() : "", points, reason == null ? "Points assigned" : reason, true);
+            if (attendeeUserId != null) {
+                notificationService.createPointsAdjustedForAttendeeNotification(eventId, attendeeUserId, event.getTitle(), points, reason, true);
+            }
         }
         return new PointBalanceResponse(balance.getEventId(), balance.getAttendeeUserId(), balance.getPointsBalance());
     }
@@ -182,6 +185,9 @@ public class RewardService {
         Event event = eventRepository.findById(eventId).orElse(null);
         if (event != null && notificationService != null) {
             notificationService.createPointsAdjustedNotification(eventId, event.getOrganizerUserId(), event.getTitle(), attendeeUserId != null ? attendeeUserId.toString() : "", points, reason == null ? "Points deducted" : reason, false);
+            if (attendeeUserId != null) {
+                notificationService.createPointsAdjustedForAttendeeNotification(eventId, attendeeUserId, event.getTitle(), points, reason, false);
+            }
         }
         return new PointBalanceResponse(balance.getEventId(), balance.getAttendeeUserId(), balance.getPointsBalance());
     }
@@ -226,6 +232,11 @@ public class RewardService {
         transaction.setOccurredAt(Instant.now());
         transaction.setReason("Reward redemption");
         pointTransactionRepository.save(transaction);
+
+        Event event = eventRepository.findById(request.eventId()).orElse(null);
+        if (event != null && notificationService != null && request.attendeeUserId() != null) {
+            notificationService.createRewardRedeemedNotification(request.eventId(), request.attendeeUserId(), event.getTitle(), reward.getName(), reward.getPointsRequired());
+        }
 
         return new RewardRedemptionResponse(redemption.getId(), redemption.getEventId(), redemption.getAttendeeUserId(),
                 redemption.getRewardId(), redemption.getPointsSpent(), redemption.getStatus(), redemption.getRedeemedAt(),

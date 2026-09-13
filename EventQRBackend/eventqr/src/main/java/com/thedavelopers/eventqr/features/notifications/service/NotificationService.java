@@ -201,6 +201,55 @@ public void createEventStartingSoonNotifications(List<com.thedavelopers.eventqr.
         }
     }
 
+    public void createPointsAdjustedForAttendeeNotification(UUID eventId, UUID attendeeUserId, String eventTitle, int points, String reason, boolean credited) {
+        Notification n = new Notification();
+        n.setEventId(eventId);
+        n.setRecipientUserId(attendeeUserId);
+        n.setNotificationType(NotificationType.POINTS_ADJUSTED);
+        n.setTitle("Points " + (credited ? "credited" : "deducted") + ": " + eventTitle);
+        n.setMessage((credited ? "You earned +" : "You were deducted ") + points + " points for " + eventTitle
+                + (reason == null || reason.isBlank() ? "" : ". Reason: " + reason));
+        n.setStatus(NotificationStatus.SENT);
+        notificationRepository.save(n);
+    }
+
+    public void createRewardRedeemedNotification(UUID eventId, UUID attendeeUserId, String eventTitle, String rewardName, int pointsRequired) {
+        Notification n = new Notification();
+        n.setEventId(eventId);
+        n.setRecipientUserId(attendeeUserId);
+        n.setNotificationType(NotificationType.REWARD_REDEEMED);
+        n.setTitle("Reward redeemed: " + eventTitle);
+        n.setMessage("You redeemed " + rewardName + " for " + eventTitle + " (-" + pointsRequired + " points)");
+        n.setStatus(NotificationStatus.SENT);
+        notificationRepository.save(n);
+    }
+
+    public void createRewardExhaustedAttendeeNotifications(List<com.thedavelopers.eventqr.features.events.model.entity.Event> events) {
+        for (com.thedavelopers.eventqr.features.events.model.entity.Event event : events) {
+            for (UUID attendeeId : attendeeIds(event.getId())) {
+                Notification n = new Notification();
+                n.setEventId(event.getId());
+                n.setRecipientUserId(attendeeId);
+                n.setNotificationType(NotificationType.REWARD_EXHAUSTED);
+                n.setTitle("Reward sold out: " + event.getTitle());
+                n.setMessage("A reward for '" + event.getTitle() + "' is sold out. Check the rewards list for alternatives.");
+                n.setStatus(NotificationStatus.SENT);
+                notificationRepository.save(n);
+            }
+        }
+    }
+
+    public void createRegistrationConfirmationNotification(UUID eventId, UUID attendeeUserId, String eventTitle) {
+        Notification n = new Notification();
+        n.setEventId(eventId);
+        n.setRecipientUserId(attendeeUserId);
+        n.setNotificationType(NotificationType.REGISTRATION_NEW);
+        n.setTitle("Registered: " + eventTitle);
+        n.setMessage("You're registered for '" + eventTitle + "'. Your QR pass is ready.");
+        n.setStatus(NotificationStatus.SENT);
+        notificationRepository.save(n);
+    }
+
     private List<UUID> attendeeIds(UUID eventId) {
         return registrationRepository.findByEventId(eventId).stream()
                 .map(registration -> registration.getAttendeeUserId())
