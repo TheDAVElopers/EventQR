@@ -21,8 +21,8 @@ open class AttendeeNotificationsActivity : AppCompatActivity(), NotificationsCon
     private lateinit var recyclerNotifications: RecyclerView
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var skeletonLoading: View
-    private lateinit var txtEmpty: TextView
-    private lateinit var txtError: TextView
+    private lateinit var layoutEmpty: View
+    private lateinit var layoutError: View
     private lateinit var btnRetry: Button
     private lateinit var actionMarkAllRead: TextView
     private lateinit var btnBack: ImageButton
@@ -40,8 +40,8 @@ open class AttendeeNotificationsActivity : AppCompatActivity(), NotificationsCon
         swipeRefresh = findViewById(R.id.swipeRefreshNotifications)
         recyclerNotifications = findViewById(R.id.recyclerNotifications)
         skeletonLoading = findViewById(R.id.skeletonLoading)
-        txtEmpty = findViewById(R.id.txtNotificationsEmpty)
-        txtError = findViewById(R.id.txtNotificationsError)
+        layoutEmpty = findViewById(R.id.layoutNotificationsEmpty)
+        layoutError = findViewById(R.id.layoutNotificationsError)
         btnRetry = findViewById(R.id.btnNotificationsRetry)
         actionMarkAllRead = findViewById(R.id.txtMarkAllRead)
         btnBack = findViewById(R.id.btnBack)
@@ -70,8 +70,8 @@ open class AttendeeNotificationsActivity : AppCompatActivity(), NotificationsCon
         }
         if (isLoading) {
             recyclerNotifications.visibility = View.GONE
-            txtEmpty.visibility = View.GONE
-            txtError.visibility = View.GONE
+            layoutEmpty.visibility = View.GONE
+            layoutError.visibility = View.GONE
             btnRetry.visibility = View.GONE
         } else {
             swipeRefresh.isRefreshing = false
@@ -80,7 +80,7 @@ open class AttendeeNotificationsActivity : AppCompatActivity(), NotificationsCon
 
     override fun showContent() {
         swipeRefresh.isRefreshing = false
-        txtError.visibility = View.GONE
+        layoutError.visibility = View.GONE
         btnRetry.visibility = View.GONE
         skeletonLoading.visibility = View.GONE
     }
@@ -92,12 +92,12 @@ open class AttendeeNotificationsActivity : AppCompatActivity(), NotificationsCon
     override fun showError(message: String) {
         swipeRefresh.isRefreshing = false
         recyclerNotifications.visibility = View.GONE
-        txtEmpty.visibility = View.GONE
+        layoutEmpty.visibility = View.GONE
         skeletonLoading.visibility = View.GONE
 
-        txtError.visibility = View.VISIBLE
+        layoutError.visibility = View.VISIBLE
         btnRetry.visibility = View.VISIBLE
-        txtError.text = message
+        layoutError.findViewById<TextView>(R.id.txtNotificationsError).text = message
     }
 
     override fun setMarkAllEnabled(enabled: Boolean) {
@@ -107,18 +107,17 @@ open class AttendeeNotificationsActivity : AppCompatActivity(), NotificationsCon
 
     override fun renderNotifications(items: List<NotificationResponse>) {
         swipeRefresh.isRefreshing = false
-        txtError.visibility = View.GONE
+        layoutError.visibility = View.GONE
         btnRetry.visibility = View.GONE
         skeletonLoading.visibility = View.GONE
 
         if (items.isEmpty()) {
             recyclerNotifications.visibility = View.GONE
-            txtEmpty.visibility = View.VISIBLE
-            txtEmpty.text = "No notifications yet."
+            layoutEmpty.visibility = View.VISIBLE
             return
         }
 
-        txtEmpty.visibility = View.GONE
+        layoutEmpty.visibility = View.GONE
         recyclerNotifications.visibility = View.VISIBLE
         adapter.submitItems(items)
     }

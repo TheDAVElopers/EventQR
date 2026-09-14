@@ -73,25 +73,53 @@
                     android:orientation="vertical">
                     <include layout="@layout/include_skeleton_cards" android:layout_marginTop="16dp" />
 
-                <TextView
-                    android:id="@+id/txtNotificationsEmpty"
+                <LinearLayout
+                    android:id="@+id/layoutNotificationsEmpty"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center"
                     android:gravity="center"
-                    android:text="No notifications yet."
-                    android:textColor="@color/eventqr_muted"
-                    android:textSize="16sp"
-                    android:visibility="gone" />
+                    android:orientation="vertical"
+                    android:visibility="gone">
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_admin_notification"
+                        app:tint="@color/text_disabled" />
+                    <TextView
+                        android:id="@+id/txtNotificationsEmpty"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center"
+                        android:text="No notifications yet."
+                        android:textColor="@color/eventqr_muted"
+                        android:textSize="16sp" />
+                </LinearLayout>
 
-                <TextView
-                    android:id="@+id/txtNotificationsError"
+                <LinearLayout
+                    android:id="@+id/layoutNotificationsError"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center"
                     android:gravity="center"
-                    android:text="Unable to load notifications."
-                    android:textColor="@color/eventqr_error"
-                    android:textSize="14sp"
-                    android:visibility="gone" />
+                    android:orientation="vertical"
+                    android:visibility="gone">
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_admin_notification"
+                        app:tint="@color/eventqr_error" />
+                    <TextView
+                        android:id="@+id/txtNotificationsError"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center"
+                        android:text="Unable to load notifications."
+                        android:textColor="@color/eventqr_error"
+                        android:textSize="14sp" />
+                </LinearLayout>
 
                 <Button
                     android:id="@+id/btnNotificationsRetry"
