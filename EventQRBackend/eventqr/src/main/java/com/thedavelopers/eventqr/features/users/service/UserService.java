@@ -19,6 +19,7 @@ import com.thedavelopers.eventqr.features.users.model.entity.UserProfile;
 import com.thedavelopers.eventqr.features.users.model.entity.UserTokenRevocation;
 import com.thedavelopers.eventqr.features.users.repository.UserProfileRepository;
 import com.thedavelopers.eventqr.features.users.repository.UserTokenRevocationRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.AccountStatus;
 import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
@@ -51,19 +52,63 @@ public class UserService implements AttendeeDirectoryPort {
         this.passwordEncoder = passwordEncoder;
         this.userTokenRevocationRepository = userTokenRevocationRepository;
     }
-
-    public UserResponse create(UserRequest request) {
-        UserProfile userProfile = userProfileRepository.findByEmailIgnoreCase(request.email()).orElseGet(UserProfile::new);
-        if (hasRealPassword(userProfile)) {
-            throw new ConflictException("User already exists for email " + request.email());
+public UserResponse create(UserRequest request) {
+        String email = request.email().trim().toLowerCase();
+        
+        // First, try to find existing user
+        UserProfile existingUser = userProfileRepository.findByEmailIgnoreCase(email).orElse(null);
+        
+        if (existingUser != null) {
+            // User exists, check if they have a real password
+            if (hasRealPassword(existingUser)) {
+                throw new ConflictException("User already exists for email " + email);
+            }
+            // User exists but doesn't have a real password (e.g., created via findOrCreateAttendee)
+            // Update the existing user
+            existingUser.setFullName(request.fullName().trim());
+            existingUser.setPhoneNumber(request.phoneNumber());
+            existingUser.setRole(request.role());
+            existingUser.setStatus(AccountStatus.ACTIVE);
+            existingUser.setPasswordHash(passwordEncoder.encode(request.password()));
+            return toResponse(userProfileRepository.save(existingUser));
         }
-        userProfile.setEmail(request.email().trim().toLowerCase());
-        userProfile.setFullName(request.fullName().trim());
-        userProfile.setPhoneNumber(request.phoneNumber());
-        userProfile.setRole(request.role());
-        userProfile.setStatus(AccountStatus.ACTIVE);
-        userProfile.setPasswordHash(passwordEncoder.encode(request.password()));
-        return toResponse(userProfileRepository.save(userProfile));
+        
+        // No existing user found, try to create new one
+        UserProfile newUser = new UserProfile();
+        newUser.setEmail(email);
+        newUser.setFullName(request.fullName().trim());
+        newUser.setPhoneNumber(request.phoneNumber());
+        newUser.setRole(request.role());
+        newUser.setStatus(AccountStatus.ACTIVE);
+        newUser.setPasswordHash(passwordEncoder.encode(request.password()));
+        
+        try {
+            return toResponse(userProfileRepository.save(newUser));
+        } catch (DataIntegrityViolationException e) {
+            // Handle race condition: another thread created the user while we were processing
+            // Check if it's due to email uniqueness constraint
+            if (e.getRootCause() != null && 
+                (e.getRootCause().getMessage().contains("user_profiles_email_key") ||
+                 e.getRootCause().getMessage().contains("duplicate key") ||
+                 e.getRootCause().getMessage().contains("Unique index"))) {
+                // Retry as update - the user was created by another thread
+                UserProfile retryUser = userProfileRepository.findByEmailIgnoreCase(email)
+                        .orElseThrow(() -> new ConflictException("User already exists for email " + email));
+                
+                if (hasRealPassword(retryUser)) {
+                    throw new ConflictException("User already exists for email " + email);
+                }
+                
+                retryUser.setFullName(request.fullName().trim());
+                retryUser.setPhoneNumber(request.phoneNumber());
+                retryUser.setRole(request.role());
+                retryUser.setStatus(AccountStatus.ACTIVE);
+                retryUser.setPasswordHash(passwordEncoder.encode(request.password()));
+                return toResponse(userProfileRepository.save(retryUser));
+            }
+            // If it's not a duplicate key error, rethrow
+            throw e;
+        }
     }
 
     public Page<UserResponse> findAllUsers(Pageable pageable) {
