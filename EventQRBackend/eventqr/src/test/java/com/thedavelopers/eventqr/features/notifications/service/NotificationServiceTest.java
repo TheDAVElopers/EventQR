@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.notifications.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -15,9 +16,13 @@ import org.mockito.MockitoAnnotations;
 
 import com.thedavelopers.eventqr.features.notifications.model.entity.Notification;
 import com.thedavelopers.eventqr.features.notifications.repository.NotificationRepository;
+import com.thedavelopers.eventqr.features.organizer.model.entity.EventStaffAssignment;
+import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignmentRepository;
 import com.thedavelopers.eventqr.features.registrations.repository.EventRegistrationRepository;
 import com.thedavelopers.eventqr.shared.constants.NotificationStatus;
 import com.thedavelopers.eventqr.shared.constants.NotificationType;
+import com.thedavelopers.eventqr.shared.constants.TransactionResult;
+import com.thedavelopers.eventqr.shared.constants.TransactionType;
 import com.thedavelopers.eventqr.shared.interfaces.TransactionRecordedEvent;
 
 class NotificationServiceTest {
@@ -28,12 +33,15 @@ class NotificationServiceTest {
     @Mock
     private EventRegistrationRepository registrationRepository;
 
+    @Mock
+    private EventStaffAssignmentRepository staffAssignmentRepository;
+
     private NotificationService notificationService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        notificationService = new NotificationService(notificationRepository, registrationRepository);
+        notificationService = new NotificationService(notificationRepository, registrationRepository, staffAssignmentRepository);
     }
 
     @Test
@@ -90,11 +98,59 @@ class NotificationServiceTest {
     }
 
     @Test
-    void onTransactionRecorded_stillWorks() {
-        // Regression: existing event listener should not break
-        // Just confirm service instantiates and saves work
+    void onTransactionRecorded_rejected_notifiesScanningAndAssignedStaff() {
         UUID eventId = UUID.randomUUID();
-        notificationService.createEventApprovedNotification(eventId, UUID.randomUUID(), "Event");
-        verify(notificationRepository).save(org.mockito.ArgumentMatchers.any(Notification.class));
+        UUID attendee = UUID.randomUUID();
+        UUID scanningStaff = UUID.randomUUID();
+        UUID assignedStaff = UUID.randomUUID();
+        UUID txId = UUID.randomUUID();
+        EventStaffAssignment assignment = new EventStaffAssignment();
+        assignment.setStaffUserId(assignedStaff);
+        when(staffAssignmentRepository.findByEventIdAndActiveTrue(eventId)).thenReturn(List.of(assignment));
+        notificationService.onTransactionRecorded(new TransactionRecordedEvent(
+                txId, eventId, attendee, null, null, null, TransactionType.ENTRY,
+                TransactionResult.REJECTED, 0, scanningStaff, "Duplicate entry"));
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository, times(3)).save(captor.capture());
+        assertThat(captor.getAllValues()).anySatisfy(n -> {
+            assertThat(n.getRecipientUserId()).isEqualTo(scanningStaff);
+            assertThat(n.getNotificationType()).isEqualTo(NotificationType.SCAN_REJECTED);
+            assertThat(n.getStatus()).isEqualTo(NotificationStatus.SENT);
+        });
+        assertThat(captor.getAllValues()).anySatisfy(n ->
+                assertThat(n.getRecipientUserId()).isEqualTo(assignedStaff));
+        assertThat(captor.getAllValues()).anySatisfy(n ->
+                assertThat(n.getRecipientUserId()).isEqualTo(attendee));
+    }
+
+    @Test
+    void onTransactionRecorded_rejected_dedupesScanningStaffWhoIsAssigned() {
+        UUID eventId = UUID.randomUUID();
+        UUID attendee = UUID.randomUUID();
+        UUID scanningStaff = UUID.randomUUID();
+        EventStaffAssignment assignment = new EventStaffAssignment();
+        assignment.setStaffUserId(scanningStaff);
+        when(staffAssignmentRepository.findByEventIdAndActiveTrue(eventId)).thenReturn(List.of(assignment));
+        notificationService.onTransactionRecorded(new TransactionRecordedEvent(
+                eventId, eventId, attendee, null, null, null, TransactionType.ENTRY,
+                TransactionResult.REJECTED, 0, scanningStaff, "Duplicate reward claim"));
+        verify(notificationRepository, times(2)).save(org.mockito.ArgumentMatchers.any(Notification.class));
+    }
+
+    @Test
+    void onTransactionRecorded_rejected_nullScanningStaffStillNotifiesAssigned() {
+        UUID eventId = UUID.randomUUID();
+        UUID attendee = UUID.randomUUID();
+        UUID assignedStaff = UUID.randomUUID();
+        EventStaffAssignment assignment = new EventStaffAssignment();
+        assignment.setStaffUserId(assignedStaff);
+        when(staffAssignmentRepository.findByEventIdAndActiveTrue(eventId)).thenReturn(List.of(assignment));
+        notificationService.onTransactionRecorded(new TransactionRecordedEvent(
+                eventId, eventId, attendee, null, null, null, TransactionType.ENTRY,
+                TransactionResult.REJECTED, 0, null, "Wrong event"));
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository, times(2)).save(captor.capture());
+        assertThat(captor.getAllValues()).anySatisfy(n ->
+                assertThat(n.getRecipientUserId()).isEqualTo(assignedStaff));
     }
 }

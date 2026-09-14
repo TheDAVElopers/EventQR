@@ -17,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.thedavelopers.eventqr.features.events.service.EventService;
 import com.thedavelopers.eventqr.features.notifications.service.NotificationService;
+import com.thedavelopers.eventqr.features.organizer.model.entity.EventStaffAssignment;
+import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignmentRepository;
 import com.thedavelopers.eventqr.features.qremail.service.QREmailService;
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationRequest;
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse;
@@ -51,6 +53,7 @@ public class RegistrationService implements RegistrationLookupPort, Registration
     private final EventRegistrationRepository registrationRepository;
     private final AttendeeDirectoryPort attendeeDirectoryPort;
     private final NotificationService notificationService;
+    private final EventStaffAssignmentRepository staffAssignmentRepository;
     private final EventLookupPort eventLookupPort;
     private final QrCredentialPort qrCredentialPort;
     private final EventService eventService;
@@ -60,6 +63,7 @@ public class RegistrationService implements RegistrationLookupPort, Registration
     public RegistrationService(EventRegistrationRepository registrationRepository,
                                AttendeeDirectoryPort attendeeDirectoryPort,
                                NotificationService notificationService,
+                               EventStaffAssignmentRepository staffAssignmentRepository,
                                EventLookupPort eventLookupPort,
                                QrCredentialPort qrCredentialPort,
                                EventService eventService,
@@ -68,6 +72,7 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         this.registrationRepository = registrationRepository;
         this.attendeeDirectoryPort = attendeeDirectoryPort;
         this.notificationService = notificationService;
+        this.staffAssignmentRepository = staffAssignmentRepository;
         this.eventLookupPort = eventLookupPort;
         this.qrCredentialPort = qrCredentialPort;
         this.eventService = eventService;
@@ -171,12 +176,22 @@ public class RegistrationService implements RegistrationLookupPort, Registration
                 notificationService.createCapacityFullNotification(
                         eventSnapshot.eventId(), eventSnapshot.organizerUserId(), eventSnapshot.title(),
                         (int) currentCount, capacity);
+                notifyAssignedStaffCapacityFull(eventSnapshot.eventId(), eventSnapshot.organizerUserId(),
+                        eventSnapshot.title(), (int) currentCount, capacity);
             } else if (currentCount >= capacity * 0.8) {
                 notificationService.createCapacityWarningNotification(
                         eventSnapshot.eventId(), eventSnapshot.organizerUserId(), eventSnapshot.title(),
                         (int) currentCount, capacity);
             }
         }
+    }
+
+    private void notifyAssignedStaffCapacityFull(UUID eventId, UUID organizerUserId, String eventTitle, int count, int capacity) {
+        staffAssignmentRepository.findByEventIdAndActiveTrue(eventId).stream()
+            .map(EventStaffAssignment::getStaffUserId)
+            .filter(staffUserId -> !staffUserId.equals(organizerUserId))
+            .forEach(staffUserId -> notificationService.createCapacityFullNotification(
+                    eventId, staffUserId, eventTitle, count, capacity));
     }
 
     public List<RegistrationResponse> findByEvent(UUID eventId) {

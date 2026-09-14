@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.notifications.service;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse;
 import com.thedavelopers.eventqr.features.notifications.model.entity.Notification;
 import com.thedavelopers.eventqr.features.notifications.repository.NotificationRepository;
+import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignmentRepository;
 import com.thedavelopers.eventqr.features.registrations.repository.EventRegistrationRepository;
 import com.thedavelopers.eventqr.shared.constants.NotificationStatus;
 import com.thedavelopers.eventqr.shared.constants.NotificationType;
@@ -24,11 +26,14 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final EventRegistrationRepository registrationRepository;
+    private final EventStaffAssignmentRepository staffAssignmentRepository;
 
     public NotificationService(NotificationRepository notificationRepository,
-                               EventRegistrationRepository registrationRepository) {
+                               EventRegistrationRepository registrationRepository,
+                               EventStaffAssignmentRepository staffAssignmentRepository) {
         this.notificationRepository = notificationRepository;
         this.registrationRepository = registrationRepository;
+        this.staffAssignmentRepository = staffAssignmentRepository;
     }
 
     public List<NotificationResponse> findByRecipient(UUID recipientUserId) {
@@ -100,6 +105,29 @@ public class NotificationService {
         notification.setNotificationType(event.transactionResult() == TransactionResult.APPROVED
                 ? NotificationType.SCAN_APPROVED : NotificationType.SCAN_REJECTED);
         notificationRepository.save(notification);
+
+        if (event.transactionResult() == TransactionResult.REJECTED) {
+            List<UUID> staffRecipients = new ArrayList<>();
+            if (event.staffUserId() != null) {
+                staffRecipients.add(event.staffUserId());
+            }
+            staffAssignmentRepository.findByEventIdAndActiveTrue(event.eventId())
+                .forEach(assignment -> staffRecipients.add(assignment.getStaffUserId()));
+            staffRecipients.stream().distinct().forEach(recipientUserId ->
+                    createScanRejectedStaffNotification(event, recipientUserId));
+        }
+    }
+
+    private void createScanRejectedStaffNotification(TransactionRecordedEvent event, UUID recipientUserId) {
+        Notification n = new Notification();
+        n.setEventId(event.eventId());
+        n.setRecipientUserId(recipientUserId);
+        n.setTitle("Scan rejected");
+        n.setMessage(event.reason() == null ? "A scanner rejected a QR transaction." : event.reason());
+        n.setRelatedTransactionId(event.transactionId());
+        n.setNotificationType(NotificationType.SCAN_REJECTED);
+        n.setStatus(NotificationStatus.SENT);
+        notificationRepository.save(n);
     }
 
     public void createNewRegistrationNotification(UUID eventId, UUID organizerUserId, String eventTitle, String attendeeName) {
