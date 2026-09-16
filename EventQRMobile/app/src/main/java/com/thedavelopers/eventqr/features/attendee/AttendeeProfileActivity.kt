@@ -9,10 +9,10 @@ import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
-import android.widget.ImageButton
+import com.google.android.material.appbar.MaterialToolbar
 import android.widget.TextView
 import android.widget.Toast
-import com.google.android.material.textfield.TextInputLayout
+import androidx.core.content.ContextCompat
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -180,11 +180,12 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
     private lateinit var sessionManager: SessionManager
     private lateinit var repository: AttendeeRepository
 
-    private lateinit var btnBack: ImageButton
+    private lateinit var btnBack: MaterialToolbar
     private lateinit var edtFullName: EditText
     private lateinit var edtEmail: EditText
     private lateinit var edtPhone: EditText
-    private lateinit var tilPhone: TextInputLayout
+    private lateinit var layoutPhoneField: View
+    private lateinit var txtPhoneError: TextView
     private lateinit var cardError: View
     private lateinit var txtApiError: TextView
     private lateinit var btnRetryProfileLoad: Button
@@ -219,7 +220,8 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
         edtFullName = findViewById(R.id.edtFullName)
         edtEmail = findViewById(R.id.edtEmail)
         edtPhone = findViewById(R.id.edtPhone)
-        tilPhone = findViewById(R.id.tilPhone)
+        layoutPhoneField = findViewById(R.id.layoutPhoneField)
+        txtPhoneError = findViewById(R.id.txtPhoneError)
         cardError = findViewById(R.id.cardError)
         txtApiError = findViewById(R.id.txtApiError)
         btnRetryProfileLoad = findViewById(R.id.btnRetryProfileLoad)
@@ -229,12 +231,12 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
         btnSaveChanges = findViewById(R.id.btnSaveChanges)
         txtEmptyHint = findViewById(R.id.txtEmptyHint)
 
-        swipeRefresh.setColorSchemeResources(R.color.eventqr_purple)
+        swipeRefresh.setColorSchemeResources(R.color.accent_signal)
         swipeRefresh.setOnRefreshListener { loadCurrentProfile() }
     }
 
     private fun bindActions() {
-        btnBack.setOnClickListener { finish() }
+        btnBack.setNavigationOnClickListener { finish() }
         btnRetryProfileLoad.setOnClickListener { loadCurrentProfile() }
 
         btnSaveChanges.setOnClickListener { attemptSave() }
@@ -342,11 +344,15 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
     private fun validateForm(): Boolean {
         val phone = sanitizePhone()
         if (phone.isBlank()) {
-            edtPhone.error = "Phone number is required."
+            layoutPhoneField.background = ContextCompat.getDrawable(this, R.drawable.bg_phone_input_error)
+            txtPhoneError.text = "Phone number is required."
+            txtPhoneError.visibility = View.VISIBLE
             return false
         }
         if (phone.length != 10 || !phone.all { it.isDigit() }) {
-            edtPhone.error = "Enter a valid 10-digit mobile number"
+            layoutPhoneField.background = ContextCompat.getDrawable(this, R.drawable.bg_phone_input_error)
+            txtPhoneError.text = "Enter a valid 10-digit mobile number"
+            txtPhoneError.visibility = View.VISIBLE
             return false
         }
         return true
@@ -374,7 +380,8 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
                 val normalized = normalizePhoneDigits(current.toString())
                 if (normalized != current.toString()) {
                     current.replace(0, current.length, normalized)
-                    edtPhone.error = null
+                    layoutPhoneField.background = ContextCompat.getDrawable(this@AttendeeEditProfileActivity, R.drawable.bg_phone_input)
+                    txtPhoneError.visibility = View.GONE
                 }
             }
         })
@@ -403,7 +410,8 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
     private fun clearFieldErrors() {
         edtFullName.error = null
         edtEmail.error = null
-        edtPhone.error = null
+        layoutPhoneField.background = ContextCompat.getDrawable(this@AttendeeEditProfileActivity, R.drawable.bg_phone_input)
+        txtPhoneError.visibility = View.GONE
     }
 
     private fun showApiError(message: String) {

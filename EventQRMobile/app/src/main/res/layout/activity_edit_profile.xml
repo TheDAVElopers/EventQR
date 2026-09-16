@@ -3,39 +3,21 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface_alt"
+    android:background="@color/paper"
     android:orientation="vertical">
 
-    <LinearLayout
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbarEditProfile"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:background="@drawable/bg_header_surface_outline"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingEnd="16dp">
-
-        <ImageButton
-            android:id="@+id/toolbarEditProfile"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Back"
-            android:padding="8dp"
-            android:src="@drawable/ic_back_chevron"
-            app:tint="@color/text_primary" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_weight="1"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text="Edit Profile"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-            android:textColor="@color/text_primary" />
-    </LinearLayout>
+        android:layout_height="@dimen/topbar_height"
+        android:background="@color/paper"
+        android:elevation="0dp"
+        app:navigationContentDescription="Back"
+        app:navigationIcon="@drawable/ic_back_chevron"
+        app:navigationIconTint="@color/text_on_paper"
+        app:title="Edit Profile"
+        app:titleTextAppearance="@style/TextAppearance.EventQR.TextTitle"
+        app:titleTextColor="@color/text_on_paper" />
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshEditProfile"
@@ -53,24 +35,22 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingHorizontal="16dp"
-                android:paddingTop="24dp"
-                android:paddingBottom="32dp">
+                android:paddingStart="@dimen/space_md"
+                android:paddingTop="@dimen/space_lg"
+                android:paddingEnd="@dimen/space_md"
+                android:paddingBottom="@dimen/space_xl">
 
-                <!-- Skeleton loading -->
                 <include layout="@layout/include_skeleton_edit_profile" />
 
                 <TextView
                     android:id="@+id/txtEmptyHint"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
+                    android:layout_marginBottom="@dimen/space_xs"
                     android:text="Complete your profile to help organizers reach you."
-                    android:textColor="@color/text_secondary"
-                    android:textSize="14sp"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact"
                     android:visibility="gone" />
 
-                <!-- Editable content below skeleton -->
                 <LinearLayout
                     android:id="@+id/layoutEditProfileContent"
                     android:layout_width="match_parent"
@@ -80,237 +60,273 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="4dp"
+                        android:layout_marginBottom="@dimen/space_sm"
                         android:text="Personal Information"
-                        android:textAppearance="@style/TextAppearance.EventQR.SectionTitle" />
-
-                    <com.google.android.material.card.MaterialCardView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
-                        app:cardCornerRadius="12dp"
-                        app:cardElevation="2dp"
-                        app:strokeColor="@color/outline"
-                        app:strokeWidth="1dp">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:padding="16dp">
-
-                            <com.google.android.material.textfield.TextInputLayout
-                                android:id="@+id/tilFullName"
-                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:hint="Full Name"
-                                app:boxCornerRadiusBottomEnd="8dp"
-                                app:boxCornerRadiusBottomStart="8dp"
-                                app:boxCornerRadiusTopEnd="8dp"
-                                app:boxCornerRadiusTopStart="8dp"
-                                app:boxStrokeColor="@color/outline"
-                                android:enabled="false"
-
-                                app:hintTextColor="@color/text_secondary"
-                                app:placeholderTextColor="@color/text_disabled">
-
-                                <com.google.android.material.textfield.TextInputEditText
-                                    android:id="@+id/edtFullName"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:enabled="false"
-                                    android:focusable="false"
-                                    android:focusableInTouchMode="false"
-                                    android:inputType="textPersonName"
-                                    android:textColor="@color/text_primary"
-                                    android:textColorHint="@color/text_disabled"
-                                    android:textSize="14sp" />
-                            </com.google.android.material.textfield.TextInputLayout>
-
-                            <com.google.android.material.textfield.TextInputLayout
-                                android:id="@+id/tilEmail"
-                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="12dp"
-                                android:hint="Email Address"
-                                app:boxCornerRadiusBottomEnd="8dp"
-                                app:boxCornerRadiusBottomStart="8dp"
-                                app:boxCornerRadiusTopEnd="8dp"
-                                app:boxCornerRadiusTopStart="8dp"
-                                app:boxStrokeColor="@color/outline"
-                                android:enabled="false"
-
-                                app:hintTextColor="@color/text_secondary"
-                                app:placeholderTextColor="@color/text_disabled">
-
-                                <com.google.android.material.textfield.TextInputEditText
-                                    android:id="@+id/edtEmail"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:enabled="false"
-                                    android:focusable="false"
-                                    android:focusableInTouchMode="false"
-                                    android:inputType="textEmailAddress"
-                                    android:textColor="@color/text_primary"
-                                    android:textColorHint="@color/text_disabled"
-                                    android:textSize="14sp" />
-                            </com.google.android.material.textfield.TextInputLayout>
-
-                            <com.google.android.material.textfield.TextInputLayout
-                                android:id="@+id/tilPhone"
-                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="12dp"
-                                android:hint="Phone Number"
-                                app:boxCornerRadiusBottomEnd="8dp"
-                                app:boxCornerRadiusBottomStart="8dp"
-                                app:boxCornerRadiusTopEnd="8dp"
-                                app:boxCornerRadiusTopStart="8dp"
-                                app:boxStrokeColor="@color/outline"
-                                app:counterEnabled="true"
-                                app:counterMaxLength="10"
-                                app:helperText="Enter your 10-digit mobile number"
-                                app:hintTextColor="@color/text_secondary"
-                                app:prefixText="+63"
-                                app:prefixTextColor="@color/text_primary">
-
-                                <com.google.android.material.textfield.TextInputEditText
-                                    android:id="@+id/edtPhone"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:hint="9123456789"
-                                    android:inputType="number"
-                                    android:maxLength="10"
-                                    android:textColor="@color/text_primary"
-                                    android:textColorHint="@color/text_disabled"
-                                    android:textSize="14sp" />
-                            </com.google.android.material.textfield.TextInputLayout>
-
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
+                        android:textAppearance="@style/TextAppearance.EventQR.TextLabel" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="4dp"
-                        android:text="Security"
-                        android:textAppearance="@style/TextAppearance.EventQR.SectionTitle" />
+                        android:layout_marginBottom="@dimen/space_xs"
+                        android:text="Full Name"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextLabel" />
 
-                    <com.google.android.material.card.MaterialCardView
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilFullName"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/input_height"
+                        android:enabled="false"
+                        app:boxBackgroundColor="@color/surface"
+                        app:boxCornerRadiusBottomEnd="@dimen/radius_sharp"
+                        app:boxCornerRadiusBottomStart="@dimen/radius_sharp"
+                        app:boxCornerRadiusTopEnd="@dimen/radius_sharp"
+                        app:boxCornerRadiusTopStart="@dimen/radius_sharp"
+                        app:boxStrokeColor="@color/input_stroke"
+                        app:boxStrokeErrorColor="@color/status_rejected"
+                        app:boxStrokeWidth="1.5dp"
+                        app:boxStrokeWidthFocused="2dp"
+                        app:errorTextAppearance="@style/TextAppearance.EventQR.InputError"
+                        app:hintEnabled="false"
+                        app:hintTextColor="@color/text_on_paper_muted">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/edtFullName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:enabled="false"
+                            android:focusable="false"
+                            android:focusableInTouchMode="false"
+                            android:fontFamily="@font/archivo_regular"
+                            android:inputType="textPersonName"
+                            android:paddingStart="24dp"
+                            android:textColor="@color/text_on_paper_muted"
+                            android:textSize="@dimen/type_body" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <Space
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/space_sm" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/space_xs"
+                        android:text="Email Address"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextLabel" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilEmail"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/input_height"
+                        android:enabled="false"
+                        app:boxBackgroundColor="@color/surface"
+                        app:boxCornerRadiusBottomEnd="@dimen/radius_sharp"
+                        app:boxCornerRadiusBottomStart="@dimen/radius_sharp"
+                        app:boxCornerRadiusTopEnd="@dimen/radius_sharp"
+                        app:boxCornerRadiusTopStart="@dimen/radius_sharp"
+                        app:boxStrokeColor="@color/input_stroke"
+                        app:boxStrokeErrorColor="@color/status_rejected"
+                        app:boxStrokeWidth="1.5dp"
+                        app:boxStrokeWidthFocused="2dp"
+                        app:errorTextAppearance="@style/TextAppearance.EventQR.InputError"
+                        app:hintEnabled="false"
+                        app:hintTextColor="@color/text_on_paper_muted">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/edtEmail"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:enabled="false"
+                            android:focusable="false"
+                            android:focusableInTouchMode="false"
+                            android:fontFamily="@font/archivo_regular"
+                            android:inputType="textEmailAddress"
+                            android:paddingStart="24dp"
+                            android:textColor="@color/text_on_paper_muted"
+                            android:textSize="@dimen/type_body" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <Space
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/space_sm" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/space_xs"
+                        android:text="Phone Number"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextLabel" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutPhoneField"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/input_height"
+                        android:background="@drawable/bg_phone_input"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingStart="@dimen/space_md"
+                        android:paddingEnd="@dimen/space_md">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/archivo_regular"
+                            android:gravity="center_vertical"
+                            android:includeFontPadding="false"
+                            android:text="+63"
+                            android:textColor="@color/text_on_paper"
+                            android:textSize="@dimen/type_body" />
+
+                        <EditText
+                            android:id="@+id/edtPhone"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@android:color/transparent"
+                            android:fontFamily="@font/archivo_regular"
+                            android:gravity="center_vertical"
+                            android:hint="9123456789"
+                            android:imeOptions="actionDone"
+                            android:includeFontPadding="false"
+                            android:inputType="number"
+                            android:maxLength="10"
+                            android:textColor="@color/text_on_paper"
+                            android:textColorHint="@color/ink_muted"
+                            android:textSize="@dimen/type_body"
+                            android:padding="0dp" />
+                    </LinearLayout>
+
+                    <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="24dp"
-                        app:cardCornerRadius="12dp"
-                        app:cardElevation="2dp"
-                        app:strokeColor="@color/outline"
-                        app:strokeWidth="1dp">
+                        android:layout_marginTop="@dimen/space_xs"
+                        android:text="Enter your 10-digit mobile number"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
 
-                        <LinearLayout
-                            android:id="@+id/btnChangePassword"
-                            android:layout_width="match_parent"
-                            android:layout_height="56dp"
-                            android:background="?attr/selectableItemBackground"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:gravity="center_vertical"
-                            android:paddingHorizontal="16dp">
+                    <TextView
+                        android:id="@+id/txtPhoneError"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_xs"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact"
+                        android:textColor="@color/status_rejected"
+                        android:visibility="gone" />
 
-                            <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
-                                android:contentDescription="Security icon"
-                                android:src="@drawable/ic_lock"
-                                app:tint="@color/text_secondary" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_xl"
+                        android:layout_marginBottom="@dimen/space_sm"
+                        android:text="Security"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextLabel" />
 
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="12dp"
-                                android:layout_weight="1"
-                                android:text="Change Password"
-                                android:textColor="@color/text_primary"
-                                android:textSize="14sp" />
+                    <LinearLayout
+                        android:id="@+id/btnChangePassword"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="?attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingVertical="@dimen/space_sm">
 
-                            <ImageView
-                                android:layout_width="16dp"
-                                android:layout_height="16dp"
-                                android:contentDescription="Navigate"
-                                android:src="@drawable/ic_chevron_right"
-                                app:tint="@color/text_disabled" />
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:contentDescription="Security icon"
+                            android:src="@drawable/ic_lock"
+                            app:tint="@color/text_on_paper" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/space_sm"
+                            android:layout_weight="1"
+                            android:text="Change Password"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextTitle" />
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:contentDescription="Navigate"
+                            android:src="@drawable/ic_chevron_right"
+                            app:tint="@color/text_on_paper_muted" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/line" />
+
+                    <Space
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/space_xl" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnSaveChanges"
                         android:layout_width="match_parent"
-                        android:layout_height="48dp"
+                        android:layout_height="@dimen/button_primary_height"
+                        android:fontFamily="@font/archivo_semibold"
+                        android:letterSpacing="0"
                         android:text="Save Changes"
                         android:textAllCaps="false"
-                        android:textColor="@color/brand_on_primary"
-                        android:textSize="14sp"
-                        android:letterSpacing="0.02"
-                        app:backgroundTint="@color/brand_primary"
-                        app:cornerRadius="8dp"
-                        app:rippleColor="@color/brand_primary_dark" />
+                        android:textColor="@color/btn_primary_text"
+                        android:textSize="@dimen/type_title"
+                        app:backgroundTint="@color/btn_primary_bg"
+                        app:cornerRadius="@dimen/radius_sharp"
+                        app:elevation="0dp"
+                        app:rippleColor="@color/accent_signal_pressed"
+                        app:strokeWidth="0dp" />
                 </LinearLayout>
 
-                <!-- Error card (outside content container so it can show during errors) -->
-                <com.google.android.material.card.MaterialCardView
+                <LinearLayout
                     android:id="@+id/cardError"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:visibility="gone"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="0dp"
-                    app:strokeColor="@color/error"
-                    app:strokeWidth="1dp">
+                    android:layout_marginTop="@dimen/space_sm"
+                    android:orientation="vertical"
+                    android:visibility="gone">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="16dp">
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                        <LinearLayout
-                            android:layout_width="match_parent"
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:contentDescription="Error"
+                            android:src="@drawable/ic_error"
+                            app:tint="@color/status_rejected" />
+
+                        <TextView
+                            android:id="@+id/txtApiError"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal">
-
-                            <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
-                                android:contentDescription="Error"
-                                android:src="@drawable/ic_error"
-                                app:tint="@color/error" />
-
-                            <TextView
-                                android:id="@+id/txtApiError"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="8dp"
-                                android:layout_weight="1"
-                                android:textColor="@color/error"
-                                android:textSize="14sp" />
-                        </LinearLayout>
-
-                        <Button
-                            android:id="@+id/btnRetryProfileLoad"
-                            style="@style/Widget.MaterialComponents.Button.TextButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="48dp"
-                            android:layout_gravity="end"
-                            android:layout_marginTop="8dp"
-                            android:text="Retry"
-                            android:textAllCaps="false"
-                            android:textColor="@color/error"
-                            android:textSize="12sp" />
+                            android:layout_marginStart="@dimen/space_xs"
+                            android:layout_weight="1"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact"
+                            android:textColor="@color/status_rejected" />
                     </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnRetryProfileLoad"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="48dp"
+                        android:layout_gravity="end"
+                        android:layout_marginTop="@dimen/space_xs"
+                        android:fontFamily="@font/archivo_semibold"
+                        android:letterSpacing="0.06"
+                        android:text="Retry"
+                        android:textAllCaps="true"
+                        android:textColor="@color/status_rejected"
+                        android:textSize="@dimen/type_label" />
+                </LinearLayout>
 
             </LinearLayout>
         </ScrollView>

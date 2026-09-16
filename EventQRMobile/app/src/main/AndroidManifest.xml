@@ -22,7 +22,9 @@
         <activity android:name=".features.attendee.AttendeeEventRequestDetailActivity" android:exported="false" />
         <activity android:name=".features.attendee.MyEventRequestsActivity" android:exported="false" />
         <activity android:name=".features.attendee.RequestEventActivity" android:exported="false" />
-        <activity android:name=".features.attendee.AttendeeEditProfileActivity" android:exported="false" />
+        <activity android:name=".features.attendee.AttendeeEditProfileActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
         <activity android:name=".features.attendee.AttendeeProfileActivity" android:exported="false" />
         <activity android:name=".features.attendee.AttendeeNotificationsActivity" android:exported="false" />
         <activity android:name=".features.attendee.AttendeeRewardsActivity" android:exported="false" />
@@ -89,7 +91,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".features.auth.changepassword.ChangePasswordActivity" android:exported="false" />
+        <activity android:name=".features.auth.changepassword.ChangePasswordActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <activity android:name=".features.dashboard.DashboardActivity" android:exported="false" />
         <activity android:name=".features.auth.register.RegistrationActivity" android:exported="false" />
         <activity

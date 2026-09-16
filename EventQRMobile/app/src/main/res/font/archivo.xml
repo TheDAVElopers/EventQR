@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<font-family xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <font
+        android:font="@font/archivo_regular"
+        android:fontStyle="normal"
+        android:fontWeight="400"
+        app:font="@font/archivo_regular"
+        app:fontStyle="normal"
+        app:fontWeight="400" />
+
+    <font
+        android:font="@font/archivo_semibold"
+        android:fontStyle="normal"
+        android:fontWeight="600"
+        app:font="@font/archivo_semibold"
+        app:fontStyle="normal"
+        app:fontWeight="600" />
+
+    <font
+        android:font="@font/archivo_black"
+        android:fontStyle="normal"
+        android:fontWeight="900"
+        app:font="@font/archivo_black"
+        app:fontStyle="normal"
+        app:fontWeight="900" />
+</font-family>

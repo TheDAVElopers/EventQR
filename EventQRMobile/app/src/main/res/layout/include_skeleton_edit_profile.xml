@@ -4,79 +4,60 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingHorizontal="16dp"
-    android:paddingTop="24dp"
-    android:paddingBottom="32dp"
     android:visibility="gone">
 
-    <!-- Section label placeholder -->
     <View
-        android:layout_width="140dp"
+        android:layout_width="120dp"
         android:layout_height="12dp"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/bg_staff_skeleton_bar" />
+        android:layout_marginBottom="@dimen/space_sm"
+        android:background="@drawable/bg_skeleton_block" />
 
-    <!-- Form card skeleton -->
-    <LinearLayout
+    <View
+        android:layout_width="72dp"
+        android:layout_height="12dp"
+        android:layout_marginBottom="@dimen/space_xs"
+        android:background="@drawable/bg_skeleton_block" />
+    <View
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:layout_marginBottom="12dp"
-        android:background="@drawable/bg_staff_skeleton_card">
+        android:layout_height="@dimen/input_height"
+        android:layout_marginBottom="@dimen/space_sm"
+        android:background="@drawable/bg_skeleton_block" />
 
-        <!-- Input field 1 placeholder (Full Name) -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginBottom="12dp"
-            android:background="@drawable/bg_staff_skeleton_bar" />
+    <View
+        android:layout_width="64dp"
+        android:layout_height="12dp"
+        android:layout_marginBottom="@dimen/space_xs"
+        android:background="@drawable/bg_skeleton_block" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/input_height"
+        android:layout_marginBottom="@dimen/space_sm"
+        android:background="@drawable/bg_skeleton_block" />
 
-        <!-- Input field 2 placeholder (Email) -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginBottom="12dp"
-            android:background="@drawable/bg_staff_skeleton_bar" />
-
-        <!-- Input field 3 placeholder (Phone) -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:background="@drawable/bg_staff_skeleton_bar" />
-    </LinearLayout>
-
-    <!-- Security section label placeholder -->
     <View
         android:layout_width="80dp"
         android:layout_height="12dp"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/bg_staff_skeleton_bar" />
-
-    <!-- Change password card skeleton -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="16dp"
-        android:layout_marginBottom="16dp"
-        android:background="@drawable/bg_staff_skeleton_card">
-
-        <View
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:background="@drawable/bg_staff_skeleton_date_block" />
-
-        <View
-            android:layout_width="130dp"
-            android:layout_height="14dp"
-            android:layout_marginStart="12dp"
-            android:background="@drawable/bg_staff_skeleton_bar" />
-    </LinearLayout>
-
-    <!-- Save button placeholder -->
+        android:layout_marginBottom="@dimen/space_xs"
+        android:background="@drawable/bg_skeleton_block" />
     <View
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:background="@drawable/bg_staff_skeleton_bar" />
+        android:layout_height="@dimen/input_height"
+        android:background="@drawable/bg_skeleton_block" />
+
+    <View
+        android:layout_width="88dp"
+        android:layout_height="12dp"
+        android:layout_marginTop="@dimen/space_xl"
+        android:layout_marginBottom="@dimen/space_sm"
+        android:background="@drawable/bg_skeleton_block" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/space_xxl"
+        android:background="@drawable/bg_skeleton_block" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/button_primary_height"
+        android:layout_marginTop="@dimen/space_xl"
+        android:background="@drawable/bg_skeleton_block" />
 </LinearLayout>

@@ -79,4 +79,60 @@
         <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textColor">@color/text_primary</item>
     </style>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- EventQR v2.0 Type Scale (DESIGN.md §3.2)      -->
+    <!-- ═══════════════════════════════════════════════ -->
+
+    <style name="TextAppearance.EventQR.TextTitle" parent="">
+        <item name="android:fontFamily">@font/archivo_semibold</item>
+        <item name="android:textSize">@dimen/type_title</item>
+        <item name="android:textColor">@color/text_on_paper</item>
+    </style>
+
+    <style name="TextAppearance.EventQR.TextLabel" parent="">
+        <item name="android:fontFamily">@font/archivo_semibold</item>
+        <item name="android:textSize">@dimen/type_label</item>
+        <item name="android:textColor">@color/text_on_paper</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.06</item>
+    </style>
+
+    <style name="TextAppearance.EventQR.TextBody" parent="">
+        <item name="android:fontFamily">@font/archivo_regular</item>
+        <item name="android:textSize">@dimen/type_body</item>
+        <item name="android:textColor">@color/text_on_paper</item>
+    </style>
+
+    <style name="TextAppearance.EventQR.TextBodyCompact" parent="">
+        <item name="android:fontFamily">@font/archivo_regular</item>
+        <item name="android:textSize">@dimen/type_body_compact</item>
+        <item name="android:textColor">@color/text_on_paper_muted</item>
+    </style>
+
+    <style name="TextAppearance.EventQR.TextCaption" parent="">
+        <item name="android:fontFamily">@font/archivo_regular</item>
+        <item name="android:textSize">@dimen/type_caption</item>
+        <item name="android:textColor">@color/text_on_paper_muted</item>
+    </style>
+
+    <style name="TextAppearance.EventQR.TextStatus" parent="">
+        <item name="android:fontFamily">@font/jetbrains_mono_semibold</item>
+        <item name="android:textSize">@dimen/type_status</item>
+        <item name="android:textColor">@color/text_on_paper</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.08</item>
+    </style>
+
+    <style name="TextAppearance.EventQR.TextHeadline" parent="">
+        <item name="android:fontFamily">@font/archivo_semibold</item>
+        <item name="android:textSize">@dimen/type_headline</item>
+        <item name="android:textColor">@color/text_on_paper</item>
+    </style>
+
+    <style name="TextAppearance.EventQR.InputError" parent="">
+        <item name="android:fontFamily">@font/archivo_regular</item>
+        <item name="android:textSize">@dimen/type_body_compact</item>
+        <item name="android:textColor">@color/status_rejected</item>
+    </style>
 </resources>

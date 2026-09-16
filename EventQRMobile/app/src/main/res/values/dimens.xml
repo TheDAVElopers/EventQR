@@ -29,4 +29,45 @@
     <dimen name="landing_card_title_size">14sp</dimen>
     <dimen name="landing_card_desc_size">12sp</dimen>
     <dimen name="landing_card_margin_top">12dp</dimen>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- v2.0 Spacing Scale (DESIGN.md §4.1)            -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <dimen name="space_xs">8dp</dimen>
+    <dimen name="space_sm">16dp</dimen>
+    <dimen name="space_md">24dp</dimen>
+    <dimen name="space_lg">32dp</dimen>
+    <dimen name="space_xl">40dp</dimen>
+    <dimen name="space_xxl">56dp</dimen>
+    <dimen name="space_xxxl">72dp</dimen>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- v2.0 Border Radius (§5.1)                      -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <dimen name="radius_flat">0dp</dimen>
+    <dimen name="radius_sharp">4dp</dimen>
+    <dimen name="radius_soft">8dp</dimen>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- v2.0 Component Dimensions                      -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <dimen name="input_height">52dp</dimen>
+    <dimen name="button_primary_height">56dp</dimen>
+    <dimen name="topbar_height">56dp</dimen>
+    <dimen name="back_control_size">44dp</dimen>
+    <dimen name="progress_circular_size">28dp</dimen>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- v2.0 Type Scale sizes (§3.2)                   -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <dimen name="type_jumbo">40sp</dimen>
+    <dimen name="type_display">30sp</dimen>
+    <dimen name="type_headline">22sp</dimen>
+    <dimen name="type_title">17sp</dimen>
+    <dimen name="type_label">13sp</dimen>
+    <dimen name="type_body">15sp</dimen>
+    <dimen name="type_body_compact">13sp</dimen>
+    <dimen name="type_status">11sp</dimen>
+    <dimen name="type_code">15sp</dimen>
+    <dimen name="type_caption">12sp</dimen>
 </resources>
