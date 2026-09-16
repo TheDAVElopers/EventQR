@@ -157,6 +157,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
         cardView.addView(text("ID Preview", 11, true, TEXT).apply {
             gravity = Gravity.CENTER
             setPadding(0, 0, 0, dp(10))
+            includeFontPadding = false
         })
 
         // QR code (locked) — size from shared config ratio
@@ -203,8 +204,8 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
         )
-        addView(text(label.uppercase(), previewLabelFontSp, true, MUTED, align = Gravity.CENTER_HORIZONTAL))
-        addView(text(value, previewEventNameFontSp, true, TEXT, align = Gravity.CENTER_HORIZONTAL))
+        addView(text(label.uppercase(), previewLabelFontSp, true, MUTED, align = Gravity.CENTER_HORIZONTAL).apply { includeFontPadding = false })
+        addView(text(value, previewEventNameFontSp, true, TEXT, align = Gravity.CENTER_HORIZONTAL).apply { includeFontPadding = false })
     }
 
     private fun qrPlaceholder(): TextView = TextView(this).apply {
@@ -235,8 +236,8 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
         )
-        addView(text(label.uppercase(), previewLabelFontSp, true, MUTED, align = Gravity.CENTER_HORIZONTAL))
-        addView(text(value, valueSizeSp, true, TEXT, align = Gravity.CENTER_HORIZONTAL))
+        addView(text(label.uppercase(), previewLabelFontSp, true, MUTED, align = Gravity.CENTER_HORIZONTAL).apply { includeFontPadding = false })
+        addView(text(value, valueSizeSp, true, TEXT, align = Gravity.CENTER_HORIZONTAL).apply { includeFontPadding = false })
     }
 
     private fun loadConfig() {
