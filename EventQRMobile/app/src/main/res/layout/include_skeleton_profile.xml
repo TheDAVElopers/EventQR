@@ -13,34 +13,36 @@
     <View
         android:layout_width="120dp"
         android:layout_height="12dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginBottom="6dp"
         android:background="@drawable/bg_staff_skeleton_bar" />
 
-    <!-- Profile details card skeleton -->
+    <!-- Profile details card skeleton (56dp rows with indented dividers) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:background="@drawable/bg_staff_skeleton_card"
         android:orientation="vertical"
-        android:padding="16dp"
-        android:layout_marginBottom="16dp"
-        android:background="@drawable/bg_staff_skeleton_card">
+        android:padding="0dp">
 
-        <!-- Name row -->
+        <!-- Name row placeholder -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="56dp"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp">
 
             <View
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:background="@drawable/bg_staff_skeleton_date_block" />
 
             <View
-                android:layout_width="80dp"
+                android:layout_width="60dp"
                 android:layout_height="12dp"
-                android:layout_marginStart="16dp"
+                android:layout_marginStart="12dp"
                 android:background="@drawable/bg_staff_skeleton_bar" />
 
             <View
@@ -57,25 +59,27 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginHorizontal="16dp"
+            android:layout_marginStart="52dp"
+            android:layout_marginEnd="16dp"
             android:background="@color/outline" />
 
-        <!-- Email row -->
+        <!-- Email row placeholder -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="56dp"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp">
 
             <View
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:background="@drawable/bg_staff_skeleton_date_block" />
 
             <View
-                android:layout_width="56dp"
+                android:layout_width="50dp"
                 android:layout_height="12dp"
-                android:layout_marginStart="16dp"
+                android:layout_marginStart="12dp"
                 android:background="@drawable/bg_staff_skeleton_bar" />
 
             <View
@@ -92,25 +96,27 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginHorizontal="16dp"
+            android:layout_marginStart="52dp"
+            android:layout_marginEnd="16dp"
             android:background="@color/outline" />
 
-        <!-- Phone row -->
+        <!-- Phone row placeholder -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="56dp"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp">
 
             <View
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:background="@drawable/bg_staff_skeleton_date_block" />
 
             <View
-                android:layout_width="52dp"
+                android:layout_width="55dp"
                 android:layout_height="12dp"
-                android:layout_marginStart="16dp"
+                android:layout_marginStart="12dp"
                 android:background="@drawable/bg_staff_skeleton_bar" />
 
             <View
@@ -125,134 +131,185 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- "Account" section label placeholder -->
+    <!-- "Account & Activity" section label placeholder -->
     <View
-        android:layout_width="80dp"
+        android:layout_width="130dp"
         android:layout_height="12dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="6dp"
         android:background="@drawable/bg_staff_skeleton_bar" />
 
-    <!-- Menu card skeleton 1 -->
+    <!-- Unified Account Menu skeleton card (56dp rows with indented dividers) -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="16dp"
-        android:layout_marginBottom="12dp"
-        android:background="@drawable/bg_staff_skeleton_card">
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:background="@drawable/bg_staff_skeleton_card"
+        android:orientation="vertical"
+        android:padding="0dp">
+
+        <!-- Menu item 1 placeholder (Edit Profile) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp">
+
+            <View
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_staff_skeleton_date_block" />
+
+            <View
+                android:layout_width="110dp"
+                android:layout_height="14dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/bg_staff_skeleton_bar" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <View
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:background="@drawable/bg_staff_skeleton_bar" />
+        </LinearLayout>
 
         <View
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@drawable/bg_staff_skeleton_date_block" />
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginStart="52dp"
+            android:layout_marginEnd="16dp"
+            android:background="@color/outline" />
+
+        <!-- Menu item 2 placeholder (Transaction History) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp">
+
+            <View
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_staff_skeleton_date_block" />
+
+            <View
+                android:layout_width="140dp"
+                android:layout_height="14dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/bg_staff_skeleton_bar" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <View
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:background="@drawable/bg_staff_skeleton_bar" />
+        </LinearLayout>
 
         <View
-            android:layout_width="120dp"
-            android:layout_height="14dp"
-            android:layout_marginStart="16dp"
-            android:background="@drawable/bg_staff_skeleton_bar" />
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginStart="52dp"
+            android:layout_marginEnd="16dp"
+            android:background="@color/outline" />
+
+        <!-- Menu item 3 placeholder (Claimed Rewards) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp">
+
+            <View
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_staff_skeleton_date_block" />
+
+            <View
+                android:layout_width="125dp"
+                android:layout_height="14dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/bg_staff_skeleton_bar" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <View
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:background="@drawable/bg_staff_skeleton_bar" />
+        </LinearLayout>
 
         <View
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginStart="52dp"
+            android:layout_marginEnd="16dp"
+            android:background="@color/outline" />
 
-        <View
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:background="@drawable/bg_staff_skeleton_bar" />
+        <!-- Menu item 4 placeholder (My Event Requests) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp">
+
+            <View
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_staff_skeleton_date_block" />
+
+            <View
+                android:layout_width="135dp"
+                android:layout_height="14dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/bg_staff_skeleton_bar" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <View
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:background="@drawable/bg_staff_skeleton_bar" />
+        </LinearLayout>
     </LinearLayout>
 
-    <!-- Menu card skeleton 2 -->
+    <!-- Sign Out skeleton card -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="52dp"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/bg_staff_skeleton_card"
         android:gravity="center_vertical"
-        android:paddingHorizontal="16dp"
-        android:layout_marginBottom="12dp"
-        android:background="@drawable/bg_staff_skeleton_card">
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp">
 
         <View
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:background="@drawable/bg_staff_skeleton_date_block" />
 
         <View
-            android:layout_width="160dp"
+            android:layout_width="80dp"
             android:layout_height="14dp"
-            android:layout_marginStart="16dp"
-            android:background="@drawable/bg_staff_skeleton_bar" />
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-
-        <View
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:background="@drawable/bg_staff_skeleton_bar" />
-    </LinearLayout>
-
-    <!-- Menu card skeleton 3 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="16dp"
-        android:layout_marginBottom="12dp"
-        android:background="@drawable/bg_staff_skeleton_card">
-
-        <View
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@drawable/bg_staff_skeleton_date_block" />
-
-        <View
-            android:layout_width="140dp"
-            android:layout_height="14dp"
-            android:layout_marginStart="16dp"
-            android:background="@drawable/bg_staff_skeleton_bar" />
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-
-        <View
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:background="@drawable/bg_staff_skeleton_bar" />
-    </LinearLayout>
-
-    <!-- Menu card skeleton 4 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="16dp"
-        android:layout_marginBottom="12dp"
-        android:background="@drawable/bg_staff_skeleton_card">
-
-        <View
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@drawable/bg_staff_skeleton_date_block" />
-
-        <View
-            android:layout_width="130dp"
-            android:layout_height="14dp"
-            android:layout_marginStart="16dp"
-            android:background="@drawable/bg_staff_skeleton_bar" />
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-
-        <View
-            android:layout_width="16dp"
-            android:layout_height="16dp"
+            android:layout_marginStart="12dp"
             android:background="@drawable/bg_staff_skeleton_bar" />
     </LinearLayout>
 </LinearLayout>

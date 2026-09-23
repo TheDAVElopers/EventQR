@@ -4,77 +4,95 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingHorizontal="16dp"
-    android:paddingTop="24dp"
-    android:paddingBottom="32dp"
     android:visibility="gone">
 
-    <!-- Section label placeholder -->
+    <!-- Section 1 Label Placeholder ("Personal Information") -->
     <View
-        android:layout_width="140dp"
-        android:layout_height="12dp"
+        android:layout_width="160dp"
+        android:layout_height="16dp"
         android:layout_marginBottom="8dp"
         android:background="@drawable/bg_staff_skeleton_bar" />
 
-    <!-- Form card skeleton -->
+    <!-- Personal Information Card Skeleton (1:1 with Real Form Card) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/bg_staff_skeleton_card"
         android:orientation="vertical"
-        android:padding="16dp"
-        android:layout_marginBottom="12dp"
-        android:background="@drawable/bg_staff_skeleton_card">
+        android:padding="16dp">
 
-        <!-- Input field 1 placeholder (Full Name) -->
+        <!-- Input 1 Placeholder (Full Name: 56dp Outlined Box) -->
         <View
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_marginBottom="12dp"
+            android:layout_marginBottom="16dp"
             android:background="@drawable/bg_staff_skeleton_bar" />
 
-        <!-- Input field 2 placeholder (Email) -->
+        <!-- Input 2 Placeholder (Email: 56dp Outlined Box) -->
         <View
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_marginBottom="12dp"
+            android:layout_marginBottom="16dp"
             android:background="@drawable/bg_staff_skeleton_bar" />
 
-        <!-- Input field 3 placeholder (Phone) -->
+        <!-- Input 3 Placeholder (Phone: 56dp Outlined Box) -->
         <View
             android:layout_width="match_parent"
             android:layout_height="56dp"
+            android:background="@drawable/bg_staff_skeleton_bar" />
+
+        <!-- Phone Helper/Counter Text Placeholder -->
+        <View
+            android:layout_width="180dp"
+            android:layout_height="12dp"
+            android:layout_marginTop="8dp"
             android:background="@drawable/bg_staff_skeleton_bar" />
     </LinearLayout>
 
-    <!-- Security section label placeholder -->
+    <!-- Section 2 Label Placeholder ("Security") -->
     <View
         android:layout_width="80dp"
-        android:layout_height="12dp"
+        android:layout_height="16dp"
         android:layout_marginBottom="8dp"
         android:background="@drawable/bg_staff_skeleton_bar" />
 
-    <!-- Change password card skeleton -->
+    <!-- Security Navigation Card Skeleton (56dp Row) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/bg_staff_skeleton_card"
         android:gravity="center_vertical"
-        android:paddingHorizontal="16dp"
-        android:layout_marginBottom="16dp"
-        android:background="@drawable/bg_staff_skeleton_card">
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp">
 
+        <!-- Icon Block Placeholder (36dp x 36dp) -->
         <View
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:background="@drawable/bg_staff_skeleton_date_block" />
 
+        <!-- Row Title Placeholder ("Change Password") -->
         <View
             android:layout_width="130dp"
             android:layout_height="14dp"
             android:layout_marginStart="12dp"
             android:background="@drawable/bg_staff_skeleton_bar" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <!-- Chevron Placeholder -->
+        <View
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:background="@drawable/bg_staff_skeleton_bar" />
     </LinearLayout>
 
-    <!-- Save button placeholder -->
+    <!-- Save Changes Button Placeholder (48dp Button) -->
     <View
         android:layout_width="match_parent"
         android:layout_height="48dp"
