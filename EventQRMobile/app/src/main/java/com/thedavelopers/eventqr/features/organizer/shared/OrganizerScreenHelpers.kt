@@ -641,27 +641,3 @@ internal fun AppCompatActivity.formatCount(value: Long): String = String.format(
 
 internal fun OrganizerMvpEvent.lifecycleStatus(): String =
     EventStatusBadgeStyler.displayLabel(EventStatusBadgeStyler.fromLabel(status), status)
-
-internal fun OrganizerMvpEvent.progressRatio(): Float {
-    if (capacity <= 0) return if (registeredCount > 0) 1f else 0f
-    return (registeredCount.toFloat() / capacity.toFloat()).coerceIn(0f, 1f)
-}
-
-internal fun AppCompatActivity.dateBadgeParts(shortDate: String): Pair<String, String> {
-    val tokens = shortDate.split(" ", ",", "-", "/").filter { it.isNotBlank() }
-    val day = tokens.firstOrNull { it.all(Char::isDigit) }?.padStart(2, '0') ?: "--"
-    val month = tokens.firstOrNull { it.any(Char::isLetter) }
-        ?.take(3)
-        ?.uppercase()
-        ?: "---"
-    return day to month
-}
-
-internal fun AppCompatActivity.statusBadge(status: String): TextView {
-    val eventStatus = EventStatusBadgeStyler.fromLabel(status)
-    val color = EventStatusBadgeStyler.primaryColor(this, eventStatus)
-    return text(EventStatusBadgeStyler.displayLabel(eventStatus, status), 12, true, color).apply {
-        setPadding(dp(12), dp(6), dp(12), dp(6))
-        background = rounded(color and 0x22FFFFFF or 0x22000000, 16, null, density = resources.displayMetrics.density)
-    }
-}

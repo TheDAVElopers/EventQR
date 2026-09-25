@@ -8,7 +8,6 @@ import com.thedavelopers.eventqr.core.api.dto.RegistrationStatus
 import com.thedavelopers.eventqr.core.api.dto.TransactionResult
 import com.thedavelopers.eventqr.core.api.dto.TransactionType
 import com.thedavelopers.eventqr.core.api.safeApiCall
-import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.features.events.model.dto.EventApprovalRequest
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequest
@@ -52,7 +51,6 @@ enum class OrganizerMvpDataSource {
 
 class OrganizerRepository(private val context: Context) {
   private val apiService = ApiClient.getService(context)
-  private val sessionManager = SessionManager(context)
   // Cached in-memory event store (replaces OrganizerMvpPlaceholders cachedEvents)
   private var cachedEvents: List<OrganizerMvpEvent> = emptyList()
 
@@ -524,14 +522,6 @@ private fun OrganizerMvpScanPurpose.toOrganizerRequest(): OrganizerScanPurposeRe
 )
 
 private fun String.toUuidOrNull(): UUID? = runCatching { UUID.fromString(this) }.getOrNull()
-
-private fun RegistrationStatus.toEventStatusLabel(): String = when (this) {
-    RegistrationStatus.REGISTERED -> "Registered"
-    RegistrationStatus.ENTERED -> "Checked In / Entered"
-    RegistrationStatus.EXITED -> "Exited"
-    RegistrationStatus.CANCELLED -> "Cancelled"
-    RegistrationStatus.NO_SHOW -> "No-show"
-}
 
 private fun TransactionType.toDisplayType(): String = when (this) {
     TransactionType.ENTRY -> "Entry"

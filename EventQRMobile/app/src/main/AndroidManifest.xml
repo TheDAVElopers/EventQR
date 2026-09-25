@@ -51,7 +51,6 @@
         <activity android:name=".features.staff.reward.RewardRedemptionScanResultActivity" android:exported="false" />
         <activity android:name=".features.staff.reward.RedemptionResultActivity" android:exported="false" />
         <activity android:name=".features.organizer.notifications.NotificationManagementActivity" android:exported="false" />
-        <activity android:name=".features.organizer.reports.ReportsActivity" android:exported="false" />
         <activity android:name=".features.organizer.rewards.ManageRewardsActivity" android:exported="false" />
         <activity android:name=".features.organizer.idtemplate.IdTemplateSettingsActivity" android:exported="false" />
         <activity android:name=".features.organizer.events.EventManagementHubActivity" android:exported="false" />

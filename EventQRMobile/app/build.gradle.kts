@@ -62,6 +62,5 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.security.crypto)
     testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
 }

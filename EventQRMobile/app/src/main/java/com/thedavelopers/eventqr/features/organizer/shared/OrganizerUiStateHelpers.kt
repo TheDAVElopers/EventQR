@@ -118,22 +118,6 @@ internal fun AppCompatActivity.errorState(
     }
 }
 
-internal fun AppCompatActivity.stateCard(
-    title: String = "System State",
-    message: String = "This view uses the latest available event data. Pull down to refresh when the screen supports refresh.",
-): View {
-    return card(14).apply {
-        addView(text(title, 15, true, TEXT))
-        addView(text(message, 13, false, MUTED).apply {
-            setPadding(0, dp(6), 0, 0)
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            )
-        })
-    }
-}
-
 internal fun <T> AppCompatActivity.dataSourceBanner(load: OrganizerMvpLoad<T>): View? {
     if (load.source == OrganizerMvpDataSource.BACKEND) return null
     val message = load.message?.takeIf { it.isNotBlank() } ?: "Showing limited local data. Pull down to refresh."

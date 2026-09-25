@@ -42,11 +42,6 @@ data class ChangePasswordRequest(
     val confirmPassword: String
 )
 
-data class PasswordChangeRequest(
-    val currentPassword: String,
-    val newPassword: String
-)
-
 data class ResetTokenValidationResponse(
     val valid: Boolean
 )

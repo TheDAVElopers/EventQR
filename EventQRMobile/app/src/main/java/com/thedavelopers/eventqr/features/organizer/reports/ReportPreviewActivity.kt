@@ -98,10 +98,6 @@ class ReportPreviewActivity : AppCompatActivity() {
     private val dateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a", Locale.ENGLISH)
         .withZone(ZoneId.of("Asia/Manila"))
 
-    // Pagination state for reports (if needed)
-    private var reportPage = 0
-    private val PAGE_SIZE = 50 // reasonable page size for report rows
-    private var isLastReportPage = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
