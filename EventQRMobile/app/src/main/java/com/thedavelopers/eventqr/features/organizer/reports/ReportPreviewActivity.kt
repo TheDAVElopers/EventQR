@@ -5,7 +5,9 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.Typeface
+import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -35,9 +37,14 @@ import com.thedavelopers.eventqr.features.reports.model.dto.EventReportSummaryDt
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportType
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportRowDto
 import androidx.annotation.RequiresApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.io.FileOutputStream
 import java.io.OutputStream
 import java.time.Instant
@@ -318,12 +325,12 @@ class ReportPreviewActivity : AppCompatActivity() {
 
     private fun showExportDialog() {
         val rootView = content.rootView ?: content
-        if (isCombined) {
-            Snackbar.make(rootView, "Export is unavailable for combined reports. Export each report individually.", Snackbar.LENGTH_LONG).show()
+        if (isCombined && combinedReports.isNullOrEmpty()) {
+            Snackbar.make(rootView, "No report data available to export.", Snackbar.LENGTH_LONG).show()
             return
         }
         val dialog = AlertDialog.Builder(this)
-            .setTitle("Export Report")
+            .setTitle(if (isCombined) "Export Combined Report" else "Export Report")
             .setMessage("Choose export format:")
             .setPositiveButton("CSV") { _, _ -> exportReport("CSV") }
             .setNegativeButton("PDF") { _, _ -> exportReport("PDF") }
@@ -334,21 +341,72 @@ class ReportPreviewActivity : AppCompatActivity() {
 
     private fun exportReport(format: String) {
         val rootView = content.rootView ?: content
+
+        if (isCombined) {
+            val reports = combinedReports.orEmpty()
+            if (reports.isEmpty()) {
+                Snackbar.make(rootView, "No report data to export.", Snackbar.LENGTH_LONG).show()
+                return
+            }
+
+            Snackbar.make(rootView, "Preparing combined $format export...", Snackbar.LENGTH_SHORT).show()
+
+            MainScope().launch {
+                try {
+                    val safeEventName = (summary.eventName?.takeIf { it.isNotBlank() } ?: "event")
+                        .replace(Regex("[^a-zA-Z0-9_-]"), "-")
+                        .trim('-')
+                        .lowercase()
+                    val fileName = "combined-report-$safeEventName.${format.lowercase()}"
+                    val contentType = if (format.equals("PDF", ignoreCase = true)) "application/pdf" else "text/csv"
+
+                    val bytes = withContext(Dispatchers.Default) {
+                        if (format.equals("PDF", ignoreCase = true)) {
+                            generateCombinedPdf(reports)
+                        } else {
+                            generateCombinedCsv(reports)
+                        }
+                    }
+                    saveAndShareFile(bytes, fileName, contentType)
+                } catch (e: Exception) {
+                    Snackbar.make(rootView, "Export failed: ${e.message}", Snackbar.LENGTH_LONG)
+                        .setAction("Retry") { exportReport(format) }
+                        .show()
+                }
+            }
+            return
+        }
+
         Snackbar.make(rootView, "Preparing $format export...", Snackbar.LENGTH_SHORT).show()
 
         MainScope().launch {
-            val filters = if (isCombined) {
-                EventReportFiltersDto() // Default filters for combined
-            } else {
-                sourceFilters
-            }
             val reportType = singleReport?.reportType ?: EventReportType.ROSTER
 
-            when (val result = repository.exportReport(eventId, reportType, format, filters)) {
+            when (val result = repository.exportReport(eventId, reportType, format, sourceFilters)) {
                 is NetworkResult.Success -> {
                     saveAndShareFile(result.data.bytes, result.data.fileName, result.data.contentType)
                 }
                 is NetworkResult.Error -> {
+                    val report = singleReport
+                    if (report != null) {
+                        try {
+                            val safeTitle = (report.reportTitle ?: "report")
+                                .replace(Regex("[^a-zA-Z0-9_-]"), "-")
+                                .trim('-')
+                                .lowercase()
+                            val fileName = "$safeTitle-${eventId.take(8)}.${format.lowercase()}"
+                            val contentType = if (format.equals("PDF", ignoreCase = true)) "application/pdf" else "text/csv"
+                            val bytes = withContext(Dispatchers.Default) {
+                                if (format.equals("PDF", ignoreCase = true)) {
+                                    generateCombinedPdf(listOf(report))
+                                } else {
+                                    generateCombinedCsv(listOf(report))
+                                }
+                            }
+                            saveAndShareFile(bytes, fileName, contentType)
+                            return@launch
+                        } catch (_: Exception) {}
+                    }
                     Snackbar.make(rootView, "Export failed: ${result.message}", Snackbar.LENGTH_LONG)
                         .setAction("Retry") { exportReport(format) }
                         .show()
@@ -356,6 +414,245 @@ class ReportPreviewActivity : AppCompatActivity() {
                 NetworkResult.Loading -> Unit
             }
         }
+    }
+
+    private fun generateCombinedCsv(reports: List<EventReportDto>): ByteArray {
+        val stringWriter = StringWriter()
+        val writer = PrintWriter(stringWriter)
+
+        writer.println(csv("Combined Event Report"))
+        writer.println("${csv("Event")},${csv(summary.eventName ?: "Event")}")
+        writer.println("${csv("Generated")},${csv(dateFormatter.format(Instant.now()))}")
+        writer.println()
+
+        reports.forEachIndexed { index, report ->
+            writer.println(csv("================================================================================"))
+            writer.println(csv(report.reportTitle ?: "Section ${index + 1}"))
+            val genText = report.generatedAtInstant?.let { dateFormatter.format(it) } ?: "Just now"
+            writer.println("${csv("Generated")},${csv(genText)}")
+            writer.println()
+
+            // Header columns
+            val cols = report.columns.map { csv(it ?: "") }
+            writer.println(cols.joinToString(","))
+
+            // Rows
+            for (row in report.rows) {
+                val values = (0 until report.columns.size).map { colIndex ->
+                    val cell = if (colIndex < row.values.size) row.values[colIndex] else null
+                    csv(cell ?: "")
+                }
+                writer.println(values.joinToString(","))
+            }
+
+            // Chart series
+            if (report.chartSeries.isNotEmpty()) {
+                writer.println()
+                writer.println(csv("Chart Summary"))
+                for ((k, v) in report.chartSeries) {
+                    writer.println("${csv(k ?: "")},${csv(v.toString())}")
+                }
+            }
+            writer.println()
+        }
+
+        writer.flush()
+        return stringWriter.toString().toByteArray(Charsets.UTF_8)
+    }
+
+    private fun csv(value: String): String {
+        val escaped = value.replace("\"", "\"\"")
+        return "\"$escaped\""
+    }
+
+    private fun generateCombinedPdf(reports: List<EventReportDto>): ByteArray {
+        val document = PdfDocument()
+        val pageWidth = 595
+        val pageHeight = 842
+        val margin = 36f
+        val contentWidth = pageWidth - (2 * margin)
+        var pageNumber = 1
+
+        var pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create()
+        var currentPage = document.startPage(pageInfo)
+        var canvas = currentPage.canvas
+        var y = margin + 20f
+
+        val titlePaint = Paint().apply {
+            color = Color.parseColor("#1E1B4B")
+            textSize = 18f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            isAntiAlias = true
+        }
+
+        val subtitlePaint = Paint().apply {
+            color = Color.parseColor("#6B7280")
+            textSize = 10f
+            isAntiAlias = true
+        }
+
+        val footerPaint = Paint().apply {
+            color = Color.parseColor("#9CA3AF")
+            textSize = 8f
+            isAntiAlias = true
+        }
+
+        val sectionTitlePaint = Paint().apply {
+            color = Color.parseColor("#4F46E5")
+            textSize = 13f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            isAntiAlias = true
+        }
+
+        val sectionBannerPaint = Paint().apply {
+            color = Color.parseColor("#EEF2FF")
+            style = Paint.Style.FILL
+        }
+
+        val tableHeaderBgPaint = Paint().apply {
+            color = Color.parseColor("#F9FAFB")
+            style = Paint.Style.FILL
+        }
+
+        val tableHeaderPaint = Paint().apply {
+            color = Color.parseColor("#111827")
+            textSize = 9.5f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            isAntiAlias = true
+        }
+
+        val cellPaint = Paint().apply {
+            color = Color.parseColor("#374151")
+            textSize = 8.5f
+            isAntiAlias = true
+        }
+
+        val cellMutedPaint = Paint().apply {
+            color = Color.parseColor("#9CA3AF")
+            textSize = 8.5f
+            isAntiAlias = true
+        }
+
+        val altRowPaint = Paint().apply {
+            color = Color.parseColor("#F9FAFB")
+            style = Paint.Style.FILL
+        }
+
+        val linePaint = Paint().apply {
+            color = Color.parseColor("#E5E7EB")
+            strokeWidth = 1f
+        }
+
+        fun drawFooter() {
+            canvas.drawLine(margin, pageHeight - margin - 10f, margin + contentWidth, pageHeight - margin - 10f, linePaint)
+            val footerText = "EventQR Report • Page $pageNumber"
+            canvas.drawText(footerText, margin, pageHeight - margin, footerPaint)
+        }
+
+        fun ensureSpace(needed: Float) {
+            if (y + needed > pageHeight - margin - 20f) {
+                drawFooter()
+                document.finishPage(currentPage)
+                pageNumber++
+                pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create()
+                currentPage = document.startPage(pageInfo)
+                canvas = currentPage.canvas
+                y = margin + 20f
+            }
+        }
+
+        fun truncate(text: String, maxWidth: Float, paint: Paint): String {
+            if (maxWidth <= 0f) return ""
+            if (paint.measureText(text) <= maxWidth) return text
+            var truncated = text
+            while (truncated.isNotEmpty() && paint.measureText("$truncated...") > maxWidth) {
+                truncated = truncated.dropLast(1)
+            }
+            return if (truncated.isEmpty()) "" else "$truncated..."
+        }
+
+        // Header on page 1
+        canvas.drawText("Combined Event Report", margin, y, titlePaint)
+        y += 18f
+        canvas.drawText("Event: ${summary.eventName ?: "Event"}", margin, y, subtitlePaint)
+        y += 13f
+        canvas.drawText("Generated: ${dateFormatter.format(Instant.now())}", margin, y, subtitlePaint)
+        y += 16f
+        canvas.drawLine(margin, y, margin + contentWidth, y, linePaint)
+        y += 20f
+
+        reports.forEachIndexed { _, report ->
+            ensureSpace(80f)
+
+            // Section Banner
+            canvas.drawRect(margin, y - 13f, margin + contentWidth, y + 9f, sectionBannerPaint)
+            canvas.drawText(report.reportTitle ?: "Report Section", margin + 8f, y + 2f, sectionTitlePaint)
+            y += 22f
+
+            val generatedAtText = report.generatedAtInstant?.let { "Generated: ${dateFormatter.format(it)}" } ?: ""
+            if (generatedAtText.isNotBlank()) {
+                canvas.drawText(generatedAtText, margin + 4f, y, subtitlePaint)
+                y += 13f
+            }
+
+            val columns = report.columns.map { it ?: "" }
+            val colCount = maxOf(columns.size, 1)
+            val colWidth = contentWidth / colCount
+
+            // Table Header
+            ensureSpace(28f)
+            canvas.drawRect(margin, y - 11f, margin + contentWidth, y + 7f, tableHeaderBgPaint)
+            canvas.drawLine(margin, y + 7f, margin + contentWidth, y + 7f, linePaint)
+            columns.forEachIndexed { i, col ->
+                val colX = margin + (i * colWidth) + 4f
+                val txt = truncate(col, colWidth - 8f, tableHeaderPaint)
+                canvas.drawText(txt, colX, y, tableHeaderPaint)
+            }
+            y += 16f
+
+            // Table Rows
+            if (report.rows.isEmpty()) {
+                ensureSpace(20f)
+                canvas.drawText("No records available for this section.", margin + 4f, y, cellMutedPaint)
+                y += 20f
+            } else {
+                report.rows.forEachIndexed { rowIndex, row ->
+                    ensureSpace(18f)
+                    if (rowIndex % 2 == 1) {
+                        canvas.drawRect(margin, y - 10f, margin + contentWidth, y + 6f, altRowPaint)
+                    }
+                    columns.forEachIndexed { colIndex, _ ->
+                        val cellVal = if (colIndex < row.values.size) row.values[colIndex] ?: "—" else "—"
+                        val colX = margin + (colIndex * colWidth) + 4f
+                        val txt = truncate(cellVal, colWidth - 8f, cellPaint)
+                        canvas.drawText(txt, colX, y, cellPaint)
+                    }
+                    y += 16f
+                }
+            }
+
+            // Chart Series Summary if any
+            if (report.chartSeries.isNotEmpty()) {
+                ensureSpace(30f + (report.chartSeries.size * 13f))
+                y += 6f
+                canvas.drawText("Chart Summary", margin + 4f, y, tableHeaderPaint)
+                y += 13f
+                for ((k, v) in report.chartSeries) {
+                    val keyText = k ?: "Item"
+                    canvas.drawText("$keyText: $v", margin + 12f, y, cellPaint)
+                    y += 12f
+                }
+            }
+
+            y += 22f
+        }
+
+        drawFooter()
+        document.finishPage(currentPage)
+        val stream = ByteArrayOutputStream()
+        document.writeTo(stream)
+        document.close()
+        return stream.toByteArray()
     }
 
     private fun saveAndShareFile(bytes: ByteArray, fileName: String, contentType: String) {
