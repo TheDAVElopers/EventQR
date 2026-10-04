@@ -271,7 +271,7 @@ open class EventReportsActivity : AppCompatActivity() {
                 })
 
                 addView(TextView(this@EventReportsActivity).apply {
-                    text = "${selectedEvent.title} • Overview"
+                    text = selectedEvent.title
                     textSize = 17f
                     setTypeface(typeface, Typeface.BOLD)
                     setTextColor(Color.WHITE)
@@ -279,29 +279,7 @@ open class EventReportsActivity : AppCompatActivity() {
                     maxLines = 1
                     layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
                         marginStart = dp(12)
-                        marginEnd = dp(8)
                     }
-                })
-
-                addView(LinearLayout(this@EventReportsActivity).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    gravity = Gravity.CENTER_VERTICAL
-                    background = rounded(Color.parseColor("#25FFFFFF"), 12, null, density = resources.displayMetrics.density)
-                    setPadding(dp(10), dp(4), dp(10), dp(4))
-
-                    addView(View(this@EventReportsActivity).apply {
-                        background = rounded(Color.parseColor("#22D3EE"), 3, null, density = resources.displayMetrics.density)
-                        layoutParams = LinearLayout.LayoutParams(dp(6), dp(6)).apply {
-                            marginEnd = dp(5)
-                        }
-                    })
-
-                    addView(TextView(this@EventReportsActivity).apply {
-                        text = "Selected Event"
-                        textSize = 11f
-                        setTypeface(typeface, Typeface.BOLD)
-                        setTextColor(Color.parseColor("#E0E7FF"))
-                    })
                 })
             }
             addView(topRow)
