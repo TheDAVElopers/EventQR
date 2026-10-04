@@ -341,6 +341,58 @@ class ReportPreviewActivity : AppCompatActivity() {
         }
     }
 
+    private fun getColumnWeight(index: Int, columnCount: Int, reportType: EventReportType): Float {
+        return when (reportType) {
+            EventReportType.CLAIMS -> {
+                when (index) {
+                    0 -> 1.0f // Name
+                    1 -> 1.1f // Benefit
+                    2 -> 1.1f // Claimed At
+                    else -> 0.8f // Result
+                }
+            }
+            EventReportType.ATTENDANCE, EventReportType.BOOTH_VISITS -> {
+                when (index) {
+                    0 -> 1.0f // Name
+                    1 -> 1.4f // Session/Activity or Booth/Session
+                    else -> 1.0f // Timestamp / Visit Time
+                }
+            }
+            EventReportType.POINTS -> {
+                when (index) {
+                    0 -> 1.0f // Name
+                    1 -> 0.8f // Points Earned
+                    else -> 1.4f // Source Activity
+                }
+            }
+            EventReportType.ENTRY_LOGS, EventReportType.EXIT_LOGS -> {
+                when (index) {
+                    0 -> 1.1f // Name
+                    1 -> 1.2f // Entry/Exit Time
+                    else -> 0.9f // Result
+                }
+            }
+            EventReportType.ROSTER -> {
+                when (index) {
+                    0 -> 1.1f // Name
+                    1 -> 0.9f // Status
+                    else -> 1.1f // Registered At
+                }
+            }
+            EventReportType.NO_SHOWS -> {
+                when (index) {
+                    0 -> 1.1f // Name
+                    1 -> 1.0f // Registered On
+                    else -> 1.0f // Reason
+                }
+            }
+        }
+    }
+
+    private fun getColumnGravity(index: Int, columnCount: Int, reportType: EventReportType): Int {
+        return Gravity.START or Gravity.CENTER_VERTICAL
+    }
+
     private fun buildPaginatedDataTable(report: EventReportDto): LinearLayout {
         return card(16).apply {
             // Header Row: Section Title + Record count pill
@@ -404,12 +456,13 @@ class ReportPreviewActivity : AppCompatActivity() {
                     maxLines = 1
                     ellipsize = android.text.TextUtils.TruncateAt.END
                     includeFontPadding = false
-                    val isFirst = (index == 0)
-                    gravity = if (isFirst) Gravity.START else Gravity.CENTER
+                    gravity = getColumnGravity(index, columnCount, report.reportType)
+                    textAlignment = View.TEXT_ALIGNMENT_VIEW_START
+                    setPadding(0, 0, dp(6), 0)
                     layoutParams = LinearLayout.LayoutParams(
                         0,
                         ViewGroup.LayoutParams.WRAP_CONTENT,
-                        if (isFirst && !isFourCol) 1.2f else 1f
+                        getColumnWeight(index, columnCount, report.reportType)
                     )
                 })
             }
@@ -424,8 +477,12 @@ class ReportPreviewActivity : AppCompatActivity() {
 
             // RecyclerView for rows
             val recyclerView = RecyclerView(this@ReportPreviewActivity).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
                 layoutManager = LinearLayoutManager(this@ReportPreviewActivity)
-                adapter = ReportRowAdapter(report.rows, columnCount)
+                adapter = ReportRowAdapter(report)
                 isNestedScrollingEnabled = false
                 setHasFixedSize(true)
             }
@@ -436,10 +493,11 @@ class ReportPreviewActivity : AppCompatActivity() {
     }
 
     private inner class ReportRowAdapter(
-        private val rows: List<EventReportRowDto>,
-        private val columnCount: Int
+        private val report: EventReportDto
     ) : RecyclerView.Adapter<ReportRowAdapter.ViewHolder>() {
 
+        private val rows = report.rows
+        private val columnCount = report.columns.size
         private val isFourCol = columnCount >= 4
 
         inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -455,12 +513,13 @@ class ReportPreviewActivity : AppCompatActivity() {
                         setIncludeFontPadding(false)
                         maxLines = 2
                         ellipsize = android.text.TextUtils.TruncateAt.END
-                        val isFirst = (i == 0)
-                        gravity = if (isFirst) Gravity.START else Gravity.CENTER
+                        gravity = getColumnGravity(i, columnCount, report.reportType)
+                        textAlignment = View.TEXT_ALIGNMENT_VIEW_START
+                        setPadding(0, 0, dp(6), 0)
                         layoutParams = LinearLayout.LayoutParams(
                             0,
                             ViewGroup.LayoutParams.WRAP_CONTENT,
-                            if (isFirst && !isFourCol) 1.2f else 1f
+                            getColumnWeight(i, columnCount, report.reportType)
                         )
                     }
                     views.add(tv)
@@ -481,7 +540,8 @@ class ReportPreviewActivity : AppCompatActivity() {
                     val displayValue = value?.ifBlank { "—" } ?: "—"
                     views[i].text = displayValue
                     val isFirst = (i == 0)
-                    views[i].gravity = if (isFirst) Gravity.START else Gravity.CENTER
+                    views[i].gravity = getColumnGravity(i, columnCount, report.reportType)
+                    views[i].textAlignment = View.TEXT_ALIGNMENT_VIEW_START
                     views[i].setTypeface(null, if (isFirst) Typeface.BOLD else Typeface.NORMAL)
 
                     val lower = displayValue.lowercase()
@@ -501,6 +561,10 @@ class ReportPreviewActivity : AppCompatActivity() {
             val row = LinearLayout(parent.context).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
+                layoutParams = RecyclerView.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
                 setPadding(dp(12), dp(10), dp(12), dp(10))
             }
             val holder = ViewHolder(row)
