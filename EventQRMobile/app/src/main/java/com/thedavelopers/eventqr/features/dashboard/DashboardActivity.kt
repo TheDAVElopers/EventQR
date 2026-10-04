@@ -145,11 +145,15 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         }
 
         skeletonLoading.visibility = if (isLoading) View.VISIBLE else View.GONE
+        upcomingEventsLayout.visibility = if (isLoading) View.GONE else View.VISIBLE
+        discoverEventsLayout.visibility = if (isLoading) View.GONE else View.VISIBLE
     }
 
     override fun showSummary(summary: DashboardSummary) {
         stopSwipeRefresh()
         skeletonLoading.visibility = View.GONE
+        upcomingEventsLayout.visibility = View.VISIBLE
+        discoverEventsLayout.visibility = View.VISIBLE
 
         nameText.text = (summary.fullName?.takeIf { it.isNotBlank() }
             ?: sessionManager.getFullName()?.takeIf { it.isNotBlank() }
@@ -178,6 +182,8 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         stopSwipeRefresh()
         setupPortalSwitcher()
         skeletonLoading.visibility = View.GONE
+        upcomingEventsLayout.visibility = View.VISIBLE
+        discoverEventsLayout.visibility = View.VISIBLE
         renderUpcomingEvents(emptyList())
         renderDiscoverEvents(emptyList())
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
@@ -207,7 +213,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         }
 
         // Show only the closest upcoming event
-        upcomingEventsLayout.addView(createEventCard(events[0], true))
+        upcomingEventsLayout.addView(createEventCard(events[0], true, upcomingEventsLayout))
     }
 
     private fun renderDiscoverEvents(events: List<DashboardUpcomingEvent>) {
@@ -221,13 +227,13 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         }
 
         events.forEachIndexed { index, event ->
-            discoverEventsLayout.addView(createEventCard(event, index == 0))
+            discoverEventsLayout.addView(createEventCard(event, index == 0, discoverEventsLayout))
         }
     }
 
-    private fun createEventCard(event: DashboardUpcomingEvent, isFirst: Boolean): View {
+    private fun createEventCard(event: DashboardUpcomingEvent, isFirst: Boolean, parent: ViewGroup): View {
         val inflater = LayoutInflater.from(this)
-        val view = inflater.inflate(R.layout.item_attendee_event, discoverEventsLayout, false)
+        val view = inflater.inflate(R.layout.item_attendee_event, parent, false)
         val params = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
