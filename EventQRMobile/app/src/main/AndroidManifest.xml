@@ -75,7 +75,10 @@
         <activity android:name=".features.admin.users.AdminAccountManagementActivity" android:exported="false" />
         <activity android:name=".features.admin.logs.AdminAuditLogsActivity" android:exported="false" />
 
-        <activity android:name=".features.auth.forgotpassword.ForgotPasswordActivity" android:exported="false" />
+        <activity
+            android:name=".features.auth.forgotpassword.ForgotPasswordActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".features.auth.resetpassword.ResetPasswordActivity"
             android:exported="true">
@@ -92,7 +95,10 @@
 
         <activity android:name=".features.auth.changepassword.ChangePasswordActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <activity android:name=".features.dashboard.DashboardActivity" android:exported="false" />
-        <activity android:name=".features.auth.register.RegistrationActivity" android:exported="false" />
+        <activity
+            android:name=".features.auth.register.RegistrationActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".features.landing.LandingActivity"
             android:exported="true"
@@ -102,7 +108,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".features.auth.login.LoginActivity" android:exported="false" />
+        <activity
+            android:name=".features.auth.login.LoginActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
         <!-- uCrop crop screen for the event poster flow (scope addition beyond SRS/SDD Module 3).
              Declared explicitly because the AAR manifest was not merging on AGP 9.2.1. -->
         <activity

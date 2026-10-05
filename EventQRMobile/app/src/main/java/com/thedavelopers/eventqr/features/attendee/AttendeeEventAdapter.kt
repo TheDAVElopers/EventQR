@@ -1,20 +1,23 @@
 package com.thedavelopers.eventqr.features.attendee
 
-import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
+import androidx.compose.ui.platform.ComposeView
 import androidx.recyclerview.widget.RecyclerView
-import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.core.api.dto.EventStatus
+import com.thedavelopers.eventqr.features.events.EventCardBinder
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Locale
 
 class AttendeeEventAdapter(
     private val onClick: (AttendeeEventResponse) -> Unit,
 ) : RecyclerView.Adapter<AttendeeEventAdapter.ViewHolder>() {
 
     private val items = mutableListOf<AttendeeEventResponse>()
+    private val manilaZone = ZoneId.of("Asia/Manila")
+    private val timeFormatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH)
 
     fun submitItems(newItems: List<AttendeeEventResponse>) {
         items.clear()
@@ -23,8 +26,13 @@ class AttendeeEventAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_attendee_event, parent, false)
-        return ViewHolder(view)
+        val composeView = ComposeView(parent.context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            )
+        }
+        return ViewHolder(composeView)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -33,58 +41,42 @@ class AttendeeEventAdapter(
 
     override fun getItemCount(): Int = items.size
 
-    inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val titleView: TextView = itemView.findViewById(R.id.txtAttendeeEventTitle)
-        private val statusView: TextView = itemView.findViewById(R.id.txtAttendeeEventStatus)
-        private val dateTimeView: TextView = itemView.findViewById(R.id.txtAttendeeEventDateTime)
-        private val locationView: TextView = itemView.findViewById(R.id.txtAttendeeEventLocation)
-        private val dayView: TextView = itemView.findViewById(R.id.txtEventDay)
-        private val monthView: TextView = itemView.findViewById(R.id.txtEventMonth)
-        private val regCountView: TextView = itemView.findViewById(R.id.txtRegistrationCount)
-        private val regPercentView: TextView = itemView.findViewById(R.id.txtRegistrationPercent)
-        private val progressBar: android.widget.ProgressBar = itemView.findViewById(R.id.pbRegistration)
-        private val dateBadgeView: View = itemView.findViewById(R.id.layoutEventDate)
-
+    inner class ViewHolder(private val composeView: ComposeView) : RecyclerView.ViewHolder(composeView) {
         fun bind(item: AttendeeEventResponse) {
             val status = EventStatusBadgeStyler.resolve(item.status, item.eventStartAt, item.eventEndAt)
-            val ctx = itemView.context
-
-            titleView.text = item.title.ifBlank { "Untitled event" }
-
-            EventStatusBadgeStyler.bind(statusView, status)
-            dateBadgeView.setBackgroundResource(EventStatusBadgeStyler.dateBadgeRes(status))
+            val day: String
+            val month: String
+            val time: String
 
             if (item.eventStartAt != null) {
-                val zonedDateTime = item.eventStartAt.atZone(java.time.ZoneId.of("Asia/Manila"))
-                dayView.text = zonedDateTime.dayOfMonth.toString()
-                monthView.text = zonedDateTime.month.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.ENGLISH).uppercase()
-
-                val timeFormatter = java.time.format.DateTimeFormatter.ofPattern("hh:mm a", java.util.Locale.ENGLISH)
-                dateTimeView.text = zonedDateTime.format(timeFormatter)
+                val zonedDateTime = item.eventStartAt.atZone(manilaZone)
+                day = zonedDateTime.dayOfMonth.toString()
+                month = zonedDateTime.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH).uppercase()
+                time = zonedDateTime.format(timeFormatter)
             } else {
-                dayView.text = "--"
-                monthView.text = "---"
-                dateTimeView.text = "-"
+                day = "--"
+                month = "---"
+                time = "-"
             }
 
-            locationView.text = item.location?.takeIf { it.isNotBlank() } ?: "Location not set"
-
+            val location = item.location?.takeIf { it.isNotBlank() } ?: "Location not set"
             val capacity = item.capacity.coerceAtLeast(1)
             val current = item.currentAttendeeCount
             val percent = (current.toFloat() / capacity.toFloat() * 100).toInt().coerceIn(0, 100)
 
-            regCountView.text = "$current/$capacity registered"
-            regPercentView.text = "$percent%"
-            progressBar.progress = percent
-            progressBar.progressDrawable = ctx.getDrawable(
-                when (status) {
-                    EventStatus.ENDED -> R.drawable.pb_event_completed
-                    EventStatus.APPROVED -> R.drawable.pb_event_upcoming
-                    else -> R.drawable.pb_event_active
-                },
+            EventCardBinder.bind(
+                view = composeView,
+                title = item.title,
+                status = status.name,
+                day = day,
+                month = month,
+                time = time,
+                location = location,
+                count = current,
+                capacity = capacity,
+                percent = percent,
+                onClick = { onClick(item) },
             )
-
-            itemView.setOnClickListener { onClick(item) }
         }
     }
 }

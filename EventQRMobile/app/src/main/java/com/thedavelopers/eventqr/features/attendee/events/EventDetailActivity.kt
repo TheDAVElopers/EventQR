@@ -58,11 +58,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
             setBackgroundResource(R.drawable.bg_disabled_button)
         }
 
-        findViewById<View>(R.id.layoutDetailCategory)?.visibility = View.GONE
-        findViewById<View>(R.id.layoutDetailRewards)?.visibility = View.GONE
-        findViewById<View>(R.id.layoutDetailAgenda)?.visibility = View.GONE
-
-        findViewById<Button>(R.id.btnViewRewards).setOnClickListener {
+        findViewById<View>(R.id.layoutRewardsRow)?.setOnClickListener {
             startActivity(Intent(this, AttendeeRewardsActivity::class.java).putExtra(EXTRA_EVENT_ID, eventId))
         }
 
@@ -126,8 +122,6 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
             rewardsRow?.visibility = View.GONE
             rewardsDivider?.visibility = View.GONE
         }
-
-        findViewById<View>(R.id.layoutDetailRewards)?.visibility = View.GONE
 
         checkOwnedEventThenAvailability(event)
     }
@@ -299,10 +293,6 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         if (isRegistered) {
             val btn = findViewById<Button>(R.id.btnRegisterForEvent)
             setAlreadyRegisteredState(btn)
-
-            if (currentEvent?.rewardsEnabled == true) {
-                findViewById<View>(R.id.btnViewRewards)?.visibility = View.VISIBLE
-            }
         }
     }
 

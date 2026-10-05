@@ -1,17 +1,39 @@
 package com.thedavelopers.eventqr.features.staff
 
-import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
-import android.widget.TextView
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.recyclerview.widget.RecyclerView
-import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResponse
+import com.thedavelopers.eventqr.ui.components.EventCard
+import com.thedavelopers.eventqr.ui.components.parseBadgeStatus
+import com.thedavelopers.eventqr.ui.theme.BrandPrimary
+import com.thedavelopers.eventqr.ui.theme.EventQrTheme
+import com.thedavelopers.eventqr.ui.theme.TextOnPrimary
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
 import java.util.Locale
 
 class StaffAssignedEventAdapter(
@@ -21,6 +43,7 @@ class StaffAssignedEventAdapter(
 
     private val items = mutableListOf<StaffAssignedEventResponse>()
     private val manilaZone = ZoneId.of("Asia/Manila")
+    private val timeFmt = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH)
 
     fun submitItems(newItems: List<StaffAssignedEventResponse>) {
         items.clear()
@@ -29,9 +52,13 @@ class StaffAssignedEventAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_staff_assigned_event, parent, false)
-        return ViewHolder(view)
+        val composeView = ComposeView(parent.context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            )
+        }
+        return ViewHolder(composeView)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -40,56 +67,77 @@ class StaffAssignedEventAdapter(
 
     override fun getItemCount(): Int = items.size
 
-    inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val titleView: TextView = itemView.findViewById(R.id.txtStaffEventTitle)
-        private val statusView: TextView = itemView.findViewById(R.id.txtStaffEventStatus)
-        private val dateTimeView: TextView = itemView.findViewById(R.id.txtStaffEventDateTime)
-        private val locationView: TextView = itemView.findViewById(R.id.txtStaffEventLocation)
-        private val dayView: TextView = itemView.findViewById(R.id.txtEventDay)
-        private val monthView: TextView = itemView.findViewById(R.id.txtEventMonth)
-        private val dateBlock: LinearLayout = itemView.findViewById(R.id.layoutEventDate)
-        private val btnScan: LinearLayout = itemView.findViewById(R.id.btnScan)
-        private val btnAttendees: LinearLayout = itemView.findViewById(R.id.btnAttendees)
-
+    inner class ViewHolder(private val composeView: ComposeView) : RecyclerView.ViewHolder(composeView) {
         fun bind(item: StaffAssignedEventResponse) {
-            val ctx = itemView.context
             val resolvedStatus = EventStatusBadgeStyler.resolve(
                 item.status, item.eventStartAt, item.eventEndAt,
             )
+            val day: String
+            val month: String
+            val time: String
 
-            titleView.text = item.title.ifBlank { "Untitled Event" }
-            EventStatusBadgeStyler.bind(statusView, resolvedStatus)
-
-            bindDateBlock(resolvedStatus)
-            bindDateTime(item)
-            bindLocation(item)
-
-            btnScan.setOnClickListener { onScanClick(item) }
-            btnAttendees.setOnClickListener { onAttendeesClick(item) }
-        }
-
-        private fun bindDateBlock(status: EventStatus) {
-            dateBlock.setBackgroundResource(EventStatusBadgeStyler.dateBadgeRes(status))
-        }
-
-        private fun bindDateTime(item: StaffAssignedEventResponse) {
             if (item.eventStartAt != null) {
                 val zdt = item.eventStartAt.atZone(manilaZone)
-                dayView.text = zdt.dayOfMonth.toString()
-                monthView.text = zdt.month.getDisplayName(
-                    java.time.format.TextStyle.SHORT, Locale.ENGLISH,
-                ).uppercase()
-                val timeFmt = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH)
-                dateTimeView.text = zdt.format(timeFmt)
+                day = zdt.dayOfMonth.toString()
+                month = zdt.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH).uppercase()
+                time = zdt.format(timeFmt)
             } else {
-                dayView.text = "--"
-                monthView.text = "---"
-                dateTimeView.text = "Date not set"
+                day = "--"
+                month = "---"
+                time = "-"
             }
-        }
 
-        private fun bindLocation(item: StaffAssignedEventResponse) {
-            locationView.text = item.location?.takeIf { it.isNotBlank() } ?: "Location not set"
+            val location = item.location?.takeIf { it.isNotBlank() } ?: "Location not set"
+            val badgeStatus = parseBadgeStatus(resolvedStatus.name)
+
+            composeView.setContent {
+                EventQrTheme {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp),
+                    ) {
+                        EventCard(
+                            title = item.title.ifBlank { "Untitled Event" },
+                            status = badgeStatus,
+                            day = day,
+                            month = month,
+                            time = time,
+                            location = location,
+                            onClick = { onAttendeesClick(item) },
+                        )
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Button(
+                                onClick = { onScanClick(item) },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = BrandPrimary,
+                                    contentColor = TextOnPrimary,
+                                ),
+                            ) {
+                                Icon(Icons.Default.QrCodeScanner, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Scan QR", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+                            }
+
+                            OutlinedButton(
+                                onClick = { onAttendeesClick(item) },
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                Icon(Icons.Default.Groups, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Attendees", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

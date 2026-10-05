@@ -1,22 +1,16 @@
 package com.thedavelopers.eventqr.features.admin
 
-import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
+import androidx.compose.ui.platform.ComposeView
 import androidx.recyclerview.widget.RecyclerView
-import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.core.api.dto.EventRequestStatus
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import com.thedavelopers.eventqr.ui.components.EventRequestCard
+import com.thedavelopers.eventqr.ui.theme.EventQrTheme
 
 class AdminEventRequestAdapter(
     private val onTap: (EventRequestResponse) -> Unit,
 ) : RecyclerView.Adapter<AdminEventRequestAdapter.AdminEventRequestViewHolder>() {
 
-    private val submittedFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy").withZone(ZoneId.of("Asia/Manila"))
     private val rows = mutableListOf<EventRequestResponse>()
 
     fun submit(items: List<EventRequestResponse>) {
@@ -26,56 +20,34 @@ class AdminEventRequestAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AdminEventRequestViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_admin_event_request, parent, false)
-        return AdminEventRequestViewHolder(view)
+        val composeView = ComposeView(parent.context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            )
+        }
+        return AdminEventRequestViewHolder(composeView)
     }
 
     override fun onBindViewHolder(holder: AdminEventRequestViewHolder, position: Int) {
-        holder.bind(rows[position], onTap, submittedFormatter)
+        holder.bind(rows[position], onTap)
     }
 
     override fun getItemCount(): Int = rows.size
 
-    class AdminEventRequestViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val textTitle: TextView = itemView.findViewById(R.id.textTitle)
-        private val textStatus: TextView = itemView.findViewById(R.id.textStatus)
-        private val textSubmitted: TextView = itemView.findViewById(R.id.textSubmitted)
-
+    class AdminEventRequestViewHolder(private val composeView: ComposeView) : RecyclerView.ViewHolder(composeView) {
         fun bind(
             request: EventRequestResponse,
             onTap: (EventRequestResponse) -> Unit,
-            submittedFormatter: DateTimeFormatter,
         ) {
-            textTitle.text = request.eventName.ifBlank { "Untitled Event" }
-            textSubmitted.text = "Submitted ${formatDate(request.createdAt, submittedFormatter)}"
-            bindStatus(textStatus, request.status)
-
-            itemView.setOnClickListener { onTap(request) }
-        }
-
-        private fun bindStatus(view: TextView, status: EventRequestStatus) {
-            when (status) {
-                EventRequestStatus.PENDING -> {
-                    view.text = "Pending"
-                    view.setBackgroundResource(R.drawable.bg_admin_pending_badge)
-                    view.setTextColor(0xFF92400E.toInt())
-                }
-                EventRequestStatus.APPROVED -> {
-                    view.text = "Approved"
-                    view.setBackgroundResource(R.drawable.bg_admin_approved_badge)
-                    view.setTextColor(0xFF065F46.toInt())
-                }
-                EventRequestStatus.REJECTED -> {
-                    view.text = "Rejected"
-                    view.setBackgroundResource(R.drawable.bg_admin_rejected_badge)
-                    view.setTextColor(0xFF991B1B.toInt())
+            composeView.setContent {
+                EventQrTheme {
+                    EventRequestCard(
+                        request = request,
+                        onClick = { onTap(request) },
+                    )
                 }
             }
-        }
-
-        private fun formatDate(value: Instant?, formatter: DateTimeFormatter): String {
-            return if (value == null) "Not available" else formatter.format(value)
         }
     }
 }

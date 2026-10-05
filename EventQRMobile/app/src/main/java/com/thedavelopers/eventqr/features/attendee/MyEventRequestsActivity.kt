@@ -151,51 +151,34 @@ class MyEventRequestsActivity : AppCompatActivity() {
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RequestViewHolder {
-            val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_my_event_request, parent, false)
-            return RequestViewHolder(view)
+            val composeView = androidx.compose.ui.platform.ComposeView(parent.context).apply {
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                )
+            }
+            return RequestViewHolder(composeView)
         }
 
         override fun onBindViewHolder(holder: RequestViewHolder, position: Int) {
-            holder.bind(items[position], submittedDateFormatter, onTap)
+            holder.bind(items[position], onTap)
         }
 
         override fun getItemCount(): Int = items.size
 
-        class RequestViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            private val txtTitle: TextView = itemView.findViewById(R.id.txtRequestTitle)
-            private val txtStatus: TextView = itemView.findViewById(R.id.txtRequestStatus)
-            private val txtSubmitted: TextView = itemView.findViewById(R.id.txtRequestSubmitted)
-
+        class RequestViewHolder(private val composeView: androidx.compose.ui.platform.ComposeView) : RecyclerView.ViewHolder(composeView) {
             fun bind(
                 request: EventRequestResponse,
-                submittedDateFormatter: DateTimeFormatter,
                 onTap: (EventRequestResponse) -> Unit,
             ) {
-                txtTitle.text = request.eventName.ifBlank { "Untitled Event" }
-                txtSubmitted.text = "Submitted ${request.createdAt?.let { submittedDateFormatter.format(it) } ?: "-"}"
-
-                when (request.status) {
-                    EventRequestStatus.APPROVED -> {
-                        txtStatus.visibility = View.VISIBLE
-                        txtStatus.text = "Approved"
-                        txtStatus.setBackgroundResource(R.drawable.bg_admin_approved_badge)
-                        txtStatus.setTextColor(0xFF047857.toInt())
-                    }
-
-                    EventRequestStatus.PENDING -> {
-                        txtStatus.visibility = View.GONE
-                    }
-
-                    EventRequestStatus.REJECTED -> {
-                        txtStatus.visibility = View.VISIBLE
-                        txtStatus.text = "Rejected"
-                        txtStatus.setBackgroundResource(R.drawable.bg_admin_rejected_badge)
-                        txtStatus.setTextColor(0xFFB91C1C.toInt())
+                composeView.setContent {
+                    com.thedavelopers.eventqr.ui.theme.EventQrTheme {
+                        com.thedavelopers.eventqr.ui.components.EventRequestCard(
+                            request = request,
+                            onClick = { onTap(request) },
+                        )
                     }
                 }
-
-                itemView.setOnClickListener { onTap(request) }
             }
         }
     }

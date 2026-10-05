@@ -201,15 +201,7 @@
                     <TextView android:id="@+id/txtRemainingSpots" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="" android:textColor="#6B7280" android:textSize="14sp" />
                 </LinearLayout>
 
-                <View android:id="@+id/layoutDetailRewards" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-                <Button android:id="@+id/btnViewRewards" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-                <View android:id="@+id/layoutDetailCategory" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-                <TextView android:id="@+id/txtDetailStart" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-                <TextView android:id="@+id/txtDetailStatus_legacy" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-                <TextView android:id="@+id/txtBadgeFeatured" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-                <View android:id="@+id/layoutDetailAgenda" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-                <Button android:id="@+id/btnViewTransactions" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-                <TextView android:id="@+id/txtDetailEnd" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

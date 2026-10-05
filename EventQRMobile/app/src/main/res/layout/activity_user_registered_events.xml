@@ -126,8 +126,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
-                android:padding="16dp"
-                tools:listitem="@layout/item_registered_event" />
+                android:padding="16dp" />
 
             <include layout="@layout/include_skeleton_cards" />
 
