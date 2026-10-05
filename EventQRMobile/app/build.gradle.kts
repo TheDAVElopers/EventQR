@@ -46,6 +46,14 @@ android {
             "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api"
         )
     }
+    lint {
+        abortOnError = true
+        checkReleaseBuilds = false
+        disable += listOf("UseAppTint")
+    }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {

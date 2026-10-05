@@ -20,14 +20,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
+import androidx.compose.material.icons.automirrored.filled.EventNote
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.EventNote
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -249,7 +249,7 @@ fun UserProfileScreen(
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 12.dp), color = BorderLight)
 
                         ProfileMenuRow(
-                            icon = Icons.Default.ReceiptLong,
+                            icon = Icons.AutoMirrored.Filled.ReceiptLong,
                             title = "Transaction History",
                             onClick = onTransactionsClick,
                         )
@@ -266,7 +266,7 @@ fun UserProfileScreen(
                         if (onEventRequestsClick != null) {
                             HorizontalDivider(modifier = Modifier.padding(horizontal = 12.dp), color = BorderLight)
                             ProfileMenuRow(
-                                icon = Icons.Default.EventNote,
+                                icon = Icons.AutoMirrored.Filled.EventNote,
                                 title = "My Event Requests",
                                 onClick = onEventRequestsClick,
                             )
