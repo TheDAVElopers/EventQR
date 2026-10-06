@@ -7,9 +7,8 @@ import urllib.error
 import urllib.request
 
 PROJECT_REF = os.environ.get("SUPABASE_PROJECT_REF", "hmjrqfwtpinguhwgkgpw")
-ANON_KEY = os.environ.get(
-    "SUPABASE_ANON_KEY",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtanJxZnd0cGluZ3Vod2drZ3B3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2ODUxMjcsImV4cCI6MjA5NTI2MTEyN30.IxQgUnLCHtdW6SlbFdxzRWJy7RK0n1RHNXIC2bkEXig",
+ANON_KEY = os.environ.get("SUPABASE_ANON_KEY") or (
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtanJxZnd0cGluZ3Vod2drZ3B3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2ODUxMjcsImV4cCI6MjA5NTI2MTEyN30.IxQgUnLCHtdW6SlbFdxzRWJy7RK0n1RHNXIC2bkEXig"
 )
 TABLE_NAME = os.environ.get("SUPABASE_TABLE_NAME", "user_profiles")
 
