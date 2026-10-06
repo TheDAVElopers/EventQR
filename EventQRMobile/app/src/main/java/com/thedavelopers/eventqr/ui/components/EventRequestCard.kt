@@ -1,5 +1,7 @@
 package com.thedavelopers.eventqr.ui.components
 
+import android.content.Context
+import android.view.ViewGroup
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,18 +18,45 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import com.thedavelopers.eventqr.core.api.dto.EventRequestStatus
+import com.thedavelopers.eventqr.core.util.DateFormatters
+import com.thedavelopers.eventqr.features.events.eventRequestBadgeStatus
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse
-import com.thedavelopers.eventqr.ui.theme.PaperWhite
-import com.thedavelopers.eventqr.ui.theme.TextMuted
-import com.thedavelopers.eventqr.ui.theme.TextPrimary
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import com.thedavelopers.eventqr.ui.theme.EventQrRowTheme
+import com.thedavelopers.eventqr.ui.theme.LocalSpacing
+
+class EventRequestHolder(context: Context) {
+
+    val view = ComposeView(context).apply {
+        layoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+        )
+    }
+
+    var onClick: (EventRequestResponse) -> Unit = {}
+
+    private val state = mutableStateOf<EventRequestResponse?>(null)
+
+    init {
+        view.setContent {
+            EventQrRowTheme {
+                state.value?.let { request ->
+                    EventRequestCard(request = request, onClick = { onClick(request) })
+                }
+            }
+        }
+    }
+
+    fun update(request: EventRequestResponse) {
+        state.value = request
+    }
+}
 
 @Composable
 fun EventRequestCard(
@@ -35,20 +64,22 @@ fun EventRequestCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val spacing = LocalSpacing.current
+
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp)
-            .heightIn(min = 72.dp)
+            .padding(vertical = spacing.micro)
+            .heightIn(min = spacing.listItemMinHeight)
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = PaperWhite),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(spacing.cardCornerRadius),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = spacing.cardElevation),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(spacing.cardContentPadding),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -58,29 +89,21 @@ fun EventRequestCard(
                 Text(
                     text = request.eventName.ifBlank { "Untitled Event" },
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                val badgeStatus = when (request.status) {
-                    EventRequestStatus.APPROVED -> EventBadgeStatus.APPROVED
-                    EventRequestStatus.REJECTED -> EventBadgeStatus.REJECTED
-                    EventRequestStatus.PENDING -> EventBadgeStatus.PENDING
-                }
-                StatusBadge(status = badgeStatus)
+                Spacer(modifier = Modifier.width(spacing.small))
+                StatusBadge(status = eventRequestBadgeStatus(request.status))
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(spacing.micro))
 
-            val dateStr = request.createdAt?.let {
-                DateTimeFormatter.ofPattern("MMM d, yyyy").withZone(ZoneId.of("Asia/Manila")).format(it)
-            } ?: "-"
             Text(
-                text = "Submitted $dateStr",
+                text = "Submitted ${DateFormatters.formatEventDate(request.createdAt)}",
                 style = MaterialTheme.typography.bodySmall,
-                color = TextMuted,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }

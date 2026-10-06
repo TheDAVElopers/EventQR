@@ -48,9 +48,18 @@ class StatusBadgeTest {
     }
 
     @Test
-    fun parseBadgeStatus_nullBlankOrUnknown_defaultsToPending() {
-        assertEquals(EventBadgeStatus.PENDING, parseBadgeStatus(null))
-        assertEquals(EventBadgeStatus.PENDING, parseBadgeStatus(""))
-        assertEquals(EventBadgeStatus.PENDING, parseBadgeStatus("UNKNOWN_XYZ"))
+    fun parseBadgeStatus_mapsDraft() {
+        assertEquals(EventBadgeStatus.DRAFT, parseBadgeStatus("DRAFT"))
+        assertEquals(EventBadgeStatus.DRAFT, parseBadgeStatus("draft"))
+        assertEquals(EventBadgeStatus.DRAFT, parseBadgeStatus("Status: Draft"))
+    }
+
+    @Test
+    fun parseBadgeStatus_nullBlankOrUnrecognized_mapsToUnknown() {
+        assertEquals(EventBadgeStatus.UNKNOWN, parseBadgeStatus(null))
+        assertEquals(EventBadgeStatus.UNKNOWN, parseBadgeStatus(""))
+        assertEquals(EventBadgeStatus.UNKNOWN, parseBadgeStatus("UNKNOWN_XYZ"))
+        assertEquals(EventBadgeStatus.UNKNOWN, parseBadgeStatus("Status not recognized"))
+        assertEquals(EventBadgeStatus.UNKNOWN, parseBadgeStatus("Status: BRAND_NEW_STATUS"))
     }
 }

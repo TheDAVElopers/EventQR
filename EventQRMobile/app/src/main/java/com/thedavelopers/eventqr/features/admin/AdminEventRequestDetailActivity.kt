@@ -18,6 +18,7 @@ class AdminEventRequestDetailActivity : AppCompatActivity() {
 
     private lateinit var repository: AdminRepository
     private var requestId: String = ""
+    private var hasResumedOnce = false
 
     private val _request = MutableStateFlow<EventRequestResponse?>(null)
     private val _isLoading = MutableStateFlow(false)
@@ -59,6 +60,10 @@ class AdminEventRequestDetailActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        if (!hasResumedOnce) {
+            hasResumedOnce = true
+            return
+        }
         if (requestId.isNotBlank()) {
             verifyAdminAndLoad()
         }

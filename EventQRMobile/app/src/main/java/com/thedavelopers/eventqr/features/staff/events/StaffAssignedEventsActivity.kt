@@ -17,6 +17,7 @@ import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResponse
 import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
+import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import java.time.Instant
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -41,13 +42,14 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         val sessionManager = SessionManager(this)
-        if (RoleMapper.normalizeRole(sessionManager.getUserRole()) != AccountRole.STAFF.name) {
-            Toast.makeText(this, "Access Denied: Staff only", Toast.LENGTH_LONG).show()
+        if (!RoleMapper.isAtLeast(sessionManager.getUserRole(), AccountRole.STAFF)) {
+            Toast.makeText(this, "Access Denied: Staff or above", Toast.LENGTH_LONG).show()
             finish()
             return
         }
 
         setContentView(R.layout.activity_staff_assigned_events)
+        applyEventQrSystemBarAppearance()
         repository = StaffRepository(this)
 
         recyclerView = findViewById(R.id.recyclerAssignedEvents)

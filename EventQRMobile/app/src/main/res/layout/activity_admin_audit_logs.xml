@@ -27,93 +27,11 @@
             android:textColor="@color/text_primary" />
     </LinearLayout>
 
-    <HorizontalScrollView
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/composeAuditFilters"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#F3F4F6"
-        android:clipToPadding="false"
-        android:paddingStart="16dp"
-        android:paddingTop="16dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="8dp"
-        android:scrollbars="none">
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/chipAuditAll"
-                android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:background="@drawable/bg_admin_request_filter_active"
-                android:gravity="center"
-                android:minWidth="46dp"
-                android:paddingHorizontal="14dp"
-                android:text="All"
-                android:textColor="@android:color/white"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/chipAuditApproval"
-                android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:layout_marginStart="8dp"
-                android:background="@drawable/bg_admin_request_filter_inactive"
-                android:gravity="center"
-                android:minWidth="82dp"
-                android:paddingHorizontal="14dp"
-                android:text="Approval"
-                android:textColor="#6B7280"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/chipAuditAccount"
-                android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:layout_marginStart="8dp"
-                android:background="@drawable/bg_admin_request_filter_inactive"
-                android:gravity="center"
-                android:minWidth="78dp"
-                android:paddingHorizontal="14dp"
-                android:text="Account"
-                android:textColor="#6B7280"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/chipAuditSecurity"
-                android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:layout_marginStart="8dp"
-                android:background="@drawable/bg_admin_request_filter_inactive"
-                android:gravity="center"
-                android:minWidth="78dp"
-                android:paddingHorizontal="14dp"
-                android:text="Security"
-                android:textColor="#6B7280"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/chipAuditNotification"
-                android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:layout_marginStart="8dp"
-                android:background="@drawable/bg_admin_request_filter_inactive"
-                android:gravity="center"
-                android:minWidth="104dp"
-                android:paddingHorizontal="14dp"
-                android:text="Notification"
-                android:textColor="#6B7280"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-    </HorizontalScrollView>
-
+        android:background="#F3F4F6" />
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshAuditLogs"
         android:layout_width="match_parent"

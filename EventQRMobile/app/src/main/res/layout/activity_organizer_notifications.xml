@@ -16,13 +16,13 @@
 
         <ImageButton
             android:id="@+id/btnBack"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Back"
-            android:padding="6dp"
+            android:padding="12dp"
             android:src="@drawable/ic_back_chevron"
             app:tint="#121735" />
 

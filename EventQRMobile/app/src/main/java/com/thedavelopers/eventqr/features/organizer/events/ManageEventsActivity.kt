@@ -15,11 +15,12 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.chip.Chip
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.features.events.EventCardBinder
+import com.thedavelopers.eventqr.core.util.EventCardPresenter
 import com.thedavelopers.eventqr.features.organizer.*
+import com.thedavelopers.eventqr.ui.components.EventCardHolder
+import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import kotlin.math.min
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -59,6 +60,7 @@ open class ManageEventsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         repository = OrganizerRepository(this)
         setContentView(R.layout.activity_organizer_events)
+        applyEventQrSystemBarAppearance()
 
         swipeRefresh = findViewById(R.id.swipeRefreshEvents)
         skeletonLoading = findViewById(R.id.skeletonLoading)
@@ -280,21 +282,7 @@ open class ManageEventsActivity : AppCompatActivity() {
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val view = EventCardBinder.inflate(
-                context = this@ManageEventsActivity,
-                parent = parent,
-                title = "",
-                status = "",
-                day = "",
-                month = "",
-                time = "",
-                location = "",
-                count = 0,
-                capacity = 1,
-                percent = 0,
-                onClick = {},
-            )
-            return ViewHolder(view)
+            return ViewHolder(EventCardHolder(parent.context))
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -303,29 +291,25 @@ open class ManageEventsActivity : AppCompatActivity() {
 
         override fun getItemCount(): Int = items.size
 
-        inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        inner class ViewHolder(private val card: EventCardHolder) :
+            RecyclerView.ViewHolder(card.view) {
+
             fun bind(event: OrganizerMvpEvent) {
                 val parsedStart = parseEventStartDateTime(event)
                 val parsedDate = parsedStart?.toLocalDate() ?: parseEventDateOnly(event)
-                val day = parsedDate?.format(dayFormatter) ?: "--"
-                val month = parsedDate?.format(monthFormatter)?.uppercase(Locale.ENGLISH) ?: "---"
-                val time = parsedStart?.format(timeFormatter) ?: "-"
-                val location = event.venue.takeIf { it.isNotBlank() && it != "Venue not set" } ?: "Location not set"
-                val capacity = event.capacity.coerceAtLeast(1)
-                val count = event.currentAttendeeCount.coerceAtLeast(0)
-                val percent = if (capacity > 0) min((count.toFloat() / capacity.toFloat() * 100f).toInt(), 100) else 0
+                val day = parsedDate?.format(dayFormatter) ?: EventCardPresenter.UNKNOWN_DAY
+                val month = parsedDate?.format(monthFormatter)?.uppercase(Locale.ENGLISH) ?: EventCardPresenter.UNKNOWN_MONTH
+                val time = parsedStart?.format(timeFormatter) ?: EventCardPresenter.UNKNOWN_TIME
 
-                EventCardBinder.bind(
-                    view = itemView,
+                card.update(
                     title = event.title,
                     status = event.lifecycleStatus(),
                     day = day,
                     month = month,
                     time = time,
-                    location = location,
-                    count = count,
-                    capacity = capacity,
-                    percent = percent,
+                    location = event.venue.takeIf { it.isNotBlank() && it != "Venue not set" } ?: EventCardPresenter.UNKNOWN_LOCATION,
+                    count = event.currentAttendeeCount.coerceAtLeast(0),
+                    capacity = EventCardPresenter.capacity(event.capacity),
                     onClick = { onClick(event) },
                 )
             }

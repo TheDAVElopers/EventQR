@@ -20,11 +20,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.ui.theme.BrandPrimaryDark
 import com.thedavelopers.eventqr.ui.theme.BrandPurple
+import com.thedavelopers.eventqr.ui.theme.LocalSpacing
 import com.thedavelopers.eventqr.ui.theme.TextOnPrimary
 import com.thedavelopers.eventqr.ui.theme.TextOnPrimaryMuted
 
@@ -34,16 +33,18 @@ fun AuthHeader(
     subtitle: String,
     modifier: Modifier = Modifier,
 ) {
+    val spacing = LocalSpacing.current
+
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp))
+            .clip(RoundedCornerShape(bottomStart = spacing.extraLarge, bottomEnd = spacing.extraLarge))
             .background(
                 Brush.verticalGradient(
                     colors = listOf(BrandPrimaryDark, BrandPurple),
                 ),
             )
-            .padding(horizontal = 24.dp, vertical = 32.dp),
+            .padding(horizontal = spacing.large, vertical = spacing.extraLarge),
         contentAlignment = Alignment.Center,
     ) {
         Column(
@@ -52,20 +53,19 @@ fun AuthHeader(
             Image(
                 painter = painterResource(id = R.drawable.white_logo),
                 contentDescription = "EventQR Logo",
-                modifier = Modifier.size(72.dp),
+                modifier = Modifier.size(spacing.brandLogoSize),
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(spacing.mediumSmall))
 
             Text(
                 text = title,
-                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
                 color = TextOnPrimary,
-                fontSize = 26.sp,
                 textAlign = TextAlign.Center,
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(spacing.micro))
 
             Text(
                 text = subtitle,

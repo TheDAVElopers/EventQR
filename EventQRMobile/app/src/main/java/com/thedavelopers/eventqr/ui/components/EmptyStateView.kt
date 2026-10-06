@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -22,13 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import com.thedavelopers.eventqr.ui.theme.BrandPrimary
-import com.thedavelopers.eventqr.ui.theme.SurfaceAlt
-import com.thedavelopers.eventqr.ui.theme.TextMuted
-import com.thedavelopers.eventqr.ui.theme.TextOnPrimary
-import com.thedavelopers.eventqr.ui.theme.TextPrimary
-import com.thedavelopers.eventqr.ui.theme.TextSecondary
+import com.thedavelopers.eventqr.ui.theme.LocalSpacing
 
 @Composable
 fun EmptyStateView(
@@ -38,60 +33,66 @@ fun EmptyStateView(
     modifier: Modifier = Modifier,
     actionLabel: String? = null,
     onActionClick: (() -> Unit)? = null,
-    iconTint: Color = BrandPrimary,
-    iconBackgroundColor: Color = SurfaceAlt,
+    iconTint: Color? = null,
+    iconBackgroundColor: Color? = null,
 ) {
+    val spacing = LocalSpacing.current
+    val resolvedIconTint = iconTint ?: MaterialTheme.colorScheme.primary
+    val resolvedIconBackground = iconBackgroundColor ?: MaterialTheme.colorScheme.surfaceVariant
+    val actionText = actionLabel.takeIf { onActionClick != null }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 32.dp, vertical = 40.dp),
+            .padding(horizontal = spacing.extraLarge, vertical = spacing.emptyStateVerticalPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
             modifier = Modifier
-                .size(72.dp)
+                .size(spacing.iconContainerLarge)
                 .clip(CircleShape)
-                .background(iconBackgroundColor),
+                .background(resolvedIconBackground),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = iconTint,
-                modifier = Modifier.size(36.dp),
+                tint = resolvedIconTint,
+                modifier = Modifier.size(spacing.iconSizeXLarge),
             )
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(spacing.mediumLarge))
 
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = TextPrimary,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(spacing.small))
 
         Text(
             text = description,
             style = MaterialTheme.typography.bodyMedium,
-            color = TextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
 
-        if (!actionLabel.isNullOrBlank() && onActionClick != null) {
-            Spacer(modifier = Modifier.height(24.dp))
+        if (!actionText.isNullOrBlank() && onActionClick != null) {
+            Spacer(modifier = Modifier.height(spacing.large))
             Button(
                 onClick = onActionClick,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = BrandPrimary,
-                    contentColor = TextOnPrimary,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                 ),
                 shape = MaterialTheme.shapes.medium,
+                modifier = Modifier.heightIn(min = spacing.buttonHeightMin),
             ) {
                 Text(
-                    text = actionLabel,
+                    text = actionText,
                     style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
                 )
             }

@@ -1,24 +1,30 @@
 package com.thedavelopers.eventqr.features.admin.logs
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.core.api.dto.AccountRole
+import com.thedavelopers.eventqr.core.session.SessionManager
+import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.admin.AdminBottomNavItem
-import com.thedavelopers.eventqr.features.admin.AdminEventApprovalBackendActivity
 import com.thedavelopers.eventqr.features.admin.AdminRepository
 import com.thedavelopers.eventqr.features.admin.configureAdminBottomNav
-import com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity
-import com.thedavelopers.eventqr.features.admin.users.AdminAccountManagementActivity
 import com.thedavelopers.eventqr.features.audit.model.dto.AuditLogResponse
+import com.thedavelopers.eventqr.ui.components.FilterChipRow
+import com.thedavelopers.eventqr.ui.theme.EventQrTheme
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class AdminAuditLogsActivity : AppCompatActivity() {
@@ -29,23 +35,24 @@ class AdminAuditLogsActivity : AppCompatActivity() {
     private lateinit var textPlaceholder: TextView
     private lateinit var recyclerLogs: RecyclerView
 
-    private lateinit var chipAll: TextView
-    private lateinit var chipApproval: TextView
-    private lateinit var chipAccount: TextView
-    private lateinit var chipSecurity: TextView
-    private lateinit var chipNotification: TextView
-
     private var allLogs: List<AuditLogResponse> = emptyList()
-    private var selectedFilter: AuditFilter = AuditFilter.ALL
+    private val selectedFilter = MutableStateFlow(AuditFilter.ALL)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_admin_audit_logs)
 
+        val normalizedRole = RoleMapper.normalizeRole(SessionManager(this).getUserRole())
+        if (normalizedRole != AccountRole.ADMIN.name && normalizedRole != AccountRole.SUPER_ADMIN.name) {
+            Toast.makeText(this, "Access Denied: Admin only", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
+
         repository = AdminRepository(this)
         adapter = AdminAuditLogAdapter()
         bindViews()
-        bindFilterClicks()
+        bindFilterChips()
         bindNav()
         loadLogs()
     }
@@ -59,21 +66,22 @@ class AdminAuditLogsActivity : AppCompatActivity() {
         recyclerLogs.adapter = adapter
         swipeRefresh.setColorSchemeResources(R.color.eventqr_purple)
         swipeRefresh.setOnRefreshListener { loadLogs() }
-
-        chipAll = findViewById(R.id.chipAuditAll)
-        chipApproval = findViewById(R.id.chipAuditApproval)
-        chipAccount = findViewById(R.id.chipAuditAccount)
-        chipSecurity = findViewById(R.id.chipAuditSecurity)
-        chipNotification = findViewById(R.id.chipAuditNotification)
-        updateChipStyles()
     }
 
-    private fun bindFilterClicks() {
-        chipAll.setOnClickListener { setFilter(AuditFilter.ALL) }
-        chipApproval.setOnClickListener { setFilter(AuditFilter.APPROVAL) }
-        chipAccount.setOnClickListener { setFilter(AuditFilter.ACCOUNT) }
-        chipSecurity.setOnClickListener { setFilter(AuditFilter.SECURITY) }
-        chipNotification.setOnClickListener { setFilter(AuditFilter.NOTIFICATION) }
+    private fun bindFilterChips() {
+        val composeView = findViewById<ComposeView>(R.id.composeAuditFilters)
+        composeView.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        composeView.setContent {
+            EventQrTheme {
+                val filter = selectedFilter.collectAsStateWithLifecycle().value
+                FilterChipRow(
+                    items = AuditFilter.entries,
+                    selectedItem = filter,
+                    onItemSelected = { setFilter(it) },
+                    labelProvider = { it.label },
+                )
+            }
+        }
     }
 
     private fun bindNav() {
@@ -109,29 +117,13 @@ class AdminAuditLogsActivity : AppCompatActivity() {
     }
 
     private fun setFilter(filter: AuditFilter) {
-        selectedFilter = filter
-        updateChipStyles()
+        selectedFilter.value = filter
         applyFilter()
     }
 
-    private fun updateChipStyles() {
-        styleChip(chipAll, selectedFilter == AuditFilter.ALL)
-        styleChip(chipApproval, selectedFilter == AuditFilter.APPROVAL)
-        styleChip(chipAccount, selectedFilter == AuditFilter.ACCOUNT)
-        styleChip(chipSecurity, selectedFilter == AuditFilter.SECURITY)
-        styleChip(chipNotification, selectedFilter == AuditFilter.NOTIFICATION)
-    }
-
-    private fun styleChip(chip: TextView, selected: Boolean) {
-        chip.setBackgroundResource(
-            if (selected) R.drawable.bg_admin_request_filter_active
-            else R.drawable.bg_admin_request_filter_inactive
-        )
-        chip.setTextColor(if (selected) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
-        chip.elevation = if (selected) 2f else 1f
-    }
-
     private fun applyFilter() {
+        val activeFilter = selectedFilter.value
+
         if (allLogs.isEmpty()) {
             recyclerLogs.visibility = View.GONE
             textPlaceholder.visibility = View.VISIBLE
@@ -143,7 +135,7 @@ class AdminAuditLogsActivity : AppCompatActivity() {
         val filtered = allLogs.filter { log ->
             val actionText = log.action.lowercase()
             val detailsText = log.details.orEmpty().lowercase()
-            when (selectedFilter) {
+            when (activeFilter) {
                 AuditFilter.ALL -> true
                 AuditFilter.APPROVAL -> actionText.contains("approve") || actionText.contains("reject") || actionText.contains("request") || detailsText.contains("approve") || detailsText.contains("reject")
                 AuditFilter.ACCOUNT -> actionText.contains("account") || actionText.contains("user") || actionText.contains("role") || actionText.contains("suspend") || detailsText.contains("account") || detailsText.contains("role")
@@ -158,11 +150,11 @@ class AdminAuditLogsActivity : AppCompatActivity() {
         textPlaceholder.text = if (filtered.isEmpty()) "No audit logs for this filter." else ""
     }
 
-    private enum class AuditFilter {
-        ALL,
-        APPROVAL,
-        ACCOUNT,
-        SECURITY,
-        NOTIFICATION,
+    private enum class AuditFilter(val label: String) {
+        ALL("All"),
+        APPROVAL("Approval"),
+        ACCOUNT("Account"),
+        SECURITY("Security"),
+        NOTIFICATION("Notification"),
     }
 }

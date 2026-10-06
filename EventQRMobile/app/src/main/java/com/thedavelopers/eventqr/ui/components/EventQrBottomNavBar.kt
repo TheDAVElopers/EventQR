@@ -1,16 +1,19 @@
 package com.thedavelopers.eventqr.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
@@ -29,14 +32,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.thedavelopers.eventqr.ui.theme.BrandPrimary
-import com.thedavelopers.eventqr.ui.theme.PaperWhite
-import com.thedavelopers.eventqr.ui.theme.StatCardPurpleBg
-import com.thedavelopers.eventqr.ui.theme.TextMuted
+import com.thedavelopers.eventqr.ui.theme.LocalSpacing
 
 data class NavItem(
     val id: String,
@@ -51,16 +51,20 @@ fun EventQrBottomNavBar(
     onItemSelected: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val spacing = LocalSpacing.current
+    val colorScheme = MaterialTheme.colorScheme
+
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-        colors = CardDefaults.cardColors(containerColor = PaperWhite),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        shape = RoundedCornerShape(topStart = spacing.mediumLarge, topEnd = spacing.mediumLarge),
+        colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = spacing.navElevation),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 6.dp),
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(horizontal = spacing.small, vertical = spacing.micro),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -69,32 +73,40 @@ fun EventQrBottomNavBar(
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .clickable { onItemSelected(item.id) }
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                        .clip(RoundedCornerShape(spacing.mediumSmall))
+                        .selectable(
+                            selected = isSelected,
+                            role = Role.Tab,
+                            onClick = { onItemSelected(item.id) },
+                        )
+                        .padding(
+                            horizontal = spacing.mediumSmall,
+                            vertical = spacing.micro,
+                        ),
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(if (isSelected) StatCardPurpleBg else PaperWhite),
+                            .size(spacing.iconContainerSmall)
+                            .clip(RoundedCornerShape(spacing.mediumSmall))
+                            .background(
+                                if (isSelected) colorScheme.primaryContainer else Color.Transparent,
+                            ),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             imageVector = item.icon,
-                            contentDescription = item.label,
-                            tint = if (isSelected) BrandPrimary else TextMuted,
-                            modifier = Modifier.size(20.dp),
+                            contentDescription = null,
+                            tint = if (isSelected) colorScheme.onPrimaryContainer else colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(spacing.iconSizeMedium),
                         )
                     }
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(spacing.nano))
                     Text(
                         text = item.label,
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            fontSize = 10.sp,
                         ),
-                        color = if (isSelected) BrandPrimary else TextMuted,
+                        color = if (isSelected) colorScheme.primary else colorScheme.onSurfaceVariant,
                     )
                 }
             }

@@ -89,10 +89,6 @@ class AttendeeRepository(context: Context) {
     suspend fun redeemReward(request: RewardRedemptionRequest) = safeApiCall { apiService.redeemReward(request) }
     suspend fun getRewardRedemptions(eventId: String) = safeApiCall { apiService.getRewardRedemptions(eventId) }
     suspend fun getMyRewardRedemptions(eventId: String) = safeApiCall { apiService.getMyClaimedRewards(eventId) }
-    suspend fun getMyNotifications() = safeApiCall { apiService.getMyNotifications() }
-    suspend fun markNotificationRead(notificationId: String) = safeApiCall { apiService.markNotificationRead(notificationId) }
-    suspend fun markAllNotificationsRead() = safeApiCall { apiService.markAllNotificationsRead() }
-    suspend fun getNotificationsByRecipient(recipientUserId: String) = safeApiCall { apiService.getNotificationsByRecipient(recipientUserId) }
     suspend fun getDashboardSummary() = safeApiCall { apiService.getDashboard() }
     suspend fun parseUuid(value: String?): UUID? = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
         runCatching { UUID.fromString(value.orEmpty()) }.getOrNull()

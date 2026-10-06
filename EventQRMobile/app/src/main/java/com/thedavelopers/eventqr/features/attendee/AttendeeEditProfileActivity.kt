@@ -1,6 +1,5 @@
 package com.thedavelopers.eventqr.features.attendee
 
-import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.InputType
@@ -20,7 +19,7 @@ import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.session.SessionManager
 import kotlinx.coroutines.launch
 
-open class AttendeeEditProfileActivity : AppCompatActivity() {
+class AttendeeEditProfileActivity : AppCompatActivity() {
     private lateinit var sessionManager: SessionManager
     private lateinit var repository: AttendeeRepository
 
@@ -88,19 +87,21 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
         }
 
         configurePhoneInput()
+        attachFormWatchers()
+    }
 
-        val formWatcher = object : TextWatcher {
+    private fun attachFormWatchers() {
+        edtFullName.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+            override fun afterTextChanged(editable: Editable?) = onFormValueChanged()
+        })
+    }
 
-            override fun afterTextChanged(s: Editable?) {
-                clearApiError()
-                clearFieldErrors()
-                updateSaveButtonState()
-            }
-        }
-
-        edtPhone.addTextChangedListener(formWatcher)
+    private fun onFormValueChanged() {
+        clearApiError()
+        clearFieldErrors()
+        updateSaveButtonState()
     }
 
     private fun prefillFromSession() {
@@ -119,10 +120,10 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
             when (val profileResult = repository.getMyProfile()) {
                 is NetworkResult.Success -> {
                     val user = profileResult.data
-                    edtFullName.setText(user.fullName)
-                    edtEmail.setText(user.email)
+                    applyServerValue(edtFullName, user.fullName)
+                    applyServerValue(edtEmail, user.email)
                     val phoneDigits = normalizePhoneDigits(user.phoneNumber.orEmpty())
-                    edtPhone.setText(phoneDigits)
+                    applyServerValue(edtPhone, phoneDigits)
 
                     sessionManager.updateProfile(
                         fullName = user.fullName,
@@ -132,15 +133,21 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
                     sessionManager.saveRole(user.role)
 
                     txtEmptyHint.visibility = if (phoneDigits.isBlank()) View.VISIBLE else View.GONE
+                    captureInitialSnapshot(user.fullName.trim(), user.email, phoneDigits)
                 }
 
                 is NetworkResult.Error -> showApiError(profileResult.message)
                 else -> Unit
             }
 
-            captureInitialFormSnapshot()
             setLoadingState(false)
         }
+    }
+
+    private fun applyServerValue(field: EditText, serverValue: String) {
+        if (field.hasFocus()) return
+        if (field.text.toString() == serverValue) return
+        field.setText(serverValue)
     }
 
     private fun attemptSave() {
@@ -190,13 +197,17 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
     }
 
     private fun hasChanges(): Boolean {
-        return sanitizePhone() != initialPhone
+        return sanitizeName() != initialFullName || sanitizePhone() != initialPhone
     }
 
     private fun captureInitialFormSnapshot() {
-        initialFullName = sanitizeName()
-        initialEmail = sanitizeEmail()
-        initialPhone = sanitizePhone()
+        captureInitialSnapshot(sanitizeName(), sanitizeEmail(), sanitizePhone())
+    }
+
+    private fun captureInitialSnapshot(name: String, email: String, phone: String) {
+        initialFullName = name
+        initialEmail = email
+        initialPhone = phone
     }
 
     private fun configurePhoneInput() {
@@ -209,8 +220,8 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
                 val normalized = normalizePhoneDigits(current.toString())
                 if (normalized != current.toString()) {
                     current.replace(0, current.length, normalized)
-                    edtPhone.error = null
                 }
+                onFormValueChanged()
             }
         })
     }
@@ -266,6 +277,7 @@ open class AttendeeEditProfileActivity : AppCompatActivity() {
             layoutEditProfileContent.visibility = View.VISIBLE
         }
         edtPhone.isEnabled = !loading
+        edtFullName.isEnabled = !loading
         updateSaveButtonState()
     }
 

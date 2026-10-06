@@ -29,15 +29,40 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.thedavelopers.eventqr.ui.theme.BorderLight
-import com.thedavelopers.eventqr.ui.theme.BrandPrimary
-import com.thedavelopers.eventqr.ui.theme.PaperWhite
-import com.thedavelopers.eventqr.ui.theme.StatusActiveGreen
-import com.thedavelopers.eventqr.ui.theme.TextMuted
-import com.thedavelopers.eventqr.ui.theme.TextPrimary
-import com.thedavelopers.eventqr.ui.theme.TextSecondary
+import com.thedavelopers.eventqr.ui.theme.EventAccentActive
+import com.thedavelopers.eventqr.ui.theme.EventAccentActiveFill
+import com.thedavelopers.eventqr.ui.theme.EventAccentApproved
+import com.thedavelopers.eventqr.ui.theme.EventAccentApprovedFill
+import com.thedavelopers.eventqr.ui.theme.EventAccentCompleted
+import com.thedavelopers.eventqr.ui.theme.EventAccentCompletedFill
+import com.thedavelopers.eventqr.ui.theme.EventAccentPending
+import com.thedavelopers.eventqr.ui.theme.EventAccentPendingFill
+import com.thedavelopers.eventqr.ui.theme.EventAccentRejected
+import com.thedavelopers.eventqr.ui.theme.EventAccentRejectedFill
+import com.thedavelopers.eventqr.ui.theme.EventAccentRegistered
+import com.thedavelopers.eventqr.ui.theme.EventAccentRegisteredFill
+import com.thedavelopers.eventqr.ui.theme.EventAccentUpcoming
+import com.thedavelopers.eventqr.ui.theme.EventAccentUpcomingFill
+import com.thedavelopers.eventqr.ui.theme.LocalSpacing
+import java.util.Locale
+
+data class EventCardAccent(
+    val container: Color,
+    val fill: Color,
+)
+
+fun eventCardAccent(status: EventBadgeStatus): EventCardAccent = when (status) {
+    EventBadgeStatus.ACTIVE -> EventCardAccent(EventAccentActive, EventAccentActiveFill)
+    EventBadgeStatus.COMPLETED -> EventCardAccent(EventAccentCompleted, EventAccentCompletedFill)
+    EventBadgeStatus.UPCOMING -> EventCardAccent(EventAccentUpcoming, EventAccentUpcomingFill)
+    EventBadgeStatus.PENDING -> EventCardAccent(EventAccentPending, EventAccentPendingFill)
+    EventBadgeStatus.APPROVED -> EventCardAccent(EventAccentApproved, EventAccentApprovedFill)
+    EventBadgeStatus.REGISTERED -> EventCardAccent(EventAccentRegistered, EventAccentRegisteredFill)
+    EventBadgeStatus.REJECTED -> EventCardAccent(EventAccentRejected, EventAccentRejectedFill)
+    EventBadgeStatus.CANCELLED -> EventCardAccent(EventAccentRejected, EventAccentRejectedFill)
+    EventBadgeStatus.DRAFT -> EventCardAccent(EventAccentCompleted, EventAccentCompletedFill)
+    EventBadgeStatus.UNKNOWN -> EventCardAccent(EventAccentCompleted, EventAccentCompletedFill)
+}
 
 @Composable
 fun EventCard(
@@ -51,34 +76,39 @@ fun EventCard(
     statusLabel: String? = null,
     registeredCount: Int? = null,
     capacity: Int? = null,
-    onClick: () -> Unit,
+    accentColor: Color = eventCardAccent(status).container,
+    progressColor: Color = eventCardAccent(status).fill,
+    onClick: (() -> Unit)? = null,
     trailingAction: (@Composable () -> Unit)? = null,
 ) {
+    val spacing = LocalSpacing.current
+    val metaColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val progressTrackColor = MaterialTheme.colorScheme.outlineVariant
+
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 96.dp)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = PaperWhite),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            .heightIn(min = spacing.cardMinHeight)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
+        shape = RoundedCornerShape(spacing.cardCornerRadius),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = spacing.cardElevation),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(spacing.cardContentPadding),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top,
             ) {
-                // Calendar Date Badge
                 Box(
                     modifier = Modifier
-                        .size(54.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(BrandPrimary)
-                        .padding(4.dp),
+                        .size(spacing.dateBadgeSize)
+                        .clip(RoundedCornerShape(spacing.cardCornerRadiusSmall))
+                        .background(accentColor)
+                        .padding(spacing.badgeContentPadding),
                     contentAlignment = Alignment.Center,
                 ) {
                     Column(
@@ -87,22 +117,18 @@ fun EventCard(
                         Text(
                             text = day.ifBlank { "--" },
                             color = Color.White,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            lineHeight = 18.sp,
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                         )
                         Text(
-                            text = month.uppercase().ifBlank { "---" },
-                            color = Color.White.copy(alpha = 0.85f),
+                            text = month.uppercase(Locale.ENGLISH).ifBlank { "---" },
+                            color = Color.White,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                            fontSize = 10.sp,
-                            lineHeight = 12.sp,
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.width(14.dp))
+                Spacer(modifier = Modifier.width(spacing.cardContentGap))
 
-                // Title, Status, and Meta
                 Column(
                     modifier = Modifier.weight(1f),
                 ) {
@@ -113,55 +139,53 @@ fun EventCard(
                         Text(
                             text = title.ifBlank { "Untitled Event" },
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = TextPrimary,
+                            color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f),
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(spacing.small))
                         StatusBadge(
                             status = status,
                             customLabel = statusLabel,
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(spacing.micro))
 
-                    // Time Row
                     if (time.isNotBlank() && time != "-") {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = Icons.Default.Schedule,
                                 contentDescription = null,
-                                tint = TextMuted,
-                                modifier = Modifier.size(14.dp),
+                                tint = metaColor,
+                                modifier = Modifier.size(spacing.iconSizeSmall),
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(spacing.extraSmall))
                             Text(
                                 text = time,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondary,
+                                color = metaColor,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(spacing.nano))
 
-                    // Location Row
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.LocationOn,
                             contentDescription = null,
-                            tint = TextMuted,
-                            modifier = Modifier.size(14.dp),
+                            tint = metaColor,
+                            modifier = Modifier.size(spacing.iconSizeSmall),
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(spacing.extraSmall))
                         Text(
                             text = location.ifBlank { "Venue TBD" },
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary,
+                            color = metaColor,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -169,14 +193,13 @@ fun EventCard(
                 }
 
                 if (trailingAction != null) {
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(spacing.small))
                     trailingAction()
                 }
             }
 
-            // Capacity Progress Bar (if provided)
             if (registeredCount != null && capacity != null && capacity > 0) {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(spacing.mediumSmall))
                 val fraction = (registeredCount.toFloat() / capacity.toFloat()).coerceIn(0f, 1f)
                 val percent = (fraction * 100).toInt()
 
@@ -187,25 +210,25 @@ fun EventCard(
                     Text(
                         text = "$registeredCount / $capacity Registered",
                         style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                        color = TextSecondary,
+                        color = metaColor,
                         modifier = Modifier.weight(1f),
                     )
                     Text(
                         text = "$percent%",
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        color = TextPrimary,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(spacing.micro))
                 LinearProgressIndicator(
                     progress = { fraction },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(6.dp)
-                        .clip(RoundedCornerShape(3.dp)),
-                    color = StatusActiveGreen,
-                    trackColor = BorderLight,
+                        .height(spacing.progressBarHeight)
+                        .clip(RoundedCornerShape(spacing.progressBarCornerRadius)),
+                    color = progressColor,
+                    trackColor = progressTrackColor,
                 )
             }
         }

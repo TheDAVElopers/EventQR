@@ -163,33 +163,27 @@
                             android:orientation="vertical"
                             android:padding="16dp">
 
-                            <!-- Full Name (Locked / Display-Only) -->
+                            <!-- Full Name -->
                             <com.google.android.material.textfield.TextInputLayout
                                 android:id="@+id/tilFullName"
                                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:enabled="false"
                                 android:hint="Full Name"
                                 app:boxCornerRadiusBottomEnd="8dp"
                                 app:boxCornerRadiusBottomStart="8dp"
                                 app:boxCornerRadiusTopEnd="8dp"
                                 app:boxCornerRadiusTopStart="8dp"
                                 app:boxStrokeColor="@color/outline"
-                                app:endIconContentDescription="Field is locked"
-                                app:endIconDrawable="@drawable/ic_lock"
-                                app:endIconMode="custom"
-                                app:endIconTint="@color/text_disabled"
+                                app:helperText="Name on your EventQR account"
                                 app:hintTextColor="@color/text_secondary">
 
                                 <com.google.android.material.textfield.TextInputEditText
                                     android:id="@+id/edtFullName"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:enabled="false"
-                                    android:focusable="false"
-                                    android:focusableInTouchMode="false"
-                                    android:inputType="textPersonName"
+                                    android:inputType="textPersonName|textCapWords"
+                                    android:maxLength="60"
                                     android:textColor="@color/text_primary"
                                     android:textSize="14sp" />
                             </com.google.android.material.textfield.TextInputLayout>

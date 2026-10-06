@@ -14,17 +14,15 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.thedavelopers.eventqr.ui.theme.BrandPrimary
-import com.thedavelopers.eventqr.ui.theme.PaperWhite
-import com.thedavelopers.eventqr.ui.theme.TextMuted
+import com.thedavelopers.eventqr.ui.theme.LocalSpacing
 import com.thedavelopers.eventqr.ui.theme.TextOnPrimary
 import com.thedavelopers.eventqr.ui.theme.TextOnPrimaryMuted
-import com.thedavelopers.eventqr.ui.theme.TextPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,21 +37,24 @@ fun EventQrTopAppBar(
     containerColor: Color? = null,
     titleContentColor: Color? = null,
 ) {
-    val defaultColors = if (isBrandHeader) {
-        TopAppBarDefaults.topAppBarColors(
-            containerColor = containerColor ?: BrandPrimary,
-            titleContentColor = titleContentColor ?: TextOnPrimary,
-            navigationIconContentColor = titleContentColor ?: TextOnPrimary,
-            actionIconContentColor = titleContentColor ?: TextOnPrimary,
-        )
-    } else {
-        TopAppBarDefaults.topAppBarColors(
-            containerColor = containerColor ?: PaperWhite,
-            titleContentColor = titleContentColor ?: TextPrimary,
-            navigationIconContentColor = titleContentColor ?: TextPrimary,
-            actionIconContentColor = titleContentColor ?: TextPrimary,
-        )
+    val spacing = LocalSpacing.current
+    val colorScheme = MaterialTheme.colorScheme
+    val resolvedContainerColor = remember(containerColor, isBrandHeader, colorScheme) {
+        containerColor ?: if (isBrandHeader) BrandPrimary else colorScheme.surface
     }
+    val resolvedTitleColor = remember(titleContentColor, isBrandHeader, colorScheme) {
+        titleContentColor ?: if (isBrandHeader) TextOnPrimary else colorScheme.onSurface
+    }
+    val resolvedSubtitleColor = remember(isBrandHeader, colorScheme) {
+        if (isBrandHeader) TextOnPrimaryMuted else colorScheme.onSurfaceVariant
+    }
+
+    val defaultColors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(
+        containerColor = resolvedContainerColor,
+        titleContentColor = resolvedTitleColor,
+        navigationIconContentColor = resolvedTitleColor,
+        actionIconContentColor = resolvedTitleColor,
+    )
 
     TopAppBar(
         title = {
@@ -63,7 +64,7 @@ fun EventQrTopAppBar(
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    color = if (isBrandHeader) TextOnPrimary else TextPrimary,
+                    color = resolvedTitleColor,
                 )
                 if (!subtitle.isNullOrBlank()) {
                     Text(
@@ -71,7 +72,7 @@ fun EventQrTopAppBar(
                         style = MaterialTheme.typography.bodySmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        color = if (isBrandHeader) TextOnPrimaryMuted else TextMuted,
+                        color = resolvedSubtitleColor,
                     )
                 }
             }
@@ -83,13 +84,13 @@ fun EventQrTopAppBar(
                 onBackClick != null -> {
                     IconButton(
                         onClick = onBackClick,
-                        modifier = Modifier.size(48.dp),
+                        modifier = Modifier.size(spacing.minTouchTarget),
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            modifier = Modifier.size(24.dp),
-                            tint = if (isBrandHeader) TextOnPrimary else TextPrimary,
+                            modifier = Modifier.size(spacing.iconSizeLarge),
+                            tint = resolvedTitleColor,
                         )
                     }
                 }

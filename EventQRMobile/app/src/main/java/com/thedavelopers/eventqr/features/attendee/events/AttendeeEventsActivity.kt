@@ -16,6 +16,7 @@ import com.google.android.material.chip.Chip
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
+import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import java.time.Instant
 
 open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
@@ -40,6 +41,7 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_events)
+        applyEventQrSystemBarAppearance()
         configureAttendeeBottomNav(AttendeeBottomNavItem.EVENTS)
 
         presenter = EventsPresenter(this, AttendeeRepository(this))

@@ -15,14 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import com.thedavelopers.eventqr.ui.theme.BorderLight
-import com.thedavelopers.eventqr.ui.theme.BrandPrimary
-import com.thedavelopers.eventqr.ui.theme.PaperWhite
-import com.thedavelopers.eventqr.ui.theme.SurfaceAlt
-import com.thedavelopers.eventqr.ui.theme.TextOnPrimary
-import com.thedavelopers.eventqr.ui.theme.TextPrimary
-import com.thedavelopers.eventqr.ui.theme.TextSecondary
+import com.thedavelopers.eventqr.ui.theme.LocalSpacing
 
 @Composable
 fun <T> FilterChipRow(
@@ -32,12 +25,14 @@ fun <T> FilterChipRow(
     modifier: Modifier = Modifier,
     labelProvider: (T) -> String = { it.toString() },
 ) {
+    val spacing = LocalSpacing.current
+
     Row(
         modifier = modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(horizontal = spacing.screenHorizontalPadding, vertical = spacing.small),
+        horizontalArrangement = Arrangement.spacedBy(spacing.small),
     ) {
         items.forEach { item ->
             val isSelected = item == selectedItem
@@ -52,21 +47,21 @@ fun <T> FilterChipRow(
                         ),
                     )
                 },
-                modifier = Modifier.heightIn(min = 40.dp),
-                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.heightIn(min = spacing.minTouchTarget),
+                shape = RoundedCornerShape(spacing.chipCornerRadius),
                 colors = FilterChipDefaults.filterChipColors(
-                    containerColor = SurfaceAlt,
-                    labelColor = TextSecondary,
-                    selectedContainerColor = BrandPrimary,
-                    selectedLabelColor = TextOnPrimary,
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
                 ),
                 border = FilterChipDefaults.filterChipBorder(
                     enabled = true,
                     selected = isSelected,
-                    borderColor = BorderLight,
-                    selectedBorderColor = BrandPrimary,
-                    borderWidth = 1.dp,
-                    selectedBorderWidth = 1.dp,
+                    borderColor = MaterialTheme.colorScheme.outline,
+                    selectedBorderColor = MaterialTheme.colorScheme.primary,
+                    borderWidth = spacing.chipBorderWidth,
+                    selectedBorderWidth = spacing.chipBorderWidth,
                 ),
             )
         }

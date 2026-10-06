@@ -21,6 +21,7 @@ import com.thedavelopers.eventqr.core.api.dto.EventRequestStatus
 import com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity
 import com.thedavelopers.eventqr.features.admin.logs.AdminAuditLogsActivity
 import com.thedavelopers.eventqr.features.admin.users.AdminAccountManagementActivity
+import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import kotlinx.coroutines.launch
 
 class AdminEventApprovalBackendActivity : AppCompatActivity() {
@@ -55,6 +56,7 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_admin_event_requests)
+        applyEventQrSystemBarAppearance()
 
         repository = AdminRepository(this)
         bindViews()

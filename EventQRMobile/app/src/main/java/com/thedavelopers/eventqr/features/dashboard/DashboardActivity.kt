@@ -1,16 +1,13 @@
 package com.thedavelopers.eventqr.features.dashboard
 
 import android.content.Intent
-import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Gravity
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -19,9 +16,9 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.DateFormatters
+import com.thedavelopers.eventqr.core.util.EventCardPresenter
 import com.thedavelopers.eventqr.core.util.PortalSwitcher
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.core.util.firstNameOnly
@@ -42,11 +39,9 @@ import com.thedavelopers.eventqr.features.attendee.configureAttendeeBottomNav
 import com.thedavelopers.eventqr.features.dashboard.model.dto.DashboardSummary
 import com.thedavelopers.eventqr.features.dashboard.model.dto.DashboardUpcomingEvent
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
+import com.thedavelopers.eventqr.ui.components.EventCardHolder
+import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import kotlinx.coroutines.launch
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
-import java.util.Locale
 
 open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     private lateinit var presenter: DashboardPresenter
@@ -68,10 +63,13 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private var isSwipeRefreshing = false
     private var refreshBadgeOnResume = false
+    private val upcomingEventHolders = mutableMapOf<String, EventCardHolder>()
+    private val discoverEventHolders = mutableMapOf<String, EventCardHolder>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_dashboard)
+        applyEventQrSystemBarAppearance()
         configureAttendeeBottomNav(AttendeeBottomNavItem.DASHBOARD)
 
         sessionManager = SessionManager(this)
@@ -203,100 +201,90 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     }
 
     private fun renderUpcomingEvents(events: List<DashboardUpcomingEvent>) {
-        while (upcomingEventsLayout.childCount > 1) {
-            upcomingEventsLayout.removeViewAt(1)
-        }
-
-        if (events.isEmpty()) {
-            upcomingEventsLayout.addView(createEmptyStateView("No upcoming events yet."))
+        val rows = events.take(1)
+        if (rows.isEmpty()) {
+            renderEmptyState(upcomingEventsLayout, upcomingEventHolders, "No upcoming events yet.")
             return
         }
-
-        // Show only the closest upcoming event
-        upcomingEventsLayout.addView(createEventCard(events[0], true, upcomingEventsLayout))
+        syncEventRows(upcomingEventsLayout, upcomingEventHolders, rows)
     }
 
     private fun renderDiscoverEvents(events: List<DashboardUpcomingEvent>) {
-        while (discoverEventsLayout.childCount > 1) {
-            discoverEventsLayout.removeViewAt(1)
-        }
-
         if (events.isEmpty()) {
-            discoverEventsLayout.addView(createEmptyStateView("No discoverable events right now."))
+            renderEmptyState(discoverEventsLayout, discoverEventHolders, "No discoverable events right now.")
             return
         }
+        syncEventRows(discoverEventsLayout, discoverEventHolders, events)
+    }
 
-        events.forEachIndexed { index, event ->
-            discoverEventsLayout.addView(createEventCard(event, index == 0, discoverEventsLayout))
+    private fun renderEmptyState(
+        layout: LinearLayout,
+        holders: MutableMap<String, EventCardHolder>,
+        message: String,
+    ) {
+        holders.clear()
+        while (layout.childCount > 1) {
+            layout.removeViewAt(1)
+        }
+        layout.addView(createEmptyStateView(message))
+    }
+
+    private fun syncEventRows(
+        layout: LinearLayout,
+        holders: MutableMap<String, EventCardHolder>,
+        events: List<DashboardUpcomingEvent>,
+    ) {
+        val rows = events.distinctBy { it.eventId }
+        val liveKeys = rows.mapTo(mutableSetOf()) { it.eventId.toString() }
+
+        holders.keys.filterNot { it in liveKeys }.forEach { holders.remove(it) }
+        (1 until layout.childCount)
+            .map { layout.getChildAt(it) }
+            .filter { it.tag !in liveKeys }
+            .forEach { layout.removeView(it) }
+
+        rows.forEachIndexed { index, event ->
+            val holder = holders.getOrPut(event.eventId.toString()) {
+                EventCardHolder(this).also { created ->
+                    created.view.tag = event.eventId.toString()
+                    created.view.layoutParams = LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                    )
+                }
+            }
+            bindEventCard(holder, event, isFirst = index == 0)
+            if (layout.getChildAt(index + 1) !== holder.view) {
+                (holder.view.parent as? ViewGroup)?.removeView(holder.view)
+                layout.addView(holder.view, minOf(index + 1, layout.childCount))
+            }
         }
     }
 
-    private fun createEventCard(event: DashboardUpcomingEvent, isFirst: Boolean, parent: ViewGroup): View {
-        val inflater = LayoutInflater.from(this)
-        val view = inflater.inflate(R.layout.item_attendee_event, parent, false)
-        val params = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-        ).apply {
-            topMargin = if (isFirst) dp(12) else 0
-            bottomMargin = dp(12)
-        }
-        view.layoutParams = params
-
-        val titleView = view.findViewById<TextView>(R.id.txtAttendeeEventTitle)
-        val statusView = view.findViewById<TextView>(R.id.txtAttendeeEventStatus)
-        val dateTimeView = view.findViewById<TextView>(R.id.txtAttendeeEventDateTime)
-        val locationView = view.findViewById<TextView>(R.id.txtAttendeeEventLocation)
-        val dayView = view.findViewById<TextView>(R.id.txtEventDay)
-        val monthView = view.findViewById<TextView>(R.id.txtEventMonth)
-        val dateBadgeView = view.findViewById<View>(R.id.layoutEventDate)
-        val regCountView = view.findViewById<TextView>(R.id.txtRegistrationCount)
-        val regPercentView = view.findViewById<TextView>(R.id.txtRegistrationPercent)
-        val progressBar = view.findViewById<ProgressBar>(R.id.pbRegistration)
-
-        titleView.text = event.title.ifBlank { "Untitled event" }
-
+    private fun bindEventCard(holder: EventCardHolder, event: DashboardUpcomingEvent, isFirst: Boolean) {
         val eventStatus = EventStatusBadgeStyler.resolve(
             event.status?.let { EventStatusBadgeStyler.fromLabel(it) },
             event.eventStartAt,
             event.eventEndAt,
         )
-        EventStatusBadgeStyler.bind(statusView, eventStatus, event.status)
-        applyEventStatusUi(eventStatus, progressBar)
-        dateBadgeView.setBackgroundResource(EventStatusBadgeStyler.dateBadgeRes(eventStatus))
-
-        val manila = ZoneId.of("Asia/Manila")
-        val startAt = event.eventStartAt
-        if (startAt != null) {
-            val zdt = startAt.atZone(manila)
-            dayView.text = zdt.dayOfMonth.toString()
-            monthView.text = zdt.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH).uppercase(Locale.ENGLISH)
-            dateTimeView.text = zdt.format(DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH))
-        } else {
-            dayView.text = "--"
-            monthView.text = "---"
-            dateTimeView.text = "-"
+        val date = EventCardPresenter.dateParts(event.eventStartAt)
+        holder.update(
+            title = event.title.ifBlank { "Untitled event" },
+            status = EventStatusBadgeStyler.displayLabel(eventStatus, event.status),
+            day = date.day,
+            month = date.month,
+            time = date.time,
+            location = EventCardPresenter.location(event.location),
+            count = event.currentAttendeeCount,
+            capacity = EventCardPresenter.capacity(event.capacity),
+            onClick = { openEventDetail(event) },
+        )
+        val topMargin = if (isFirst) dp(12) else 0
+        val params = holder.view.layoutParams as LinearLayout.LayoutParams
+        if (params.topMargin != topMargin) {
+            params.topMargin = topMargin
+            holder.view.layoutParams = params
         }
-
-        locationView.text = event.location?.takeIf { it.isNotBlank() } ?: "Location not set"
-
-        if (event.capacity > 0) {
-            val percentage = ((event.currentAttendeeCount.toFloat() / event.capacity.toFloat()) * 100f)
-                .toInt()
-                .coerceIn(0, 100)
-            regCountView.text = "${event.currentAttendeeCount} / ${event.capacity} registered"
-            regPercentView.text = "$percentage%"
-            regPercentView.visibility = View.VISIBLE
-            progressBar.visibility = View.VISIBLE
-            progressBar.progress = percentage
-        } else {
-            regCountView.text = "${event.currentAttendeeCount} registered"
-            regPercentView.visibility = View.GONE
-            progressBar.visibility = View.GONE
-        }
-
-        view.setOnClickListener { openEventDetail(event) }
-        return view
     }
 
     private fun createEmptyStateView(message: String): View {
@@ -339,19 +327,6 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         })
 
         return container
-    }
-
-    private fun applyEventStatusUi(
-        eventStatus: EventStatus,
-        progressBar: ProgressBar,
-    ) {
-        progressBar.progressDrawable = getDrawable(
-            when (eventStatus) {
-                EventStatus.ENDED -> R.drawable.pb_event_completed
-                EventStatus.ACTIVE -> R.drawable.pb_event_active
-                else -> R.drawable.pb_event_upcoming
-            },
-        )
     }
 
     private fun openEventDetail(event: DashboardUpcomingEvent) {

@@ -42,6 +42,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,30 +50,37 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.thedavelopers.eventqr.core.api.dto.EventRequestStatus
+import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse
 import com.thedavelopers.eventqr.ui.components.EmptyStateView
 import com.thedavelopers.eventqr.ui.components.EventBadgeStatus
 import com.thedavelopers.eventqr.ui.components.EventQrTopAppBar
 import com.thedavelopers.eventqr.ui.components.StatusBadge
-import com.thedavelopers.eventqr.ui.theme.BackgroundLight
-import com.thedavelopers.eventqr.ui.theme.BorderLight
-import com.thedavelopers.eventqr.ui.theme.BrandPrimary
-import com.thedavelopers.eventqr.ui.theme.PaperWhite
-import com.thedavelopers.eventqr.ui.theme.StatusApprovedGreen
-import com.thedavelopers.eventqr.ui.theme.StatusApprovedGreenBg
-import com.thedavelopers.eventqr.ui.theme.StatusApprovedGreenText
-import com.thedavelopers.eventqr.ui.theme.StatusRejectedRed
-import com.thedavelopers.eventqr.ui.theme.StatusRejectedRedBg
-import com.thedavelopers.eventqr.ui.theme.StatusRejectedRedText
-import com.thedavelopers.eventqr.ui.theme.TextMuted
-import com.thedavelopers.eventqr.ui.theme.TextOnPrimary
-import com.thedavelopers.eventqr.ui.theme.TextPrimary
-import com.thedavelopers.eventqr.ui.theme.TextSecondary
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import com.thedavelopers.eventqr.ui.theme.LocalSpacing
+import java.util.UUID
+
+private enum class ConfirmAction {
+    APPROVE,
+    REJECT,
+    UPGRADE,
+}
+
+internal fun eventRequestBadgeStatus(status: EventRequestStatus): EventBadgeStatus = when (status) {
+    EventRequestStatus.APPROVED -> EventBadgeStatus.APPROVED
+    EventRequestStatus.REJECTED -> EventBadgeStatus.REJECTED
+    EventRequestStatus.PENDING -> EventBadgeStatus.PENDING
+}
+
+internal fun requesterDisplay(
+    requesterName: String?,
+    contactEmail: String?,
+    requesterUserId: UUID?,
+): String {
+    requesterName?.takeIf { it.isNotBlank() }?.let { return it }
+    contactEmail?.takeIf { it.isNotBlank() }?.let { return it }
+    return "Unknown requester"
+}
 
 @Composable
 fun EventRequestDetailScreen(
@@ -87,8 +95,10 @@ fun EventRequestDetailScreen(
     onUpgradeClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
+    val spacing = LocalSpacing.current
+    val colorScheme = MaterialTheme.colorScheme
     var showConfirmDialog by remember { mutableStateOf<ConfirmAction?>(null) }
-    var remarksText by remember { mutableStateOf("") }
+    var remarksText by rememberSaveable { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -97,7 +107,7 @@ fun EventRequestDetailScreen(
                 onBackClick = onBackClick,
             )
         },
-        containerColor = BackgroundLight,
+        containerColor = colorScheme.background,
         modifier = modifier.fillMaxSize(),
     ) { innerPadding ->
         Box(
@@ -108,7 +118,7 @@ fun EventRequestDetailScreen(
             when {
                 isLoading && request == null -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = BrandPrimary)
+                        CircularProgressIndicator(color = colorScheme.primary)
                     }
                 }
                 errorMessage != null && request == null -> {
@@ -118,30 +128,28 @@ fun EventRequestDetailScreen(
                         description = errorMessage,
                         actionLabel = "Retry",
                         onActionClick = onRetryClick,
-                        iconTint = StatusRejectedRedText,
-                        iconBackgroundColor = StatusRejectedRedBg,
+                        iconTint = colorScheme.onErrorContainer,
+                        iconBackgroundColor = colorScheme.errorContainer,
                     )
                 }
                 request != null -> {
                     val scrollState = rememberScrollState()
-                    val formatter = remember {
-                        DateTimeFormatter.ofPattern("MMM d, yyyy").withZone(ZoneId.of("Asia/Manila"))
-                    }
 
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
                             .verticalScroll(scrollState)
-                            .padding(16.dp),
+                            .padding(spacing.screenHorizontalPadding),
                     ) {
-                        // Title & Status Card
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = PaperWhite),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                            shape = RoundedCornerShape(spacing.cardCornerRadius),
+                            colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
+                            elevation = CardDefaults.cardElevation(
+                                defaultElevation = spacing.cardElevation,
+                            ),
                         ) {
-                            Column(modifier = Modifier.padding(18.dp)) {
+                            Column(modifier = Modifier.padding(spacing.mediumLarge)) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically,
@@ -149,98 +157,94 @@ fun EventRequestDetailScreen(
                                 ) {
                                     Text(
                                         text = request.eventName.ifBlank { "Untitled Event" },
-                                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                                        color = TextPrimary,
+                                        style = MaterialTheme.typography.titleLarge.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = colorScheme.onSurface,
+                                        ),
                                         modifier = Modifier.weight(1f),
                                     )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    val badgeStatus = when (request.status) {
-                                        EventRequestStatus.APPROVED -> EventBadgeStatus.APPROVED
-                                        EventRequestStatus.REJECTED -> EventBadgeStatus.REJECTED
-                                        EventRequestStatus.PENDING -> EventBadgeStatus.PENDING
-                                    }
-                                    StatusBadge(status = badgeStatus)
+                                    Spacer(modifier = Modifier.width(spacing.small))
+                                    StatusBadge(status = eventRequestBadgeStatus(request.status))
                                 }
 
                                 if (isAdmin) {
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    val requester = request.requesterName?.takeIf { it.isNotBlank() }
-                                        ?: request.contactEmail?.takeIf { it.isNotBlank() }
-                                        ?: request.requesterUserId.toString()
+                                    Spacer(modifier = Modifier.height(spacing.small))
                                     Text(
-                                        text = "Submitted by: $requester",
+                                        text = "Submitted by: ${requesterDisplay(request.requesterName, request.contactEmail, request.requesterUserId)}",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = TextSecondary,
+                                        color = colorScheme.onSurfaceVariant,
                                     )
                                 }
 
-                                Spacer(modifier = Modifier.height(4.dp))
+                                Spacer(modifier = Modifier.height(spacing.extraSmall))
                                 Text(
-                                    text = "Submitted on ${formatDate(request.createdAt, formatter)}",
+                                    text = "Submitted on ${DateFormatters.formatEventDate(request.createdAt)}",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = TextMuted,
+                                    color = colorScheme.onSurfaceVariant,
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(spacing.medium))
 
-                        // Admin Remarks Note (if approved or rejected)
                         if (request.status == EventRequestStatus.APPROVED) {
                             NoteBox(
                                 title = "Approval Note",
                                 message = request.adminRemarks?.takeIf { it.isNotBlank() }
                                     ?: "Approved. Venue confirmed. Please proceed to event setup.",
-                                backgroundColor = StatusApprovedGreenBg,
-                                textColor = StatusApprovedGreenText,
+                                backgroundColor = colorScheme.primaryContainer,
+                                textColor = colorScheme.onPrimaryContainer,
                             )
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(spacing.medium))
                         } else if (request.status == EventRequestStatus.REJECTED) {
                             NoteBox(
                                 title = "Rejection Note",
                                 message = request.adminRemarks?.takeIf { it.isNotBlank() }
                                     ?: "This request was rejected. Review the event details and submit a revised request if needed.",
-                                backgroundColor = StatusRejectedRedBg,
-                                textColor = StatusRejectedRedText,
+                                backgroundColor = colorScheme.errorContainer,
+                                textColor = colorScheme.onErrorContainer,
                             )
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(spacing.medium))
                         }
 
-                        // Event Information Card
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = PaperWhite),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                            shape = RoundedCornerShape(spacing.cardCornerRadius),
+                            colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
+                            elevation = CardDefaults.cardElevation(
+                                defaultElevation = spacing.cardElevation,
+                            ),
                         ) {
-                            Column(modifier = Modifier.padding(18.dp)) {
+                            Column(modifier = Modifier.padding(spacing.mediumLarge)) {
                                 Text(
                                     text = "Description",
-                                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = TextMuted,
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = colorScheme.onSurfaceVariant,
+                                    ),
                                 )
-                                Spacer(modifier = Modifier.height(4.dp))
+                                Spacer(modifier = Modifier.height(spacing.extraSmall))
                                 Text(
                                     text = request.eventDescription?.takeIf { it.isNotBlank() }
                                         ?: "No description provided.",
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = TextPrimary,
+                                    color = colorScheme.onSurface,
                                 )
 
                                 HorizontalDivider(
-                                    modifier = Modifier.padding(vertical = 14.dp),
-                                    color = BorderLight,
+                                    modifier = Modifier.padding(vertical = spacing.cardContentGap),
+                                    color = colorScheme.outlineVariant,
                                 )
 
                                 InfoRow(
                                     icon = Icons.Default.CalendarToday,
                                     label = "PROPOSED DATE",
-                                    value = formatDate(request.startDateTime, formatter),
+                                    value = DateFormatters.formatEventDate(request.startDateTime),
                                 )
 
                                 HorizontalDivider(
-                                    modifier = Modifier.padding(vertical = 12.dp),
-                                    color = BorderLight,
+                                    modifier = Modifier.padding(vertical = spacing.mediumSmall),
+                                    color = colorScheme.outlineVariant,
                                 )
 
                                 InfoRow(
@@ -250,8 +254,8 @@ fun EventRequestDetailScreen(
                                 )
 
                                 HorizontalDivider(
-                                    modifier = Modifier.padding(vertical = 12.dp),
-                                    color = BorderLight,
+                                    modifier = Modifier.padding(vertical = spacing.mediumSmall),
+                                    color = colorScheme.outlineVariant,
                                 )
 
                                 InfoRow(
@@ -262,8 +266,8 @@ fun EventRequestDetailScreen(
 
                                 if (isAdmin && !request.contactEmail.isNullOrBlank()) {
                                     HorizontalDivider(
-                                        modifier = Modifier.padding(vertical = 12.dp),
-                                        color = BorderLight,
+                                        modifier = Modifier.padding(vertical = spacing.mediumSmall),
+                                        color = colorScheme.outlineVariant,
                                     )
                                     InfoRow(
                                         icon = Icons.Default.Person,
@@ -274,14 +278,13 @@ fun EventRequestDetailScreen(
                             }
                         }
 
-                        // Admin Action Buttons
                         if (isAdmin) {
-                            Spacer(modifier = Modifier.height(24.dp))
+                            Spacer(modifier = Modifier.height(spacing.large))
 
                             if (request.status == EventRequestStatus.PENDING) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(spacing.mediumSmall),
                                 ) {
                                     OutlinedButton(
                                         onClick = {
@@ -290,13 +293,17 @@ fun EventRequestDetailScreen(
                                         },
                                         modifier = Modifier
                                             .weight(1f)
-                                            .heightIn(min = 48.dp),
+                                            .heightIn(min = spacing.buttonHeightMin),
                                         colors = ButtonDefaults.outlinedButtonColors(
-                                            contentColor = StatusRejectedRed,
+                                            contentColor = colorScheme.error,
                                         ),
                                     ) {
-                                        Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(18.dp))
-                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Icon(
+                                            Icons.Default.Close,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(spacing.iconSizeMedium),
+                                        )
+                                        Spacer(modifier = Modifier.width(spacing.micro))
                                         Text("Reject", fontWeight = FontWeight.Bold)
                                     }
 
@@ -307,14 +314,18 @@ fun EventRequestDetailScreen(
                                         },
                                         modifier = Modifier
                                             .weight(1f)
-                                            .heightIn(min = 48.dp),
+                                            .heightIn(min = spacing.buttonHeightMin),
                                         colors = ButtonDefaults.buttonColors(
-                                            containerColor = StatusApprovedGreen,
-                                            contentColor = TextOnPrimary,
+                                            containerColor = colorScheme.tertiary,
+                                            contentColor = colorScheme.onTertiary,
                                         ),
                                     ) {
-                                        Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
-                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Icon(
+                                            Icons.Default.Check,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(spacing.iconSizeMedium),
+                                        )
+                                        Spacer(modifier = Modifier.width(spacing.micro))
                                         Text("Approve", fontWeight = FontWeight.Bold)
                                     }
                                 }
@@ -328,30 +339,33 @@ fun EventRequestDetailScreen(
                                     enabled = !request.organizerUpgraded,
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .heightIn(min = 48.dp),
+                                        .heightIn(min = spacing.buttonHeightMin),
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = BrandPrimary,
-                                        contentColor = TextOnPrimary,
-                                        disabledContainerColor = BorderLight,
-                                        disabledContentColor = TextMuted,
+                                        containerColor = colorScheme.primary,
+                                        contentColor = colorScheme.onPrimary,
+                                        disabledContainerColor = colorScheme.surfaceVariant,
+                                        disabledContentColor = colorScheme.onSurfaceVariant,
                                     ),
                                 ) {
                                     Text(
-                                        text = if (request.organizerUpgraded) "Upgraded to Organizer" else "Upgrade to Organizer",
+                                        text = if (request.organizerUpgraded) {
+                                            "Upgraded to Organizer"
+                                        } else {
+                                            "Upgrade to Organizer"
+                                        },
                                         fontWeight = FontWeight.Bold,
                                     )
                                 }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(spacing.large))
                     }
                 }
             }
         }
     }
 
-    // Confirmation Dialog
     showConfirmDialog?.let { action ->
         AlertDialog(
             onDismissRequest = { showConfirmDialog = null },
@@ -369,14 +383,17 @@ fun EventRequestDetailScreen(
                 Column {
                     Text(
                         text = when (action) {
-                            ConfirmAction.APPROVE -> "Approve this event creation request? The requester will be notified."
-                            ConfirmAction.REJECT -> "Reject this event creation request? The requester will be notified."
-                            ConfirmAction.UPGRADE -> "This will upgrade the requester's account to Organizer role."
+                            ConfirmAction.APPROVE ->
+                                "Approve this event creation request? The requester will be notified."
+                            ConfirmAction.REJECT ->
+                                "Reject this event creation request? The requester will be notified."
+                            ConfirmAction.UPGRADE ->
+                                "This will upgrade the requester's account to Organizer role."
                         },
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     if (action == ConfirmAction.APPROVE || action == ConfirmAction.REJECT) {
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(spacing.mediumSmall))
                         OutlinedTextField(
                             value = remarksText,
                             onValueChange = { remarksText = it },
@@ -399,7 +416,16 @@ fun EventRequestDetailScreen(
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (action == ConfirmAction.REJECT) StatusRejectedRed else BrandPrimary,
+                        containerColor = if (action == ConfirmAction.REJECT) {
+                            colorScheme.error
+                        } else {
+                            colorScheme.primary
+                        },
+                        contentColor = if (action == ConfirmAction.REJECT) {
+                            colorScheme.onError
+                        } else {
+                            colorScheme.onPrimary
+                        },
                     ),
                 ) {
                     Text(
@@ -421,12 +447,6 @@ fun EventRequestDetailScreen(
     }
 }
 
-private enum class ConfirmAction {
-    APPROVE,
-    REJECT,
-    UPGRADE,
-}
-
 @Composable
 private fun NoteBox(
     title: String,
@@ -435,12 +455,14 @@ private fun NoteBox(
     textColor: Color,
     modifier: Modifier = Modifier,
 ) {
+    val spacing = LocalSpacing.current
+
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(spacing.cardCornerRadiusSmall))
             .background(backgroundColor)
-            .padding(16.dp),
+            .padding(spacing.medium),
     ) {
         Column {
             Text(
@@ -448,7 +470,7 @@ private fun NoteBox(
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                 color = textColor,
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(spacing.extraSmall))
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodySmall,
@@ -465,6 +487,9 @@ private fun InfoRow(
     value: String,
     modifier: Modifier = Modifier,
 ) {
+    val spacing = LocalSpacing.current
+    val colorScheme = MaterialTheme.colorScheme
+
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -472,26 +497,22 @@ private fun InfoRow(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = BrandPrimary,
-            modifier = Modifier.size(20.dp),
+            tint = colorScheme.primary,
+            modifier = Modifier.size(spacing.iconSizeMedium),
         )
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(spacing.mediumSmall))
         Column {
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                color = TextMuted,
+                color = colorScheme.onSurfaceVariant,
             )
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(spacing.nano))
             Text(
                 text = value,
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = TextPrimary,
+                color = colorScheme.onSurface,
             )
         }
     }
-}
-
-private fun formatDate(value: Instant?, formatter: DateTimeFormatter): String {
-    return value?.let { formatter.format(it) } ?: "Not available"
 }

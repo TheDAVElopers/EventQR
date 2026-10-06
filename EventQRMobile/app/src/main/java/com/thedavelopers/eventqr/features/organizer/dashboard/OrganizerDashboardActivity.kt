@@ -19,6 +19,7 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.NotificationStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
+import com.thedavelopers.eventqr.core.util.EventCardPresenter
 import com.thedavelopers.eventqr.core.util.PortalSwitcher
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.core.util.firstNameOnly
@@ -31,9 +32,10 @@ import com.thedavelopers.eventqr.features.organizer.bottomNav
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDashboardDto
 import com.thedavelopers.eventqr.features.organizer.notifications.NotificationManagementActivity
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
+import com.thedavelopers.eventqr.ui.components.EventCardHolder
+import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import kotlin.math.min
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -59,6 +61,7 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_organizer_dashboard)
+        applyEventQrSystemBarAppearance()
         repository = OrganizerRepository(this)
         sessionManager = SessionManager(this)
         swipeRefreshLayout = findViewById(R.id.swipeRefreshDashboard)
@@ -271,29 +274,20 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
     ): View {
         val parsedStart = parseEventStartDateTime(event)
         val parsedDate = parsedStart?.toLocalDate() ?: parseEventDateOnly(event)
-        val day = parsedDate?.format(dayFormatter) ?: "--"
-        val month = parsedDate?.format(monthFormatter)?.uppercase(Locale.ENGLISH) ?: "---"
-        val time = parsedStart?.format(timeFormatter) ?: "-"
-        val location = event.venue.takeIf { it.isNotBlank() && it != "Venue not set" } ?: "Location not set"
 
-        val capacity = event.capacity.coerceAtLeast(1)
-        val count = event.currentAttendeeCount.coerceAtLeast(0)
-        val percent = if (capacity > 0) min((count.toFloat() / capacity.toFloat() * 100f).toInt(), 100) else 0
-
-        return com.thedavelopers.eventqr.features.events.EventCardBinder.inflate(
-            context = this,
-            parent = null,
+        val holder = EventCardHolder(this)
+        holder.update(
             title = event.title,
             status = event.lifecycleStatus(),
-            day = day,
-            month = month,
-            time = time,
-            location = location,
-            count = count,
-            capacity = capacity,
-            percent = percent,
-            onClick = { onClick() },
+            day = parsedDate?.format(dayFormatter) ?: EventCardPresenter.UNKNOWN_DAY,
+            month = parsedDate?.format(monthFormatter)?.uppercase(Locale.ENGLISH) ?: EventCardPresenter.UNKNOWN_MONTH,
+            time = parsedStart?.format(timeFormatter) ?: EventCardPresenter.UNKNOWN_TIME,
+            location = event.venue.takeIf { it.isNotBlank() && it != "Venue not set" } ?: EventCardPresenter.UNKNOWN_LOCATION,
+            count = event.currentAttendeeCount.coerceAtLeast(0),
+            capacity = EventCardPresenter.capacity(event.capacity),
+            onClick = onClick,
         )
+        return holder.view
     }
 
     private fun parseEventStartDateTime(event: OrganizerMvpEvent): LocalDateTime? {

@@ -1,8 +1,11 @@
 package com.thedavelopers.eventqr.features.attendee
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
+import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.core.api.NetworkResult
@@ -18,8 +21,10 @@ class AttendeeEventRequestDetailActivity : AppCompatActivity() {
 
     private val _request = MutableStateFlow<EventRequestResponse?>(null)
     private val _isLoading = MutableStateFlow(false)
+    private val _isRefreshing = MutableStateFlow(false)
     private val _errorMessage = MutableStateFlow<String?>(null)
 
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         repository = AttendeeRepository(this)
@@ -29,16 +34,23 @@ class AttendeeEventRequestDetailActivity : AppCompatActivity() {
             EventQrTheme {
                 val request = _request.collectAsStateWithLifecycle().value
                 val isLoading = _isLoading.collectAsStateWithLifecycle().value
+                val isRefreshing = _isRefreshing.collectAsStateWithLifecycle().value
                 val errorMessage = _errorMessage.collectAsStateWithLifecycle().value
 
-                EventRequestDetailScreen(
-                    request = request,
-                    isLoading = isLoading,
-                    errorMessage = errorMessage,
-                    isAdmin = false,
-                    onBackClick = { finish() },
-                    onRetryClick = { loadRequest() },
-                )
+                PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    onRefresh = { loadRequest() },
+                    modifier = Modifier,
+                ) {
+                    EventRequestDetailScreen(
+                        request = request,
+                        isLoading = isLoading,
+                        errorMessage = errorMessage,
+                        isAdmin = false,
+                        onBackClick = { finish() },
+                        onRetryClick = { loadRequest() },
+                    )
+                }
             }
         }
 
@@ -51,6 +63,7 @@ class AttendeeEventRequestDetailActivity : AppCompatActivity() {
             return
         }
 
+        _isRefreshing.value = _request.value != null
         _isLoading.value = true
         _errorMessage.value = null
         lifecycleScope.launch {
@@ -65,6 +78,7 @@ class AttendeeEventRequestDetailActivity : AppCompatActivity() {
                 }
                 NetworkResult.Loading -> Unit
             }
+            _isRefreshing.value = false
         }
     }
 

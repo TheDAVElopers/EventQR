@@ -2,51 +2,40 @@ package com.thedavelopers.eventqr.features.auth.forgotpassword
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
-import android.widget.Button
-import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import com.thedavelopers.eventqr.R
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.thedavelopers.eventqr.features.auth.login.LoginActivity
+import com.thedavelopers.eventqr.ui.theme.EventQrTheme
+import kotlinx.coroutines.flow.MutableStateFlow
 
 open class ForgotPasswordActivity : AppCompatActivity(), ForgotPasswordContract.View {
     private lateinit var presenter: ForgotPasswordPresenter
-    private lateinit var emailInput: EditText
-    private lateinit var sendButton: Button
-    private lateinit var backButton: android.widget.ImageButton
-    private lateinit var formLayout: LinearLayout
-    private lateinit var confirmationLayout: LinearLayout
+
+    private val email = MutableStateFlow("")
+    private val emailError = MutableStateFlow<String?>(null)
+    private val isLoading = MutableStateFlow(false)
+    private val isConfirmationVisible = MutableStateFlow(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_forgot_password)
 
         presenter = ForgotPasswordPresenter()
         presenter.attach(this, this)
 
-        emailInput = findViewById(R.id.editEmail)
-        sendButton = findViewById(R.id.btnSendResetLink)
-        backButton = findViewById(R.id.btnBackToSignIn)
-        formLayout = findViewById(R.id.layoutForm)
-        confirmationLayout = findViewById(R.id.layoutConfirmation)
-
-        sendButton.setOnClickListener {
-            presenter.submitRequest(emailInput.text.toString())
-        }
-
-        backButton.setOnClickListener {
-            presenter.backToSignIn()
-        }
-
-        findViewById<Button>(R.id.btnBackToSignInConfirmation).setOnClickListener {
-            presenter.backToSignIn()
-        }
-
-        findViewById<View>(R.id.tvBackToSignIn).setOnClickListener {
-            presenter.backToSignIn()
+        setContent {
+            EventQrTheme {
+                ForgotPasswordScreen(
+                    email = email.collectAsStateWithLifecycle().value,
+                    onEmailChange = { email.value = it },
+                    emailError = emailError.collectAsStateWithLifecycle().value,
+                    isLoading = isLoading.collectAsStateWithLifecycle().value,
+                    showConfirmation = isConfirmationVisible.collectAsStateWithLifecycle().value,
+                    onSendResetLink = { presenter.submitRequest(email.value) },
+                    onBackToSignIn = { presenter.backToSignIn() },
+                )
+            }
         }
     }
 
@@ -56,12 +45,11 @@ open class ForgotPasswordActivity : AppCompatActivity(), ForgotPasswordContract.
     }
 
     override fun showLoading(isLoading: Boolean) {
-        sendButton.isEnabled = !isLoading
-        sendButton.text = if (isLoading) "Sending..." else "Send Reset Link"
+        this.isLoading.value = isLoading
     }
 
     override fun showEmailError(message: String?) {
-        emailInput.error = message
+        emailError.value = message
     }
 
     override fun showMessage(message: String) {
@@ -69,8 +57,7 @@ open class ForgotPasswordActivity : AppCompatActivity(), ForgotPasswordContract.
     }
 
     override fun showConfirmation() {
-        formLayout.visibility = View.GONE
-        confirmationLayout.visibility = View.VISIBLE
+        isConfirmationVisible.value = true
     }
 
     override fun navigateBackToSignIn() {

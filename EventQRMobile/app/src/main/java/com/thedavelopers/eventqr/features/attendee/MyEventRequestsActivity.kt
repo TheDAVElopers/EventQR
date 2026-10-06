@@ -2,7 +2,6 @@ package com.thedavelopers.eventqr.features.attendee
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
@@ -13,14 +12,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.thedavelopers.eventqr.core.api.NetworkResult
-import com.thedavelopers.eventqr.core.api.dto.EventRequestStatus
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse
+import com.thedavelopers.eventqr.ui.components.EventRequestHolder
+import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import kotlinx.coroutines.launch
 import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 class MyEventRequestsActivity : AppCompatActivity() {
     private lateinit var repository: AttendeeRepository
@@ -33,13 +31,10 @@ class MyEventRequestsActivity : AppCompatActivity() {
     private lateinit var btnRetry: Button
     private lateinit var adapter: MyEventRequestsAdapter
 
-    private val submittedDateFormatter: DateTimeFormatter = DateTimeFormatter
-        .ofPattern("MMM d, yyyy")
-        .withZone(ZoneId.of("Asia/Manila"))
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_my_event_requests)
+        applyEventQrSystemBarAppearance()
         repository = AttendeeRepository(this)
 
         btnBack = findViewById(R.id.btnBack)
@@ -51,7 +46,6 @@ class MyEventRequestsActivity : AppCompatActivity() {
         btnRetry = findViewById(R.id.btnMyRequestsRetry)
 
         adapter = MyEventRequestsAdapter(
-            submittedDateFormatter = submittedDateFormatter,
             onTap = { request -> onRequestTapped(request) }
         )
 
@@ -138,7 +132,6 @@ class MyEventRequestsActivity : AppCompatActivity() {
     }
 
     private class MyEventRequestsAdapter(
-        private val submittedDateFormatter: DateTimeFormatter,
         private val onTap: (EventRequestResponse) -> Unit,
     ) : RecyclerView.Adapter<MyEventRequestsAdapter.RequestViewHolder>() {
 
@@ -151,13 +144,7 @@ class MyEventRequestsActivity : AppCompatActivity() {
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RequestViewHolder {
-            val composeView = androidx.compose.ui.platform.ComposeView(parent.context).apply {
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                )
-            }
-            return RequestViewHolder(composeView)
+            return RequestViewHolder(EventRequestHolder(parent.context))
         }
 
         override fun onBindViewHolder(holder: RequestViewHolder, position: Int) {
@@ -166,19 +153,16 @@ class MyEventRequestsActivity : AppCompatActivity() {
 
         override fun getItemCount(): Int = items.size
 
-        class RequestViewHolder(private val composeView: androidx.compose.ui.platform.ComposeView) : RecyclerView.ViewHolder(composeView) {
+        class RequestViewHolder(
+            private val holder: EventRequestHolder,
+        ) : RecyclerView.ViewHolder(holder.view) {
+
             fun bind(
                 request: EventRequestResponse,
                 onTap: (EventRequestResponse) -> Unit,
             ) {
-                composeView.setContent {
-                    com.thedavelopers.eventqr.ui.theme.EventQrTheme {
-                        com.thedavelopers.eventqr.ui.components.EventRequestCard(
-                            request = request,
-                            onClick = { onTap(request) },
-                        )
-                    }
-                }
+                holder.onClick = onTap
+                holder.update(request)
             }
         }
     }

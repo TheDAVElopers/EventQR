@@ -1,11 +1,16 @@
 package com.thedavelopers.eventqr.features.events
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
+@RunWith(AndroidJUnit4::class)
+@Config(sdk = [35])
 class EventStatusBadgeStylerTest {
 
     @Test

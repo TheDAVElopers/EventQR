@@ -12,6 +12,7 @@ import com.google.android.material.chip.Chip
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.registrations.RegisteredEventAdapter
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
+import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import java.time.Instant
 
 open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContract.View {
@@ -29,6 +30,7 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_registered_events)
+        applyEventQrSystemBarAppearance()
         configureAttendeeBottomNav(AttendeeBottomNavItem.REGISTERED)
 
         presenter = RegisteredEventsPresenter(this, AttendeeRepository(this))

@@ -1,11 +1,9 @@
 package com.thedavelopers.eventqr.features.admin
 
 import android.view.ViewGroup
-import androidx.compose.ui.platform.ComposeView
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse
-import com.thedavelopers.eventqr.ui.components.EventRequestCard
-import com.thedavelopers.eventqr.ui.theme.EventQrTheme
+import com.thedavelopers.eventqr.ui.components.EventRequestHolder
 
 class AdminEventRequestAdapter(
     private val onTap: (EventRequestResponse) -> Unit,
@@ -20,13 +18,7 @@ class AdminEventRequestAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AdminEventRequestViewHolder {
-        val composeView = ComposeView(parent.context).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            )
-        }
-        return AdminEventRequestViewHolder(composeView)
+        return AdminEventRequestViewHolder(EventRequestHolder(parent.context))
     }
 
     override fun onBindViewHolder(holder: AdminEventRequestViewHolder, position: Int) {
@@ -35,19 +27,16 @@ class AdminEventRequestAdapter(
 
     override fun getItemCount(): Int = rows.size
 
-    class AdminEventRequestViewHolder(private val composeView: ComposeView) : RecyclerView.ViewHolder(composeView) {
+    class AdminEventRequestViewHolder(
+        private val holder: EventRequestHolder,
+    ) : RecyclerView.ViewHolder(holder.view) {
+
         fun bind(
             request: EventRequestResponse,
             onTap: (EventRequestResponse) -> Unit,
         ) {
-            composeView.setContent {
-                EventQrTheme {
-                    EventRequestCard(
-                        request = request,
-                        onClick = { onTap(request) },
-                    )
-                }
-            }
+            holder.onClick = onTap
+            holder.update(request)
         }
     }
 }

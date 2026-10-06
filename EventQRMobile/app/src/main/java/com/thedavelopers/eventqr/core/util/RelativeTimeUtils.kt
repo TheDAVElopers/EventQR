@@ -25,6 +25,9 @@ object RelativeTimeUtils {
         }
     }
 
+    fun formatRelativeOrDash(instant: Instant?): String =
+        if (instant == null) "--" else formatRelative(instant)
+
     fun formatFull(instant: Instant?): String {
         if (instant == null) return "--"
         return fullFormatter.format(instant)
