@@ -63,11 +63,8 @@ public class QREmailController {
         if (role == AccountRole.ADMIN || role == AccountRole.SUPER_ADMIN) {
             return;
         }
-        if (role == AccountRole.ATTENDEE) {
-            if (registration.attendeeUserId().equals(callerId)) {
-                return;
-            }
-            throw new ForbiddenException("You can only email your own QR credential");
+        if (registration.attendeeUserId().equals(callerId)) {
+            return;
         }
         if (role == AccountRole.ORGANIZER) {
             if (eventService.findOne(registration.eventId()).organizerUserId().equals(callerId)) {

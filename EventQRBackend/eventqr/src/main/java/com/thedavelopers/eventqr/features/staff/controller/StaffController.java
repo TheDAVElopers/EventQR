@@ -32,6 +32,7 @@ import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionRequ
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse;
 import com.thedavelopers.eventqr.features.transactions.service.TransactionService;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
+import com.thedavelopers.eventqr.shared.constants.AccountRoles;
 import com.thedavelopers.eventqr.shared.constants.EventStatus;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.interfaces.ScanPurposePort.ScanPurposeSnapshot;
@@ -263,8 +264,18 @@ public class StaffController {
     private EventStaffAssignment requireActiveAssignment(HttpServletRequest request, UUID eventId) {
         UUID staffUserId = currentUserId(request);
         AccountRole tokenRole = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
-        if (tokenRole == AccountRole.ORGANIZER || tokenRole == AccountRole.ADMIN) {
+        if (AccountRoles.isAtLeast(tokenRole, AccountRole.ADMIN)) {
             return null;
+        }
+        if (tokenRole == AccountRole.ORGANIZER) {
+            if (eventService.findOne(eventId).organizerUserId().equals(staffUserId)) {
+                return null;
+            }
+            return eventStaffAssignmentRepository.findByEventIdAndStaffUserIdAndActiveTrue(eventId, staffUserId)
+                    .orElseThrow(() -> new ForbiddenException("Organizer is not assigned to this event"));
+        }
+        if (tokenRole == AccountRole.ATTENDEE) {
+            throw new ForbiddenException("Attendee role is not permitted for staff operations");
         }
         return eventStaffAssignmentRepository.findByEventIdAndStaffUserIdAndActiveTrue(eventId, staffUserId)
                 .orElseThrow(() -> new ForbiddenException("Staff user is not actively assigned to this event"));

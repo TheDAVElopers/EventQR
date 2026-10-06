@@ -22,6 +22,7 @@ import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionRequ
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse;
 import com.thedavelopers.eventqr.features.transactions.service.TransactionService;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
+import com.thedavelopers.eventqr.shared.constants.AccountRoles;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
 import com.thedavelopers.eventqr.shared.security.JwtService;
@@ -63,6 +64,9 @@ public class TransactionController {
     private void requireStaffOrOrganizerForEvent(HttpServletRequest request, UUID eventId) {
         UUID callerId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
         AccountRole role = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
+        if (AccountRoles.isAtLeast(role, AccountRole.ADMIN)) {
+            return;
+        }
         if (role == AccountRole.STAFF) {
             if (!eventStaffAssignmentRepository.existsByEventIdAndStaffUserIdAndActiveTrue(eventId, callerId)) {
                 throw new ForbiddenException("Staff user is not actively assigned to this event");

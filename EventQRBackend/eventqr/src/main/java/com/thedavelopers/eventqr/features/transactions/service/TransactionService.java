@@ -31,6 +31,7 @@ import com.thedavelopers.eventqr.features.transactions.repository.TransactionLog
 import com.thedavelopers.eventqr.features.transactions.repository.TransactionRuleRepository;
 import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignmentRepository;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
+import com.thedavelopers.eventqr.shared.constants.AccountRoles;
 import com.thedavelopers.eventqr.shared.constants.EventStatus;
 import com.thedavelopers.eventqr.shared.constants.ScanPurposeCode;
 import com.thedavelopers.eventqr.shared.constants.TransactionResult;
@@ -315,7 +316,7 @@ public class TransactionService {
         var staff = attendeeDirectoryPort.findById(staffUserId)
                 .orElseThrow(() -> new ForbiddenException("Staff user not found"));
         if (staff.status() != com.thedavelopers.eventqr.shared.constants.AccountStatus.ACTIVE
-                || (staff.role() != AccountRole.STAFF && staff.role() != AccountRole.ORGANIZER && staff.role() != AccountRole.ADMIN)) {
+                || !AccountRoles.isAtLeast(staff.role(), AccountRole.STAFF)) {
             throw new ForbiddenException("Staff user is not authorized for this scan");
         }
         if (requiresStaffAssignment && staff.role() == AccountRole.STAFF) {

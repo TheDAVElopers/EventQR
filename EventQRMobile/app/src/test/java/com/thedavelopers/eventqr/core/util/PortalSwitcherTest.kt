@@ -2,6 +2,7 @@ package com.thedavelopers.eventqr.core.util
 
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Test
 
 /**
@@ -61,6 +62,21 @@ class PortalSwitcherTest {
             listOf(PortalSwitcher.PORTAL_ATTENDEE, PortalSwitcher.PORTAL_SUPER_ADMIN),
             PortalSwitcher.portalsForRole(AccountRole.SUPER_ADMIN.name),
         )
+    }
+
+    @Test
+    fun attendee_neverOfferedElevatedPortals() {
+        val attendeePortals =
+            PortalSwitcher.portalsForRole(AccountRole.ATTENDEE.name) +
+                PortalSwitcher.portalsForRole(AccountRole.USER.name)
+        listOf(
+            PortalSwitcher.PORTAL_STAFF,
+            PortalSwitcher.PORTAL_ORGANIZER,
+            PortalSwitcher.PORTAL_ADMIN,
+            PortalSwitcher.PORTAL_SUPER_ADMIN,
+        ).forEach { elevated ->
+            assertFalse(elevated, attendeePortals.contains(elevated))
+        }
     }
 
     @Test

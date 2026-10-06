@@ -50,6 +50,7 @@ import com.thedavelopers.eventqr.features.transactions.repository.TransactionRul
 import com.thedavelopers.eventqr.features.users.model.entity.UserProfile;
 import com.thedavelopers.eventqr.features.users.repository.UserProfileRepository;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
+import com.thedavelopers.eventqr.shared.constants.AccountRoles;
 import com.thedavelopers.eventqr.shared.constants.EventStatus;
 import com.thedavelopers.eventqr.shared.constants.RedemptionStatus;
 import com.thedavelopers.eventqr.shared.constants.RegistrationStatus;
@@ -116,8 +117,8 @@ public class OrganizerService {
     }
 
     @Transactional(readOnly = true)
-    public OrganizerEventResponse event(UUID organizerUserId, UUID eventId) {
-        return toOrganizerEvent(requireOrganizerEvent(organizerUserId, eventId));
+    public OrganizerEventResponse event(UUID organizerUserId, UUID eventId, AccountRole role) {
+        return toOrganizerEvent(requireOrganizerEvent(organizerUserId, eventId, role));
     }
 
     // SDD 3.5 (UC-20) — Manage Approved Event Details.
@@ -127,8 +128,8 @@ public class OrganizerService {
     //
     // SCOPE DEVIATION: Event Update Log Repository (SDD 3.5) omitted in MVP — tracked separately
     // for capstone defense.
-    public EventResponse updateEvent(UUID organizerUserId, UUID eventId, EventRequest request) {
-        Event event = requireOrganizerEvent(organizerUserId, eventId);
+    public EventResponse updateEvent(UUID organizerUserId, UUID eventId, AccountRole role, EventRequest request) {
+        Event event = requireOrganizerEvent(organizerUserId, eventId, role);
         // SDD 3.5 / UC-20 edit lock: once an event is Active (Ongoing) or Completed the
         // Organizer can no longer edit its details — editable only while Upcoming (APPROVED).
         if (event.getStatus() == EventStatus.ACTIVE || event.getStatus() == EventStatus.ENDED) {
@@ -171,8 +172,8 @@ public class OrganizerService {
                 event.getOrganizerUserId(), event.getApprovedByUserId(), event.getApprovedAt(), event.getRejectionReason());
     }
 
-    public EventResponse updateStatus(UUID organizerUserId, UUID eventId, EventStatus status) {
-        Event event = requireOrganizerEvent(organizerUserId, eventId);
+    public EventResponse updateStatus(UUID organizerUserId, UUID eventId, AccountRole role, EventStatus status) {
+        Event event = requireOrganizerEvent(organizerUserId, eventId, role);
         event.setStatus(status);
         return new EventResponse(eventRepository.save(event).getId(), event.getTitle(), event.getDescription(), event.getCategory(), event.getLocation(),
                 event.getRegistrationOpenAt(), event.getRegistrationCloseAt(), event.getEventStartAt(), event.getEventEndAt(),
@@ -180,8 +181,8 @@ public class OrganizerService {
                 event.getOrganizerUserId(), event.getApprovedByUserId(), event.getApprovedAt(), event.getRejectionReason());
     }
 
-    public EventResponse updateRewardSettings(UUID organizerUserId, UUID eventId, RewardSettingsRequest request) {
-        Event event = requireOrganizerEvent(organizerUserId, eventId);
+    public EventResponse updateRewardSettings(UUID organizerUserId, UUID eventId, AccountRole role, RewardSettingsRequest request) {
+        Event event = requireOrganizerEvent(organizerUserId, eventId, role);
         event.setRewardsEnabled(request.enabled());
         if (request.enabled()) {
             ensureRewardRedemptionScanPurpose(eventId);
@@ -236,17 +237,17 @@ public class OrganizerService {
     }
 
     @Transactional(readOnly = true)
-    public OrganizerDashboardResponse dashboard(UUID organizerUserId, UUID eventId) {
+    public OrganizerDashboardResponse dashboard(UUID organizerUserId, UUID eventId, AccountRole role) {
         OrganizerDashboardResponse summary = dashboard(organizerUserId);
         return new OrganizerDashboardResponse(summary.organizerUserId(), summary.organizerName(), summary.organizerEmail(),
                 summary.organization(), summary.totalEvents(), summary.totalAttendees(), summary.totalTransactions(),
                 summary.totalPointsAwarded(), summary.rewardsSummary(), summary.recentEvents(),
-                toOrganizerEvent(requireOrganizerEvent(organizerUserId, eventId)));
+                toOrganizerEvent(requireOrganizerEvent(organizerUserId, eventId, role)));
     }
 
     @Transactional(readOnly = true)
-    public List<OrganizerAttendeeResponse> attendees(UUID organizerUserId, UUID eventId) {
-        requireOrganizerEvent(organizerUserId, eventId);
+    public List<OrganizerAttendeeResponse> attendees(UUID organizerUserId, UUID eventId, AccountRole role) {
+        requireOrganizerEvent(organizerUserId, eventId, role);
         List<TransactionLog> logs = transactionLogRepository.findByEventId(eventId);
         return registrationRepository.findByEventId(eventId).stream()
                 .map(registration -> toAttendee(registration, logs))
@@ -254,12 +255,12 @@ public class OrganizerService {
     }
 
     @Transactional(readOnly = true)
-    public List<OrganizerAttendeeResponse> searchAttendees(UUID organizerUserId, UUID eventId, String query) {
+    public List<OrganizerAttendeeResponse> searchAttendees(UUID organizerUserId, UUID eventId, AccountRole role, String query) {
         String safeQuery = query == null ? "" : query.trim().toLowerCase();
         if (safeQuery.isBlank()) {
-            return attendees(organizerUserId, eventId);
+            return attendees(organizerUserId, eventId, role);
         }
-        return attendees(organizerUserId, eventId).stream()
+        return attendees(organizerUserId, eventId, role).stream()
                 .filter(attendee -> attendee.name().toLowerCase().contains(safeQuery)
                         || attendee.email().toLowerCase().contains(safeQuery)
                         || attendee.registrationStatus().toLowerCase().contains(safeQuery)
@@ -267,8 +268,8 @@ public class OrganizerService {
                 .toList();
     }
 
-    public OrganizerAttendeeResponse updateAttendeeStatus(UUID organizerUserId, UUID eventId, UUID attendeeId, String status) {
-        requireOrganizerEvent(organizerUserId, eventId);
+    public OrganizerAttendeeResponse updateAttendeeStatus(UUID organizerUserId, UUID eventId, AccountRole role, UUID attendeeId, String status) {
+        requireOrganizerEvent(organizerUserId, eventId, role);
         EventRegistration registration = registrationRepository.findByEventId(eventId).stream()
                 .filter(item -> item.getAttendeeUserId().equals(attendeeId) || item.getId().equals(attendeeId))
                 .findFirst()
@@ -279,8 +280,8 @@ public class OrganizerService {
     }
 
     @Transactional(readOnly = true)
-    public OrganizerAttendeeResponse attendee(UUID organizerUserId, UUID eventId, UUID attendeeId) {
-        List<OrganizerAttendeeResponse> attendees = attendees(organizerUserId, eventId);
+    public OrganizerAttendeeResponse attendee(UUID organizerUserId, UUID eventId, AccountRole role, UUID attendeeId) {
+        List<OrganizerAttendeeResponse> attendees = attendees(organizerUserId, eventId, role);
         return attendees.stream()
                 .filter(item -> item.attendeeId().equals(attendeeId) || item.registrationId().equals(attendeeId))
                 .findFirst()
@@ -288,8 +289,8 @@ public class OrganizerService {
     }
 
     @Transactional(readOnly = true)
-    public List<OrganizerTransactionResponse> transactions(UUID organizerUserId, UUID eventId) {
-        Event event = requireOrganizerEvent(organizerUserId, eventId);
+    public List<OrganizerTransactionResponse> transactions(UUID organizerUserId, UUID eventId, AccountRole role) {
+        Event event = requireOrganizerEvent(organizerUserId, eventId, role);
         List<EventRegistration> registrations = registrationRepository.findByEventId(eventId);
         List<ScanPurpose> purposes = scanPurposeRepository.findByEventId(eventId);
         List<EventStaffAssignment> staffAssignments = staffAssignmentRepository.findByEventId(eventId);
@@ -298,8 +299,8 @@ public class OrganizerService {
                 .toList();
     }
 
-    public TransactionResponse transaction(UUID organizerUserId, UUID eventId, UUID transactionId) {
-        Event event = requireOrganizerEvent(organizerUserId, eventId);
+    public TransactionResponse transaction(UUID organizerUserId, UUID eventId, AccountRole role, UUID transactionId) {
+        Event event = requireOrganizerEvent(organizerUserId, eventId, role);
         TransactionLog log = transactionLogRepository.findById(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
         if (!log.getEventId().equals(eventId)) {
@@ -311,15 +312,15 @@ public class OrganizerService {
     }
 
     @Transactional(readOnly = true)
-    public List<OrganizerStaffResponse> staff(UUID organizerUserId, UUID eventId) {
-        requireOrganizerEvent(organizerUserId, eventId);
+    public List<OrganizerStaffResponse> staff(UUID organizerUserId, UUID eventId, AccountRole role) {
+        requireOrganizerEvent(organizerUserId, eventId, role);
         List<EventStaffAssignment> assignments = staffAssignmentRepository.findByEventId(eventId);
         log.debug("Organizer staff fetch eventId={} count={}", eventId, assignments.size());
         return assignments.stream().map(this::toStaff).toList();
     }
 
-    public OrganizerStaffResponse addStaff(UUID organizerUserId, UUID eventId, StaffAssignmentRequest request) {
-        Event event = requireOrganizerEvent(organizerUserId, eventId);
+    public OrganizerStaffResponse addStaff(UUID organizerUserId, UUID eventId, AccountRole role, StaffAssignmentRequest request) {
+        Event event = requireOrganizerEvent(organizerUserId, eventId, role);
         UserProfile staffUser = resolveStaffUser(request);
         log.debug(
                 "Organizer staff add request eventId={} staffUserId={} email={}",
@@ -407,9 +408,9 @@ public class OrganizerService {
         return toStaff(saved);
     }
 
-    public OrganizerStaffResponse updateStaff(UUID organizerUserId, UUID eventId, UUID assignmentId,
+    public OrganizerStaffResponse updateStaff(UUID organizerUserId, UUID eventId, AccountRole role, UUID assignmentId,
                                               StaffAssignmentUpdateRequest request) {
-        requireOrganizerEvent(organizerUserId, eventId);
+        requireOrganizerEvent(organizerUserId, eventId, role);
         EventStaffAssignment assignment = requireAssignment(eventId, assignmentId);
         if (request.active() != null) {
             assignment.setActive(request.active());
@@ -438,8 +439,8 @@ public class OrganizerService {
         return toStaff(staffAssignmentRepository.save(assignment));
     }
 
-    public void removeStaff(UUID organizerUserId, UUID eventId, UUID assignmentId) {
-        Event event = requireOrganizerEvent(organizerUserId, eventId);
+    public void removeStaff(UUID organizerUserId, UUID eventId, AccountRole role, UUID assignmentId) {
+        Event event = requireOrganizerEvent(organizerUserId, eventId, role);
         EventStaffAssignment assignment = staffAssignmentRepository.findById(assignmentId)
                 .filter(item -> item.getEventId().equals(eventId))
                 .or(() -> staffAssignmentRepository.findByEventIdAndStaffUserId(eventId, assignmentId))
@@ -478,14 +479,14 @@ public class OrganizerService {
     }
 
     @Transactional(readOnly = true)
-    public List<UserSearchResponse> searchUsers(UUID organizerUserId, UUID eventId, String query) {
-        requireOrganizerEvent(organizerUserId, eventId);
+    public List<UserSearchResponse> searchUsers(UUID organizerUserId, UUID eventId, AccountRole role, String query) {
+        requireOrganizerEvent(organizerUserId, eventId, role);
         return searchUsers(organizerUserId, query);
     }
 
     @Transactional(readOnly = true)
-    public List<OrganizerScanPurposeResponse> scanPurposes(UUID organizerUserId, UUID eventId) {
-        requireOrganizerEvent(organizerUserId, eventId);
+    public List<OrganizerScanPurposeResponse> scanPurposes(UUID organizerUserId, UUID eventId, AccountRole role) {
+        requireOrganizerEvent(organizerUserId, eventId, role);
         List<ScanPurpose> purposes = scanPurposeRepository.findByEventId(eventId);
         log.debug("ScanPurposePersistence eventId={} loadedCount={} names={}", eventId, purposes.size(), summarizeScanPurposeNames(purposes));
         if (purposes.isEmpty()) {
@@ -494,9 +495,9 @@ public class OrganizerService {
         return purposes.stream().map(this::toScanPurpose).toList();
     }
 
-    public OrganizerScanPurposeResponse saveScanPurpose(UUID organizerUserId, UUID eventId,
+    public OrganizerScanPurposeResponse saveScanPurpose(UUID organizerUserId, UUID eventId, AccountRole role,
                                                         OrganizerScanPurposeRequest request) {
-        requireOrganizerEvent(organizerUserId, eventId);
+        requireOrganizerEvent(organizerUserId, eventId, role);
         validateScanPurpose(request);
         boolean creating = request.scanPurposeId() == null;
         ScanPurpose purpose = creating
@@ -537,8 +538,8 @@ public class OrganizerService {
         return response;
     }
 
-    public void deleteScanPurpose(UUID organizerUserId, UUID eventId, UUID purposeId) {
-        requireOrganizerEvent(organizerUserId, eventId);
+    public void deleteScanPurpose(UUID organizerUserId, UUID eventId, AccountRole role, UUID purposeId) {
+        requireOrganizerEvent(organizerUserId, eventId, role);
         ScanPurpose purpose = scanPurposeRepository.findById(purposeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Scan purpose not found"));
         if (!purpose.getEventId().equals(eventId)) {
@@ -547,8 +548,8 @@ public class OrganizerService {
         scanPurposeRepository.delete(purpose);
     }
 
-    public OrganizerScanPurposeResponse enableScanPurpose(UUID organizerUserId, UUID eventId, UUID purposeId, boolean enabled) {
-        requireOrganizerEvent(organizerUserId, eventId);
+    public OrganizerScanPurposeResponse enableScanPurpose(UUID organizerUserId, UUID eventId, AccountRole role, UUID purposeId, boolean enabled) {
+        requireOrganizerEvent(organizerUserId, eventId, role);
         ScanPurpose purpose = scanPurposeRepository.findById(purposeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Scan purpose not found"));
         if (!purpose.getEventId().equals(eventId)) {
@@ -574,8 +575,8 @@ public class OrganizerService {
         return response;
     }
 
-    public OrganizerScanPurposeResponse toggleTrackingOnly(UUID organizerUserId, UUID eventId, UUID purposeId, boolean trackingOnly) {
-        requireOrganizerEvent(organizerUserId, eventId);
+    public OrganizerScanPurposeResponse toggleTrackingOnly(UUID organizerUserId, UUID eventId, AccountRole role, UUID purposeId, boolean trackingOnly) {
+        requireOrganizerEvent(organizerUserId, eventId, role);
         ScanPurpose purpose = scanPurposeRepository.findById(purposeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Scan purpose not found"));
         if (!purpose.getEventId().equals(eventId)) {
@@ -600,17 +601,17 @@ public class OrganizerService {
         return response;
     }
 
-    public List<OrganizerTransactionRuleResponse> listTransactionRules(UUID organizerUserId, UUID eventId) {
-        requireOrganizerEvent(organizerUserId, eventId);
+    public List<OrganizerTransactionRuleResponse> listTransactionRules(UUID organizerUserId, UUID eventId, AccountRole role) {
+        requireOrganizerEvent(organizerUserId, eventId, role);
         return transactionRuleRepository.findByEventId(eventId).stream().map(this::toTransactionRule).toList();
     }
 
-    public OrganizerTransactionRuleResponse saveTransactionRule(UUID organizerUserId, UUID eventId, TransactionRuleRequest request) {
-        return saveTransactionRule(organizerUserId, eventId, null, request);
+    public OrganizerTransactionRuleResponse saveTransactionRule(UUID organizerUserId, UUID eventId, AccountRole role, TransactionRuleRequest request) {
+        return saveTransactionRule(organizerUserId, eventId, role, null, request);
     }
 
-    public OrganizerTransactionRuleResponse saveTransactionRule(UUID organizerUserId, UUID eventId, UUID ruleId, TransactionRuleRequest request) {
-        requireOrganizerEvent(organizerUserId, eventId);
+    public OrganizerTransactionRuleResponse saveTransactionRule(UUID organizerUserId, UUID eventId, AccountRole role, UUID ruleId, TransactionRuleRequest request) {
+        requireOrganizerEvent(organizerUserId, eventId, role);
         ScanPurpose purpose = scanPurposeRepository.findById(request.scanPurposeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Scan purpose not found"));
         if (!purpose.getEventId().equals(eventId)) {
@@ -643,13 +644,13 @@ public class OrganizerService {
         return value <= 0 ? fallback : value;
     }
 
-    private Event requireOrganizerEvent(UUID organizerUserId, UUID eventId) {
+    private Event requireOrganizerEvent(UUID organizerUserId, UUID eventId, AccountRole role) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
         UserProfile user = userProfileRepository.findById(organizerUserId)
                 .orElseThrow(() -> new ForbiddenException("Organizer account not found"));
         boolean owner = organizerUserId.equals(event.getOrganizerUserId());
-        if (!owner) {
+        if (!owner && !AccountRoles.isAtLeast(role, AccountRole.ADMIN)) {
             throw new ForbiddenException("Organizer is not assigned to this event");
         }
         if (event.getStatus() != EventStatus.APPROVED && event.getStatus() != EventStatus.ACTIVE

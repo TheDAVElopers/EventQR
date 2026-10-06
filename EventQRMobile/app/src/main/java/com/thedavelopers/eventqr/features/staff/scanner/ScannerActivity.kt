@@ -130,8 +130,8 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         preselectedEventId = intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_ID)
 
         val sessionManager = SessionManager(this)
-        if (RoleMapper.normalizeRole(sessionManager.getUserRole()) != AccountRole.STAFF.name) {
-            Toast.makeText(this, "Access Denied: Staff only", Toast.LENGTH_LONG).show()
+        if (!RoleMapper.isAtLeast(sessionManager.getUserRole(), AccountRole.STAFF)) {
+            Toast.makeText(this, "Access Denied: Staff or above", Toast.LENGTH_LONG).show()
             finish()
             return
         }

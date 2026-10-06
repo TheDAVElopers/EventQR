@@ -118,11 +118,8 @@ public class QrCredentialController {
             return;
         }
         com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse registration = registrationService.findOne(registrationId);
-        if (role == AccountRole.ATTENDEE) {
-            if (registration.attendeeUserId().equals(callerId)) {
-                return;
-            }
-            throw new ForbiddenException("You can only access your own QR credential");
+        if (registration.attendeeUserId().equals(callerId)) {
+            return;
         }
         if (role == AccountRole.ORGANIZER) {
             if (eventService.findOne(registration.eventId()).organizerUserId().equals(callerId)) {

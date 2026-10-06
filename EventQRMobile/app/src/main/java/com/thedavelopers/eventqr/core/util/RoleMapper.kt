@@ -22,6 +22,29 @@ object RoleMapper {
     }
 
     /**
+     * Privilege ranks for floor checks. Explicit values, never enum declaration order
+     * (declaration order would rank STAFF above ORGANIZER, which is backwards).
+     * 'USER' normalizes to ATTENDEE, so it shares rank 0 and is never a distinct tier.
+     */
+    private val RANK: Map<String, Int> = mapOf(
+        AccountRole.ATTENDEE.name to 0,
+        AccountRole.STAFF.name to 1,
+        AccountRole.ORGANIZER.name to 2,
+        AccountRole.ADMIN.name to 3,
+        AccountRole.SUPER_ADMIN.name to 4,
+    )
+
+    /** Returns the privilege rank of [role], or -1 for null/blank/unknown roles. */
+    fun rankOf(role: String?): Int = RANK[normalizeRole(role)] ?: -1
+
+    /** True when [role] is known and ranks at least as high as [min]. Unknown roles fail closed. */
+    fun isAtLeast(role: String?, min: AccountRole): Boolean {
+        val r = rankOf(role)
+        val m = rankOf(min.name)
+        return r >= 0 && m >= 0 && r >= m
+    }
+
+    /**
      * Maps a normalized role string to a displayable name.
      */
     fun getDisplayName(role: String?): String {

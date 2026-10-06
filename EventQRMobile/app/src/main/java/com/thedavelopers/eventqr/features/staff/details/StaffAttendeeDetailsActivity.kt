@@ -52,8 +52,8 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         sessionManager = SessionManager(this)
-        if (RoleMapper.normalizeRole(sessionManager.getUserRole()) != AccountRole.STAFF.name) {
-            Toast.makeText(this, "Access Denied: Staff only", Toast.LENGTH_LONG).show()
+        if (!RoleMapper.isAtLeast(sessionManager.getUserRole(), AccountRole.STAFF)) {
+            Toast.makeText(this, "Access Denied: Staff or above", Toast.LENGTH_LONG).show()
             finish()
             return
         }

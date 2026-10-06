@@ -2,11 +2,13 @@ package com.thedavelopers.eventqr.features.attendee
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.dashboard.DashboardActivity
@@ -19,7 +21,7 @@ import com.thedavelopers.eventqr.ui.theme.EventQrTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
-open class AttendeeProfileActivity : AppCompatActivity() {
+class AttendeeProfileActivity : AppCompatActivity() {
 
     private lateinit var sessionManager: SessionManager
     private lateinit var repository: AttendeeRepository
@@ -32,6 +34,12 @@ open class AttendeeProfileActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         sessionManager = SessionManager(this)
         repository = AttendeeRepository(this)
+
+        if (!RoleMapper.isAtLeast(sessionManager.getUserRole(), AccountRole.ATTENDEE)) {
+            Toast.makeText(this, "Access Denied", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
 
         setContent {
             EventQrTheme {

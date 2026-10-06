@@ -110,13 +110,12 @@ public class UserController {
 
     private void requireCanCreateWithRole(HttpServletRequest request, AccountRole roleToCreate) {
         AccountRole callerRole = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
+        if (callerRole != AccountRole.ADMIN && callerRole != AccountRole.SUPER_ADMIN) {
+            throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Admin access required to create users");
+        }
         if (roleToCreate == AccountRole.ADMIN || roleToCreate == AccountRole.SUPER_ADMIN) {
             if (callerRole != AccountRole.SUPER_ADMIN) {
                 throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Only super admins can create admin accounts");
-            }
-        } else if (roleToCreate == AccountRole.ORGANIZER || roleToCreate == AccountRole.STAFF) {
-            if (callerRole != AccountRole.ADMIN && callerRole != AccountRole.SUPER_ADMIN) {
-                throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Admin access required to create this role");
             }
         }
     }
