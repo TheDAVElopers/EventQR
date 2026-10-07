@@ -112,7 +112,7 @@
         android:id="@+id/swipeRefreshRegisteredEvents"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@id/bottomNavBar"
+        app:layout_constraintBottom_toTopOf="@id/composeBottomNav"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/filterDivider">
@@ -145,160 +145,10 @@
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <!-- ── Bottom Navigation ─────────────────────────────────── -->
-    <LinearLayout
-        android:id="@+id/bottomNavBar"
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/composeBottomNav"
         android:layout_width="match_parent"
-        android:layout_height="76dp"
-        android:background="@drawable/bg_bottom_nav"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:paddingHorizontal="20dp"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <LinearLayout
-            android:id="@+id/navDashboard"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <ImageView
-                android:id="@+id/imgNavDashboard"
-                android:layout_width="38dp"
-                android:layout_height="38dp"
-                android:background="@drawable/bg_nav_icon_inactive"
-                android:contentDescription="Dashboard"
-                android:padding="8dp"
-                android:src="@drawable/ic_home"
-                android:tint="#000000" />
-
-            <TextView
-                android:id="@+id/txtNavDashboard"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="Home"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/navEvents"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <ImageView
-                android:id="@+id/imgNavEvents"
-                android:layout_width="38dp"
-                android:layout_height="38dp"
-                android:background="@drawable/bg_nav_icon_inactive"
-                android:contentDescription="Events"
-                android:padding="8dp"
-                android:src="@drawable/ic_calendar"
-                android:tint="#000000" />
-
-            <TextView
-                android:id="@+id/txtNavEvents"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="Events"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/navRegistered"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <ImageView
-                android:id="@+id/imgNavRegistered"
-                android:layout_width="38dp"
-                android:layout_height="38dp"
-                android:background="@drawable/bg_nav_icon_active"
-                android:contentDescription="Registered"
-                android:padding="8dp"
-                android:src="@drawable/ic_nav_registered"
-                android:tint="#FFFFFF" />
-
-            <TextView
-                android:id="@+id/txtNavRegistered"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="Registered"
-                android:textColor="@color/brand_primary"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/navRewards"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <ImageView
-                android:id="@+id/imgNavRewards"
-                android:layout_width="39dp"
-                android:layout_height="39dp"
-                android:background="@drawable/bg_nav_icon_inactive"
-                android:contentDescription="Rewards"
-                android:padding="8dp"
-                android:src="@drawable/ic_nav_gift"
-                android:tint="#000000" />
-
-            <TextView
-                android:id="@+id/txtNavRewards"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="7dp"
-                android:text="Rewards"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/navProfile"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <ImageView
-                android:id="@+id/imgNavProfile"
-                android:layout_width="39dp"
-                android:layout_height="39dp"
-                android:background="@drawable/bg_nav_icon_inactive"
-                android:contentDescription="Profile"
-                android:padding="8dp"
-                android:src="@drawable/ic_nav_profile"
-                android:tint="#000000" />
-
-            <TextView
-                android:id="@+id/txtNavProfile"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="7dp"
-                android:text="Profile"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-    </LinearLayout>
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

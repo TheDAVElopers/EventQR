@@ -461,7 +461,8 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
     private fun setupBottomNav() {
-        configureStaffBottomNav(StaffBottomNavItem.LOGS, selectedEventId)
+        configureStaffBottomNav(StaffBottomNavItem.LOGS, intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_ID)
+            ?.takeIf { extra -> assignedEvents.any { it.eventId.toString() == extra } } ?: selectedEventId)
     }
 
     override fun onDestroy() {

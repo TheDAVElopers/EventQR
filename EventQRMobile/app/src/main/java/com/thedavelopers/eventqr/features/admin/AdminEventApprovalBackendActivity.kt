@@ -41,11 +41,6 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
     private lateinit var textEmpty: TextView
     private lateinit var recyclerRequests: RecyclerView
 
-    private lateinit var navDashboard: LinearLayout
-    private lateinit var navRequests: LinearLayout
-    private lateinit var navAccounts: LinearLayout
-    private lateinit var navLogs: LinearLayout
-
     private var allRequests = emptyList<com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse>()
     private var currentFilter: EventRequestFilter = EventRequestFilter.ALL
 
@@ -87,11 +82,6 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
         buttonRetry = findViewById(R.id.buttonRetry)
         textEmpty = findViewById(R.id.textEmpty)
         recyclerRequests = findViewById(R.id.recyclerRequests)
-
-        navDashboard = findViewById(R.id.navDashboard)
-        navRequests = findViewById(R.id.navRequests)
-        navAccounts = findViewById(R.id.navAccounts)
-        navLogs = findViewById(R.id.navLogs)
 
         buttonRetry.setOnClickListener { loadRequests(showLoading = true) }
         swipeRefresh.setColorSchemeResources(R.color.eventqr_purple)

@@ -1,10 +1,12 @@
 package com.thedavelopers.eventqr.features.staff
 
-import android.view.View
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.ui.platform.ComposeView
 import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.features.common.bindBottomNavItem
+import com.thedavelopers.eventqr.features.common.bindComposeBottomNav
 import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
+import com.thedavelopers.eventqr.ui.components.StaffNavItems
 
 enum class StaffBottomNavItem {
     DASHBOARD,
@@ -13,70 +15,44 @@ enum class StaffBottomNavItem {
     LOGS,
 }
 
-fun AppCompatActivity.configureStaffBottomNav(selectedItem: StaffBottomNavItem, currentEventId: String? = null) {
-    bindBottomNavItem(
-        R.id.navDashboard,
-        selectedItem == StaffBottomNavItem.DASHBOARD,
-        R.drawable.ic_nav_home,
-        "Dashboard",
-        StaffDashboardActivity::class.java,
-    )
-    bindBottomNavItem(
-        R.id.navScanner,
-        selectedItem == StaffBottomNavItem.SCANNER,
-        R.drawable.ic_scan,
-        "Scan",
-        ScannerActivity::class.java,
-    ) {
-        currentEventId?.takeIf { it.isNotBlank() }?.let { putExtra(StaffScreenExtras.EXTRA_EVENT_ID, it) }
+private val StaffBottomNavItem.navId: String
+    get() = when (this) {
+        StaffBottomNavItem.DASHBOARD -> "dashboard"
+        StaffBottomNavItem.SCANNER -> "scanner"
+        StaffBottomNavItem.EVENTS -> "events"
+        StaffBottomNavItem.LOGS -> "logs"
     }
-    bindBottomNavItem(
-        R.id.navEvents,
-        selectedItem == StaffBottomNavItem.EVENTS,
-        R.drawable.ic_calendar,
-        "Events",
-        StaffAssignedEventsActivity::class.java,
-    )
-    bindBottomNavItem(
-        R.id.navLogs,
-        selectedItem == StaffBottomNavItem.LOGS,
-        R.drawable.ic_file,
-        "Logs",
-        StaffTransactionsActivity::class.java,
-    ) {
-        currentEventId?.takeIf { it.isNotBlank() }?.let { putExtra(StaffScreenExtras.EXTRA_EVENT_ID, it) }
-    }
+
+/** Pure id-to-destination mapping for the staff nav; unmapped ids (incl. Profile) resolve to null (no-op). */
+internal fun staffNavDestination(id: String): Class<out AppCompatActivity>? = when (id) {
+    "dashboard" -> StaffDashboardActivity::class.java
+    "scanner" -> ScannerActivity::class.java
+    "events" -> StaffAssignedEventsActivity::class.java
+    "logs" -> StaffTransactionsActivity::class.java
+    "profile" -> StaffProfileActivity::class.java
+    else -> null
 }
 
-fun AppCompatActivity.configureStaffProfileBottomNav() {
-    findViewById<View>(R.id.navRegistered)?.visibility = View.GONE
+/** Only the Scanner and Logs tabs carry the current event id into the launched screen. */
+internal fun staffNavEventIdExtra(id: String, currentEventId: String?): String? =
+    if ((id == "scanner" || id == "logs") && !currentEventId.isNullOrBlank()) currentEventId else null
 
-    bindBottomNavItem(
-        R.id.navDashboard,
-        false,
-        R.drawable.ic_nav_home,
-        "Dashboard",
-        StaffDashboardActivity::class.java,
-    )
-    bindBottomNavItem(
-        R.id.navEvents,
-        false,
-        R.drawable.ic_scan,
-        "Scan QR",
-        ScannerActivity::class.java,
-    )
-    bindBottomNavItem(
-        R.id.navRewards,
-        false,
-        R.drawable.ic_file,
-        "Logs",
-        StaffTransactionsActivity::class.java,
-    )
-    bindBottomNavItem(
-        R.id.navProfile,
-        true,
-        R.drawable.ic_nav_profile,
-        "Profile",
-        StaffProfileActivity::class.java,
-    )
+/**
+ * Binds the shared Compose bottom navbar into the screen's [R.id.composeBottomNav] host.
+ * All staff screens share one constant item set (Dashboard, Scan, Events, Logs, Profile) —
+ * matching the Compose navbar already used by [StaffProfileActivity]. The 5th tab is Profile.
+ */
+fun AppCompatActivity.configureStaffBottomNav(selectedItem: StaffBottomNavItem, currentEventId: String? = null) {
+    val view = findViewById<ComposeView>(R.id.composeBottomNav) ?: return
+    val selectedId = selectedItem.navId
+    bindComposeBottomNav(view, StaffNavItems, selectedId) { id ->
+        if (id == selectedId) return@bindComposeBottomNav
+        val destination = staffNavDestination(id) ?: return@bindComposeBottomNav
+        val intent = Intent(this, destination)
+            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        staffNavEventIdExtra(id, currentEventId)?.let {
+            intent.putExtra(StaffScreenExtras.EXTRA_EVENT_ID, it)
+        }
+        startActivity(intent)
+    }
 }

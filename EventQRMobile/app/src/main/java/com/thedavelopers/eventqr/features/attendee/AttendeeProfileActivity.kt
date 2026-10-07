@@ -4,18 +4,17 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.activity.compose.setContent
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionLogout
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
-import com.thedavelopers.eventqr.features.dashboard.DashboardActivity
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
-import com.thedavelopers.eventqr.ui.components.AttendeeNavItems
-import com.thedavelopers.eventqr.ui.components.EventQrBottomNavBar
 import com.thedavelopers.eventqr.ui.profile.UserProfileScreen
 import com.thedavelopers.eventqr.ui.theme.EventQrTheme
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,70 +40,49 @@ class AttendeeProfileActivity : AppCompatActivity() {
             return
         }
 
-        setContent {
-            EventQrTheme {
-                val user = _user.collectAsStateWithLifecycle().value
-                val isLoading = _isLoading.collectAsStateWithLifecycle().value
-                val errorMessage = _errorMessage.collectAsStateWithLifecycle().value
+        setContentView(R.layout.activity_attendee_profile)
+        configureAttendeeBottomNav(AttendeeBottomNavItem.PROFILE)
 
-                val fullName = user?.fullName ?: sessionManager.getFullName().orEmpty().ifBlank { "Attendee" }
-                val role = user?.role?.name ?: sessionManager.getUserRole().orEmpty()
-                val roleDisplayName = RoleMapper.getDisplayName(role).ifBlank { "Attendee" }
-                val email = user?.email ?: sessionManager.getEmail().orEmpty()
-                val phone = user?.phoneNumber ?: sessionManager.getPhone()
+        findViewById<ComposeView>(R.id.composeAttendeeProfile).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                EventQrTheme {
+                    val user = _user.collectAsStateWithLifecycle().value
+                    val isLoading = _isLoading.collectAsStateWithLifecycle().value
+                    val errorMessage = _errorMessage.collectAsStateWithLifecycle().value
 
-                UserProfileScreen(
-                    fullName = fullName,
-                    roleDisplayName = roleDisplayName,
-                    email = email,
-                    phoneNumber = phone,
-                    isLoading = isLoading,
-                    errorMessage = errorMessage,
-                    onEditProfileClick = {
-                        startActivity(Intent(this, AttendeeEditProfileActivity::class.java))
-                    },
-                    onTransactionsClick = {
-                        startActivity(Intent(this, AttendeeTransactionsActivity::class.java))
-                    },
-                    onClaimedRewardsClick = {
-                        startActivity(Intent(this, ClaimedRewardsActivity::class.java))
-                    },
-                    onEventRequestsClick = {
-                        startActivity(Intent(this, MyEventRequestsActivity::class.java))
-                    },
-                    onChangePasswordClick = {
-                        startActivity(com.thedavelopers.eventqr.core.navigation.AppNavigator.changePassword(this))
-                    },
-                    onSignOutConfirm = { performSignOut() },
-                    onRetryClick = { loadProfile() },
-                    bottomBar = {
-                        EventQrBottomNavBar(
-                            items = AttendeeNavItems,
-                            selectedId = "profile",
-                            onItemSelected = { id ->
-                                when (id) {
-                                    "home" -> {
-                                        startActivity(Intent(this, DashboardActivity::class.java))
-                                        finish()
-                                    }
-                                    "events" -> {
-                                        startActivity(Intent(this, AttendeeEventsActivity::class.java))
-                                        finish()
-                                    }
-                                    "registered" -> {
-                                        startActivity(Intent(this, RegisteredEventsActivity::class.java))
-                                        finish()
-                                    }
-                                    "rewards" -> {
-                                        startActivity(Intent(this, AttendeeRewardsActivity::class.java))
-                                        finish()
-                                    }
-                                    "profile" -> Unit
-                                }
-                            },
-                        )
-                    },
-                )
+                    val fullName = user?.fullName ?: sessionManager.getFullName().orEmpty().ifBlank { "Attendee" }
+                    val role = user?.role?.name ?: sessionManager.getUserRole().orEmpty()
+                    val roleDisplayName = RoleMapper.getDisplayName(role).ifBlank { "Attendee" }
+                    val email = user?.email ?: sessionManager.getEmail().orEmpty()
+                    val phone = user?.phoneNumber ?: sessionManager.getPhone()
+
+                    UserProfileScreen(
+                        fullName = fullName,
+                        roleDisplayName = roleDisplayName,
+                        email = email,
+                        phoneNumber = phone,
+                        isLoading = isLoading,
+                        errorMessage = errorMessage,
+                        onEditProfileClick = {
+                            startActivity(Intent(this@AttendeeProfileActivity, AttendeeEditProfileActivity::class.java))
+                        },
+                        onTransactionsClick = {
+                            startActivity(Intent(this@AttendeeProfileActivity, AttendeeTransactionsActivity::class.java))
+                        },
+                        onClaimedRewardsClick = {
+                            startActivity(Intent(this@AttendeeProfileActivity, ClaimedRewardsActivity::class.java))
+                        },
+                        onEventRequestsClick = {
+                            startActivity(Intent(this@AttendeeProfileActivity, MyEventRequestsActivity::class.java))
+                        },
+                        onChangePasswordClick = {
+                            startActivity(com.thedavelopers.eventqr.core.navigation.AppNavigator.changePassword(this@AttendeeProfileActivity))
+                        },
+                        onSignOutConfirm = { performSignOut() },
+                        onRetryClick = { loadProfile() },
+                    )
+                }
             }
         }
     }

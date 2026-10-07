@@ -71,6 +71,57 @@ class EventQrBottomNavBarComposeTest {
     }
 
     @Test
+    fun adminNavItems_exposeExpectedIdsAndLabels() {
+        assertEquals(
+            listOf("dashboard", "requests", "accounts", "logs"),
+            AdminNavItems.map { it.id },
+        )
+        assertEquals(
+            listOf("Dashboard", "Requests", "Accounts", "Logs"),
+            AdminNavItems.map { it.label },
+        )
+    }
+
+    @Test
+    fun organizerNavItems_exposeExpectedIdsAndLabels() {
+        assertEquals(
+            listOf("dashboard", "events", "attendees", "reports", "rewards"),
+            OrganizerNavItems.map { it.id },
+        )
+        assertEquals(
+            listOf("Dashboard", "Events", "Attendees", "Reports", "Rewards"),
+            OrganizerNavItems.map { it.label },
+        )
+    }
+
+    @Test
+    fun adminNavBar_rendersEveryItemLabel() {
+        setNavBar(items = AdminNavItems, selectedId = "dashboard")
+
+        listOf("Dashboard", "Requests", "Accounts", "Logs").forEach { label ->
+            composeTestRule.onNodeWithText(label).assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun organizerNavBar_rendersEveryItemLabel() {
+        setNavBar(items = OrganizerNavItems, selectedId = "events")
+
+        listOf("Dashboard", "Events", "Attendees", "Reports", "Rewards").forEach { label ->
+            composeTestRule.onNodeWithText(label).assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun adminNavBar_selectedRequestsIsSemanticallySelected() {
+        setNavBar(items = AdminNavItems, selectedId = "requests")
+
+        composeTestRule.onNode(hasText("Requests")).assertIsSelected()
+        composeTestRule.onNode(hasText("Dashboard")).assertIsNotSelected()
+        composeTestRule.onNode(hasText("Logs")).assertIsNotSelected()
+    }
+
+    @Test
     fun everyItem_exposesTabRole() {
         setNavBar(items = AttendeeNavItems, selectedId = "home")
 

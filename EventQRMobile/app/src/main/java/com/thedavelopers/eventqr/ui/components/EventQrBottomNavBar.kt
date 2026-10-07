@@ -16,13 +16,16 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.HowToReg
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.RequestQuote
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -128,4 +131,25 @@ val StaffNavItems = listOf(
     NavItem("events", "Events", Icons.Default.CalendarToday),
     NavItem("logs", "Logs", Icons.Default.Description),
     NavItem("profile", "Profile", Icons.Default.Person),
+)
+
+/**
+ * Admin portal items. The super-admin portal reuses the same screens (admin dashboard,
+ * event requests, account management, audit logs), so [SUPER_ADMIN] accounts bind
+ * [AdminNavItems] as well — see [com.thedavelopers.eventqr.features.admin.configureAdminBottomNav].
+ */
+val AdminNavItems = listOf(
+    NavItem("dashboard", "Dashboard", Icons.Default.Home),
+    NavItem("requests", "Requests", Icons.Default.RequestQuote),
+    NavItem("accounts", "Accounts", Icons.Default.Group),
+    NavItem("logs", "Logs", Icons.Default.Description),
+)
+
+/** Organizer portal items, mirroring the destinations of the legacy organizer nav. */
+val OrganizerNavItems = listOf(
+    NavItem("dashboard", "Dashboard", Icons.Default.Home),
+    NavItem("events", "Events", Icons.Default.CalendarToday),
+    NavItem("attendees", "Attendees", Icons.Default.Group),
+    NavItem("reports", "Reports", Icons.Default.Assessment),
+    NavItem("rewards", "Rewards", Icons.Default.CardGiftcard),
 )

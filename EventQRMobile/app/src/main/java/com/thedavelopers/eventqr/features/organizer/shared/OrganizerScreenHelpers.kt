@@ -8,6 +8,7 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -22,11 +23,15 @@ import android.widget.ScrollView
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.widget.TextViewCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
-import android.util.TypedValue
+import com.thedavelopers.eventqr.ui.components.EventQrBottomNavBar
+import com.thedavelopers.eventqr.ui.components.OrganizerNavItems
+import com.thedavelopers.eventqr.ui.theme.EventQrTheme
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -47,7 +52,6 @@ internal const val NAV_REWARDS = "Rewards"
 internal val PRIMARY = Color.parseColor("#25215F")
 internal val PURPLE = Color.parseColor("#5B25C9")
 internal val NAV_PURPLE = Color.parseColor("#4F46E5")
-internal val NAV_INACTIVE = Color.parseColor("#9CA3AF")
 internal val BG = Color.parseColor("#F7F7FA")
 internal val CARD = Color.WHITE
 internal val TEXT = Color.parseColor("#111827")
@@ -652,78 +656,62 @@ internal fun AppCompatActivity.organizerShell(
     return content
 }
 
+/** Pure id-to-destination mapping for the organizer nav; unmapped ids resolve to null (no-op). */
+internal fun organizerNavDestination(id: String): Class<out AppCompatActivity>? = when (id) {
+    "dashboard" -> com.thedavelopers.eventqr.features.organizer.dashboard.OrganizerDashboardActivity::class.java
+    "events" -> com.thedavelopers.eventqr.features.organizer.events.ManageEventsActivity::class.java
+    "attendees" -> com.thedavelopers.eventqr.features.organizer.attendees.AttendeeManagementActivity::class.java
+    "reports" -> com.thedavelopers.eventqr.features.organizer.reports.EventReportsActivity::class.java
+    "rewards" -> com.thedavelopers.eventqr.features.organizer.rewards.ManageRewardsActivity::class.java
+    else -> null
+}
+
+/**
+ * Same-tab guard used by the shared organizer bottom nav: never re-open the screen hosting
+ * the nav, and never navigate for unknown ids (null destination). A ReportPreview screen
+ * resolves "reports" to [com.thedavelopers.eventqr.features.organizer.reports.EventReportsActivity],
+ * so that tab is a navigation target again from the preview.
+ */
+internal fun shouldNavigateAway(currentClass: Class<*>, destination: Class<*>?): Boolean =
+    destination != null && currentClass != destination
+
 internal fun AppCompatActivity.bottomNav(selected: String): LinearLayout {
-    val nav = LinearLayout(this).apply {
-        orientation = LinearLayout.HORIZONTAL
-        gravity = Gravity.CENTER
-        setPadding(dp(20), 0, dp(20), 0)
-        setBackgroundColor(Color.WHITE)
-        elevation = dp(8).toFloat()
+    val currentEventId = selectedEventId().takeIf { it.isNotBlank() }
+    val selectedId = selected.lowercase()
+    return LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
-            dp(76),
+            ViewGroup.LayoutParams.WRAP_CONTENT,
         )
-    }
-    val currentEventId = selectedEventId().takeIf { it.isNotBlank() }
-    val items = listOf(
-        Triple(NAV_DASHBOARD, com.thedavelopers.eventqr.R.drawable.ic_nav_home, {
-            if (this@bottomNav !is com.thedavelopers.eventqr.features.organizer.dashboard.OrganizerDashboardActivity) {
-                openOrganizerPage(com.thedavelopers.eventqr.features.organizer.dashboard.OrganizerDashboardActivity::class.java)
+        addView(ComposeView(this@bottomNav).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                EventQrTheme {
+                    EventQrBottomNavBar(
+                        items = OrganizerNavItems,
+                        selectedId = selectedId,
+                        onItemSelected = { id ->
+                            val dest = organizerNavDestination(id)
+                            if (shouldNavigateAway(this@bottomNav::class.java, dest)) {
+                                openOrganizerNavPage(id, currentEventId)
+                            }
+                        },
+                    )
+                }
             }
-        }),
-        Triple(NAV_EVENTS, com.thedavelopers.eventqr.R.drawable.ic_calendar, {
-            if (this@bottomNav !is com.thedavelopers.eventqr.features.organizer.events.ManageEventsActivity) {
-                openOrganizerPage(com.thedavelopers.eventqr.features.organizer.events.ManageEventsActivity::class.java, currentEventId)
-            }
-        }),
-        Triple(NAV_ATTENDEES, com.thedavelopers.eventqr.R.drawable.ic_group, {
-            if (this@bottomNav !is com.thedavelopers.eventqr.features.organizer.attendees.AttendeeManagementActivity) {
-                openOrganizerPage(com.thedavelopers.eventqr.features.organizer.attendees.AttendeeManagementActivity::class.java, currentEventId)
-            }
-        }),
-        Triple(NAV_REPORTS, com.thedavelopers.eventqr.R.drawable.ic_organizer_reports, {
-            if (this@bottomNav !is com.thedavelopers.eventqr.features.organizer.reports.EventReportsActivity) {
-                openOrganizerPage(com.thedavelopers.eventqr.features.organizer.reports.EventReportsActivity::class.java, currentEventId)
-            }
-        }),
-        Triple(NAV_REWARDS, com.thedavelopers.eventqr.R.drawable.ic_nav_gift, {
-            if (this@bottomNav !is com.thedavelopers.eventqr.features.organizer.rewards.ManageRewardsActivity) {
-                openOrganizerPage(com.thedavelopers.eventqr.features.organizer.rewards.ManageRewardsActivity::class.java, currentEventId)
-            }
-        }),
-    )
-    items.forEach { (label, iconRes, onClick) ->
-        val isSelected = selected == label
-        val rippleAttr = TypedValue().also { theme.resolveAttribute(android.R.attr.selectableItemBackground, it, true) }
-        nav.addView(LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            setPadding(0, dp(8), 0, dp(8))
-            foreground = getDrawable(rippleAttr.resourceId)
-            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f).apply {
-                setMargins(0, 0, 0, 0)
-            }
-            addView(ImageView(this@bottomNav).apply {
-                layoutParams = LinearLayout.LayoutParams(dp(39), dp(39))
-                setBackgroundResource(
-                    if (isSelected) {
-                        com.thedavelopers.eventqr.R.drawable.bg_nav_icon_active
-                    } else {
-                        com.thedavelopers.eventqr.R.drawable.bg_nav_icon_inactive
-                    }
-                )
-                setImageResource(iconRes)
-                setPadding(dp(if (isSelected) 9 else 8), dp(if (isSelected) 9 else 8), dp(if (isSelected) 9 else 8), dp(if (isSelected) 9 else 8))
-                setColorFilter(if (isSelected) Color.WHITE else NAV_INACTIVE)
-            })
-            addView(text(label, 11, isSelected, if (isSelected) NAV_PURPLE else NAV_INACTIVE).apply {
-                gravity = Gravity.CENTER
-                setPadding(0, dp(4), 0, 0)
-            })
-            setOnClickListener { onClick() }
         })
     }
-    return nav
+}
+
+/**
+ * Mirrors the legacy organizer nav destinations: dashboard carries no event id,
+ * every event-scoped tab (events, attendees, reports, rewards) carries [currentEventId].
+ */
+internal fun AppCompatActivity.openOrganizerNavPage(id: String, currentEventId: String?) {
+    val destination = organizerNavDestination(id) ?: return
+    if (this::class.java == destination) return
+    openOrganizerPage(destination, if (id == "dashboard") null else currentEventId)
 }
 
 internal fun AppCompatActivity.formatCount(value: Int): String = String.format("%,d", value)
