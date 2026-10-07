@@ -17,7 +17,6 @@ import com.thedavelopers.eventqr.features.organizer.dashboard.OrganizerDashboard
 import com.thedavelopers.eventqr.features.staff.EventRegistrationsActivity
 import com.thedavelopers.eventqr.features.staff.StaffAssignedEventsActivity
 import com.thedavelopers.eventqr.features.staff.StaffDashboardActivity
-import com.thedavelopers.eventqr.features.staff.StaffProfileActivity
 import com.thedavelopers.eventqr.features.staff.StaffScreenExtras
 import com.thedavelopers.eventqr.features.staff.StaffTransactionsActivity
 import com.thedavelopers.eventqr.features.staff.details.StaffAttendeeDetailsActivity
@@ -42,7 +41,6 @@ class RoleGuardMatrixTest {
 
     private val staffFloorActivities: List<Class<out Activity>> = listOf(
         StaffDashboardActivity::class.java,
-        StaffProfileActivity::class.java,
         StaffTransactionsActivity::class.java,
         StaffNotificationsActivity::class.java,
         ScannerActivity::class.java,

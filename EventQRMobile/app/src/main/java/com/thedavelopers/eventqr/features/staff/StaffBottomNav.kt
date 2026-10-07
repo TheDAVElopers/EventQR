@@ -23,13 +23,12 @@ private val StaffBottomNavItem.navId: String
         StaffBottomNavItem.LOGS -> "logs"
     }
 
-/** Pure id-to-destination mapping for the staff nav; unmapped ids (incl. Profile) resolve to null (no-op). */
+/** Pure id-to-destination mapping for the staff nav; unmapped ids resolve to null (no-op). */
 internal fun staffNavDestination(id: String): Class<out AppCompatActivity>? = when (id) {
     "dashboard" -> StaffDashboardActivity::class.java
     "scanner" -> ScannerActivity::class.java
     "events" -> StaffAssignedEventsActivity::class.java
     "logs" -> StaffTransactionsActivity::class.java
-    "profile" -> StaffProfileActivity::class.java
     else -> null
 }
 
@@ -39,8 +38,7 @@ internal fun staffNavEventIdExtra(id: String, currentEventId: String?): String? 
 
 /**
  * Binds the shared Compose bottom navbar into the screen's [R.id.composeBottomNav] host.
- * All staff screens share one constant item set (Dashboard, Scan, Events, Logs, Profile) —
- * matching the Compose navbar already used by [StaffProfileActivity]. The 5th tab is Profile.
+ * All staff screens share one constant item set (Dashboard, Scan, Events, Logs).
  */
 fun AppCompatActivity.configureStaffBottomNav(selectedItem: StaffBottomNavItem, currentEventId: String? = null) {
     val view = findViewById<ComposeView>(R.id.composeBottomNav) ?: return

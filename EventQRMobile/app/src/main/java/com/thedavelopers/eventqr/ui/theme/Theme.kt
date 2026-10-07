@@ -1,6 +1,8 @@
 package com.thedavelopers.eventqr.ui.theme
 
 import android.app.Activity
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
 import android.view.View
 import android.view.ViewGroup
@@ -87,24 +89,41 @@ internal fun Activity.applyRequestedEventQrSystemBarAppearance() {
         isAppearanceLightStatusBars = lightStatusBars
         isAppearanceLightNavigationBars = true
     }
-    applyEventQrStatusBarScrim()
+    applyEventQrAdaptiveStatusBar()
 }
 
-private fun Activity.applyEventQrStatusBarScrim() {
-    val decor = window.decorView as? ViewGroup ?: return
-    if (decor.findViewById<View>(R.id.eventqr_status_bar_scrim) != null) return
-    val scrim = View(this).apply {
-        id = R.id.eventqr_status_bar_scrim
-        setBackgroundColor(Color.BLACK)
-        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+// The status bar is transparent, so whatever the header paints shows behind it. Only the icon contrast has to adapt.
+private fun Activity.applyEventQrAdaptiveStatusBar() {
+    val decor = window.decorView
+    val update = Runnable { updateEventQrStatusBarIconContrast() }
+    if (decor.getTag(R.id.eventqr_status_bar_adaptive) != true) {
+        decor.setTag(R.id.eventqr_status_bar_adaptive, true)
+        decor.viewTreeObserver.addOnGlobalLayoutListener {
+            decor.removeCallbacks(update)
+            decor.postDelayed(update, 80)
+        }
     }
-    decor.addView(scrim, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0))
-    ViewCompat.setOnApplyWindowInsetsListener(scrim) { view, insets ->
-        val statusTop = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
-        view.layoutParams = view.layoutParams.apply { height = statusTop }
-        insets
-    }
-    ViewCompat.requestApplyInsets(scrim)
+    decor.post(update)
+}
+
+private fun Activity.updateEventQrStatusBarIconContrast() {
+    val decor = window.decorView
+    val statusTop = ViewCompat.getRootWindowInsets(decor)?.getInsets(WindowInsetsCompat.Type.statusBars())?.top ?: return
+    if (statusTop <= 0 || decor.width <= 0) return
+    val scale = 0.1f
+    val bitmap = Bitmap.createBitmap(
+        (decor.width * scale).toInt().coerceAtLeast(1),
+        (statusTop * scale).toInt().coerceAtLeast(1),
+        Bitmap.Config.ARGB_8888,
+    )
+    val canvas = Canvas(bitmap)
+    canvas.scale(scale, scale)
+    decor.draw(canvas)
+    val pixels = IntArray(bitmap.width * bitmap.height)
+    bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+    bitmap.recycle()
+    val luminance = pixels.map { 0.299 * Color.red(it) + 0.587 * Color.green(it) + 0.114 * Color.blue(it) }.average() / 255.0
+    WindowCompat.getInsetsController(window, decor).isAppearanceLightStatusBars = luminance > 0.5
 }
 
 fun View.applyEventQrTopInsetPadding() {

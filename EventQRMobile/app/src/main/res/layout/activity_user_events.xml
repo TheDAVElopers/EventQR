@@ -3,24 +3,20 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface_alt"
+    android:background="@drawable/bg_organizer_events_screen"
     android:orientation="vertical">
 
-    <com.google.android.material.appbar.MaterialToolbar
+    <com.thedavelopers.eventqr.ui.components.EventQrTabHeader
         android:id="@+id/toolbarDiscoverEvents"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="?attr/actionBarSize"
-        android:background="@color/surface"
-        android:elevation="0dp"
         app:title="Discover Events"
-        app:titleTextColor="@color/text_primary"
-        app:titleTextAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
+        app:subtitle="Find and register for upcoming events" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/surface"
+        android:background="@android:color/transparent"
         android:orientation="vertical"
         android:paddingHorizontal="16dp"
         android:paddingBottom="16dp">

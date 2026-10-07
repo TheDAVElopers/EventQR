@@ -3,30 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F3F4F6"
+    android:background="@drawable/bg_organizer_events_screen"
     android:orientation="vertical">
 
-    <LinearLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrTabHeader
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="56dp"
-        android:background="@drawable/bg_header_surface_outline"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingHorizontal="16dp">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_weight="1"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text="Transaction Logs"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-            android:textColor="@color/text_primary" />
-    </LinearLayout>
+        app:title="Transaction Logs"
+        app:subtitle="Review scans and transactions" />
 
     <LinearLayout
         android:id="@+id/cardStaffTransactionsEvent"
@@ -292,7 +277,14 @@
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout android:id="@+id/swipeRefreshStaffTransactions" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
         <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent" android:paddingHorizontal="16dp">
             <androidx.recyclerview.widget.RecyclerView android:id="@+id/recyclerStaffTransactions" android:layout_width="match_parent" android:layout_height="match_parent" android:clipToPadding="false" android:paddingTop="8dp" android:paddingBottom="12dp" />
-            <TextView android:id="@+id/txtStaffTransactionsEmptyState" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="center" android:gravity="center" android:text="No transaction logs for this event yet." android:textColor="#6B7280" android:textSize="14sp" android:visibility="gone" />
+            <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+            android:id="@+id/txtStaffTransactionsEmptyState"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            app:icon="@drawable/ic_history"
+            app:title="No transactions logged"
+            app:subtitle="Scans you perform will show up here." />
             <ProgressBar android:id="@+id/pbStaffTransactionsLoadMore" android:layout_width="36dp" android:layout_height="36dp" android:layout_gravity="bottom|center_horizontal" android:layout_marginBottom="8dp" android:visibility="gone" />
             <include
                 layout="@layout/include_skeleton_cards"

@@ -3,6 +3,8 @@ package com.thedavelopers.eventqr.features.notifications
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -47,7 +49,6 @@ import com.thedavelopers.eventqr.core.api.dto.NotificationType
 import com.thedavelopers.eventqr.core.util.RelativeTimeUtils
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 import com.thedavelopers.eventqr.ui.components.EmptyStateView
-import com.thedavelopers.eventqr.ui.components.EventQrTopAppBar
 import com.thedavelopers.eventqr.ui.theme.LocalSpacing
 
 private val UNREAD_TINT_ALPHA = 0.08f
@@ -57,9 +58,7 @@ fun NotificationsScreen(
     notifications: List<NotificationResponse>,
     isLoading: Boolean,
     errorMessage: String?,
-    onBackClick: () -> Unit,
     onNotificationClick: (NotificationResponse) -> Unit,
-    onMarkAllReadClick: () -> Unit,
     onRetryClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -67,29 +66,8 @@ fun NotificationsScreen(
     val colorScheme = MaterialTheme.colorScheme
 
     Scaffold(
-        topBar = {
-            EventQrTopAppBar(
-                title = "Notifications",
-                onBackClick = onBackClick,
-                actions = {
-                    val hasUnread = notifications.any { it.status != NotificationStatus.READ && it.readAt == null }
-                    if (notifications.isNotEmpty()) {
-                        TextButton(
-                            onClick = onMarkAllReadClick,
-                            enabled = hasUnread,
-                        ) {
-                            Text(
-                                text = "Mark all read",
-                                style = MaterialTheme.typography.labelMedium.copy(
-                                    fontWeight = FontWeight.SemiBold,
-                                ),
-                                color = if (hasUnread) colorScheme.primary else colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                },
-            )
-        },
+        // The header (title, back, Mark all read) is the shared EventQrDetailHeader, hosted by the activity.
+        contentWindowInsets = WindowInsets.navigationBars,
         containerColor = colorScheme.background,
         modifier = modifier.fillMaxSize(),
     ) { innerPadding ->

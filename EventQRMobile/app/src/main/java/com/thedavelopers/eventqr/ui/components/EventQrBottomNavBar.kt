@@ -130,7 +130,6 @@ val StaffNavItems = listOf(
     NavItem("scanner", "Scan", Icons.Default.QrCodeScanner),
     NavItem("events", "Events", Icons.Default.CalendarToday),
     NavItem("logs", "Logs", Icons.Default.Description),
-    NavItem("profile", "Profile", Icons.Default.Person),
 )
 
 /**

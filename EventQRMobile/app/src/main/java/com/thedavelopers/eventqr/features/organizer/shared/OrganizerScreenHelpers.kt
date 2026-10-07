@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.organizer
 
-import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
+import com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
+import com.thedavelopers.eventqr.ui.components.EventQrTabHeader
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
@@ -252,7 +253,7 @@ internal fun AppCompatActivity.showMissingEventScreen(screenTitle: String, messa
         .addView(emptyState(
             iconRes = R.drawable.ic_calendar,
             title = "No event selected",
-            subtext = "Open this screen from My Events or the event hub.",
+            subtext = "$message Open this screen from My Events or the event hub.",
             actionLabel = "Open My Events",
             onAction = { openOrganizerPage(com.thedavelopers.eventqr.features.organizer.events.ManageEventsActivity::class.java) },
         ))
@@ -364,12 +365,55 @@ internal fun AppCompatActivity.labeledInput(
     })
 }
 
+/**
+ * Back pages get the centered-title detail header; bottom-nav pages get the My Events style tab header.
+ * Both come from ui/components/EventQrHeaders.kt, so restyle them there.
+ */
+internal fun AppCompatActivity.organizerHeader(
+    title: String,
+    subtitle: String?,
+    selectedNav: String?,
+    showBack: Boolean,
+    topRightLabel: String?,
+    onTopRight: (() -> Unit)?,
+): View {
+    val action = topRightLabel?.let { label ->
+        Button(this).apply {
+            id = R.id.nav_header_action
+            text = label
+            setAllCaps(false)
+            setTextColor(Color.WHITE)
+            textSize = 13f
+            setTypeface(typeface, Typeface.BOLD)
+            background = rounded(PURPLE, 10, null, density = resources.displayMetrics.density)
+            setOnClickListener { onTopRight?.invoke() }
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(38))
+            setPadding(dp(14), 0, dp(14), 0)
+        }
+    }
+    if (showBack) {
+        return EventQrDetailHeader(this).apply {
+            this.title = title
+            action?.let { endSlot.addView(it) }
+        }
+    }
+    val defaultSub = when (selectedNav) {
+        NAV_REPORTS -> "View and generate event reports"
+        NAV_REWARDS -> "View and manage event rewards"
+        else -> null
+    }
+    return EventQrTabHeader(this).apply {
+        this.title = title
+        subtitleText = subtitle ?: defaultSub
+        action?.let { endSlot.addView(it) }
+    }
+}
+
 internal fun AppCompatActivity.organizerRefreshShell(
     title: String,
     subtitle: String? = null,
     selectedNav: String? = null,
     showBack: Boolean = false,
-    darkHeader: Boolean = false,
     topRightLabel: String? = null,
     onTopRight: (() -> Unit)? = null,
     onRefresh: () -> Unit,
@@ -380,117 +424,7 @@ internal fun AppCompatActivity.organizerRefreshShell(
     }
     setContentView(root)
 
-    val header = android.widget.RelativeLayout(this).apply {
-        layoutParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-        )
-        setPadding(dp(20), dp(20), dp(20), dp(8))
-        applyEventQrTopInsetPadding()
-    }
-
-    val titleContainer = LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        val params = android.widget.RelativeLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-        ).apply {
-            addRule(android.widget.RelativeLayout.ALIGN_PARENT_START)
-            addRule(android.widget.RelativeLayout.CENTER_VERTICAL)
-            if (topRightLabel != null) {
-                addRule(android.widget.RelativeLayout.LEFT_OF, com.thedavelopers.eventqr.R.id.nav_header_action)
-            }
-        }
-        layoutParams = params
-    }
-
-    if (showBack) {
-        val backRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            )
-        }
-        val outVal = TypedValue()
-        theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outVal, true)
-        val backIcon = ImageView(this).apply {
-            id = com.thedavelopers.eventqr.R.id.nav_header_back
-            setImageResource(com.thedavelopers.eventqr.R.drawable.ic_back_chevron)
-            setColorFilter(if (darkHeader) Color.WHITE else Color.parseColor("#121735"))
-            contentDescription = "Back"
-            layoutParams = LinearLayout.LayoutParams(dp(32), dp(32))
-            setPadding(dp(4), dp(4), dp(4), dp(4))
-            setBackgroundResource(outVal.resourceId)
-            setOnClickListener { finish() }
-        }
-        backRow.addView(backIcon)
-        backRow.addView(TextView(this).apply {
-            id = com.thedavelopers.eventqr.R.id.nav_header_title
-            text = title
-            textSize = 22f
-            setTypeface(typeface, Typeface.BOLD)
-            setTextColor(if (darkHeader) Color.WHITE else Color.parseColor("#121735"))
-            maxLines = 1
-            ellipsize = android.text.TextUtils.TruncateAt.END
-            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-                marginStart = dp(8)
-            }
-        })
-        titleContainer.addView(backRow)
-    } else {
-        titleContainer.addView(TextView(this).apply {
-            id = com.thedavelopers.eventqr.R.id.nav_header_title
-            text = title
-            textSize = 26f
-            setTypeface(typeface, Typeface.BOLD)
-            setTextColor(if (darkHeader) Color.WHITE else Color.parseColor("#121735"))
-            maxLines = 1
-            ellipsize = android.text.TextUtils.TruncateAt.END
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        })
-    }
-
-    val defaultSub = when (selectedNav) {
-        NAV_REPORTS -> "View and generate event reports"
-        NAV_REWARDS -> "View and manage event rewards"
-        else -> subtitle
-    }
-    val effectiveSub = subtitle ?: defaultSub
-    effectiveSub?.takeIf { it.isNotBlank() }?.let { sub ->
-        titleContainer.addView(TextView(this).apply {
-            text = sub
-            textSize = 13f
-            setTextColor(if (darkHeader) Color.parseColor("#D7D4F8") else Color.parseColor("#8E8EA9"))
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-                topMargin = dp(2)
-            }
-        })
-    }
-
-    header.addView(titleContainer)
-
-    if (topRightLabel != null) {
-        val topBtn = Button(this).apply {
-            id = com.thedavelopers.eventqr.R.id.nav_header_action
-            text = topRightLabel
-            setAllCaps(false)
-            setTextColor(Color.WHITE)
-            textSize = 13f
-            setTypeface(typeface, Typeface.BOLD)
-            background = rounded(PURPLE, 10, null, density = resources.displayMetrics.density)
-            setOnClickListener { onTopRight?.invoke() }
-            layoutParams = android.widget.RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(38)).apply {
-                addRule(android.widget.RelativeLayout.ALIGN_PARENT_END)
-                addRule(android.widget.RelativeLayout.CENTER_VERTICAL)
-            }
-            setPadding(dp(14), 0, dp(14), 0)
-        }
-        header.addView(topBtn)
-    }
-
-    root.addView(header)
+    root.addView(organizerHeader(title, subtitle, selectedNav, showBack, topRightLabel, onTopRight))
 
     val swipeRefreshLayout = SwipeRefreshLayout(this).apply {
         setColorSchemeColors(PURPLE)
@@ -518,7 +452,6 @@ internal fun AppCompatActivity.organizerShell(
     subtitle: String? = null,
     selectedNav: String? = null,
     showBack: Boolean = false,
-    darkHeader: Boolean = false,
     topRightLabel: String? = null,
     onTopRight: (() -> Unit)? = null,
 ): LinearLayout {
@@ -528,117 +461,7 @@ internal fun AppCompatActivity.organizerShell(
     }
     setContentView(root)
 
-    val header = android.widget.RelativeLayout(this).apply {
-        layoutParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-        )
-        setPadding(dp(20), dp(20), dp(20), dp(8))
-        applyEventQrTopInsetPadding()
-    }
-
-    val titleContainer = LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        val params = android.widget.RelativeLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-        ).apply {
-            addRule(android.widget.RelativeLayout.ALIGN_PARENT_START)
-            addRule(android.widget.RelativeLayout.CENTER_VERTICAL)
-            if (topRightLabel != null) {
-                addRule(android.widget.RelativeLayout.LEFT_OF, com.thedavelopers.eventqr.R.id.nav_header_action)
-            }
-        }
-        layoutParams = params
-    }
-
-    if (showBack) {
-        val backRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            )
-        }
-        val outVal = TypedValue()
-        theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outVal, true)
-        val backIcon = ImageView(this).apply {
-            id = com.thedavelopers.eventqr.R.id.nav_header_back
-            setImageResource(com.thedavelopers.eventqr.R.drawable.ic_back_chevron)
-            setColorFilter(if (darkHeader) Color.WHITE else Color.parseColor("#121735"))
-            contentDescription = "Back"
-            layoutParams = LinearLayout.LayoutParams(dp(32), dp(32))
-            setPadding(dp(4), dp(4), dp(4), dp(4))
-            setBackgroundResource(outVal.resourceId)
-            setOnClickListener { finish() }
-        }
-        backRow.addView(backIcon)
-        backRow.addView(TextView(this).apply {
-            id = com.thedavelopers.eventqr.R.id.nav_header_title
-            text = title
-            textSize = 22f
-            setTypeface(typeface, Typeface.BOLD)
-            setTextColor(if (darkHeader) Color.WHITE else Color.parseColor("#121735"))
-            maxLines = 1
-            ellipsize = android.text.TextUtils.TruncateAt.END
-            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-                marginStart = dp(8)
-            }
-        })
-        titleContainer.addView(backRow)
-    } else {
-        titleContainer.addView(TextView(this).apply {
-            id = com.thedavelopers.eventqr.R.id.nav_header_title
-            text = title
-            textSize = 26f
-            setTypeface(typeface, Typeface.BOLD)
-            setTextColor(if (darkHeader) Color.WHITE else Color.parseColor("#121735"))
-            maxLines = 1
-            ellipsize = android.text.TextUtils.TruncateAt.END
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        })
-    }
-
-    val defaultSub = when (selectedNav) {
-        NAV_REPORTS -> "View and generate event reports"
-        NAV_REWARDS -> "View and manage event rewards"
-        else -> subtitle
-    }
-    val effectiveSub = subtitle ?: defaultSub
-    effectiveSub?.takeIf { it.isNotBlank() }?.let { sub ->
-        titleContainer.addView(TextView(this).apply {
-            text = sub
-            textSize = 13f
-            setTextColor(if (darkHeader) Color.parseColor("#D7D4F8") else Color.parseColor("#8E8EA9"))
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-                topMargin = dp(2)
-            }
-        })
-    }
-
-    header.addView(titleContainer)
-
-    if (topRightLabel != null) {
-        val topBtn = Button(this).apply {
-            id = com.thedavelopers.eventqr.R.id.nav_header_action
-            text = topRightLabel
-            setAllCaps(false)
-            setTextColor(Color.WHITE)
-            textSize = 13f
-            setTypeface(typeface, Typeface.BOLD)
-            background = rounded(PURPLE, 10, null, density = resources.displayMetrics.density)
-            setOnClickListener { onTopRight?.invoke() }
-            layoutParams = android.widget.RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(38)).apply {
-                addRule(android.widget.RelativeLayout.ALIGN_PARENT_END)
-                addRule(android.widget.RelativeLayout.CENTER_VERTICAL)
-            }
-            setPadding(dp(14), 0, dp(14), 0)
-        }
-        header.addView(topBtn)
-    }
-
-    root.addView(header)
+    root.addView(organizerHeader(title, subtitle, selectedNav, showBack, topRightLabel, onTopRight))
 
     val scroll = ScrollView(this).apply {
         isFillViewport = true

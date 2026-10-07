@@ -6,46 +6,11 @@
     android:background="@drawable/bg_organizer_events_screen"
     android:orientation="vertical">
 
-    <RelativeLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="20dp"
-        android:paddingTop="20dp"
-        android:paddingBottom="8dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <ImageButton
-                android:id="@+id/btnBack"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Back"
-                android:padding="12dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_back_chevron"
-                app:tint="#121735" />
-
-            <TextView
-                android:id="@+id/txtDetailTitle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="Attendee Details"
-                android:textColor="#121735"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-    </RelativeLayout>
+        app:title="Attendee Details" />
 
     <ScrollView
         android:layout_width="match_parent"

@@ -1,6 +1,6 @@
 package com.thedavelopers.eventqr.features.admin.users
 
-import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -39,7 +39,7 @@ class AdminAccountManagementActivity : AppCompatActivity() {
     private lateinit var searchInput: EditText
     private lateinit var recyclerAccounts: RecyclerView
     private lateinit var progressLoading: ProgressBar
-    private lateinit var textPlaceholder: TextView
+    private lateinit var textPlaceholder: EventQrEmptyState
     private lateinit var filterChipsLayout: ChipGroup
 
     private var allUsers: List<UserResponse> = emptyList()
@@ -49,7 +49,6 @@ class AdminAccountManagementActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_admin_account_management)
-        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
 
         repository = AdminRepository(this)
         sessionManager = SessionManager(this)
@@ -138,6 +137,7 @@ class AdminAccountManagementActivity : AppCompatActivity() {
             }
             adapter.submitItems(filtered)
             textPlaceholder.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
+            recyclerAccounts.visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
             textPlaceholder.text = if (allUsers.isEmpty()) {
                 "No accounts found yet."
             } else {

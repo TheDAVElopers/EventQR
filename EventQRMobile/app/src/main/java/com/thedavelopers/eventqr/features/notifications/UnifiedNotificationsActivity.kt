@@ -3,7 +3,13 @@ package com.thedavelopers.eventqr.features.notifications
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.activity.compose.setContent
+import android.graphics.Typeface
+import android.view.View
+import android.widget.TextView
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
+import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.components.setContentWithDetailHeader
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.core.api.NetworkResult
@@ -25,7 +31,7 @@ open class UnifiedNotificationsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         repository = NotificationsRepository(this)
 
-        setContent {
+        val header = setContentWithDetailHeader("Notifications") {
             EventQrTheme {
                 val notifications = _notifications.collectAsStateWithLifecycle().value
                 val isLoading = _isLoading.collectAsStateWithLifecycle().value
@@ -35,20 +41,39 @@ open class UnifiedNotificationsActivity : AppCompatActivity() {
                     notifications = notifications,
                     isLoading = isLoading,
                     errorMessage = errorMessage,
-                    onBackClick = { finish() },
                     onNotificationClick = { notification ->
                         if (notification.status != NotificationStatus.READ && notification.readAt == null) {
                             markRead(notification.notificationId.toString())
                         }
                     },
-                    onMarkAllReadClick = { markAllRead() },
                     onRetryClick = { loadNotifications() },
                 )
             }
         }
 
+        val markAllRead = TextView(this).apply {
+            text = "Mark all read"
+            textSize = 13f
+            setTypeface(typeface, Typeface.BOLD)
+            setPadding(dp(8), dp(8), dp(8), dp(8))
+            setOnClickListener { markAllRead() }
+        }
+        header.endSlot.addView(markAllRead)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                _notifications.collect { list ->
+                    val hasUnread = list.any { it.status != NotificationStatus.READ && it.readAt == null }
+                    markAllRead.visibility = if (list.isEmpty()) View.GONE else View.VISIBLE
+                    markAllRead.isEnabled = hasUnread
+                    markAllRead.setTextColor(getColor(if (hasUnread) R.color.eventqr_purple else R.color.text_disabled))
+                }
+            }
+        }
+
         loadNotifications()
     }
+
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
     protected fun loadNotifications() {
         _isLoading.value = true

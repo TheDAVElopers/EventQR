@@ -1,6 +1,5 @@
 package com.thedavelopers.eventqr.features.attendee
 
-import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -31,7 +30,6 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_registered_events)
-        findViewById<View>(R.id.layoutTopBar).applyEventQrTopInsetPadding()
         applyEventQrSystemBarAppearance()
         configureAttendeeBottomNav(AttendeeBottomNavItem.REGISTERED)
 

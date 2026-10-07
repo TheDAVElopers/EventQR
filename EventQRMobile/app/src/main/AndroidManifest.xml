@@ -47,7 +47,6 @@
         <activity android:name=".features.staff.result.StaffScanResultActivity" android:exported="false" />
         <activity android:name=".features.staff.StaffDashboardActivity" android:exported="false" />
         <activity android:name=".features.staff.notifications.StaffNotificationsActivity" android:exported="false" />
-        <activity android:name=".features.staff.StaffProfileActivity" android:exported="false" />
         <activity android:name=".features.staff.reward.RewardRedemptionScanResultActivity" android:exported="false" />
         <activity android:name=".features.staff.reward.RedemptionResultActivity" android:exported="false" />
         <activity android:name=".features.organizer.notifications.NotificationManagementActivity" android:exported="false" />

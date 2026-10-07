@@ -7,44 +7,16 @@
     android:background="@drawable/bg_organizer_events_screen"
     android:orientation="vertical">
 
-    <RelativeLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrTabHeader
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="20dp"
-        android:paddingTop="20dp"
-        android:paddingBottom="8dp">
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_toStartOf="@id/btnFilterCard"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Attendees"
-                android:textColor="#121735"
-                android:textSize="26sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="View and manage event attendees"
-                android:textColor="#8E8EA9"
-                android:textSize="13sp" />
-        </LinearLayout>
-
+        app:title="Attendees"
+        app:subtitle="View and manage event attendees">
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/btnFilterCard"
             android:layout_width="42dp"
             android:layout_height="42dp"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
             app:cardBackgroundColor="@color/surface"
             app:cardCornerRadius="12dp"
             app:cardElevation="1dp"
@@ -62,8 +34,7 @@
                 android:src="@drawable/ic_search"
                 app:tint="#5B25C9" />
         </com.google.android.material.card.MaterialCardView>
-
-    </RelativeLayout>
+    </com.thedavelopers.eventqr.ui.components.EventQrTabHeader>
 
     <LinearLayout
         android:layout_width="match_parent"

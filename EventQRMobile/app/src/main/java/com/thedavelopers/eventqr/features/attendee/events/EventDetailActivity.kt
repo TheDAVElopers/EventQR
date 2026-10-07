@@ -1,6 +1,5 @@
 package com.thedavelopers.eventqr.features.attendee
 
-import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Bundle
@@ -36,15 +35,14 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_event_detail)
-        findViewById<View>(R.id.layoutTopBar).applyEventQrTopInsetPadding()
 
         repository = AttendeeRepository(this)
         presenter = EventDetailPresenter(this, repository)
         eventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty()
 
-        findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
+        findViewById<View>(R.id.nav_header_back).setOnClickListener { finish() }
 
-        findViewById<TextView>(R.id.txtDetailTitle).text = intent.getStringExtra(EXTRA_EVENT_TITLE).orEmpty()
+        findViewById<TextView>(R.id.nav_header_title).text = intent.getStringExtra(EXTRA_EVENT_TITLE).orEmpty()
         findViewById<TextView>(R.id.txtDetailDescription).text = intent.getStringExtra(EXTRA_EVENT_DESCRIPTION).orEmpty()
         findViewById<TextView>(R.id.txtDetailVenue).text = intent.getStringExtra(EXTRA_EVENT_LOCATION).orEmpty().ifBlank { "Location not specified" }
         
@@ -96,7 +94,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
 
     override fun renderEvent(event: AttendeeEventResponse) {
         currentEvent = event
-        findViewById<TextView>(R.id.txtDetailTitle).text = event.title
+        findViewById<TextView>(R.id.nav_header_title).text = event.title
         findViewById<TextView>(R.id.txtDetailDescription).text = event.description?.takeIf { it.isNotBlank() } ?: "No event description provided."
         findViewById<TextView>(R.id.txtDetailVenue).text = event.location?.takeIf { it.isNotBlank() } ?: "Location not specified."
         renderEventPoster(event.eventLogoUrl)
@@ -315,7 +313,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         findViewById<View>(R.id.skeletonDetailVenue).visibility = if (isLoading) View.VISIBLE else View.GONE
         findViewById<View>(R.id.skeletonDetailCapacity).visibility = if (isLoading) View.VISIBLE else View.GONE
         findViewById<View>(R.id.skeletonDetailRewards).visibility = if (isLoading) View.VISIBLE else View.GONE
-        findViewById<View>(R.id.txtDetailTitle).visibility = if (isLoading) View.GONE else View.VISIBLE
+        findViewById<View>(R.id.nav_header_title).visibility = if (isLoading) View.GONE else View.VISIBLE
         findViewById<View>(R.id.txtDetailDescription).visibility = if (isLoading) View.GONE else View.VISIBLE
         findViewById<View>(R.id.txtDetailDate).visibility = if (isLoading) View.GONE else View.VISIBLE
         findViewById<View>(R.id.txtDetailTime).visibility = if (isLoading) View.GONE else View.VISIBLE

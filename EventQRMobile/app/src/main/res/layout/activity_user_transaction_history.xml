@@ -11,38 +11,11 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <LinearLayout
-            android:id="@+id/headerTopBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="56dp"
-            android:background="@drawable/bg_header_surface_outline"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="8dp"
-            android:paddingEnd="16dp">
-
-            <ImageButton
-                android:id="@+id/btnBack"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Back"
-                android:padding="12dp"
-                android:src="@drawable/ic_back_chevron"
-                app:tint="@color/text_primary" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="Transaction History"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                android:textColor="@color/text_primary" />
-        </LinearLayout>
+        <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
+        android:id="@+id/headerTopBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:title="Transaction History" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -264,15 +237,7 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <TextView
-                    android:id="@+id/txtTransactionsEmpty"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:text="No transactions available."
-                    android:textColor="@color/eventqr_muted"
-                    android:textSize="16sp"
-                    android:visibility="gone" />
+                
 
                 <TextView
                     android:id="@+id/txtTransactionsError"
@@ -296,6 +261,14 @@
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
+            <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+            android:id="@+id/txtTransactionsEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            app:icon="@drawable/ic_history"
+            app:title="No transactions yet"
+            app:subtitle="Points you earn and spend will show up here." />
         </FrameLayout>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 

@@ -1,6 +1,5 @@
 package com.thedavelopers.eventqr.features.staff.result
 
-import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -32,7 +31,6 @@ open class StaffTransactionResultActivity : AppCompatActivity() {
         }
 
         setContentView(R.layout.activity_staff_transaction_result)
-        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
 
         val approved = intent.getStringExtra(StaffScreenExtras.EXTRA_TRANSACTION_RESULT).orUnknown() == TransactionResult.APPROVED.name
         findViewById<TextView>(R.id.txtTransactionType).text = buildString {
@@ -61,7 +59,7 @@ open class StaffTransactionResultActivity : AppCompatActivity() {
             startActivity(Intent(this, StaffDashboardActivity::class.java))
             finish()
         }
-        findViewById<View>(R.id.btnTransactionBackToScanner).setOnClickListener { openScanner() }
+        findViewById<View>(R.id.nav_header_back).setOnClickListener { openScanner() }
     }
 
     private fun openScanner() {

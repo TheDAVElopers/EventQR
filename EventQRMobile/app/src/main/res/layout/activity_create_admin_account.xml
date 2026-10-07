@@ -11,38 +11,11 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <LinearLayout
-            android:id="@+id/headerTopBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="56dp"
-            android:background="@drawable/bg_header_surface_outline"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="8dp"
-            android:paddingEnd="16dp">
-
-            <ImageButton
-                android:id="@+id/buttonBack"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Back"
-                android:padding="8dp"
-                android:src="@drawable/ic_back_chevron"
-                app:tint="@color/text_primary" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="Create Admin Account"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                android:textColor="@color/text_primary" />
-        </LinearLayout>
+        <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
+        android:id="@+id/headerTopBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:title="Create Admin Account" />
 
         <LinearLayout
             android:layout_width="match_parent"

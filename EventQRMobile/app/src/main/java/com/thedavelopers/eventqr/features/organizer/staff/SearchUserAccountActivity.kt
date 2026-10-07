@@ -1,6 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.staff
 
-import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import android.app.AlertDialog
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -37,7 +37,7 @@ class SearchUserAccountActivity : AppCompatActivity() {
     private lateinit var searchField: EditText
     private lateinit var recyclerUsers: RecyclerView
     private lateinit var progressBar: ProgressBar
-    private lateinit var emptyStateText: TextView
+    private lateinit var emptyStateText: EventQrEmptyState
     private lateinit var assignButton: Button
     private lateinit var userAdapter: SearchUserAccountAdapter
 
@@ -58,7 +58,6 @@ class SearchUserAccountActivity : AppCompatActivity() {
                 }
 
             setContentView(R.layout.activity_search_user_account)
-            findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
             activeStaffEmails.addAll(
                 intent.getStringArrayListExtra(EXTRA_ACTIVE_STAFF_EMAILS)
                     .orEmpty()
@@ -90,7 +89,7 @@ class SearchUserAccountActivity : AppCompatActivity() {
     }
 
     private fun bindActions() {
-        findViewById<ImageButton>(R.id.btnSearchUserBack).setOnClickListener { finish() }
+        findViewById<ImageButton>(R.id.nav_header_back).setOnClickListener { finish() }
         searchField.doAfterTextChanged {
             loadUsers()
         }

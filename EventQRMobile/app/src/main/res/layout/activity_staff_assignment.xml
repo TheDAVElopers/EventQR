@@ -6,52 +6,15 @@
     android:background="@drawable/bg_organizer_events_screen"
     android:orientation="vertical">
 
-    <RelativeLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="20dp"
-        android:paddingTop="20dp"
-        android:paddingBottom="8dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_toStartOf="@id/btnAddStaff"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <ImageButton
-                android:id="@+id/btnStaffAssignmentBack"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/back"
-                android:padding="4dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_back_chevron"
-                app:tint="#121735" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="@string/staff_assignment_title"
-                android:textColor="#121735"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
+        app:title="@string/staff_assignment_title">
         <Button
             android:id="@+id/btnAddStaff"
             android:layout_width="wrap_content"
             android:layout_height="38dp"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
             android:background="@drawable/bg_primary_button"
             android:minWidth="80dp"
             android:paddingHorizontal="14dp"
@@ -60,7 +23,7 @@
             android:textColor="@android:color/white"
             android:textSize="13sp"
             android:textStyle="bold" />
-    </RelativeLayout>
+    </com.thedavelopers.eventqr.ui.components.EventQrDetailHeader>
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshStaffAssignment"
@@ -88,17 +51,14 @@
                 android:layout_gravity="center"
                 android:visibility="gone" />
 
-            <TextView
-                android:id="@+id/txtEmptyStaff"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:paddingHorizontal="32dp"
-                android:text="@string/staff_assignment_empty"
-                android:textColor="#7E84A3"
-                android:textSize="14sp"
-                android:visibility="gone" />
+            <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+            android:id="@+id/txtEmptyStaff"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            app:icon="@drawable/ic_group"
+            app:title="No staff assigned yet"
+            app:subtitle="Tap + Add to assign staff to this event." />
         </FrameLayout>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </LinearLayout>

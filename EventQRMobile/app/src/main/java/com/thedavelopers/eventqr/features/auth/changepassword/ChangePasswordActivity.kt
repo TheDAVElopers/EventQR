@@ -1,6 +1,5 @@
 package com.thedavelopers.eventqr.features.auth.changepassword
 
-import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -31,7 +30,6 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_change_password)
-        findViewById<View>(R.id.toolbarChangePassword).applyEventQrTopInsetPadding()
 
         presenter = ChangePasswordPresenter()
         presenter.attach(this, this)

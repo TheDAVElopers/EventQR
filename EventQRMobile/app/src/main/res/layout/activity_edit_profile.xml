@@ -7,38 +7,11 @@
     android:orientation="vertical">
 
     <!-- Top Action Bar / Header (56dp, 48dp Accessible Back Touch Target) -->
-    <LinearLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="56dp"
-        android:background="@drawable/bg_header_surface_outline"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="4dp"
-        android:paddingEnd="16dp">
-
-        <ImageButton
-            android:id="@+id/toolbarEditProfile"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Back"
-            android:padding="12dp"
-            android:src="@drawable/ic_back_chevron"
-            app:tint="@color/text_primary" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_weight="1"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text="Edit Profile"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-            android:textColor="@color/text_primary" />
-    </LinearLayout>
+        app:title="Edit Profile" />
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshEditProfile"

@@ -43,11 +43,11 @@ class EventQrBottomNavBarComposeTest {
     @Test
     fun staffNavItems_exposeExpectedIdsAndLabels() {
         assertEquals(
-            listOf("dashboard", "scanner", "events", "logs", "profile"),
+            listOf("dashboard", "scanner", "events", "logs"),
             StaffNavItems.map { it.id },
         )
         assertEquals(
-            listOf("Dashboard", "Scan", "Events", "Logs", "Profile"),
+            listOf("Dashboard", "Scan", "Events", "Logs"),
             StaffNavItems.map { it.label },
         )
     }
@@ -65,7 +65,7 @@ class EventQrBottomNavBarComposeTest {
     fun staffNavBar_rendersEveryItemLabel() {
         setNavBar(items = StaffNavItems, selectedId = "dashboard")
 
-        listOf("Dashboard", "Scan", "Events", "Logs", "Profile").forEach { label ->
+        listOf("Dashboard", "Scan", "Events", "Logs").forEach { label ->
             composeTestRule.onNodeWithText(label).assertIsDisplayed()
         }
     }

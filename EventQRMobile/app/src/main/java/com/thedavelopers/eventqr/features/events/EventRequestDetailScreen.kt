@@ -3,6 +3,8 @@ package com.thedavelopers.eventqr.features.events
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -55,7 +57,6 @@ import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse
 import com.thedavelopers.eventqr.ui.components.EmptyStateView
 import com.thedavelopers.eventqr.ui.components.EventBadgeStatus
-import com.thedavelopers.eventqr.ui.components.EventQrTopAppBar
 import com.thedavelopers.eventqr.ui.components.StatusBadge
 import com.thedavelopers.eventqr.ui.theme.LocalSpacing
 import java.util.UUID
@@ -88,7 +89,6 @@ fun EventRequestDetailScreen(
     isLoading: Boolean,
     errorMessage: String?,
     isAdmin: Boolean,
-    onBackClick: () -> Unit,
     onRetryClick: () -> Unit,
     onApproveClick: ((remarks: String?) -> Unit)? = null,
     onRejectClick: ((remarks: String?) -> Unit)? = null,
@@ -101,12 +101,7 @@ fun EventRequestDetailScreen(
     var remarksText by rememberSaveable { mutableStateOf("") }
 
     Scaffold(
-        topBar = {
-            EventQrTopAppBar(
-                title = "Event Request",
-                onBackClick = onBackClick,
-            )
-        },
+        contentWindowInsets = WindowInsets.navigationBars,
         containerColor = colorScheme.background,
         modifier = modifier.fillMaxSize(),
     ) { innerPadding ->

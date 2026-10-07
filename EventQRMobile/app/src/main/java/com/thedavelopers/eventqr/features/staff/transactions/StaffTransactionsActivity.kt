@@ -1,6 +1,6 @@
 package com.thedavelopers.eventqr.features.staff
 
-import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -48,7 +48,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
     private lateinit var txtTotalScans: TextView
     private lateinit var txtSuccessfulScans: TextView
     private lateinit var txtRejectedScans: TextView
-    private lateinit var txtEmptyState: TextView
+    private lateinit var txtEmptyState: EventQrEmptyState
     private lateinit var recyclerView: RecyclerView
     private lateinit var pbLoadMore: ProgressBar
 
@@ -81,7 +81,6 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         }
 
         setContentView(R.layout.activity_staff_transaction_logs)
-        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
 
         repository = StaffRepository(this)
         adapter = TransactionLogAdapter()

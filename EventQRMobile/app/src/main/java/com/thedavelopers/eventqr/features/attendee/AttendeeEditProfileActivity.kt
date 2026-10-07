@@ -1,6 +1,5 @@
 package com.thedavelopers.eventqr.features.attendee
 
-import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.os.Bundle
 import android.text.Editable
 import android.text.InputType
@@ -49,7 +48,6 @@ class AttendeeEditProfileActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit_profile)
-        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
 
         sessionManager = SessionManager(this)
         repository = AttendeeRepository(this)
@@ -61,7 +59,7 @@ class AttendeeEditProfileActivity : AppCompatActivity() {
     }
 
     private fun bindViews() {
-        btnBack = findViewById(R.id.toolbarEditProfile)
+        btnBack = findViewById(R.id.nav_header_back)
         edtFullName = findViewById(R.id.edtFullName)
         edtEmail = findViewById(R.id.edtEmail)
         edtPhone = findViewById(R.id.edtPhone)

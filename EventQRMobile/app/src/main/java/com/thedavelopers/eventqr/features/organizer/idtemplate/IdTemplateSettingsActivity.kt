@@ -68,11 +68,11 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
         val initialTitle = intentEventTitle()?.takeIf { it.isNotBlank() }
         content = organizerShell(
             title = "ID Display Settings",
-            subtitle = initialTitle,
             showBack = true,
         )
 
-        styleHeaderSubtitle()
+        // The detail header has no subtitle, so the event chip sits at the top of the content.
+        if (initialTitle != null) content.addView(createHighlightedEventTitleView(initialTitle).also { eventTitleView = it }, 0)
 
         content.addView(lockedFieldsCard().apply {
             id = com.thedavelopers.eventqr.R.id.idt_locked_card
@@ -105,28 +105,12 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
         loadConfig()
     }
 
-    private fun styleHeaderSubtitle() {
-        val headerTitleView = findViewById<TextView>(com.thedavelopers.eventqr.R.id.nav_header_title)
-        val titleContainer = headerTitleView?.parent?.parent as? LinearLayout
-        if (titleContainer != null && titleContainer.childCount > 1) {
-            val existingText = (titleContainer.getChildAt(1) as? TextView)?.text?.toString().orEmpty()
-            titleContainer.removeViewAt(1)
-            if (existingText.isNotBlank()) {
-                titleContainer.addView(createHighlightedEventTitleView(existingText))
-            }
-        }
-    }
+    private var eventTitleView: View? = null
 
     private fun updateHeaderSubtitle(title: String) {
         if (title.isBlank()) return
-        val headerTitleView = findViewById<TextView>(com.thedavelopers.eventqr.R.id.nav_header_title)
-        val titleContainer = headerTitleView?.parent?.parent as? LinearLayout
-        if (titleContainer != null) {
-            if (titleContainer.childCount > 1) {
-                titleContainer.removeViewAt(1)
-            }
-            titleContainer.addView(createHighlightedEventTitleView(title))
-        }
+        eventTitleView?.let { content.removeView(it) }
+        eventTitleView = createHighlightedEventTitleView(title).also { content.addView(it, 0) }
     }
 
     private fun createHighlightedEventTitleView(titleText: String): LinearLayout =
@@ -144,8 +128,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
             ).apply {
-                topMargin = dp(6)
-                marginStart = dp(40)
+                bottomMargin = dp(12)
             }
 
             // Calendar / Event Icon

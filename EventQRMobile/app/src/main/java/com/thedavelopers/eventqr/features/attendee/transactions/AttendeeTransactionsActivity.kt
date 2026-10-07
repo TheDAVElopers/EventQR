@@ -1,6 +1,6 @@
 package com.thedavelopers.eventqr.features.attendee
 
-import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -28,7 +28,7 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
     private lateinit var adapter: TransactionAdapter
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var skeletonLoading: View
-    private lateinit var emptyText: TextView
+    private lateinit var emptyText: EventQrEmptyState
     private lateinit var errorText: TextView
     private lateinit var retryButton: Button
     private lateinit var filterSpinner: Spinner
@@ -48,7 +48,6 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_transaction_history)
-        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
         configureAttendeeBottomNav(AttendeeBottomNavItem.PROFILE)
 
         presenter = TransactionHistoryPresenter(this, AttendeeRepository(this))
@@ -65,7 +64,7 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
         summaryCountText = findViewById(R.id.txtHistoryTransactionCount)
         recyclerView = findViewById(R.id.recyclerTransactions)
 
-        findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
+        findViewById<View>(R.id.nav_header_back).setOnClickListener { finish() }
         retryButton.setOnClickListener { presenter.load(null) }
         swipeRefresh.setOnRefreshListener { presenter.load(null) }
         cardSelectedEvent.setOnClickListener { setEventDropdownOpen(!isEventDropdownOpen) }

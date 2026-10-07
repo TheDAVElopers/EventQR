@@ -1,6 +1,5 @@
 package com.thedavelopers.eventqr.features.organizer.events
 
-import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -61,7 +60,6 @@ open class ManageEventsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         repository = OrganizerRepository(this)
         setContentView(R.layout.activity_organizer_events)
-        findViewById<View>(R.id.toolbarMyEvents).applyEventQrTopInsetPadding()
         applyEventQrSystemBarAppearance()
 
         swipeRefresh = findViewById(R.id.swipeRefreshEvents)

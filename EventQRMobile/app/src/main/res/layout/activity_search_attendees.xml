@@ -6,47 +6,11 @@
     android:background="@drawable/bg_organizer_events_screen"
     android:orientation="vertical">
 
-    <RelativeLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="20dp"
-        android:paddingTop="20dp"
-        android:paddingBottom="8dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <ImageButton
-                android:id="@+id/btnBack"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Back"
-                android:padding="12dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_back_chevron"
-                app:tint="#121735" />
-
-            <TextView
-                android:id="@+id/txtSearchTitle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="Search Attendees"
-                android:textColor="#121735"
-                android:textSize="26sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-    </RelativeLayout>
+        app:title="Search Attendees" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -256,16 +220,12 @@
             android:layout_gravity="center"
             android:visibility="gone" />
 
-        <TextView
+        <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
             android:id="@+id/txtSearchEmpty"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:gravity="center"
-            android:paddingHorizontal="32dp"
-            android:text="No attendees match your search."
-            android:textColor="#7E84A3"
-            android:textSize="14sp"
-            android:visibility="gone" />
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            app:icon="@drawable/ic_search"
+            app:title="No attendees found" />
     </FrameLayout>
 </LinearLayout>

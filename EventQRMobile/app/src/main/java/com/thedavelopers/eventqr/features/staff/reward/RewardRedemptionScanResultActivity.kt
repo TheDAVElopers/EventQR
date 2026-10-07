@@ -1,6 +1,6 @@
 package com.thedavelopers.eventqr.features.staff.reward
 
-import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
+import com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -347,42 +347,7 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
-    private fun buildHeaderBar(title: String): LinearLayout =
-        LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setBackgroundResource(R.drawable.bg_header_surface_outline)
-            setPadding(dp(8), 0, dp(16), 0)
-            minimumHeight = dp(56)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-            )
-            applyEventQrTopInsetPadding()
-
-            addView(ImageButton(this@RewardRedemptionScanResultActivity).apply {
-                setImageResource(R.drawable.ic_back_chevron)
-                imageTintList = ColorStateList.valueOf(getColor(R.color.text_primary))
-                setBackgroundResource(selectableItemBackgroundBorderless())
-                setPadding(dp(8), dp(8), dp(8), dp(8))
-                contentDescription = "Back"
-                layoutParams = LinearLayout.LayoutParams(dp(40), dp(40))
-                setOnClickListener { finish() }
-            })
-
-            addView(TextView(this@RewardRedemptionScanResultActivity).apply {
-                text = title
-                setTextAppearance(com.google.android.material.R.style.TextAppearance_MaterialComponents_Headline6)
-                setTextColor(getColor(R.color.text_primary))
-                maxLines = 1
-                ellipsize = TextUtils.TruncateAt.END
-                layoutParams = LinearLayout.LayoutParams(
-                    0,
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    1f,
-                ).apply { marginStart = dp(12) }
-            })
-        }
+    private fun buildHeaderBar(title: String): View = EventQrDetailHeader(this).apply { this.title = title }
 
     private fun selectableItemBackgroundBorderless(): Int {
         val outValue = TypedValue()

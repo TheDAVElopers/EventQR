@@ -81,13 +81,12 @@ class BottomNavMappingTest {
         assertEquals(ScannerActivity::class.java, staffNavDestination("scanner"))
         assertEquals(StaffAssignedEventsActivity::class.java, staffNavDestination("events"))
         assertEquals(StaffTransactionsActivity::class.java, staffNavDestination("logs"))
-        assertEquals(com.thedavelopers.eventqr.features.staff.StaffProfileActivity::class.java, staffNavDestination("profile"))
     }
 
     @Test
-    fun staffNavDestination_profileAndUnknownResolveToNull() {
-        // Profile is a rendered tab but has no destination in the XML-hosted staff nav.
+    fun staffNavDestination_unknownIdResolvesToNull() {
         assertNull(staffNavDestination("bogus"))
+        assertNull(staffNavDestination("profile"))
     }
 
     @Test
@@ -97,7 +96,6 @@ class BottomNavMappingTest {
         assertEquals(eventId, staffNavEventIdExtra("logs", eventId))
         assertNull(staffNavEventIdExtra("dashboard", eventId))
         assertNull(staffNavEventIdExtra("events", eventId))
-        assertNull(staffNavEventIdExtra("profile", eventId))
     }
 
     @Test
@@ -108,13 +106,9 @@ class BottomNavMappingTest {
     }
 
     @Test
-    fun staffNavItems_onlyProfileIsUnmapped() {
+    fun staffNavItems_everyTabMapsToADestination() {
         StaffNavItems.forEach { item ->
-            if (item.id == "profile") {
-                assertNotNull("staff tab profile must map to destination", staffNavDestination(item.id))
-            } else {
-                assertNotNull("staff tab '${item.id}' must map to a destination", staffNavDestination(item.id))
-            }
+            assertNotNull("staff tab '${item.id}' must map to a destination", staffNavDestination(item.id))
         }
     }
 

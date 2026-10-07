@@ -1,6 +1,6 @@
 package com.thedavelopers.eventqr.features.admin.logs
 
-import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import android.os.Bundle
 import android.view.View
 import android.widget.ProgressBar
@@ -33,7 +33,7 @@ class AdminAuditLogsActivity : AppCompatActivity() {
     private lateinit var adapter: AdminAuditLogAdapter
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var progressLoading: ProgressBar
-    private lateinit var textPlaceholder: TextView
+    private lateinit var textPlaceholder: EventQrEmptyState
     private lateinit var recyclerLogs: RecyclerView
 
     private var allLogs: List<AuditLogResponse> = emptyList()
@@ -42,7 +42,6 @@ class AdminAuditLogsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_admin_audit_logs)
-        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
 
         val normalizedRole = RoleMapper.normalizeRole(SessionManager(this).getUserRole())
         if (normalizedRole != AccountRole.ADMIN.name && normalizedRole != AccountRole.SUPER_ADMIN.name) {

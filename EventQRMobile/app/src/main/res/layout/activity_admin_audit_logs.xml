@@ -3,37 +3,21 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F3F4F6"
+    android:background="@drawable/bg_organizer_events_screen"
     android:orientation="vertical">
 
-    <LinearLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrTabHeader
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="56dp"
-        android:background="@drawable/bg_header_surface_outline"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingEnd="16dp">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_weight="1"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text="Audit Logs"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-            android:textColor="@color/text_primary" />
-    </LinearLayout>
+        app:title="Audit Logs"
+        app:subtitle="Track activity across the system" />
 
     <androidx.compose.ui.platform.ComposeView
         android:id="@+id/composeAuditFilters"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#F3F4F6" />
+        android:background="@android:color/transparent" />
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshAuditLogs"
         android:layout_width="match_parent"
@@ -60,17 +44,14 @@
                 android:layout_gravity="center"
                 android:visibility="gone" />
 
-            <TextView
-                android:id="@+id/textAuditPlaceholder"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginHorizontal="16dp"
-                android:gravity="center"
-                android:text="No audit logs yet."
-                android:textColor="#6B7280"
-                android:textSize="14sp"
-                android:visibility="gone" />
+            <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+            android:id="@+id/textAuditPlaceholder"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            app:icon="@drawable/ic_audit_shield"
+            app:title="No audit logs yet"
+            app:subtitle="Activity across the system will show up here." />
         </FrameLayout>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 

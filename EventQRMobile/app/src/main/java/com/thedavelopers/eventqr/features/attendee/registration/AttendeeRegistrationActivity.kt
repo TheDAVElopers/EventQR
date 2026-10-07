@@ -1,7 +1,6 @@
 package com.thedavelopers.eventqr.features.attendee
 
 import android.view.View
-import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
@@ -45,14 +44,13 @@ open class AttendeeRegistrationActivity : AppCompatActivity(), RegistrationContr
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_event_registration)
-        findViewById<View>(R.id.layoutTopBar).applyEventQrTopInsetPadding()
 
         sessionManager = SessionManager(this)
         repository = AttendeeRepository(this)
         presenter = RegistrationPresenter(this, repository)
         eventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty()
 
-        findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
+        findViewById<ImageButton>(R.id.nav_header_back).setOnClickListener { finish() }
 
         eventCategoryText = findViewById(R.id.txtEventCategory)
         eventTitleText = findViewById(R.id.txtEventTitle)

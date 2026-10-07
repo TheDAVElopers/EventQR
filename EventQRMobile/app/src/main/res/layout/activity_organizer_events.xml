@@ -6,39 +6,12 @@
     android:background="@drawable/bg_organizer_events_screen"
     android:orientation="vertical">
 
-    <RelativeLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrTabHeader
         android:id="@+id/toolbarMyEvents"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="20dp"
-        android:paddingTop="20dp"
-        android:paddingBottom="8dp">
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="My Events"
-                android:textColor="#121735"
-                android:textSize="26sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="View and manage your event registrations"
-                android:textColor="#8E8EA9"
-                android:textSize="13sp" />
-        </LinearLayout>
-
-    </RelativeLayout>
+        app:title="My Events"
+        app:subtitle="View and manage your event registrations" />
 
     <LinearLayout
         android:layout_width="match_parent"

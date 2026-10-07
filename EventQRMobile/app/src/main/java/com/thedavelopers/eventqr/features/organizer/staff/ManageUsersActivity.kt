@@ -1,6 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.staff
 
-import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
@@ -34,7 +34,7 @@ open class ManageUsersActivity : AppCompatActivity() {
     private lateinit var recyclerStaff: RecyclerView
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var progressBar: ProgressBar
-    private lateinit var emptyStateText: TextView
+    private lateinit var emptyStateText: EventQrEmptyState
     private lateinit var staffAdapter: StaffAssignmentAdapter
     private val assignedStaff = mutableListOf<OrganizerMvpStaff>()
 
@@ -58,7 +58,6 @@ open class ManageUsersActivity : AppCompatActivity() {
                 }
 
             setContentView(R.layout.activity_staff_assignment)
-            findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
             bindViews()
             setupList()
             bindActions()
@@ -81,7 +80,7 @@ open class ManageUsersActivity : AppCompatActivity() {
     }
 
     private fun bindActions() {
-        findViewById<ImageButton>(R.id.btnStaffAssignmentBack).setOnClickListener { finish() }
+        findViewById<ImageButton>(R.id.nav_header_back).setOnClickListener { finish() }
         findViewById<Button>(R.id.btnAddStaff).setOnClickListener { openSearchUserPage() }
     }
 

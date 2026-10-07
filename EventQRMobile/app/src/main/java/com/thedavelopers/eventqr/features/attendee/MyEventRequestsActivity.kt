@@ -1,6 +1,6 @@
 package com.thedavelopers.eventqr.features.attendee
 
-import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -27,7 +27,7 @@ class MyEventRequestsActivity : AppCompatActivity() {
     private lateinit var recyclerRequests: RecyclerView
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var skeletonLoading: View
-    private lateinit var txtEmpty: TextView
+    private lateinit var txtEmpty: EventQrEmptyState
     private lateinit var txtError: TextView
     private lateinit var btnRetry: Button
     private lateinit var adapter: MyEventRequestsAdapter
@@ -35,11 +35,10 @@ class MyEventRequestsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_my_event_requests)
-        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
         applyEventQrSystemBarAppearance()
         repository = AttendeeRepository(this)
 
-        btnBack = findViewById(R.id.btnBack)
+        btnBack = findViewById(R.id.nav_header_back)
         swipeRefresh = findViewById(R.id.swipeRefreshMyEventRequests)
         recyclerRequests = findViewById(R.id.recyclerMyEventRequests)
         skeletonLoading = findViewById(R.id.skeletonLoading)

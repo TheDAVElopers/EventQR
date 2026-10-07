@@ -6,39 +6,11 @@
     android:background="#F3F4F6"
     android:orientation="vertical">
 
-    <LinearLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="56dp"
-        android:background="@drawable/bg_header_surface_outline"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingEnd="16dp">
-
-        <ImageButton
-            android:id="@+id/btnBackEventRegistrations"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Back"
-            android:padding="8dp"
-            android:src="@drawable/ic_back_chevron"
-            app:tint="@color/text_primary" />
-
-        <TextView
-            android:id="@+id/txtEventAttendeesTitle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_weight="1"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text="Event Attendees"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-            android:textColor="@color/text_primary" />
-
+        app:title="Event Attendees">
         <TextView
             android:id="@+id/badgeSelectionCount"
             android:layout_width="wrap_content"
@@ -56,7 +28,6 @@
             android:textSize="12sp"
             android:textStyle="bold"
             android:visibility="gone" />
-
         <ImageButton
             android:id="@+id/btnSelectForPrint"
             android:layout_width="36dp"
@@ -66,7 +37,7 @@
             android:padding="8dp"
             android:src="@drawable/ic_select_multiple"
             app:tint="#111827" />
-    </LinearLayout>
+    </com.thedavelopers.eventqr.ui.components.EventQrDetailHeader>
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshEventRegistrations"
@@ -206,17 +177,7 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <TextView
-                    android:id="@+id/txtAssignedEventsEmpty"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    android:gravity="center"
-                    android:padding="24dp"
-                    android:text="No attendees found."
-                    android:textColor="#6B7280"
-                    android:textSize="14sp"
-                    android:visibility="gone" />
+                
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recyclerEventRegistrations"
@@ -244,6 +205,14 @@
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:visibility="gone" />
+            <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+            android:id="@+id/txtAssignedEventsEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            app:icon="@drawable/ic_group"
+            app:title="No attendees found"
+            app:subtitle="Registered attendees will show up here." />
         </FrameLayout>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 

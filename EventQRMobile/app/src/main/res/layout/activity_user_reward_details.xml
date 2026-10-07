@@ -6,36 +6,11 @@
     android:background="@color/eventqr_bg"
     android:orientation="vertical">
 
-    <LinearLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="58dp"
-        android:background="@android:color/white"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingHorizontal="16dp">
-
-        <ImageButton
-            android:id="@+id/btnBack"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="@drawable/bg_soft_gray_pill"
-            android:contentDescription="Back"
-            android:padding="12dp"
-            android:src="@drawable/ic_back_chevron" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_weight="1"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text="Reward Details"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-            android:textColor="@color/text_primary" />
-    </LinearLayout>
+        app:title="Reward Details" />
 
     <ScrollView
         android:layout_width="match_parent"

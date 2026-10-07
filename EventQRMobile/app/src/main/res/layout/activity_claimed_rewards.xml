@@ -6,38 +6,11 @@
     android:background="@color/eventqr_bg"
     android:orientation="vertical">
 
-    <LinearLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="56dp"
-        android:background="@drawable/bg_header_surface_outline"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingEnd="16dp">
-
-        <ImageButton
-            android:id="@+id/btnBack"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Back"
-            android:padding="12dp"
-            android:src="@drawable/ic_back_chevron"
-            app:tint="@color/text_primary" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_weight="1"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text="Claimed Rewards"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-            android:textColor="@color/text_primary" />
-    </LinearLayout>
+        app:title="Claimed Rewards" />
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshClaimedRewards"
@@ -179,15 +152,7 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <TextView
-                    android:id="@+id/txtClaimedRewardsEmpty"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:text="No claimed rewards yet."
-                    android:textColor="@color/eventqr_muted"
-                    android:textSize="16sp"
-                    android:visibility="gone" />
+                
 
                 <TextView
                     android:id="@+id/txtClaimedRewardsError"
@@ -211,6 +176,14 @@
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
+            <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+            android:id="@+id/txtClaimedRewardsEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            app:icon="@drawable/ic_nav_gift"
+            app:title="No claimed rewards yet"
+            app:subtitle="Rewards you claim will show up here." />
         </FrameLayout>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </LinearLayout>

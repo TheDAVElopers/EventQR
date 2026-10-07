@@ -3,31 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eventqr_bg"
+    android:background="@drawable/bg_organizer_events_screen"
     android:orientation="vertical">
 
-    <LinearLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrTabHeader
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="56dp"
-        android:background="@drawable/bg_header_surface_outline"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingEnd="16dp">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_weight="1"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text="Account Management"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-            android:textColor="@color/text_primary" />
-    </LinearLayout>
+        app:title="Account Management"
+        app:subtitle="Manage admin and user accounts" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -129,16 +113,15 @@
             android:layout_marginTop="16dp"
             android:visibility="gone" />
 
-        <TextView
+        <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
             android:id="@+id/textAccountsPlaceholder"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="26dp"
-            android:gravity="center"
-            android:text="No accounts found yet."
-            android:textColor="#6B7280"
-            android:textSize="14sp"
-            android:visibility="gone" />
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:visibility="gone"
+            app:icon="@drawable/ic_admin_users"
+            app:title="No accounts found yet"
+            app:subtitle="Created accounts will show up here." />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerAdminAccounts"

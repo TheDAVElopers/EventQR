@@ -1,6 +1,6 @@
 package com.thedavelopers.eventqr.features.admin
 
-import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -39,7 +39,7 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
     private lateinit var loadingRequests: ProgressBar
     private lateinit var textError: TextView
     private lateinit var buttonRetry: Button
-    private lateinit var textEmpty: TextView
+    private lateinit var textEmpty: EventQrEmptyState
     private lateinit var recyclerRequests: RecyclerView
 
     private var allRequests = emptyList<com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse>()
@@ -52,7 +52,6 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_admin_event_requests)
-        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
         applyEventQrSystemBarAppearance()
 
         repository = AdminRepository(this)

@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <item name="eventqr_light_status_bars" type="id" />
-    <item name="eventqr_status_bar_scrim" type="id" />
+    <item name="eventqr_status_bar_adaptive" type="id" />
 
     <!-- Shared (organizerShell / organizerRefreshShell) -->
     <item name="nav_header_title" type="id" />
     <item name="nav_header_action" type="id" />
     <item name="nav_header_back" type="id" />
+    <item name="nav_header_subtitle" type="id" />
 
     <!-- EventManagementHubActivity (emh_) -->
     <item name="emh_header_banner" type="id" />

@@ -136,4 +136,7 @@
     <color name="eventqr_event_badge_cancelled_bg">#FBE3E3</color>
     <color name="eventqr_event_badge_unknown_bg">#CBD5E1</color>
     <color name="eventqr_event_badge_registered_bg">#EEF2FF</color>
+    <!-- Screen headers (EventQrHeaders.kt) -->
+    <color name="header_title">#121735</color>
+    <color name="header_subtitle">#8E8EA9</color>
 </resources>

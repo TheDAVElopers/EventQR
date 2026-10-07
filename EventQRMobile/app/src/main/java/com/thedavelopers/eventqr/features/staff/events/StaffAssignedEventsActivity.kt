@@ -1,6 +1,6 @@
 package com.thedavelopers.eventqr.features.staff
 
-import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -27,7 +27,7 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
     private lateinit var repository: StaffRepository
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: StaffAssignedEventAdapter
-    private lateinit var emptyState: android.widget.TextView
+    private lateinit var emptyState: EventQrEmptyState
     private lateinit var skeletonLoading: View
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var chipAll: Chip
@@ -50,7 +50,6 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
         }
 
         setContentView(R.layout.activity_staff_assigned_events)
-        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
         applyEventQrSystemBarAppearance()
         repository = StaffRepository(this)
 

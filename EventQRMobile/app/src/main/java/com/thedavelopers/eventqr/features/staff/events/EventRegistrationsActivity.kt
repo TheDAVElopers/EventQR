@@ -1,6 +1,6 @@
 package com.thedavelopers.eventqr.features.staff
 
-import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import android.content.Intent
 import android.graphics.Typeface
 import android.os.Bundle
@@ -45,7 +45,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
     private lateinit var adapter: RegistrationAdapter
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var searchInput: EditText
-    private lateinit var emptyState: TextView
+    private lateinit var emptyState: EventQrEmptyState
     private lateinit var eventTitleView: TextView
     private lateinit var totalView: TextView
     private lateinit var checkedInView: TextView
@@ -80,7 +80,6 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         }
 
         setContentView(R.layout.activity_event_registrations)
-        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
 
         repository = StaffRepository(this)
         presenter = EventRegistrationsPresenter(this, repository)
@@ -156,7 +155,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         btnPrintSelectedIds = findViewById(R.id.btnPrintSelectedIds)
         btnSelectAll = findViewById(R.id.btnSelectAllRegistrations)
 
-        findViewById<View>(R.id.btnBackEventRegistrations).setOnClickListener {
+        findViewById<View>(R.id.nav_header_back).setOnClickListener {
             if (selectionMode) {
                 exitSelectionMode()
             } else {

@@ -1,6 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.attendees
 
-import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
@@ -35,7 +35,7 @@ open class SearchAttendeesActivity : AppCompatActivity() {
     private lateinit var selectedEvent: OrganizerMvpEvent
     private lateinit var adapter: SearchAttendeesAdapter
     private lateinit var searchInput: EditText
-    private lateinit var emptyState: TextView
+    private lateinit var emptyState: EventQrEmptyState
     private lateinit var progressBar: ProgressBar
     private lateinit var filterChips: Map<String, TextView>
     private var attendees: List<OrganizerMvpAttendee> = emptyList()
@@ -44,12 +44,11 @@ open class SearchAttendeesActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search_attendees)
-        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
 
         repository = OrganizerRepository(this)
 
-        findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
-        findViewById<TextView>(R.id.txtSearchTitle).text = "Search Attendees"
+        findViewById<ImageButton>(R.id.nav_header_back).setOnClickListener { finish() }
+        findViewById<TextView>(R.id.nav_header_title).text = "Search Attendees"
 
         // Set initial dynamic title from Intent while fetching the full event object
         val initialTitle = intentEventTitle()?.takeIf { it.isNotBlank() }

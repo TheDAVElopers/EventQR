@@ -6,38 +6,11 @@
     android:layout_height="match_parent"
     android:background="@color/eventqr_bg">
 
-    <LinearLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
         android:id="@+id/layoutTopBar"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/white"
-        android:gravity="center_vertical"
-        android:minHeight="56dp"
-        android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingEnd="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <ImageButton
-            android:id="@+id/btnBack"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Back"
-            android:padding="12dp"
-            android:src="@drawable/ic_back_chevron"
-            app:tint="@color/eventqr_text" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Register for Event"
-            android:textColor="@color/eventqr_text"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-    </LinearLayout>
+        app:title="Register for Event" />
 
     <ScrollView
         android:layout_width="0dp"

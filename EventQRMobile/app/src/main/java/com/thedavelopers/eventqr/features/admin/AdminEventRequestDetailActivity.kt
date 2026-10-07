@@ -3,7 +3,7 @@ package com.thedavelopers.eventqr.features.admin
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.activity.compose.setContent
+import com.thedavelopers.eventqr.ui.components.setContentWithDetailHeader
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.core.api.NetworkResult
@@ -35,7 +35,7 @@ class AdminEventRequestDetailActivity : AppCompatActivity() {
 
         repository = AdminRepository(this)
 
-        setContent {
+        setContentWithDetailHeader("Event Request") {
             EventQrTheme {
                 val request = _request.collectAsStateWithLifecycle().value
                 val isLoading = _isLoading.collectAsStateWithLifecycle().value
@@ -46,7 +46,6 @@ class AdminEventRequestDetailActivity : AppCompatActivity() {
                     isLoading = isLoading,
                     errorMessage = errorMessage,
                     isAdmin = true,
-                    onBackClick = { finish() },
                     onRetryClick = { verifyAdminAndLoad() },
                     onApproveClick = { remarks -> approveRequest(remarks) },
                     onRejectClick = { remarks -> rejectRequest(remarks) },

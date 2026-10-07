@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
+import androidx.core.view.WindowCompat
 import com.thedavelopers.eventqr.core.session.SessionEvents
 import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
 import com.thedavelopers.eventqr.features.auth.login.LoginActivity
@@ -16,7 +17,10 @@ class EventQrApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
-            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+                // Pre-35 devices only draw behind the status bar once asked to; 35+ enforces it.
+                WindowCompat.setDecorFitsSystemWindows(activity.window, false)
+            }
 
             override fun onActivityStarted(activity: Activity) {
                 activity.applyRequestedEventQrSystemBarAppearance()

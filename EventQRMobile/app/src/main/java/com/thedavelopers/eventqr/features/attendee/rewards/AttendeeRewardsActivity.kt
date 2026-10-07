@@ -1,6 +1,5 @@
 package com.thedavelopers.eventqr.features.attendee
 
-import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -76,7 +75,6 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_rewards)
-        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
         configureAttendeeBottomNav(AttendeeBottomNavItem.REWARDS)
 
         repository = AttendeeRepository(this)

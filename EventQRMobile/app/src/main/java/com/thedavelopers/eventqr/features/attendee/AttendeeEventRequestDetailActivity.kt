@@ -1,7 +1,7 @@
 package com.thedavelopers.eventqr.features.attendee
 
 import android.os.Bundle
-import androidx.activity.compose.setContent
+import com.thedavelopers.eventqr.ui.components.setContentWithDetailHeader
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -30,7 +30,7 @@ class AttendeeEventRequestDetailActivity : AppCompatActivity() {
         repository = AttendeeRepository(this)
         requestId = intent.getStringExtra(EXTRA_EVENT_REQUEST_ID).orEmpty()
 
-        setContent {
+        setContentWithDetailHeader("Event Request") {
             EventQrTheme {
                 val request = _request.collectAsStateWithLifecycle().value
                 val isLoading = _isLoading.collectAsStateWithLifecycle().value
@@ -47,7 +47,6 @@ class AttendeeEventRequestDetailActivity : AppCompatActivity() {
                         isLoading = isLoading,
                         errorMessage = errorMessage,
                         isAdmin = false,
-                        onBackClick = { finish() },
                         onRetryClick = { loadRequest() },
                     )
                 }

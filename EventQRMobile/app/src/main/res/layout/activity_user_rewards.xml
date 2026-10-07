@@ -1,30 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eventqr_bg"
+    android:background="@drawable/bg_organizer_events_screen"
     android:orientation="vertical">
 
-    <LinearLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrTabHeader
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/white"
-        android:gravity="center_vertical"
-        android:minHeight="60dp"
-        android:paddingHorizontal="16dp">
-
-        <TextView
-            android:id="@+id/txtRewardsHeaderTitle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text="Rewards"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-            android:textColor="@color/text_primary" />
-
+        app:title="Rewards"
+        app:subtitle="Earn and claim event rewards">
         <TextView
             android:id="@+id/txtMyClaims"
             android:layout_width="wrap_content"
@@ -35,7 +22,7 @@
             android:text="My Claims"
             android:textColor="@color/purple"
             android:textSize="16sp" />
-    </LinearLayout>
+    </com.thedavelopers.eventqr.ui.components.EventQrTabHeader>
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshRewards"
@@ -52,7 +39,7 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:orientation="vertical"
                 android:paddingHorizontal="16dp"
                 android:paddingTop="16dp"
@@ -91,45 +78,15 @@
                 </LinearLayout>
 
                 <!-- Empty events state -->
-                <LinearLayout
+                <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
                     android:id="@+id/layoutNoRegisteredEvents"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:paddingTop="32dp"
-                    android:paddingBottom="24dp"
-                    android:visibility="gone">
-
-                    <ImageView
-                        android:id="@+id/imgEmptyRewardsIcon"
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:contentDescription="No registered events"
-                        android:src="@drawable/ic_nav_gift"
-                        android:tint="@color/text_disabled" />
-
-                    <TextView
-                        android:id="@+id/txtEmptyRewardsTitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:gravity="center"
-                        android:text="No registered events yet"
-                        android:textColor="@color/text_primary"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/txtEmptyRewardsSub"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:gravity="center"
-                        android:text="Register for an event to start earning rewards"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="14sp" />
-                </LinearLayout>
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:visibility="gone"
+                    app:icon="@drawable/ic_nav_gift"
+                    app:title="No registered events yet"
+                    app:subtitle="Register for an event to start earning rewards" />
 
                 <!-- Main content wrapper -->
                 <LinearLayout
@@ -295,43 +252,15 @@
                         android:textSize="20sp" />
 
                     <!-- Rewards empty state -->
-                    <LinearLayout
+                    <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
                         android:id="@+id/layoutRewardsEmpty"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:paddingTop="24dp"
-                        android:paddingBottom="24dp"
-                        android:visibility="gone">
-
-                        <ImageView
-                            android:layout_width="64dp"
-                            android:layout_height="64dp"
-                            android:contentDescription="No rewards"
-                            android:src="@drawable/ic_nav_gift"
-                            android:tint="@color/text_disabled" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="12dp"
-                            android:gravity="center"
-                            android:text="No rewards available yet"
-                            android:textColor="@color/text_primary"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:gravity="center"
-                            android:text="Check back later for rewards for this event"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="14sp" />
-                    </LinearLayout>
+                        android:visibility="gone"
+                        app:icon="@drawable/ic_nav_gift"
+                        app:title="No rewards available yet"
+                        app:subtitle="Check back later for rewards for this event" />
 
                     <!-- Rewards list skeleton (shown during loading) -->
                     <LinearLayout

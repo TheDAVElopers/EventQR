@@ -1,6 +1,5 @@
 package com.thedavelopers.eventqr.features.organizer.attendees
 
-import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.content.Intent
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
@@ -49,10 +48,9 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_attendee_details)
-        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
         repository = OrganizerRepository(this)
 
-        findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
+        findViewById<ImageButton>(R.id.nav_header_back).setOnClickListener { finish() }
         findViewById<View>(R.id.btnAttendeeRetry).setOnClickListener {
             val eventId = selectedEvent.id
             val attendeeId = intent.getStringExtra(SearchAttendeesActivity.EXTRA_ATTENDEE_ID).orEmpty()
@@ -116,7 +114,7 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
 
     private fun renderProfile() {
         skeletonLoading.visibility = View.GONE
-        findViewById<TextView>(R.id.txtDetailTitle).text = "Attendee Details"
+        findViewById<TextView>(R.id.nav_header_title).text = "Attendee Details"
         findViewById<TextView>(R.id.txtDetailInitial).text = attendeeInitial(attendee.name)
         findViewById<TextView>(R.id.txtDetailName).text = attendee.name
         findViewById<TextView>(R.id.txtDetailEmail).text = attendee.email
