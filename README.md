@@ -144,7 +144,6 @@ EventQR/
 │   └── ...
 ├── .gitignore
 ├── AGENTS.md                    # Opencode agent configuration
-├── EVENTQR_DESIGN_SYSTEM.md     # Design system guidelines
 ├── FinalFlow.md                 # Project workflow documentation
 ├── opencode.json                # Opencode configuration
 └── README.md

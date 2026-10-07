@@ -1,5 +1,8 @@
 name: Supabase Keep-Alive
 
+# Pings the Supabase REST API every 3 days so the free-tier project is not paused for inactivity.
+# Needs the SUPABASE_ANON_KEY repo secret (the app's public anon key).
+
 on:
   schedule:
     - cron: "0 9 */3 * *"
@@ -13,8 +16,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
       - name: Ping Supabase REST API
         env:
+          SUPABASE_PROJECT_REF: hmjrqfwtpinguhwgkgpw
+          SUPABASE_TABLE_NAME: user_profiles
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-        run: python3 scripts/supabase-keepalive.py
+        run: |
+          curl --fail --silent --show-error --max-time 30 \
+            -o /dev/null -w "OK: %{http_code}\n" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            "https://$SUPABASE_PROJECT_REF.supabase.co/rest/v1/$SUPABASE_TABLE_NAME?limit=1"

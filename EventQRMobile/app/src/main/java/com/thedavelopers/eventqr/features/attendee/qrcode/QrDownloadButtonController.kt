@@ -9,7 +9,7 @@ import android.widget.ProgressBar
 /**
  * Drives the "Download QR" button through idle -> saving -> saved states.
  *
- * Matches the design-system loading guidance: while saving, the label is
+ * While saving, the label is
  * swapped for an inline spinner and the button keeps its exact size (no layout
  * jump). On success the spinner is replaced by a scale-pulse checkmark, the
  * caller is notified via [showSaved]'s callback once the pulse lands (so it can
