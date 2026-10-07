@@ -1,12 +1,11 @@
 package com.thedavelopers.eventqr.core.api
 
-import com.google.gson.Gson
 import com.thedavelopers.eventqr.core.api.dto.ApiResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 
-private val errorParser = Gson()
+private val errorParser = sharedGson()
 
 @Suppress("UNCHECKED_CAST")
 suspend fun <T> safeApiCall(call: suspend () -> ApiResponse<T>): NetworkResult<T> {

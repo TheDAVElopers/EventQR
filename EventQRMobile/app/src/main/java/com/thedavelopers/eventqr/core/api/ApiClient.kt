@@ -2,6 +2,7 @@ package com.thedavelopers.eventqr.core.api
 
 import android.content.Context
 import com.google.gson.GsonBuilder
+import com.google.gson.JsonParseException
 import com.thedavelopers.eventqr.core.session.SessionEvents
 import okhttp3.OkHttpClient
 import retrofit2.Call
@@ -39,21 +40,21 @@ object ApiClient {
     }
 
     private fun buildService(context: Context): ApiService {
-        val gson = GsonBuilder()
-            .registerTypeAdapter(Instant::class.java, InstantTypeAdapter)
-            .setLenient()
-            .create()
-
         val client = newHttpClient(context)
 
         return Retrofit.Builder()
             .baseUrl(ApiConfig.BASE_URL)
             .client(client)
-            .addConverterFactory(GsonConverterFactory.create(gson))
+            .addConverterFactory(GsonConverterFactory.create(sharedGson()))
             .build()
             .create(ApiService::class.java)
     }
 }
+
+internal fun sharedGson() = GsonBuilder()
+    .registerTypeAdapter(Instant::class.java, InstantTypeAdapter)
+    .setLenient()
+    .create()
 
 private interface RefreshApi {
     @POST("auth/refresh")
@@ -66,7 +67,7 @@ private class HttpRefreshCall : RefreshCall {
         Retrofit.Builder()
             .baseUrl(ApiConfig.BASE_URL)
             .client(OkHttpClient())
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(sharedGson()))
             .build()
             .create(RefreshApi::class.java)
     }
@@ -81,6 +82,8 @@ private class HttpRefreshCall : RefreshCall {
             else -> RefreshOutcome.Unavailable
         }
     } catch (_: IOException) {
+        RefreshOutcome.Unavailable
+    } catch (_: JsonParseException) {
         RefreshOutcome.Unavailable
     }
 }

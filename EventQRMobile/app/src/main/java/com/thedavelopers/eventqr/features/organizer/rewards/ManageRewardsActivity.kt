@@ -17,10 +17,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
-import com.google.gson.GsonBuilder
 import com.thedavelopers.eventqr.core.api.ApiConfig
-import com.thedavelopers.eventqr.core.api.InstantTypeAdapter
 import com.thedavelopers.eventqr.core.api.dto.ApiResponse
+import com.thedavelopers.eventqr.core.api.sharedGson
 import com.thedavelopers.eventqr.core.api.dto.RedemptionStatus
 import com.thedavelopers.eventqr.core.api.dto.RewardStatus
 import com.thedavelopers.eventqr.features.events.model.dto.EventResponse
@@ -48,7 +47,6 @@ import com.thedavelopers.eventqr.features.organizer.text
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResponse
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRequest
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse
-import java.time.Instant
 import java.util.UUID
 import kotlinx.coroutines.launch
 
@@ -814,15 +812,11 @@ private object OrganizerRewardsApiProvider {
     }
 
     private fun build(context: Context): OrganizerRewardsService {
-        val gson = GsonBuilder()
-            .registerTypeAdapter(Instant::class.java, InstantTypeAdapter)
-            .setLenient()
-            .create()
         val client = com.thedavelopers.eventqr.core.api.ApiClient.newHttpClient(context)
         return Retrofit.Builder()
             .baseUrl(ApiConfig.BASE_URL)
             .client(client)
-            .addConverterFactory(GsonConverterFactory.create(gson))
+            .addConverterFactory(GsonConverterFactory.create(sharedGson()))
             .build()
             .create(OrganizerRewardsService::class.java)
     }
