@@ -181,7 +181,6 @@
                     android:background="@null"
                     android:hint="9123456789"
                     android:inputType="number"
-                    android:maxLength="10"
                     android:paddingEnd="14dp"
                     android:textColor="@color/eventqr_text"
                     android:textColorHint="#71717A"

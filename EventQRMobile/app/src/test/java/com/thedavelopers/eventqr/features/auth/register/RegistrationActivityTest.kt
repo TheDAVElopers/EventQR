@@ -72,8 +72,45 @@ class RegistrationActivityTest {
 
         phoneInput.setText("123456789012345")
 
-        // android:maxLength="10" caps the field before the watcher runs.
+        // No raw maxLength on the field: the full input reaches the normalizer, which
+        // strips prefixes and caps the NATIONAL digits at 10 afterwards.
         assertEquals("1234567890", phoneInput.text.toString())
+        assertEquals("10/10", activity.findViewById<TextView>(R.id.txtPhoneCounter).text.toString())
+    }
+
+    @Test
+    fun phoneInput_fullInternationalPaste_normalizedToNationalDigits() {
+        val activity = buildActivity()
+        val phoneInput = activity.findViewById<EditText>(R.id.edtPhoneNumber)
+
+        phoneInput.setText("+639171234567")
+
+        // +63 stripped on the FULL input, leaving the 10 national digits intact.
+        assertEquals("9171234567", phoneInput.text.toString())
+        assertEquals("10/10", activity.findViewById<TextView>(R.id.txtPhoneCounter).text.toString())
+    }
+
+    @Test
+    fun phoneInput_0063PrefixPaste_normalizedToNationalDigits() {
+        val activity = buildActivity()
+        val phoneInput = activity.findViewById<EditText>(R.id.edtPhoneNumber)
+
+        phoneInput.setText("00639171234567")
+
+        assertEquals("9171234567", phoneInput.text.toString())
+        assertEquals("10/10", activity.findViewById<TextView>(R.id.txtPhoneCounter).text.toString())
+    }
+
+    @Test
+    fun phoneInput_overLengthInternationalJunk_prefixStrippedThenCapped() {
+        val activity = buildActivity()
+        val phoneInput = activity.findViewById<EditText>(R.id.edtPhoneNumber)
+
+        // 63 + 14 digits: prefix removed first, then the remaining national digits
+        // capped at 10 — cap runs after normalization, never on raw input.
+        phoneInput.setText("6391712345678901")
+
+        assertEquals("9171234567", phoneInput.text.toString())
         assertEquals("10/10", activity.findViewById<TextView>(R.id.txtPhoneCounter).text.toString())
     }
 
@@ -82,12 +119,25 @@ class RegistrationActivityTest {
         val activity = buildActivity()
         val phoneInput = activity.findViewById<EditText>(R.id.edtPhoneNumber)
 
-        // maxLength caps "09171234567" to "0917123456"; the normalizer then drops
-        // the leading 0 (asserted values reflect Robolectric's filter pipeline).
+        // The full 11-digit local number reaches the normalizer; the leading 0 is
+        // stripped and all 10 national digits survive.
         phoneInput.setText("09171234567")
 
-        assertEquals("917123456", phoneInput.text.toString())
-        assertEquals("9/10", activity.findViewById<TextView>(R.id.txtPhoneCounter).text.toString())
+        assertEquals("9171234567", phoneInput.text.toString())
+        assertEquals("10/10", activity.findViewById<TextView>(R.id.txtPhoneCounter).text.toString())
+    }
+
+    @Test
+    fun phoneInput_clearedField_resetsCounter() {
+        val activity = buildActivity()
+        val phoneInput = activity.findViewById<EditText>(R.id.edtPhoneNumber)
+        val counter = activity.findViewById<TextView>(R.id.txtPhoneCounter)
+
+        phoneInput.setText("9123456789")
+        assertEquals("10/10", counter.text.toString())
+
+        phoneInput.setText("")
+        assertEquals("0/10", counter.text.toString())
     }
 
     // -- Password requirements UI ------------------------------------------------

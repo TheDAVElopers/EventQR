@@ -17,6 +17,7 @@ import com.google.android.material.textfield.TextInputLayout
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.session.SessionManager
+import com.thedavelopers.eventqr.core.util.Validators
 import kotlinx.coroutines.launch
 
 class AttendeeEditProfileActivity : AppCompatActivity() {
@@ -189,7 +190,9 @@ class AttendeeEditProfileActivity : AppCompatActivity() {
             edtPhone.error = "Phone number is required."
             return false
         }
-        if (phone.length != 10 || !phone.all { it.isDigit() }) {
+        // Same rule as registration: the field holds normalized national digits and the
+        // assembled E.164 value must satisfy Validators.isValidPhoneNumber.
+        if (!Validators.isValidPhoneNumber("+63$phone")) {
             edtPhone.error = "Enter a valid 10-digit mobile number"
             return false
         }

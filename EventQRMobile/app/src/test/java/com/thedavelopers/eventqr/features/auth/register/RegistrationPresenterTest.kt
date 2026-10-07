@@ -102,6 +102,61 @@ class RegistrationPresenterTest {
     }
 
     @Test
+    fun submitRegistration_fullInternationalPhone_acceptedByValidator() {
+        // The Activity normalizes pasted input to national digits and submits "+63" +
+        // digits; the validator must accept that full E.164 value.
+        presenter.submitRegistration(
+            "John", "Doe", "user@example.com", "+639171234567", "Strong1!Pass", "Strong1!PasX",
+        )
+
+        assertEquals(listOf(null), view.fieldErrors["phone"])
+        assertTrue(view.loadingStates.isEmpty())
+    }
+
+    @Test
+    fun submitRegistration_legacy63Phone_acceptedByValidator() {
+        presenter.submitRegistration(
+            "John", "Doe", "user@example.com", "639171234567", "Strong1!Pass", "Strong1!PasX",
+        )
+
+        assertEquals(listOf(null), view.fieldErrors["phone"])
+        assertTrue(view.loadingStates.isEmpty())
+    }
+
+    @Test
+    fun submitRegistration_nationalDigitsWithoutPrefix_denied() {
+        // 10 national digits alone are not a valid submission value.
+        presenter.submitRegistration(
+            "John", "Doe", "user@example.com", "9171234567", "Strong1!Pass", "Strong1!PasX",
+        )
+
+        assertEquals(listOf("Enter valid 10-digit mobile number"), view.fieldErrors["phone"])
+        assertTrue(view.loadingStates.isEmpty())
+    }
+
+    @Test
+    fun submitRegistration_rawLocal11Digit_deniedWithoutPresenterNormalization() {
+        // Raw local form never reaches the presenter (the Activity normalizes first);
+        // the presenter validates, it does not normalize.
+        presenter.submitRegistration(
+            "John", "Doe", "user@example.com", "09171234567", "Strong1!Pass", "Strong1!PasX",
+        )
+
+        assertEquals(listOf("Enter valid 10-digit mobile number"), view.fieldErrors["phone"])
+        assertTrue(view.loadingStates.isEmpty())
+    }
+
+    @Test
+    fun submitRegistration_overLengthPhone_denied() {
+        presenter.submitRegistration(
+            "John", "Doe", "user@example.com", "+639171234567890", "Strong1!Pass", "Strong1!PasX",
+        )
+
+        assertEquals(listOf("Enter valid 10-digit mobile number"), view.fieldErrors["phone"])
+        assertTrue(view.loadingStates.isEmpty())
+    }
+
+    @Test
     fun detach_stopsNotifyingView() {
         presenter.detach()
 

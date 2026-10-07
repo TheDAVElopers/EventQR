@@ -201,9 +201,11 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
     }
 
     // EventQR - UI validation deviation beyond SRS UC-01 field spec
-    // Phone format enforcement: numeric-only entry capped at 10 digits (PH mobile without
-    // leading 0). Pasted full numbers ("0917...", "63917...", "+63917...") are auto-normalized
-    // to the last 10 digits; a live n/10 counter mirrors the field state.
+    // Phone format enforcement: numeric-only entry (inputType=number). No raw maxLength
+    // cap — pasted full numbers ("0917...", "0063...", "63917...", "+63917...") must reach
+    // the normalizer intact. Normalization strips +63/0063/0 prefixes on the full input and
+    // caps the national digits at 10 AFTER stripping; a live n/10 counter mirrors the
+    // normalized field state.
     private fun configurePhoneInput() {
         phoneInput.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
