@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         app:title="Edit Profile" />
 
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshEditProfile"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -305,5 +305,5 @@
 
             </LinearLayout>
         </ScrollView>
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 </LinearLayout>

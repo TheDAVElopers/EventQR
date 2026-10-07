@@ -85,7 +85,6 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
         recyclerRequests = findViewById(R.id.recyclerRequests)
 
         buttonRetry.setOnClickListener { loadRequests(showLoading = true) }
-        swipeRefresh.setColorSchemeResources(R.color.eventqr_purple)
         swipeRefresh.setOnRefreshListener { loadRequests(showLoading = false) }
     }
 

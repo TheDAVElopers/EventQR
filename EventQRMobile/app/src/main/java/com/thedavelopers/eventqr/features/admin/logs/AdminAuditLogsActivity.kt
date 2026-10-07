@@ -65,7 +65,6 @@ class AdminAuditLogsActivity : AppCompatActivity() {
         recyclerLogs = findViewById(R.id.recyclerAuditLogs)
         recyclerLogs.layoutManager = LinearLayoutManager(this)
         recyclerLogs.adapter = adapter
-        swipeRefresh.setColorSchemeResources(R.color.eventqr_purple)
         swipeRefresh.setOnRefreshListener { loadLogs() }
     }
 

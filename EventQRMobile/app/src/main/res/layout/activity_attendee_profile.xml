@@ -7,7 +7,60 @@
     android:background="@color/surface_alt"
     android:orientation="vertical">
 
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    <LinearLayout
+        android:id="@+id/headerProfile"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_dashboard_gradient"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="32dp"
+        android:paddingBottom="28dp">
+
+        <FrameLayout
+            android:layout_width="88dp"
+            android:layout_height="88dp"
+            android:background="@drawable/bg_profile_initial_avatar">
+
+            <TextView
+                android:id="@+id/txtProfileInitial"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:textColor="@color/brand_on_primary"
+                android:textSize="36sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium"
+                tools:text="J" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/txtProfileName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:gravity="center"
+            android:textColor="@color/brand_on_primary"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            tools:text="Juan Dela Cruz" />
+
+        <TextView
+            android:id="@+id/txtProfileRole"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_profile_role_badge"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="4dp"
+            android:textColor="@color/brand_on_primary"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            tools:text="Attendee" />
+    </LinearLayout>
+
+    <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshProfile"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -25,58 +78,7 @@
                 android:orientation="vertical">
 
                 <!-- ==================== HEADER ==================== -->
-                <LinearLayout
-                    android:id="@+id/headerProfile"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_dashboard_gradient"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:paddingHorizontal="24dp"
-                    android:paddingTop="32dp"
-                    android:paddingBottom="28dp">
-
-                    <FrameLayout
-                        android:layout_width="88dp"
-                        android:layout_height="88dp"
-                        android:background="@drawable/bg_profile_initial_avatar">
-
-                        <TextView
-                            android:id="@+id/txtProfileInitial"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:gravity="center"
-                            android:textColor="@color/brand_on_primary"
-                            android:textSize="36sp"
-                            android:textStyle="bold"
-                            android:fontFamily="sans-serif-medium"
-                            tools:text="J" />
-                    </FrameLayout>
-
-                    <TextView
-                        android:id="@+id/txtProfileName"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="14dp"
-                        android:gravity="center"
-                        android:textColor="@color/brand_on_primary"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        tools:text="Juan Dela Cruz" />
-
-                    <TextView
-                        android:id="@+id/txtProfileRole"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:background="@drawable/bg_profile_role_badge"
-                        android:paddingHorizontal="16dp"
-                        android:paddingVertical="4dp"
-                        android:textColor="@color/brand_on_primary"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        tools:text="Attendee" />
-                </LinearLayout>
+                
 
                 <!-- ==================== ERROR / RETRY ==================== -->
                 <LinearLayout
@@ -582,7 +584,7 @@
                 </LinearLayout>
             </LinearLayout>
         </ScrollView>
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 
     <androidx.compose.ui.platform.ComposeView
         android:id="@+id/composeBottomNav"

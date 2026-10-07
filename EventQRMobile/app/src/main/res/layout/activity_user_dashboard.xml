@@ -229,7 +229,7 @@
     </LinearLayout>
 
     <!-- ── Swipeable Content ────────────────────────────────── -->
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshDashboard"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -571,7 +571,7 @@
                 </LinearLayout>
             </LinearLayout>
         </ScrollView>
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 
     <!-- ── Bottom Navigation ─────────────────────────────────── -->
     <androidx.compose.ui.platform.ComposeView

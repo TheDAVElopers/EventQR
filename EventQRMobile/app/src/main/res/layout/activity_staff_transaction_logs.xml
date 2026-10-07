@@ -274,7 +274,7 @@
         </LinearLayout>
     </LinearLayout>
 
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout android:id="@+id/swipeRefreshStaffTransactions" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
+    <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout android:id="@+id/swipeRefreshStaffTransactions" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
         <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent" android:paddingHorizontal="16dp">
             <androidx.recyclerview.widget.RecyclerView android:id="@+id/recyclerStaffTransactions" android:layout_width="match_parent" android:layout_height="match_parent" android:clipToPadding="false" android:paddingTop="8dp" android:paddingBottom="12dp" />
             <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
@@ -293,7 +293,7 @@
             <EditText android:id="@+id/edtStaffTransactionsEventId" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
             <Button android:id="@+id/btnLoadStaffTransactions" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
         </FrameLayout>
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 
     <androidx.compose.ui.platform.ComposeView
         android:id="@+id/composeBottomNav"

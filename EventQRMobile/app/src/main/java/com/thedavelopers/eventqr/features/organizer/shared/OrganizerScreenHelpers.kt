@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.organizer
 
 import com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
+import com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
 import com.thedavelopers.eventqr.ui.components.EventQrTabHeader
 import android.app.AlertDialog
 import android.content.Context
@@ -426,8 +427,7 @@ internal fun AppCompatActivity.organizerRefreshShell(
 
     root.addView(organizerHeader(title, subtitle, selectedNav, showBack, topRightLabel, onTopRight))
 
-    val swipeRefreshLayout = SwipeRefreshLayout(this).apply {
-        setColorSchemeColors(PURPLE)
+    val swipeRefreshLayout = EventQrSwipeRefreshLayout(this).apply {
         setOnRefreshListener { onRefresh() }
         layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f)
     }

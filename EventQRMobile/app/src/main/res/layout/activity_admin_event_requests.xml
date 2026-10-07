@@ -84,7 +84,7 @@
         </HorizontalScrollView>
     </LinearLayout>
 
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshRequests"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -151,7 +151,7 @@
             app:title="No event requests yet"
             app:subtitle="Requests from organizers will show up here." />
         </FrameLayout>
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 
     <androidx.compose.ui.platform.ComposeView
         android:id="@+id/composeBottomNav"

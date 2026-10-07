@@ -25,7 +25,7 @@
             android:textStyle="bold" />
     </com.thedavelopers.eventqr.ui.components.EventQrDetailHeader>
 
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshMyEventRequests"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -88,5 +88,5 @@
             app:title="No event requests yet"
             app:subtitle="Requests you submit will show up here." />
         </FrameLayout>
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 </LinearLayout>

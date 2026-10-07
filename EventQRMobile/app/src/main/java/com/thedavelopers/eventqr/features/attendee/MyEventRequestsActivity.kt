@@ -55,7 +55,6 @@ class MyEventRequestsActivity : AppCompatActivity() {
 
         btnBack.setOnClickListener { finish() }
         btnRetry.setOnClickListener { loadRequests() }
-        swipeRefresh.setColorSchemeResources(R.color.eventqr_purple)
         swipeRefresh.setOnRefreshListener { loadRequests() }
 
         findViewById<View>(R.id.btnNewRequest).setOnClickListener {

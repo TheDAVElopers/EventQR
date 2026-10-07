@@ -39,7 +39,7 @@
             app:tint="#111827" />
     </com.thedavelopers.eventqr.ui.components.EventQrDetailHeader>
 
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshEventRegistrations"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -214,7 +214,7 @@
             app:title="No attendees found"
             app:subtitle="Registered attendees will show up here." />
         </FrameLayout>
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 
     <LinearLayout
         android:id="@+id/batchPrintBar"

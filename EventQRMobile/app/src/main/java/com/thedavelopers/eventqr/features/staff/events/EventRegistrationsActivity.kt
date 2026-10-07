@@ -170,7 +170,6 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         }
         btnPrintSelectedIds.setOnClickListener { printSelected() }
 
-        swipeRefresh.setColorSchemeResources(R.color.eventqr_purple)
         swipeRefresh.setOnRefreshListener {
             if (selectedEventId.isNotBlank()) presenter.load(selectedEventId) else swipeRefresh.isRefreshing = false
         }

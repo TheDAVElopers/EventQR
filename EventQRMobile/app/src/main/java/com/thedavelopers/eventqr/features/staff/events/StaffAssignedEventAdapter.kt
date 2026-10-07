@@ -2,11 +2,9 @@ package com.thedavelopers.eventqr.features.staff
 
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -119,58 +117,52 @@ private fun StaffAssignedEventCard(
 ) {
     val spacing = LocalSpacing.current
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = spacing.mediumSmall),
-    ) {
-        EventCard(
-            title = state.title,
-            status = parseBadgeStatus(state.badgeStatusRaw),
-            day = state.day,
-            month = state.month,
-            time = state.time,
-            location = state.location,
-        )
-
-        Spacer(modifier = Modifier.height(spacing.micro))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(spacing.small),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Button(
-                onClick = onScanClick,
-                modifier = Modifier.weight(1f),
+    EventCard(
+        title = state.title,
+        status = parseBadgeStatus(state.badgeStatusRaw),
+        day = state.day,
+        month = state.month,
+        time = state.time,
+        location = state.location,
+        modifier = Modifier.padding(bottom = spacing.mediumSmall),
+        footer = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(spacing.small),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(
-                    Icons.Default.QrCodeScanner,
-                    contentDescription = null,
-                    modifier = Modifier.size(spacing.mediumSmall + spacing.extraSmall),
-                )
-                Spacer(modifier = Modifier.width(spacing.micro))
-                Text(
-                    text = "Scan QR",
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                )
-            }
+                Button(
+                    onClick = onScanClick,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Icon(
+                        Icons.Default.QrCodeScanner,
+                        contentDescription = null,
+                        modifier = Modifier.size(spacing.mediumSmall + spacing.extraSmall),
+                    )
+                    Spacer(modifier = Modifier.width(spacing.micro))
+                    Text(
+                        text = "Scan QR",
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                    )
+                }
 
-            OutlinedButton(
-                onClick = onAttendeesClick,
-                modifier = Modifier.weight(1f),
-            ) {
-                Icon(
-                    Icons.Default.Groups,
-                    contentDescription = null,
-                    modifier = Modifier.size(spacing.mediumSmall + spacing.extraSmall),
-                )
-                Spacer(modifier = Modifier.width(spacing.micro))
-                Text(
-                    text = "Attendees",
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                )
+                OutlinedButton(
+                    onClick = onAttendeesClick,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Icon(
+                        Icons.Default.Groups,
+                        contentDescription = null,
+                        modifier = Modifier.size(spacing.mediumSmall + spacing.extraSmall),
+                    )
+                    Spacer(modifier = Modifier.width(spacing.micro))
+                    Text(
+                        text = "Attendees",
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                    )
+                }
             }
-        }
-    }
+        },
+    )
 }

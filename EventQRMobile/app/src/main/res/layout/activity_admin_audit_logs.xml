@@ -18,7 +18,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/transparent" />
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshAuditLogs"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -53,7 +53,7 @@
             app:title="No audit logs yet"
             app:subtitle="Activity across the system will show up here." />
         </FrameLayout>
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 
     <androidx.compose.ui.platform.ComposeView
         android:id="@+id/composeBottomNav"

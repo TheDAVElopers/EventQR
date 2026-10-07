@@ -73,7 +73,6 @@ class AttendeeEditProfileActivity : AppCompatActivity() {
         btnSaveChanges = findViewById(R.id.btnSaveChanges)
         txtEmptyHint = findViewById(R.id.txtEmptyHint)
 
-        swipeRefresh.setColorSchemeResources(R.color.eventqr_purple)
         swipeRefresh.setOnRefreshListener { loadCurrentProfile() }
     }
 

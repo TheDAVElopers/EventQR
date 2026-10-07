@@ -54,7 +54,6 @@ class AttendeeProfileActivity : AppCompatActivity() {
         txtProfileError = findViewById(R.id.txtProfileError)
         btnProfileRetry = findViewById(R.id.btnProfileRetry)
 
-        swipeRefresh.setColorSchemeResources(R.color.eventqr_purple)
         swipeRefresh.setOnRefreshListener { loadProfile() }
 
         btnProfileRetry.setOnClickListener { loadProfile() }

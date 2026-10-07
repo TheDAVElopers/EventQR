@@ -23,6 +23,7 @@ import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
 import com.thedavelopers.eventqr.features.transactions.TransactionLogAdapter
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 
 open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.View {
@@ -74,7 +75,6 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
         configureStaffBottomNav(StaffBottomNavItem.DASHBOARD)
 
         swipeRefreshLayout = findViewById(R.id.swipeRefreshDashboard)
-        swipeRefreshLayout.setColorSchemeResources(R.color.eventqr_purple)
         swipeRefreshLayout.setOnRefreshListener {
             isSwipeRefreshing = true
             presenter.loadData()
@@ -174,7 +174,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
         skeletonLoading.visibility = View.GONE
         adapter.submitItems(items)
         findViewById<RecyclerView>(R.id.recyclerRecentScans).visibility = if (items.isEmpty()) View.GONE else View.VISIBLE
-        findViewById<TextView>(R.id.txtRecentScansEmpty).visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
+        findViewById<EventQrEmptyState>(R.id.txtRecentScansEmpty).visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
     }
 
     override fun updateStats(scans: Int, checkins: Int) {

@@ -24,7 +24,7 @@
             android:textSize="16sp" />
     </com.thedavelopers.eventqr.ui.components.EventQrTabHeader>
 
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshRewards"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -351,7 +351,7 @@
                 </LinearLayout>
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 
     <androidx.compose.ui.platform.ComposeView
         android:id="@+id/composeBottomNav"

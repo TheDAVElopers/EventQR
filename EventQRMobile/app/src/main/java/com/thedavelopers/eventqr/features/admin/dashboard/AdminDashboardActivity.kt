@@ -85,7 +85,6 @@ class AdminDashboardActivity : AppCompatActivity() {
     }
 
     private fun setupSwipeRefresh() {
-        swipeRefreshLayout.setColorSchemeResources(R.color.eventqr_purple)
         swipeRefreshLayout.setOnRefreshListener {
             isSwipeRefreshing = true
             loadSummary()

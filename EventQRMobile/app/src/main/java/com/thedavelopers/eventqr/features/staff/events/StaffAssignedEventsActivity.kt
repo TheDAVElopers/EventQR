@@ -57,7 +57,6 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
         emptyState = findViewById(R.id.txtAssignedEventsEmpty)
         skeletonLoading = findViewById(R.id.skeletonLoading)
         swipeRefresh = findViewById(R.id.swipeRefreshAssignedEvents)
-        swipeRefresh.setColorSchemeResources(R.color.eventqr_purple)
         swipeRefresh.setOnRefreshListener { loadEvents(showLoading = false) }
 
         chipAll = findViewById(R.id.chipAll)

@@ -100,7 +100,6 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         pbLoadMore = findViewById(R.id.pbStaffTransactionsLoadMore)
 
         swipeRefresh = findViewById(R.id.swipeRefreshStaffTransactions)
-        swipeRefresh.setColorSchemeResources(R.color.eventqr_purple)
         swipeRefresh.setOnRefreshListener { refreshTransactions() }
 
         skeletonLoading = findViewById(R.id.skeletonLoading)

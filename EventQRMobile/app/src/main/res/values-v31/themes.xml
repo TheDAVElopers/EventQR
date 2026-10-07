@@ -8,12 +8,16 @@
         (windowSplashScreenBackground) can only be a single opaque solid color - it does
         not support a gradient drawable (unlike android:windowBackground on older versions).
         We therefore keep the background as the gradient's dominant/center color
-        (eventqr_indigo) and use a transparent animated icon so the native splash fades
+        (eventqr_indigo) and show the logo on it so the native splash fades
         smoothly into the app's gradient+logo splash (activity_splash_modern.xml) without
         a jarring solid-color "flash". postSplashScreenTheme restores the normal app theme.
+
+        The icon is the app icon's white logo (ic_launcher_foreground_eventqr), so a signed-in
+        user, who skips activity_splash_modern.xml and goes straight to the dashboard, still
+        sees the logo on the purple splash.
     -->
     <style name="Theme.App.Starting" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_transparent_icon</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground_eventqr</item>
         <item name="windowSplashScreenBackground">@color/eventqr_indigo</item>
         <item name="postSplashScreenTheme">@style/Theme.EventQR</item>
     </style>

@@ -310,7 +310,7 @@
 
     </LinearLayout>
 
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshAttendeeManagement"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -526,7 +526,7 @@
                 </LinearLayout>
             </LinearLayout>
         </FrameLayout>
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 
     <LinearLayout
         android:id="@+id/layoutBottomNavHost"

@@ -80,6 +80,7 @@ fun EventCard(
     progressColor: Color = eventCardAccent(status).fill,
     onClick: (() -> Unit)? = null,
     trailingAction: (@Composable () -> Unit)? = null,
+    footer: (@Composable () -> Unit)? = null,
 ) {
     val spacing = LocalSpacing.current
     val metaColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -230,6 +231,11 @@ fun EventCard(
                     color = progressColor,
                     trackColor = progressTrackColor,
                 )
+            }
+
+            if (footer != null) {
+                Spacer(modifier = Modifier.height(spacing.mediumSmall))
+                footer()
             }
         }
     }

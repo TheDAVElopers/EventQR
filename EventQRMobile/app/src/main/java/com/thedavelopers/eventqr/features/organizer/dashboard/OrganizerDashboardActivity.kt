@@ -68,7 +68,6 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
         sessionManager = SessionManager(this)
         swipeRefreshLayout = findViewById(R.id.swipeRefreshDashboard)
         skeletonLoading = findViewById(R.id.skeletonLoading)
-        swipeRefreshLayout.setColorSchemeResources(R.color.eventqr_purple)
         swipeRefreshLayout.setOnRefreshListener {
             isSwipeRefreshing = true
             loadDashboard()

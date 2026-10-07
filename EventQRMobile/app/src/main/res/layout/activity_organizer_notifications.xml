@@ -149,7 +149,7 @@
             android:visibility="gone" />
     </LinearLayout>
 
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshNotifications"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -220,5 +220,5 @@
                     android:textSize="14sp" />
             </LinearLayout>
         </FrameLayout>
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 </LinearLayout>

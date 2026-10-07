@@ -93,7 +93,7 @@
         android:background="@color/eventqr_border"
         app:layout_constraintTop_toBottomOf="@id/layoutFilter" />
 
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshRegisteredEvents"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -124,7 +124,7 @@
             app:title="No registered events yet"
             app:subtitle="Events you register for will show up here." />
         </FrameLayout>
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 
     <!-- ── Bottom Navigation ─────────────────────────────────── -->
     <androidx.compose.ui.platform.ComposeView

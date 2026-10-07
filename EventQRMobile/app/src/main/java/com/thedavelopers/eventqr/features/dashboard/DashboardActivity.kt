@@ -99,7 +99,6 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         discoverEventsSeeAll = findViewById(R.id.txtDiscoverEventsSeeAll)
         swipeRefreshLayout = findViewById(R.id.swipeRefreshDashboard)
 
-        swipeRefreshLayout.setColorSchemeResources(R.color.brand_primary)
         swipeRefreshLayout.setOnRefreshListener {
             isSwipeRefreshing = true
             presenter.loadDashboard()
