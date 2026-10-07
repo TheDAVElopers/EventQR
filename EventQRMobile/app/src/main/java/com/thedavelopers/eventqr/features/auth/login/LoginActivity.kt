@@ -2,49 +2,53 @@ package com.thedavelopers.eventqr.features.auth.login
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.InputType
+import android.view.MotionEvent
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.core.content.ContextCompat
+import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.auth.AuthRepository
 import com.thedavelopers.eventqr.features.auth.forgotpassword.ForgotPasswordActivity
 import com.thedavelopers.eventqr.features.auth.register.RegistrationActivity
 import com.thedavelopers.eventqr.features.dashboard.DashboardActivity
-import com.thedavelopers.eventqr.ui.theme.EventQrTheme
-import kotlinx.coroutines.flow.MutableStateFlow
 
 open class LoginActivity : AppCompatActivity(), LoginContract.View {
     private lateinit var presenter: LoginPresenter
-
-    private val email = MutableStateFlow("")
-    private val password = MutableStateFlow("")
-    private val emailError = MutableStateFlow<String?>(null)
-    private val passwordError = MutableStateFlow<String?>(null)
-    private val isLoading = MutableStateFlow(false)
+    private lateinit var emailInput: EditText
+    private lateinit var passwordInput: EditText
+    private lateinit var signInButton: Button
+    private lateinit var registerButton: android.view.View
+    private lateinit var forgotPasswordLink: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_signin)
 
         presenter = LoginPresenter(this, AuthRepository(this))
+        emailInput = findViewById(R.id.edtEmail)
+        passwordInput = findViewById(R.id.edtPassword)
+        signInButton = findViewById(R.id.btnSignIn)
+        registerButton = findViewById(R.id.btnRegister)
+        forgotPasswordLink = findViewById(R.id.txtForgotPassword)
         presenter.attach(this)
+        configurePasswordToggle(passwordInput)
 
-        setContent {
-            EventQrTheme {
-                LoginScreen(
-                    email = email.collectAsStateWithLifecycle().value,
-                    onEmailChange = { email.value = it },
-                    password = password.collectAsStateWithLifecycle().value,
-                    onPasswordChange = { password.value = it },
-                    emailError = emailError.collectAsStateWithLifecycle().value,
-                    passwordError = passwordError.collectAsStateWithLifecycle().value,
-                    isLoading = isLoading.collectAsStateWithLifecycle().value,
-                    onSignIn = { presenter.submitLogin(email.value, password.value) },
-                    onRegister = { presenter.openRegistration() },
-                    onForgotPassword = { presenter.openForgotPassword() },
-                )
-            }
+        signInButton.setOnClickListener {
+            presenter.submitLogin(emailInput.text.toString(), passwordInput.text.toString())
+        }
+
+        registerButton.setOnClickListener {
+            presenter.openRegistration()
+        }
+
+        forgotPasswordLink.setOnClickListener {
+            presenter.openForgotPassword()
         }
     }
 
@@ -54,15 +58,16 @@ open class LoginActivity : AppCompatActivity(), LoginContract.View {
     }
 
     override fun showLoading(isLoading: Boolean) {
-        this.isLoading.value = isLoading
+        signInButton.isEnabled = !isLoading
+        signInButton.text = if (isLoading) "Signing in..." else "Sign In"
     }
 
     override fun showEmailError(message: String?) {
-        emailError.value = message
+        emailInput.error = message
     }
 
     override fun showPasswordError(message: String?) {
-        passwordError.value = message
+        passwordInput.error = message
     }
 
     override fun showMessage(message: String) {
@@ -101,5 +106,35 @@ open class LoginActivity : AppCompatActivity(), LoginContract.View {
 
     override fun navigateToForgotPassword() {
         startActivity(Intent(this, ForgotPasswordActivity::class.java))
+    }
+
+    private fun configurePasswordToggle(input: EditText) {
+        input.setOnTouchListener { view, event ->
+            if (event.action == MotionEvent.ACTION_UP && event.rawX >= input.right - input.compoundPaddingEnd) {
+                val isVisible = input.inputType == (InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD)
+                if (isVisible) {
+                    input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+                    input.setCompoundDrawablesWithIntrinsicBounds(
+                        input.compoundDrawables[0],
+                        null,
+                        ContextCompat.getDrawable(this, R.drawable.ic_visibility_on),
+                        null
+                    )
+                } else {
+                    input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                    input.setCompoundDrawablesWithIntrinsicBounds(
+                        input.compoundDrawables[0],
+                        null,
+                        ContextCompat.getDrawable(this, R.drawable.ic_visibility_off),
+                        null
+                    )
+                }
+                input.setSelection(input.text.length)
+                view.performClick()
+                true
+            } else {
+                false
+            }
+        }
     }
 }
