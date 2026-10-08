@@ -468,7 +468,11 @@ public class OrganizerService {
         if (request.canManageRewards() != null) {
             assignment.setCanManageRewards(request.canManageRewards());
         }
-        return toStaff(staffAssignmentRepository.save(assignment));
+        EventStaffAssignment saved = staffAssignmentRepository.save(assignment);
+        if (request.active() != null) {
+            syncStaffRoleAfterAssignmentChange(assignment.getStaffUserId());
+        }
+        return toStaff(saved);
     }
 
     public void removeStaff(UUID organizerUserId, UUID eventId, AccountRole role, UUID assignmentId) {
@@ -481,6 +485,7 @@ public class OrganizerService {
         boolean wasActive = assignment.isActive();
         assignment.setActive(false);
         staffAssignmentRepository.save(assignment);
+        syncStaffRoleAfterAssignmentChange(assignment.getStaffUserId());
 
         if (wasActive) {
             UserProfile organizerProfile = userProfileRepository.findById(organizerUserId).orElse(null);
@@ -493,6 +498,21 @@ public class OrganizerService {
                 log.error("Failed to create staff removal notification eventId={} staffUserId={}", eventId, assignment.getStaffUserId(), ex);
             }
         }
+    }
+
+    private void syncStaffRoleAfterAssignmentChange(UUID staffUserId) {
+        boolean hasActive = staffAssignmentRepository.existsByStaffUserIdAndActiveTrue(staffUserId);
+        userProfileRepository.findById(staffUserId).ifPresent(user -> {
+            if (!hasActive && user.getRole() == AccountRole.STAFF) {
+                user.setRole(AccountRole.ATTENDEE);
+                userProfileRepository.save(user);
+                log.info("Demoted user {} to ATTENDEE after last active staff assignment was removed/deactivated", staffUserId);
+            } else if (hasActive && user.getRole() == AccountRole.ATTENDEE) {
+                user.setRole(AccountRole.STAFF);
+                userProfileRepository.save(user);
+                log.info("Promoted user {} to STAFF after activating staff assignment", staffUserId);
+            }
+        });
     }
 
     @Transactional(readOnly = true)

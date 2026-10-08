@@ -28,4 +28,6 @@ public interface EventStaffAssignmentRepository extends JpaRepository<EventStaff
     boolean existsByEventIdAndStaffUserId(UUID eventId, UUID staffUserId);
 
     boolean existsByEventIdAndStaffUserIdAndActiveTrue(UUID eventId, UUID staffUserId);
+
+    boolean existsByStaffUserIdAndActiveTrue(UUID staffUserId);
 }
