@@ -24,6 +24,7 @@ val TextOnPrimary = Color(0xFFFFFFFF)
 val TextOnPrimaryMuted = Color(0xFFD7D4F8)
 
 // Semantic & Status Colors
+val StatusActiveGreen = Color(0xFF10B981)
 val StatusActiveGreenBg = Color(0xFFD1FAE5)
 val StatusActiveGreenText = Color(0xFF065F46)
 

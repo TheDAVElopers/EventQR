@@ -11,7 +11,13 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.thedavelopers.eventqr.core.api.dto.NotificationStatus
 import com.thedavelopers.eventqr.core.api.dto.NotificationType
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import com.thedavelopers.eventqr.ui.theme.EventQrTheme
+import com.thedavelopers.eventqr.ui.theme.StatusActiveGreen
+import com.thedavelopers.eventqr.ui.theme.StatusActiveGreenBg
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Color
 import java.time.Instant
 import java.util.UUID
 import org.junit.Assert.assertEquals
@@ -80,6 +86,27 @@ class NotificationsScreenComposeTest {
 
         composeTestRule.onNodeWithText("Registration confirmed").assertIsDisplayed()
         composeTestRule.onNode(hasClickAction()).assertHasClickAction()
+    }
+
+    @Test
+    fun approvedNotifications_useActiveGreenCheckMarkVisuals() {
+        lateinit var eventApprovedVisuals: Triple<ImageVector, Color, Color>
+        lateinit var scanApprovedVisuals: Triple<ImageVector, Color, Color>
+
+        composeTestRule.setContent {
+            EventQrTheme {
+                eventApprovedVisuals = resolveNotificationVisuals(NotificationType.EVENT_APPROVED)
+                scanApprovedVisuals = resolveNotificationVisuals(NotificationType.SCAN_APPROVED)
+            }
+        }
+
+        assertEquals(Icons.Default.CheckCircle, eventApprovedVisuals.first)
+        assertEquals(StatusActiveGreen, eventApprovedVisuals.second)
+        assertEquals(StatusActiveGreenBg, eventApprovedVisuals.third)
+
+        assertEquals(Icons.Default.CheckCircle, scanApprovedVisuals.first)
+        assertEquals(StatusActiveGreen, scanApprovedVisuals.second)
+        assertEquals(StatusActiveGreenBg, scanApprovedVisuals.third)
     }
 
     private fun notification(

@@ -137,3 +137,14 @@ fun View.applyEventQrTopInsetPadding() {
     // requestApplyInsets is a no-op on a detached view, so it has to wait for attach.
     if (isAttachedToWindow) ViewCompat.requestApplyInsets(this) else doOnAttach { ViewCompat.requestApplyInsets(it) }
 }
+
+fun View.applyEventQrBottomInsetPadding() {
+    val basePaddingBottom = paddingBottom
+    ViewCompat.setOnApplyWindowInsetsListener(this) { view, insets ->
+        val navBottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+        view.updatePadding(bottom = basePaddingBottom + navBottom)
+        insets
+    }
+    if (isAttachedToWindow) ViewCompat.requestApplyInsets(this) else doOnAttach { ViewCompat.requestApplyInsets(it) }
+}
+

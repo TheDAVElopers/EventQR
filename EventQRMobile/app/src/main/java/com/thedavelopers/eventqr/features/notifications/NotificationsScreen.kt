@@ -50,6 +50,8 @@ import com.thedavelopers.eventqr.core.util.RelativeTimeUtils
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 import com.thedavelopers.eventqr.ui.components.EmptyStateView
 import com.thedavelopers.eventqr.ui.theme.LocalSpacing
+import com.thedavelopers.eventqr.ui.theme.StatusActiveGreen
+import com.thedavelopers.eventqr.ui.theme.StatusActiveGreenBg
 import androidx.compose.ui.res.stringResource
 import com.thedavelopers.eventqr.R
 
@@ -227,10 +229,10 @@ fun NotificationItemCard(
 }
 
 @Composable
-private fun resolveNotificationVisuals(type: NotificationType?): Triple<ImageVector, Color, Color> {
+internal fun resolveNotificationVisuals(type: NotificationType?): Triple<ImageVector, Color, Color> {
     val colorScheme = MaterialTheme.colorScheme
-    val successIcon = colorScheme.onTertiaryContainer
-    val successBg = colorScheme.tertiaryContainer
+    val successIcon = StatusActiveGreen
+    val successBg = StatusActiveGreenBg
     val warningIcon = colorScheme.onSecondaryContainer
     val warningBg = colorScheme.secondaryContainer
     val errorIcon = colorScheme.onErrorContainer

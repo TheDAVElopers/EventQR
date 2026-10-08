@@ -20,6 +20,7 @@ import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
 import com.thedavelopers.eventqr.features.events.model.dto.EventAvailabilityResponse
 import com.thedavelopers.eventqr.features.organizer.events.EventManagementHubActivity
+import com.thedavelopers.eventqr.ui.theme.applyEventQrBottomInsetPadding
 import java.time.Instant
 import kotlinx.coroutines.launch
 
@@ -36,6 +37,8 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_event_detail)
+
+        findViewById<View>(R.id.layoutBottomBar)?.applyEventQrBottomInsetPadding()
 
         repository = AttendeeRepository(this)
         presenter = EventDetailPresenter(this, repository, UiStrings(this))
