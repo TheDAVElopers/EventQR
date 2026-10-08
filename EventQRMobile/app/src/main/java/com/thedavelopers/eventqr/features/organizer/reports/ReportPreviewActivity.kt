@@ -586,11 +586,11 @@ class ReportPreviewActivity : AppCompatActivity() {
             return
         }
         val dialog = AlertDialog.Builder(this)
-            .setTitle(if (isCombined) "Export Combined Report" else "Export Report")
-            .setMessage("Choose export format:")
-            .setPositiveButton("CSV") { _, _ -> exportReport("CSV") }
-            .setNegativeButton("PDF") { _, _ -> exportReport("PDF") }
-            .setNeutralButton("Cancel", null)
+            .setTitle(getString(if (isCombined) R.string.report_preview_export_combined_report else R.string.report_preview_export_report))
+            .setMessage(getString(R.string.report_preview_choose_export_format))
+            .setPositiveButton(getString(R.string.report_preview_csv)) { _, _ -> exportReport("CSV") }
+            .setNegativeButton(getString(R.string.report_preview_pdf)) { _, _ -> exportReport("PDF") }
+            .setNeutralButton(getString(R.string.request_event_cancel), null)
             .create()
         dialog.show()
     }
@@ -614,7 +614,7 @@ class ReportPreviewActivity : AppCompatActivity() {
                         .trim('-')
                         .lowercase()
                     val fileName = "combined-report-$safeEventName.${format.lowercase()}"
-                    val contentType = if (format.equals("PDF", ignoreCase = true)) "application/pdf" else "text/csv"
+                    val contentType = getString(if (format.equals("PDF", ignoreCase = true)) R.string.report_preview_application_pdf else R.string.report_preview_text_csv)
 
                     val bytes = withContext(Dispatchers.Default) {
                         if (format.equals("PDF", ignoreCase = true)) {
@@ -651,7 +651,7 @@ class ReportPreviewActivity : AppCompatActivity() {
                                 .trim('-')
                                 .lowercase()
                             val fileName = "$safeTitle-${eventId.take(8)}.${format.lowercase()}"
-                            val contentType = if (format.equals("PDF", ignoreCase = true)) "application/pdf" else "text/csv"
+                            val contentType = getString(if (format.equals("PDF", ignoreCase = true)) R.string.report_preview_application_pdf else R.string.report_preview_text_csv)
                             val bytes = withContext(Dispatchers.Default) {
                                 if (format.equals("PDF", ignoreCase = true)) {
                                     generateCombinedPdf(listOf(report))

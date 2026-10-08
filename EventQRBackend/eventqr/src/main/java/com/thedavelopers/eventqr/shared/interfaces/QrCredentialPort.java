@@ -24,6 +24,8 @@ public interface QrCredentialPort {
 
     QrCredentialSnapshot markDownloaded(UUID qrCredentialId);
 
+    QrCredentialSnapshot deactivate(UUID qrCredentialId);
+
     QrCredentialSnapshot markEmailQueued(UUID qrCredentialId);
 
     QrCredentialSnapshot markEmailSent(UUID qrCredentialId);

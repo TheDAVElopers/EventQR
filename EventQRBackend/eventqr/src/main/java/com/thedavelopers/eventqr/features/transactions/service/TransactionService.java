@@ -33,6 +33,7 @@ import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignm
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.AccountRoles;
 import com.thedavelopers.eventqr.shared.constants.EventStatus;
+import com.thedavelopers.eventqr.shared.constants.RegistrationStatus;
 import com.thedavelopers.eventqr.shared.constants.ScanPurposeCode;
 import com.thedavelopers.eventqr.shared.constants.TransactionResult;
 import com.thedavelopers.eventqr.shared.constants.TransactionType;
@@ -120,6 +121,9 @@ public class TransactionService {
             if (!eventSnapshot.eventId().equals(qrSnapshot.eventId())) {
                 throw new ForbiddenException("Wrong event QR");
             }
+            if (isNotScannable(registration.status())) {
+                throw new ForbiddenException("Registration is not active");
+            }
             return new ScanVerificationResponse(eventSnapshot.eventId(), registration.attendeeUserId(), registration.registrationId(),
                     qrSnapshot.qrCredentialId(), qrSnapshot.qrValue(), registration.attendeeName(), registration.attendeeEmail(),
                     registration.status(), purpose.scanPurposeId(), purpose.code(), qrSnapshot.active(),
@@ -141,6 +145,9 @@ public class TransactionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Registration not found for QR credential"));
         if (!eventSnapshot.eventId().equals(registration.eventId())) {
             throw new ForbiddenException("Registration does not belong to selected event");
+        }
+        if (isNotScannable(registration.status())) {
+            throw new ForbiddenException("Registration is not active");
         }
         return new ScanVerificationResponse(eventSnapshot.eventId(), registration.attendeeUserId(), registration.registrationId(),
                 qrSnapshot.qrCredentialId(), qrSnapshot.qrValue(), registration.attendeeName(), registration.attendeeEmail(),
@@ -209,6 +216,13 @@ public class TransactionService {
                 transactionType, 0, request.notes(), request.qrValue(), purpose.code().name(), purpose.name());
         }
 
+        if (isNotScannable(registration.status())) {
+            return reject(eventSnapshot.eventId(), registration.attendeeUserId(), registration.registrationId(),
+                registration.qrCredentialId(), purpose.scanPurposeId(), request.staffUserId(),
+                "Registration is not active",
+                transactionType, 0, request.notes(), request.qrValue(), purpose.code().name(), purpose.name());
+        }
+
         boolean rewardRedemptionScan = purpose.code() == ScanPurposeCode.REWARD_REDEMPTION_SCAN;
         String duplicateReason = rewardRedemptionScan ? null : determineDuplicateReason(registration, rule);
         if (duplicateReason != null) {
@@ -236,6 +250,10 @@ public class TransactionService {
                 saved.getTransactionType(), saved.getTransactionResult(), saved.getPointsDelta(), saved.getStaffUserId(),
                 saved.getReason()));
         return toResponse(saved);
+    }
+
+    private static boolean isNotScannable(RegistrationStatus status) {
+        return status == RegistrationStatus.CANCELLED || status == RegistrationStatus.NO_SHOW;
     }
 
     @Transactional(readOnly = true)

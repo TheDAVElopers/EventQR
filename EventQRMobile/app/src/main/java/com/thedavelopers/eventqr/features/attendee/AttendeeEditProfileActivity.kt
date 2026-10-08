@@ -169,7 +169,7 @@ class AttendeeEditProfileActivity : AppCompatActivity() {
                 is NetworkResult.Success -> {
                     sessionManager.updateProfile(fullName, phone, initialEmail)
                     captureInitialFormSnapshot()
-                    Toast.makeText(this@AttendeeEditProfileActivity, "Profile updated successfully.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@AttendeeEditProfileActivity, this@AttendeeEditProfileActivity.getString(R.string.attendee_edit_profile_profile_updated_successfully), Toast.LENGTH_SHORT).show()
                     setResult(RESULT_OK)
                     finish()
                 }
@@ -186,13 +186,13 @@ class AttendeeEditProfileActivity : AppCompatActivity() {
     private fun validateForm(): Boolean {
         val phone = sanitizePhone()
         if (phone.isBlank()) {
-            edtPhone.error = "Phone number is required."
+            edtPhone.error = getString(R.string.attendee_edit_profile_phone_number_is_required)
             return false
         }
         // Same rule as registration: the field holds normalized national digits and the
         // assembled E.164 value must satisfy Validators.isValidPhoneNumber.
         if (!Validators.isValidPhoneNumber("+63$phone")) {
-            edtPhone.error = "Enter a valid 10-digit mobile number"
+            edtPhone.error = getString(R.string.error_invalid_phone)
             return false
         }
         return true
@@ -286,6 +286,6 @@ class AttendeeEditProfileActivity : AppCompatActivity() {
     private fun updateSaveButtonState() {
         val canSave = !isLoadingProfile && !isSavingProfile && hasChanges()
         btnSaveChanges.isEnabled = canSave
-        btnSaveChanges.text = if (isSavingProfile) "Saving..." else "Save Changes"
+        btnSaveChanges.text = getString(if (isSavingProfile) R.string.attendee_edit_profile_saving else R.string.edit_profile_save_changes)
     }
 }

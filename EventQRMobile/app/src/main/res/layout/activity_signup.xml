@@ -17,7 +17,7 @@
         <ImageView
             android:layout_width="96dp"
             android:layout_height="96dp"
-            android:contentDescription="EventQR logo"
+            android:contentDescription="@string/common_eventqr_logo"
             android:scaleType="fitCenter"
             android:src="@drawable/white_logo" />
 
@@ -25,7 +25,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="Sign Up"
+            android:text="@string/signup_sign_up"
             android:textColor="#FFFFFF"
             android:textSize="30sp"
             android:textStyle="bold" />
@@ -35,7 +35,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:gravity="center"
-            android:text="Create your account and simplify event check-ins"
+            android:text="@string/signup_create_your_account_and_simplify_eve"
             android:textColor="#F4F3FF"
             android:textSize="13sp" />
     </LinearLayout>
@@ -69,7 +69,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="First Name"
+                        android:text="@string/common_first_name"
                         android:textColor="#111827"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -80,7 +80,7 @@
                         android:layout_height="52dp"
                         android:layout_marginTop="6dp"
                         android:background="@drawable/bg_auth_field_focus"
-                        android:hint="John"
+                        android:hint="@string/common_john"
                         android:inputType="textPersonName"
                         android:paddingHorizontal="14dp"
                         android:textColor="@color/eventqr_text"
@@ -98,7 +98,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Last Name"
+                        android:text="@string/common_last_name"
                         android:textColor="#111827"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -109,7 +109,7 @@
                         android:layout_height="52dp"
                         android:layout_marginTop="6dp"
                         android:background="@drawable/bg_auth_field_focus"
-                        android:hint="Doe"
+                        android:hint="@string/common_doe"
                         android:inputType="textPersonName"
                         android:paddingHorizontal="14dp"
                         android:textColor="@color/eventqr_text"
@@ -122,7 +122,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
-                android:text="Email Address"
+                android:text="@string/common_email_address"
                 android:textColor="#111827"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -135,7 +135,7 @@
                 android:background="@drawable/bg_auth_field_focus"
                 android:drawableStart="@drawable/email_icon"
                 android:drawablePadding="10dp"
-                android:hint="johndoe@gmail.com"
+                android:hint="@string/common_johndoe_gmail_com"
                 android:inputType="textEmailAddress"
                 android:paddingHorizontal="14dp"
                 android:textColor="@color/eventqr_text"
@@ -146,7 +146,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
-                android:text="Phone Number"
+                android:text="@string/common_phone_number"
                 android:textColor="#111827"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -201,7 +201,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
-                android:text="Password"
+                android:text="@string/common_password"
                 android:textColor="#111827"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -215,7 +215,7 @@
                 android:drawableStart="@drawable/password_icon"
                 android:drawableEnd="@drawable/ic_visibility_on"
                 android:drawablePadding="10dp"
-                android:hint="Enter password"
+                android:hint="@string/common_enter_password"
                 android:inputType="textPassword"
                 android:paddingHorizontal="14dp"
                 android:textColor="@color/eventqr_text"
@@ -283,7 +283,7 @@
                             android:id="@+id/txtPasswordLengthRequirement"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="○ At least 8 characters"
+                            android:text="@string/password_req_length"
                             android:textColor="@color/eventqr_muted"
                             android:textSize="11sp" />
 
@@ -292,7 +292,16 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="○ One uppercase letter"
+                            android:text="@string/password_req_uppercase"
+                            android:textColor="@color/eventqr_muted"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/txtPasswordLowercaseRequirement"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/password_req_lowercase"
                             android:textColor="@color/eventqr_muted"
                             android:textSize="11sp" />
 
@@ -301,7 +310,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="○ One number"
+                            android:text="@string/password_req_number"
                             android:textColor="@color/eventqr_muted"
                             android:textSize="11sp" />
 
@@ -310,7 +319,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="○ One special character"
+                            android:text="@string/password_req_special"
                             android:textColor="@color/eventqr_muted"
                             android:textSize="11sp" />
                     </LinearLayout>
@@ -331,7 +340,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
-                android:text="Confirm Password"
+                android:text="@string/common_confirm_password"
                 android:textColor="#111827"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -345,7 +354,7 @@
                 android:drawableStart="@drawable/password_icon"
                 android:drawableEnd="@drawable/ic_visibility_on"
                 android:drawablePadding="10dp"
-                android:hint="Confirm password"
+                android:hint="@string/common_confirm_password_2"
                 android:inputType="textPassword"
                 android:paddingHorizontal="14dp"
                 android:textColor="@color/eventqr_text"
@@ -358,7 +367,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
                 android:buttonTint="@color/eventqr_indigo"
-                android:text="I agree to the Terms &amp; Conditions"
+                android:text="@string/signup_i_agree_to_the_terms_conditions"
                 android:textColor="#111827"
                 android:textSize="14sp" />
 
@@ -370,7 +379,7 @@
                 android:background="@drawable/bg_auth_button_press"
                 android:elevation="4dp"
                 android:stateListAnimator="@null"
-                android:text="Create Account"
+                android:text="@string/common_create_account"
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textSize="16sp"
@@ -389,14 +398,14 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Already have an account? "
+                    android:text="@string/signup_already_have_an_account"
                     android:textColor="#6B7280"
                     android:textSize="13sp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Sign In"
+                    android:text="@string/common_sign_in"
                     android:textColor="@color/eventqr_indigo"
                     android:textSize="13sp"
                     android:textStyle="bold" />

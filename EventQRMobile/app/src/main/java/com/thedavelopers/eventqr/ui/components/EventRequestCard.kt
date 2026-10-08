@@ -29,6 +29,8 @@ import com.thedavelopers.eventqr.features.events.eventRequestBadgeStatus
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse
 import com.thedavelopers.eventqr.ui.theme.EventQrRowTheme
 import com.thedavelopers.eventqr.ui.theme.LocalSpacing
+import androidx.compose.ui.res.stringResource
+import com.thedavelopers.eventqr.R
 
 class EventRequestHolder(context: Context) {
 
@@ -87,7 +89,7 @@ fun EventRequestCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    text = request.eventName.ifBlank { "Untitled Event" },
+                    text = request.eventName.ifBlank { stringResource(R.string.common_untitled_event) },
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
@@ -101,7 +103,7 @@ fun EventRequestCard(
             Spacer(modifier = Modifier.height(spacing.micro))
 
             Text(
-                text = "Submitted ${DateFormatters.formatEventDate(request.createdAt)}",
+                text = stringResource(R.string.event_request_card_submitted_submitted_1_s, DateFormatters.formatEventDate(request.createdAt)),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

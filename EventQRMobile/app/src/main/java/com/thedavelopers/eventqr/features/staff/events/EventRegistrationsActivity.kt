@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.staff
 
+import com.thedavelopers.eventqr.core.util.UiStrings
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import android.content.Intent
 import android.graphics.Typeface
@@ -74,7 +75,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
 
         val sessionManager = SessionManager(this)
         if (!RoleMapper.isAtLeast(sessionManager.getUserRole(), AccountRole.STAFF)) {
-            Toast.makeText(this, "Access Denied: Staff or above", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, this.getString(R.string.staff_dashboard_access_denied_staff_or_above), Toast.LENGTH_LONG).show()
             finish()
             return
         }
@@ -82,7 +83,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         setContentView(R.layout.activity_event_registrations)
 
         repository = StaffRepository(this)
-        presenter = EventRegistrationsPresenter(this, repository)
+        presenter = EventRegistrationsPresenter(this, repository, UiStrings(this))
         adapter = RegistrationAdapter(
             onClick = { registration ->
                 startActivity(Intent(this, StaffAttendeeDetailsActivity::class.java).apply {
@@ -114,7 +115,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
                     is NetworkResult.Success -> {
                         val firstEvent = eventsResult.data.firstOrNull()
                         if (firstEvent == null) {
-                            showMessage("No assigned events found")
+                            showMessage(getString(R.string.event_registrations_no_assigned_events_found))
                             return@launch
                         }
                         selectedEventId = firstEvent.eventId.toString()
@@ -209,7 +210,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         adapter.submitItems(filtered)
         findViewById<RecyclerView>(R.id.recyclerEventRegistrations).visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
         emptyState.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
-        emptyState.text = if (allRegistrations.isEmpty()) "No attendees found." else "No attendees match your search."
+        emptyState.text = getString(if (allRegistrations.isEmpty()) R.string.event_registrations_no_attendees_found else R.string.search_attendees_no_attendees_match_your_search)
         if (selectionMode) syncSelectionUi(adapter.getSelectedItems().size)
     }
 
@@ -258,7 +259,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         badgeSelection.text = count.toString()
         badgeSelection.visibility = if (selectionMode && count > 0) View.VISIBLE else if (selectionMode) View.VISIBLE else View.GONE
         btnPrintSelectedIds.isEnabled = count > 0
-        btnSelectAll.text = if (adapter.isAllSelected()) "Clear All" else "Select All"
+        btnSelectAll.text = getString(if (adapter.isAllSelected()) R.string.event_registrations_clear_all else R.string.event_registrations_select_all)
     }
 
     // ------------------------------------------------------------------
@@ -268,7 +269,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
     private fun printSelected() {
         val selected = adapter.getSelectedItems().filter { it.qrCredentialId != null }
         if (selected.isEmpty()) {
-            showMessage("Select at least one attendee with a QR credential.")
+            showMessage(getString(R.string.event_registrations_select_at_least_one_attendee_with_a))
             return
         }
 
@@ -365,10 +366,10 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         }
 
         AlertDialog.Builder(this)
-            .setTitle("Review Sheet Layout")
+            .setTitle(getString(R.string.event_registrations_review_sheet_layout))
             .setView(scroll)
-            .setPositiveButton("Confirm & Print") { _, _ -> executeBatchPrint(cards, selected) }
-            .setNegativeButton("Cancel", null)
+            .setPositiveButton(getString(R.string.event_registrations_confirm_print)) { _, _ -> executeBatchPrint(cards, selected) }
+            .setNegativeButton(getString(R.string.request_event_cancel), null)
             .show()
     }
 
@@ -439,9 +440,9 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         }
 
         AlertDialog.Builder(this)
-            .setTitle("Print Result")
+            .setTitle(getString(R.string.event_registrations_print_result))
             .setView(body)
-            .setPositiveButton("OK", null)
+            .setPositiveButton(getString(R.string.event_registrations_ok), null)
             .show()
     }
 

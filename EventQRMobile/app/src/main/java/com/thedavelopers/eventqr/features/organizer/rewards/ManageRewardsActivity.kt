@@ -653,15 +653,15 @@ open class ManageRewardsActivity : AppCompatActivity() {
         form.addView(duplicateSwitch)
 
         AlertDialog.Builder(this)
-            .setTitle(if (isEdit) "Edit Reward" else "Create Reward")
+            .setTitle(getString(if (isEdit) R.string.manage_rewards_edit_reward else R.string.manage_rewards_create_reward))
             .setView(form)
-            .setNegativeButton("Cancel", null)
-            .setPositiveButton(if (isEdit) "Save" else "Create") { _, _ ->
+            .setNegativeButton(getString(R.string.request_event_cancel), null)
+            .setPositiveButton(getString(if (isEdit) R.string.manage_scan_purposes_save else R.string.manage_rewards_create)) { _, _ ->
                 val title = titleInput.text.toString().trim()
                 val points = pointsInput.text.toString().toIntOrNull()
                 val quantity = quantityInput.text.toString().toIntOrNull()
                 if (title.isBlank() || points == null || points <= 0 || quantity == null || quantity <= 0) {
-                    Toast.makeText(this, "Enter a valid reward title, points cost, and total quantity.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, this.getString(R.string.manage_rewards_enter_a_valid_reward_title_points_co), Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
                 saveReward(reward, title, points, quantity, duplicateSwitch.isChecked)
@@ -694,10 +694,10 @@ open class ManageRewardsActivity : AppCompatActivity() {
 
     private fun confirmDeleteReward(reward: RewardResponse) {
         AlertDialog.Builder(this)
-            .setTitle("Remove reward?")
+            .setTitle(getString(R.string.manage_rewards_remove_reward))
             .setMessage("Remove ${reward.name} from ${selectedEvent.title}?")
-            .setNegativeButton("Cancel", null)
-            .setPositiveButton("Remove") { _, _ -> deleteReward(reward) }
+            .setNegativeButton(getString(R.string.request_event_cancel), null)
+            .setPositiveButton(getString(R.string.staff_remove)) { _, _ -> deleteReward(reward) }
             .show()
     }
 
@@ -744,7 +744,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
                 renderRewards()
                 Toast.makeText(
                     this@ManageRewardsActivity,
-                    if (rewardsEnabled) "Reward redemption enabled for this event." else "Reward redemption disabled for this event.",
+                    getString(if (rewardsEnabled) R.string.manage_rewards_reward_redemption_enabled_for_this_e else R.string.manage_rewards_reward_redemption_disabled_for_this),
                     Toast.LENGTH_SHORT,
                 ).show()
             } catch (error: Exception) {

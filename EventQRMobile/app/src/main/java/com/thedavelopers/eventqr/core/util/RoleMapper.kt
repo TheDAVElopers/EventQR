@@ -1,6 +1,8 @@
 package com.thedavelopers.eventqr.core.util
 
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
+import android.content.Context
+import com.thedavelopers.eventqr.R
 
 object RoleMapper {
     /**
@@ -47,15 +49,15 @@ object RoleMapper {
     /**
      * Maps a normalized role string to a displayable name.
      */
-    fun getDisplayName(role: String?): String {
-        val normalized = normalizeRole(role)
-        return when (normalized) {
-            AccountRole.ATTENDEE.name -> "Attendee"
-            AccountRole.STAFF.name -> "Staff"
-            AccountRole.ORGANIZER.name -> "Organizer"
-            AccountRole.ADMIN.name -> "Administrator"
-            AccountRole.SUPER_ADMIN.name -> "Super Admin"
-            else -> normalized.lowercase().capitalize()
-        }
+    fun getDisplayNameRes(role: String?): Int? = when (normalizeRole(role)) {
+            AccountRole.ATTENDEE.name -> R.string.common_attendee
+            AccountRole.STAFF.name -> R.string.staff_dashboard_staff
+            AccountRole.ORGANIZER.name -> R.string.organizer_dashboard_organizer
+            AccountRole.ADMIN.name -> R.string.role_administrator
+            AccountRole.SUPER_ADMIN.name -> R.string.role_super_admin
+        else -> null
     }
+
+    fun getDisplayName(context: Context, role: String?): String =
+        getDisplayNameRes(role)?.let { context.getString(it) } ?: normalizeRole(role).lowercase().capitalize()
 }

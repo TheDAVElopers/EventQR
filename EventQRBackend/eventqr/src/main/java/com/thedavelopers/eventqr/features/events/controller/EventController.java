@@ -30,6 +30,7 @@ import com.thedavelopers.eventqr.features.registrations.service.RegistrationServ
 import com.thedavelopers.eventqr.features.events.service.EventService;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
+import com.thedavelopers.eventqr.shared.security.ClientIp;
 import com.thedavelopers.eventqr.shared.security.JwtService;
 
 @RestController
@@ -85,10 +86,13 @@ public class EventController {
     }
 
     @PostMapping("/{eventId}/registrations")
-    public ResponseEntity<ApiResponse<RegistrationSubmissionResponse>> register(@PathVariable UUID eventId,
+    public ResponseEntity<ApiResponse<RegistrationSubmissionResponse>> register(HttpServletRequest httpRequest,
+                                                                                @PathVariable UUID eventId,
                                                                                 @Valid @RequestBody RegistrationRequest request) {
         RegistrationRequest normalized = new RegistrationRequest(eventId, request.email(), request.fullName(), request.phoneNumber());
-        return ResponseEntity.ok(ApiResponse.success("Registration completed", registrationService.register(normalized)));
+        return ResponseEntity.ok(ApiResponse.success("Registration completed", registrationService.registerAs(normalized,
+                currentUserId(httpRequest), jwtService.extractRoleFromBearer(httpRequest.getHeader("Authorization")),
+                ClientIp.from(httpRequest))));
     }
 
     @GetMapping("/attendee-visible")
@@ -97,7 +101,7 @@ public class EventController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         UUID userId = currentUserId(request);
-        return ResponseEntity.ok(ApiResponse.success(eventService.findAttendeeVisibleEvents(userId, PageRequest.of(page, size))));
+        return ResponseEntity.ok(ApiResponse.success(eventService.findAttendeeVisibleEvents(userId, attendeePage(page, size))));
     }
 
     @GetMapping("/attendee-browse")
@@ -106,7 +110,15 @@ public class EventController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         UUID userId = currentUserId(request);
-        return ResponseEntity.ok(ApiResponse.success(eventService.findAttendeeBrowseEvents(userId, PageRequest.of(page, size))));
+        return ResponseEntity.ok(ApiResponse.success(eventService.findAttendeeBrowseEvents(userId, attendeePage(page, size))));
+    }
+
+    private static final int MAX_PAGE_SIZE = 100;
+
+    private static PageRequest attendeePage(int page, int size) {
+        int safeSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
+        return PageRequest.of(Math.max(page, 0), safeSize,
+                org.springframework.data.domain.Sort.by("eventStartAt").ascending().and(org.springframework.data.domain.Sort.by("id").ascending()));
     }
 
     private void requireOrganizer(HttpServletRequest request) {

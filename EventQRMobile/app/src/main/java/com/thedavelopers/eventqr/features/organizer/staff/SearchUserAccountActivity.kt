@@ -132,7 +132,7 @@ class SearchUserAccountActivity : AppCompatActivity() {
         val user = selectedUser ?: return
         val normalizedEmail = user.email.trim().lowercase()
         if (activeStaffEmails.contains(normalizedEmail)) {
-            Toast.makeText(this, "Duplicate staff assignment", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, this.getString(R.string.search_user_account_duplicate_staff_assignment), Toast.LENGTH_SHORT).show()
             return
         }
 

@@ -32,7 +32,7 @@
                     android:id="@+id/txtHeaderTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Organizer Portal"
+                    android:text="@string/organizer_dashboard_organizer_portal"
                     android:textColor="@color/brand_on_primary"
                     android:textSize="26sp"
                     android:textStyle="bold" />
@@ -51,7 +51,7 @@
                         android:ellipsize="end"
                         android:maxWidth="160dp"
                         android:maxLines="1"
-                        android:text="Loading organizer profile"
+                        android:text="@string/organizer_dashboard_loading_organizer_profile"
                         android:textColor="#C3C0E5"
                         android:textSize="13sp" />
 
@@ -83,7 +83,7 @@
                             android:id="@+id/txtCurrentPortal"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Organizer"
+                            android:text="@string/organizer_dashboard_organizer"
                             android:textColor="@color/brand_on_primary"
                             android:textSize="11sp"
                             android:textStyle="bold" />
@@ -107,7 +107,7 @@
                 android:background="@drawable/bg_header_icon_circle"
                 android:clickable="true"
                 android:focusable="true"
-                android:contentDescription="Notifications">
+                android:contentDescription="@string/common_notifications">
 
                 <ImageView
                     android:layout_width="22dp"
@@ -169,7 +169,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Unable to load organizer dashboard"
+                        android:text="@string/organizer_dashboard_unable_to_load_organizer_dashboard"
                         android:textColor="@color/error"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -179,7 +179,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="Please try again."
+                        android:text="@string/common_please_try_again"
                         android:textColor="@color/error"
                         android:textSize="12sp" />
 
@@ -191,7 +191,7 @@
                         android:background="@drawable/bg_primary_button"
                         android:minHeight="48dp"
                         android:paddingHorizontal="16dp"
-                        android:text="Retry"
+                        android:text="@string/common_retry"
                         android:textAllCaps="false"
                         android:textColor="@color/brand_on_primary"
                         android:textSize="14sp" />
@@ -235,7 +235,7 @@
                                 <ImageView
                                     android:layout_width="20dp"
                                     android:layout_height="20dp"
-                                    android:contentDescription="Total Events"
+                                    android:contentDescription="@string/organizer_dashboard_total_events"
                                     android:src="@drawable/ic_calendar"
                                     app:tint="#5B25C9" />
                             </LinearLayout>
@@ -260,7 +260,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="2dp"
-                                    android:text="Total Events"
+                                    android:text="@string/organizer_dashboard_total_events"
                                     android:textColor="#6B7280"
                                     android:textSize="11sp" />
                             </LinearLayout>
@@ -268,7 +268,7 @@
                             <ImageView
                                 android:layout_width="16dp"
                                 android:layout_height="16dp"
-                                android:contentDescription="Details"
+                                android:contentDescription="@string/organizer_dashboard_details"
                                 android:src="@drawable/ic_chevron_right"
                                 app:tint="#9CA3AF" />
                         </LinearLayout>
@@ -302,7 +302,7 @@
                                 <ImageView
                                     android:layout_width="20dp"
                                     android:layout_height="20dp"
-                                    android:contentDescription="Total Attendees"
+                                    android:contentDescription="@string/organizer_dashboard_total_attendees"
                                     android:src="@drawable/ic_group"
                                     app:tint="#2563EB" />
                             </LinearLayout>
@@ -327,7 +327,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="2dp"
-                                    android:text="Total Attendees"
+                                    android:text="@string/organizer_dashboard_total_attendees"
                                     android:textColor="#6B7280"
                                     android:textSize="11sp" />
                             </LinearLayout>
@@ -335,7 +335,7 @@
                             <ImageView
                                 android:layout_width="16dp"
                                 android:layout_height="16dp"
-                                android:contentDescription="Details"
+                                android:contentDescription="@string/organizer_dashboard_details"
                                 android:src="@drawable/ic_chevron_right"
                                 app:tint="#9CA3AF" />
                         </LinearLayout>
@@ -369,7 +369,7 @@
                                 <ImageView
                                     android:layout_width="20dp"
                                     android:layout_height="20dp"
-                                    android:contentDescription="Transactions"
+                                    android:contentDescription="@string/common_transactions"
                                     android:src="@drawable/ic_credit_card"
                                     app:tint="#7C3AED" />
                             </LinearLayout>
@@ -394,7 +394,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="2dp"
-                                    android:text="Transactions"
+                                    android:text="@string/common_transactions"
                                     android:textColor="#6B7280"
                                     android:textSize="11sp" />
                             </LinearLayout>
@@ -402,7 +402,7 @@
                             <ImageView
                                 android:layout_width="16dp"
                                 android:layout_height="16dp"
-                                android:contentDescription="Details"
+                                android:contentDescription="@string/organizer_dashboard_details"
                                 android:src="@drawable/ic_chevron_right"
                                 app:tint="#9CA3AF" />
                         </LinearLayout>
@@ -436,7 +436,7 @@
                                 <ImageView
                                     android:layout_width="20dp"
                                     android:layout_height="20dp"
-                                    android:contentDescription="Rewards Given"
+                                    android:contentDescription="@string/organizer_dashboard_rewards_given"
                                     android:src="@drawable/ic_star_filled"
                                     app:tint="#10B981" />
                             </LinearLayout>
@@ -461,7 +461,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="2dp"
-                                    android:text="Rewards Given"
+                                    android:text="@string/organizer_dashboard_rewards_given"
                                     android:textColor="#6B7280"
                                     android:textSize="11sp" />
                             </LinearLayout>
@@ -469,7 +469,7 @@
                             <ImageView
                                 android:layout_width="16dp"
                                 android:layout_height="16dp"
-                                android:contentDescription="Details"
+                                android:contentDescription="@string/organizer_dashboard_details"
                                 android:src="@drawable/ic_chevron_right"
                                 app:tint="#9CA3AF" />
                         </LinearLayout>
@@ -488,7 +488,7 @@
                     <ImageView
                         android:layout_width="22dp"
                         android:layout_height="22dp"
-                        android:contentDescription="Live"
+                        android:contentDescription="@string/organizer_dashboard_live"
                         android:src="@drawable/ic_signal_live" />
 
                     <TextView
@@ -496,7 +496,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:layout_weight="1"
-                        android:text="Active Events"
+                        android:text="@string/common_active_events"
                         android:textColor="#111827"
                         android:textSize="18sp"
                         android:textStyle="bold" />
@@ -511,7 +511,7 @@
                         android:gravity="center"
                         android:minHeight="40dp"
                         android:paddingHorizontal="8dp"
-                        android:text="See All ›"
+                        android:text="@string/organizer_dashboard_see_all"
                         android:textColor="#5B25C9"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -540,7 +540,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:text="No active events"
+                        android:text="@string/organizer_dashboard_no_active_events"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -549,7 +549,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="Approve or create events to see them here."
+                        android:text="@string/organizer_dashboard_approve_or_create_events_to_see_them"
                         android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
                 </LinearLayout>

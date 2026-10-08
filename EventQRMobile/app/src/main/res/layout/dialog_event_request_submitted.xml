@@ -10,7 +10,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Event Request Submitted"
+        android:text="@string/dialog_event_request_submitted_event_request_submitted"
         android:textColor="#111827"
         android:textSize="18sp"
         android:textStyle="bold" />
@@ -19,7 +19,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Your event request has been submitted for admin review."
+        android:text="@string/dialog_event_request_submitted_your_event_request_has_been_submitte"
         android:textColor="#4B5563"
         android:textSize="14sp" />
 
@@ -27,7 +27,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Status: Pending"
+        android:text="@string/dialog_event_request_submitted_status_pending"
         android:textColor="#25215F"
         android:textSize="14sp"
         android:textStyle="bold" />
@@ -38,7 +38,7 @@
         android:layout_height="52dp"
         android:layout_marginTop="14dp"
         android:background="@drawable/button_rounded"
-        android:text="View My Event Request"
+        android:text="@string/dialog_event_request_submitted_view_my_event_request"
         android:textAllCaps="false"
         android:textColor="#FFFFFF"
         android:textSize="15sp"
@@ -50,7 +50,7 @@
         android:layout_height="52dp"
         android:layout_marginTop="10dp"
         android:background="@drawable/bg_outline_button"
-        android:text="Back to Dashboard"
+        android:text="@string/common_back_to_dashboard"
         android:textAllCaps="false"
         android:textColor="#25215F"
         android:textSize="15sp" />

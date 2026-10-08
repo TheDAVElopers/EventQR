@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.notifications
 
+import com.thedavelopers.eventqr.core.util.UiStrings
 import android.graphics.Color
 import android.os.Bundle
 import android.text.TextUtils
@@ -53,7 +54,7 @@ class NotificationManagementActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this, object : ViewModelProvider.Factory {
             override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
                 @Suppress("UNCHECKED_CAST")
-                return OrganizerNotificationsViewModel(repo) as T
+                return OrganizerNotificationsViewModel(repo, UiStrings(this@NotificationManagementActivity)) as T
             }
         })[OrganizerNotificationsViewModel::class.java]
 

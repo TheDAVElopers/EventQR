@@ -73,7 +73,7 @@
                 android:background="@drawable/bg_green_pill"
                 android:paddingHorizontal="10dp"
                 android:paddingVertical="4dp"
-                android:text="Approved"
+                android:text="@string/common_approved"
                 android:textColor="#047857"
                 android:textSize="12sp"
                 android:textStyle="bold" />
@@ -83,7 +83,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="-100 pts"
+                android:text="@string/item_claimed_reward_100_pts"
                 android:textColor="@color/eventqr_error"
                 android:textSize="22sp"
                 android:textStyle="bold" />

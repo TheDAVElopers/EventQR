@@ -280,9 +280,9 @@ open class AttendeeManagementActivity : AppCompatActivity() {
         currentEventLabel.visibility = View.GONE
         cardAttendeeStats.visibility = View.GONE
         emptyStateLayout.visibility = View.VISIBLE
-        emptyStateTitle.text = "No event selected"
-        emptyStateSub.text = "Select an event from the dropdown above to view attendees."
-        txtEventTitle.text = "Choose an Event"
+        emptyStateTitle.text = getString(R.string.attendee_management_no_event_selected)
+        emptyStateSub.text = getString(R.string.attendee_management_select_an_event_from_the_dropdown_ab)
+        txtEventTitle.text = getString(R.string.attendee_management_choose_an_event)
         txtEventSelectorDate.text = "2026-09-22"
     }
 
@@ -295,8 +295,8 @@ open class AttendeeManagementActivity : AppCompatActivity() {
         cardAttendeeStats.visibility = View.GONE
         eventSelectorHost.visibility = View.GONE
         emptyStateLayout.visibility = View.VISIBLE
-        emptyStateTitle.text = "No Events Available"
-        emptyStateSub.text = "Create an event in the Events tab to start managing attendees."
+        emptyStateTitle.text = getString(R.string.attendee_management_no_events_available)
+        emptyStateSub.text = getString(R.string.attendee_management_create_an_event_in_the_events_tab_to)
     }
 
     private fun restoreNormalUi() {
@@ -320,12 +320,12 @@ open class AttendeeManagementActivity : AppCompatActivity() {
         emptyStateLayout.visibility = if (attendees.isEmpty()) View.VISIBLE else View.GONE
         when {
             load.source == OrganizerMvpDataSource.ERROR -> {
-                emptyStateTitle.text = "Unable to load attendees"
+                emptyStateTitle.text = getString(R.string.attendee_management_unable_to_load_attendees)
                 emptyStateSub.text = load.message ?: "Please try again later."
             }
             attendees.isEmpty() -> {
-                emptyStateTitle.text = "No attendees registered yet"
-                emptyStateSub.text = "Attendees will appear here once they register for the event."
+                emptyStateTitle.text = getString(R.string.attendee_management_no_attendees_registered_yet)
+                emptyStateSub.text = getString(R.string.attendee_management_attendees_will_appear_here_once_they)
             }
         }
     }

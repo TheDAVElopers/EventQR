@@ -14,6 +14,7 @@ import com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse
 import com.thedavelopers.eventqr.ui.theme.EventQrTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import com.thedavelopers.eventqr.R
 
 class AttendeeEventRequestDetailActivity : AppCompatActivity() {
     private lateinit var repository: AttendeeRepository
@@ -58,7 +59,7 @@ class AttendeeEventRequestDetailActivity : AppCompatActivity() {
 
     private fun loadRequest() {
         if (requestId.isBlank()) {
-            _errorMessage.value = "Missing event request information."
+            _errorMessage.value = getString(R.string.event_request_detail_missing_event_request_information)
             return
         }
 
@@ -73,7 +74,7 @@ class AttendeeEventRequestDetailActivity : AppCompatActivity() {
                 }
                 is NetworkResult.Error -> {
                     _isLoading.value = false
-                    _errorMessage.value = result.message.ifBlank { "Unable to load request details." }
+                    _errorMessage.value = result.message.ifBlank { getString(R.string.event_request_detail_unable_to_load_request_details) }
                 }
                 NetworkResult.Loading -> Unit
             }

@@ -9,6 +9,7 @@ interface ClaimedRewardsContract {
             items: List<RewardRedemptionResponse>,
             eventTitle: String?,
             rewardNamesById: Map<String, String>,
+            eventTitlesById: Map<String, String> = emptyMap(),
         )
     }
 }

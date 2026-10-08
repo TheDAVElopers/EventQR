@@ -50,6 +50,8 @@ import com.thedavelopers.eventqr.core.util.RelativeTimeUtils
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 import com.thedavelopers.eventqr.ui.components.EmptyStateView
 import com.thedavelopers.eventqr.ui.theme.LocalSpacing
+import androidx.compose.ui.res.stringResource
+import com.thedavelopers.eventqr.R
 
 private val UNREAD_TINT_ALPHA = 0.08f
 
@@ -138,7 +140,8 @@ fun NotificationItemCard(
     } else {
         colorScheme.primaryContainer.copy(alpha = UNREAD_TINT_ALPHA)
     }
-    val stateLabel = if (isRead) "Read notification" else "Unread notification"
+    val stateLabel = if (isRead) stringResource(R.string.notifications_read_notification) else stringResource(R.string.notifications_unread_notification)
+    val itemDescription = stringResource(R.string.notifications_item_1_s_2_s, stateLabel, item.title)
 
     Row(
         modifier = modifier
@@ -147,7 +150,7 @@ fun NotificationItemCard(
             .background(containerColor)
             .clickable(onClick = onClick)
             .padding(spacing.cardContentGap)
-            .semantics { contentDescription = "$stateLabel. ${item.title}" },
+            .semantics { contentDescription = itemDescription },
         verticalAlignment = Alignment.Top,
     ) {
         Box(

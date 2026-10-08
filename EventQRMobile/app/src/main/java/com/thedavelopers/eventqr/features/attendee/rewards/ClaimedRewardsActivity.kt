@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
-import com.thedavelopers.eventqr.core.api.dto.RegistrationStatus
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResponse
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -95,6 +94,7 @@ open class ClaimedRewardsActivity : AppCompatActivity(), ClaimedRewardsContract.
         items: List<RewardRedemptionResponse>,
         eventTitle: String?,
         rewardNamesById: Map<String, String>,
+        eventTitlesById: Map<String, String>,
     ) {
         swipeRefresh.isRefreshing = false
         skeletonLoading.visibility = View.GONE
@@ -102,7 +102,7 @@ open class ClaimedRewardsActivity : AppCompatActivity(), ClaimedRewardsContract.
         retryButton.visibility = View.GONE
 
         val sorted = items.sortedByDescending { it.redeemedAt ?: Instant.EPOCH }
-        adapter.submitItems(sorted, eventTitle, rewardNamesById)
+        adapter.submitItems(sorted, eventTitle, rewardNamesById, eventTitlesById)
 
         val isEmpty = sorted.isEmpty()
         emptyView.visibility = if (isEmpty) View.VISIBLE else View.GONE
@@ -119,23 +119,24 @@ open class ClaimedRewardsActivity : AppCompatActivity(), ClaimedRewardsContract.
         lifecycleScope.launch {
             when (val registrationsResult = AttendeeRepository(this@ClaimedRewardsActivity).getMyRegistrations()) {
                 is NetworkResult.Success -> {
-                    val selectedRegistration = registrationsResult.data
-                        .filter { it.status != RegistrationStatus.CANCELLED && it.status != RegistrationStatus.NO_SHOW }
-                        .maxByOrNull { it.registeredAt ?: Instant.EPOCH }
-
-                    val selectedEventId = selectedRegistration?.eventId?.toString().orEmpty()
-                    if (selectedEventId.isBlank()) {
+                    // "My Claims" without an event: gather claims across every registration the user has,
+                    // including cancelled ones, since a claim made earlier is still the user's history.
+                    val registrations = registrationsResult.data
+                    val eventIds = registrations.map { it.eventId.toString() }.distinct()
+                    val titles = registrations
+                        .mapNotNull { reg -> reg.eventTitle?.takeIf { it.isNotBlank() }?.let { reg.eventId.toString() to it } }
+                        .toMap()
+                    if (eventIds.isEmpty()) {
                         swipeRefresh.isRefreshing = false
                         skeletonLoading.visibility = View.GONE
-                        emptyView.text = "No claimed rewards yet."
+                        emptyView.text = getString(R.string.claimed_rewards_no_claimed_rewards_yet)
                         emptyView.visibility = View.VISIBLE
                         retryButton.visibility = View.GONE
                         recyclerView.visibility = View.GONE
                         return@launch
                     }
 
-                    eventId = selectedEventId
-                    presenter.loadRedemptions(selectedEventId)
+                    presenter.loadAllRedemptions(eventIds, titles)
                 }
 
                 is NetworkResult.Error -> {

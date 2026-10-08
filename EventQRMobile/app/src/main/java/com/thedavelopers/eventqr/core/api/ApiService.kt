@@ -163,7 +163,10 @@ interface ApiService {
     suspend fun getAttendeeVisibleEvents(): ApiResponse<PageResponse<AttendeeEventResponse>>
 
     @GET("events/attendee-browse")
-    suspend fun getAttendeeBrowseEvents(): ApiResponse<PageResponse<AttendeeEventResponse>>
+    suspend fun getAttendeeBrowseEvents(
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 100,
+    ): ApiResponse<PageResponse<AttendeeEventResponse>>
 
     @GET("events/{eventId}")
     suspend fun getEventById(@Path("eventId") eventId: String): ApiResponse<AttendeeEventResponse>
@@ -339,7 +342,10 @@ interface ApiService {
     ): ApiResponse<OrganizerTransactionRuleDto>
 
     @GET("registrations/me")
-    suspend fun getMyRegistrations(): ApiResponse<PageResponse<RegistrationResponse>>
+    suspend fun getMyRegistrations(
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 100,
+    ): ApiResponse<PageResponse<RegistrationResponse>>
 
     @GET("attendees/me/events/{eventId}/transactions")
     suspend fun getMyEventTransactions(@Path("eventId") eventId: String): ApiResponse<List<TransactionResponse>>
@@ -475,7 +481,10 @@ interface ApiService {
     suspend fun getMyClaimedRewards(@Path("eventId") eventId: String): ApiResponse<List<RewardRedemptionResponse>>
 
     @GET("attendees/me/events/{eventId}/rewards")
-    suspend fun getAttendeeRewards(@Path("eventId") eventId: String): ApiResponse<List<RewardResponse>>
+    suspend fun getAttendeeRewards(
+        @Path("eventId") eventId: String,
+        @Query("includeUnavailable") includeUnavailable: Boolean = false,
+    ): ApiResponse<List<RewardResponse>>
 
     @GET("staff/events")
     suspend fun getStaffEvents(): ApiResponse<List<StaffAssignedEventResponse>>

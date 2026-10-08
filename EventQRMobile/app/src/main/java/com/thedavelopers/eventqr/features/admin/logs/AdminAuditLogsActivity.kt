@@ -45,7 +45,7 @@ class AdminAuditLogsActivity : AppCompatActivity() {
 
         val normalizedRole = RoleMapper.normalizeRole(SessionManager(this).getUserRole())
         if (normalizedRole != AccountRole.ADMIN.name && normalizedRole != AccountRole.SUPER_ADMIN.name) {
-            Toast.makeText(this, "Access Denied: Admin only", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, this.getString(R.string.admin_audit_logs_access_denied_admin_only), Toast.LENGTH_LONG).show()
             finish()
             return
         }
@@ -109,7 +109,7 @@ class AdminAuditLogsActivity : AppCompatActivity() {
                     progressLoading.visibility = View.GONE
                     recyclerLogs.visibility = View.GONE
                     textPlaceholder.visibility = View.VISIBLE
-                    textPlaceholder.text = "Unable to load audit logs. Pull down to retry."
+                    textPlaceholder.text = getString(R.string.admin_audit_logs_unable_to_load_audit_logs_pull_down)
                 }
                 NetworkResult.Loading -> Unit
             }
@@ -127,7 +127,7 @@ class AdminAuditLogsActivity : AppCompatActivity() {
         if (allLogs.isEmpty()) {
             recyclerLogs.visibility = View.GONE
             textPlaceholder.visibility = View.VISIBLE
-            textPlaceholder.text = "No audit logs yet."
+            textPlaceholder.text = getString(R.string.admin_audit_logs_no_audit_logs_yet)
             adapter.submitItems(emptyList())
             return
         }

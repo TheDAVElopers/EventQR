@@ -113,20 +113,42 @@ class EventControllerTest {
     void theEventInTheUrlWinsOverTheEventInTheBody() throws Exception {
         UUID otherEvent = UUID.randomUUID();
 
-        mvc.perform(post("/api/v1/events/{id}/registrations", eventId).contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/api/v1/events/{id}/registrations", eventId).header("Authorization", AUTH).contentType(MediaType.APPLICATION_JSON)
                         .content(json("{'eventId':'" + otherEvent + "','email':'jane@example.com','fullName':'Jane Doe'}")))
                 .andExpect(status().isOk());
 
         ArgumentCaptor<RegistrationRequest> captured = ArgumentCaptor.forClass(RegistrationRequest.class);
-        verify(registrationService).register(captured.capture());
+        verify(registrationService).registerAs(captured.capture(), any(), any(), any());
         org.assertj.core.api.Assertions.assertThat(captured.getValue().eventId()).isEqualTo(eventId);
     }
 
     @Test
-    void aFullEventTurnsIntoA409() throws Exception {
-        when(registrationService.register(any())).thenThrow(new ConflictException("Event is at capacity"));
+    void theRegistrationIsMadeAsTheCallerWithTheCallersRole() throws Exception {
+        mvc.perform(post("/api/v1/events/{id}/registrations", eventId).header("Authorization", AUTH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'eventId':'" + eventId + "','email':'jane@example.com','fullName':'Jane Doe'}")))
+                .andExpect(status().isOk());
 
-        mvc.perform(post("/api/v1/events/{id}/registrations", eventId).contentType(MediaType.APPLICATION_JSON)
+        verify(registrationService).registerAs(any(), eq(userId), eq(AccountRole.ORGANIZER), any());
+    }
+
+    @Test
+    void registeringAnotherUsersEmailTurnsIntoAGeneric403() throws Exception {
+        when(registrationService.registerAs(any(), any(), any(), any()))
+                .thenThrow(new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("You can only register using your own account email"));
+
+        mvc.perform(post("/api/v1/events/{id}/registrations", eventId).header("Authorization", AUTH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'eventId':'" + eventId + "','email':'victim@example.com','fullName':'Victim'}")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("You can only register using your own account email"));
+    }
+
+    @Test
+    void aFullEventTurnsIntoA409() throws Exception {
+        when(registrationService.registerAs(any(), any(), any(), any())).thenThrow(new ConflictException("Event is at capacity"));
+
+        mvc.perform(post("/api/v1/events/{id}/registrations", eventId).header("Authorization", AUTH).contentType(MediaType.APPLICATION_JSON)
                         .content(json("{'eventId':'" + eventId + "','email':'jane@example.com','fullName':'Jane Doe'}")))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("Event is at capacity"));
@@ -134,11 +156,11 @@ class EventControllerTest {
 
     @Test
     void registeringWithABadEmailIsRejectedBeforeTheServiceIsCalled() throws Exception {
-        mvc.perform(post("/api/v1/events/{id}/registrations", eventId).contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/api/v1/events/{id}/registrations", eventId).header("Authorization", AUTH).contentType(MediaType.APPLICATION_JSON)
                         .content(json("{'eventId':'" + eventId + "','email':'nope','fullName':'Jane Doe'}")))
                 .andExpect(status().isBadRequest());
 
-        verify(registrationService, never()).register(any());
+        verify(registrationService, never()).registerAs(any(), any(), any(), any());
     }
 
     // ----- reading -----

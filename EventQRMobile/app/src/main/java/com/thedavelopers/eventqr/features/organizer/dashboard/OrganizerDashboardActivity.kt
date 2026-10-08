@@ -147,12 +147,12 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
         val container = view.findViewById<LinearLayout>(R.id.portalOptionsContainer)
         portals.forEach { portal ->
             val portalView = layoutInflater.inflate(R.layout.item_portal_option, container, false)
-            portalView.findViewById<TextView>(R.id.txtPortalName).text = portal
+            portalView.findViewById<TextView>(R.id.txtPortalName).text = PortalSwitcher.title(this, portal)
             
             val icon = portalView.findViewById<android.widget.ImageView>(R.id.imgPortalIcon)
             val subtitle = portalView.findViewById<TextView>(R.id.txtPortalSubtitle)
             icon.setImageResource(PortalSwitcher.iconRes(portal))
-            subtitle.text = PortalSwitcher.subtitle(portal)
+            subtitle.text = PortalSwitcher.subtitle(this, portal)
 
             if (portal == PortalSwitcher.PORTAL_ORGANIZER) {
                 portalView.findViewById<View>(R.id.currentPortalBadge).visibility = View.VISIBLE
@@ -217,7 +217,7 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
                 if (!isSwipeRefreshing) findViewById<View>(R.id.statsGrid).visibility = View.GONE
                 findViewById<View>(R.id.layoutDashboardError).visibility = View.VISIBLE
                 Log.w(TAG, "Dashboard load failed: ${error.message ?: "unknown"}", error)
-                findViewById<TextView>(R.id.txtDashboardError).text = "Couldn't load your dashboard. Check your connection and try again."
+                findViewById<TextView>(R.id.txtDashboardError).text = getString(R.string.organizer_dashboard_couldn_t_load_your_dashboard_check_y)
             } finally {
                 stopSwipeRefresh()
             }

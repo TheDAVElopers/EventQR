@@ -20,6 +20,7 @@ import com.thedavelopers.eventqr.features.users.model.entity.UserProfile;
 import com.thedavelopers.eventqr.features.users.repository.UserProfileRepository;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.AccountStatus;
+import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.exceptions.UnauthorizedException;
 import com.thedavelopers.eventqr.shared.security.JwtService;
 
@@ -86,6 +87,27 @@ class AuthServiceTest {
     }
 
     @Test
+    void unknownEmailsAndUnusableHashesStillSpendAPasswordHashVerification() {
+        PasswordEncoder encoder = mock(PasswordEncoder.class);
+        AuthService timed = new AuthService(userRepository, encoder, jwtService, refreshTokenService);
+        when(userRepository.findByEmailIgnoreCase("nobody@example.com")).thenReturn(Optional.empty());
+        user.setPasswordHash("{UNUSABLE}abc");
+
+        assertThatThrownBy(() -> timed.login(new LoginRequest("nobody@example.com", PASSWORD)))
+                .isInstanceOf(UnauthorizedException.class).hasMessage("Invalid email or password");
+        assertThatThrownBy(() -> timed.login(login(PASSWORD)))
+                .isInstanceOf(UnauthorizedException.class).hasMessage("Invalid email or password");
+
+        org.mockito.ArgumentCaptor<String> hash = org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(encoder, org.mockito.Mockito.times(2)).matches(org.mockito.ArgumentMatchers.eq(PASSWORD), hash.capture());
+        // A real, well-formed strength-10 BCrypt hash, so the verification costs the same as a real one.
+        assertThat(hash.getAllValues()).allSatisfy(h -> {
+            assertThat(h).startsWith("$2a$10$").hasSize(60);
+            assertThat(new BCryptPasswordEncoder().matches(PASSWORD, h)).isFalse();
+        });
+    }
+
+    @Test
     void accountsWithoutAUsablePasswordCannotLogIn() {
         for (String hash : new String[] {null, "", "   ", "{UNUSABLE}abc"}) {
             user.setPasswordHash(hash);
@@ -104,9 +126,18 @@ class AuthServiceTest {
 
             assertThatThrownBy(() -> service.login(login(PASSWORD)))
                     .as("status %s", status)
-                    .isInstanceOf(UnauthorizedException.class)
-                    .hasMessageContaining("disabled");
+                    .isInstanceOf(ForbiddenException.class)
+                    .hasMessage("Account is disabled. Contact support.");
         }
+    }
+
+    @Test
+    void disabledAccountWithWrongPasswordStillGets401NotTheDisabledSignal() {
+        user.setStatus(AccountStatus.SUSPENDED);
+
+        assertThatThrownBy(() -> service.login(login("wrong-password")))
+                .isInstanceOf(UnauthorizedException.class)
+                .hasMessage("Invalid email or password");
     }
 
     @Test

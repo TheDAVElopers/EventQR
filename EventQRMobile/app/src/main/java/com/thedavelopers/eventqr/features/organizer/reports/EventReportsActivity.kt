@@ -723,7 +723,7 @@ open class EventReportsActivity : AppCompatActivity() {
 
         generateButton = primaryButton("Generate") {
             if (endDate!!.isBefore(startDate!!)) {
-                dateError.text = "End date must be after start date"
+                dateError.text = getString(R.string.event_reports_end_date_must_be_after_start_date)
                 dateError.visibility = View.VISIBLE
                 return@primaryButton
             }
@@ -797,8 +797,8 @@ open class EventReportsActivity : AppCompatActivity() {
         val combined = mutableListOf<EventReportDto>()
         val allTypes = reportCatalog().map { it.reportType }
         val loading = AlertDialog.Builder(this)
-            .setTitle("Generating reports")
-            .setMessage("Please wait while all report sections are prepared.")
+            .setTitle(getString(R.string.event_reports_generating_reports))
+            .setMessage(getString(R.string.event_reports_please_wait_while_all_report_section))
             .setCancelable(false)
             .create()
         loading.show()

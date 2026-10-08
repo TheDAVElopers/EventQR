@@ -105,12 +105,12 @@ class RequestEventActivity : AppCompatActivity() {
                     if (croppedUri != null) {
                         handleCroppedPoster(croppedUri)
                     } else {
-                        showMessage("Unable to process cropped poster. Please try again.")
+                        showMessage(getString(R.string.request_event_unable_to_process_cropped_poster_ple))
                     }
                 }
                 result.resultCode == UCrop.RESULT_ERROR -> {
                     result.data?.let { UCrop.getError(it) }
-                    showMessage("Unable to crop selected poster. Please choose another image.")
+                    showMessage(getString(R.string.request_event_unable_to_crop_selected_poster_pleas))
                 }
             }
         }
@@ -137,12 +137,12 @@ class RequestEventActivity : AppCompatActivity() {
             if (endDateTimeValue != null && !endDateTimeValue!!.isAfter(value)) {
                 endDateTimeValue = null
                 endDateTimeInput.text?.clear()
-                endDateTimeInput.error = "End date/time must be after the start"
+                endDateTimeInput.error = getString(R.string.request_event_end_date_time_must_be_after_the_star)
             }
             if (registrationEndDateTimeValue != null && !registrationEndDateTimeValue!!.isBefore(value)) {
                 registrationEndDateTimeValue = null
                 registrationEndDateTimeInput.text?.clear()
-                registrationEndDateTimeInput.error = "Registration end must be before event start"
+                registrationEndDateTimeInput.error = getString(R.string.request_event_registration_end_must_be_before_even)
             }
         }
         configureDateTimeField(endDateTimeInput, { endDateTimeValue }) { value ->
@@ -152,7 +152,7 @@ class RequestEventActivity : AppCompatActivity() {
             if (startDateTimeValue != null && !value.isAfter(startDateTimeValue)) {
                 endDateTimeValue = null
                 endDateTimeInput.text?.clear()
-                endDateTimeInput.error = "End date/time must be after the start"
+                endDateTimeInput.error = getString(R.string.request_event_end_date_time_must_be_after_the_star)
             }
         }
         configureDateTimeField(registrationStartDateTimeInput, { registrationStartDateTimeValue }) { value ->
@@ -162,7 +162,7 @@ class RequestEventActivity : AppCompatActivity() {
             if (registrationEndDateTimeValue != null && !registrationEndDateTimeValue!!.isAfter(value)) {
                 registrationEndDateTimeValue = null
                 registrationEndDateTimeInput.text?.clear()
-                registrationEndDateTimeInput.error = "Registration end must be after registration start"
+                registrationEndDateTimeInput.error = getString(R.string.request_event_registration_end_must_be_after_regis)
             }
         }
         configureDateTimeField(registrationEndDateTimeInput, { registrationEndDateTimeValue }) { value ->
@@ -172,13 +172,13 @@ class RequestEventActivity : AppCompatActivity() {
             if (registrationStartDateTimeValue != null && !value.isAfter(registrationStartDateTimeValue)) {
                 registrationEndDateTimeValue = null
                 registrationEndDateTimeInput.text?.clear()
-                registrationEndDateTimeInput.error = "Registration end must be after registration start"
+                registrationEndDateTimeInput.error = getString(R.string.request_event_registration_end_must_be_after_regis)
                 return@configureDateTimeField
             }
             if (startDateTimeValue != null && !value.isBefore(startDateTimeValue)) {
                 registrationEndDateTimeValue = null
                 registrationEndDateTimeInput.text?.clear()
-                registrationEndDateTimeInput.error = "Registration end must be before event start"
+                registrationEndDateTimeInput.error = getString(R.string.request_event_registration_end_must_be_before_even)
             }
         }
     }
@@ -255,7 +255,7 @@ class RequestEventActivity : AppCompatActivity() {
         // Crop output is forced to JPEG by UCrop options; still guard the type explicitly.
         val croppedType = contentResolver.getType(croppedUri)?.lowercase()
         if (croppedType != null && croppedType !in ALLOWED_POSTER_MIME_TYPES) {
-            showMessage("Only JPG and PNG posters are supported. Please choose another image.")
+            showMessage(getString(R.string.request_event_only_jpg_and_png_posters_are_support))
             return
         }
 
@@ -267,7 +267,7 @@ class RequestEventActivity : AppCompatActivity() {
         }.onSuccess {
             if (posterFile.length() > MAX_POSTER_BYTES) {
                 posterFile.delete()
-                showMessage("Cropped poster must not exceed 5 MB. Please choose a smaller image.")
+                showMessage(getString(R.string.request_event_cropped_poster_must_not_exceed_5_mb))
                 return
             }
             selectedPosterFile?.delete()
@@ -275,10 +275,10 @@ class RequestEventActivity : AppCompatActivity() {
             eventPosterPreview.setImageURI(croppedUri)
             eventPosterPreview.visibility = View.VISIBLE
             eventPosterPlaceholder.visibility = View.GONE
-            eventPosterStatusText.text = "Poster ready (16:9). Tap it to replace or re-crop."
+            eventPosterStatusText.text = getString(R.string.request_event_poster_ready_16_9_tap_it_to_replace)
             eventPosterStatusText.setTextColor(0xFF4F46E5.toInt())
         }.onFailure {
-            showMessage("Unable to attach cropped poster. Please choose another image.")
+            showMessage(getString(R.string.request_event_unable_to_attach_cropped_poster_plea))
         }
     }
 
@@ -371,11 +371,11 @@ class RequestEventActivity : AppCompatActivity() {
         failIfNull(endDateTimeInput, endDateTime, "End date/time is required")
 
         if (startDateTime != null && startDateTime.isBefore(currentLocalDateTime())) {
-            startDateTimeInput.error = "Start date/time cannot be in the past"
+            startDateTimeInput.error = getString(R.string.request_event_start_date_time_cannot_be_in_the_pas)
             failures += startDateTimeInput to "Start date/time cannot be in the past"
         }
         if (startDateTime != null && endDateTime != null && !endDateTime.isAfter(startDateTime)) {
-            endDateTimeInput.error = "End date/time must be after the start"
+            endDateTimeInput.error = getString(R.string.request_event_end_date_time_must_be_after_the_star)
             failures += endDateTimeInput to "End date/time must be after the start"
         }
 
@@ -385,23 +385,23 @@ class RequestEventActivity : AppCompatActivity() {
         failIfNull(registrationEndDateTimeInput, registrationEnd, "Registration end date/time is required")
 
         if (registrationStart != null && registrationStart.isBefore(currentLocalDateTime())) {
-            registrationStartDateTimeInput.error = "Registration start cannot be in the past"
+            registrationStartDateTimeInput.error = getString(R.string.request_event_registration_start_cannot_be_in_the)
             failures += registrationStartDateTimeInput to "Registration start cannot be in the past"
         }
         if (registrationStart != null && registrationEnd != null && !registrationEnd.isAfter(registrationStart)) {
-            registrationEndDateTimeInput.error = "Registration end must be after registration start"
+            registrationEndDateTimeInput.error = getString(R.string.request_event_registration_end_must_be_after_regis)
             failures += registrationEndDateTimeInput to "Registration end must be after registration start"
         }
         if (registrationEnd != null && registrationEnd.isBefore(currentLocalDateTime())) {
-            registrationEndDateTimeInput.error = "Registration end cannot be in the past"
+            registrationEndDateTimeInput.error = getString(R.string.request_event_registration_end_cannot_be_in_the_pa)
             failures += registrationEndDateTimeInput to "Registration end cannot be in the past"
         }
         if (registrationEnd != null && endDateTime != null && registrationEnd.isAfter(endDateTime)) {
-            registrationEndDateTimeInput.error = "Registration end must not be after event end"
+            registrationEndDateTimeInput.error = getString(R.string.request_event_registration_end_must_not_be_after_e)
             failures += registrationEndDateTimeInput to "Registration end must not be after event end"
         }
         if (registrationEnd != null && startDateTime != null && !registrationEnd.isBefore(startDateTime)) {
-            registrationEndDateTimeInput.error = "Registration end must be before event start"
+            registrationEndDateTimeInput.error = getString(R.string.request_event_registration_end_must_be_before_even)
             failures += registrationEndDateTimeInput to "Registration end must be before event start"
         }
 
@@ -409,7 +409,7 @@ class RequestEventActivity : AppCompatActivity() {
 
         val contactEmail = contactEmailInput.requiredValue("Contact email is required")
         if (contactEmail != null && !Validators.isValidEmail(contactEmail)) {
-            contactEmailInput.error = "Enter a valid email address"
+            contactEmailInput.error = getString(R.string.create_admin_account_enter_a_valid_email_address)
             failures += contactEmailInput to "Enter a valid email address"
         }
         val contactNumber = contactNumberInput.requiredValue("Contact number is required")
@@ -450,7 +450,7 @@ class RequestEventActivity : AppCompatActivity() {
         val shown = failures.take(maxShownMessages).joinToString("\n") { "• ${it.second}" }
         val hiddenCount = failures.size - maxShownMessages
         val message = if (hiddenCount > 0) {
-            "$shown\nand $hiddenCount more issue${if (hiddenCount == 1) "" else "s"}"
+            "$shown\n" + resources.getQuantityString(R.plurals.request_event_more_issues, hiddenCount, hiddenCount)
         } else {
             shown
         }
@@ -461,7 +461,7 @@ class RequestEventActivity : AppCompatActivity() {
         isSubmitting = loading
         submitProgress.visibility = if (loading) View.VISIBLE else View.GONE
         submitButton.isEnabled = !loading
-        submitButton.text = if (loading) "Submitting..." else "Submit Request"
+        submitButton.text = getString(if (loading) R.string.attendee_registration_submitting else R.string.request_event_submit_request)
     }
 
     private fun showSuccessDialog() {
@@ -627,7 +627,7 @@ class RequestEventActivity : AppCompatActivity() {
                     { _, hourOfDay, minute ->
                         val selectedDateTime = LocalDateTime.of(selectedDate, LocalTime.of(hourOfDay, minute))
                         if (selectedDateTime.isBefore(currentLocalDateTime())) {
-                            Toast.makeText(this, "Selected date/time cannot be in the past", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, this.getString(R.string.request_event_selected_date_time_cannot_be_in_the), Toast.LENGTH_SHORT).show()
                             return@TimePickerDialog
                         }
                         onSelected(selectedDateTime)

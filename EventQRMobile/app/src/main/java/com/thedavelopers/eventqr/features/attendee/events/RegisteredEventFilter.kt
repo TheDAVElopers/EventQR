@@ -2,6 +2,7 @@ package com.thedavelopers.eventqr.features.attendee
 
 enum class RegisteredEventFilter {
     ALL,
-    REGISTERED,
+    UPCOMING,
+    ACTIVE,
     COMPLETED
 }

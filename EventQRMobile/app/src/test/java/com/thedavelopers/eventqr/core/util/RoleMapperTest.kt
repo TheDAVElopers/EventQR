@@ -5,6 +5,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import com.thedavelopers.eventqr.R
 
 class RoleMapperTest {
 
@@ -37,20 +38,11 @@ class RoleMapperTest {
     }
 
     @Test
-    fun getDisplayName_returnsExpectedLabels() {
-        assertEquals("Attendee", RoleMapper.getDisplayName("USER"))
-        assertEquals("Attendee", RoleMapper.getDisplayName("ATTENDEE"))
-        assertEquals("Staff", RoleMapper.getDisplayName("STAFF"))
-        assertEquals("Organizer", RoleMapper.getDisplayName("ORGANIZER"))
-        assertEquals("Administrator", RoleMapper.getDisplayName("ADMIN"))
-        assertEquals("Super Admin", RoleMapper.getDisplayName("SUPER_ADMIN"))
-    }
-
-    @Test
-    fun getDisplayName_handlesBlankAndFallback() {
-        assertEquals("", RoleMapper.getDisplayName(null))
-        assertEquals("", RoleMapper.getDisplayName(""))
-        assertEquals("Guest", RoleMapper.getDisplayName("guest"))
+    fun getDisplayNameRes_mapsKnownRolesAndAliases() {
+        assertEquals(R.string.common_attendee, RoleMapper.getDisplayNameRes("USER"))
+        assertEquals(R.string.common_attendee, RoleMapper.getDisplayNameRes("ATTENDEE"))
+        assertEquals(null, RoleMapper.getDisplayNameRes("guest"))
+        assertEquals(null, RoleMapper.getDisplayNameRes(null))
     }
 
     @Test

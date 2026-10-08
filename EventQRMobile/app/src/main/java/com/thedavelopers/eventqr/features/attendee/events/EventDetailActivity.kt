@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.attendee
 
+import com.thedavelopers.eventqr.core.util.UiStrings
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Bundle
@@ -37,12 +38,12 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         setContentView(R.layout.activity_event_detail)
 
         repository = AttendeeRepository(this)
-        presenter = EventDetailPresenter(this, repository)
+        presenter = EventDetailPresenter(this, repository, UiStrings(this))
         eventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty()
 
         findViewById<View>(R.id.nav_header_back).setOnClickListener { finish() }
 
-        findViewById<TextView>(R.id.nav_header_title).text = intent.getStringExtra(EXTRA_EVENT_TITLE).orEmpty()
+        findViewById<TextView>(R.id.txtDetailTitle).text = intent.getStringExtra(EXTRA_EVENT_TITLE).orEmpty()
         findViewById<TextView>(R.id.txtDetailDescription).text = intent.getStringExtra(EXTRA_EVENT_DESCRIPTION).orEmpty()
         findViewById<TextView>(R.id.txtDetailVenue).text = intent.getStringExtra(EXTRA_EVENT_LOCATION).orEmpty().ifBlank { "Location not specified" }
         
@@ -75,7 +76,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         if (eventId.isNotBlank()) {
             presenter.loadEventDetails(eventId)
         } else {
-            showMessage("Missing event information.")
+            showMessage(getString(R.string.event_detail_missing_event_information))
         }
     }
 
@@ -94,7 +95,8 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
 
     override fun renderEvent(event: AttendeeEventResponse) {
         currentEvent = event
-        findViewById<TextView>(R.id.nav_header_title).text = event.title
+        // The header keeps its fixed "Event Details" title; the event name sits on the banner above the description.
+        findViewById<TextView>(R.id.txtDetailTitle).text = event.title
         findViewById<TextView>(R.id.txtDetailDescription).text = event.description?.takeIf { it.isNotBlank() } ?: "No event description provided."
         findViewById<TextView>(R.id.txtDetailVenue).text = event.location?.takeIf { it.isNotBlank() } ?: "Location not specified."
         renderEventPoster(event.eventLogoUrl)
@@ -178,19 +180,20 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         val remainingView = findViewById<TextView>(R.id.txtRemainingSpots)
 
         if (capacity <= 0) {
-            capacityView.text = "--"
+            // Capacity 0 means unlimited on the backend, not "unknown".
+            capacityView.text = getString(R.string.event_detail_capacity_unlimited, current)
             percentView.text = ""
             remainingView.text = ""
             progressBar.progress = 0
             return
         }
 
-        capacityView.text = "$current / $capacity registered"
+        capacityView.text = getString(R.string.event_detail_capacity_registered, current, capacity)
         val percent = (current.toFloat() / capacity.toFloat() * 100).toInt().coerceIn(0, 100)
         val remaining = (capacity - current).coerceAtLeast(0)
-        percentView.text = "$percent% full"
+        percentView.text = getString(R.string.event_detail_percent_full, percent)
         progressBar.progress = percent
-        remainingView.text = "$remaining spots remaining"
+        remainingView.text = getString(R.string.event_detail_spots_remaining, remaining)
     }
 
     private fun checkOwnedEventThenAvailability(event: AttendeeEventResponse) {
@@ -246,7 +249,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
 
         if (availability.available) {
             btn.isEnabled = true
-            btn.text = "Register"
+            btn.text = getString(R.string.event_detail_register)
             btn.setBackgroundResource(R.drawable.bg_detail_register_button)
             logRegistrationWindow(event, availability, availability.message, true)
             return
@@ -278,7 +281,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         }
 
         btn.isEnabled = true
-        btn.text = "Register"
+        btn.text = getString(R.string.event_detail_register)
         btn.setBackgroundResource(R.drawable.bg_detail_register_button)
         logRegistrationWindow(event, null, "Availability endpoint failed: $message", true)
     }
@@ -359,13 +362,13 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
 
     private fun setAlreadyRegisteredState(button: Button) {
         button.isEnabled = false
-        button.text = "Already Registered"
+        button.text = getString(R.string.event_detail_already_registered)
         button.setBackgroundResource(R.drawable.bg_disabled_button)
     }
 
     private fun setUnverifiableState(button: Button) {
         button.isEnabled = false
-        button.text = "Can't verify registration"
+        button.text = getString(R.string.event_detail_can_t_verify_registration)
         button.setBackgroundResource(R.drawable.bg_disabled_button)
     }
 

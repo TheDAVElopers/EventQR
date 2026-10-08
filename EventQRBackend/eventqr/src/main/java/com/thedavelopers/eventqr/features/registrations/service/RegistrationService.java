@@ -31,6 +31,8 @@ import com.thedavelopers.eventqr.shared.constants.RegistrationStatus;
 import com.thedavelopers.eventqr.shared.exceptions.ConflictException;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
+import com.thedavelopers.eventqr.shared.exceptions.TooManyRequestsException;
+import com.thedavelopers.eventqr.shared.security.RegistrationRateLimiter;
 import com.thedavelopers.eventqr.shared.interfaces.AttendeeDirectoryPort;
 import com.thedavelopers.eventqr.shared.interfaces.EventLookupPort;
 import com.thedavelopers.eventqr.shared.interfaces.EventLookupPort.EventSnapshot;
@@ -45,6 +47,7 @@ import com.thedavelopers.eventqr.shared.interfaces.RegistrationLookupPort.Regist
 @Transactional
 public class RegistrationService implements RegistrationLookupPort, RegistrationCommandPort {
 
+    private static final String REGISTER_OWN_EMAIL_MESSAGE = "You can only register using your own account email";
     private static final Logger log = LoggerFactory.getLogger(RegistrationService.class);
 
     @PersistenceContext
@@ -59,6 +62,7 @@ public class RegistrationService implements RegistrationLookupPort, Registration
     private final EventService eventService;
     private final QREmailService qrEmailService;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final RegistrationRateLimiter registrationRateLimiter;
 
     public RegistrationService(EventRegistrationRepository registrationRepository,
                                AttendeeDirectoryPort attendeeDirectoryPort,
@@ -68,7 +72,8 @@ public class RegistrationService implements RegistrationLookupPort, Registration
                                QrCredentialPort qrCredentialPort,
                                EventService eventService,
                                QREmailService qrEmailService,
-                               ApplicationEventPublisher applicationEventPublisher) {
+                               ApplicationEventPublisher applicationEventPublisher,
+                               RegistrationRateLimiter registrationRateLimiter) {
         this.registrationRepository = registrationRepository;
         this.attendeeDirectoryPort = attendeeDirectoryPort;
         this.notificationService = notificationService;
@@ -78,10 +83,41 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         this.eventService = eventService;
         this.qrEmailService = qrEmailService;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.registrationRateLimiter = registrationRateLimiter;
     }
 
-    @CacheEvict(cacheNames = {"events", "registrations"}, key = "#request.eventId()")
-    public RegistrationSubmissionResponse register(RegistrationRequest request) {
+    /**
+     * Registers for an event on behalf of an authenticated caller. The registration email must be
+     * the caller's own profile email; only ADMIN/SUPER_ADMIN may register another email. The check
+     * runs before the rate limiter and before any event or attendee lookup, so a mismatch reveals
+     * nothing about whether the email exists or is already registered, creates no profile, and
+     * consumes no rate-limit budget. The limiter is then keyed on the client IP and the caller's
+     * user id (never the body email), so nobody can exhaust another user's budget. Both registration
+     * endpoints call this method, so they cannot diverge.
+     */
+    @CacheEvict(cacheNames = {"events", "registrations"}, allEntries = true)
+    public RegistrationSubmissionResponse registerAs(RegistrationRequest request, UUID callerUserId,
+                                                     AccountRole callerRole, String clientIp) {
+        requireOwnEmailOrAdmin(request.email(), callerUserId, callerRole);
+        if (!registrationRateLimiter.allow(clientIp, callerUserId)) {
+            throw new TooManyRequestsException("Too many registration requests. Please try again later.");
+        }
+        return register(request);
+    }
+
+    private void requireOwnEmailOrAdmin(String requestedEmail, UUID callerUserId, AccountRole callerRole) {
+        if (callerRole == AccountRole.ADMIN || callerRole == AccountRole.SUPER_ADMIN) {
+            return;
+        }
+        String callerEmail = callerUserId == null ? null
+                : attendeeDirectoryPort.findById(callerUserId).map(AttendeeDirectoryPort.AttendeeSnapshot::email).orElse(null);
+        if (callerEmail == null || requestedEmail == null || !requestedEmail.trim().equalsIgnoreCase(callerEmail.trim())) {
+            throw new ForbiddenException(REGISTER_OWN_EMAIL_MESSAGE);
+        }
+    }
+
+    /** Unchecked core; callers outside this package must go through {@link #registerAs}. */
+    RegistrationSubmissionResponse register(RegistrationRequest request) {
         EventLookupPort.EventSnapshot eventSnapshot = eventLookupPort.findById(request.eventId())
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + request.eventId()));
         Instant now = Instant.now();
@@ -224,7 +260,7 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         return toResponse(registration);
     }
 
-    @CacheEvict(cacheNames = {"events", "registrations"}, key = "#attendeeUserId")
+    @CacheEvict(cacheNames = {"events", "registrations"}, allEntries = true)
     public RegistrationResponse cancel(UUID registrationId, UUID attendeeUserId) {
         EventRegistration registration = registrationRepository.findById(registrationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Registration not found: " + registrationId));
@@ -237,7 +273,7 @@ public class RegistrationService implements RegistrationLookupPort, Registration
             eventService.decrementCurrentAttendeeCount(registration.getEventId());
         }
         if (registration.getQrCredentialId() != null) {
-            qrCredentialPort.findById(registration.getQrCredentialId()).ifPresent(qr -> qrCredentialPort.markEmailQueued(qr.qrCredentialId()));
+            qrCredentialPort.findById(registration.getQrCredentialId()).ifPresent(qr -> qrCredentialPort.deactivate(qr.qrCredentialId()));
         }
         return toResponse(registration);
     }

@@ -10,7 +10,7 @@
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="Attendee Details" />
+        app:title="@string/attendee_details_attendee_details" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -63,7 +63,7 @@
                             android:layout_height="wrap_content"
                             android:ellipsize="end"
                             android:maxLines="2"
-                            android:text="Attendee"
+                            android:text="@string/common_attendee"
                             android:textColor="#111827"
                             android:textSize="19sp"
                             android:textStyle="bold" />
@@ -104,7 +104,7 @@
                     android:layout_height="42dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Event" android:textColor="#6B7280" android:textSize="14sp" />
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/common_event" android:textColor="#6B7280" android:textSize="14sp" />
                     <TextView android:id="@+id/txtDetailEventName" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:ellipsize="end" android:gravity="end" android:maxLines="1" android:textColor="#111827" android:textSize="14sp" android:textStyle="bold" />
                 </LinearLayout>
 
@@ -115,7 +115,7 @@
                     android:layout_height="42dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Registration ID" android:textColor="#6B7280" android:textSize="14sp" />
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/common_registration_id" android:textColor="#6B7280" android:textSize="14sp" />
                     <TextView android:id="@+id/txtDetailRegistrationId" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:ellipsize="end" android:gravity="end" android:maxLines="1" android:textColor="#111827" android:textSize="14sp" android:textStyle="bold" />
                 </LinearLayout>
 
@@ -126,7 +126,7 @@
                     android:layout_height="42dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Status" android:textColor="#6B7280" android:textSize="14sp" />
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/common_status" android:textColor="#6B7280" android:textSize="14sp" />
                     <TextView android:id="@+id/txtDetailRegistrationStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/bg_badge_default" android:includeFontPadding="false" android:paddingHorizontal="12dp" android:paddingVertical="5dp" android:textColor="@color/eventqr_badge_default_text" android:textSize="12sp" android:textStyle="bold" />
                 </LinearLayout>
 
@@ -137,7 +137,7 @@
                     android:layout_height="42dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Check-in Time" android:textColor="#6B7280" android:textSize="14sp" />
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/staff_attendee_details_check_in_time" android:textColor="#6B7280" android:textSize="14sp" />
                     <TextView android:id="@+id/txtDetailCheckInTime" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:textColor="#111827" android:textSize="14sp" android:textStyle="bold" />
                 </LinearLayout>
 
@@ -148,7 +148,7 @@
                     android:layout_height="42dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Points Earned" android:textColor="#6B7280" android:textSize="14sp" />
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/common_points_earned" android:textColor="#6B7280" android:textSize="14sp" />
                     <TextView android:id="@+id/txtDetailPointsBalance" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:textColor="#111827" android:textSize="14sp" android:textStyle="bold" />
                 </LinearLayout>
 
@@ -159,7 +159,7 @@
                     android:layout_height="42dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Transactions" android:textColor="#6B7280" android:textSize="14sp" />
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/common_transactions" android:textColor="#6B7280" android:textSize="14sp" />
                     <TextView android:id="@+id/txtDetailTransactionCount" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:textColor="#111827" android:textSize="14sp" android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
@@ -194,7 +194,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
-                        android:text="Print ID"
+                        android:text="@string/staff_attendee_details_print_id"
                         android:textColor="@android:color/white"
                         android:textSize="15sp"
                         android:textStyle="bold" />
@@ -223,7 +223,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
-                        android:text="Scan Again"
+                        android:text="@string/staff_attendee_details_scan_again"
                         android:textColor="@color/eventqr_purple"
                         android:textSize="15sp"
                         android:textStyle="bold" />
@@ -254,7 +254,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Recent Transactions"
+                    android:text="@string/staff_attendee_details_recent_transactions"
                     android:textColor="#111827"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -267,7 +267,7 @@
                     android:background="@drawable/bg_card"
                     android:gravity="center"
                     android:padding="24dp"
-                    android:text="No transactions recorded yet"
+                    android:text="@string/staff_attendee_details_no_transactions_recorded_yet"
                     android:textColor="#9CA3AF"
                     android:textSize="14sp"
                     android:visibility="gone" />

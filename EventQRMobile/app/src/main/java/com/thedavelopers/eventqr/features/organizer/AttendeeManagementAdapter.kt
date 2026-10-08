@@ -45,7 +45,7 @@ class AttendeeManagementAdapter(
 
             if (item.points > 0) {
                 pointsText.visibility = View.VISIBLE
-                pointsText.text = "${item.points} pts"
+                pointsText.text = pointsText.context.getString(R.string.common_points_short, item.points)
             } else {
                 pointsText.visibility = View.GONE
             }

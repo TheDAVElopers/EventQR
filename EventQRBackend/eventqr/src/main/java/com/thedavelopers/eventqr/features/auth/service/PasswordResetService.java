@@ -6,14 +6,18 @@ import java.time.Instant;
 import java.util.HexFormat;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.thedavelopers.eventqr.features.auth.model.entity.PasswordResetToken;
 import com.thedavelopers.eventqr.features.auth.repository.PasswordResetTokenRepository;
@@ -22,7 +26,6 @@ import com.thedavelopers.eventqr.features.users.model.entity.UserProfile;
 import com.thedavelopers.eventqr.features.users.repository.UserProfileRepository;
 import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
 import com.thedavelopers.eventqr.shared.utils.EmailNormalizer;
-import com.thedavelopers.eventqr.shared.utils.LogRedaction;
 import com.thedavelopers.eventqr.shared.utils.PasswordValidator;
 
 @Service
@@ -57,14 +60,39 @@ public class PasswordResetService {
         this.frontendBaseUrl = frontendBaseUrl;
     }
 
+    /**
+     * Runs on {@code eventTaskExecutor} so the caller returns the same neutral response, in the same time,
+     * whether or not the account exists (no DB writes or Brevo call on the request thread). The proxy applies
+     * the class-level transaction inside the async thread, so token invalidation and persistence stay in one
+     * transaction. Runs on the dedicated {@code passwordResetExecutor} (caller-runs when saturated, so mail is
+     * never dropped). The whole body is guarded: failures log only userId (when known) + exception class, never
+     * the email or token, and never reach the global async handler.
+     */
+    @Async("passwordResetExecutor")
     public void requestReset(String email) {
+        AtomicReference<UUID> userId = new AtomicReference<>();
+        try {
+            doRequestReset(email, userId);
+        } catch (Exception e) {
+            log.error("Password reset request failed userId={} cause={}", userId.get(), e.getClass().getSimpleName());
+        }
+    }
+
+    private void doRequestReset(String email, AtomicReference<UUID> userIdOut) {
         String normalizedEmail = normalizeEmail(email);
-        Optional<UserProfile> userOpt = userProfileRepository.findByEmailIgnoreCase(normalizedEmail);
+        // Exact (trimmed, case-insensitive) address first: profiles created by event registration are
+        // stored exactly as typed, so a dotted or +tagged address would not match its canonical form.
+        // The canonical form remains a fallback so alias spellings still reach the real account.
+        Optional<UserProfile> userOpt = userProfileRepository.findByEmailIgnoreCase(email.trim());
+        if (userOpt.isEmpty()) {
+            userOpt = userProfileRepository.findByEmailIgnoreCase(normalizedEmail);
+        }
         if (userOpt.isEmpty()) {
             log.debug("Password reset requested for unknown email, returning silently");
             return;
         }
         UserProfile user = userOpt.get();
+        userIdOut.set(user.getId());
         passwordResetTokenRepository.invalidateAllUnusedByUserId(user.getId());
         String token = generateToken();
         Instant expiresAt = Instant.now().plus(RESET_TTL);
@@ -87,10 +115,31 @@ public class PasswordResetService {
                 <p>— The EventQR Team</p>
                 </body></html>
                 """.formatted(user.getFullName(), resetLink);
-        try {
-            emailGatewayService.sendSimple(normalizedEmail, subject, html);
-        } catch (Exception e) {
-            log.error("Failed to send password reset email to {}", LogRedaction.maskEmail(normalizedEmail), e);
+        sendAfterCommit(user.getId(), user.getEmail(), subject, html);
+    }
+
+    /**
+     * The token row only exists for real once the surrounding transaction commits. Sending inside the
+     * transaction could email a link whose token is then rolled back (dead link), so the mail goes out
+     * from afterCommit. Without an active transaction (direct calls) it is sent immediately.
+     */
+    private void sendAfterCommit(UUID userId, String toEmail, String subject, String html) {
+        Runnable send = () -> {
+            try {
+                emailGatewayService.sendSimple(toEmail, subject, html);
+            } catch (Exception e) {
+                log.error("Failed to send password reset email for userId={} cause={}", userId, e.getClass().getSimpleName());
+            }
+        };
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    send.run();
+                }
+            });
+        } else {
+            send.run();
         }
     }
 
@@ -113,9 +162,7 @@ public class PasswordResetService {
         if (!newPassword.equals(confirmPassword)) {
             throw new BadRequestException("Passwords do not match");
         }
-        if (!PasswordValidator.isValid(newPassword)) {
-            throw new BadRequestException(PasswordValidator.FAILURE_MESSAGE);
-        }
+        PasswordValidator.requireValid(newPassword);
         PasswordResetToken resetToken = passwordResetTokenRepository
                 .findByTokenAndUsedFalseAndExpiresAtAfter(token.trim(), Instant.now())
                 .orElseThrow(() -> new BadRequestException("Reset token is invalid or expired"));

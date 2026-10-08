@@ -36,6 +36,7 @@ class CreateAdminAccountActivity : AppCompatActivity() {
     private lateinit var requirementsLayout: View
     private lateinit var passwordLengthRequirement: TextView
     private lateinit var passwordCapitalRequirement: TextView
+    private lateinit var passwordLowercaseRequirement: TextView
     private lateinit var passwordSpecialRequirement: TextView
     private lateinit var passwordNumberRequirement: TextView
     private lateinit var passwordStrengthText: TextView
@@ -49,7 +50,7 @@ class CreateAdminAccountActivity : AppCompatActivity() {
         sessionManager = SessionManager(this)
 
         if (RoleMapper.normalizeRole(sessionManager.getUserRole()) != AccountRole.SUPER_ADMIN.name) {
-            Toast.makeText(this, "Only Super Admin can create admin accounts.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, this.getString(R.string.create_admin_account_only_super_admin_can_create_admin_ac), Toast.LENGTH_SHORT).show()
             finish()
             return
         }
@@ -81,6 +82,7 @@ class CreateAdminAccountActivity : AppCompatActivity() {
         requirementsLayout = findViewById(R.id.layoutPasswordRequirements)
         passwordLengthRequirement = findViewById(R.id.txtPasswordLengthRequirement)
         passwordCapitalRequirement = findViewById(R.id.txtPasswordCapitalRequirement)
+        passwordLowercaseRequirement = findViewById(R.id.txtPasswordLowercaseRequirement)
         passwordSpecialRequirement = findViewById(R.id.txtPasswordSpecialRequirement)
         passwordNumberRequirement = findViewById(R.id.txtPasswordNumberRequirement)
         passwordStrengthText = findViewById(R.id.txtPasswordStrength)
@@ -102,47 +104,50 @@ class CreateAdminAccountActivity : AppCompatActivity() {
         val lastName = lastNameInput.text.toString().trim()
         val email = emailInput.text.toString().trim()
         val phone = phoneInput.text.toString().trim()
-        val password = passwordInput.text.toString().trim()
-        val confirmPassword = confirmPasswordInput.text.toString().trim()
+        val password = passwordInput.text.toString()
+        val confirmPassword = confirmPasswordInput.text.toString()
 
         var valid = true
         if (!Validators.isNonEmpty(firstName)) {
-            firstNameInput.error = "First name is required"
+            firstNameInput.error = getString(R.string.create_admin_account_first_name_is_required)
             valid = false
         } else {
             firstNameInput.error = null
         }
 
         if (!Validators.isNonEmpty(lastName)) {
-            lastNameInput.error = "Last name is required"
+            lastNameInput.error = getString(R.string.create_admin_account_last_name_is_required)
             valid = false
         } else {
             lastNameInput.error = null
         }
 
         if (!Validators.isValidEmail(email)) {
-            emailInput.error = "Enter a valid email address"
+            emailInput.error = getString(R.string.create_admin_account_enter_a_valid_email_address)
             valid = false
         } else {
             emailInput.error = null
         }
 
         if (!Validators.isValidPhoneNumber(phone)) {
-            phoneInput.error = "Phone number must start with 63 and be 12 digits long"
+            phoneInput.error = getString(R.string.error_invalid_phone)
             valid = false
         } else {
             phoneInput.error = null
         }
 
         if (!Validators.isValidSignUpPassword(password)) {
-            passwordInput.error = "Password must meet all requirements"
+            passwordInput.error = Validators.passwordRequirements(password).let {
+                if (it.isOtherwiseValid && !it.withinMaxLength) getString(R.string.error_password_too_long)
+                else getString(R.string.password_policy_hint)
+            }
             valid = false
         } else {
             passwordInput.error = null
         }
 
         if (password != confirmPassword) {
-            confirmPasswordInput.error = "Passwords do not match"
+            confirmPasswordInput.error = getString(R.string.password_error_mismatch)
             valid = false
         } else {
             confirmPasswordInput.error = null
@@ -175,7 +180,7 @@ class CreateAdminAccountActivity : AppCompatActivity() {
 
     private fun setLoading(isLoading: Boolean) {
         createButton.isEnabled = !isLoading && Validators.isValidSignUpPassword(passwordInput.text.toString())
-        createButton.text = if (isLoading) "Creating admin..." else "Create Admin Account"
+        createButton.text = getString(if (isLoading) R.string.create_admin_account_creating_admin else R.string.common_create_admin_account)
     }
 
     private fun updatePasswordRequirements(password: String) {
@@ -187,19 +192,14 @@ class CreateAdminAccountActivity : AppCompatActivity() {
         requirementsLayout.visibility = View.VISIBLE
 
         val requirements = Validators.passwordRequirements(password)
-        updateRequirement(passwordLengthRequirement, "At least 8 characters", requirements.hasMinLength)
-        updateRequirement(passwordCapitalRequirement, "One uppercase letter", requirements.hasCapital)
-        updateRequirement(passwordNumberRequirement, "One number", requirements.hasNumber)
-        updateRequirement(passwordSpecialRequirement, "One special character", requirements.hasSpecial)
+        updateRequirement(passwordLengthRequirement, getString(R.string.password_req_length), requirements.hasMinLength)
+        updateRequirement(passwordCapitalRequirement, getString(R.string.password_req_uppercase), requirements.hasCapital)
+        updateRequirement(passwordLowercaseRequirement, getString(R.string.password_req_lowercase), requirements.hasLowercase)
+        updateRequirement(passwordNumberRequirement, getString(R.string.password_req_number), requirements.hasNumber)
+        updateRequirement(passwordSpecialRequirement, getString(R.string.password_req_special), requirements.hasSpecial)
+        passwordInput.error = if (!requirements.withinMaxLength) getString(R.string.error_password_too_long) else null
 
-        val metCount = listOf(
-            requirements.hasMinLength,
-            requirements.hasCapital,
-            requirements.hasNumber,
-            requirements.hasSpecial,
-        ).count { it }
-
-        updateStrengthUI(metCount)
+        updateStrengthUI(requirements.strengthLevel)
         createButton.isEnabled = requirements.isValid
     }
 
@@ -211,10 +211,10 @@ class CreateAdminAccountActivity : AppCompatActivity() {
     private fun updateStrengthUI(metCount: Int) {
         val (colorRes, label) = when (metCount) {
             0 -> R.color.eventqr_muted to ""
-            1 -> R.color.eventqr_error to "Weak"
-            2 -> R.color.eventqr_warning to "Fair"
-            3 -> R.color.eventqr_info to "Good"
-            4 -> R.color.eventqr_success to "Strong"
+            1 -> R.color.eventqr_error to getString(R.string.password_strength_weak)
+            2 -> R.color.eventqr_warning to getString(R.string.password_strength_fair)
+            3 -> R.color.eventqr_info to getString(R.string.password_strength_good)
+            4 -> R.color.eventqr_success to getString(R.string.password_strength_strong)
             else -> R.color.eventqr_muted to ""
         }
 

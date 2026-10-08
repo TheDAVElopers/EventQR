@@ -11,8 +11,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
-        app:title="My Registered Events"
-        app:subtitle="Events you have signed up for" />
+        app:title="@string/user_registered_events_my_registered_events"
+        app:subtitle="@string/user_registered_events_events_you_have_signed_up_for" />
 
     <LinearLayout
         android:id="@+id/layoutFilter"
@@ -40,7 +40,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:checked="true"
-                    android:text="All"
+                    android:text="@string/common_all"
                     android:textColor="@color/brand_on_primary"
                     app:chipBackgroundColor="@color/eventqr_indigo"
                     app:chipCornerRadius="24dp"
@@ -51,12 +51,28 @@
                     app:textEndPadding="12dp" />
 
                 <com.google.android.material.chip.Chip
-                    android:id="@+id/chipRegistered"
+                    android:id="@+id/chipUpcoming"
                     style="@style/Widget.MaterialComponents.Chip.Choice"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:text="Registered"
+                    android:text="@string/common_upcoming"
+                    android:textColor="@color/text_secondary"
+                    app:chipBackgroundColor="@color/surface"
+                    app:chipCornerRadius="24dp"
+                    app:chipMinHeight="40dp"
+                    app:chipStrokeColor="@color/outline"
+                    app:chipStrokeWidth="1dp"
+                    app:textStartPadding="12dp"
+                    app:textEndPadding="12dp" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipActive"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/common_active"
                     android:textColor="@color/text_secondary"
                     app:chipBackgroundColor="@color/surface"
                     app:chipCornerRadius="24dp"
@@ -72,7 +88,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:text="Completed"
+                    android:text="@string/common_completed"
                     android:textColor="@color/text_secondary"
                     app:chipBackgroundColor="@color/surface"
                     app:chipCornerRadius="24dp"
@@ -121,8 +137,8 @@
             android:layout_height="match_parent"
             android:visibility="gone"
             app:icon="@drawable/ic_nav_registered"
-            app:title="No registered events yet"
-            app:subtitle="Events you register for will show up here." />
+            app:title="@string/common_no_registered_events_yet"
+            app:subtitle="@string/user_registered_events_events_you_register_for_will_show_up" />
         </FrameLayout>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 

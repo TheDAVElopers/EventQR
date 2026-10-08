@@ -39,9 +39,7 @@ public class ChangePasswordService {
         if (!newPassword.equals(confirmPassword)) {
             throw new BadRequestException("Passwords do not match");
         }
-        if (!PasswordValidator.isValid(newPassword)) {
-            throw new BadRequestException(PasswordValidator.FAILURE_MESSAGE);
-        }
+        PasswordValidator.requireValid(newPassword);
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         userProfileRepository.save(user);

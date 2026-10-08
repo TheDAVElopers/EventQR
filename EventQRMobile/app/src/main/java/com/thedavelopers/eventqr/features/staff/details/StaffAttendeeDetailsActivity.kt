@@ -53,7 +53,7 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         sessionManager = SessionManager(this)
         if (!RoleMapper.isAtLeast(sessionManager.getUserRole(), AccountRole.STAFF)) {
-            Toast.makeText(this, "Access Denied: Staff or above", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, this.getString(R.string.staff_dashboard_access_denied_staff_or_above), Toast.LENGTH_LONG).show()
             finish()
             return
         }
@@ -83,7 +83,7 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
 
     private fun loadDetails() {
         if (eventId.isBlank() || attendeeId.isBlank()) {
-            Toast.makeText(this, "Missing attendee context", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, this.getString(R.string.staff_attendee_details_missing_attendee_context), Toast.LENGTH_SHORT).show()
             finish()
             return
         }
@@ -125,10 +125,10 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.txtDetailPointsBalance).text = "${item.pointsEarned} pts"
         findViewById<TextView>(R.id.txtDetailTransactionCount).text = "0"
 
-        findViewById<TextView>(R.id.txtDetailQrStatus).text = if (item.qrCredentialId == null) "QR Credential: Pending" else "QR Credential: Issued"
+        findViewById<TextView>(R.id.txtDetailQrStatus).text = getString(if (item.qrCredentialId == null) R.string.staff_attendee_details_qr_credential_pending else R.string.staff_attendee_details_qr_credential_issued)
         findViewById<TextView>(R.id.txtDetailEntryStatus).text = RegistrationStatusBadgeStyler.displayLabel(item.status)
-        findViewById<TextView>(R.id.txtDetailAttendanceStatus).text = if (item.attendedAt != null || item.enteredAt != null) "Checked In" else "Registered"
-        findViewById<TextView>(R.id.txtDetailExitStatus).text = if (item.exitedAt != null) "Exited" else "Not exited"
+        findViewById<TextView>(R.id.txtDetailAttendanceStatus).text = getString(if (item.attendedAt != null || item.enteredAt != null) R.string.common_checked_in else R.string.common_registered)
+        findViewById<TextView>(R.id.txtDetailExitStatus).text = getString(if (item.exitedAt != null) R.string.search_attendees_exited else R.string.staff_attendee_details_not_exited)
         findViewById<TextView>(R.id.txtDetailRegistrationDate).text = item.registeredAt?.let { "Registered: ${formatTime(it)}" } ?: "Registered: Unknown"
         findViewById<View>(R.id.btnPrintOrReprintId).visibility = if (qrCredentialId.isBlank()) View.GONE else View.VISIBLE
     }
@@ -175,7 +175,7 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
     private fun loadPrintLogs() {
         if (qrCredentialId.isBlank()) {
             hasPrintedId = false
-            findViewById<TextView>(R.id.txtPrintOrReprintIdLabel).text = "Print ID"
+            findViewById<TextView>(R.id.txtPrintOrReprintIdLabel).text = getString(R.string.staff_attendee_details_print_id)
             return
         }
 
@@ -183,7 +183,7 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
             when (val result = repository.getStaffPrintLogs(eventId)) {
                 is NetworkResult.Success -> {
                     hasPrintedId = result.data.any { it.attendeeUserId.toString() == attendeeId }
-                    findViewById<TextView>(R.id.txtPrintOrReprintIdLabel).text = if (hasPrintedId) "Reprint ID" else "Print ID"
+                    findViewById<TextView>(R.id.txtPrintOrReprintIdLabel).text = getString(if (hasPrintedId) R.string.staff_attendee_details_reprint_id else R.string.staff_attendee_details_print_id)
                 }
                 is NetworkResult.Error -> Unit
                 NetworkResult.Loading -> Unit
@@ -193,7 +193,7 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
 
     private fun printId() {
         if (eventId.isBlank() || attendeeId.isBlank()) {
-            Toast.makeText(this, "Attendee context is required for printing", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, this.getString(R.string.staff_attendee_details_attendee_context_is_required_for_pri), Toast.LENGTH_SHORT).show()
             return
         }
 

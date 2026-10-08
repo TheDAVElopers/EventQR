@@ -247,6 +247,14 @@ public class RewardService {
         return rewardRepository.findByEventId(eventId).stream().map(this::toResponse).toList();
     }
 
+    /** Rewards an attendee can still claim: ACTIVE and unlimited (null stock) or in stock. */
+    public List<RewardResponse> findClaimableRewards(UUID eventId) {
+        return rewardRepository.findByEventId(eventId).stream()
+                .filter(r -> r.getStatus() == RewardStatus.ACTIVE
+                        && (r.getStockQuantity() == null || r.getStockQuantity() > 0))
+                .map(this::toResponse).toList();
+    }
+
     public List<RewardRedemptionResponse> findRedemptions(UUID eventId) {
         return rewardRedemptionRepository.findByEventId(eventId).stream().map(redemption -> new RewardRedemptionResponse(
                 redemption.getId(), redemption.getEventId(), redemption.getAttendeeUserId(), redemption.getRewardId(),

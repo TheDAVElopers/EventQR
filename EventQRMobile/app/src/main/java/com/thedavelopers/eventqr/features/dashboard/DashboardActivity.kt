@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.dashboard
 
+import com.thedavelopers.eventqr.core.util.UiStrings
 import android.content.Intent
 import android.os.Bundle
 import android.view.Gravity
@@ -80,6 +81,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
             DashboardRepository(this),
             AttendeeRepository(this),
             sessionManager,
+            UiStrings(this),
         )
         presenter.attach(this)
 
@@ -197,14 +199,14 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     }
 
     override fun updateHeader(role: String?, name: String?) {
-        welcomeText.text = "Welcome back,"
+        welcomeText.text = getString(R.string.common_welcome_back)
         nameText.text = (name?.takeIf { it.isNotBlank() } ?: "Attendee").firstNameOnly()
     }
 
     private fun renderUpcomingEvents(events: List<DashboardUpcomingEvent>) {
         val rows = events.take(1)
         if (rows.isEmpty()) {
-            renderEmptyState(upcomingEventsLayout, upcomingEventHolders, "No upcoming events yet.")
+            renderEmptyState(upcomingEventsLayout, upcomingEventHolders, "No upcoming registered events.")
             return
         }
         syncEventRows(upcomingEventsLayout, upcomingEventHolders, rows)
@@ -276,8 +278,8 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
             month = date.month,
             time = date.time,
             location = EventCardPresenter.location(event.location),
-            count = event.currentAttendeeCount,
-            capacity = EventCardPresenter.capacity(event.capacity),
+            count = if (event.capacityUnknown) null else event.currentAttendeeCount,
+            capacity = if (event.capacityUnknown) null else EventCardPresenter.capacity(event.capacity),
             onClick = { openEventDetail(event) },
         )
         val topMargin = if (isFirst) dp(12) else 0
@@ -371,12 +373,12 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         val container = view.findViewById<LinearLayout>(R.id.portalOptionsContainer)
         portals.forEach { portal ->
             val portalView = layoutInflater.inflate(R.layout.item_portal_option, container, false)
-            portalView.findViewById<TextView>(R.id.txtPortalName).text = portal
+            portalView.findViewById<TextView>(R.id.txtPortalName).text = PortalSwitcher.title(this, portal)
 
             val icon = portalView.findViewById<ImageView>(R.id.imgPortalIcon)
             val subtitle = portalView.findViewById<TextView>(R.id.txtPortalSubtitle)
             icon.setImageResource(PortalSwitcher.iconRes(portal))
-            subtitle.text = PortalSwitcher.subtitle(portal)
+            subtitle.text = PortalSwitcher.subtitle(this, portal)
 
             if (portal == PortalSwitcher.PORTAL_ATTENDEE) {
                 portalView.findViewById<View>(R.id.currentPortalBadge).visibility = View.VISIBLE

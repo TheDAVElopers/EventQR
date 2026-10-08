@@ -3,6 +3,8 @@ package com.thedavelopers.eventqr.features.attendee
 import android.content.Context
 import com.thedavelopers.eventqr.core.api.ApiClient
 import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.core.api.dto.ApiResponse
+import com.thedavelopers.eventqr.core.api.dto.PageResponse
 import com.thedavelopers.eventqr.core.api.safeApiCall
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
 import com.thedavelopers.eventqr.features.events.model.dto.EventCreationRequestDto
@@ -23,7 +25,7 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 import java.util.UUID
 
-class AttendeeRepository(context: Context) {
+open class AttendeeRepository(context: Context) {
     private val apiService = ApiClient.getService(context)
     suspend fun getEvents(): NetworkResult<List<AttendeeEventResponse>> =
         when (val result = safeApiCall { apiService.getAttendeeVisibleEvents() }) {
@@ -32,11 +34,7 @@ class AttendeeRepository(context: Context) {
             NetworkResult.Loading -> NetworkResult.Loading
         }
     suspend fun getBrowseEvents(): NetworkResult<List<AttendeeEventResponse>> =
-        when (val result = safeApiCall { apiService.getAttendeeBrowseEvents() }) {
-            is NetworkResult.Success -> NetworkResult.Success(result.data.content)
-            is NetworkResult.Error -> result
-            NetworkResult.Loading -> NetworkResult.Loading
-        }
+        loadAllPages(MAX_PAGES, sortKey = { it.eventStartAt }) { page -> apiService.getAttendeeBrowseEvents(page = page, size = PAGE_SIZE) }
     suspend fun getEvent(eventId: String) = safeApiCall { apiService.getEventById(eventId) }
     suspend fun getEventAvailability(eventId: String) = safeApiCall { apiService.getEventAvailability(eventId) }
     suspend fun getOrganizerEvents(): NetworkResult<List<OrganizerEventDto>> = safeApiCall { apiService.getOrganizerEvents() }
@@ -55,12 +53,10 @@ class AttendeeRepository(context: Context) {
         apiService.uploadEventLogo(part)
     }
     suspend fun getStoredFile(fileId: String) = safeApiCall { apiService.getStoredFile(fileId) }
-    suspend fun createRegistration(request: RegistrationRequest) = safeApiCall { apiService.createRegistration(request) }
+    open suspend fun createRegistration(request: RegistrationRequest) = safeApiCall { apiService.createRegistration(request) }
     suspend fun getMyRegistrations(): NetworkResult<List<RegistrationResponse>> =
-        when (val result = safeApiCall { apiService.getMyRegistrations() }) {
-            is NetworkResult.Success -> NetworkResult.Success(result.data.content).also {
-                RegistrationsCache.set(result.data.content)
-            }
+        when (val result = loadAllPages(MAX_PAGES, sortKey = { it.eventStartAt }) { page -> apiService.getMyRegistrations(page = page, size = PAGE_SIZE) }) {
+            is NetworkResult.Success -> result.also { RegistrationsCache.set(it.data) }
             is NetworkResult.Error -> result
             NetworkResult.Loading -> NetworkResult.Loading
         }
@@ -84,7 +80,9 @@ class AttendeeRepository(context: Context) {
     suspend fun markMyQrDisplayed(qrCredentialId: String) = safeApiCall { apiService.markMyQrDisplayed(qrCredentialId) }
     suspend fun markMyQrDownloaded(qrCredentialId: String) = safeApiCall { apiService.markMyQrDownloaded(qrCredentialId) }
     suspend fun getTransactionsByEvent(eventId: String) = safeApiCall { apiService.getTransactionsByEvent(eventId) }
-    suspend fun getRewardsByEvent(eventId: String) = safeApiCall { apiService.getAttendeeRewards(eventId) }
+    /** [includeUnavailable] = true also returns inactive/sold-out rewards (used for claim-history name lookups). */
+    suspend fun getRewardsByEvent(eventId: String, includeUnavailable: Boolean = false) =
+        safeApiCall { apiService.getAttendeeRewards(eventId, includeUnavailable) }
     suspend fun getRewardBalance(eventId: String, attendeeUserId: String) = safeApiCall { apiService.getRewardBalance(eventId, attendeeUserId) }
     suspend fun redeemReward(request: RewardRedemptionRequest) = safeApiCall { apiService.redeemReward(request) }
     suspend fun getRewardRedemptions(eventId: String) = safeApiCall { apiService.getRewardRedemptions(eventId) }
@@ -120,4 +118,42 @@ class AttendeeRepository(context: Context) {
             else -> if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg")) fileName else "$fileName.jpg"
         }
     }
+
+    private companion object {
+        const val PAGE_SIZE = 100
+        const val MAX_PAGES = 20
+    }
 }
+
+/**
+ * Loads every page until the server reports the last page, an empty page, or a page identical to the
+ * previous one (a backend ignoring page/size). A failure on ANY page, or exhausting [maxPages] without
+ * reaching the end, returns an error, so callers never see (or cache) a silently truncated list. When [sortKey] is given the combined list is sorted
+ * ascending by it (nulls last, stable), so correctness does not depend on backend order.
+ */
+internal suspend fun <T, K : Comparable<K>> loadAllPages(
+    maxPages: Int,
+    sortKey: ((T) -> K?)? = null,
+    fetch: suspend (page: Int) -> ApiResponse<PageResponse<T>>,
+): NetworkResult<List<T>> {
+    val all = mutableListOf<T>()
+    var previous: List<T>? = null
+    for (page in 0 until maxPages) {
+        when (val result = safeApiCall { fetch(page) }) {
+            is NetworkResult.Success -> {
+                val content = result.data.content
+                if (content.isEmpty() || content == previous) return NetworkResult.Success(sorted(all, sortKey))
+                all += content
+                if (result.data.last) return NetworkResult.Success(sorted(all, sortKey))
+                previous = content
+            }
+            is NetworkResult.Error -> return result
+            NetworkResult.Loading -> return NetworkResult.Loading
+        }
+    }
+    // Hit maxPages without seeing `last` or an empty page: the list is truncated, so never report it as complete.
+    return NetworkResult.Error("Too many results to load. Please try again later.")
+}
+
+private fun <T, K : Comparable<K>> sorted(items: List<T>, sortKey: ((T) -> K?)?): List<T> =
+    if (sortKey == null) items else items.sortedWith(compareBy(nullsLast()) { sortKey(it) })

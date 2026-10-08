@@ -13,10 +13,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.thedavelopers.eventqr.features.events.service.EventService;
 import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignmentRepository;
+import com.thedavelopers.eventqr.features.registrations.repository.EventRegistrationRepository;
 import com.thedavelopers.eventqr.features.rewards.model.dto.PointBalanceResponse;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResponse;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRequest;
@@ -35,13 +37,16 @@ public class RewardRoutesController {
     private final JwtService jwtService;
     private final EventService eventService;
     private final EventStaffAssignmentRepository eventStaffAssignmentRepository;
+    private final EventRegistrationRepository eventRegistrationRepository;
 
     public RewardRoutesController(RewardService rewardService, JwtService jwtService,
-                                  EventService eventService, EventStaffAssignmentRepository eventStaffAssignmentRepository) {
+                                  EventService eventService, EventStaffAssignmentRepository eventStaffAssignmentRepository,
+                                  EventRegistrationRepository eventRegistrationRepository) {
         this.rewardService = rewardService;
         this.jwtService = jwtService;
         this.eventService = eventService;
         this.eventStaffAssignmentRepository = eventStaffAssignmentRepository;
+        this.eventRegistrationRepository = eventRegistrationRepository;
     }
 
     @GetMapping("/events/{eventId}/rewards")
@@ -110,15 +115,20 @@ public class RewardRoutesController {
 
     @GetMapping("/attendees/me/events/{eventId}/rewards")
     public ResponseEntity<ApiResponse<List<RewardResponse>>> attendeeRewards(HttpServletRequest request,
-                                                                              @PathVariable UUID eventId) {
-        UUID userId = currentUserId(request);
-        return ResponseEntity.ok(ApiResponse.success(rewardService.findRewards(eventId)));
+                                                                              @PathVariable UUID eventId,
+                                                                              @RequestParam(defaultValue = "false") boolean includeUnavailable) {
+        requireRegistered(eventId, currentUserId(request));
+        List<RewardResponse> rewards = includeUnavailable
+                ? rewardService.findRewards(eventId)
+                : rewardService.findClaimableRewards(eventId);
+        return ResponseEntity.ok(ApiResponse.success(rewards));
     }
 
     @GetMapping("/attendees/me/events/{eventId}/points")
     public ResponseEntity<ApiResponse<PointBalanceResponse>> attendeePoints(HttpServletRequest request,
                                                                          @PathVariable UUID eventId) {
         UUID userId = currentUserId(request);
+        requireRegistered(eventId, userId);
         return ResponseEntity.ok(ApiResponse.success(rewardService.getBalance(eventId, userId)));
     }
 
@@ -138,6 +148,13 @@ public class RewardRoutesController {
 
     private UUID currentUserId(HttpServletRequest request) {
         return jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
+    }
+
+    /** Any registration status counts, so claim history for cancelled registrations stays reachable. */
+    private void requireRegistered(UUID eventId, UUID userId) {
+        if (!eventRegistrationRepository.existsByEventIdAndAttendeeUserId(eventId, userId)) {
+            throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Not registered for this event");
+        }
     }
 
     private void requireNonAttendee(HttpServletRequest request) {

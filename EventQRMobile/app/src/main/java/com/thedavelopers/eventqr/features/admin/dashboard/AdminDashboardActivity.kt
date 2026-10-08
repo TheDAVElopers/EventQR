@@ -106,7 +106,7 @@ class AdminDashboardActivity : AppCompatActivity() {
 
         findViewById<TextView>(R.id.textAdminPortalTitle).text = currentPortal
         findViewById<TextView>(R.id.portalSwitcherChip).text =
-            if (normalizedRole == AccountRole.SUPER_ADMIN.name) "Super Admin ▾" else "Admin ▾"
+            getString(if (normalizedRole == AccountRole.SUPER_ADMIN.name) R.string.admin_dashboard_super_admin else R.string.admin_dashboard_admin)
 
         val chip = findViewById<View>(R.id.portalSwitcherChip)
         val dot = findViewById<View>(R.id.textAdminPortalDot)
@@ -128,12 +128,12 @@ class AdminDashboardActivity : AppCompatActivity() {
 
         portals.forEach { portal ->
             val portalView = layoutInflater.inflate(R.layout.item_portal_option, container, false)
-            portalView.findViewById<TextView>(R.id.txtPortalName).text = portal
+            portalView.findViewById<TextView>(R.id.txtPortalName).text = PortalSwitcher.title(this, portal)
 
             val icon = portalView.findViewById<ImageView>(R.id.imgPortalIcon)
             val subtitle = portalView.findViewById<TextView>(R.id.txtPortalSubtitle)
             icon.setImageResource(PortalSwitcher.iconRes(portal))
-            subtitle.text = PortalSwitcher.subtitle(portal)
+            subtitle.text = PortalSwitcher.subtitle(this, portal)
 
             if (portal == currentPortal) {
                 portalView.findViewById<View>(R.id.currentPortalBadge).visibility = View.VISIBLE

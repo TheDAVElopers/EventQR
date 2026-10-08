@@ -211,7 +211,7 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
             return
         }
         if (eventId.isBlank()) {
-            showMessage("Missing event context")
+            showMessage(getString(R.string.reward_redemption_scan_result_missing_event_context))
             return
         }
         lifecycleScope.launch {
@@ -280,7 +280,7 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
             })
             val allowDuplicates = reward.allowDuplicateClaims
             detailRow.addView(TextView(this).apply {
-                text = if (allowDuplicates) "Duplicate claims allowed" else "One claim only"
+                text = getString(if (allowDuplicates) R.string.reward_redemption_scan_result_duplicate_claims_allowed else R.string.reward_redemption_scan_result_one_claim_only)
                 textSize = 12f
                 setTypeface(typeface, Typeface.BOLD)
                 setTextColor(if (allowDuplicates) 0xFFB45309.toInt() else Color.parseColor("#065F46"))
@@ -301,15 +301,15 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
         android.app.AlertDialog.Builder(this)
             .setTitle("Redeem ${reward.name}")
             .setMessage("This will deduct ${reward.pointsRequired} points from this attendee. Continue?")
-            .setNegativeButton("Cancel", null)
-            .setPositiveButton("Redeem") { _, _ -> redeem(reward) }
+            .setNegativeButton(getString(R.string.request_event_cancel), null)
+            .setPositiveButton(getString(R.string.reward_redemption_scan_result_redeem)) { _, _ -> redeem(reward) }
             .show()
     }
 
     private fun redeem(reward: RewardResponse) {
         if (inFlight) return
         if (attendeeUserId.isBlank() || redemptionScanLogId.isBlank()) {
-            showMessage("Missing redemption context")
+            showMessage(getString(R.string.reward_redemption_scan_result_missing_redemption_context))
             return
         }
         inFlight = true

@@ -1,5 +1,7 @@
 package com.thedavelopers.eventqr.features.dashboard
 
+import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.util.UiStrings
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.RegistrationStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
@@ -20,6 +22,7 @@ class DashboardPresenter(
     private val repository: DashboardRepository,
     private val attendeeRepository: AttendeeRepository,
     private val sessionManager: SessionManager,
+    private val strings: UiStrings,
 ) {
     private var dashboardJob: Job? = null
 
@@ -101,7 +104,7 @@ class DashboardPresenter(
                     DashboardUpcomingEvent(
                         eventId = reg.eventId,
                         registrationId = reg.registrationId,
-                        title = reg.eventTitle?.takeIf { it.isNotBlank() } ?: "Registered Event",
+                        title = reg.eventTitle?.takeIf { it.isNotBlank() } ?: strings.get(R.string.dashboard_registered_event),
                         location = reg.eventLocation,
                         category = null,
                         eventStartAt = reg.eventStartAt,
@@ -111,6 +114,7 @@ class DashboardPresenter(
                         capacity = 0,
                         currentAttendeeCount = 0,
                         isRegistered = true,
+                        capacityUnknown = true,
                     )
                 }
 
@@ -155,25 +159,12 @@ class DashboardPresenter(
                 aStart.compareTo(bStart)
             }
 
-            // Priority 1: Attendee's registered active/upcoming events
-            val registeredActiveOrUpcoming = allEvents
+            // Next Event: only the attendee's own next registered event (ongoing first, then soonest).
+            // Never fall back to a public or past event.
+            val nextEvent = allEvents
                 .filter { it.isRegistered && !isEnded(it) }
                 .sortedWith(activeOrUpcomingComparator)
-
-            // Priority 2: Public active/upcoming events
-            val publicActiveOrUpcoming = allEvents
-                .filter { !isEnded(it) }
-                .sortedWith(activeOrUpcomingComparator)
-
-            // Next Event selection:
-            // 1. Registered active/upcoming
-            // 2. Public active/upcoming
-            // 3. Fallback to latest registered event if all ended
-            // 4. Fallback to latest public event if all ended
-            val nextEvent = registeredActiveOrUpcoming.firstOrNull()
-                ?: publicActiveOrUpcoming.firstOrNull()
-                ?: allEvents.filter { it.isRegistered }.maxByOrNull { it.eventStartAt ?: it.eventEndAt ?: Instant.MIN }
-                ?: allEvents.maxByOrNull { it.eventStartAt ?: it.eventEndAt ?: Instant.MIN }
+                .firstOrNull()
 
             val nextEventList = if (nextEvent != null) listOf(nextEvent) else emptyList()
 
@@ -192,16 +183,19 @@ class DashboardPresenter(
                     .take(5)
             }
 
+            // Same definitions as the Registered tab chips: Registered = live registrations whose event
+            // has not ended; Completed = live registrations whose event has ended.
+            val tabCounts = DashboardStats.registrationCounts(registrations, now)
             val registeredCount = if (registrationsResult is NetworkResult.Success) {
-                registeredEventIds.size
+                tabCounts.registered
             } else if (summaryResult is NetworkResult.Success) {
                 summaryResult.data.totalRegistrations.toInt()
             } else {
-                registeredEventIds.size
+                tabCounts.registered
             }
 
             val upcomingCount = if (eventsResult is NetworkResult.Success || allEvents.isNotEmpty()) {
-                allEvents.count { !isEnded(it) }
+                DashboardStats.upcomingCount(allEvents.map { it.eventStartAt }, now)
             } else if (summaryResult is NetworkResult.Success) {
                 summaryResult.data.totalEvents.toInt()
             } else {
@@ -209,10 +203,7 @@ class DashboardPresenter(
             }
 
             val completedCount = if (registrationsResult is NetworkResult.Success) {
-                registrations.count {
-                    (it.status == RegistrationStatus.ENTERED || it.status == RegistrationStatus.EXITED) &&
-                        it.eventEndAt?.isBefore(now) == true
-                }
+                tabCounts.completed
             } else if (summaryResult is NetworkResult.Success) {
                 summaryResult.data.completedEventsCount.toInt()
             } else {
@@ -242,20 +233,20 @@ class DashboardPresenter(
                 )
                 view?.showSummary(fallbackSummary)
                 if (summaryResult is NetworkResult.Error) {
-                    view?.showMessage("Unable to load latest stats: ${summaryResult.message}")
+                    view?.showMessage(strings.get(R.string.dashboard_unable_to_load_latest_stats, summaryResult.message))
                 }
             } else if (summaryResult is NetworkResult.Error) {
                 view?.showError(summaryResult.message)
             }
 
             if (currentUserResult is NetworkResult.Error) {
-                view?.showMessage("Unable to refresh account role: ${currentUserResult.message}")
+                view?.showMessage(strings.get(R.string.dashboard_unable_to_refresh_account_role, currentUserResult.message))
             }
             if (eventsResult is NetworkResult.Error) {
-                view?.showMessage("Unable to load events: ${eventsResult.message}")
+                view?.showMessage(strings.get(R.string.dashboard_unable_to_load_events, eventsResult.message))
             }
             if (registrationsResult is NetworkResult.Error) {
-                view?.showMessage("Unable to load registrations: ${registrationsResult.message}")
+                view?.showMessage(strings.get(R.string.dashboard_unable_to_load_registrations, registrationsResult.message))
             }
         }
     }
@@ -273,4 +264,24 @@ class DashboardPresenter(
         val status = EventStatusBadgeStyler.resolve(event.status, event.eventStartAt, event.eventEndAt, now)
         return EventStatusBadgeStyler.displayLabel(status)
     }
+}
+
+data class RegistrationCounts(val registered: Int, val completed: Int)
+
+/** Pure dashboard tile math, kept free of Android types so it can be unit tested. */
+object DashboardStats {
+    fun isLive(status: RegistrationStatus): Boolean =
+        status != RegistrationStatus.CANCELLED && status != RegistrationStatus.NO_SHOW
+
+    fun registrationCounts(
+        registrations: List<com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse>,
+        now: Instant,
+    ): RegistrationCounts {
+        val live = registrations.filter { isLive(it.status) }
+        val completed = live.count { it.eventEndAt?.isBefore(now) == true }
+        return RegistrationCounts(registered = live.size - completed, completed = completed)
+    }
+
+    /** Events that have not started yet (start strictly after now); ongoing events are excluded. */
+    fun upcomingCount(starts: List<Instant?>, now: Instant): Int = starts.count { it?.isAfter(now) == true }
 }

@@ -31,7 +31,7 @@
             android:id="@+id/textAccountName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Juan dela Cruz"
+            android:text="@string/item_admin_account_juan_dela_cruz"
             android:textColor="#111827"
             android:textSize="15sp"
             android:textStyle="bold" />
@@ -40,7 +40,7 @@
             android:id="@+id/textAccountEmail"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="juan@email.com"
+            android:text="@string/item_admin_account_juan_email_com"
             android:textColor="#6B7280"
             android:textSize="13sp" />
     </LinearLayout>
@@ -58,7 +58,7 @@
             android:background="@drawable/bg_admin_role_badge_purple"
             android:paddingHorizontal="10dp"
             android:paddingVertical="3dp"
-            android:text="Attendee"
+            android:text="@string/common_attendee"
             android:textColor="#4338CA"
             android:textSize="12sp"
             android:textStyle="bold" />
@@ -72,7 +72,7 @@
             android:background="@drawable/bg_admin_status_active_badge"
             android:paddingHorizontal="10dp"
             android:paddingVertical="3dp"
-            android:text="Active"
+            android:text="@string/common_active"
             android:textColor="#065F46"
             android:textSize="12sp"
             android:textStyle="bold" />
@@ -83,7 +83,7 @@
             android:layout_height="24dp"
             android:layout_gravity="end"
             android:layout_marginTop="6dp"
-            android:contentDescription="More actions"
+            android:contentDescription="@string/item_admin_account_more_actions"
             android:padding="4dp"
             android:src="@drawable/ic_filter_list" />
     </LinearLayout>

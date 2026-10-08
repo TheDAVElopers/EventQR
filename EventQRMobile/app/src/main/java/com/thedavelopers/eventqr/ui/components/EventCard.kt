@@ -45,6 +45,8 @@ import com.thedavelopers.eventqr.ui.theme.EventAccentUpcoming
 import com.thedavelopers.eventqr.ui.theme.EventAccentUpcomingFill
 import com.thedavelopers.eventqr.ui.theme.LocalSpacing
 import java.util.Locale
+import androidx.compose.ui.res.stringResource
+import com.thedavelopers.eventqr.R
 
 data class EventCardAccent(
     val container: Color,
@@ -138,7 +140,7 @@ fun EventCard(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = title.ifBlank { "Untitled Event" },
+                            text = title.ifBlank { stringResource(R.string.common_untitled_event) },
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
@@ -184,7 +186,7 @@ fun EventCard(
                         )
                         Spacer(modifier = Modifier.width(spacing.extraSmall))
                         Text(
-                            text = location.ifBlank { "Venue TBD" },
+                            text = location.ifBlank { stringResource(R.string.common_venue_tbd) },
                             style = MaterialTheme.typography.bodySmall,
                             color = metaColor,
                             maxLines = 1,
@@ -199,7 +201,15 @@ fun EventCard(
                 }
             }
 
-            if (registeredCount != null && capacity != null && capacity > 0) {
+            if (registeredCount != null && capacity != null && capacity <= 0) {
+                // Capacity 0 means unlimited: show the count only, no "/ cap" and no progress bar.
+                Spacer(modifier = Modifier.height(spacing.mediumSmall))
+                Text(
+                    text = "$registeredCount registered",
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                    color = metaColor,
+                )
+            } else if (registeredCount != null && capacity != null) {
                 Spacer(modifier = Modifier.height(spacing.mediumSmall))
                 val fraction = (registeredCount.toFloat() / capacity.toFloat()).coerceIn(0f, 1f)
                 val percent = (fraction * 100).toInt()

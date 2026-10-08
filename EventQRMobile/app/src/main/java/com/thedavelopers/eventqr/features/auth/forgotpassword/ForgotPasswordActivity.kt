@@ -56,7 +56,7 @@ open class ForgotPasswordActivity : AppCompatActivity(), ForgotPasswordContract.
 
     override fun showLoading(isLoading: Boolean) {
         sendButton.isEnabled = !isLoading
-        sendButton.text = if (isLoading) "Sending..." else "Send Reset Link"
+        sendButton.text = getString(if (isLoading) R.string.forgot_password_sending else R.string.forgot_password_send_reset_link)
     }
 
     override fun showEmailError(message: String?) {

@@ -110,7 +110,7 @@ class AttendeeEditProfileActivityTest {
         activity.findViewById<android.widget.Button>(R.id.btnSaveChanges).performClick()
 
         assertEquals(
-            "Enter a valid 10-digit mobile number",
+            activity.getString(R.string.error_invalid_phone),
             phoneInput(activity).error.toString(),
         )
     }

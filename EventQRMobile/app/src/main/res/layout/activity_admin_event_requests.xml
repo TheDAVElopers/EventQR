@@ -10,8 +10,8 @@
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="Event Requests"
-        app:subtitle="Review event creation requests" />
+        app:title="@string/admin_event_requests_event_requests"
+        app:subtitle="@string/admin_event_requests_review_event_creation_requests" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -41,7 +41,7 @@
                     android:gravity="center"
                     android:minWidth="46dp"
                     android:paddingHorizontal="14dp"
-                    android:text="All"
+                    android:text="@string/common_all"
                     android:textSize="14sp"
                     android:textStyle="bold" />
 
@@ -53,7 +53,7 @@
                     android:gravity="center"
                     android:minWidth="82dp"
                     android:paddingHorizontal="14dp"
-                    android:text="Pending"
+                    android:text="@string/admin_event_requests_pending"
                     android:textSize="14sp"
                     android:textStyle="bold" />
 
@@ -65,7 +65,7 @@
                     android:gravity="center"
                     android:minWidth="88dp"
                     android:paddingHorizontal="14dp"
-                    android:text="Approved"
+                    android:text="@string/common_approved"
                     android:textSize="14sp"
                     android:textStyle="bold" />
 
@@ -77,7 +77,7 @@
                     android:gravity="center"
                     android:minWidth="86dp"
                     android:paddingHorizontal="14dp"
-                    android:text="Rejected"
+                    android:text="@string/common_rejected"
                     android:textSize="14sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -134,7 +134,7 @@
                     android:layout_height="52dp"
                     android:layout_marginTop="10dp"
                     android:background="@drawable/bg_outline_button"
-                    android:text="Retry"
+                    android:text="@string/common_retry"
                     android:textAllCaps="false"
                     android:textColor="@color/eventqr_indigo"
                     android:textSize="15sp"
@@ -148,8 +148,8 @@
             android:layout_height="match_parent"
             android:visibility="gone"
             app:icon="@drawable/ic_event_request"
-            app:title="No event requests yet"
-            app:subtitle="Requests from organizers will show up here." />
+            app:title="@string/common_no_event_requests_yet"
+            app:subtitle="@string/admin_event_requests_requests_from_organizers_will_show_u" />
         </FrameLayout>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 

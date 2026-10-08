@@ -24,6 +24,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.AccountStatus;
 import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
+import com.thedavelopers.eventqr.shared.utils.PasswordValidator;
 import com.thedavelopers.eventqr.shared.exceptions.ConflictException;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
@@ -58,7 +59,43 @@ public class UserService implements AttendeeDirectoryPort {
         this.userTokenRevocationRepository = userTokenRevocationRepository;
     }
 
+    /**
+     * Public self-service signup ({@code POST /auth/register}). Unlike {@link #create}, this never
+     * claims an existing profile: a profile with no usable password (a "ghost" created by
+     * {@link #findOrCreateAttendee} when someone was registered for an event by email) belongs to
+     * whoever controls that inbox, and signup cannot prove that. Any existing email therefore gets
+     * the same 409 as a normal duplicate; the owner of a ghost profile sets a password through the
+     * forgot-password / reset flow, which proves inbox ownership. The role is always ATTENDEE.
+     */
+    public UserResponse register(UserRequest request) {
+        requireStrongPassword(request.password());
+        String email = request.email().trim().toLowerCase();
+        if (userProfileRepository.findByEmailIgnoreCase(email).isPresent()) {
+            throw new ConflictException("User already exists for email " + email);
+        }
+        UserProfile newUser = new UserProfile();
+        newUser.setEmail(email);
+        newUser.setFullName(request.fullName().trim());
+        newUser.setPhoneNumber(request.phoneNumber());
+        newUser.setRole(AccountRole.ATTENDEE);
+        newUser.setStatus(AccountStatus.ACTIVE);
+        newUser.setPasswordHash(passwordEncoder.encode(request.password()));
+        try {
+            return toResponse(userProfileRepository.saveAndFlush(newUser));
+        } catch (DataIntegrityViolationException e) {
+            // saveAndFlush forces the INSERT here (a UUID id defers it to commit), so the race surfaces in this catch.
+            // Lost a race with a concurrent signup / ghost creation for the same email: never claim it.
+            throw new ConflictException("User already exists for email " + email);
+        }
+    }
+
+    /**
+     * Privileged creation for admin-authorized callers only; may claim an existing passwordless
+     * profile (the admin sets its password and role). Public signup must use {@link #register}.
+     */
     public UserResponse create(UserRequest request) {
+        // Covers every branch below (new, ghost-claim, race-retry) since they all encode request.password().
+        requireStrongPassword(request.password());
         String email = request.email().trim().toLowerCase();
         
         // First, try to find existing user
@@ -89,32 +126,23 @@ public class UserService implements AttendeeDirectoryPort {
         newUser.setPasswordHash(passwordEncoder.encode(request.password()));
         
         try {
-            return toResponse(userProfileRepository.save(newUser));
+            return toResponse(userProfileRepository.saveAndFlush(newUser));
         } catch (DataIntegrityViolationException e) {
-            // Handle race condition: another thread created the user while we were processing
-            // Check if it's due to email uniqueness constraint
-            if (e.getRootCause() != null &&
-                    (e.getRootCause().getMessage().contains("user_profiles_email_key") ||
-                     e.getRootCause().getMessage().contains("duplicate key") ||
-                     e.getRootCause().getMessage().contains("Unique index"))) {
-                // Retry as update - the user was created by another thread
-                UserProfile retryUser = userProfileRepository.findByEmailIgnoreCase(email)
-                        .orElseThrow(() -> new ConflictException("User already exists for email " + email));
-                
-                if (hasRealPassword(retryUser)) {
-                    throw new ConflictException("User already exists for email " + email);
-                }
-                
-                retryUser.setFullName(request.fullName().trim());
-                retryUser.setPhoneNumber(request.phoneNumber());
-                retryUser.setRole(request.role());
-                retryUser.setStatus(AccountStatus.ACTIVE);
-                retryUser.setPasswordHash(passwordEncoder.encode(request.password()));
-                return toResponse(userProfileRepository.save(retryUser));
+            // Another request created this email between the lookup and the insert. The failed flush leaves this
+            // transaction rollback-only, so retrying inside it cannot succeed: report the duplicate and let the
+            // caller retry (the next attempt sees the committed row and takes the normal path).
+            Throwable root = e.getRootCause();
+            String rootMessage = root == null ? "" : String.valueOf(root.getMessage());
+            if (rootMessage.contains("user_profiles_email_key") || rootMessage.contains("duplicate key")
+                    || rootMessage.contains("Unique index")) {
+                throw new ConflictException("User already exists for email " + email);
             }
-            // If it's not a duplicate key error, rethrow
             throw e;
         }
+    }
+
+    private static void requireStrongPassword(String password) {
+        PasswordValidator.requireValid(password);
     }
 
     public Page<UserResponse> findAllUsers(Pageable pageable) {
@@ -162,6 +190,7 @@ userProfile.setFullName(fullName.trim());
         if (newPassword == null || newPassword.isBlank()) {
             throw new BadRequestException("New password is required");
         }
+        requireStrongPassword(newPassword);
         UserProfile userProfile = requireUser(userId);
         if (!passwordEncoder.matches(currentPassword, userProfile.getPasswordHash())) {
             throw new BadRequestException("Current password is incorrect");

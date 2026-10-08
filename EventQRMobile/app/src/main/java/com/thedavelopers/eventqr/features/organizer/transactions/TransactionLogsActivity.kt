@@ -84,8 +84,8 @@ open class TransactionLogsActivity : AppCompatActivity() {
             return
         }
         if (logs.isEmpty()) {
-            val title = if (attendeeId == null) "No event logs yet" else "No attendee logs yet"
-            val subtext = if (attendeeId == null) "Transaction logs will appear here once activity occurs." else "No logs found for this attendee."
+            val title = getString(if (attendeeId == null) R.string.transaction_logs_no_event_logs_yet else R.string.transaction_logs_no_attendee_logs_yet)
+            val subtext = getString(if (attendeeId == null) R.string.transaction_logs_transaction_logs_will_appear_here_on else R.string.transaction_logs_no_logs_found_for_this_attendee)
             list.addView(emptyState(
                 iconRes = R.drawable.ic_organizer_reports,
                 title = title,

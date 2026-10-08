@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.chip.Chip
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.registrations.RegisteredEventAdapter
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
@@ -21,8 +22,12 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var skeletonLoading: View
     private lateinit var chipAll: Chip
-    private lateinit var chipRegistered: Chip
+    private lateinit var chipUpcoming: Chip
+    private lateinit var chipActive: Chip
     private lateinit var chipCompleted: Chip
+
+    private lateinit var emptyState: EventQrEmptyState
+    private lateinit var defaultEmptyTitle: CharSequence
 
     private var allItems: List<RegistrationResponse> = emptyList()
     private var selectedFilter: RegisteredEventFilter = RegisteredEventFilter.ALL
@@ -37,12 +42,16 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
         swipeRefresh = findViewById(R.id.swipeRefreshRegisteredEvents)
         skeletonLoading = findViewById(R.id.skeletonLoading)
 
+        emptyState = findViewById(R.id.txtRegisteredEventsEmpty)
+        defaultEmptyTitle = emptyState.text ?: ""
         chipAll = findViewById(R.id.chipAll)
-        chipRegistered = findViewById(R.id.chipRegistered)
+        chipUpcoming = findViewById(R.id.chipUpcoming)
+        chipActive = findViewById(R.id.chipActive)
         chipCompleted = findViewById(R.id.chipCompleted)
 
         chipAll.setOnClickListener { selectFilter(RegisteredEventFilter.ALL) }
-        chipRegistered.setOnClickListener { selectFilter(RegisteredEventFilter.REGISTERED) }
+        chipUpcoming.setOnClickListener { selectFilter(RegisteredEventFilter.UPCOMING) }
+        chipActive.setOnClickListener { selectFilter(RegisteredEventFilter.ACTIVE) }
         chipCompleted.setOnClickListener { selectFilter(RegisteredEventFilter.COMPLETED) }
         swipeRefresh.setOnRefreshListener { presenter.load() }
 
@@ -67,7 +76,8 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
 
         val chips = mapOf(
             RegisteredEventFilter.ALL to chipAll,
-            RegisteredEventFilter.REGISTERED to chipRegistered,
+            RegisteredEventFilter.UPCOMING to chipUpcoming,
+            RegisteredEventFilter.ACTIVE to chipActive,
             RegisteredEventFilter.COMPLETED to chipCompleted,
         )
 
@@ -81,30 +91,46 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
         }
     }
 
+    // Same three states the card badge shows (Upcoming / Active / Completed), derived from the event window.
+    private fun isUpcoming(item: RegistrationResponse, now: Instant) = item.eventStartAt?.isAfter(now) == true
+
+    private fun isCompleted(item: RegistrationResponse, now: Instant) = item.eventEndAt?.isBefore(now) == true
+
+    private fun isActive(item: RegistrationResponse, now: Instant) = !isUpcoming(item, now) && !isCompleted(item, now)
+
     private fun renderFilteredEvents() {
         val now = Instant.now()
         val filtered = when (selectedFilter) {
             RegisteredEventFilter.ALL -> {
-                val ongoing = allItems
-                    .filter { it.eventStartAt?.isAfter(now) != true && it.eventEndAt?.isBefore(now) != true }
-                    .sortedBy { it.eventStartAt }
-                val upcoming = allItems.filter { it.eventStartAt?.isAfter(now) == true }.sortedBy { it.eventStartAt }
-                val completed = allItems.filter { it.eventEndAt?.isBefore(now) == true }.sortedByDescending { it.eventEndAt }
+                val ongoing = allItems.filter { isActive(it, now) }.sortedBy { it.eventStartAt }
+                val upcoming = allItems.filter { isUpcoming(it, now) }.sortedBy { it.eventStartAt }
+                val completed = allItems.filter { isCompleted(it, now) }.sortedByDescending { it.eventEndAt }
                 ongoing + upcoming + completed
             }
-            RegisteredEventFilter.REGISTERED -> allItems.filter { it.eventEndAt?.isBefore(now) != true }
-            RegisteredEventFilter.COMPLETED -> allItems.filter { it.eventEndAt?.isBefore(now) == true }
+            RegisteredEventFilter.UPCOMING -> allItems.filter { isUpcoming(it, now) }.sortedBy { it.eventStartAt }
+            RegisteredEventFilter.ACTIVE -> allItems.filter { isActive(it, now) }.sortedBy { it.eventStartAt }
+            RegisteredEventFilter.COMPLETED -> allItems.filter { isCompleted(it, now) }.sortedByDescending { it.eventEndAt }
         }
         adapter.submitItems(filtered)
-        findViewById<View>(R.id.txtRegisteredEventsEmpty).visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
+        // A filter with no matches must not claim the user has no registrations at all. The empty state hides its
+        // subtitle automatically whenever the title differs from the layout default.
+        emptyState.text = when (selectedFilter) {
+            RegisteredEventFilter.ALL -> defaultEmptyTitle
+            RegisteredEventFilter.UPCOMING -> getString(R.string.registered_events_none_upcoming)
+            RegisteredEventFilter.ACTIVE -> getString(R.string.registered_events_none_active)
+            RegisteredEventFilter.COMPLETED -> getString(R.string.registered_events_none_completed)
+        }
+        emptyState.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
 
         chipAll.visibility = View.VISIBLE
-        chipRegistered.visibility = View.VISIBLE
+        chipUpcoming.visibility = View.VISIBLE
+        chipActive.visibility = View.VISIBLE
         chipCompleted.visibility = View.VISIBLE
 
-        chipAll.text = "All"
-        chipRegistered.text = "Registered"
-        chipCompleted.text = "Completed"
+        chipAll.text = getString(R.string.common_all)
+        chipUpcoming.text = getString(R.string.common_upcoming)
+        chipActive.text = getString(R.string.common_active)
+        chipCompleted.text = getString(R.string.common_completed)
     }
 
     override fun onDestroy() {

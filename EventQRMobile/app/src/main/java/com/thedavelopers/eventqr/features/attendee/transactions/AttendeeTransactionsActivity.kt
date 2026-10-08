@@ -108,7 +108,7 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
         swipeRefresh.isRefreshing = false
         skeletonLoading.visibility = View.GONE
 
-        summaryCountText.text = "0 transactions"
+        summaryCountText.text = getString(R.string.user_transaction_history_0_transactions)
         errorText.text = message.ifBlank { "Unable to load transactions." }
         errorText.visibility = View.VISIBLE
         retryButton.visibility = View.VISIBLE
@@ -238,7 +238,7 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
         adapter.submitItems(filtered)
         emptyText.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
         recyclerView.visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
-        emptyText.text = "No transactions found for the selected event."
+        emptyText.text = getString(R.string.attendee_transactions_no_transactions_found_for_the_select)
 
         summaryCountText.text = if (filtered.size == 1) "1 transaction" else "${filtered.size} transactions"
     }

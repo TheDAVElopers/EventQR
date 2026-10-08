@@ -1,5 +1,7 @@
 package com.thedavelopers.eventqr.features.attendee
 
+import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.util.UiStrings
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.RegistrationStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
@@ -12,6 +14,7 @@ import kotlinx.coroutines.launch
 class EventDetailPresenter(
     private var view: EventDetailContract.View?,
     private val repository: AttendeeRepository,
+    private val strings: UiStrings,
 ) {
     private var job: Job? = null
 
@@ -31,7 +34,7 @@ class EventDetailPresenter(
                     view?.renderEvent(result.data)
                 }
                 is NetworkResult.Error -> {
-                    view?.showMessage("Unable to load event details: ${result.message}")
+                    view?.showMessage(strings.get(R.string.event_detail_unable_to_load_event_details, result.message))
                 }
                 else -> Unit
             }
@@ -91,7 +94,7 @@ class EventDetailPresenter(
         val fullName = view?.getSessionFullName().orEmpty()
         val phoneNumber = view?.getSessionPhone().orEmpty()
         if (!Validators.isValidEmail(email) || !Validators.isNonEmpty(fullName)) {
-            view?.showMessage("Open registration to enter attendee details")
+            view?.showMessage(strings.get(R.string.event_detail_open_registration_to_enter_attendee_details))
             view?.openRegistration(eventId, eventTitle, email, fullName, phoneNumber)
             return
         }

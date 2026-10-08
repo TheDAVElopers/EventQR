@@ -10,8 +10,8 @@
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="Transaction Logs"
-        app:subtitle="Review scans and transactions" />
+        app:title="@string/staff_transaction_logs_transaction_logs"
+        app:subtitle="@string/staff_transaction_logs_review_scans_and_transactions" />
 
     <LinearLayout
         android:id="@+id/cardStaffTransactionsEvent"
@@ -43,7 +43,7 @@
                 android:id="@+id/txtStaffTransactionsEventLabel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Logs For"
+                android:text="@string/staff_transaction_logs_logs_for"
                 android:textColor="@color/filter_label"
                 android:textSize="12sp" />
 
@@ -53,7 +53,7 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:text="Assigned Event"
+                android:text="@string/common_assigned_event"
                 android:textColor="@color/text_primary"
                 android:textSize="15sp"
                 android:textStyle="bold" />
@@ -115,7 +115,7 @@
                 android:id="@+id/txtStaffTransactionsPurposeLabel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Purpose Filter"
+                android:text="@string/staff_transaction_logs_purpose_filter"
                 android:textColor="@color/filter_label"
                 android:textSize="12sp" />
 
@@ -125,7 +125,7 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:text="All Purposes"
+                android:text="@string/staff_transaction_logs_all_purposes"
                 android:textColor="@color/text_primary"
                 android:textSize="15sp"
                 android:textStyle="bold" />
@@ -188,7 +188,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Total scans"
+                android:text="@string/staff_transaction_logs_total_scans"
                 android:textColor="#6B7280"
                 android:textSize="12sp" />
         </LinearLayout>
@@ -228,7 +228,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Successful"
+                android:text="@string/staff_transaction_logs_successful"
                 android:textColor="#6B7280"
                 android:textSize="12sp" />
         </LinearLayout>
@@ -268,7 +268,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Rejected"
+                android:text="@string/common_rejected"
                 android:textColor="#6B7280"
                 android:textSize="12sp" />
         </LinearLayout>
@@ -283,8 +283,8 @@
             android:layout_height="match_parent"
             android:visibility="gone"
             app:icon="@drawable/ic_history"
-            app:title="No transactions logged"
-            app:subtitle="Scans you perform will show up here." />
+            app:title="@string/staff_transaction_logs_no_transactions_logged"
+            app:subtitle="@string/common_scans_you_perform_will_show_up_here" />
             <ProgressBar android:id="@+id/pbStaffTransactionsLoadMore" android:layout_width="36dp" android:layout_height="36dp" android:layout_gravity="bottom|center_horizontal" android:layout_marginBottom="8dp" android:visibility="gone" />
             <include
                 layout="@layout/include_skeleton_cards"

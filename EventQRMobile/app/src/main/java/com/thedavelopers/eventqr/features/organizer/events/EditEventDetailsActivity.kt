@@ -92,13 +92,13 @@ class EditEventDetailsActivity : AppCompatActivity() {
                     if (croppedUri != null) {
                         handleCroppedBanner(croppedUri)
                     } else {
-                        bannerStatus.text = "Unable to process banner. Please try again."
+                        bannerStatus.text = getString(R.string.edit_event_details_unable_to_process_banner_please_try)
                         bannerStatus.setTextColor(ERROR)
                     }
                 }
                 result.resultCode == UCrop.RESULT_ERROR -> {
                     result.data?.let { UCrop.getError(it) }
-                    bannerStatus.text = "Unable to crop banner. Please choose another image."
+                    bannerStatus.text = getString(R.string.edit_event_details_unable_to_crop_banner_please_choose)
                     bannerStatus.setTextColor(ERROR)
                 }
             }
@@ -458,7 +458,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
         }.onSuccess {
             if (croppedFile.length() > MAX_BANNER_BYTES) {
                 croppedFile.delete()
-                bannerStatus.text = "Banner must not exceed 5 MB. Please choose a smaller image."
+                bannerStatus.text = getString(R.string.edit_event_details_banner_must_not_exceed_5_mb_please_c)
                 bannerStatus.setTextColor(ERROR)
                 return
             }
@@ -466,10 +466,10 @@ class EditEventDetailsActivity : AppCompatActivity() {
             selectedBannerFile = croppedFile
             bannerPreview.setImageURI(croppedUri)
             bannerPreview.background = null
-            bannerStatus.text = "New banner selected (16:9). It will be uploaded when you save."
+            bannerStatus.text = getString(R.string.edit_event_details_new_banner_selected_16_9_it_will_be)
             bannerStatus.setTextColor(com.thedavelopers.eventqr.features.organizer.PURPLE)
         }.onFailure {
-            bannerStatus.text = "Unable to attach banner. Please choose another image."
+            bannerStatus.text = getString(R.string.edit_event_details_unable_to_attach_banner_please_choos)
             bannerStatus.setTextColor(ERROR)
         }
     }
@@ -478,7 +478,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
         val fileId = current.eventLogoUrl?.trim().orEmpty()
         if (fileId.isBlank()) {
             bannerPreview.visibility = View.GONE
-            bannerStatus.text = "No banner set. Tap below to choose a 16:9 landscape image."
+            bannerStatus.text = getString(R.string.edit_event_details_no_banner_set_tap_below_to_choose_a)
             return
         }
         MainScope().launch {
@@ -497,7 +497,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
                             bannerPreview.setImageBitmap(bitmap)
                             bannerPreview.background = null
                             bannerPreview.visibility = View.VISIBLE
-                            bannerStatus.text = "Current banner. Tap below to replace it."
+                            bannerStatus.text = getString(R.string.edit_event_details_current_banner_tap_below_to_replace)
                         } else {
                             bannerPreview.visibility = View.GONE
                         }
@@ -549,7 +549,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
             event.status.equals("Completed", ignoreCase = true)
 
     private fun applyEditLock(event: OrganizerEventDto) {
-        val reason = if (event.status.equals("Active", ignoreCase = true)) "ongoing" else "completed"
+        val reason = getString(if (event.status.equals("Active", ignoreCase = true)) R.string.edit_event_details_ongoing else R.string.edit_event_details_completed)
         statusView.text = "Editing locked — event is $reason"
         statusView.setTextColor(ERROR)
         screenTitle = VIEW_LABEL
@@ -583,15 +583,15 @@ class EditEventDetailsActivity : AppCompatActivity() {
         val capacityValue = capacityInput.text.toString().trim().toIntOrNull()
 
         titleInput.error = if (title.isBlank()) "Title is required" else null
-        if (capacityValue == null || capacityValue <= 0) capacityInput.error = "Capacity must be greater than 0"
+        if (capacityValue == null || capacityValue <= 0) capacityInput.error = getString(R.string.edit_event_details_capacity_must_be_greater_than_0)
         if (title.isBlank() || capacityValue == null || capacityValue <= 0) return
 
         val current = loadedEvent ?: run {
-            Toast.makeText(this, "Event not loaded yet", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, this.getString(R.string.edit_event_details_event_not_loaded_yet), Toast.LENGTH_SHORT).show()
             return
         }
         val organizerId = current.organizerUserId ?: run {
-            statusView.text = "Backend does not report this event's organizer; update the app server."
+            statusView.text = getString(R.string.edit_event_details_backend_does_not_report_this_event_s)
             statusView.setTextColor(ERROR)
             return
         }
@@ -615,7 +615,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
 
             when (val result = repository.updateOrganizerEvent(eventId, buildRequest(current, organizerId, bannerFileId))) {
                 is NetworkResult.Success -> {
-                    Toast.makeText(this@EditEventDetailsActivity, "Event updated", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@EditEventDetailsActivity, this@EditEventDetailsActivity.getString(R.string.edit_event_details_event_updated), Toast.LENGTH_SHORT).show()
                     finish()
                 }
                 is NetworkResult.Error -> {

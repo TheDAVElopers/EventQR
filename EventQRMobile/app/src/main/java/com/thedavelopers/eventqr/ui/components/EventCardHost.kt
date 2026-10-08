@@ -18,8 +18,8 @@ data class EventCardState(
     val month: String = EventCardPresenter.UNKNOWN_MONTH,
     val time: String = EventCardPresenter.UNKNOWN_TIME,
     val location: String = "",
-    val registeredCount: Int = 0,
-    val capacity: Int = 1,
+    val registeredCount: Int? = null,
+    val capacity: Int? = null,
     val onClick: (() -> Unit)? = null,
 )
 
@@ -49,8 +49,8 @@ class EventCardHolder(context: Context) {
         month: String,
         time: String,
         location: String,
-        count: Int,
-        capacity: Int,
+        count: Int?,
+        capacity: Int?,
         onClick: () -> Unit,
     ) {
         state.value = EventCardState(
@@ -78,7 +78,7 @@ fun EventCardHost(state: EventCardState) {
         time = state.time,
         location = state.location,
         registeredCount = state.registeredCount,
-        capacity = state.capacity.coerceAtLeast(1),
+        capacity = state.capacity?.let { EventCardPresenter.capacity(it) },
         onClick = state.onClick,
         modifier = Modifier.padding(bottom = spacing.mediumSmall),
     )

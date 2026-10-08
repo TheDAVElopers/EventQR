@@ -38,7 +38,7 @@ class AttendeeProfileActivity : AppCompatActivity() {
         repository = AttendeeRepository(this)
 
         if (!RoleMapper.isAtLeast(sessionManager.getUserRole(), AccountRole.ATTENDEE)) {
-            Toast.makeText(this, "Access Denied", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, this.getString(R.string.attendee_profile_access_denied), Toast.LENGTH_LONG).show()
             finish()
             return
         }
@@ -79,13 +79,13 @@ class AttendeeProfileActivity : AppCompatActivity() {
 
     private fun showSignOutConfirmation() {
         MaterialAlertDialogBuilder(this)
-            .setTitle("Sign Out")
-            .setMessage("Are you sure you want to sign out?")
-            .setPositiveButton("Sign Out") { dialog, _ ->
+            .setTitle(getString(R.string.common_sign_out))
+            .setMessage(getString(R.string.attendee_profile_are_you_sure_you_want_to_sign_out))
+            .setPositiveButton(getString(R.string.common_sign_out)) { dialog, _ ->
                 dialog.dismiss()
                 performSignOut()
             }
-            .setNegativeButton("Cancel") { dialog, _ ->
+            .setNegativeButton(getString(R.string.request_event_cancel)) { dialog, _ ->
                 dialog.dismiss()
             }
             .show()
@@ -136,7 +136,7 @@ class AttendeeProfileActivity : AppCompatActivity() {
         txtProfileName.text = user?.fullName ?: sessionManager.getFullName().orEmpty()
         txtProfileRole.text = (user?.role?.name ?: sessionManager.getUserRole())
             ?.takeIf { it.isNotBlank() }
-            ?.let { RoleMapper.getDisplayName(it) }
+            ?.let { RoleMapper.getDisplayName(this, it) }
             .orEmpty()
 
         val name = user?.fullName ?: sessionManager.getFullName().orEmpty()

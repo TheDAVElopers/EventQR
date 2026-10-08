@@ -215,7 +215,7 @@ open class ManageEventsActivity : AppCompatActivity() {
             emptySubText = "Pull down to refresh or tap retry"
             retryButton.visibility = View.VISIBLE
         } else {
-            emptyView.text = "No events available for the selected filter."
+            emptyView.text = getString(R.string.organizer_events_no_events_available_for_the_selected)
             emptySubText = "Try adjusting your search or filters"
             retryButton.visibility = View.GONE
         }

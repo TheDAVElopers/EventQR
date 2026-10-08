@@ -10,7 +10,7 @@
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="Attendee Details" />
+        app:title="@string/attendee_details_attendee_details" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -39,7 +39,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Unable to load attendee record"
+                    android:text="@string/attendee_details_unable_to_load_attendee_record"
                     android:textColor="@color/error"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -49,7 +49,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Please try again."
+                    android:text="@string/common_please_try_again"
                     android:textColor="@color/error"
                     android:textSize="12sp" />
 
@@ -61,7 +61,7 @@
                     android:background="@drawable/bg_primary_button"
                     android:minHeight="48dp"
                     android:paddingHorizontal="16dp"
-                    android:text="Retry"
+                    android:text="@string/common_retry"
                     android:textAllCaps="false"
                     android:textColor="@color/brand_on_primary"
                     android:textSize="14sp" />
@@ -302,7 +302,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Event"
+                                android:text="@string/common_event"
                                 android:textColor="#7E84A3"
                                 android:textSize="12sp" />
 
@@ -357,7 +357,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Registration ID"
+                                android:text="@string/common_registration_id"
                                 android:textColor="#7E84A3"
                                 android:textSize="12sp" />
 
@@ -399,7 +399,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="12dp"
-                            android:text="Status"
+                            android:text="@string/common_status"
                             android:textColor="#7E84A3"
                             android:textSize="12sp" />
 
@@ -474,7 +474,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Registered"
+                                    android:text="@string/common_registered"
                                     android:textColor="#7E84A3"
                                     android:textSize="12sp" />
 
@@ -521,7 +521,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Last Activity"
+                                    android:text="@string/attendee_details_last_activity"
                                     android:textColor="#7E84A3"
                                     android:textSize="12sp" />
 
@@ -576,7 +576,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Points Earned"
+                                    android:text="@string/common_points_earned"
                                     android:textColor="#7E84A3"
                                     android:textSize="12sp" />
 
@@ -640,7 +640,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
                             android:layout_weight="1"
-                            android:text="Transaction History"
+                            android:text="@string/common_transaction_history"
                             android:textColor="#111827"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -660,7 +660,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="View Event Log"
+                                android:text="@string/attendee_details_view_event_log"
                                 android:textColor="#5B25C9"
                                 android:textSize="13sp"
                                 android:textStyle="bold" />
@@ -687,7 +687,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:text="No transactions yet"
+                        android:text="@string/attendee_details_no_transactions_yet"
                         android:textColor="#7E84A3"
                         android:textSize="14sp"
                         android:visibility="gone" />

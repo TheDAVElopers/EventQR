@@ -35,5 +35,8 @@ object EventCardPresenter {
 
     fun location(raw: String?): String = raw?.takeIf { it.isNotBlank() } ?: UNKNOWN_LOCATION
 
-    fun capacity(raw: Int): Int = raw.coerceAtLeast(1)
+    /** Capacity 0 (or negative) means unlimited; callers must not render "/ cap" or a progress bar for it. */
+    fun capacity(raw: Int): Int = raw.coerceAtLeast(0)
+
+    fun isUnlimited(capacity: Int): Boolean = capacity <= 0
 }

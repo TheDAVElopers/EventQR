@@ -1,6 +1,8 @@
 package com.thedavelopers.eventqr.features.auth.resetpassword
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
+import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.auth.AuthRepository
@@ -11,10 +13,14 @@ class ResetPasswordPresenter() {
     private var view: ResetPasswordContract.View? = null
     private var job: kotlinx.coroutines.Job? = null
     private var repository: AuthRepository? = null
-    private var token: String? = null
+    private var appContext: Context? = null
+
+    @VisibleForTesting
+    internal var token: String? = null
 
     fun attach(view: ResetPasswordContract.View, context: Context) {
         this.view = view
+        this.appContext = context.applicationContext
         this.repository = AuthRepository(context)
     }
 
@@ -22,6 +28,7 @@ class ResetPasswordPresenter() {
         job?.cancel()
         view = null
         repository = null
+        appContext = null
     }
 
     fun validateToken(token: String?) {
@@ -58,7 +65,7 @@ class ResetPasswordPresenter() {
     fun submitReset(newPassword: String, confirmPassword: String) {
         val currentToken = token
         if (currentToken.isNullOrBlank()) {
-            view?.showMessage("Reset token is missing")
+            view?.showMessage(string(R.string.reset_token_missing))
             return
         }
 
@@ -67,12 +74,16 @@ class ResetPasswordPresenter() {
 
         val requirements = Validators.passwordRequirements(newPassword)
         if (!requirements.isValid) {
-            view?.showPasswordError("Password must be at least 8 characters and include an uppercase letter, a number, and a special character")
+            if (requirements.isOtherwiseValid) {
+                view?.showPasswordError(Validators.PASSWORD_TOO_LONG_ERROR)
+                return
+            }
+            view?.showPasswordError(string(R.string.password_policy_hint))
             return
         }
 
         if (newPassword != confirmPassword) {
-            view?.showConfirmPasswordError("Passwords do not match")
+            view?.showConfirmPasswordError(string(R.string.password_error_mismatch))
             return
         }
 
@@ -85,12 +96,12 @@ class ResetPasswordPresenter() {
                 }
                 is NetworkResult.Error -> {
                     view?.showLoading(false)
-                    view?.showMessage(result.message ?: "Reset failed")
+                    view?.showMessage(result.message ?: string(R.string.reset_failed))
                 }
                 NetworkResult.Loading -> Unit
                 null -> {
                     view?.showLoading(false)
-                    view?.showMessage("Reset failed")
+                    view?.showMessage(string(R.string.reset_failed))
                 }
             }
         }
@@ -99,4 +110,6 @@ class ResetPasswordPresenter() {
     fun navigateToLogin() {
         view?.navigateToLogin()
     }
+
+    private fun string(resId: Int): String = appContext?.getString(resId).orEmpty()
 }

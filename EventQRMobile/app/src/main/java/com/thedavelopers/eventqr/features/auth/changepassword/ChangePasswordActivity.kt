@@ -24,6 +24,7 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
     private lateinit var requirementsLayout: LinearLayout
     private lateinit var passwordLengthRequirement: TextView
     private lateinit var passwordCapitalRequirement: TextView
+    private lateinit var passwordLowercaseRequirement: TextView
     private lateinit var passwordNumberRequirement: TextView
     private lateinit var passwordSpecialRequirement: TextView
 
@@ -42,6 +43,7 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
         requirementsLayout = findViewById(R.id.layoutPasswordRequirements)
         passwordLengthRequirement = findViewById(R.id.txtPasswordLengthRequirement)
         passwordCapitalRequirement = findViewById(R.id.txtPasswordCapitalRequirement)
+        passwordLowercaseRequirement = findViewById(R.id.txtPasswordLowercaseRequirement)
         passwordNumberRequirement = findViewById(R.id.txtPasswordNumberRequirement)
         passwordSpecialRequirement = findViewById(R.id.txtPasswordSpecialRequirement)
 
@@ -97,7 +99,7 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
 
     override fun showLoading(isLoading: Boolean) {
         changeButton.isEnabled = !isLoading
-        changeButton.text = if (isLoading) "Changing\u2026" else "Change Password"
+        changeButton.text = getString(if (isLoading) R.string.change_password_changing else R.string.common_change_password)
         progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
@@ -106,7 +108,7 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
     }
 
     override fun showNewPasswordError(message: String?) {
-        newPasswordInput.error = message
+        newPasswordInput.error = if (message == Validators.PASSWORD_TOO_LONG_ERROR) getString(R.string.error_password_too_long) else message
     }
 
     override fun showConfirmPasswordError(message: String?) {
@@ -118,7 +120,7 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
     }
 
     override fun showSuccess() {
-        Toast.makeText(this, "Password changed successfully", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, this.getString(R.string.change_password_password_changed_successfully), Toast.LENGTH_SHORT).show()
         finish()
     }
 
@@ -130,10 +132,12 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
         requirementsLayout.visibility = View.VISIBLE
 
         val requirements = Validators.passwordRequirements(password)
-        updateRequirement(passwordLengthRequirement, "At least 8 characters", requirements.hasMinLength)
-        updateRequirement(passwordCapitalRequirement, "One uppercase letter", requirements.hasCapital)
-        updateRequirement(passwordNumberRequirement, "One number", requirements.hasNumber)
-        updateRequirement(passwordSpecialRequirement, "One special character", requirements.hasSpecial)
+        updateRequirement(passwordLengthRequirement, getString(R.string.password_req_length), requirements.hasMinLength)
+        updateRequirement(passwordCapitalRequirement, getString(R.string.password_req_uppercase), requirements.hasCapital)
+        updateRequirement(passwordLowercaseRequirement, getString(R.string.password_req_lowercase), requirements.hasLowercase)
+        updateRequirement(passwordNumberRequirement, getString(R.string.password_req_number), requirements.hasNumber)
+        updateRequirement(passwordSpecialRequirement, getString(R.string.password_req_special), requirements.hasSpecial)
+        newPasswordInput.error = if (!requirements.withinMaxLength) getString(R.string.error_password_too_long) else null
 
         validateButtonState()
     }

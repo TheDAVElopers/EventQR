@@ -32,7 +32,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif-light"
-                    android:text="Welcome back,"
+                    android:text="@string/common_welcome_back"
                     android:textColor="#B0BEC5"
                     android:textSize="15sp" />
 
@@ -51,7 +51,7 @@
                         android:fontFamily="sans-serif-medium"
                         android:maxLines="1"
                         android:maxWidth="190dp"
-                        android:text="Staff Name"
+                        android:text="@string/staff_dashboard_staff_name"
                         android:textColor="#FFFFFF"
                         android:textSize="22sp" />
 
@@ -82,7 +82,7 @@
                             android:id="@+id/txtCurrentPortal"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Staff"
+                            android:text="@string/staff_dashboard_staff"
                             android:textColor="#FFFFFF"
                             android:textSize="11sp"
                             android:textStyle="bold" />
@@ -110,7 +110,7 @@
                     android:layout_width="22dp"
                     android:layout_height="22dp"
                     android:layout_gravity="center"
-                    android:contentDescription="Notifications"
+                    android:contentDescription="@string/common_notifications"
                     android:src="@drawable/notification_bell"
                     app:tint="#FFFFFF" />
 
@@ -152,7 +152,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif-medium"
-                    android:text="Scanned Today"
+                    android:text="@string/staff_dashboard_scanned_today"
                     android:textColor="#80FFFFFF"
                     android:textSize="12sp" />
 
@@ -181,7 +181,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif-medium"
-                    android:text="Successful Check-ins"
+                    android:text="@string/staff_dashboard_successful_check_ins"
                     android:textColor="#80FFFFFF"
                     android:textSize="12sp" />
 
@@ -231,7 +231,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif-medium"
-                        android:text="Today's Activity"
+                        android:text="@string/staff_dashboard_today_s_activity"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp" />
 
@@ -242,8 +242,8 @@
                         android:layout_weight="1"
                         android:visibility="gone"
                         app:icon="@drawable/ic_qr_scan"
-                        app:title="No scans yet today"
-                        app:subtitle="Scans you perform will show up here." />
+                        app:title="@string/staff_dashboard_no_scans_yet_today"
+                        app:subtitle="@string/common_scans_you_perform_will_show_up_here" />
 
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/recyclerRecentScans"

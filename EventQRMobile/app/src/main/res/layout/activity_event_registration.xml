@@ -10,7 +10,7 @@
         android:id="@+id/layoutTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="Register for Event" />
+        app:title="@string/event_registration_register_for_event" />
 
     <ScrollView
         android:layout_width="0dp"
@@ -47,7 +47,7 @@
                         android:id="@+id/txtEventCategory"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Development"
+                        android:text="@string/event_registration_development"
                         android:textColor="#EDE9FE"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -57,7 +57,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="DevFest Manila 2026"
+                        android:text="@string/event_registration_devfest_manila_2026"
                         android:textColor="@color/white"
                         android:textSize="20sp"
                         android:textStyle="bold" />
@@ -67,7 +67,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Jul 20, 2026 · PICC, Pasay City"
+                        android:text="@string/event_registration_jul_20_2026_picc_pasay_city"
                         android:textColor="#F5F3FF"
                         android:textSize="13sp" />
                 </LinearLayout>
@@ -90,14 +90,14 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Registrant Information"
+                        android:text="@string/event_registration_registrant_information"
                         android:textColor="@color/eventqr_text"
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
                     <TextView
                         style="@style/RequestEventLabel"
-                        android:text="Full Name *" />
+                        android:text="@string/event_registration_full_name" />
 
                     <!-- EventQR - registrant info display-only, pulled from account profile (edit profile handled separately, not here) -->
                     <EditText
@@ -106,7 +106,7 @@
                         android:enabled="false"
                         android:focusable="false"
                         android:focusableInTouchMode="false"
-                        android:hint="Full name"
+                        android:hint="@string/common_full_name"
                         android:imeOptions="actionNext"
                         android:inputType="textPersonName"
                         android:maxLines="1"
@@ -114,17 +114,19 @@
 
                     <TextView
                         style="@style/RequestEventLabel"
-                        android:text="Email Address *" />
+                        android:text="@string/event_registration_email_address" />
 
                     <EditText
                         android:id="@+id/edtRegistrationEmail"
                         style="@style/RequestEventInput"
                         android:drawableStart="@drawable/email_icon"
                         android:drawablePadding="8dp"
+                        android:clickable="false"
+                        android:longClickable="false"
                         android:enabled="false"
                         android:focusable="false"
                         android:focusableInTouchMode="false"
-                        android:hint="john.doe@university.edu"
+                        android:hint="@string/event_registration_john_doe_university_edu"
                         android:imeOptions="actionNext"
                         android:inputType="textEmailAddress"
                         android:maxLines="1"
@@ -132,7 +134,7 @@
 
                     <TextView
                         style="@style/RequestEventLabel"
-                        android:text="Phone Number *" />
+                        android:text="@string/event_registration_phone_number" />
 
                     <EditText
                         android:id="@+id/edtRegistrationPhone"
@@ -179,7 +181,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
                         android:layout_weight="1"
-                        android:text="I agree to the event terms and conditions. My QR credential will be generated and emailed to me after successful registration."
+                        android:text="@string/event_registration_i_agree_to_the_event_terms_and_condi"
                         android:textColor="@color/eventqr_text"
                         android:textSize="14sp"
                         android:lineSpacingExtra="2dp" />
@@ -204,7 +206,7 @@
             android:layout_width="match_parent"
             android:layout_height="46dp"
             android:background="@drawable/bg_primary_button"
-            android:text="Confirm Registration"
+            android:text="@string/event_registration_confirm_registration"
             android:textAllCaps="false"
             android:textColor="@color/white"
             android:textSize="15sp"

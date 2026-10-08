@@ -11,7 +11,7 @@
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="Edit Profile" />
+        app:title="@string/attendee_profile_edit_profile" />
 
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshEditProfile"
@@ -89,7 +89,7 @@
                             android:layout_marginTop="4dp"
                             android:minWidth="64dp"
                             android:minHeight="48dp"
-                            android:text="Retry"
+                            android:text="@string/common_retry"
                             android:textAllCaps="false"
                             android:textColor="@color/error"
                             android:textSize="13sp" />
@@ -102,7 +102,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
-                    android:text="Complete your profile to help organizers reach you."
+                    android:text="@string/edit_profile_complete_your_profile_to_help_organi"
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp"
                     android:visibility="gone" />
@@ -119,7 +119,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
-                        android:text="Personal Information"
+                        android:text="@string/edit_profile_personal_information"
                         android:textAppearance="@style/TextAppearance.EventQR.SectionTitle" />
 
                     <com.google.android.material.card.MaterialCardView
@@ -144,7 +144,7 @@
                                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:hint="Full Name"
+                                android:hint="@string/edit_profile_full_name"
                                 app:boxCornerRadiusBottomEnd="8dp"
                                 app:boxCornerRadiusBottomStart="8dp"
                                 app:boxCornerRadiusTopEnd="8dp"
@@ -171,7 +171,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="16dp"
                                 android:enabled="false"
-                                android:hint="Email Address"
+                                android:hint="@string/common_email_address"
                                 app:boxCornerRadiusBottomEnd="8dp"
                                 app:boxCornerRadiusBottomStart="8dp"
                                 app:boxCornerRadiusTopEnd="8dp"
@@ -202,7 +202,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="16dp"
-                                android:hint="Phone Number"
+                                android:hint="@string/common_phone_number"
                                 app:boxCornerRadiusBottomEnd="8dp"
                                 app:boxCornerRadiusBottomStart="8dp"
                                 app:boxCornerRadiusTopEnd="8dp"
@@ -232,7 +232,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
-                        android:text="Security"
+                        android:text="@string/common_security"
                         android:textAppearance="@style/TextAppearance.EventQR.SectionTitle" />
 
                     <com.google.android.material.card.MaterialCardView
@@ -274,7 +274,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="12dp"
                                 android:layout_weight="1"
-                                android:text="Change Password"
+                                android:text="@string/common_change_password"
                                 android:textColor="@color/text_primary"
                                 android:textSize="15sp"
                                 android:textStyle="bold" />
@@ -294,7 +294,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
                         android:letterSpacing="0.02"
-                        android:text="Save Changes"
+                        android:text="@string/edit_profile_save_changes"
                         android:textAllCaps="false"
                         android:textColor="@color/brand_on_primary"
                         android:textSize="14sp"

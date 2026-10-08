@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.attendee
 
+import com.thedavelopers.eventqr.core.util.UiStrings
 import android.view.View
 import android.content.Intent
 import android.os.Bundle
@@ -40,6 +41,7 @@ open class AttendeeRegistrationActivity : AppCompatActivity(), RegistrationContr
     )
     private var suppressEditTracking = false
     private var isLoading = false
+    private var profileEmail: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,7 +49,13 @@ open class AttendeeRegistrationActivity : AppCompatActivity(), RegistrationContr
 
         sessionManager = SessionManager(this)
         repository = AttendeeRepository(this)
-        presenter = RegistrationPresenter(this, repository)
+        presenter = RegistrationPresenter(
+            this,
+            repository,
+            UiStrings(this),
+            ownEmailProvider = { profileEmail?.takeIf { it.isNotBlank() } ?: sessionManager.getEmail() },
+            ownEmailMessage = getString(R.string.registration_own_email_required),
+        )
         eventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty()
 
         findViewById<ImageButton>(R.id.nav_header_back).setOnClickListener { finish() }
@@ -88,7 +96,7 @@ open class AttendeeRegistrationActivity : AppCompatActivity(), RegistrationContr
 
     override fun showLoading(isLoading: Boolean) {
         this.isLoading = isLoading
-        submitButton.text = if (isLoading) "Submitting..." else "Confirm Registration"
+        submitButton.text = getString(if (isLoading) R.string.attendee_registration_submitting else R.string.event_registration_confirm_registration)
         updateSubmitButtonState()
     }
 
@@ -100,7 +108,7 @@ open class AttendeeRegistrationActivity : AppCompatActivity(), RegistrationContr
         when (field) {
             "fullName" -> fullNameInput.error = message
             "email" -> emailInput.error = message
-            "phone" -> phoneInput.error = message
+            "phone" -> phoneInput.error = if (message == Validators.PHONE_ERROR) getString(R.string.error_invalid_phone) else message
         }
     }
 
@@ -130,7 +138,7 @@ open class AttendeeRegistrationActivity : AppCompatActivity(), RegistrationContr
 
         eventCategoryText.text = category
         eventTitleText.text = title
-        eventDateTimeVenueText.text = "$date · $venue"
+        eventDateTimeVenueText.text = getString(R.string.registration_date_venue, date, venue)
     }
 
     private fun attachInputTracking() {
@@ -171,6 +179,7 @@ open class AttendeeRegistrationActivity : AppCompatActivity(), RegistrationContr
             when (val result = repository.getMyProfile()) {
                 is NetworkResult.Success -> {
                     val profile = result.data
+                    profileEmail = profile.email
                     applyPrefill(fullNameInput, FIELD_FULL_NAME, profile.fullName.orEmpty())
                     applyPrefill(emailInput, FIELD_EMAIL, profile.email.orEmpty())
                     applyPrefill(phoneInput, FIELD_PHONE, profile.phoneNumber.orEmpty())
@@ -209,20 +218,20 @@ open class AttendeeRegistrationActivity : AppCompatActivity(), RegistrationContr
 
         var valid = true
         if (!Validators.isNonEmpty(fullName)) {
-            fullNameInput.error = "Full name is required"
+            fullNameInput.error = getString(R.string.attendee_registration_full_name_is_required)
             valid = false
         }
         if (!Validators.isValidEmail(email)) {
-            emailInput.error = "Enter a valid email address"
+            emailInput.error = getString(R.string.create_admin_account_enter_a_valid_email_address)
             valid = false
         }
         if (!Validators.isValidPhoneNumber(phoneNumber)) {
-            phoneInput.error = "Phone number must start with 63 and be 12 digits long"
+            phoneInput.error = getString(R.string.error_invalid_phone)
             valid = false
         }
         if (!termsCheckbox.isChecked) {
             valid = false
-            Toast.makeText(this, "You must agree to the terms and conditions", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, this.getString(R.string.attendee_registration_you_must_agree_to_the_terms_and_cond), Toast.LENGTH_SHORT).show()
         }
 
         if (!valid) {

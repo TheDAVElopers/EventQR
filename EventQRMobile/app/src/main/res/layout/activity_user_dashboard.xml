@@ -33,7 +33,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif-light"
-                    android:text="Welcome back,"
+                    android:text="@string/common_welcome_back"
                     android:textColor="#B0BEC5"
                     android:textSize="15sp" />
 
@@ -52,7 +52,7 @@
                         android:fontFamily="sans-serif-medium"
                         android:maxLines="1"
                         android:maxWidth="190dp"
-                        android:text="Attendee"
+                        android:text="@string/common_attendee"
                         android:textColor="#FFFFFF"
                         android:textSize="22sp" />
 
@@ -84,7 +84,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="sans-serif-medium"
-                            android:text="Attendee"
+                            android:text="@string/common_attendee"
                             android:textColor="#FFFFFF"
                             android:textSize="11sp" />
 
@@ -110,7 +110,7 @@
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:layout_gravity="center"
-                    android:contentDescription="Notifications"
+                    android:contentDescription="@string/common_notifications"
                     android:src="@drawable/notification_bell"
                     android:tint="#FFFFFF" />
 
@@ -153,7 +153,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif-medium"
-                    android:text="Registered"
+                    android:text="@string/common_registered"
                     android:textColor="#80FFFFFF"
                     android:textSize="12sp" />
 
@@ -182,7 +182,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif-medium"
-                    android:text="Upcoming"
+                    android:text="@string/common_upcoming"
                     android:textColor="#80FFFFFF"
                     android:textSize="12sp" />
 
@@ -211,7 +211,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif-medium"
-                    android:text="Completed"
+                    android:text="@string/common_completed"
                     android:textColor="#80FFFFFF"
                     android:textSize="12sp" />
 
@@ -259,7 +259,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif-medium"
-                        android:text="Quick Actions"
+                        android:text="@string/user_dashboard_quick_actions"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp" />
 
@@ -299,7 +299,7 @@
                                     android:layout_width="20dp"
                                     android:layout_height="20dp"
                                     android:layout_gravity="center"
-                                    android:contentDescription="Browse Events"
+                                    android:contentDescription="@string/user_dashboard_browse_events"
                                     android:src="@drawable/ic_calendar"
                                     android:tint="@color/brand_primary" />
                             </FrameLayout>
@@ -312,7 +312,7 @@
                                 android:fontFamily="sans-serif-medium"
                                 android:gravity="center"
                                 android:maxLines="1"
-                                android:text="Browse Events"
+                                android:text="@string/user_dashboard_browse_events"
                                 android:textColor="@color/text_primary"
                                 android:textSize="11sp" />
                         </LinearLayout>
@@ -338,7 +338,7 @@
                                     android:layout_width="20dp"
                                     android:layout_height="20dp"
                                     android:layout_gravity="center"
-                                    android:contentDescription="History"
+                                    android:contentDescription="@string/user_dashboard_history"
                                     android:src="@drawable/ic_history"
                                     android:tint="@color/brand_primary" />
                             </FrameLayout>
@@ -351,7 +351,7 @@
                                 android:fontFamily="sans-serif-medium"
                                 android:gravity="center"
                                 android:maxLines="1"
-                                android:text="Transaction History"
+                                android:text="@string/common_transaction_history"
                                 android:textColor="@color/text_primary"
                                 android:textSize="11sp" />
                         </LinearLayout>
@@ -377,7 +377,7 @@
                                     android:layout_width="20dp"
                                     android:layout_height="20dp"
                                     android:layout_gravity="center"
-                                    android:contentDescription="Request Event"
+                                    android:contentDescription="@string/user_dashboard_request_event"
                                     android:src="@drawable/ic_event_request"
                                     android:tint="@color/brand_primary" />
                             </FrameLayout>
@@ -390,7 +390,7 @@
                                 android:fontFamily="sans-serif-medium"
                                 android:gravity="center"
                                 android:maxLines="1"
-                                android:text="Request Event"
+                                android:text="@string/user_dashboard_request_event"
                                 android:textColor="@color/text_primary"
                                 android:textSize="11sp" />
                         </LinearLayout>
@@ -412,7 +412,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif-medium"
-                        android:text="Next Event"
+                        android:text="@string/user_dashboard_next_event"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp" />
                 </LinearLayout>
@@ -438,7 +438,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:fontFamily="sans-serif-medium"
-                            android:text="Discover Events"
+                            android:text="@string/user_dashboard_discover_events"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp" />
 
@@ -449,7 +449,7 @@
                             android:clickable="true"
                             android:focusable="true"
                             android:fontFamily="sans-serif-medium"
-                            android:text="See All"
+                            android:text="@string/user_dashboard_see_all"
                             android:textColor="@color/brand_primary"
                             android:textSize="13sp" />
                     </LinearLayout>

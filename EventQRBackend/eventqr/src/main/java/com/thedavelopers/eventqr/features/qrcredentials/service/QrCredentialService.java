@@ -103,6 +103,7 @@ public class QrCredentialService implements QrCredentialPort {
         return qrCredentialRepository.save(qrCredential).toSnapshot();
     }
 
+    @Override
     public QrCredentialSnapshot deactivate(UUID qrCredentialId) {
         QrCredential qrCredential = load(qrCredentialId);
         qrCredential.setActive(false);

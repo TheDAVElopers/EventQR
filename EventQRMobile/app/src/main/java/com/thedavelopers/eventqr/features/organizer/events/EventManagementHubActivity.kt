@@ -194,7 +194,7 @@ open class EventManagementHubActivity : AppCompatActivity() {
 
             // Menu Items List
             val canEdit = event.lifecycleStatus() == "Upcoming"
-            val editLabel = if (canEdit) "Edit Event Details" else "View Event Details"
+            val editLabel = getString(if (canEdit) R.string.event_management_hub_edit_event_details else R.string.event_management_hub_view_event_details)
             val menuItems = listOf(
                 MenuSpec(
                     label = editLabel,

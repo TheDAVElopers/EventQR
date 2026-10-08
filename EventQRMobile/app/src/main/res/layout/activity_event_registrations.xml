@@ -10,7 +10,7 @@
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="Event Attendees">
+        app:title="@string/event_registrations_event_attendees">
         <TextView
             android:id="@+id/badgeSelectionCount"
             android:layout_width="wrap_content"
@@ -33,7 +33,7 @@
             android:layout_width="36dp"
             android:layout_height="36dp"
             android:background="@drawable/bg_circle_light"
-            android:contentDescription="Select attendees for batch printing"
+            android:contentDescription="@string/event_registrations_select_attendees_for_batch_printing"
             android:padding="8dp"
             android:src="@drawable/ic_select_multiple"
             app:tint="#111827" />
@@ -83,7 +83,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Event"
+                            android:text="@string/common_event"
                             android:textColor="#DAD7FF"
                             android:textSize="11sp"
                             android:textStyle="bold" />
@@ -94,7 +94,7 @@
                             android:layout_height="wrap_content"
                             android:ellipsize="end"
                             android:maxLines="1"
-                            android:text="Assigned Event"
+                            android:text="@string/common_assigned_event"
                             android:textColor="#FFFFFF"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -123,7 +123,7 @@
                         android:layout_height="match_parent"
                         android:layout_weight="1"
                         android:background="@android:color/transparent"
-                        android:hint="Search attendees..."
+                        android:hint="@string/event_registrations_search_attendees"
                         android:imeOptions="actionSearch"
                         android:inputType="text"
                         android:singleLine="true"
@@ -146,7 +146,7 @@
                         android:orientation="vertical"
                         android:padding="12dp">
 
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Total" android:textColor="#6B7280" android:textSize="12sp" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/common_total" android:textColor="#6B7280" android:textSize="12sp" />
                         <TextView android:id="@+id/txtAttendeeTotal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="0" android:textColor="#111827" android:textSize="22sp" android:textStyle="bold" />
                     </LinearLayout>
 
@@ -159,7 +159,7 @@
                         android:orientation="vertical"
                         android:padding="12dp">
 
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Checked In" android:textColor="#6B7280" android:textSize="12sp" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/common_checked_in" android:textColor="#6B7280" android:textSize="12sp" />
                         <TextView android:id="@+id/txtAttendeeCheckedIn" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="0" android:textColor="#10B981" android:textSize="22sp" android:textStyle="bold" />
                     </LinearLayout>
 
@@ -172,7 +172,7 @@
                         android:orientation="vertical"
                         android:padding="12dp">
 
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Registered" android:textColor="#6B7280" android:textSize="12sp" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/common_registered" android:textColor="#6B7280" android:textSize="12sp" />
                         <TextView android:id="@+id/txtAttendeeRegistered" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="0" android:textColor="#4F46E5" android:textSize="22sp" android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
@@ -211,8 +211,8 @@
             android:layout_height="match_parent"
             android:visibility="gone"
             app:icon="@drawable/ic_group"
-            app:title="No attendees found"
-            app:subtitle="Registered attendees will show up here." />
+            app:title="@string/common_no_attendees_found"
+            app:subtitle="@string/event_registrations_registered_attendees_will_show_up_he" />
         </FrameLayout>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 
@@ -236,7 +236,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:backgroundTint="#F3F4F6"
-            android:text="Select All"
+            android:text="@string/event_registrations_select_all"
             android:textColor="#4F46E5"
             android:textStyle="bold" />
 
@@ -248,7 +248,7 @@
             android:layout_weight="1"
             android:backgroundTint="#4F46E5"
             android:enabled="false"
-            android:text="Print Selected"
+            android:text="@string/event_registrations_print_selected"
             android:textColor="#FFFFFF"
             android:textStyle="bold" />
     </LinearLayout>

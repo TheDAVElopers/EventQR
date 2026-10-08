@@ -32,7 +32,10 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
 
     List<EventRegistration> findByAttendeeUserId(UUID attendeeUserId);
 
-    Page<EventRegistration> findByAttendeeUserId(UUID attendeeUserId, Pageable pageable);
+    @Query(value = "select r from EventRegistration r, com.thedavelopers.eventqr.features.events.model.entity.Event e where e.id = r.eventId and r.attendeeUserId = :attendeeUserId "
+            + "order by e.eventStartAt asc, r.id asc",
+           countQuery = "select count(r) from EventRegistration r where r.attendeeUserId = :attendeeUserId")
+    Page<EventRegistration> findByAttendeeUserId(@org.springframework.data.repository.query.Param("attendeeUserId") UUID attendeeUserId, Pageable pageable);
 
     Page<EventRegistration> findByEventIdAndAttendeeUserId(UUID eventId, UUID attendeeUserId, Pageable pageable);
 

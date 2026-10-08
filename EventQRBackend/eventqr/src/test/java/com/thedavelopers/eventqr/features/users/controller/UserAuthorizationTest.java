@@ -73,7 +73,7 @@ class UserAuthorizationTest {
 
     private String createBody(AccountRole role) {
         return "{\"email\":\"user@example.com\",\"fullName\":\"User\",\"phoneNumber\":null,"
-                + "\"password\":\"password123\",\"role\":\"" + role.name() + "\"}";
+                + "\"password\":\"Password1!\",\"role\":\"" + role.name() + "\"}";
     }
 
     private void postCreate(AccountRole callerRole, AccountRole roleToCreate, int expectedStatus)

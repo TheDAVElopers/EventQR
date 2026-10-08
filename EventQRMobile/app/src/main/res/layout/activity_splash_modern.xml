@@ -1,15 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Base is the SAME flat color as the Android 12+ system splash (windowSplashScreenBackground), so the hand-off from
+     the system splash is invisible. The gradient and logo then fade in on top (see LandingActivity). -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_eventqr_gradient">
+    android:background="@color/eventqr_indigo">
+
+    <View
+        android:id="@+id/splashGradient"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_eventqr_gradient" />
 
     <ImageView
+        android:id="@+id/splashLogo"
         android:layout_width="282dp"
         android:layout_height="120dp"
         android:layout_gravity="center"
         android:adjustViewBounds="true"
-        android:contentDescription="EventQR logo"
+        android:contentDescription="@string/common_eventqr_logo"
         android:scaleType="fitCenter"
         android:src="@drawable/splash_logo_w_text_right" />
 

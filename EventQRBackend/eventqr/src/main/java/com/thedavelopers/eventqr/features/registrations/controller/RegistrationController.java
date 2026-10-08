@@ -27,11 +27,10 @@ import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationSu
 import com.thedavelopers.eventqr.features.registrations.service.RegistrationService;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
-import com.thedavelopers.eventqr.shared.exceptions.TooManyRequestsException;
 import com.thedavelopers.eventqr.shared.interfaces.QrCredentialPort.QrCredentialSnapshot;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
 import com.thedavelopers.eventqr.shared.security.JwtService;
-import com.thedavelopers.eventqr.shared.security.RegistrationRateLimiter;
+import com.thedavelopers.eventqr.shared.security.ClientIp;
 
 @RestController
 @RequestMapping("/api/v1/registrations")
@@ -43,29 +42,25 @@ public class RegistrationController {
     private final JwtService jwtService;
     private final EventService eventService;
     private final EventStaffAssignmentRepository eventStaffAssignmentRepository;
-    private final RegistrationRateLimiter registrationRateLimiter;
 
     public RegistrationController(RegistrationService registrationService, QrCredentialService qrCredentialService,
                                   QREmailService qrEmailService, JwtService jwtService,
-                                  EventService eventService, EventStaffAssignmentRepository eventStaffAssignmentRepository,
-                                  RegistrationRateLimiter registrationRateLimiter) {
+                                  EventService eventService, EventStaffAssignmentRepository eventStaffAssignmentRepository) {
         this.registrationService = registrationService;
         this.qrCredentialService = qrCredentialService;
         this.qrEmailService = qrEmailService;
         this.jwtService = jwtService;
         this.eventService = eventService;
         this.eventStaffAssignmentRepository = eventStaffAssignmentRepository;
-        this.registrationRateLimiter = registrationRateLimiter;
     }
 
     @PostMapping
     public ResponseEntity<ApiResponse<RegistrationSubmissionResponse>> register(HttpServletRequest request,
                                                                                 @Valid @RequestBody RegistrationRequest regRequest) {
-        if (!registrationRateLimiter.allow(request, regRequest.email())) {
-            throw new TooManyRequestsException(
-                    "Too many registration requests. Please try again later.");
-        }
-        return ResponseEntity.ok(ApiResponse.success("Registration completed", registrationService.register(regRequest)));
+        return ResponseEntity.ok(ApiResponse.success("Registration completed", registrationService.registerAs(regRequest,
+                jwtService.extractUserIdFromBearer(request.getHeader("Authorization")),
+                jwtService.extractRoleFromBearer(request.getHeader("Authorization")),
+                ClientIp.from(request))));
     }
 
     @GetMapping("/me")
@@ -73,7 +68,7 @@ public class RegistrationController {
                                                                                     @RequestParam(defaultValue = "0") int page,
                                                                                     @RequestParam(defaultValue = "20") int size) {
         UUID userId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
-        return ResponseEntity.ok(ApiResponse.success(registrationService.findByAttendeeUserId(userId, PageRequest.of(page, size))));
+        return ResponseEntity.ok(ApiResponse.success(registrationService.findByAttendeeUserId(userId, PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100)))));
     }
 
     @GetMapping("/{registrationId}")
@@ -96,7 +91,7 @@ public class RegistrationController {
                                                                                @RequestParam(defaultValue = "0") int page,
                                                                                @RequestParam(defaultValue = "20") int size) {
         requireEventAccess(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success(registrationService.findByEvent(eventId, PageRequest.of(page, size))));
+        return ResponseEntity.ok(ApiResponse.success(registrationService.findByEvent(eventId, PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100)))));
     }
 
     @PostMapping("/{registrationId}/qr")
@@ -168,9 +163,6 @@ public class RegistrationController {
             return;
         }
         if (role == AccountRole.ATTENDEE) {
-            if (registration.attendeeUserId().equals(callerId)) {
-                return;
-            }
             throw new ForbiddenException("You can only access your own registration");
         }
         if (role == AccountRole.ORGANIZER) {

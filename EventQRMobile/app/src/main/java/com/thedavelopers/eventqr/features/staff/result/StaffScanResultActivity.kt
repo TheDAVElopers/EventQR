@@ -56,7 +56,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
             ?: UUID.randomUUID()
         sessionManager = SessionManager(this)
         if (!RoleMapper.isAtLeast(sessionManager.getUserRole(), AccountRole.STAFF)) {
-            Toast.makeText(this, "Access Denied: Staff or above", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, this.getString(R.string.staff_dashboard_access_denied_staff_or_above), Toast.LENGTH_LONG).show()
             finish()
             return
         }
@@ -109,7 +109,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
             findViewById<TextView>(R.id.txtScanResultAttendeeName).text = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_NAME).orUnknown()
             findViewById<TextView>(R.id.txtScanResultAttendeeEmail).text = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_EMAIL).orUnknown()
             findViewById<TextView>(R.id.txtScanResultRegistrationStatus).text = intent.getStringExtra(StaffScreenExtras.EXTRA_REGISTRATION_STATUS).orUnknown()
-            findViewById<TextView>(R.id.txtScanResultStatusHint).text = "Attendee verified successfully"
+            findViewById<TextView>(R.id.txtScanResultStatusHint).text = getString(R.string.staff_scan_result_attendee_verified_successfully)
             findViewById<Button>(R.id.btnContinueTransaction).visibility = View.VISIBLE
             findViewById<Button>(R.id.btnViewAttendeeDetails).visibility = View.VISIBLE
             
@@ -122,8 +122,8 @@ open class StaffScanResultActivity : AppCompatActivity() {
         } else {
             findViewById<View>(R.id.headerApproved).visibility = View.GONE
             findViewById<View>(R.id.headerRejected).visibility = View.VISIBLE
-            findViewById<TextView>(R.id.txtScanResultStateRejected).text = "Verification Rejected"
-            findViewById<TextView>(R.id.txtScanResultStatusHintRejected).text = "Backend verification rejected the scan."
+            findViewById<TextView>(R.id.txtScanResultStateRejected).text = getString(R.string.staff_scan_result_verification_rejected)
+            findViewById<TextView>(R.id.txtScanResultStatusHintRejected).text = getString(R.string.staff_scan_result_backend_verification_rejected_the_sc)
             findViewById<View>(R.id.layoutApprovedDetails).visibility = View.GONE
             findViewById<View>(R.id.layoutRejectedReason).visibility = View.VISIBLE
             findViewById<View>(R.id.cardVerificationDetails).visibility = View.GONE
@@ -135,8 +135,8 @@ open class StaffScanResultActivity : AppCompatActivity() {
     private fun bindRejectedResult(message: String) {
         findViewById<View>(R.id.headerApproved).visibility = View.GONE
         findViewById<View>(R.id.headerRejected).visibility = View.VISIBLE
-        findViewById<TextView>(R.id.txtScanResultStateRejected).text = "Verification Rejected"
-        findViewById<TextView>(R.id.txtScanResultStatusHintRejected).text = "Transaction could not be completed."
+        findViewById<TextView>(R.id.txtScanResultStateRejected).text = getString(R.string.staff_scan_result_verification_rejected)
+        findViewById<TextView>(R.id.txtScanResultStatusHintRejected).text = getString(R.string.staff_scan_result_transaction_could_not_be_completed)
         findViewById<TextView>(R.id.txtScanResultReason).text = message
         findViewById<View>(R.id.layoutApprovedDetails).visibility = View.GONE
         findViewById<View>(R.id.layoutRejectedReason).visibility = View.VISIBLE
@@ -146,7 +146,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
 
     private fun recordTransaction() {
         if (savingTransaction) {
-            Toast.makeText(this, "Transaction save already in progress.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, this.getString(R.string.staff_scan_result_transaction_save_already_in_progress), Toast.LENGTH_SHORT).show()
             return
         }
         val eventId = intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_ID).orEmpty()
@@ -167,7 +167,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
         }
 
         if (eventId.isBlank() || purposeId.isBlank() || qrValue.isBlank() || staffUserId.isBlank() || purposeCode.isBlank()) {
-            Toast.makeText(this, "Transaction failed: Missing scan context", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, this.getString(R.string.staff_scan_result_transaction_failed_missing_scan_cont), Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -175,7 +175,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
         val parsedPurposeId = runCatching { UUID.fromString(purposeId) }.getOrNull()
         val parsedStaffUserId = runCatching { UUID.fromString(staffUserId) }.getOrNull()
         if (parsedEventId == null || parsedPurposeId == null || parsedStaffUserId == null || parsedPurposeCode == null) {
-            Toast.makeText(this, "Transaction failed: Invalid scan context", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, this.getString(R.string.staff_scan_result_transaction_failed_invalid_scan_cont), Toast.LENGTH_SHORT).show()
             Log.w(
                 tag,
                 "invalid context eventId=$eventId purposeId=$purposeId staffUserId=$staffUserId purposeCode=$purposeCode"
@@ -186,7 +186,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
         savingTransaction = true
         findViewById<LinearProgressIndicator>(R.id.progressTransactionInline).visibility = View.VISIBLE
         findViewById<Button>(R.id.btnContinueTransaction).isEnabled = false
-        findViewById<Button>(R.id.btnContinueTransaction).text = "Logging..."
+        findViewById<Button>(R.id.btnContinueTransaction).text = getString(R.string.staff_scan_result_logging)
 
         MainScope().launch {
             val request = TransactionRequest(
@@ -221,14 +221,14 @@ open class StaffScanResultActivity : AppCompatActivity() {
 
     private fun triggerPrint(eventId: String, attendeeId: String) {
         if (eventId.isBlank() || attendeeId.isBlank()) {
-            Toast.makeText(this, "Print failed: Missing attendee context", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, this.getString(R.string.staff_scan_result_print_failed_missing_attendee_contex), Toast.LENGTH_SHORT).show()
             return
         }
 
         savingTransaction = true
         findViewById<LinearProgressIndicator>(R.id.progressTransactionInline).visibility = View.VISIBLE
         findViewById<Button>(R.id.btnContinueTransaction).isEnabled = false
-        findViewById<Button>(R.id.btnContinueTransaction).text = "Printing..."
+        findViewById<Button>(R.id.btnContinueTransaction).text = getString(R.string.staff_scan_result_printing)
 
         MainScope().launch {
             val apiService = com.thedavelopers.eventqr.core.api.ApiClient.getService(this@StaffScanResultActivity)
@@ -371,7 +371,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
     private fun openAttendeeDetails() {
         val attendeeId = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_ID)
         if (attendeeId.isNullOrBlank()) {
-            Toast.makeText(this, "Attendee details are only available for valid scans", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, this.getString(R.string.staff_scan_result_attendee_details_are_only_available), Toast.LENGTH_SHORT).show()
             return
         }
         startActivity(Intent(this, StaffAttendeeDetailsActivity::class.java).apply {

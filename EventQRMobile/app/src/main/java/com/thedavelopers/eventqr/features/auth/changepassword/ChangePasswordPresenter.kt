@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.auth.changepassword
 
 import android.content.Context
+import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.auth.AuthRepository
@@ -11,9 +12,11 @@ class ChangePasswordPresenter() {
     private var view: ChangePasswordContract.View? = null
     private var job: kotlinx.coroutines.Job? = null
     private var repository: AuthRepository? = null
+    private var appContext: Context? = null
 
     fun attach(view: ChangePasswordContract.View, context: Context) {
         this.view = view
+        this.appContext = context.applicationContext
         this.repository = AuthRepository(context)
     }
 
@@ -29,18 +32,22 @@ class ChangePasswordPresenter() {
         view?.showConfirmPasswordError(null)
 
         if (currentPassword.isBlank()) {
-            view?.showCurrentPasswordError("Enter your current password")
+            view?.showCurrentPasswordError(string(R.string.password_error_current_required))
             return
         }
 
         val requirements = Validators.passwordRequirements(newPassword)
         if (!requirements.isValid) {
-            view?.showNewPasswordError("Password must be at least 8 characters and include an uppercase letter, a number, and a special character")
+            if (requirements.isOtherwiseValid) {
+                view?.showNewPasswordError(Validators.PASSWORD_TOO_LONG_ERROR)
+                return
+            }
+            view?.showNewPasswordError(string(R.string.password_policy_hint))
             return
         }
 
         if (newPassword != confirmPassword) {
-            view?.showConfirmPasswordError("Passwords do not match")
+            view?.showConfirmPasswordError(string(R.string.password_error_mismatch))
             return
         }
 
@@ -53,12 +60,12 @@ class ChangePasswordPresenter() {
                 }
                 is NetworkResult.Error -> {
                     view?.showLoading(false)
-                    view?.showMessage(result.message ?: "Change password failed")
+                    view?.showMessage(result.message ?: string(R.string.change_password_failed))
                 }
                 NetworkResult.Loading -> Unit
                 null -> {
                     view?.showLoading(false)
-                    view?.showMessage("Change password failed")
+                    view?.showMessage(string(R.string.change_password_failed))
                 }
             }
         }
@@ -67,4 +74,6 @@ class ChangePasswordPresenter() {
     fun navigateBack() {
         view?.navigateBack()
     }
+
+    private fun string(resId: Int): String = appContext?.getString(resId).orEmpty()
 }

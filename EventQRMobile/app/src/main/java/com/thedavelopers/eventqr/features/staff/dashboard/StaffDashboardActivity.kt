@@ -40,7 +40,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
 
         val sessionManager = SessionManager(this)
         if (!RoleMapper.isAtLeast(sessionManager.getUserRole(), AccountRole.STAFF)) {
-            Toast.makeText(this, "Access Denied: Staff or above", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, this.getString(R.string.staff_dashboard_access_denied_staff_or_above), Toast.LENGTH_LONG).show()
             finish()
             return
         }
@@ -118,11 +118,11 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
         val container = view.findViewById<LinearLayout>(R.id.portalOptionsContainer)
         portals.forEach { portal ->
             val portalView = layoutInflater.inflate(R.layout.item_portal_option, container, false)
-            portalView.findViewById<TextView>(R.id.txtPortalName).text = portal
+            portalView.findViewById<TextView>(R.id.txtPortalName).text = PortalSwitcher.title(this, portal)
             val icon = portalView.findViewById<ImageView>(R.id.imgPortalIcon)
             val subtitle = portalView.findViewById<TextView>(R.id.txtPortalSubtitle)
             icon.setImageResource(PortalSwitcher.iconRes(portal))
-            subtitle.text = PortalSwitcher.subtitle(portal)
+            subtitle.text = PortalSwitcher.subtitle(this, portal)
 
             if (portal == PortalSwitcher.PORTAL_STAFF) {
                 portalView.findViewById<View>(R.id.currentPortalBadge).visibility = View.VISIBLE

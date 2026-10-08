@@ -60,6 +60,8 @@ import com.thedavelopers.eventqr.ui.components.EventBadgeStatus
 import com.thedavelopers.eventqr.ui.components.StatusBadge
 import com.thedavelopers.eventqr.ui.theme.LocalSpacing
 import java.util.UUID
+import androidx.compose.ui.res.stringResource
+import com.thedavelopers.eventqr.R
 
 private enum class ConfirmAction {
     APPROVE,
@@ -151,7 +153,7 @@ fun EventRequestDetailScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                 ) {
                                     Text(
-                                        text = request.eventName.ifBlank { "Untitled Event" },
+                                        text = request.eventName.ifBlank { stringResource(R.string.common_untitled_event) },
                                         style = MaterialTheme.typography.titleLarge.copy(
                                             fontWeight = FontWeight.Bold,
                                             color = colorScheme.onSurface,
@@ -165,7 +167,7 @@ fun EventRequestDetailScreen(
                                 if (isAdmin) {
                                     Spacer(modifier = Modifier.height(spacing.small))
                                     Text(
-                                        text = "Submitted by: ${requesterDisplay(request.requesterName, request.contactEmail, request.requesterUserId)}",
+                                        text = stringResource(R.string.event_request_detail_submitted_by_1_s, requesterDisplay(request.requesterName, request.contactEmail, request.requesterUserId)),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = colorScheme.onSurfaceVariant,
                                     )
@@ -173,7 +175,7 @@ fun EventRequestDetailScreen(
 
                                 Spacer(modifier = Modifier.height(spacing.extraSmall))
                                 Text(
-                                    text = "Submitted on ${DateFormatters.formatEventDate(request.createdAt)}",
+                                    text = stringResource(R.string.event_request_detail_submitted_on_1_s, DateFormatters.formatEventDate(request.createdAt)),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = colorScheme.onSurfaceVariant,
                                 )
@@ -186,7 +188,7 @@ fun EventRequestDetailScreen(
                             NoteBox(
                                 title = "Approval Note",
                                 message = request.adminRemarks?.takeIf { it.isNotBlank() }
-                                    ?: "Approved. Venue confirmed. Please proceed to event setup.",
+                                    ?: "No note provided.",
                                 backgroundColor = colorScheme.primaryContainer,
                                 textColor = colorScheme.onPrimaryContainer,
                             )
@@ -195,7 +197,7 @@ fun EventRequestDetailScreen(
                             NoteBox(
                                 title = "Rejection Note",
                                 message = request.adminRemarks?.takeIf { it.isNotBlank() }
-                                    ?: "This request was rejected. Review the event details and submit a revised request if needed.",
+                                    ?: "No note provided.",
                                 backgroundColor = colorScheme.errorContainer,
                                 textColor = colorScheme.onErrorContainer,
                             )
@@ -212,7 +214,7 @@ fun EventRequestDetailScreen(
                         ) {
                             Column(modifier = Modifier.padding(spacing.mediumLarge)) {
                                 Text(
-                                    text = "Description",
+                                    text = stringResource(R.string.common_description),
                                     style = MaterialTheme.typography.labelMedium.copy(
                                         fontWeight = FontWeight.Bold,
                                         color = colorScheme.onSurfaceVariant,
@@ -299,7 +301,7 @@ fun EventRequestDetailScreen(
                                             modifier = Modifier.size(spacing.iconSizeMedium),
                                         )
                                         Spacer(modifier = Modifier.width(spacing.micro))
-                                        Text("Reject", fontWeight = FontWeight.Bold)
+                                        Text(stringResource(R.string.common_reject), fontWeight = FontWeight.Bold)
                                     }
 
                                     Button(
@@ -321,7 +323,7 @@ fun EventRequestDetailScreen(
                                             modifier = Modifier.size(spacing.iconSizeMedium),
                                         )
                                         Spacer(modifier = Modifier.width(spacing.micro))
-                                        Text("Approve", fontWeight = FontWeight.Bold)
+                                        Text(stringResource(R.string.common_approve), fontWeight = FontWeight.Bold)
                                     }
                                 }
                             } else if (request.status == EventRequestStatus.APPROVED) {
@@ -392,7 +394,7 @@ fun EventRequestDetailScreen(
                         OutlinedTextField(
                             value = remarksText,
                             onValueChange = { remarksText = it },
-                            label = { Text("Remarks (Optional)") },
+                            label = { Text(stringResource(R.string.common_remarks_optional)) },
                             modifier = Modifier.fillMaxWidth(),
                         )
                     }
@@ -435,7 +437,7 @@ fun EventRequestDetailScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showConfirmDialog = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.request_event_cancel))
                 }
             },
         )

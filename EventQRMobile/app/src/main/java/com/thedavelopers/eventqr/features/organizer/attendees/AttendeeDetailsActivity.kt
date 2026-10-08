@@ -68,7 +68,7 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
         val attendeeId = intent.getStringExtra(SearchAttendeesActivity.EXTRA_ATTENDEE_ID).orEmpty()
         val eventId = intentEventId().orEmpty().ifBlank { selectedEventId() }
         if (attendeeId.isBlank() || eventId.isBlank()) {
-            Toast.makeText(this, "Open attendee details from an event to view live records.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, this.getString(R.string.attendee_details_open_attendee_details_from_an_event), Toast.LENGTH_SHORT).show()
             finish()
             return
         }
@@ -76,7 +76,7 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
         lifecycleScope.launch {
             selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
                 ?: run {
-                    Toast.makeText(this@AttendeeDetailsActivity, "Selected event not available.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@AttendeeDetailsActivity, this@AttendeeDetailsActivity.getString(R.string.attendee_details_selected_event_not_available), Toast.LENGTH_SHORT).show()
                     finish()
                     return@launch
                 }
@@ -114,7 +114,7 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
 
     private fun renderProfile() {
         skeletonLoading.visibility = View.GONE
-        findViewById<TextView>(R.id.nav_header_title).text = "Attendee Details"
+        findViewById<TextView>(R.id.nav_header_title).text = getString(R.string.attendee_details_attendee_details)
         findViewById<TextView>(R.id.txtDetailInitial).text = attendeeInitial(attendee.name)
         findViewById<TextView>(R.id.txtDetailName).text = attendee.name
         findViewById<TextView>(R.id.txtDetailEmail).text = attendee.email
@@ -136,7 +136,7 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
         }
         findViewById<TextView>(R.id.txtDetailIdStatusValue).apply {
             val issued = attendee.qrCredentialStatus.equals("Issued", ignoreCase = true)
-            text = if (issued) "ID issued" else "No ID"
+            text = getString(if (issued) R.string.attendee_details_id_issued else R.string.attendee_details_no_id)
             background = GradientDrawable().apply {
                 setColor(getColor(if (issued) R.color.eventqr_badge_entered_bg else R.color.eventqr_badge_default_bg))
                 cornerRadius = 999f

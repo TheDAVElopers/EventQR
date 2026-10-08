@@ -51,6 +51,7 @@ class TransactionAdapter : RecyclerView.Adapter<TransactionAdapter.ViewHolder>()
         private val trendIcon: ImageView = itemView.findViewById(R.id.imgTransactionTrend)
 
         fun bind(item: TransactionResponse) {
+            val isApproved = item.transactionResult.name == "APPROVED"
             val isEarned = item.pointsDelta >= 0
             val title = mapTransactionTitle(item.transactionType)
 
@@ -58,11 +59,16 @@ class TransactionAdapter : RecyclerView.Adapter<TransactionAdapter.ViewHolder>()
             eventView.text = item.eventTitle.orEmpty()
             timeView.text = item.scannedAt?.let { displayFormatter.format(it) } ?: "-"
 
-            val deltaPrefix = if (isEarned) "+" else ""
-            pointsView.text = "$deltaPrefix${item.pointsDelta} pts"
-            pointsView.setTextColor(if (isEarned) Color.parseColor("#10B981") else Color.parseColor("#EF4444"))
+            if (!isApproved) {
+                // A rejected/failed scan awards nothing; never render it as a green "+0 pts".
+                pointsView.text = "Rejected"
+                pointsView.setTextColor(Color.parseColor("#EF4444"))
+            } else {
+                val deltaPrefix = if (isEarned) "+" else ""
+                pointsView.text = "$deltaPrefix${item.pointsDelta} pts"
+                pointsView.setTextColor(if (isEarned) Color.parseColor("#10B981") else Color.parseColor("#EF4444"))
+            }
 
-            val isApproved = item.transactionResult.name == "APPROVED"
             tagView.text = if (isApproved) "Success" else "Failed"
             tagView.setBackgroundResource(if (isApproved) R.drawable.bg_green_pill else R.drawable.bg_red_warning)
             tagView.setTextColor(if (isApproved) Color.parseColor("#047857") else Color.parseColor("#B91C1C"))
@@ -84,8 +90,8 @@ class TransactionAdapter : RecyclerView.Adapter<TransactionAdapter.ViewHolder>()
                 TransactionType.ENTRY -> "Event Entry"
                 TransactionType.ATTENDANCE -> "Session Attendance"
                 TransactionType.BOOTH_VISIT -> "Booth Visit"
-                TransactionType.REWARD_REDEMPTION,
-                TransactionType.REWARD_REDEMPTION_SCAN -> "Reward Redemption"
+                TransactionType.REWARD_REDEMPTION_SCAN -> "Reward Redemption Scan"
+                TransactionType.REWARD_REDEMPTION -> "Reward Redeemed"
                 TransactionType.EXIT -> "Event Exit"
                 else -> type.name.lowercase().replace('_', ' ').split(' ').joinToString(" ") { word ->
                     word.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }

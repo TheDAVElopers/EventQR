@@ -1,5 +1,7 @@
 package com.thedavelopers.eventqr.features.organizer.notifications
 
+import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.util.UiStrings
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -12,7 +14,7 @@ import com.thedavelopers.eventqr.features.organizer.OrganizerRepository
 import kotlinx.coroutines.launch
 import java.util.UUID
 
-class OrganizerNotificationsViewModel(private val repo: OrganizerRepository) : ViewModel() {
+class OrganizerNotificationsViewModel(private val repo: OrganizerRepository, private val strings: UiStrings) : ViewModel() {
 
     private val _selectedEventId = MutableLiveData<UUID?>(null)
     private val _selectedType = MutableLiveData<NotificationType?>(null)
@@ -51,7 +53,7 @@ class OrganizerNotificationsViewModel(private val repo: OrganizerRepository) : V
             when (result) {
                 is NetworkResult.Success -> _list.value = result.data
                 is NetworkResult.Error -> _error.value = result.message
-                else -> _error.value = "Unknown error"
+                else -> _error.value = strings.get(R.string.notifications_unknown_error)
             }
         }
     }

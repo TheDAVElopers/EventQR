@@ -155,6 +155,7 @@ class RegistrationActivityTest {
         assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.layoutPasswordRequirements).visibility)
         assertEquals("✓ At least 8 characters", activity.findViewById<TextView>(R.id.txtPasswordLengthRequirement).text.toString())
         assertEquals("✓ One uppercase letter", activity.findViewById<TextView>(R.id.txtPasswordCapitalRequirement).text.toString())
+        assertEquals("✓ One lowercase letter", activity.findViewById<TextView>(R.id.txtPasswordLowercaseRequirement).text.toString())
         assertEquals("✓ One number", activity.findViewById<TextView>(R.id.txtPasswordNumberRequirement).text.toString())
         assertEquals("✓ One special character", activity.findViewById<TextView>(R.id.txtPasswordSpecialRequirement).text.toString())
         assertEquals("Strong", activity.findViewById<TextView>(R.id.txtPasswordStrength).text.toString())
@@ -170,7 +171,41 @@ class RegistrationActivityTest {
 
         assertEquals("✓ At least 8 characters", activity.findViewById<TextView>(R.id.txtPasswordLengthRequirement).text.toString())
         assertEquals("○ One uppercase letter", activity.findViewById<TextView>(R.id.txtPasswordCapitalRequirement).text.toString())
-        assertEquals("Weak", activity.findViewById<TextView>(R.id.txtPasswordStrength).text.toString())
+        assertEquals("✓ One lowercase letter", activity.findViewById<TextView>(R.id.txtPasswordLowercaseRequirement).text.toString())
+        assertEquals("Fair", activity.findViewById<TextView>(R.id.txtPasswordStrength).text.toString())
+    }
+
+    @Test
+    fun passwordInput_over72Bytes_showsInlineTooLongErrorAndBlocksSubmit() {
+        val activity = buildActivity()
+        enableSubmit(activity)
+        val passwordInput = activity.findViewById<EditText>(R.id.edtPassword)
+        val registerButton = activity.findViewById<Button>(R.id.btnRegister)
+
+        // 4 + 69 = 73 ASCII bytes: meets every class but exceeds BCrypt's 72-byte limit.
+        passwordInput.setText("Aa1!" + "a".repeat(69))
+
+        assertEquals(activity.getString(R.string.error_password_too_long), passwordInput.error.toString())
+        assertFalse(registerButton.isEnabled)
+
+        // Exactly 72 bytes is accepted again and the error clears.
+        passwordInput.setText("Aa1!" + "a".repeat(68))
+
+        assertNull(passwordInput.error)
+        assertTrue(registerButton.isEnabled)
+    }
+
+    @Test
+    fun passwordInput_multibyteOver72Bytes_isRejectedEvenWhenShortInCharacters() {
+        val activity = buildActivity()
+        enableSubmit(activity)
+        val passwordInput = activity.findViewById<EditText>(R.id.edtPassword)
+
+        // "é" is 2 bytes in UTF-8: 4 + 40 characters = 84 bytes.
+        passwordInput.setText("Aa1!" + "é".repeat(40))
+
+        assertEquals(activity.getString(R.string.error_password_too_long), passwordInput.error.toString())
+        assertFalse(activity.findViewById<Button>(R.id.btnRegister).isEnabled)
     }
 
     // -- Terms gating (TestFlow REG-9/REG-10) -------------------------------------
@@ -192,6 +227,10 @@ class RegistrationActivityTest {
         termsCheckBox.isChecked = true
         assertTrue(registerButton.isEnabled)
 
+        // No lowercase letter: still disabled even with terms checked.
+        passwordInput.setText("STRONG1!PASS")
+        assertFalse(registerButton.isEnabled)
+
         // Weakening the password disables it again even with terms checked.
         passwordInput.setText("weak")
         assertFalse(registerButton.isEnabled)
@@ -212,7 +251,7 @@ class RegistrationActivityTest {
         activity.findViewById<Button>(R.id.btnRegister).performClick()
 
         assertEquals(
-            "Enter valid 10-digit mobile number",
+            activity.getString(R.string.error_invalid_phone),
             activity.findViewById<EditText>(R.id.edtPhoneNumber).error.toString(),
         )
         assertNull(shadowOf(activity).peekNextStartedActivity())

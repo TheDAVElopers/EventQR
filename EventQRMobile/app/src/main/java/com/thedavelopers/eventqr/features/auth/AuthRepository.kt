@@ -16,11 +16,11 @@ import com.thedavelopers.eventqr.features.auth.model.dto.ResetTokenValidationRes
 import com.thedavelopers.eventqr.features.users.model.dto.UserRequest
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
 
-class AuthRepository(context: Context) {
+open class AuthRepository(context: Context) {
     private val apiService = ApiClient.getService(context)
     private val sessionManager = SessionManager(context)
 
-    suspend fun login(email: String, password: String): NetworkResult<LoginResponse> =
+    open suspend fun login(email: String, password: String): NetworkResult<LoginResponse> =
         safeApiCall { apiService.login(LoginRequest(email, password)) }
 
         suspend fun getAuthMe(): NetworkResult<UserResponse> =

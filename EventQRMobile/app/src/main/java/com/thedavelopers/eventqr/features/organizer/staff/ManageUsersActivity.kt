@@ -134,8 +134,7 @@ open class ManageUsersActivity : AppCompatActivity() {
             val renderedCount = renderAssigned()
             if (showAlreadyAssignedRefreshFailureIfEmpty && renderedCount == 0) {
                 Toast.makeText(
-                    this@ManageUsersActivity,
-                    "Staff is already assigned, but assigned staff list could not be refreshed.",
+                    this@ManageUsersActivity, this@ManageUsersActivity.getString(R.string.manage_users_staff_is_already_assigned_but_assign),
                     Toast.LENGTH_LONG,
                 ).show()
             }
@@ -161,10 +160,10 @@ open class ManageUsersActivity : AppCompatActivity() {
 
     private fun confirmRemove(staff: OrganizerMvpStaff) {
         AlertDialog.Builder(this)
-            .setTitle("Remove staff?")
+            .setTitle(getString(R.string.manage_users_remove_staff))
             .setMessage("Remove ${staff.name} from ${staff.assignedEvent}?")
-            .setNegativeButton("Cancel", null)
-            .setPositiveButton("Remove") { _, _ ->
+            .setNegativeButton(getString(R.string.request_event_cancel), null)
+            .setPositiveButton(getString(R.string.staff_remove)) { _, _ ->
                 removeStaff(staff)
             }
             .show()

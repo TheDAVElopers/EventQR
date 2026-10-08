@@ -10,6 +10,14 @@ object InstantTypeAdapter : JsonSerializer<Instant>, JsonDeserializer<Instant> {
         return JsonPrimitive(src?.toString())
     }
 
+    /** Accepts `Z` and numeric offsets (e.g. +08:00); Instant.parse alone rejects offsets on older runtimes. */
+    internal fun parseInstant(value: String): Instant =
+        try {
+            Instant.parse(value)
+        } catch (e: DateTimeParseException) {
+            java.time.OffsetDateTime.parse(value).toInstant()
+        }
+
     override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): Instant? {
         val raw = try {
             json?.asString
@@ -23,7 +31,7 @@ object InstantTypeAdapter : JsonSerializer<Instant>, JsonDeserializer<Instant> {
         val value = raw?.trim().orEmpty()
         if (value.isBlank()) return null
         return try {
-            Instant.parse(value)
+            parseInstant(value)
         } catch (e: DateTimeParseException) {
             throw JsonSyntaxException("Invalid timestamp: $value", e)
         }

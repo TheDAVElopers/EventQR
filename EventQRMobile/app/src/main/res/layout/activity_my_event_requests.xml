@@ -10,7 +10,7 @@
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="My Event Requests">
+        app:title="@string/attendee_profile_my_event_requests">
         <TextView
             android:id="@+id/btnNewRequest"
             android:layout_width="wrap_content"
@@ -19,7 +19,7 @@
             android:gravity="center"
             android:minWidth="78dp"
             android:paddingHorizontal="14dp"
-            android:text="＋  New"
+            android:text="@string/my_event_requests_new"
             android:textColor="@color/brand_on_primary"
             android:textSize="14sp"
             android:textStyle="bold" />
@@ -62,7 +62,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="Unable to load event requests."
+                    android:text="@string/my_event_requests_unable_to_load_event_requests"
                     android:textColor="@color/eventqr_error"
                     android:textSize="14sp"
                     android:visibility="gone" />
@@ -73,7 +73,7 @@
                     android:layout_height="44dp"
                     android:layout_marginTop="12dp"
                     android:background="@drawable/bg_primary_button"
-                    android:text="Retry"
+                    android:text="@string/common_retry"
                     android:textAllCaps="false"
                     android:textColor="@android:color/white"
                     android:textStyle="bold"
@@ -85,8 +85,8 @@
             android:layout_height="match_parent"
             android:visibility="gone"
             app:icon="@drawable/ic_event_request"
-            app:title="No event requests yet"
-            app:subtitle="Requests you submit will show up here." />
+            app:title="@string/common_no_event_requests_yet"
+            app:subtitle="@string/my_event_requests_requests_you_submit_will_show_up_her" />
         </FrameLayout>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 </LinearLayout>

@@ -10,8 +10,8 @@
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="Account Management"
-        app:subtitle="Manage admin and user accounts" />
+        app:title="@string/admin_account_management_account_management"
+        app:subtitle="@string/admin_account_management_manage_admin_and_user_accounts" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -55,7 +55,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Create Admin Account"
+                    android:text="@string/common_create_admin_account"
                     android:textColor="#111827"
                     android:textSize="15sp"
                     android:textStyle="bold" />
@@ -63,7 +63,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Super Admin only action"
+                    android:text="@string/admin_account_management_super_admin_only_action"
                     android:textColor="#6B7280"
                     android:textSize="13sp" />
             </LinearLayout>
@@ -82,7 +82,7 @@
             android:background="@drawable/bg_admin_search_field"
             android:drawableEnd="@drawable/ic_action_search"
             android:drawablePadding="8dp"
-            android:hint="Search accounts..."
+            android:hint="@string/admin_account_management_search_accounts"
             android:paddingHorizontal="14dp"
             android:textColor="#111827"
             android:textColorHint="#9CA3AF"/>
@@ -120,8 +120,8 @@
             android:layout_weight="1"
             android:visibility="gone"
             app:icon="@drawable/ic_admin_users"
-            app:title="No accounts found yet"
-            app:subtitle="Created accounts will show up here." />
+            app:title="@string/admin_account_management_no_accounts_found_yet_2"
+            app:subtitle="@string/admin_account_management_created_accounts_will_show_up_here" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerAdminAccounts"

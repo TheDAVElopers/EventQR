@@ -10,8 +10,8 @@
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="Rewards"
-        app:subtitle="Earn and claim event rewards">
+        app:title="@string/user_rewards_rewards"
+        app:subtitle="@string/user_rewards_earn_and_claim_event_rewards">
         <TextView
             android:id="@+id/txtMyClaims"
             android:layout_width="wrap_content"
@@ -19,7 +19,7 @@
             android:fontFamily="sans-serif-medium"
             android:paddingHorizontal="4dp"
             android:paddingVertical="8dp"
-            android:text="My Claims"
+            android:text="@string/user_rewards_my_claims"
             android:textColor="@color/purple"
             android:textSize="16sp" />
     </com.thedavelopers.eventqr.ui.components.EventQrTabHeader>
@@ -70,7 +70,7 @@
                         android:layout_height="44dp"
                         android:layout_marginTop="12dp"
                         android:background="@drawable/bg_primary_button"
-                        android:text="Retry"
+                        android:text="@string/common_retry"
                         android:textAllCaps="false"
                         android:textColor="@android:color/white"
                         android:textStyle="bold"
@@ -85,8 +85,8 @@
                     android:layout_weight="1"
                     android:visibility="gone"
                     app:icon="@drawable/ic_nav_gift"
-                    app:title="No registered events yet"
-                    app:subtitle="Register for an event to start earning rewards" />
+                    app:title="@string/common_no_registered_events_yet"
+                    app:subtitle="@string/user_rewards_register_for_an_event_to_start_earni" />
 
                 <!-- Main content wrapper -->
                 <LinearLayout
@@ -102,7 +102,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
                         android:fontFamily="sans-serif-medium"
-                        android:text="Select Registered Event"
+                        android:text="@string/user_rewards_select_registered_event"
                         android:textColor="@color/text_secondary"
                         android:textSize="15sp" />
 
@@ -132,7 +132,7 @@
                                 android:layout_weight="1"
                                 android:ellipsize="end"
                                 android:maxLines="1"
-                                android:text="Select event"
+                                android:text="@string/common_select_event"
                                 android:textColor="@color/eventqr_text"
                                 android:textSize="15sp" />
 
@@ -141,7 +141,7 @@
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
                                 android:layout_marginStart="8dp"
-                                android:contentDescription="Dropdown"
+                                android:contentDescription="@string/common_dropdown"
                                 android:src="@drawable/ic_arrow_drop_down"
                                 android:tint="#6B7280" />
                         </LinearLayout>
@@ -210,7 +210,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
                             android:fontFamily="sans-serif-bold"
-                            android:text="Event Points Balance"
+                            android:text="@string/user_rewards_event_points_balance"
                             android:textColor="#FFFFFF"
                             android:textSize="16sp" />
 
@@ -235,7 +235,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="points available for this event"
+                            android:text="@string/user_rewards_points_available_for_this_event"
                             android:textColor="#EDE9FE"
                             android:textSize="15sp" />
                     </LinearLayout>
@@ -247,7 +247,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="22dp"
                         android:fontFamily="sans-serif-bold"
-                        android:text="Available Rewards"
+                        android:text="@string/user_rewards_available_rewards"
                         android:textColor="@color/text_primary"
                         android:textSize="20sp" />
 
@@ -259,8 +259,8 @@
                         android:layout_marginTop="8dp"
                         android:visibility="gone"
                         app:icon="@drawable/ic_nav_gift"
-                        app:title="No rewards available yet"
-                        app:subtitle="Check back later for rewards for this event" />
+                        app:title="@string/user_rewards_no_rewards_available_yet"
+                        app:subtitle="@string/user_rewards_check_back_later_for_rewards_for_thi" />
 
                     <!-- Rewards list skeleton (shown during loading) -->
                     <LinearLayout

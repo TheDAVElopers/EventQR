@@ -76,7 +76,7 @@
             android:layout_height="match_parent"
             android:visibility="gone"
             app:icon="@drawable/ic_search"
-            app:title="No accounts found" />
+            app:title="@string/search_user_account_no_accounts_found" />
         </FrameLayout>
 
         <Button

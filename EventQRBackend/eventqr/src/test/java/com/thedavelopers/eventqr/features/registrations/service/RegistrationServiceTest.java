@@ -43,6 +43,8 @@ import com.thedavelopers.eventqr.shared.constants.RegistrationStatus;
 import com.thedavelopers.eventqr.shared.exceptions.ConflictException;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
+import com.thedavelopers.eventqr.shared.exceptions.TooManyRequestsException;
+import com.thedavelopers.eventqr.shared.security.RegistrationRateLimiter;
 import com.thedavelopers.eventqr.shared.interfaces.AttendeeDirectoryPort;
 import com.thedavelopers.eventqr.shared.interfaces.AttendeeDirectoryPort.AttendeeSnapshot;
 import com.thedavelopers.eventqr.shared.interfaces.EventLookupPort;
@@ -65,9 +67,11 @@ class RegistrationServiceTest {
     @Mock private EventService eventService;
     @Mock private QREmailService qrEmailService;
     @Mock private ApplicationEventPublisher applicationEventPublisher;
+    @Mock private RegistrationRateLimiter registrationRateLimiter;
 
     private RegistrationService service;
 
+    private static final String IP = "203.0.113.9";
     private final UUID eventId = UUID.randomUUID();
     private final UUID organizerId = UUID.randomUUID();
     private final UUID attendeeId = UUID.randomUUID();
@@ -79,7 +83,8 @@ class RegistrationServiceTest {
     void setUp() {
         service = new RegistrationService(registrationRepository, attendeeDirectoryPort, notificationService,
                 staffAssignmentRepository, eventLookupPort, qrCredentialPort, eventService, qrEmailService,
-                applicationEventPublisher);
+                applicationEventPublisher, registrationRateLimiter);
+        when(registrationRateLimiter.allow(any(), any())).thenReturn(true);
         // Injected by the container in production; flush/clear are no-ops for these unit tests.
         ReflectionTestUtils.setField(service, "entityManager", mock(EntityManager.class));
     }
@@ -303,6 +308,21 @@ class RegistrationServiceTest {
     }
 
     @Test
+    void cancellingDeactivatesTheQrCredential() {
+        UUID id = UUID.randomUUID();
+        EventRegistration registration = registration(id, attendeeId, RegistrationStatus.REGISTERED);
+        registration.setQrCredentialId(qrId);
+        when(registrationRepository.findById(id)).thenReturn(Optional.of(registration));
+        when(qrCredentialPort.findById(qrId)).thenReturn(Optional.of(qr()));
+        when(eventLookupPort.findById(eventId)).thenReturn(Optional.of(openEvent()));
+
+        service.cancel(id, attendeeId);
+
+        verify(qrCredentialPort).deactivate(qrId);
+        verify(qrCredentialPort, never()).markEmailQueued(any());
+    }
+
+    @Test
     void youCannotCancelSomeoneElsesRegistration() {
         UUID id = UUID.randomUUID();
         when(registrationRepository.findById(id)).thenReturn(Optional.of(registration(id, attendeeId, RegistrationStatus.REGISTERED)));
@@ -351,5 +371,137 @@ class RegistrationServiceTest {
 
         assertThatThrownBy(() -> service.markEntered(id)).isInstanceOf(ResourceNotFoundException.class);
         assertThatThrownBy(() -> service.addPoints(id, 1)).isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    // ----- registerAs: the registration email must belong to the caller -----
+
+    @Test
+    void anAttendeeCanRegisterTheirOwnEmailCaseInsensitively() {
+        givenSuccessfulRegistrationDependencies();
+        RegistrationRequest own = new RegistrationRequest(eventId, "  JANE@Example.com ", "Jane Doe", "+639171234567");
+
+        assertThat(service.registerAs(own, attendeeId, AccountRole.ATTENDEE, IP).registration().status())
+                .isEqualTo(RegistrationStatus.REGISTERED);
+    }
+
+    @Test
+    void anAttendeeCannotRegisterSomeoneElsesEmailAndNoProfileIsCreated() {
+        when(attendeeDirectoryPort.findById(attendeeId)).thenReturn(Optional.of(attendee(attendeeId)));
+        RegistrationRequest foreign = new RegistrationRequest(eventId, "victim@example.com", "Victim", null);
+
+        assertThatThrownBy(() -> service.registerAs(foreign, attendeeId, AccountRole.ATTENDEE, IP))
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessage("You can only register using your own account email");
+        verify(attendeeDirectoryPort, never()).findOrCreateAttendee(any(), any(), any(), any());
+        verify(eventLookupPort, never()).findById(any());
+        verify(registrationRepository, never()).existsByEventIdAndAttendeeEmailIgnoreCase(any(), any());
+    }
+
+    @Test
+    void theRefusalIsIdenticalWhetherOrNotTheForeignEmailIsAlreadyRegisteredOrKnown() {
+        when(attendeeDirectoryPort.findById(attendeeId)).thenReturn(Optional.of(attendee(attendeeId)));
+        RegistrationRequest foreign = new RegistrationRequest(eventId, "victim@example.com", "Victim", null);
+
+        // Case 1: the foreign email has a profile and is already registered for the event.
+        when(registrationRepository.existsByEventIdAndAttendeeEmailIgnoreCase(any(), any())).thenReturn(true);
+        when(registrationRepository.existsByEventIdAndAttendeeUserId(any(), any())).thenReturn(true);
+        when(attendeeDirectoryPort.findByEmail("victim@example.com")).thenReturn(Optional.of(attendee(UUID.randomUUID())));
+        Throwable registered = org.assertj.core.api.Assertions.catchThrowable(
+                () -> service.registerAs(foreign, attendeeId, AccountRole.ATTENDEE, IP));
+
+        // Case 2: the foreign email is entirely unknown and unregistered.
+        when(registrationRepository.existsByEventIdAndAttendeeEmailIgnoreCase(any(), any())).thenReturn(false);
+        when(registrationRepository.existsByEventIdAndAttendeeUserId(any(), any())).thenReturn(false);
+        when(attendeeDirectoryPort.findByEmail("victim@example.com")).thenReturn(Optional.empty());
+        Throwable unknown = org.assertj.core.api.Assertions.catchThrowable(
+                () -> service.registerAs(foreign, attendeeId, AccountRole.ATTENDEE, IP));
+
+        assertThat(registered).isInstanceOf(ForbiddenException.class);
+        assertThat(unknown).isInstanceOf(registered.getClass()).hasMessage(registered.getMessage());
+        // The lookups that could tell the two cases apart are never reached.
+        verify(registrationRepository, never()).existsByEventIdAndAttendeeEmailIgnoreCase(any(), any());
+        verify(registrationRepository, never()).existsByEventIdAndAttendeeUserId(any(), any());
+        verify(attendeeDirectoryPort, never()).findByEmail(any());
+        verify(attendeeDirectoryPort, never()).findOrCreateAttendee(any(), any(), any(), any());
+    }
+
+    @Test
+    void aForeignEmailIsRefusedBeforeTheRateLimiterSoNoBucketIsConsumed() {
+        when(attendeeDirectoryPort.findById(attendeeId)).thenReturn(Optional.of(attendee(attendeeId)));
+        RegistrationRequest foreign = new RegistrationRequest(eventId, "victim@example.com", "Victim", null);
+
+        for (int i = 0; i < 50; i++) {
+            assertThatThrownBy(() -> service.registerAs(foreign, attendeeId, AccountRole.ATTENDEE, IP))
+                    .isInstanceOf(ForbiddenException.class);
+        }
+
+        verify(registrationRateLimiter, never()).allow(any(), any());
+    }
+
+    @Test
+    void theRateLimiterIsKeyedOnTheClientIpAndTheCallerNeverTheBodyEmail() {
+        givenSuccessfulRegistrationDependencies();
+
+        service.registerAs(request, attendeeId, AccountRole.ATTENDEE, IP);
+
+        verify(registrationRateLimiter).allow(IP, attendeeId);
+    }
+
+    @Test
+    void anAdminRegisteringOnBehalfIsLimitedAgainstTheAdminNotTheTargetEmail() {
+        givenSuccessfulRegistrationDependencies();
+        UUID adminId = UUID.randomUUID();
+        RegistrationRequest onBehalf = new RegistrationRequest(eventId, "other@example.com", "Other", null);
+
+        service.registerAs(onBehalf, adminId, AccountRole.ADMIN, IP);
+
+        verify(registrationRateLimiter).allow(IP, adminId);
+    }
+
+    @Test
+    void whenTheLimiterRejectsTheRequestIs429AndNothingIsLookedUpOrCreated() {
+        when(attendeeDirectoryPort.findById(attendeeId)).thenReturn(Optional.of(attendee(attendeeId)));
+        when(registrationRateLimiter.allow(IP, attendeeId)).thenReturn(false);
+
+        assertThatThrownBy(() -> service.registerAs(request, attendeeId, AccountRole.ATTENDEE, IP))
+                .isInstanceOf(TooManyRequestsException.class)
+                .hasMessage("Too many registration requests. Please try again later.");
+
+        verify(eventLookupPort, never()).findById(any());
+        verify(attendeeDirectoryPort, never()).findOrCreateAttendee(any(), any(), any(), any());
+        verify(registrationRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void aThrottledCallerDoesNotStopAnotherUserFromRegisteringNormally() {
+        givenSuccessfulRegistrationDependencies();
+        UUID throttled = UUID.randomUUID();
+        when(registrationRateLimiter.allow(IP, throttled)).thenReturn(false);
+        when(attendeeDirectoryPort.findById(throttled)).thenReturn(Optional.of(attendee(throttled)));
+
+        assertThatThrownBy(() -> service.registerAs(request, throttled, AccountRole.ATTENDEE, IP))
+                .isInstanceOf(TooManyRequestsException.class);
+
+        assertThat(service.registerAs(request, attendeeId, AccountRole.ATTENDEE, "198.51.100.7").registration().status())
+                .isEqualTo(RegistrationStatus.REGISTERED);
+    }
+
+    @Test
+    void aCallerWithoutAProfileIsRefused() {
+        when(attendeeDirectoryPort.findById(attendeeId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.registerAs(request, attendeeId, AccountRole.ATTENDEE, IP))
+                .isInstanceOf(ForbiddenException.class);
+        verify(attendeeDirectoryPort, never()).findOrCreateAttendee(any(), any(), any(), any());
+    }
+
+    @Test
+    void anAdminMayRegisterAnotherEmailOnBehalf() {
+        givenSuccessfulRegistrationDependencies();
+        RegistrationRequest onBehalf = new RegistrationRequest(eventId, "other@example.com", "Other", null);
+
+        assertThat(service.registerAs(onBehalf, UUID.randomUUID(), AccountRole.ADMIN, IP).registration().status())
+                .isEqualTo(RegistrationStatus.REGISTERED);
+        verify(attendeeDirectoryPort).findOrCreateAttendee(eq("other@example.com"), any(), any(), any());
     }
 }

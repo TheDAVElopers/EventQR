@@ -42,7 +42,7 @@ class RewardAdapter(
             pointsView.text = "☆ ${item.pointsRequired} pts"
 
             val stockQuantity = item.stockQuantity
-            stockView.text = stockQuantity?.let { "$it left" } ?: "Stock unavailable"
+            stockView.text = stockQuantity?.let { "$it left" } ?: "Unlimited"
 
             itemView.setOnClickListener { onClick(item) }
         }

@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.auth.register
 
+import com.thedavelopers.eventqr.core.util.UiStrings
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
@@ -32,6 +33,7 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
     private lateinit var signInButton: android.view.View
     private lateinit var passwordLengthRequirement: TextView
     private lateinit var passwordCapitalRequirement: TextView
+    private lateinit var passwordLowercaseRequirement: TextView
     private lateinit var passwordSpecialRequirement: TextView
     private lateinit var passwordNumberRequirement: TextView
     private lateinit var passwordStrengthText: TextView
@@ -42,7 +44,7 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_signup)
 
-        presenter = RegistrationPresenter(this, AuthRepository(this))
+        presenter = RegistrationPresenter(this, AuthRepository(this), UiStrings(this))
         firstNameInput = findViewById(R.id.edtFirstName)
         lastNameInput = findViewById(R.id.edtLastName)
         emailInput = findViewById(R.id.edtEmail)
@@ -55,6 +57,7 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
         signInButton = findViewById(R.id.btnSignIn)
         passwordLengthRequirement = findViewById(R.id.txtPasswordLengthRequirement)
         passwordCapitalRequirement = findViewById(R.id.txtPasswordCapitalRequirement)
+        passwordLowercaseRequirement = findViewById(R.id.txtPasswordLowercaseRequirement)
         passwordSpecialRequirement = findViewById(R.id.txtPasswordSpecialRequirement)
         passwordNumberRequirement = findViewById(R.id.txtPasswordNumberRequirement)
         passwordStrengthText = findViewById(R.id.txtPasswordStrength)
@@ -91,7 +94,7 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
             // (+63 + digits, e.g. +639171234567) is assembled only here at submit time.
             val phoneDigits = phoneInput.text.toString()
             if (phoneDigits.length != 10) {
-                phoneInput.error = "Enter valid 10-digit mobile number"
+                phoneInput.error = getString(R.string.error_invalid_phone)
                 return@setOnClickListener
             }
             presenter.submitRegistration(
@@ -116,7 +119,7 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
 
     override fun showLoading(isLoading: Boolean) {
         registerButton.isEnabled = !isLoading && isRegistrationFormValid()
-        registerButton.text = if (isLoading) "Creating account..." else "Create Account"
+        registerButton.text = getString(if (isLoading) R.string.registration_creating_account else R.string.common_create_account)
     }
 
     override fun showFieldError(field: String, message: String?) {
@@ -128,8 +131,8 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
                 lastNameInput.error = message
             }
             "email" -> emailInput.error = message
-            "phone" -> phoneInput.error = message
-            "password" -> passwordInput.error = message
+            "phone" -> phoneInput.error = if (message == Validators.PHONE_ERROR) getString(R.string.error_invalid_phone) else message
+            "password" -> passwordInput.error = if (message == Validators.PASSWORD_TOO_LONG_ERROR) getString(R.string.error_password_too_long) else message
             "confirmPassword" -> confirmPasswordInput.error = message
         }
     }
@@ -152,19 +155,14 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
         requirementsLayout.visibility = android.view.View.VISIBLE
 
         val requirements = Validators.passwordRequirements(password)
-        updateRequirement(passwordLengthRequirement, "At least 8 characters", requirements.hasMinLength)
-        updateRequirement(passwordCapitalRequirement, "One uppercase letter", requirements.hasCapital)
-        updateRequirement(passwordNumberRequirement, "One number", requirements.hasNumber)
-        updateRequirement(passwordSpecialRequirement, "One special character", requirements.hasSpecial)
+        updateRequirement(passwordLengthRequirement, getString(R.string.password_req_length), requirements.hasMinLength)
+        updateRequirement(passwordCapitalRequirement, getString(R.string.password_req_uppercase), requirements.hasCapital)
+        updateRequirement(passwordLowercaseRequirement, getString(R.string.password_req_lowercase), requirements.hasLowercase)
+        updateRequirement(passwordNumberRequirement, getString(R.string.password_req_number), requirements.hasNumber)
+        updateRequirement(passwordSpecialRequirement, getString(R.string.password_req_special), requirements.hasSpecial)
+        passwordInput.error = if (!requirements.withinMaxLength) getString(R.string.error_password_too_long) else null
 
-        val metCount = listOf(
-            requirements.hasMinLength,
-            requirements.hasCapital,
-            requirements.hasNumber,
-            requirements.hasSpecial
-        ).count { it }
-
-        updateStrengthUI(metCount)
+        updateStrengthUI(requirements.strengthLevel)
         updateRegisterButtonState()
     }
 
@@ -183,10 +181,10 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
     private fun updateStrengthUI(metCount: Int) {
         val (colorRes, label) = when (metCount) {
             0 -> R.color.eventqr_muted to ""
-            1 -> R.color.eventqr_error to "Weak"
-            2 -> R.color.eventqr_warning to "Fair"
-            3 -> R.color.eventqr_info to "Good"
-            4 -> R.color.eventqr_success to "Strong"
+            1 -> R.color.eventqr_error to getString(R.string.password_strength_weak)
+            2 -> R.color.eventqr_warning to getString(R.string.password_strength_fair)
+            3 -> R.color.eventqr_info to getString(R.string.password_strength_good)
+            4 -> R.color.eventqr_success to getString(R.string.password_strength_strong)
             else -> R.color.eventqr_muted to ""
         }
 

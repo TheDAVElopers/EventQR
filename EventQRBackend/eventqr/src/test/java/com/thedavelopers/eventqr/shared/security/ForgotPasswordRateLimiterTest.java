@@ -20,39 +20,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ForgotPasswordRateLimiterTest {
 
-    /** Mutable wall clock with fixed zone, controllable via {@link #advance}. */
-    private static final class TestClock extends Clock {
-        private final AtomicLong millis = new AtomicLong(1_000_000_000L);
-
-        long advance(long ms) {
-            return millis.addAndGet(ms);
-        }
-
-        @Override
-        public ZoneId getZone() {
-            return ZoneOffset.UTC;
-        }
-
-        @Override
-        public Clock withZone(ZoneId zone) {
-            return this;
-        }
-
-        @Override
-        public Instant instant() {
-            return Instant.ofEpochMilli(millis.get());
-        }
-    }
-
     @Mock
     private HttpServletRequest request;
 
-    private TestClock clock;
+    private TestMillis clock;
     private ForgotPasswordRateLimiter limiter;
 
     @BeforeEach
     void setUp() {
-        clock = new TestClock();
+        clock = new TestMillis();
         limiter = new ForgotPasswordRateLimiter(clock);
         // getRemoteAddr() is only used on the fallback path, so stub leniently.
         lenient().when(request.getHeader("X-Forwarded-For")).thenReturn("203.0.113.9");
@@ -111,5 +87,29 @@ class ForgotPasswordRateLimiterTest {
         }
         // Alias 6th hits the email budget even though each alias string is distinct.
         assertThat(limiter.allow(request, "user+sixth@gmail.com")).isFalse();
+    }
+
+    @Test
+    void hundredParallelRequestsLetAtMostFiveThrough() throws Exception {
+        java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(100);
+        java.util.concurrent.CountDownLatch start = new java.util.concurrent.CountDownLatch(1);
+        java.util.concurrent.atomic.AtomicInteger allowed = new java.util.concurrent.atomic.AtomicInteger();
+        java.util.List<java.util.concurrent.Future<?>> futures = new java.util.ArrayList<>();
+        for (int i = 0; i < 100; i++) {
+            futures.add(pool.submit(() -> {
+                start.await();
+                if (limiter.allow(request, "victim@example.com")) {
+                    allowed.incrementAndGet();
+                }
+                return null;
+            }));
+        }
+        start.countDown();
+        for (java.util.concurrent.Future<?> f : futures) {
+            f.get(10, java.util.concurrent.TimeUnit.SECONDS);
+        }
+        pool.shutdownNow();
+
+        assertThat(allowed.get()).isEqualTo(5);
     }
 }

@@ -28,4 +28,6 @@ data class DashboardUpcomingEvent(
     val capacity: Int = 0,
     val currentAttendeeCount: Int = 0,
     val isRegistered: Boolean = false,
+    /** True when capacity/count were not provided (registration-only rows); the card hides them. */
+    val capacityUnknown: Boolean = false,
 )

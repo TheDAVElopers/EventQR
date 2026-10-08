@@ -11,7 +11,7 @@
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="Verification Result" />
+        app:title="@string/staff_scan_result_verification_result" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -55,7 +55,7 @@
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:layout_gravity="center"
-                        android:contentDescription="Valid"
+                        android:contentDescription="@string/common_valid"
                         android:src="@drawable/ic_qr_success_check"
                         app:tint="@android:color/white" />
 
@@ -77,7 +77,7 @@
                     android:textColor="#111827"
                     android:textSize="22sp"
                     android:textStyle="bold"
-                    android:text="QR Code Valid"/>
+                    android:text="@string/staff_scan_result_qr_code_valid"/>
 
                 <TextView
                     android:id="@+id/txtScanResultStatusHint"
@@ -86,7 +86,7 @@
                     android:layout_marginTop="8dp"
                     android:textColor="#6B7280"
                     android:textSize="14sp"
-                    android:text="Attendee verified successfully"/>
+                    android:text="@string/staff_scan_result_attendee_verified_successfully"/>
 
             </LinearLayout>
 
@@ -130,7 +130,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="QR Code Invalid"
+                    android:text="@string/staff_scan_result_qr_code_invalid"
                     android:textColor="#DC2626"
                     android:textSize="28sp"
                     android:textStyle="bold" />
@@ -139,7 +139,7 @@
                     android:id="@+id/txtScanResultStatusHintRejected"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="This scan could not be completed"
+                    android:text="@string/staff_scan_result_this_scan_could_not_be_completed"
                     android:layout_marginTop="8dp"
                     android:textColor="#6B7280"
                     android:textSize="16sp" />
@@ -251,7 +251,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="EVENT"
+                                android:text="@string/staff_scan_result_event"
                                 android:textColor="#9CA3AF"
                                 android:textSize="10sp"
                                 android:textStyle="bold" />
@@ -299,7 +299,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="SCAN PURPOSE"
+                                android:text="@string/common_scan_purpose"
                                 android:textColor="#9CA3AF"
                                 android:textSize="10sp"
                                 android:textStyle="bold" />
@@ -355,7 +355,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="VERIFIED AT"
+                            android:text="@string/staff_scan_result_verified_at"
                             android:textColor="#9CA3AF"
                             android:textSize="9sp"
                             android:textStyle="bold" />
@@ -410,7 +410,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="REJECTION REASON"
+                            android:text="@string/common_rejection_reason"
                             android:textColor="#EF4444"
                             android:textSize="10sp"
                             android:textStyle="bold" />
@@ -451,7 +451,7 @@
             android:textStyle="bold"
             app:icon="@drawable/ic_file"
             app:iconGravity="textStart"
-            android:text="Log Transaction"
+            android:text="@string/staff_scan_result_log_transaction"
             app:iconSize="24dp"
             app:iconTint="@android:color/white" />
 
@@ -474,7 +474,7 @@
             android:layout_height="48dp"
             android:layout_marginTop="12dp"
             android:background="@drawable/bg_staff_outline_button"
-            android:text="View Attendee Details"
+            android:text="@string/common_view_attendee_details"
             android:textAllCaps="false"
             android:textColor="@color/eventqr_indigo"
             android:textSize="16sp"
@@ -492,7 +492,7 @@
             android:textColor="#34343C"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:text="Scan Another"
+            android:text="@string/staff_scan_result_scan_another"
             app:icon="@drawable/ic_staff_scan"
             app:iconPadding="8dp"
             app:iconSize="30dp"

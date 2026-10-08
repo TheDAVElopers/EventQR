@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.attendee
 
+import com.thedavelopers.eventqr.core.util.UiStrings
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -78,22 +79,28 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         configureAttendeeBottomNav(AttendeeBottomNavItem.REWARDS)
 
         repository = AttendeeRepository(this)
-        presenter = RewardsPresenter(this, repository)
+        presenter = RewardsPresenter(this, repository, UiStrings(this))
         adapter = RewardAdapter { reward ->
             val currentEventId = selectedEventId.orEmpty()
             if (currentEventId.isBlank()) {
-                Toast.makeText(this, "Select a registered event first.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, this.getString(R.string.attendee_rewards_select_a_registered_event_first), Toast.LENGTH_SHORT).show()
                 return@RewardAdapter
             }
 
-            startActivity(
-                Intent(this, RewardDetailsActivity::class.java)
-                    .putExtra(EXTRA_EVENT_ID, currentEventId)
-                    .putExtra(EXTRA_REWARD_ID, reward.rewardId.toString())
-                    .putExtra(EXTRA_REWARD_NAME, reward.name)
-                    .putExtra(EXTRA_REWARD_POINTS, reward.pointsRequired)
-                    .putExtra(EXTRA_REWARD_STOCK, reward.stockQuantity ?: -1)
-            )
+            val detailsIntent = Intent(this, RewardDetailsActivity::class.java)
+                .putExtra(EXTRA_EVENT_ID, currentEventId)
+                .putExtra(EXTRA_REWARD_ID, reward.rewardId.toString())
+                .putExtra(EXTRA_REWARD_NAME, reward.name)
+                .putExtra(EXTRA_REWARD_POINTS, reward.pointsRequired)
+                .putExtra(EXTRA_REWARD_STATUS, reward.status.name)
+            // A null stock is explicitly "unlimited"; an absent extra means "unknown" to the receiver.
+            val stock = reward.stockQuantity
+            if (stock != null) {
+                detailsIntent.putExtra(EXTRA_REWARD_STOCK, stock)
+            } else {
+                detailsIntent.putExtra(EXTRA_REWARD_STOCK_UNLIMITED, true)
+            }
+            startActivity(detailsIntent)
         }
 
         swipeRefresh = findViewById(R.id.swipeRefreshRewards)

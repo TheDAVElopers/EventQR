@@ -27,7 +27,7 @@
                 android:layout_height="@dimen/landing_logo_height"
                 android:layout_marginTop="@dimen/landing_logo_margin_top"
                 android:adjustViewBounds="true"
-                android:contentDescription="EventQR logo"
+                android:contentDescription="@string/common_eventqr_logo"
                 android:scaleType="fitCenter"
                 android:src="@drawable/splash_logo_w_text_right" />
 
@@ -37,7 +37,7 @@
                 android:layout_marginTop="@dimen/landing_tagline_margin_top"
                 android:gravity="center"
                 android:lineSpacingExtra="3dp"
-                android:text="One QR code. Every event. Instant access and rewards."
+                android:text="@string/landing_one_qr_code_every_event_instant_acce"
                 android:textColor="@color/brand_on_primary"
                 android:textSize="@dimen/landing_tagline_size" />
 
@@ -48,7 +48,7 @@
                 android:layout_marginTop="@dimen/landing_btn_margin_top"
                 android:background="@drawable/bg_white_pill_button"
                 android:elevation="3dp"
-                android:text="Sign In"
+                android:text="@string/common_sign_in"
                 android:textAllCaps="false"
                 android:textColor="@color/brand_primary"
                 android:textSize="@dimen/landing_btn_text_size"
@@ -61,7 +61,7 @@
                 android:layout_marginTop="@dimen/landing_btn_margin_top"
                 android:layout_marginBottom="@dimen/landing_btn_margin_bottom"
                 android:background="@drawable/bg_dark_outline_button"
-                android:text="Create Account"
+                android:text="@string/common_create_account"
                 android:textAllCaps="false"
                 android:textColor="@color/brand_on_primary"
                 android:textSize="@dimen/landing_btn_text_size"
@@ -81,7 +81,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Why Choose EventQR?"
+                android:text="@string/landing_why_choose_eventqr"
                 android:textAppearance="@style/TextAppearance.EventQR.SectionTitle"
                 android:textColor="@color/text_primary"
                 android:textStyle="bold" />
@@ -112,7 +112,7 @@
                         android:layout_height="@dimen/landing_icon_size"
                         android:background="@drawable/dark_ic_qr_code"
                         android:padding="@dimen/landing_icon_padding"
-                        android:contentDescription="QR code icon"
+                        android:contentDescription="@string/landing_qr_code_icon"
                         android:scaleType="centerInside" />
 
                     <LinearLayout
@@ -125,7 +125,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="One QR, All Access"
+                            android:text="@string/landing_one_qr_all_access"
                             android:textColor="@color/text_primary"
                             android:textSize="@dimen/landing_card_title_size"
                             android:textStyle="bold" />
@@ -134,7 +134,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Register once and use your unique QR code for all event activities"
+                            android:text="@string/landing_register_once_and_use_your_unique_qr"
                             android:textColor="@color/text_secondary"
                             android:textSize="@dimen/landing_card_desc_size" />
                     </LinearLayout>
@@ -169,7 +169,7 @@
                         android:layout_height="@dimen/landing_icon_size"
                         android:background="@drawable/dark_ic_check_mark"
                         android:padding="@dimen/landing_icon_padding"
-                        android:contentDescription="Verification check icon"
+                        android:contentDescription="@string/landing_verification_check_icon"
                         android:scaleType="centerInside" />
 
                     <LinearLayout
@@ -182,7 +182,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Instant Verification"
+                            android:text="@string/landing_instant_verification"
                             android:textColor="@color/text_primary"
                             android:textSize="@dimen/landing_card_title_size"
                             android:textStyle="bold" />
@@ -191,7 +191,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Quick identity verification and seamless entry logging"
+                            android:text="@string/landing_quick_identity_verification_and_seam"
                             android:textColor="@color/text_secondary"
                             android:textSize="@dimen/landing_card_desc_size" />
                     </LinearLayout>
@@ -226,7 +226,7 @@
                         android:layout_height="@dimen/landing_icon_size"
                         android:background="@drawable/dark_ic_star"
                         android:padding="@dimen/landing_icon_padding"
-                        android:contentDescription="Rewards star icon"
+                        android:contentDescription="@string/landing_rewards_star_icon"
                         android:scaleType="centerInside" />
 
                     <LinearLayout
@@ -239,7 +239,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Rewards &amp; Benefits"
+                            android:text="@string/landing_rewards_benefits"
                             android:textColor="@color/text_primary"
                             android:textSize="@dimen/landing_card_title_size"
                             android:textStyle="bold" />
@@ -248,7 +248,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Earn points, claim benefits, and redeem rewards"
+                            android:text="@string/landing_earn_points_claim_benefits_and_redee"
                             android:textColor="@color/text_secondary"
                             android:textSize="@dimen/landing_card_desc_size" />
                     </LinearLayout>

@@ -11,8 +11,8 @@
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="Attendees"
-        app:subtitle="View and manage event attendees">
+        app:title="@string/attendee_management_attendees"
+        app:subtitle="@string/attendee_management_view_and_manage_event_attendees">
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/btnFilterCard"
             android:layout_width="42dp"
@@ -28,7 +28,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Search attendees"
+                android:contentDescription="@string/attendee_management_search_attendees"
                 android:padding="10dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_search"
@@ -63,7 +63,7 @@
                     android:id="@+id/txtCurrentEventLabel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="CURRENT EVENT"
+                    android:text="@string/common_current_event"
                     android:textColor="#8E8EA9"
                     android:textSize="11sp"
                     android:textStyle="bold" />
@@ -104,7 +104,7 @@
                             android:layout_height="wrap_content"
                             android:ellipsize="end"
                             android:maxLines="1"
-                            android:text="Choose an Event"
+                            android:text="@string/attendee_management_choose_an_event"
                             android:textColor="#111827"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -203,7 +203,7 @@
                         android:layout_marginTop="2dp"
                         android:gravity="center_horizontal"
                         android:maxLines="1"
-                        android:text="Total"
+                        android:text="@string/common_total"
                         android:textColor="#6B7280"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -252,7 +252,7 @@
                         android:layout_marginTop="2dp"
                         android:gravity="center_horizontal"
                         android:maxLines="1"
-                        android:text="Checked In"
+                        android:text="@string/common_checked_in"
                         android:textColor="#6B7280"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -301,7 +301,7 @@
                         android:layout_marginTop="2dp"
                         android:gravity="center_horizontal"
                         android:maxLines="1"
-                        android:text="No Show"
+                        android:text="@string/common_no_show"
                         android:textColor="#6B7280"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -362,7 +362,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:gravity="center"
-                    android:text="No attendees registered yet"
+                    android:text="@string/attendee_management_no_attendees_registered_yet"
                     android:textColor="#111827"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -373,7 +373,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
                     android:gravity="center"
-                    android:text="Attendees will appear here once they register for the event."
+                    android:text="@string/attendee_management_attendees_will_appear_here_once_they"
                     android:textColor="#7E84A3"
                     android:textSize="14sp" />
             </LinearLayout>

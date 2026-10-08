@@ -114,8 +114,8 @@ class EventCardHostComposeTest {
 
         composeTestRule.onNodeWithText("--").assertIsDisplayed()
         composeTestRule.onNodeWithText("---").assertIsDisplayed()
-        composeTestRule.onNodeWithText("0 / 1 Registered").assertIsDisplayed()
-        composeTestRule.onNodeWithText("0%").assertIsDisplayed()
+        composeTestRule.onNodeWithText("0 registered").assertDoesNotExist()
+        composeTestRule.onNodeWithText("0%").assertDoesNotExist()
     }
 
     @Test
@@ -145,19 +145,19 @@ class EventCardHostComposeTest {
     }
 
     @Test
-    fun zeroCapacity_isCoercedToOneAndStillRendersProgress() {
+    fun zeroCapacity_meansUnlimited_showsCountWithoutCapOrProgress() {
         setHost(EventCardState(title = "Campus Tech Fest", registeredCount = 4, capacity = 0))
 
-        composeTestRule.onNodeWithText("4 / 1 Registered").assertIsDisplayed()
-        composeTestRule.onNodeWithText("100%").assertIsDisplayed()
+        composeTestRule.onNodeWithText("4 registered").assertIsDisplayed()
+        composeTestRule.onNodeWithText("100%").assertDoesNotExist()
     }
 
     @Test
-    fun negativeCapacity_isCoercedToOneAndStillRendersProgress() {
+    fun negativeCapacity_isTreatedAsUnlimited() {
         setHost(EventCardState(title = "Campus Tech Fest", registeredCount = 3, capacity = -5))
 
-        composeTestRule.onNodeWithText("3 / 1 Registered").assertIsDisplayed()
-        composeTestRule.onNodeWithText("100%").assertIsDisplayed()
+        composeTestRule.onNodeWithText("3 registered").assertIsDisplayed()
+        composeTestRule.onNodeWithText("100%").assertDoesNotExist()
     }
 
     private fun setHost(state: EventCardState) {

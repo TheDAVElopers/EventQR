@@ -1,5 +1,7 @@
 package com.thedavelopers.eventqr.features.attendee
 
+import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.util.UiStrings
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.features.qrcredential.model.dto.QrCredentialSnapshot
 import kotlinx.coroutines.Job
@@ -8,6 +10,7 @@ import kotlinx.coroutines.launch
 class QrCredentialPresenter(
     private var view: QrCredentialContract.View?,
     private val repository: AttendeeRepository,
+    private val strings: UiStrings,
 ) {
     private var job: Job? = null
 
@@ -22,7 +25,7 @@ class QrCredentialPresenter(
             val qrResult = when {
                 !qrCredentialId.isNullOrBlank() -> repository.getMyQrCredentialById(qrCredentialId)
                 registrationId.isNotBlank() -> repository.getMyQrCredentialByRegistration(registrationId)
-                else -> NetworkResult.Error("Missing registration information")
+                else -> NetworkResult.Error(strings.get(R.string.qr_credential_missing_registration_information))
             }
 
             if (qrResult is NetworkResult.Success) {

@@ -21,7 +21,7 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_gravity="center"
-            android:contentDescription="Portal icon"
+            android:contentDescription="@string/item_portal_option_portal_icon"
             android:src="@drawable/ic_nav_home"
             app:tint="@color/brand_primary" />
     </FrameLayout>
@@ -38,7 +38,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="sans-serif-medium"
-            android:text="Attendee Portal"
+            android:text="@string/item_portal_option_attendee_portal"
             android:textColor="@color/text_primary"
             android:textSize="15sp" />
 
@@ -47,7 +47,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            android:text="Events, rewards, and your profile"
+            android:text="@string/item_portal_option_events_rewards_and_your_profile"
             android:textColor="@color/text_secondary"
             android:textSize="12sp" />
     </LinearLayout>
@@ -60,7 +60,7 @@
         android:background="@drawable/bg_success_chip"
         android:paddingHorizontal="8dp"
         android:paddingVertical="2dp"
-        android:text="Current"
+        android:text="@string/item_portal_option_current"
         android:textColor="@color/success"
         android:textSize="11sp"
         android:visibility="gone" />
@@ -68,7 +68,7 @@
     <ImageView
         android:layout_width="18dp"
         android:layout_height="18dp"
-        android:contentDescription="Navigate"
+        android:contentDescription="@string/item_portal_option_navigate"
         android:src="@drawable/ic_chevron_right"
         app:tint="@color/text_disabled" />
 </LinearLayout>

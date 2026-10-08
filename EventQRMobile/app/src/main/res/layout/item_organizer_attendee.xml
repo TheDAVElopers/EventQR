@@ -79,7 +79,7 @@
             android:minWidth="0dp"
             android:paddingHorizontal="12dp"
             android:paddingVertical="6dp"
-            android:text="Registered"
+            android:text="@string/common_registered"
             android:textColor="@color/brand_primary"
             android:textSize="12sp"
             android:textStyle="bold" />

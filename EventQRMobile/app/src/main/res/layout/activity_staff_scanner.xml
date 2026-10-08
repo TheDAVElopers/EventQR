@@ -11,8 +11,8 @@
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="Scan QR"
-        app:subtitle="Scan attendee QR codes" />
+        app:title="@string/staff_scanner_scan_qr"
+        app:subtitle="@string/staff_scanner_scan_attendee_qr_codes" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -81,7 +81,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="6dp"
                             android:letterSpacing="0.06"
-                            android:text="SCANNING FOR"
+                            android:text="@string/staff_scanner_scanning_for"
                             android:textColor="#8E8EA9"
                             android:textSize="11sp"
                             android:textStyle="bold" />
@@ -94,7 +94,7 @@
                         android:layout_marginTop="2dp"
                         android:ellipsize="end"
                         android:maxLines="1"
-                        android:text="Assigned Event"
+                        android:text="@string/common_assigned_event"
                         android:textColor="#121735"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -136,7 +136,7 @@
                 android:layout_marginTop="12dp"
                 android:background="@drawable/bg_scan_card"
                 android:padding="16dp"
-                android:text="No assigned events are available for this staff account."
+                android:text="@string/staff_scanner_no_assigned_events_are_available_for"
                 android:textColor="@color/text_secondary"
                 android:textSize="14sp"
                 android:visibility="gone" />
@@ -147,7 +147,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:letterSpacing="0.06"
-                android:text="SCAN PURPOSE"
+                android:text="@string/common_scan_purpose"
                 android:textColor="#8E8EA9"
                 android:textSize="12sp"
                 android:textStyle="bold" />
@@ -193,7 +193,7 @@
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
                         android:maxLines="1"
-                        android:text="Select purpose"
+                        android:text="@string/staff_scanner_select_purpose"
                         android:textColor="#121735"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -217,7 +217,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:layout_marginStart="8dp"
-                    android:contentDescription="Dropdown"
+                    android:contentDescription="@string/common_dropdown"
                     android:src="@drawable/ic_arrow_drop_down"
                     android:tint="#8E8EA9" />
             </LinearLayout>
@@ -310,7 +310,7 @@
                     android:gravity="center"
                     android:paddingHorizontal="16dp"
                     android:paddingVertical="8dp"
-                    android:text="Point camera at attendee QR code"
+                    android:text="@string/staff_scanner_point_camera_at_attendee_qr_code"
                     android:textColor="#FFFFFF"
                     android:textSize="13sp" />
             </LinearLayout>
@@ -327,7 +327,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Enter manually"
+                    android:text="@string/staff_scanner_enter_manually"
                     android:textColor="#121735"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -336,7 +336,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="Camera not working? Type the attendee ID instead."
+                    android:text="@string/staff_scanner_camera_not_working_type_the_attendee"
                     android:textColor="#8E8EA9"
                     android:textSize="13sp" />
 
@@ -353,7 +353,7 @@
                         android:layout_height="48dp"
                         android:layout_weight="1"
                         android:background="@drawable/bg_soft_input_no_stroke"
-                        android:hint="Attendee ID (e.g. #001)"
+                        android:hint="@string/staff_scanner_attendee_id_e_g_001"
                         android:inputType="text"
                         android:paddingHorizontal="16dp"
                         android:singleLine="true"
@@ -365,7 +365,7 @@
                         android:layout_height="48dp"
                         android:layout_marginStart="10dp"
                         android:background="@drawable/bg_scanner_button"
-                        android:text="Verify"
+                        android:text="@string/staff_scanner_verify"
                         android:textAllCaps="false"
                         android:textColor="#FFFFFF"
                         android:textSize="15sp"

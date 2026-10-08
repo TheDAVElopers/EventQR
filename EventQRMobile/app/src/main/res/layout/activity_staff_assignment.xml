@@ -57,8 +57,8 @@
             android:layout_height="match_parent"
             android:visibility="gone"
             app:icon="@drawable/ic_group"
-            app:title="No staff assigned yet"
-            app:subtitle="Tap + Add to assign staff to this event." />
+            app:title="@string/staff_assignment_no_staff_assigned_yet"
+            app:subtitle="@string/staff_assignment_tap_add_to_assign_staff_to_this_even" />
         </FrameLayout>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 </LinearLayout>

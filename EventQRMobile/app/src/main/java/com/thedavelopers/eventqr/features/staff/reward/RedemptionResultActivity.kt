@@ -23,7 +23,7 @@ class RedemptionResultActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         val approved = intent.getBooleanExtra(StaffScreenExtras.EXTRA_IS_VALID, false)
         val message = intent.getStringExtra(StaffScreenExtras.EXTRA_REASON).orEmpty()
-            .ifBlank { if (approved) "Reward redeemed successfully" else "Reward redemption rejected" }
+            .ifBlank { getString(if (approved) R.string.redemption_result_reward_redeemed_successfully else R.string.redemption_result_reward_redemption_rejected) }
         val points = intent.getIntExtra(StaffScreenExtras.EXTRA_POINTS_DELTA, 0)
         val remaining = intent.getIntExtra(AppRewardExtras.EXTRA_POINTS_BALANCE, 0)
         val rewardName = intent.getStringExtra(AppRewardExtras.EXTRA_REWARD_NAME).orEmpty()
@@ -75,7 +75,7 @@ class RedemptionResultActivity : AppCompatActivity() {
                     addView(spacer(dp(18)))
 
                     addView(TextView(this@RedemptionResultActivity).apply {
-                        text = if (approved) "REDEMPTION APPROVED" else "REDEMPTION REJECTED"
+                        text = getString(if (approved) R.string.redemption_result_redemption_approved else R.string.redemption_result_redemption_rejected)
                         textSize = 20f
                         gravity = Gravity.CENTER
                         setTextColor(0xFFFFFFFF.toInt())

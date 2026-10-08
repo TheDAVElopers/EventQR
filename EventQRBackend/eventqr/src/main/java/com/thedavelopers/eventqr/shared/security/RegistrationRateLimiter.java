@@ -1,86 +1,96 @@
 package com.thedavelopers.eventqr.shared.security;
 
-import java.time.Clock;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.UUID;
+import java.time.Duration;
+import java.util.function.LongSupplier;
 
-import jakarta.servlet.http.HttpServletRequest;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.stereotype.Component;
 
-import com.thedavelopers.eventqr.shared.utils.EmailNormalizer;
 
 /**
- * Endpoint-specific rate limiter for {@code POST /api/v1/registrations}.
+ * Rate limiter for event registration ({@code POST /api/v1/registrations} and
+ * {@code POST /api/v1/events/{id}/registrations}); both go through
+ * {@code RegistrationService#registerAs}, so they share this budget.
  *
- * <p>Registration is a public endpoint reachable without authentication, so the global
+ * <p>Registration requires an authenticated caller (any role), but a valid account is cheap to obtain, so the global
  * {@link RateLimitFilter} budget (200 requests per 10s per IP) alone lets an attacker
- * bulk-create accounts, triggering orphaned user_profiles and QR-email spam. This limiter
- * applies a much tighter sliding-window budget keyed by both the proxied-aware client IP
- * and the canonicalized attendee email, so abuse is throttled per source attacker and per
- * victim. The email key is canonicalized (see {@link EmailNormalizer}) so Gmail
- * {@code +tag}/dot aliases that land in the same inbox share one per-recipient budget.
+ * bulk-register and trigger QR-email spam. This limiter applies a much tighter sliding-window budget keyed by
+ * the proxy-aware client IP and by the authenticated <em>caller's user id</em>.
+ *
+ * <p>The key is deliberately the caller, never the email in the request body: a non-admin may only register their
+ * own email, and the service runs that ownership check <em>before</em> calling {@link #allow}, so a request naming
+ * someone else's email is refused with 403 without touching any bucket. Keying on the body email would let an attacker
+ * exhaust a victim's budget (Gmail dot/plus aliases collapse onto one inbox).
  *
  * <p>Both limits must pass; a request is rejected as soon as either budget is exhausted.
- * State is in-memory and suitable for the single-instance deployment only.
+ *
+ * <p>State is in-memory and per instance: with N instances the effective limit multiplies by N. If the
+ * service scales out, move this behind an interface backed by a shared store (e.g. Redis). Window
+ * arithmetic uses a monotonic time source so wall-clock steps cannot affect the windows.
  */
 @Component
 public class RegistrationRateLimiter {
 
     private static final int MAX_PER_IP = 10;
-    private static final int MAX_PER_EMAIL = 10;
+    private static final int MAX_PER_CALLER = 10;
     private static final long WINDOW_MS = 60_000L;
 
-    private final Map<String, Deque<Long>> byIp = new ConcurrentHashMap<>();
-    private final Map<String, Deque<Long>> byEmail = new ConcurrentHashMap<>();
-    private final Clock clock;
+    private final Cache<String, Deque<Long>> byIp = Caffeine.newBuilder()
+            .maximumSize(10_000).expireAfterAccess(Duration.ofMinutes(5)).build();
+    private final Cache<String, Deque<Long>> byCaller = Caffeine.newBuilder()
+            .maximumSize(20_000).expireAfterAccess(Duration.ofMinutes(5)).build();
+    /** Makes prune/check/record across both windows one atomic step; held only for small in-memory work. */
+    private final Object lock = new Object();
+    private final LongSupplier monotonicMillis;
 
     public RegistrationRateLimiter() {
-        this(Clock.systemUTC());
+        this(() -> System.nanoTime() / 1_000_000L);
     }
 
-    /** Package-private constructor for tests that need clock control. */
-    RegistrationRateLimiter(Clock clock) {
-        this.clock = clock;
+    /** Package-private constructor for tests that need time control. */
+    RegistrationRateLimiter(LongSupplier monotonicMillis) {
+        this.monotonicMillis = monotonicMillis;
     }
 
     /**
      * Returns true if the request should be allowed, otherwise false (caller returns 429).
-     * Records the attempt under both keys when allowed relative to each individual budget.
+     * Records the attempt under both keys only when both budgets have room.
+     *
+     * @param clientIp     resolved client IP (see {@link ClientIp#from})
+     * @param callerUserId the authenticated caller; a null id is bucketed with IP only
      */
-    public boolean allow(HttpServletRequest request, String email) {
-        String ip = ClientIp.from(request);
-        String canonicalEmail = email == null ? "" : EmailNormalizer.canonicalize(email);
-        if (!withinBudget(byIp, ip, MAX_PER_IP)) {
-            return false;
-        }
-        if (!canonicalEmail.isEmpty() && !withinBudget(byEmail, canonicalEmail, MAX_PER_EMAIL)) {
-            return false;
-        }
-        record(byIp, ip);
-        if (!canonicalEmail.isEmpty()) {
-            record(byEmail, canonicalEmail);
-        }
-        return true;
-    }
-
-    private boolean withinBudget(Map<String, Deque<Long>> window, String key, int max) {
-        Deque<Long> deque = window.computeIfAbsent(key, k -> new ArrayDeque<>());
-        long now = clock.millis();
-        synchronized (deque) {
-            prune(deque, now);
-            return deque.size() < max;
+    public boolean allow(String clientIp, UUID callerUserId) {
+        String canonical = clientIp == null ? null : ClientIp.canonicalize(clientIp.trim());
+        String ip = canonical != null ? canonical : ClientIp.UNKNOWN;
+        String caller = callerUserId == null ? null : callerUserId.toString();
+        synchronized (lock) {
+            long now = monotonicMillis.getAsLong();
+            if (!withinBudget(byIp, ip, MAX_PER_IP, now)) {
+                return false;
+            }
+            if (caller != null && !withinBudget(byCaller, caller, MAX_PER_CALLER, now)) {
+                return false;
+            }
+            record(byIp, ip, now);
+            if (caller != null) {
+                record(byCaller, caller, now);
+            }
+            return true;
         }
     }
 
-    private void record(Map<String, Deque<Long>> window, String key) {
-        Deque<Long> deque = window.computeIfAbsent(key, k -> new ArrayDeque<>());
-        long now = clock.millis();
-        synchronized (deque) {
-            prune(deque, now);
-            deque.addLast(now);
-        }
+    private boolean withinBudget(Cache<String, Deque<Long>> window, String key, int max, long now) {
+        Deque<Long> deque = window.get(key, k -> new ArrayDeque<>());
+        prune(deque, now);
+        return deque.size() < max;
+    }
+
+    private void record(Cache<String, Deque<Long>> window, String key, long now) {
+        window.get(key, k -> new ArrayDeque<>()).addLast(now);
     }
 
     private void prune(Deque<Long> deque, long now) {

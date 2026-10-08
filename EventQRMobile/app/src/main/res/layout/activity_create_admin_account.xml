@@ -15,7 +15,7 @@
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="Create Admin Account" />
+        app:title="@string/common_create_admin_account" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -45,7 +45,7 @@
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
-                            android:contentDescription="Admin account"
+                            android:contentDescription="@string/create_admin_account_admin_account"
                             android:src="@drawable/ic_nav_profile"
                             android:tint="@color/eventqr_purple" />
                     </FrameLayout>
@@ -60,7 +60,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Admin Details"
+                            android:text="@string/create_admin_account_admin_details"
                             android:textColor="#111827"
                             android:textSize="18sp"
                             android:textStyle="bold" />
@@ -69,7 +69,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="The new account will receive the Admin role only."
+                            android:text="@string/create_admin_account_the_new_account_will_receive_the_adm"
                             android:textColor="#6B7280"
                             android:textSize="13sp" />
                     </LinearLayout>
@@ -90,7 +90,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="First Name"
+                            android:text="@string/common_first_name"
                             android:textColor="#111827"
                             android:textSize="13sp"
                             android:textStyle="bold" />
@@ -101,7 +101,7 @@
                             android:layout_height="52dp"
                             android:layout_marginTop="6dp"
                             android:background="@drawable/bg_auth_field"
-                            android:hint="John"
+                            android:hint="@string/common_john"
                             android:inputType="textPersonName"
                             android:paddingHorizontal="14dp"
                             android:textColor="@color/eventqr_text"
@@ -119,7 +119,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Last Name"
+                            android:text="@string/common_last_name"
                             android:textColor="#111827"
                             android:textSize="13sp"
                             android:textStyle="bold" />
@@ -130,7 +130,7 @@
                             android:layout_height="52dp"
                             android:layout_marginTop="6dp"
                             android:background="@drawable/bg_auth_field"
-                            android:hint="Doe"
+                            android:hint="@string/common_doe"
                             android:inputType="textPersonName"
                             android:paddingHorizontal="14dp"
                             android:textColor="@color/eventqr_text"
@@ -143,7 +143,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
-                    android:text="Email Address"
+                    android:text="@string/common_email_address"
                     android:textColor="#111827"
                     android:textSize="13sp"
                     android:textStyle="bold" />
@@ -156,7 +156,7 @@
                     android:background="@drawable/bg_auth_field"
                     android:drawableStart="@drawable/email_icon"
                     android:drawablePadding="10dp"
-                    android:hint="johndoe@gmail.com"
+                    android:hint="@string/common_johndoe_gmail_com"
                     android:inputType="textEmailAddress"
                     android:paddingHorizontal="14dp"
                     android:textColor="@color/eventqr_text"
@@ -167,7 +167,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
-                    android:text="Phone Number"
+                    android:text="@string/common_phone_number"
                     android:textColor="#111827"
                     android:textSize="13sp"
                     android:textStyle="bold" />
@@ -197,7 +197,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="18dp"
-                    android:text="Temporary Password"
+                    android:text="@string/create_admin_account_temporary_password"
                     android:textColor="#111827"
                     android:textSize="13sp"
                     android:textStyle="bold" />
@@ -211,7 +211,7 @@
                     android:drawableStart="@drawable/password_icon"
                     android:drawableEnd="@drawable/ic_visibility_on"
                     android:drawablePadding="10dp"
-                    android:hint="Enter password"
+                    android:hint="@string/common_enter_password"
                     android:inputType="textPassword"
                     android:paddingHorizontal="14dp"
                     android:textColor="@color/eventqr_text"
@@ -279,7 +279,7 @@
                                 android:id="@+id/txtPasswordLengthRequirement"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-android:text="○ At least 8 characters"
+android:text="@string/password_req_length"
                                     android:textColor="@color/eventqr_muted"
                                     android:textSize="12sp" />
 
@@ -288,7 +288,16 @@ android:text="○ At least 8 characters"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-android:text="○ One uppercase letter"
+android:text="@string/password_req_uppercase"
+                                    android:textColor="@color/eventqr_muted"
+                                    android:textSize="12sp" />
+
+                            <TextView
+                                android:id="@+id/txtPasswordLowercaseRequirement"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+android:text="@string/password_req_lowercase"
                                     android:textColor="@color/eventqr_muted"
                                     android:textSize="12sp" />
 
@@ -297,7 +306,7 @@ android:text="○ One uppercase letter"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-android:text="○ One number"
+android:text="@string/password_req_number"
                                     android:textColor="@color/eventqr_muted"
                                     android:textSize="12sp" />
 
@@ -306,7 +315,7 @@ android:text="○ One number"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-android:text="○ One special character"
+android:text="@string/password_req_special"
                                     android:textColor="@color/eventqr_muted"
                                     android:textSize="12sp" />
                         </LinearLayout>
@@ -327,7 +336,7 @@ android:text="○ One special character"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
-                    android:text="Confirm Password"
+                    android:text="@string/common_confirm_password"
                     android:textColor="#111827"
                     android:textSize="13sp"
                     android:textStyle="bold" />
@@ -341,7 +350,7 @@ android:text="○ One special character"
                     android:drawableStart="@drawable/password_icon"
                     android:drawableEnd="@drawable/ic_visibility_on"
                     android:drawablePadding="10dp"
-                    android:hint="Confirm password"
+                    android:hint="@string/common_confirm_password_2"
                     android:inputType="textPassword"
                     android:paddingHorizontal="14dp"
                     android:textColor="@color/eventqr_text"
@@ -354,7 +363,7 @@ android:text="○ One special character"
                     android:layout_height="52dp"
                     android:layout_marginTop="20dp"
                     android:background="@drawable/bg_primary_button"
-                    android:text="Create Admin Account"
+                    android:text="@string/common_create_admin_account"
                     android:textAllCaps="false"
                     android:textColor="@android:color/white"
                     android:textStyle="bold" />

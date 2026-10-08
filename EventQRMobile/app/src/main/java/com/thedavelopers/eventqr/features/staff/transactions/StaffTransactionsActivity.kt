@@ -75,7 +75,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
 
         val sessionManager = SessionManager(this)
         if (!RoleMapper.isAtLeast(sessionManager.getUserRole(), AccountRole.STAFF)) {
-            Toast.makeText(this, "Access Denied: Staff or above", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, this.getString(R.string.staff_dashboard_access_denied_staff_or_above), Toast.LENGTH_LONG).show()
             finish()
             return
         }
@@ -145,7 +145,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
                         ?.takeIf { extra -> assignedEvents.any { it.eventId.toString() == extra } }
                     if (assignedEvents.isEmpty()) {
                         renderTransactions(emptyList())
-                        showMessage("No assigned events found")
+                        showMessage(getString(R.string.event_registrations_no_assigned_events_found))
                         showLoading(false)
                         return@launch
                     }
@@ -185,7 +185,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         txtSuccessfulScans.text = "0"
         txtRejectedScans.text = "0"
         adapter.submitItems(emptyList())
-        txtEmptyState.text = "Select an event to view its transaction logs."
+        txtEmptyState.text = getString(R.string.staff_transactions_select_an_event_to_view_its_transact)
         txtEmptyState.visibility = View.VISIBLE
         recyclerView.visibility = View.GONE
         setPurposeCardEnabled(false)
@@ -360,7 +360,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
             return
         }
         if (purposeOptions.isEmpty()) {
-            showMessage("No scan purposes found for this filter.")
+            showMessage(getString(R.string.staff_transactions_no_scan_purposes_found_for_this_filt))
             return
         }
         closeEventPopup()

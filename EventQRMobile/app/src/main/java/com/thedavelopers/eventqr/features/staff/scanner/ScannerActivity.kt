@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.staff.scanner
 
+import com.thedavelopers.eventqr.core.util.UiStrings
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -119,8 +120,8 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         if (granted) {
             startInlineCameraIfReady()
         } else {
-            inlineCameraStatus.text = "Camera permission is required for QR scanning"
-            Toast.makeText(this, "Camera permission is required for QR scanning", Toast.LENGTH_LONG).show()
+            inlineCameraStatus.text = getString(R.string.scanner_camera_permission_is_required_for_qr)
+            Toast.makeText(this, this.getString(R.string.scanner_camera_permission_is_required_for_qr), Toast.LENGTH_LONG).show()
         }
     }
 
@@ -131,14 +132,14 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
 
         val sessionManager = SessionManager(this)
         if (!RoleMapper.isAtLeast(sessionManager.getUserRole(), AccountRole.STAFF)) {
-            Toast.makeText(this, "Access Denied: Staff or above", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, this.getString(R.string.staff_dashboard_access_denied_staff_or_above), Toast.LENGTH_LONG).show()
             finish()
             return
         }
 
         setContentView(R.layout.activity_staff_scanner)
 
-        presenter = ScannerPresenter(this, StaffRepository(this))
+        presenter = ScannerPresenter(this, StaffRepository(this), UiStrings(this))
         eventSpinner = findViewById(R.id.spnScannerEvent)
         purposeSpinner = findViewById(R.id.spnScannerPurpose)
         qrInput = findViewById(R.id.edtScannerQr)
@@ -232,8 +233,8 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         if (activePurposes.isEmpty()) {
             purposeSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listOf("No scan purposes enabled for this event."))
             purposeSpinner.isEnabled = false
-            selectedPurposeName.text = "No scan purposes enabled"
-            selectedPurposePoints.text = "Configure scan purposes first"
+            selectedPurposeName.text = getString(R.string.scanner_no_scan_purposes_enabled)
+            selectedPurposePoints.text = getString(R.string.scanner_configure_scan_purposes_first)
             selectedPurposePoints.visibility = View.VISIBLE
             selectedPurposePoints.setTextColor(0xFF6B7280.toInt())
         } else {
@@ -254,14 +255,14 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
 
     private fun requestInlineCameraStart() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) startInlineCameraIfReady()
-        else { inlineCameraStatus.text = "Allow camera access to scan QR codes"; cameraPermissionLauncher.launch(Manifest.permission.CAMERA) }
+        else { inlineCameraStatus.text = getString(R.string.scanner_allow_camera_access_to_scan_qr_codes); cameraPermissionLauncher.launch(Manifest.permission.CAMERA) }
     }
 
     private fun startInlineCameraIfReady() {
         if (!::inlineCameraSurface.isInitialized || camera != null) return
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) return
         if (!inlineCameraSurface.holder.surface.isValid) return
-        inlineCameraStatus.text = "Point camera at attendee QR code"
+        inlineCameraStatus.text = getString(R.string.staff_scanner_point_camera_at_attendee_qr_code)
         runCatching {
             camera = Camera.open().apply {
                 val params = parameters
@@ -290,7 +291,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
                 applyCenterCrop(inlineCameraSurface, previewSize.height, previewSize.width, containerW, containerH)
             }
         }.onFailure {
-            inlineCameraStatus.text = "Unable to start camera"
+            inlineCameraStatus.text = getString(R.string.scanner_unable_to_start_camera)
             scannerIcon.visibility = View.VISIBLE
             Log.w(tag, "inline camera failed: ${it.message}", it)
         }
@@ -346,7 +347,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     }
 
     private fun releaseInlineCamera() { camera?.setPreviewCallback(null); runCatching { camera?.stopPreview() }; camera?.release(); camera = null; if (::scannerIcon.isInitialized) scannerIcon.visibility = View.VISIBLE }
-    private fun handleInlineQrValue(rawValue: String) { val parsed = parseQrPayload(rawValue); if (parsed == null || parsed.qrValue.isBlank()) { showMessage("QR payload format is invalid."); return }; qrInput.setText(parsed.qrValue); qrInput.setSelection(parsed.qrValue.length); submitCurrentSelection(trigger = "inline-camera") }
+    private fun handleInlineQrValue(rawValue: String) { val parsed = parseQrPayload(rawValue); if (parsed == null || parsed.qrValue.isBlank()) { showMessage(getString(R.string.scanner_qr_payload_format_is_invalid)); return }; qrInput.setText(parsed.qrValue); qrInput.setSelection(parsed.qrValue.length); submitCurrentSelection(trigger = "inline-camera") }
 
     private fun decodeFrame(data: ByteArray, width: Int, height: Int): String? {
         val ySize = width * height
@@ -376,7 +377,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     private fun bindSelectedPurposeHeader() {
         val purpose = purposeOptions.getOrNull(purposeSpinner.selectedItemPosition)
         if (purpose == null) {
-            selectedPurposeName.text = "Select purpose"
+            selectedPurposeName.text = getString(R.string.staff_scanner_select_purpose)
             selectedPurposePoints.visibility = View.GONE
             return
         }
@@ -511,14 +512,14 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     }
 
     private fun submitCurrentSelection(trigger: String) {
-        val selectedEvent = selectedEvent() ?: return showMessage("No assigned event selected.")
-        if (purposeOptions.isEmpty()) return showMessage("No scan purposes enabled for this event.")
-        val selectedPurpose = purposeOptions.getOrNull(purposeSpinner.selectedItemPosition) ?: return showMessage("No scan purpose selected.")
+        val selectedEvent = selectedEvent() ?: return showMessage(getString(R.string.scanner_no_assigned_event_selected))
+        if (purposeOptions.isEmpty()) return showMessage(getString(R.string.scanner_no_scan_purposes_enabled_for_this_ev))
+        val selectedPurpose = purposeOptions.getOrNull(purposeSpinner.selectedItemPosition) ?: return showMessage(getString(R.string.scanner_no_scan_purpose_selected))
         val qrValue = qrInput.text.toString().trim()
-        if (qrValue.isBlank()) return showMessage("QR payload format is invalid.")
+        if (qrValue.isBlank()) return showMessage(getString(R.string.scanner_qr_payload_format_is_invalid))
         val signature = "${selectedEvent.id}|${selectedPurpose.scanPurposeId}|$qrValue"
         val now = SystemClock.elapsedRealtime()
-        if (submitInFlight || (signature == lastSubmittedSignature && now - lastSubmittedAtMs < duplicateWindowMs)) return showMessage("Scan is already being processed. Please wait.")
+        if (submitInFlight || (signature == lastSubmittedSignature && now - lastSubmittedAtMs < duplicateWindowMs)) return showMessage(getString(R.string.scanner_scan_is_already_being_processed_plea))
         submitInFlight = true
         lastSubmittedSignature = signature
         lastSubmittedAtMs = now

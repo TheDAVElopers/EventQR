@@ -3,9 +3,7 @@ package com.thedavelopers.eventqr.features.registrations
 import android.content.Context
 import android.content.Intent
 import android.view.ViewGroup
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,8 +21,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.recyclerview.widget.RecyclerView
+import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.EventCardPresenter
 import com.thedavelopers.eventqr.features.attendee.EXTRA_EVENT_ID
 import com.thedavelopers.eventqr.features.attendee.EXTRA_EVENT_TITLE
@@ -140,37 +140,31 @@ private fun RegisteredEventCard(state: RegisteredEventCardState, context: Contex
                     },
                 )
             },
-        )
-
-        Spacer(modifier = Modifier.height(spacing.micro))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(spacing.small),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Button(
-                onClick = {
-                    context.startActivity(
-                        Intent(context, QrDisplayActivity::class.java).apply {
-                            putExtra(EXTRA_REGISTRATION_ID, state.registrationId)
-                            putExtra(EXTRA_QR_CREDENTIAL_ID, state.qrCredentialId)
-                        },
+            // Inside the card, not a separate row underneath it.
+            footer = {
+                Button(
+                    onClick = {
+                        context.startActivity(
+                            Intent(context, QrDisplayActivity::class.java).apply {
+                                putExtra(EXTRA_REGISTRATION_ID, state.registrationId)
+                                putExtra(EXTRA_QR_CREDENTIAL_ID, state.qrCredentialId)
+                            },
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Icon(
+                        Icons.Default.QrCode,
+                        contentDescription = null,
+                        modifier = Modifier.size(spacing.mediumSmall + spacing.extraSmall),
                     )
-                },
-                modifier = Modifier.weight(1f),
-            ) {
-                Icon(
-                    Icons.Default.QrCode,
-                    contentDescription = null,
-                    modifier = Modifier.size(spacing.mediumSmall + spacing.extraSmall),
-                )
-                Spacer(modifier = Modifier.width(spacing.micro))
-                Text(
-                    text = "Show QR",
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                )
-            }
-        }
+                    Spacer(modifier = Modifier.width(spacing.micro))
+                    Text(
+                        text = stringResource(R.string.registered_event_show_qr),
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                    )
+                }
+            },
+        )
     }
 }

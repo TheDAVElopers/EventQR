@@ -207,19 +207,19 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
         emptySubView.visibility = View.VISIBLE
         when (selectedFilter) {
             EventFilter.ALL -> {
-                emptyView.text = "No events available yet"
+                emptyView.text = getString(R.string.attendee_events_no_events_available_yet)
                 emptySubText = "Check back later for upcoming events"
             }
             EventFilter.UPCOMING -> {
-                emptyView.text = "No upcoming events"
+                emptyView.text = getString(R.string.attendee_events_no_upcoming_events)
                 emptySubText = "There are no upcoming events to show"
             }
             EventFilter.ACTIVE -> {
-                emptyView.text = "No active events"
+                emptyView.text = getString(R.string.organizer_dashboard_no_active_events)
                 emptySubText = "No events are currently in progress"
             }
             EventFilter.COMPLETED -> {
-                emptyView.text = "No completed events"
+                emptyView.text = getString(R.string.attendee_events_no_completed_events)
                 emptySubText = "Completed events will appear here"
             }
         }
@@ -233,7 +233,10 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
         val ongoing = items.filter { isOngoingEvent(it) }.sortedBy { it.eventStartAt }
         val upcoming = items.filter { it.eventStartAt?.isAfter(Instant.now()) == true }.sortedBy { it.eventStartAt }
         val completed = items.filter { isPastEvent(it) }.sortedByDescending { it.eventEndAt }
-        return ongoing + upcoming + completed
+        val bucketed = (ongoing + upcoming + completed).toSet()
+        // Events with null start/end dates fall in no bucket; keep them at the end instead of dropping them.
+        val undated = items.filter { it !in bucketed }
+        return ongoing + upcoming + completed + undated
     }
 
     private fun isPastEvent(item: AttendeeEventResponse): Boolean {

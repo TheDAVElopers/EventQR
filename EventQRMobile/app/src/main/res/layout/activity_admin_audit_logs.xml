@@ -10,8 +10,8 @@
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="Audit Logs"
-        app:subtitle="Track activity across the system" />
+        app:title="@string/admin_dashboard_audit_logs"
+        app:subtitle="@string/admin_audit_logs_track_activity_across_the_system" />
 
     <androidx.compose.ui.platform.ComposeView
         android:id="@+id/composeAuditFilters"
@@ -50,8 +50,8 @@
             android:layout_height="match_parent"
             android:visibility="gone"
             app:icon="@drawable/ic_audit_shield"
-            app:title="No audit logs yet"
-            app:subtitle="Activity across the system will show up here." />
+            app:title="@string/admin_audit_logs_no_audit_logs_yet_2"
+            app:subtitle="@string/admin_audit_logs_activity_across_the_system_will_show" />
         </FrameLayout>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 

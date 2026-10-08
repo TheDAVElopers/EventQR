@@ -1,5 +1,7 @@
 package com.thedavelopers.eventqr.features.staff.scanner
 
+import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.util.UiStrings
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import com.thedavelopers.eventqr.core.util.Validators
@@ -17,6 +19,7 @@ import java.util.UUID
 class ScannerPresenter(
     private var view: ScannerContract.View?,
     private val repository: StaffRepository,
+    private val strings: UiStrings,
 ) {
     private val tag = "StaffQrScanner"
     private var job: Job? = null
@@ -35,7 +38,7 @@ class ScannerPresenter(
                         .filter { it.canScan && it.status != EventStatus.ENDED }
                         .map { EventSpinnerOption(it.eventId.toString(), it.title, it.canScan, it.eventStartAt) }
                     if (selectable.isEmpty() && result.data.any { it.status == EventStatus.ENDED }) {
-                        view?.showMessage("Event has ended. Scanning is disabled.")
+                        view?.showMessage(strings.get(R.string.scanner_event_has_ended))
                     }
                     view?.showEvents(selectable)
                 }
@@ -48,11 +51,11 @@ class ScannerPresenter(
 
     fun submitRewardRedemptionScan(eventId: String, purpose: ScanPurposeResponse, qrValue: String, staffUserId: String?) {
         if (!Validators.isNonEmpty(eventId)) {
-            view?.showMessage("Select an assigned event")
+            view?.showMessage(strings.get(R.string.scanner_select_an_assigned_event))
             return
         }
         if (!Validators.isNonEmpty(qrValue)) {
-            view?.showMessage("Input is required")
+            view?.showMessage(strings.get(R.string.scanner_input_is_required))
             return
         }
 
@@ -65,7 +68,7 @@ class ScannerPresenter(
             val staffUuid = staffUserId?.takeIf { it.isNotBlank() }?.let(::parseUuid)
             if (eventUuid == null || (!staffUserId.isNullOrBlank() && staffUuid == null)) {
                 view?.showLoading(false)
-                view?.showScanError("Scan setup is invalid. Go back and select the event again.")
+                view?.showScanError(strings.get(R.string.scanner_scan_setup_is_invalid))
                 return@launch
             }
             val request = RewardRedemptionScanRequest(
@@ -102,11 +105,11 @@ class ScannerPresenter(
 
     fun submitScan(eventId: String, purpose: ScanPurposeResponse, qrValue: String, notes: String, staffUserId: String?) {
         if (!Validators.isNonEmpty(eventId)) {
-            view?.showMessage("Select an assigned event")
+            view?.showMessage(strings.get(R.string.scanner_select_an_assigned_event))
             return
         }
         if (!Validators.isNonEmpty(qrValue)) {
-            view?.showMessage("Input is required")
+            view?.showMessage(strings.get(R.string.scanner_input_is_required))
             return
         }
 
@@ -119,7 +122,7 @@ class ScannerPresenter(
             val staffUuid = staffUserId?.takeIf { it.isNotBlank() }?.let(::parseUuid)
             if (eventUuid == null || (!staffUserId.isNullOrBlank() && staffUuid == null)) {
                 view?.showLoading(false)
-                view?.showScanError("Scan setup is invalid. Go back and select the event again.")
+                view?.showScanError(strings.get(R.string.scanner_scan_setup_is_invalid))
                 return@launch
             }
             val request = if (isShortId) {

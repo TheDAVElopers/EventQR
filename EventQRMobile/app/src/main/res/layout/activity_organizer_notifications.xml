@@ -11,14 +11,14 @@
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="Notifications">
+        app:title="@string/common_notifications">
         <TextView
             android:id="@+id/txtMarkAllRead"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingStart="8dp"
             android:paddingVertical="4dp"
-            android:text="Mark all read"
+            android:text="@string/organizer_notifications_mark_all_read"
             android:textColor="#5B25C9"
             android:textSize="13sp"
             android:textStyle="bold" />
@@ -59,7 +59,7 @@
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:layout_marginEnd="8dp"
-                    android:contentDescription="Calendar"
+                    android:contentDescription="@string/organizer_notifications_calendar"
                     android:src="@drawable/ic_calendar"
                     app:tint="#5B25C9" />
 
@@ -70,7 +70,7 @@
                     android:layout_weight="1"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:text="All events"
+                    android:text="@string/organizer_notifications_all_events"
                     android:textColor="#121735"
                     android:textSize="14sp" />
 
@@ -79,7 +79,7 @@
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:layout_marginStart="4dp"
-                    android:contentDescription="Dropdown"
+                    android:contentDescription="@string/common_dropdown"
                     android:src="@drawable/ic_arrow_drop_down"
                     app:tint="#8E8EA9" />
             </LinearLayout>
@@ -110,7 +110,7 @@
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:layout_marginEnd="8dp"
-                    android:contentDescription="Type tag"
+                    android:contentDescription="@string/organizer_notifications_type_tag"
                     android:src="@drawable/ic_row_tag"
                     app:tint="#5B25C9" />
 
@@ -121,7 +121,7 @@
                     android:layout_weight="1"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:text="All types"
+                    android:text="@string/organizer_notifications_all_types"
                     android:textColor="#121735"
                     android:textSize="14sp" />
 
@@ -130,7 +130,7 @@
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:layout_marginStart="4dp"
-                    android:contentDescription="Dropdown"
+                    android:contentDescription="@string/common_dropdown"
                     android:src="@drawable/ic_arrow_drop_down"
                     app:tint="#8E8EA9" />
             </LinearLayout>
@@ -179,8 +179,8 @@
                 android:layout_height="match_parent"
                 android:visibility="gone"
                 app:icon="@drawable/ic_admin_notification"
-                app:title="No notifications yet"
-                app:subtitle="Stay tuned for updates on your events and activities." />
+                app:title="@string/organizer_notifications_no_notifications_yet"
+                app:subtitle="@string/organizer_notifications_stay_tuned_for_updates_on_your_event" />
 
             <!-- Error -->
             <LinearLayout
@@ -196,7 +196,7 @@
                 <ImageView
                     android:layout_width="64dp"
                     android:layout_height="64dp"
-                    android:contentDescription="Error loading notifications"
+                    android:contentDescription="@string/organizer_notifications_error_loading_notifications"
                     android:src="@drawable/ic_error_circle"
                     app:tint="@color/error" />
 
@@ -205,7 +205,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
                     android:gravity="center"
-                    android:text="Failed to load notifications"
+                    android:text="@string/organizer_notifications_failed_to_load_notifications"
                     android:textColor="#121735"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -215,7 +215,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:gravity="center"
-                    android:text="Please check your connection and try again."
+                    android:text="@string/organizer_notifications_please_check_your_connection_and_try"
                     android:textColor="#8E8EA9"
                     android:textSize="14sp" />
             </LinearLayout>

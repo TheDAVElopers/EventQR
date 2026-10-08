@@ -40,7 +40,7 @@ class EventQrApplication : Application() {
             // Called from an OkHttp thread once the server has refused the refresh token.
             Handler(Looper.getMainLooper()).post {
                 RegistrationsCache.clear()
-                Toast.makeText(this, "Your session has expired. Please sign in again.", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, this.getString(R.string.event_qr_application_your_session_has_expired_please_sign), Toast.LENGTH_LONG).show()
                 startActivity(
                     Intent(this, LoginActivity::class.java)
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)

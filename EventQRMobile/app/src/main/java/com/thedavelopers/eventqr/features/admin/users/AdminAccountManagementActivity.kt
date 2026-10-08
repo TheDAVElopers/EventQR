@@ -158,7 +158,7 @@ class AdminAccountManagementActivity : AppCompatActivity() {
                     progressLoading.visibility = View.GONE
                     recyclerAccounts.visibility = if (allUsers.isEmpty()) View.GONE else View.VISIBLE
                     textPlaceholder.visibility = if (allUsers.isEmpty()) View.VISIBLE else View.GONE
-                    textPlaceholder.text = "No accounts found yet."
+                    textPlaceholder.text = getString(R.string.admin_account_management_no_accounts_found_yet)
                     adapter.submitItems(allUsers)
                 }
                 is NetworkResult.Error -> {
@@ -166,7 +166,7 @@ class AdminAccountManagementActivity : AppCompatActivity() {
                     progressLoading.visibility = View.GONE
                     recyclerAccounts.visibility = View.GONE
                     textPlaceholder.visibility = View.VISIBLE
-                    textPlaceholder.text = "Account management is currently unavailable."
+                    textPlaceholder.text = getString(R.string.admin_account_management_account_management_is_currently_unav)
                 }
                 NetworkResult.Loading -> Unit
             }
@@ -177,21 +177,21 @@ class AdminAccountManagementActivity : AppCompatActivity() {
         when (action) {
             AccountAction.ENABLE -> {
                 if (user.userId.toString() == currentUserId) {
-                    Toast.makeText(this, "Cannot enable your own account", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, this.getString(R.string.admin_account_management_cannot_enable_your_own_account), Toast.LENGTH_SHORT).show()
                     return
                 }
                 performEnable(user)
             }
             AccountAction.DISABLE -> {
                 if (user.userId.toString() == currentUserId) {
-                    Toast.makeText(this, "Cannot disable your own account", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, this.getString(R.string.admin_account_management_cannot_disable_your_own_account), Toast.LENGTH_SHORT).show()
                     return
                 }
                 performDisable(user)
             }
             AccountAction.DELETE -> {
                 if (user.userId.toString() == currentUserId) {
-                    Toast.makeText(this, "Cannot delete your own account", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, this.getString(R.string.admin_account_management_cannot_delete_your_own_account), Toast.LENGTH_SHORT).show()
                     return
                 }
                 showDeleteConfirmation(user)
@@ -203,11 +203,11 @@ class AdminAccountManagementActivity : AppCompatActivity() {
         lifecycleScope.launch {
             when (val result = repository.enableUser(user.userId.toString())) {
                 is NetworkResult.Success -> {
-                    Toast.makeText(this@AdminAccountManagementActivity, "Account enabled", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@AdminAccountManagementActivity, this@AdminAccountManagementActivity.getString(R.string.admin_account_management_account_enabled), Toast.LENGTH_SHORT).show()
                     loadAccounts()
                 }
                 is NetworkResult.Error -> {
-                    Toast.makeText(this@AdminAccountManagementActivity, "Failed: ${result.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@AdminAccountManagementActivity, getString(R.string.common_failed_with_reason, result.message), Toast.LENGTH_LONG).show()
                 }
                 NetworkResult.Loading -> Unit
             }
@@ -218,11 +218,11 @@ class AdminAccountManagementActivity : AppCompatActivity() {
         lifecycleScope.launch {
             when (val result = repository.disableUser(user.userId.toString())) {
                 is NetworkResult.Success -> {
-                    Toast.makeText(this@AdminAccountManagementActivity, "Account disabled", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@AdminAccountManagementActivity, this@AdminAccountManagementActivity.getString(R.string.admin_account_management_account_disabled), Toast.LENGTH_SHORT).show()
                     loadAccounts()
                 }
                 is NetworkResult.Error -> {
-                    Toast.makeText(this@AdminAccountManagementActivity, "Failed: ${result.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@AdminAccountManagementActivity, getString(R.string.common_failed_with_reason, result.message), Toast.LENGTH_LONG).show()
                 }
                 NetworkResult.Loading -> Unit
             }
@@ -231,10 +231,10 @@ class AdminAccountManagementActivity : AppCompatActivity() {
 
     private fun showDeleteConfirmation(user: UserResponse) {
         AlertDialog.Builder(this)
-            .setTitle("Delete Account")
-            .setMessage("Permanently delete ${user.fullName}? This cannot be undone and requires the account to be disabled first with no transaction history.")
-            .setPositiveButton("Delete") { _, _ -> performDelete(user) }
-            .setNegativeButton("Cancel", null)
+            .setTitle(getString(R.string.admin_account_management_delete_account))
+            .setMessage(getString(R.string.admin_account_confirm_delete, user.fullName))
+            .setPositiveButton(getString(R.string.admin_account_management_delete)) { _, _ -> performDelete(user) }
+            .setNegativeButton(getString(R.string.request_event_cancel), null)
             .show()
     }
 
@@ -242,11 +242,11 @@ class AdminAccountManagementActivity : AppCompatActivity() {
         lifecycleScope.launch {
             when (val result = repository.deleteUser(user.userId.toString())) {
                 is NetworkResult.Success -> {
-                    Toast.makeText(this@AdminAccountManagementActivity, "Account deleted", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@AdminAccountManagementActivity, this@AdminAccountManagementActivity.getString(R.string.admin_account_management_account_deleted), Toast.LENGTH_SHORT).show()
                     loadAccounts()
                 }
                 is NetworkResult.Error -> {
-                    Toast.makeText(this@AdminAccountManagementActivity, "Failed: ${result.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@AdminAccountManagementActivity, getString(R.string.common_failed_with_reason, result.message), Toast.LENGTH_LONG).show()
                     loadAccounts()
                 }
                 NetworkResult.Loading -> Unit

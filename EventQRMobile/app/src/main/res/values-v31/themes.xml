@@ -4,20 +4,15 @@
     <!--
         Starting theme for Android 12+ (API 31+).
 
-        The system splash screen on API 31+ is drawn by the OS and its background
-        (windowSplashScreenBackground) can only be a single opaque solid color - it does
-        not support a gradient drawable (unlike android:windowBackground on older versions).
-        We therefore keep the background as the gradient's dominant/center color
-        (eventqr_indigo) and show the logo on it so the native splash fades
-        smoothly into the app's gradient+logo splash (activity_splash_modern.xml) without
-        a jarring solid-color "flash". postSplashScreenTheme restores the normal app theme.
-
-        The icon is the app icon's white logo (ic_launcher_foreground_eventqr), so a signed-in
-        user, who skips activity_splash_modern.xml and goes straight to the dashboard, still
-        sees the logo on the purple splash.
+        The OS always draws a system splash before the first frame, and its background can only be one
+        opaque solid color (no gradient). We do not want users to see it, only the branded splash
+        (activity_splash_modern.xml: gradient + logo with the EventQR wordmark). So the icon is
+        intentionally empty and the background is the gradient's center color (eventqr_indigo), which
+        makes the system splash read as a plain purple screen that LandingActivity then replaces
+        immediately (it also skips the system fade-out). postSplashScreenTheme restores the normal app theme.
     -->
     <style name="Theme.App.Starting" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground_eventqr</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_empty</item>
         <item name="windowSplashScreenBackground">@color/eventqr_indigo</item>
         <item name="postSplashScreenTheme">@style/Theme.EventQR</item>
     </style>

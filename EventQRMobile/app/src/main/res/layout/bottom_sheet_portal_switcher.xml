@@ -21,7 +21,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="sans-serif-medium"
-        android:text="Switch Portal"
+        android:text="@string/bottom_sheet_portal_switcher_switch_portal"
         android:textColor="@color/text_primary"
         android:textSize="18sp" />
 
@@ -29,7 +29,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:text="Choose which EventQR workspace to open."
+        android:text="@string/bottom_sheet_portal_switcher_choose_which_eventqr_workspace_to_op"
         android:textColor="@color/text_secondary"
         android:textSize="13sp" />
 
@@ -47,7 +47,7 @@
         android:layout_marginTop="8dp"
         android:background="@drawable/bg_sign_out_button"
         android:clickable="true"
-        android:contentDescription="Sign out"
+        android:contentDescription="@string/bottom_sheet_portal_switcher_sign_out"
         android:focusable="true"
         android:gravity="center_vertical"
         android:orientation="horizontal"
@@ -78,7 +78,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-medium"
-                android:text="Sign Out"
+                android:text="@string/common_sign_out"
                 android:textColor="@color/error"
                 android:textSize="15sp" />
 
@@ -86,7 +86,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="End your session on this device"
+                android:text="@string/bottom_sheet_portal_switcher_end_your_session_on_this_device"
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp" />
         </LinearLayout>

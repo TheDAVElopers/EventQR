@@ -229,7 +229,8 @@ public class EventService implements EventLookupPort {
             safeCount(event.getCurrentAttendeeCount()),
             event.getStatus(),
             event.getOrganizerUserId(),
-            currentUserId != null && currentUserId.equals(event.getOrganizerUserId())
+            currentUserId != null && currentUserId.equals(event.getOrganizerUserId()),
+            event.isRewardsEnabled()
         );
     }
 

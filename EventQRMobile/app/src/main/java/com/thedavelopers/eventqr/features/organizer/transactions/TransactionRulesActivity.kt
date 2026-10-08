@@ -15,6 +15,7 @@ import com.thedavelopers.eventqr.features.organizer.model.dto.TransactionRuleReq
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import java.util.UUID
+import com.thedavelopers.eventqr.R
 
 open class TransactionRulesActivity : AppCompatActivity() {
     private val TAG = "TransactionRulesActivity"
@@ -166,7 +167,7 @@ open class TransactionRulesActivity : AppCompatActivity() {
             Log.d(TAG, "Save result: ${result.source}, message: ${result.message}")
             
             if (result.source == OrganizerMvpDataSource.BACKEND) {
-                Toast.makeText(this@TransactionRulesActivity, "Rules saved successfully", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@TransactionRulesActivity, this@TransactionRulesActivity.getString(R.string.transaction_rules_rules_saved_successfully), Toast.LENGTH_SHORT).show()
                 loadData()
             } else {
                 Toast.makeText(this@TransactionRulesActivity, "Failed to save: ${result.message}", Toast.LENGTH_SHORT).show()

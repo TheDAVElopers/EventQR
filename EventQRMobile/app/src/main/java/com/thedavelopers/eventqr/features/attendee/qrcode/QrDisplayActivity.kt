@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.attendee
 
+import com.thedavelopers.eventqr.core.util.UiStrings
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Bundle
@@ -52,7 +53,7 @@ class QrDisplayActivity : AppCompatActivity(), QrCredentialContract.View {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_qr_display)
 
-        presenter = QrCredentialPresenter(this, AttendeeRepository(this))
+        presenter = QrCredentialPresenter(this, AttendeeRepository(this), UiStrings(this))
         qrImage = findViewById(R.id.imgQrCode)
         qrText = findViewById(R.id.txtQrValue)
         loadingText = findViewById(R.id.txtQrLoading)
@@ -107,15 +108,15 @@ class QrDisplayActivity : AppCompatActivity(), QrCredentialContract.View {
                 if (uri != null) {
                     currentQrCredentialId?.let { presenter.markDownloaded(it) }
                     downloadController.showSaved {
-                        Toast.makeText(this@QrDisplayActivity, "QR saved to gallery", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@QrDisplayActivity, this@QrDisplayActivity.getString(R.string.attendee_qr_credential_qr_saved_to_gallery), Toast.LENGTH_LONG).show()
                     }
                 } else {
                     downloadController.resetToIdle()
-                    Toast.makeText(this@QrDisplayActivity, "Failed to save QR image", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@QrDisplayActivity, this@QrDisplayActivity.getString(R.string.attendee_qr_credential_failed_to_save_qr_image), Toast.LENGTH_SHORT).show()
                 }
             }
         } else {
-            Toast.makeText(this, "QR image not ready", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, this.getString(R.string.attendee_qr_credential_qr_image_not_ready), Toast.LENGTH_SHORT).show()
         }
     }
 

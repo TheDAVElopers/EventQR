@@ -13,6 +13,7 @@ import com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse
 import com.thedavelopers.eventqr.ui.theme.EventQrTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import com.thedavelopers.eventqr.R
 
 class AdminEventRequestDetailActivity : AppCompatActivity() {
 
@@ -28,7 +29,7 @@ class AdminEventRequestDetailActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         requestId = intent.getStringExtra(EXTRA_REQUEST_ID).orEmpty()
         if (requestId.isBlank()) {
-            Toast.makeText(this, "Request not found.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, this.getString(R.string.admin_event_request_detail_request_not_found), Toast.LENGTH_SHORT).show()
             finish()
             return
         }
@@ -115,7 +116,7 @@ class AdminEventRequestDetailActivity : AppCompatActivity() {
         lifecycleScope.launch {
             when (val result = repository.approveEvent(requestId, remarks)) {
                 is NetworkResult.Success -> {
-                    Toast.makeText(this@AdminEventRequestDetailActivity, "Event request approved!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@AdminEventRequestDetailActivity, this@AdminEventRequestDetailActivity.getString(R.string.admin_event_request_detail_event_request_approved), Toast.LENGTH_SHORT).show()
                     setResult(RESULT_OK)
                     loadRequest()
                 }
@@ -133,7 +134,7 @@ class AdminEventRequestDetailActivity : AppCompatActivity() {
         lifecycleScope.launch {
             when (val result = repository.rejectEvent(requestId, remarks)) {
                 is NetworkResult.Success -> {
-                    Toast.makeText(this@AdminEventRequestDetailActivity, "Request rejected.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@AdminEventRequestDetailActivity, this@AdminEventRequestDetailActivity.getString(R.string.admin_event_request_detail_request_rejected), Toast.LENGTH_SHORT).show()
                     loadRequest()
                 }
                 is NetworkResult.Error -> {
@@ -150,7 +151,7 @@ class AdminEventRequestDetailActivity : AppCompatActivity() {
         lifecycleScope.launch {
             when (val result = repository.upgradeOrganizer(requestId)) {
                 is NetworkResult.Success -> {
-                    Toast.makeText(this@AdminEventRequestDetailActivity, "Requester upgraded to Organizer.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@AdminEventRequestDetailActivity, this@AdminEventRequestDetailActivity.getString(R.string.admin_event_request_detail_requester_upgraded_to_organizer), Toast.LENGTH_SHORT).show()
                     loadRequest()
                 }
                 is NetworkResult.Error -> {

@@ -22,18 +22,28 @@ suspend fun <T> safeApiCall(call: suspend () -> ApiResponse<T>): NetworkResult<T
                     }
                 },
                 onFailure = { throwable ->
-                    NetworkResult.Error(extractMessage(throwable), throwable)
+                    val serverMessage = (throwable as? HttpException)?.let { parseHttpErrorMessage(it) }
+                    val retryAfter = (throwable as? HttpException)?.let { parseRetryAfterSeconds(it.response()?.headers()?.get("Retry-After")) }
+                    NetworkResult.Error(extractMessage(throwable, serverMessage), throwable, serverMessage, retryAfter)
                 }
             )
     }
 }
 
-private fun extractMessage(throwable: Throwable): String {
+/** Parses a `Retry-After` delta-seconds value; null for null/blank/non-numeric (e.g. HTTP-date) or non-positive input. */
+internal fun parseRetryAfterSeconds(value: String?): Long? =
+    value?.trim()?.takeIf { it.isNotEmpty() && it.all(Char::isDigit) }?.toLongOrNull()?.takeIf { it > 0 }
+
+/** Reads the backend ErrorResponse `message` from an HTTP failure's body; null when absent or blank. */
+internal fun parseHttpErrorMessage(throwable: HttpException): String? {
+    val body = runCatching { throwable.response()?.errorBody()?.string().orEmpty() }.getOrDefault("")
+    return parseErrorMessage(body)?.takeIf { it.isNotBlank() }
+}
+
+private fun extractMessage(throwable: Throwable, serverMessage: String?): String {
     if (throwable is HttpException) {
-        val body = throwable.response()?.errorBody()?.string().orEmpty()
-        val parsedMessage = parseErrorMessage(body)
-        if (!parsedMessage.isNullOrBlank()) {
-            return parsedMessage
+        if (!serverMessage.isNullOrBlank()) {
+            return serverMessage
         }
         return throwable.message().ifBlank { "Request failed" }
     }

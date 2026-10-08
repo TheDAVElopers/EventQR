@@ -52,7 +52,7 @@ open class UnifiedNotificationsActivity : AppCompatActivity() {
         }
 
         val markAllRead = TextView(this).apply {
-            text = "Mark all read"
+            text = getString(R.string.organizer_notifications_mark_all_read)
             textSize = 13f
             setTypeface(typeface, Typeface.BOLD)
             setPadding(dp(8), dp(8), dp(8), dp(8))
@@ -101,7 +101,7 @@ open class UnifiedNotificationsActivity : AppCompatActivity() {
                 is NetworkResult.Success -> Unit
                 is NetworkResult.Error -> {
                     _notifications.value = previous
-                    Toast.makeText(this@UnifiedNotificationsActivity, result.message.ifBlank { "Unable to mark notification as read." }, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@UnifiedNotificationsActivity, result.message.ifBlank { getString(R.string.unified_notifications_unable_to_mark_notification_as_read) }, Toast.LENGTH_SHORT).show()
                 }
                 NetworkResult.Loading -> Unit
             }
@@ -116,7 +116,7 @@ open class UnifiedNotificationsActivity : AppCompatActivity() {
                 is NetworkResult.Success -> Unit
                 is NetworkResult.Error -> {
                     _notifications.value = previous
-                    Toast.makeText(this@UnifiedNotificationsActivity, result.message.ifBlank { "Unable to mark notifications as read." }, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@UnifiedNotificationsActivity, result.message.ifBlank { getString(R.string.unified_notifications_unable_to_mark_notifications_as_read) }, Toast.LENGTH_SHORT).show()
                 }
                 NetworkResult.Loading -> Unit
             }

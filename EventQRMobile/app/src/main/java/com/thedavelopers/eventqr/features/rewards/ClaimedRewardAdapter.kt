@@ -17,6 +17,7 @@ class ClaimedRewardAdapter : RecyclerView.Adapter<ClaimedRewardAdapter.ViewHolde
     private val items = mutableListOf<RewardRedemptionResponse>()
     private var eventTitle: String? = null
     private var rewardNamesById: Map<String, String> = emptyMap()
+    private var eventTitlesById: Map<String, String> = emptyMap()
     private val displayFormatter: DateTimeFormatter = DateTimeFormatter
         .ofPattern("MMM d, h:mm a")
         .withZone(ZoneId.of("Asia/Manila"))
@@ -25,11 +26,13 @@ class ClaimedRewardAdapter : RecyclerView.Adapter<ClaimedRewardAdapter.ViewHolde
         newItems: List<RewardRedemptionResponse>,
         eventTitle: String?,
         rewardNamesById: Map<String, String>,
+        eventTitlesById: Map<String, String> = emptyMap(),
     ) {
         items.clear()
         items.addAll(newItems)
         this.eventTitle = eventTitle
         this.rewardNamesById = rewardNamesById
+        this.eventTitlesById = eventTitlesById
         notifyDataSetChanged()
     }
 
@@ -52,18 +55,35 @@ class ClaimedRewardAdapter : RecyclerView.Adapter<ClaimedRewardAdapter.ViewHolde
         private val dateText: TextView = itemView.findViewById(R.id.txtClaimedDate)
         private val pointsText: TextView = itemView.findViewById(R.id.txtClaimedPoints)
 
+        // Rows are recycled, so remember the layout's amount style and restore it for every non-rejected bind.
+        private val amountSizePx = pointsText.textSize
+        private val amountColor = pointsText.currentTextColor
+        private val amountTypeface = pointsText.typeface
+
         fun bind(item: RewardRedemptionResponse) {
             val rewardName = rewardNamesById[item.rewardId.toString()]
                 ?: item.reason?.takeIf { it.isNotBlank() }
                 .orEmpty()
             val eventName = item.reason?.takeIf { it.startsWith("event:", ignoreCase = true) }?.substringAfter(":")
                 ?.trim()?.takeIf { it.isNotBlank() }
+                ?: eventTitlesById[item.eventId.toString()]
                 ?: eventTitle.orEmpty()
 
             titleText.text = rewardName
             eventText.text = eventName
             dateText.text = item.redeemedAt?.let { displayFormatter.format(it) } ?: "-"
-            pointsText.text = "-${kotlin.math.abs(item.pointsSpent)} pts"
+            if (item.status == RedemptionStatus.REJECTED) {
+                // A note, not an amount: small and muted instead of the big red "-N pts" style.
+                pointsText.text = itemView.context.getString(R.string.claimed_reward_no_points_deducted)
+                pointsText.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 12f)
+                pointsText.setTextColor(android.graphics.Color.parseColor("#6B7280"))
+                pointsText.setTypeface(amountTypeface, android.graphics.Typeface.NORMAL)
+            } else {
+                pointsText.text = "-${kotlin.math.abs(item.pointsSpent)} pts"
+                pointsText.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, amountSizePx)
+                pointsText.setTextColor(amountColor)
+                pointsText.typeface = amountTypeface
+            }
 
             iconView.setImageResource(R.drawable.ic_gift)
             iconView.setColorFilter(android.graphics.Color.parseColor("#12B981"))

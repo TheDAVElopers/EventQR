@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.persistence.PersistenceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -64,7 +65,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(TooManyRequestsException.class)
     public ResponseEntity<ErrorResponse> handleTooManyRequests(TooManyRequestsException exception, HttpServletRequest request) {
-        return build(HttpStatus.TOO_MANY_REQUESTS, exception.getMessage(), request);
+        ResponseEntity<ErrorResponse> response = build(HttpStatus.TOO_MANY_REQUESTS, exception.getMessage(), request);
+        if (exception.getRetryAfterSeconds() <= 0) {
+            return response;
+        }
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(HttpHeaders.RETRY_AFTER, Long.toString(exception.getRetryAfterSeconds()))
+                .body(response.getBody());
     }
 
     @ExceptionHandler(UnauthorizedException.class)
@@ -79,11 +86,17 @@ public class GlobalExceptionHandler {
         body.put("timestamp", Instant.now());
         body.put("status", HttpStatus.BAD_REQUEST.value());
         body.put("error", HttpStatus.BAD_REQUEST.getReasonPhrase());
-        body.put("message", "Validation failed");
         Map<String, String> fieldErrors = new LinkedHashMap<>();
-        for (FieldError fieldError : exception.getBindingResult().getFieldErrors()) {
-            fieldErrors.put(fieldError.getField(), fieldError.getDefaultMessage());
-        }
+        // Hibernate Validator reports violations as a Set, so sort for a stable "first" message and keep the
+        // first message per field.
+        exception.getBindingResult().getFieldErrors().stream()
+                .sorted(java.util.Comparator.comparing(FieldError::getField)
+                        .thenComparing(fe -> String.valueOf(fe.getDefaultMessage())))
+                .forEach(fe -> fieldErrors.putIfAbsent(fe.getField(), fe.getDefaultMessage()));
+        // Clients show "message": surface the first concrete reason (e.g. the password policy text).
+        String firstReason = fieldErrors.values().stream().filter(m -> m != null && !m.isBlank()).findFirst()
+                .orElse("Validation failed");
+        body.put("message", firstReason);
         body.put("fieldErrors", fieldErrors);
         body.put("path", request.getRequestURI());
         return ResponseEntity.badRequest().body(body);

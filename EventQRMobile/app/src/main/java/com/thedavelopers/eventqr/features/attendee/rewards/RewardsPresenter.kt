@@ -1,5 +1,7 @@
 package com.thedavelopers.eventqr.features.attendee
 
+import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.util.UiStrings
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionRequest
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse
@@ -10,6 +12,7 @@ import java.util.UUID
 class RewardsPresenter(
     private var view: RewardsContract.View?,
     private val repository: AttendeeRepository,
+    private val strings: UiStrings,
 ) {
     private var job: Job? = null
 
@@ -38,7 +41,7 @@ class RewardsPresenter(
 
                         NetworkResult.Loading, null -> {
                             view?.showLoading(false)
-                            view?.showError("Unable to load reward balance.")
+                            view?.showError(strings.get(R.string.rewards_unable_to_load_reward_balance))
                         }
                     }
                 }
@@ -54,7 +57,7 @@ class RewardsPresenter(
     fun redeem(eventId: String, attendeeUserId: String?, rewardId: String) {
         val userId = attendeeUserId.orEmpty()
         if (userId.isBlank()) {
-            view?.showMessage("Attendee user ID is required to redeem rewards")
+            view?.showMessage(strings.get(R.string.rewards_attendee_user_id_required))
             return
         }
         view?.showLoading(true)
@@ -68,7 +71,7 @@ class RewardsPresenter(
             )) {
                 is NetworkResult.Success -> {
                     view?.showLoading(false)
-                    view?.showMessage(result.message ?: "Reward redeemed")
+                    view?.showMessage(result.message ?: strings.get(R.string.rewards_reward_redeemed))
                 }
                 is NetworkResult.Error -> {
                     view?.showLoading(false)

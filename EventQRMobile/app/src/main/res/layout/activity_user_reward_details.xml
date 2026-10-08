@@ -10,7 +10,7 @@
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="Reward Details" />
+        app:title="@string/user_reward_details_reward_details" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -51,7 +51,7 @@
                 <ImageView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:contentDescription="Reward"
+                    android:contentDescription="@string/user_reward_details_reward"
                     android:padding="22dp"
                     android:src="@drawable/ic_nav_gift"
                     app:tint="@color/eventqr_indigo" />
@@ -66,7 +66,7 @@
                 android:fontFamily="sans-serif-black"
                 android:gravity="center"
                 android:maxLines="2"
-                android:text="Reward Title"
+                android:text="@string/user_reward_details_reward_title"
                 android:textColor="#FFFFFF"
                 android:textSize="24sp"
                 android:textStyle="bold" />
@@ -100,7 +100,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
                     android:includeFontPadding="false"
-                    android:text="pts"
+                    android:text="@string/user_reward_details_pts"
                     android:textColor="#DDD6FE"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -121,7 +121,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Reward Details"
+                    android:text="@string/user_reward_details_reward_details"
                     android:textColor="@color/eventqr_text"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -143,7 +143,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Status"
+                        android:text="@string/common_status"
                         android:textColor="#6B7280"
                         android:textSize="15sp" />
 
@@ -154,7 +154,7 @@
                         android:background="@drawable/bg_green_pill"
                         android:paddingHorizontal="14dp"
                         android:paddingVertical="6dp"
-                        android:text="Available"
+                        android:text="@string/user_reward_details_available"
                         android:textColor="#065F46"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -175,7 +175,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Remaining"
+                        android:text="@string/user_reward_details_remaining"
                         android:textColor="#6B7280"
                         android:textSize="15sp" />
 
@@ -204,7 +204,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Your Points"
+                        android:text="@string/user_reward_details_your_points"
                         android:textColor="#6B7280"
                         android:textSize="15sp" />
 
@@ -212,7 +212,7 @@
                         android:id="@+id/txtUserPoints"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="0 pts"
+                        android:text="@string/common_0_pts"
                         android:textColor="#5B25C9"
                         android:textSize="15sp"
                         android:textStyle="bold" />
@@ -227,7 +227,7 @@
                 android:background="@drawable/bg_yellow_notice"
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="14dp"
-                android:text="You need more points to redeem this reward."
+                android:text="@string/user_reward_details_you_need_more_points_to_redeem_this"
                 android:textColor="#B45309"
                 android:textSize="14sp"
                 android:visibility="gone" />

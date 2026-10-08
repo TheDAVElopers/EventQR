@@ -1,11 +1,12 @@
 package com.thedavelopers.eventqr.shared.security;
 
-import java.time.Clock;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.time.Duration;
+import java.util.function.LongSupplier;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +25,10 @@ import com.thedavelopers.eventqr.shared.utils.EmailNormalizer;
  * budget and cannot be used to bomb the victim with many distinct keys.
  *
  * <p>Both limits must pass; a request is rejected as soon as either budget is exhausted.
- * State is in-memory and suitable for the single-instance deployment only.
+ * State is in-memory and suitable for the single-instance deployment only. *
+ * <p>State is in-memory and per instance: with N instances the effective limit multiplies by N. If the
+ * service scales out, move this behind an interface backed by a shared store (e.g. Redis). Window
+ * arithmetic uses a monotonic time source so wall-clock steps cannot affect the windows.
  */
 @Component
 public class ForgotPasswordRateLimiter {
@@ -33,17 +37,21 @@ public class ForgotPasswordRateLimiter {
     private static final int MAX_PER_EMAIL = 5;
     private static final long WINDOW_MS = 60_000L;
 
-    private final Map<String, Deque<Long>> byIp = new ConcurrentHashMap<>();
-    private final Map<String, Deque<Long>> byEmail = new ConcurrentHashMap<>();
-    private final Clock clock;
+    private final Cache<String, Deque<Long>> byIp = Caffeine.newBuilder()
+            .maximumSize(10_000).expireAfterAccess(Duration.ofMinutes(5)).build();
+    private final Cache<String, Deque<Long>> byEmail = Caffeine.newBuilder()
+            .maximumSize(20_000).expireAfterAccess(Duration.ofMinutes(5)).build();
+    /** Makes prune/check/record across both windows one atomic step; held only for small in-memory work. */
+    private final Object lock = new Object();
+    private final LongSupplier monotonicMillis;
 
     public ForgotPasswordRateLimiter() {
-        this(Clock.systemUTC());
+        this(() -> System.nanoTime() / 1_000_000L);
     }
 
-    /** Package-private constructor for tests that need clock control. */
-    ForgotPasswordRateLimiter(Clock clock) {
-        this.clock = clock;
+    /** Package-private constructor for tests that need time control. */
+    ForgotPasswordRateLimiter(LongSupplier monotonicMillis) {
+        this.monotonicMillis = monotonicMillis;
     }
 
     /**
@@ -56,35 +64,30 @@ public class ForgotPasswordRateLimiter {
         // share one per-recipient budget (prevents alias-based email bombing). Must match
         // the canonical form used by PasswordResetService for the actual recipient.
         String canonicalEmail = email == null ? "" : EmailNormalizer.canonicalize(email);
-        if (!withinBudget(byIp, ip, MAX_PER_IP)) {
-            return false;
-        }
-        if (!canonicalEmail.isEmpty() && !withinBudget(byEmail, canonicalEmail, MAX_PER_EMAIL)) {
-            return false;
-        }
-        record(byIp, ip);
-        if (!canonicalEmail.isEmpty()) {
-            record(byEmail, canonicalEmail);
-        }
-        return true;
-    }
-
-    private boolean withinBudget(Map<String, Deque<Long>> window, String key, int max) {
-        Deque<Long> deque = window.computeIfAbsent(key, k -> new ArrayDeque<>());
-        long now = clock.millis();
-        synchronized (deque) {
-            prune(deque, now);
-            return deque.size() < max;
+        synchronized (lock) {
+            long now = monotonicMillis.getAsLong();
+            if (!withinBudget(byIp, ip, MAX_PER_IP, now)) {
+                return false;
+            }
+            if (!canonicalEmail.isEmpty() && !withinBudget(byEmail, canonicalEmail, MAX_PER_EMAIL, now)) {
+                return false;
+            }
+            record(byIp, ip, now);
+            if (!canonicalEmail.isEmpty()) {
+                record(byEmail, canonicalEmail, now);
+            }
+            return true;
         }
     }
 
-    private void record(Map<String, Deque<Long>> window, String key) {
-        Deque<Long> deque = window.computeIfAbsent(key, k -> new ArrayDeque<>());
-        long now = clock.millis();
-        synchronized (deque) {
-            prune(deque, now);
-            deque.addLast(now);
-        }
+    private boolean withinBudget(Cache<String, Deque<Long>> window, String key, int max, long now) {
+        Deque<Long> deque = window.get(key, k -> new ArrayDeque<>());
+        prune(deque, now);
+        return deque.size() < max;
+    }
+
+    private void record(Cache<String, Deque<Long>> window, String key, long now) {
+        window.get(key, k -> new ArrayDeque<>()).addLast(now);
     }
 
     private void prune(Deque<Long> deque, long now) {

@@ -43,9 +43,9 @@ class AdminAuditLogAdapter : RecyclerView.Adapter<AdminAuditLogAdapter.AdminAudi
         fun bind(item: AuditLogResponse, formatter: DateTimeFormatter) {
             val action = item.action.ifBlank { "AUDIT_ENTRY" }
             textActionTitle.text = action.toFriendlyTitle()
-            val actor = item.performedByFullName?.takeIf { it.isNotBlank() } ?: "Admin User"
-            val target = item.details?.takeIf { it.isNotBlank() } ?: "System"
-            textAuditActorTarget.text = "By $actor · Target: $target"
+            val actor = item.performedByFullName?.takeIf { it.isNotBlank() } ?: itemView.context.getString(R.string.audit_actor_fallback)
+            val target = item.details?.takeIf { it.isNotBlank() } ?: itemView.context.getString(R.string.audit_target_fallback)
+            textAuditActorTarget.text = itemView.context.getString(R.string.audit_actor_target, actor, target)
             textAuditTimestamp.text = formatter.format(item.timestamp)
             bindIconStyle(action)
         }

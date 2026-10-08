@@ -32,6 +32,7 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
     private lateinit var requirementsLayout: LinearLayout
     private lateinit var passwordLengthRequirement: TextView
     private lateinit var passwordCapitalRequirement: TextView
+    private lateinit var passwordLowercaseRequirement: TextView
     private lateinit var passwordNumberRequirement: TextView
     private lateinit var passwordSpecialRequirement: TextView
 
@@ -52,6 +53,7 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
         requirementsLayout = findViewById(R.id.layoutPasswordRequirements)
         passwordLengthRequirement = findViewById(R.id.txtPasswordLengthRequirement)
         passwordCapitalRequirement = findViewById(R.id.txtPasswordCapitalRequirement)
+        passwordLowercaseRequirement = findViewById(R.id.txtPasswordLowercaseRequirement)
         passwordNumberRequirement = findViewById(R.id.txtPasswordNumberRequirement)
         passwordSpecialRequirement = findViewById(R.id.txtPasswordSpecialRequirement)
 
@@ -100,7 +102,7 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
 
     override fun showLoading(isLoading: Boolean) {
         resetButton.isEnabled = !isLoading
-        resetButton.text = if (isLoading) "Resetting..." else "Reset Password"
+        resetButton.text = getString(if (isLoading) R.string.reset_password_resetting else R.string.reset_password_reset_password)
         progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
@@ -118,7 +120,7 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
     }
 
     override fun showPasswordError(message: String?) {
-        newPasswordInput.error = message
+        newPasswordInput.error = if (message == Validators.PASSWORD_TOO_LONG_ERROR) getString(R.string.error_password_too_long) else message
     }
 
     override fun showConfirmPasswordError(message: String?) {
@@ -151,10 +153,12 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
         requirementsLayout.visibility = View.VISIBLE
 
         val requirements = Validators.passwordRequirements(password)
-        updateRequirement(passwordLengthRequirement, "At least 8 characters", requirements.hasMinLength)
-        updateRequirement(passwordCapitalRequirement, "One uppercase letter", requirements.hasCapital)
-        updateRequirement(passwordNumberRequirement, "One number", requirements.hasNumber)
-        updateRequirement(passwordSpecialRequirement, "One special character", requirements.hasSpecial)
+        updateRequirement(passwordLengthRequirement, getString(R.string.password_req_length), requirements.hasMinLength)
+        updateRequirement(passwordCapitalRequirement, getString(R.string.password_req_uppercase), requirements.hasCapital)
+        updateRequirement(passwordLowercaseRequirement, getString(R.string.password_req_lowercase), requirements.hasLowercase)
+        updateRequirement(passwordNumberRequirement, getString(R.string.password_req_number), requirements.hasNumber)
+        updateRequirement(passwordSpecialRequirement, getString(R.string.password_req_special), requirements.hasSpecial)
+        newPasswordInput.error = if (!requirements.withinMaxLength) getString(R.string.error_password_too_long) else null
 
         resetButton.isEnabled = requirements.isValid && newPasswordInput.text.toString() == confirmPasswordInput.text.toString()
     }

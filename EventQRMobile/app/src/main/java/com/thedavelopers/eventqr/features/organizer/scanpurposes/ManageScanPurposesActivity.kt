@@ -138,7 +138,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
                 append(purpose.code?.toDisplayTypeLabel() ?: "Custom Scan")
                 append(" · ")
                 if (purpose.pointsEnabled && purpose.pointsValue > 0) append("+${purpose.pointsValue} pts · ")
-                append(if (purpose.duplicateRule.lowercase().contains("allow")) "Allows duplicates" else "No duplicates")
+                append(getString(if (purpose.duplicateRule.lowercase().contains("allow")) R.string.manage_scan_purposes_allows_duplicates else R.string.manage_scan_purposes_no_duplicates))
             }
 
             val purposeCard = purposeCard(
@@ -168,7 +168,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
             val purposeId = purpose.id?.takeIf { it.isNotBlank() }
             if (purposeId == null) {
                 Log.w(persistenceTag, "eventId=${selectedEvent.id} toggleSkipped reason=missingPurposeId name=${purpose.label}")
-                Toast.makeText(this@ManageScanPurposesActivity, "Unable to update unsaved scan purpose.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ManageScanPurposesActivity, this@ManageScanPurposesActivity.getString(R.string.manage_scan_purposes_unable_to_update_unsaved_scan_purpos), Toast.LENGTH_SHORT).show()
                 return@launch
             }
             Log.d(TAG, "eventId=${selectedEvent.id} purposeId=$purposeId label=${purpose.label} toggleValue=$enabled")
@@ -179,7 +179,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
                 is NetworkResult.Success -> {
                     Log.d(TAG, "eventId=${selectedEvent.id} purposeId=$purposeId toggleApiResult=SUCCESS active=${result.data.enabled}")
                     Log.d(persistenceTag, "eventId=${selectedEvent.id} toggleResponse id=${result.data.scanPurposeId ?: "null"} name=${result.data.title} enabled=${result.data.enabled}")
-                    Toast.makeText(this@ManageScanPurposesActivity, "${purpose.label} ${if (enabled) "enabled" else "disabled"}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@ManageScanPurposesActivity, "${purpose.label} ${getString(if (enabled) R.string.manage_scan_purposes_enabled else R.string.manage_scan_purposes_disabled)}", Toast.LENGTH_SHORT).show()
                     loadPurposes()
                 }
                 is NetworkResult.Error -> {
@@ -292,12 +292,12 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         dialogView.addView(trackingOnlyCheck)
 
         val dialogBuilder = AlertDialog.Builder(this)
-            .setTitle(if (isEdit) "Edit Scan Purpose" else "Add Scan Purpose")
+            .setTitle(getString(if (isEdit) R.string.manage_scan_purposes_edit_scan_purpose else R.string.manage_scan_purposes_add_scan_purpose))
             .setView(dialogView)
-            .setPositiveButton("Save", null)
-            .setNegativeButton("Cancel", null)
+            .setPositiveButton(getString(R.string.manage_scan_purposes_save), null)
+            .setNegativeButton(getString(R.string.request_event_cancel), null)
         if (isEdit) {
-            dialogBuilder.setNeutralButton("Delete", null)
+            dialogBuilder.setNeutralButton(getString(R.string.admin_account_management_delete), null)
         }
         val dialog = dialogBuilder.create()
 
@@ -308,7 +308,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
                 val trackingOnly = trackingOnlyCheck.isChecked
                 val points = pointsInput.text.toString().trim().toIntOrNull()?.coerceAtLeast(0) ?: 0
                 if (name.isBlank()) {
-                    nameInput.error = "Scan purpose name is required"
+                    nameInput.error = getString(R.string.manage_scan_purposes_scan_purpose_name_is_required)
                     return@setOnClickListener
                 }
                 val effectivePoints = if (trackingOnly) 0 else points
@@ -329,7 +329,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
                     pointsValue = effectivePoints,
                     pointsEnabled = pointsEnabled,
                     trackingOnly = trackingOnly,
-                    duplicateRule = if (duplicateCheck.isChecked) "Allow Duplicates" else "No Duplicates",
+                    duplicateRule = getString(if (duplicateCheck.isChecked) R.string.manage_scan_purposes_allow_duplicates else R.string.manage_scan_purposes_no_duplicates_2),
                     requiredSelectionLabel = selectedType.selectionLabel,
                 )
                 savePurpose(requestPurpose)
@@ -361,7 +361,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
             when (result) {
                 is NetworkResult.Success -> {
                     Log.d(persistenceTag, "eventId=${selectedEvent.id} saveResponse id=${result.data.scanPurposeId ?: "null"} name=${result.data.title} enabled=${result.data.enabled} code=${result.data.code}")
-                    Toast.makeText(this@ManageScanPurposesActivity, "Saved successfully", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@ManageScanPurposesActivity, this@ManageScanPurposesActivity.getString(R.string.manage_scan_purposes_saved_successfully), Toast.LENGTH_SHORT).show()
                     loadPurposes()
                 }
                 is NetworkResult.Error -> {
@@ -376,15 +376,15 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
     private fun confirmDeletePurpose(purpose: OrganizerMvpScanPurpose) {
         val purposeId = purpose.id?.takeIf { it.isNotBlank() }
         if (purposeId == null) {
-            Toast.makeText(this, "Unable to delete unsaved scan purpose.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, this.getString(R.string.manage_scan_purposes_unable_to_delete_unsaved_scan_purpos), Toast.LENGTH_SHORT).show()
             return
         }
 
         AlertDialog.Builder(this)
-            .setTitle("Delete scan purpose?")
+            .setTitle(getString(R.string.manage_scan_purposes_delete_scan_purpose))
             .setMessage("${purpose.label} will be permanently removed only if it has no transaction logs yet. If it was already used, disable it instead so old logs stay intact.")
-            .setPositiveButton("Delete") { _, _ -> deletePurposeIfUnused(purposeId, purpose.label) }
-            .setNegativeButton("Cancel", null)
+            .setPositiveButton(getString(R.string.admin_account_management_delete)) { _, _ -> deletePurposeIfUnused(purposeId, purpose.label) }
+            .setNegativeButton(getString(R.string.request_event_cancel), null)
             .show()
     }
 
@@ -395,8 +395,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
                 is NetworkResult.Success -> transactionResult.data.count { it.scanPurposeId?.toString() == purposeId }
                 is NetworkResult.Error -> {
                     Toast.makeText(
-                        this@ManageScanPurposesActivity,
-                        "Unable to verify transaction usage. Try again before deleting.",
+                        this@ManageScanPurposesActivity, this@ManageScanPurposesActivity.getString(R.string.manage_scan_purposes_unable_to_verify_transaction_usage_t),
                         Toast.LENGTH_LONG,
                     ).show()
                     return@launch
@@ -415,7 +414,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
 
             when (val deleteResult = repository.deleteScanPurposeForMvp(selectedEvent.id, purposeId)) {
                 is NetworkResult.Success -> {
-                    Toast.makeText(this@ManageScanPurposesActivity, "Scan purpose deleted.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@ManageScanPurposesActivity, this@ManageScanPurposesActivity.getString(R.string.manage_scan_purposes_scan_purpose_deleted), Toast.LENGTH_SHORT).show()
                     loadPurposes()
                 }
                 is NetworkResult.Error -> {

@@ -9,5 +9,5 @@ public record AttendeeEventResponse(UUID eventId, String title, String descripti
                                     String eventLogoUrl, Instant registrationOpenAt, Instant registrationCloseAt,
                                     Instant eventStartAt, Instant eventEndAt, int capacity,
                                     int currentAttendeeCount, EventStatus status, UUID organizerUserId,
-                                    boolean isOwnedByCurrentUser) {
+                                    boolean isOwnedByCurrentUser, boolean rewardsEnabled) {
 }

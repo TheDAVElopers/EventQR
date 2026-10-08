@@ -1,5 +1,7 @@
 package com.thedavelopers.eventqr.features.auth.register
 
+import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.util.UiStrings
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.auth.AuthRepository
@@ -9,6 +11,7 @@ import kotlinx.coroutines.launch
 class RegistrationPresenter(
     private var view: RegistrationContract.View?,
     private val repository: AuthRepository,
+    private val strings: UiStrings,
 ) {
     private var registrationJob: Job? = null
 
@@ -33,42 +36,44 @@ class RegistrationPresenter(
         val lastNameValue = lastName.trim()
         val emailValue = email.trim()
         val phoneValue = phoneNumber.trim()
-        val passwordValue = password.trim()
-        val confirmValue = confirmPassword.trim()
+        // Passwords are never trimmed: leading/trailing spaces are part of the secret.
+        val passwordValue = password
+        val confirmValue = confirmPassword
 
         var valid = true
         if (!Validators.isNonEmpty(firstNameValue)) {
-            view?.showFieldError("firstName", "First name is required")
+            view?.showFieldError("firstName", strings.get(R.string.create_admin_account_first_name_is_required))
             valid = false
         } else {
             view?.showFieldError("firstName", null)
         }
         if (!Validators.isNonEmpty(lastNameValue)) {
-            view?.showFieldError("lastName", "Last name is required")
+            view?.showFieldError("lastName", strings.get(R.string.create_admin_account_last_name_is_required))
             valid = false
         } else {
             view?.showFieldError("lastName", null)
         }
         if (!Validators.isValidEmail(emailValue)) {
-            view?.showFieldError("email", "Enter a valid email address")
+            view?.showFieldError("email", strings.get(R.string.create_admin_account_enter_a_valid_email_address))
             valid = false
         } else {
             view?.showFieldError("email", null)
         }
         if (!Validators.isValidPhoneNumber(phoneValue)) {
-            view?.showFieldError("phone", "Enter valid 10-digit mobile number")
+            view?.showFieldError("phone", Validators.PHONE_ERROR)
             valid = false
         } else {
             view?.showFieldError("phone", null)
         }
         if (!Validators.isValidSignUpPassword(passwordValue)) {
-            view?.showFieldError("password", "Password must meet all requirements")
+            val tooLong = Validators.passwordRequirements(passwordValue).let { it.isOtherwiseValid && !it.withinMaxLength }
+            view?.showFieldError("password", if (tooLong) Validators.PASSWORD_TOO_LONG_ERROR else strings.get(R.string.register_password_must_meet_all_requirements))
             valid = false
         } else {
             view?.showFieldError("password", null)
         }
         if (passwordValue != confirmValue) {
-            view?.showFieldError("confirmPassword", "Passwords do not match")
+            view?.showFieldError("confirmPassword", strings.get(R.string.password_error_mismatch))
             valid = false
         } else {
             view?.showFieldError("confirmPassword", null)
@@ -84,7 +89,7 @@ class RegistrationPresenter(
             when (val result = repository.createUser(fullNameValue, emailValue, phoneValue, passwordValue)) {
                 is NetworkResult.Success -> {
                     view?.showLoading(false)
-                    view?.showMessage(result.message ?: "Account created")
+                    view?.showMessage(result.message ?: strings.get(R.string.register_account_created))
                     view?.navigateToSignIn()
                 }
                 is NetworkResult.Error -> {

@@ -48,7 +48,7 @@ open class SearchAttendeesActivity : AppCompatActivity() {
         repository = OrganizerRepository(this)
 
         findViewById<ImageButton>(R.id.nav_header_back).setOnClickListener { finish() }
-        findViewById<TextView>(R.id.nav_header_title).text = "Search Attendees"
+        findViewById<TextView>(R.id.nav_header_title).text = getString(R.string.search_attendees_search_attendees)
 
         // Set initial dynamic title from Intent while fetching the full event object
         val initialTitle = intentEventTitle()?.takeIf { it.isNotBlank() }
@@ -122,7 +122,7 @@ open class SearchAttendeesActivity : AppCompatActivity() {
         val filtered = attendees.filter { it.matchesOrganizerAttendeeQuery(query, currentFilter) }
         adapter.submitItems(filtered)
         emptyState.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
-        emptyState.text = if (attendees.isEmpty()) "No attendees found for this event." else "No attendees match your search."
+        emptyState.text = getString(if (attendees.isEmpty()) R.string.search_attendees_no_attendees_found_for_this_event else R.string.search_attendees_no_attendees_match_your_search)
     }
 
     private fun updateChips() {

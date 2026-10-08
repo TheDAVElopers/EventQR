@@ -10,7 +10,7 @@
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="QR Display" />
+        app:title="@string/qr_display_qr_display" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -42,7 +42,7 @@
                         android:layout_width="42dp"
                         android:layout_height="42dp"
                         android:layout_gravity="center"
-                        android:contentDescription="QR credential ready"
+                        android:contentDescription="@string/qr_display_qr_credential_ready"
                         android:src="@drawable/ic_qr_success_check" />
                 </FrameLayout>
 
@@ -51,7 +51,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="18dp"
                     android:fontFamily="sans"
-                    android:text="Event Access QR"
+                    android:text="@string/qr_display_event_access_qr"
                     android:textColor="#111111"
                     android:textSize="20sp"
                     android:textStyle="bold" />
@@ -63,7 +63,7 @@
                     android:fontFamily="sans"
                     android:gravity="center"
                     android:lineSpacingExtra="2dp"
-                    android:text="Show this QR at the entrance for event access\nand check-in."
+                    android:text="@string/qr_display_show_this_qr_at_the_entrance_for_eve"
                     android:textColor="#6B7280"
                     android:textSize="14sp" />
 
@@ -94,7 +94,7 @@
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
                                 android:layout_gravity="center"
-                                android:contentDescription="Attendee"
+                                android:contentDescription="@string/common_attendee"
                                 android:src="@drawable/ic_qr_attendee" />
                         </FrameLayout>
 
@@ -108,7 +108,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Attendee"
+                                android:text="@string/common_attendee"
                                 android:textColor="#111111"
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
@@ -140,7 +140,7 @@
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
                                 android:layout_gravity="center"
-                                android:contentDescription="Email"
+                                android:contentDescription="@string/common_email"
                                 android:src="@drawable/ic_qr_email" />
                         </FrameLayout>
 
@@ -154,7 +154,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Email"
+                                android:text="@string/common_email"
                                 android:textColor="#111111"
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
@@ -188,7 +188,7 @@
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
                                 android:layout_gravity="center"
-                                android:contentDescription="Attendee ID"
+                                android:contentDescription="@string/common_attendee_id"
                                 android:src="@drawable/ic_hashtag" />
                         </FrameLayout>
 
@@ -202,7 +202,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Attendee ID"
+                                android:text="@string/common_attendee_id"
                                 android:textColor="#111111"
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
@@ -226,7 +226,7 @@
                     android:layout_marginTop="14dp"
                     android:adjustViewBounds="true"
                     android:background="#FFFFFF"
-                    android:contentDescription="QR Code"
+                    android:contentDescription="@string/common_qr_code"
                     android:elevation="2dp"
                     android:padding="6dp"
                     android:scaleType="fitCenter" />
@@ -256,7 +256,7 @@
                         android:fontFamily="sans"
                         android:paddingStart="12dp"
                         android:paddingEnd="12dp"
-                        android:text="Download QR"
+                        android:text="@string/common_download_qr"
                         android:textAllCaps="false"
                         android:textColor="#FFFFFF"
                         android:textSize="12sp"
@@ -286,7 +286,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="Loading credential..."
+                    android:text="@string/common_loading_credential"
                     android:textColor="#6B7280"
                     android:textSize="12sp"
                     android:visibility="gone" />

@@ -10,7 +10,7 @@
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="Search Attendees" />
+        app:title="@string/search_attendees_search_attendees" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -59,7 +59,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="CURRENT EVENT"
+                        android:text="@string/common_current_event"
                         android:textColor="#8E8EA9"
                         android:textSize="11sp"
                         android:textStyle="bold" />
@@ -82,7 +82,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="SEARCH BY NAME OR EMAIL"
+            android:text="@string/search_attendees_search_by_name_or_email"
             android:textColor="#8E8EA9"
             android:textSize="11sp"
             android:textStyle="bold" />
@@ -108,7 +108,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:background="@null"
-                android:hint="Search name or email..."
+                android:hint="@string/search_attendees_search_name_or_email"
                 android:inputType="text"
                 android:paddingVertical="0dp"
                 android:textColor="#121735"
@@ -138,7 +138,7 @@
                     android:background="@drawable/bg_event_filter_chip_selected"
                     android:gravity="center"
                     android:paddingHorizontal="16dp"
-                    android:text="All"
+                    android:text="@string/common_all"
                     android:textColor="@android:color/white"
                     android:textSize="13sp"
                     android:textStyle="bold" />
@@ -151,7 +151,7 @@
                     android:background="@drawable/bg_event_filter_chip_unselected"
                     android:gravity="center"
                     android:paddingHorizontal="16dp"
-                    android:text="Registered"
+                    android:text="@string/common_registered"
                     android:textColor="#4B5563"
                     android:textSize="13sp"
                     android:textStyle="bold" />
@@ -164,7 +164,7 @@
                     android:background="@drawable/bg_event_filter_chip_unselected"
                     android:gravity="center"
                     android:paddingHorizontal="16dp"
-                    android:text="Checked In"
+                    android:text="@string/common_checked_in"
                     android:textColor="#4B5563"
                     android:textSize="13sp"
                     android:textStyle="bold" />
@@ -177,7 +177,7 @@
                     android:background="@drawable/bg_event_filter_chip_unselected"
                     android:gravity="center"
                     android:paddingHorizontal="16dp"
-                    android:text="Exited"
+                    android:text="@string/search_attendees_exited"
                     android:textColor="#4B5563"
                     android:textSize="13sp"
                     android:textStyle="bold" />
@@ -189,7 +189,7 @@
                     android:background="@drawable/bg_event_filter_chip_unselected"
                     android:gravity="center"
                     android:paddingHorizontal="16dp"
-                    android:text="No Show"
+                    android:text="@string/common_no_show"
                     android:textColor="#4B5563"
                     android:textSize="13sp"
                     android:textStyle="bold" />
@@ -226,6 +226,6 @@
             android:layout_height="match_parent"
             android:visibility="gone"
             app:icon="@drawable/ic_search"
-            app:title="No attendees found" />
+            app:title="@string/common_no_attendees_found" />
     </FrameLayout>
 </LinearLayout>

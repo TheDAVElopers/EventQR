@@ -1,5 +1,7 @@
 package com.thedavelopers.eventqr.features.staff
 
+import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.util.UiStrings
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -7,6 +9,7 @@ import kotlinx.coroutines.launch
 class EventRegistrationsPresenter(
     private var view: EventRegistrationsContract.View?,
     private val repository: StaffRepository,
+    private val strings: UiStrings,
 ) {
     private var job: Job? = null
 
@@ -17,7 +20,7 @@ class EventRegistrationsPresenter(
 
     fun load(eventId: String) {
         if (eventId.isBlank()) {
-            view?.showMessage("Select an assigned event first")
+            view?.showMessage(strings.get(R.string.event_registrations_select_an_assigned_event_first))
             return
         }
         view?.showLoading(true)

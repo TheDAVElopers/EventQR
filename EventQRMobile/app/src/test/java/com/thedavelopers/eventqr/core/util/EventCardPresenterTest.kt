@@ -36,9 +36,11 @@ class EventCardPresenterTest {
     }
 
     @Test
-    fun capacityNeverZero() {
-        assertEquals(1, EventCardPresenter.capacity(0))
-        assertEquals(1, EventCardPresenter.capacity(-5))
+    fun capacityZeroMeansUnlimited() {
+        assertEquals(0, EventCardPresenter.capacity(0))
+        assertEquals(0, EventCardPresenter.capacity(-5))
+        assertEquals(true, EventCardPresenter.isUnlimited(0))
+        assertEquals(false, EventCardPresenter.isUnlimited(50))
         assertEquals(50, EventCardPresenter.capacity(50))
     }
 }

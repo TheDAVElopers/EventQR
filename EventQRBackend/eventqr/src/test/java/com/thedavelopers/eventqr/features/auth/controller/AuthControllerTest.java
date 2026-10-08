@@ -56,7 +56,8 @@ class AuthControllerTest {
     @BeforeEach
     void setUp() {
         mvc = MockMvcBuilders.standaloneSetup(new AuthController(authService, userService, jwtService,
-                        passwordResetService, changePasswordService, forgotPasswordRateLimiter))
+                        passwordResetService, changePasswordService, forgotPasswordRateLimiter,
+                        new com.thedavelopers.eventqr.shared.security.LoginRateLimiter(30, 6, 50)))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
@@ -108,7 +109,7 @@ class AuthControllerTest {
 
     @Test
     void registeringAlwaysCreatesAnAttendeeEvenIfTheClientAsksForMore() throws Exception {
-        when(userService.create(any())).thenReturn(new UserResponse(userId, "jane@example.com", "Jane Doe", null,
+        when(userService.register(any())).thenReturn(new UserResponse(userId, "jane@example.com", "Jane Doe", null,
                 AccountRole.ATTENDEE, AccountStatus.ACTIVE));
 
         mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
@@ -116,7 +117,8 @@ class AuthControllerTest {
                 .andExpect(status().isOk());
 
         ArgumentCaptor<UserRequest> captured = ArgumentCaptor.forClass(UserRequest.class);
-        verify(userService).create(captured.capture());
+        verify(userService).register(captured.capture());
+        verify(userService, never()).create(any());
         org.assertj.core.api.Assertions.assertThat(captured.getValue().role()).isEqualTo(AccountRole.ATTENDEE);
     }
 
@@ -240,5 +242,19 @@ class AuthControllerTest {
                         .content(json("{'token':'t','newPassword':'Passw0rd!!','confirmPassword':'Different1!'}")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Passwords do not match"));
+    }
+
+    @Test
+    void registerCallsRegisterAndNeverThePrivilegedCreate() throws Exception {
+        when(userService.register(any())).thenReturn(new UserResponse(userId, "jane@example.com", "Jane Doe", null,
+                AccountRole.ATTENDEE, com.thedavelopers.eventqr.shared.constants.AccountStatus.ACTIVE));
+
+        mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
+                .content(json("{'email':'jane@example.com','fullName':'Jane Doe',"
+                        + "'password':'Passw0rd!!'}")))
+                .andExpect(status().isOk());
+
+        verify(userService).register(any());
+        verify(userService, never()).create(any());
     }
 }

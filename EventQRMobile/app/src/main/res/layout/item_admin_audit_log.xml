@@ -24,7 +24,7 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_gravity="center"
-            android:contentDescription="Audit log type"
+            android:contentDescription="@string/item_admin_audit_log_audit_log_type"
             android:src="@drawable/ic_audit_shield"
             app:tint="#10B981" />
     </FrameLayout>

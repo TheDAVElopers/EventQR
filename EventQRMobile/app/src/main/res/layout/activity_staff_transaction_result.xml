@@ -10,7 +10,7 @@
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="Transaction Result" />
+        app:title="@string/staff_transaction_result_transaction_result" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -53,7 +53,7 @@
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:layout_gravity="center"
-                        android:contentDescription="Valid"
+                        android:contentDescription="@string/common_valid"
                         android:src="@drawable/ic_qr_success_check"
                         app:tint="@android:color/white" />
 
@@ -72,7 +72,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Transaction Successful"
+                    android:text="@string/staff_transaction_result_transaction_successful"
                     android:textColor="@android:color/black"
                     android:textSize="22sp"
                     android:textStyle="bold" />
@@ -83,7 +83,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
                     android:gravity="center"
-                    android:text="Points awarded to attendee"
+                    android:text="@string/staff_transaction_result_points_awarded_to_attendee"
                     android:textColor="#111827"
                     android:textSize="14sp" />
             </LinearLayout>
@@ -128,7 +128,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Transaction Rejected"
+                    android:text="@string/staff_transaction_result_transaction_rejected"
                     android:textColor="@android:color/black"
                     android:textSize="22sp"
                     android:textStyle="bold" />
@@ -139,7 +139,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
                     android:gravity="center"
-                    android:text="Transaction was not recorded"
+                    android:text="@string/staff_transaction_result_transaction_was_not_recorded"
                     android:textColor="#111827"
                     android:textSize="14sp" />
             </LinearLayout>
@@ -168,7 +168,7 @@
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
-                            android:contentDescription="Type"
+                            android:contentDescription="@string/staff_transaction_result_type"
                             android:src="@drawable/ic_row_tag" />
                     </LinearLayout>
 
@@ -182,7 +182,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="SCAN TYPE"
+                            android:text="@string/staff_transaction_result_scan_type"
                             android:textColor="#9CA3AF"
                             android:textSize="11sp"
                             android:textStyle="bold" />
@@ -220,7 +220,7 @@
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
-                            android:contentDescription="Attendee"
+                            android:contentDescription="@string/common_attendee"
                             android:src="@drawable/ic_row_user"
                             app:tint="#4F46E5" />
                     </LinearLayout>
@@ -235,7 +235,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="ATTENDEE"
+                            android:text="@string/staff_transaction_result_attendee"
                             android:textColor="#9CA3AF"
                             android:textSize="11sp"
                             android:textStyle="bold" />
@@ -272,7 +272,7 @@
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
-                            android:contentDescription="Time"
+                            android:contentDescription="@string/staff_transaction_result_time"
                             android:src="@drawable/ic_row_clock"
                             app:tint="#4F46E5"  />
                     </LinearLayout>
@@ -287,7 +287,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="SCANNED AT"
+                            android:text="@string/staff_transaction_result_scanned_at"
                             android:textColor="#9CA3AF"
                             android:textSize="11sp"
                             android:textStyle="bold" />
@@ -326,7 +326,7 @@
                     <ImageView
                         android:layout_width="20dp"
                         android:layout_height="20dp"
-                        android:contentDescription="Points"
+                        android:contentDescription="@string/staff_transaction_result_points"
                         android:src="@drawable/ic_row_star" />
                 </LinearLayout>
 
@@ -340,7 +340,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="POINTS AWARDED"
+                        android:text="@string/staff_transaction_result_points_awarded"
                         android:textColor="#C7D2FE"
                         android:textSize="10sp"
                         android:textStyle="bold" />
@@ -377,7 +377,7 @@
                     <ImageView
                         android:layout_width="20dp"
                         android:layout_height="20dp"
-                        android:contentDescription="Reason"
+                        android:contentDescription="@string/common_reason"
                         android:src="@drawable/ic_row_alert" />
                 </LinearLayout>
 
@@ -391,7 +391,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="REJECTION REASON"
+                        android:text="@string/common_rejection_reason"
                         android:textColor="#F87171"
                         android:textSize="11sp"
                         android:textStyle="bold" />
@@ -412,7 +412,7 @@
                 android:layout_height="54dp"
                 android:layout_marginTop="20dp"
                 android:background="@drawable/bg_staff_outline_button"
-                android:text="View Attendee Details"
+                android:text="@string/common_view_attendee_details"
                 android:textAllCaps="false"
                 android:textColor="@color/eventqr_indigo"
                 android:textSize="16sp"
@@ -428,7 +428,7 @@
                 android:layout_height="54dp"
                 android:layout_marginTop="12dp"
                 android:background="@drawable/bg_primary_button"
-                android:text="Scan Next Attendee"
+                android:text="@string/staff_transaction_result_scan_next_attendee"
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textSize="16sp"
@@ -446,7 +446,7 @@
                 android:layout_height="54dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="12dp"
-                android:text="Back to Dashboard"
+                android:text="@string/common_back_to_dashboard"
                 android:textAllCaps="false"
                 android:textColor="@color/eventqr_indigo"
                 android:textSize="15sp"

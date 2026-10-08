@@ -20,7 +20,7 @@
             android:id="@+id/textAdminPortalTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Admin Portal"
+            android:text="@string/admin_dashboard_admin_portal"
             android:textColor="#E6E9FF"
             android:textSize="16sp" />
 
@@ -35,7 +35,7 @@
                 android:id="@+id/textAdminName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Admin User"
+                android:text="@string/admin_dashboard_admin_user"
                 android:textColor="@android:color/white"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -57,7 +57,7 @@
                 android:background="@drawable/bg_portal_chip"
                 android:paddingHorizontal="10dp"
                 android:paddingVertical="4dp"
-                android:text="Admin ▾"
+                android:text="@string/admin_dashboard_admin"
                 android:textColor="@android:color/white"
                 android:textSize="11sp"
                 android:textStyle="bold" />
@@ -86,7 +86,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
                 android:layout_weight="1"
-                android:text="1 event request pending review"
+                android:text="@string/admin_dashboard_1_event_request_pending_review"
                 android:textColor="#FFE4E6"
                 android:textSize="14sp"
                 android:textStyle="bold" />
@@ -176,7 +176,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Pending Requests"
+                        android:text="@string/admin_dashboard_pending_requests"
                         android:textColor="#6B7280"
                         android:textSize="14sp" />
                 </LinearLayout>
@@ -219,7 +219,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Total Accounts"
+                        android:text="@string/admin_dashboard_total_accounts"
                         android:textColor="#6B7280"
                         android:textSize="14sp" />
                 </LinearLayout>
@@ -265,7 +265,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Active Events"
+                        android:text="@string/common_active_events"
                         android:textColor="#6B7280"
                         android:textSize="14sp" />
                 </LinearLayout>
@@ -308,7 +308,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Audit Logs"
+                        android:text="@string/admin_dashboard_audit_logs"
                         android:textColor="#6B7280"
                         android:textSize="14sp" />
                 </LinearLayout>

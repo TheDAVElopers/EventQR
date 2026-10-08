@@ -103,7 +103,7 @@ class MyEventRequestsActivity : AppCompatActivity() {
         if (requests.isEmpty()) {
             txtEmpty.visibility = View.VISIBLE
             recyclerRequests.visibility = View.GONE
-            txtEmpty.text = "No event requests yet."
+            txtEmpty.text = getString(R.string.my_event_requests_no_event_requests_yet)
             adapter.submitItems(emptyList())
             return
         }

@@ -33,15 +33,71 @@ class LoginActivityTest {
         Robolectric.buildActivity(LoginActivity::class.java).create().get()
 
     @Test
+    fun passwordField_isCappedAt128Characters() {
+        val activity = buildActivity()
+        val passwordInput = activity.findViewById<EditText>(R.id.edtPassword)
+
+        passwordInput.setText("a".repeat(200))
+
+        // Matches the backend's @Size(max = 128) on the login password.
+        assertEquals(128, passwordInput.text.length)
+    }
+
+    @Test
+    fun noRememberedEmail_leavesEmailEmptyAndCheckboxUnchecked() {
+        val activity = buildActivity()
+
+        assertEquals("", activity.findViewById<EditText>(R.id.edtEmail).text.toString())
+        assertFalse(activity.findViewById<android.widget.CheckBox>(R.id.chkRememberMe).isChecked)
+    }
+
+    @Test
+    fun rememberedEmail_isPrefilledAndTheBoxIsChecked() {
+        com.thedavelopers.eventqr.core.session.RememberedEmailStore
+            .create(androidx.test.core.app.ApplicationProvider.getApplicationContext())
+            .save("saved@example.com")
+
+        val activity = buildActivity()
+
+        assertEquals("saved@example.com", activity.findViewById<EditText>(R.id.edtEmail).text.toString())
+        assertTrue(activity.findViewById<android.widget.CheckBox>(R.id.chkRememberMe).isChecked)
+        assertEquals("", activity.findViewById<EditText>(R.id.edtPassword).text.toString())
+    }
+
+    @Test
+    fun successfulLoginWithTheBoxChecked_savesTheEmailOnly() {
+        val activity = buildActivity()
+        activity.findViewById<android.widget.CheckBox>(R.id.chkRememberMe).isChecked = true
+
+        activity.onLoginSucceeded("user@example.com")
+
+        val store = com.thedavelopers.eventqr.core.session.RememberedEmailStore
+            .create(androidx.test.core.app.ApplicationProvider.getApplicationContext())
+        assertEquals("user@example.com", store.get())
+    }
+
+    @Test
+    fun successfulLoginWithTheBoxUnchecked_forgetsAPreviouslyRememberedEmail() {
+        val context = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
+        com.thedavelopers.eventqr.core.session.RememberedEmailStore.create(context).save("old@example.com")
+        val activity = buildActivity()
+        activity.findViewById<android.widget.CheckBox>(R.id.chkRememberMe).isChecked = false
+
+        activity.onLoginSucceeded("user@example.com")
+
+        assertNull(com.thedavelopers.eventqr.core.session.RememberedEmailStore.create(context).get())
+    }
+
+    @Test
     fun clickSignIn_invalidCredentials_showsFieldErrors() {
         val activity = buildActivity()
         activity.findViewById<EditText>(R.id.edtEmail).setText("bad-email")
-        activity.findViewById<EditText>(R.id.edtPassword).setText("123")
+        activity.findViewById<EditText>(R.id.edtPassword).setText("")
 
         activity.findViewById<android.view.View>(R.id.btnSignIn).performClick()
 
         assertEquals("Enter a valid email address", activity.findViewById<EditText>(R.id.edtEmail).error.toString())
-        assertEquals("Password must be at least 8 characters", activity.findViewById<EditText>(R.id.edtPassword).error.toString())
+        assertEquals("Enter your password", activity.findViewById<EditText>(R.id.edtPassword).error.toString())
         // No navigation on invalid input.
         assertNull(shadowOf(activity).peekNextStartedActivity())
         assertEquals("Sign In", activity.findViewById<android.widget.Button>(R.id.btnSignIn).text.toString())
@@ -51,12 +107,12 @@ class LoginActivityTest {
     fun clickSignIn_validEmailInvalidPassword_clearsEmailErrorOnly() {
         val activity = buildActivity()
         activity.findViewById<EditText>(R.id.edtEmail).setText("user@example.com")
-        activity.findViewById<EditText>(R.id.edtPassword).setText("123")
+        activity.findViewById<EditText>(R.id.edtPassword).setText("")
 
         activity.findViewById<android.view.View>(R.id.btnSignIn).performClick()
 
         assertNull(activity.findViewById<EditText>(R.id.edtEmail).error)
-        assertEquals("Password must be at least 8 characters", activity.findViewById<EditText>(R.id.edtPassword).error.toString())
+        assertEquals("Enter your password", activity.findViewById<EditText>(R.id.edtPassword).error.toString())
     }
 
     @Test
