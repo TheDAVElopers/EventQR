@@ -125,7 +125,9 @@ class SearchUserAccountActivity : AppCompatActivity() {
             assignButtonState()
 
             if (users.isEmpty()) {
-                emptyStateText.text = source.message ?: getString(R.string.staff_search_empty)
+                // A blank field is "nothing searched yet" (the backend returns no users), not "user not found".
+                emptyStateText.text = source.message
+                    ?: getString(if (query.isBlank()) R.string.staff_search_prompt else R.string.staff_search_empty)
                 emptyStateText.visibility = View.VISIBLE
             } else {
                 emptyStateText.visibility = View.GONE

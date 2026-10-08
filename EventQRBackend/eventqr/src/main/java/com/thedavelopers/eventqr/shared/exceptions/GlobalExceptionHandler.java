@@ -111,6 +111,13 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "Malformed or missing request parameter", request);
     }
 
+    @ExceptionHandler({
+            org.springframework.web.servlet.resource.NoResourceFoundException.class,
+            org.springframework.web.servlet.NoHandlerFoundException.class})
+    public ResponseEntity<ErrorResponse> handleUnknownRoute(Exception exception, HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, "Resource not found", request);
+    }
+
     @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ErrorResponse> handleMethodNotAllowed(Exception exception, HttpServletRequest request) {
         return build(HttpStatus.METHOD_NOT_ALLOWED, "Method not allowed", request);

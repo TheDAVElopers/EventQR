@@ -8,6 +8,7 @@
     <string name="staff_search_title">Search User Account</string>
     <string name="staff_search_hint">Search by name or email...</string>
     <string name="staff_search_empty">User not found.</string>
+    <string name="staff_search_prompt">Type a name or email to find a user.</string>
     <string name="staff_assign_button">Assign as Staff</string>
     <string name="staff_assigning">Assigning...</string>
     <string name="staff_assigned_title">Staff Assigned!</string>

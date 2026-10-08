@@ -55,6 +55,11 @@ class GlobalExceptionHandlerClientErrorTest {
     }
 
     @Test
+    void unknownRouteIsNotFound() throws Exception {
+        mvc.perform(get("/does/not/exist")).andExpect(status().isNotFound());
+    }
+
+    @Test
     void wrongMethodIsMethodNotAllowed() throws Exception {
         mvc.perform(post("/probe/" + UUID.randomUUID())).andExpect(status().isMethodNotAllowed());
     }
