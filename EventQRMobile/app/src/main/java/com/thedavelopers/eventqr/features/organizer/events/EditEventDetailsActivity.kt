@@ -550,7 +550,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
 
     private fun applyEditLock(event: OrganizerEventDto) {
         val reason = getString(if (event.status.equals("Active", ignoreCase = true)) R.string.edit_event_details_ongoing else R.string.edit_event_details_completed)
-        statusView.text = "Editing locked — event is $reason"
+        statusView.text = getString(R.string.edit_event_details_editing_locked, reason)
         statusView.setTextColor(ERROR)
         screenTitle = VIEW_LABEL
         updateHeaderTitle(VIEW_LABEL)

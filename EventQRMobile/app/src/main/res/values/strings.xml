@@ -540,6 +540,7 @@
     <string name="search_attendees_no_attendees_match_your_search">No attendees match your search.</string>
     <string name="edit_event_details_ongoing">ongoing</string>
     <string name="edit_event_details_completed">completed</string>
+    <string name="edit_event_details_editing_locked">Editing locked — event is %1$s</string>
     <string name="event_management_hub_edit_event_details">Edit Event Details</string>
     <string name="event_management_hub_view_event_details">View Event Details</string>
     <string name="report_preview_export_combined_report">Export Combined Report</string>
