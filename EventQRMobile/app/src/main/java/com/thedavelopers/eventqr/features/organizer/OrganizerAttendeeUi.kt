@@ -14,12 +14,13 @@ internal fun OrganizerMvpAttendee.statusBucket(): String {
     val registration = registrationStatus.trim()
     val source = current.ifBlank { registration }
     return when {
-        source.equals("Checked In", ignoreCase = true) -> "Checked In"
-        source.equals("Exited", ignoreCase = true) -> "Exited"
-        source.equals("Cancelled", ignoreCase = true) || source.equals("Canceled", ignoreCase = true) -> "Cancelled"
+        source.equals("Checked In", ignoreCase = true) || source.equals("ENTERED", ignoreCase = true) -> "Checked In"
+        source.equals("Exited", ignoreCase = true) || source.equals("EXITED", ignoreCase = true) -> "Exited"
+        source.equals("Cancelled", ignoreCase = true) || source.equals("Canceled", ignoreCase = true) ||
+            source.equals("CANCELLED", ignoreCase = true) -> "Cancelled"
         source.contains("no-show", ignoreCase = true) || source.contains("no show", ignoreCase = true) ||
             source.equals("NO_SHOW", ignoreCase = true) -> "No Show"
-        source.equals("Registered", ignoreCase = true) -> "Registered"
+        source.equals("Registered", ignoreCase = true) || source.equals("REGISTERED", ignoreCase = true) -> "Registered"
         source.isNotBlank() -> source
         else -> "Registered"
     }
@@ -43,15 +44,24 @@ internal fun OrganizerMvpAttendee.statusPalette(context: Context): Pair<Int, Int
     return context.getColor(bgRes) to context.getColor(textRes)
 }
 
-internal fun transactionTypeLabel(value: String): String = when (value.trim().uppercase(Locale.ENGLISH)) {
-    "ENTRY" -> "Entry"
-    "ATTENDANCE" -> "Attendance"
-    "BENEFIT_CLAIM" -> "Benefit Claim"
-    "BOOTH_VISIT", "SESSION_VISIT" -> "Booth/Session Visit"
-    "REWARD_REDEMPTION_SCAN", "REWARD_REDEMPTION" -> "Reward Redemption"
-    "EXIT" -> "Exit"
-    "ID_PRINT" -> "ID Printing"
-    "REGISTRATION", "REGISTRATION_LOOKUP" -> "Registration"
+internal fun OrganizerMvpAttendee.statusLabel(context: Context): String = when (statusBucket().trim().uppercase(Locale.ENGLISH)) {
+    "CHECKED IN", "ENTERED" -> context.getString(R.string.common_checked_in)
+    "EXITED" -> context.getString(R.string.search_attendees_exited)
+    "CANCELLED", "CANCELED" -> context.getString(R.string.search_attendees_cancelled)
+    "NO SHOW", "NO_SHOW" -> context.getString(R.string.common_no_show)
+    "REGISTERED" -> context.getString(R.string.common_registered)
+    else -> statusBucket()
+}
+
+internal fun transactionTypeLabel(context: Context, value: String): String = when (value.trim().uppercase(Locale.ENGLISH)) {
+    "ENTRY" -> context.getString(R.string.txn_type_entry)
+    "ATTENDANCE" -> context.getString(R.string.txn_type_attendance)
+    "BENEFIT_CLAIM" -> context.getString(R.string.txn_type_benefit_claim)
+    "BOOTH_VISIT", "SESSION_VISIT" -> context.getString(R.string.txn_type_booth_session_visit)
+    "REWARD_REDEMPTION_SCAN", "REWARD_REDEMPTION" -> context.getString(R.string.txn_type_reward_redemption)
+    "EXIT" -> context.getString(R.string.txn_type_exit)
+    "ID_PRINT" -> context.getString(R.string.txn_type_id_printing)
+    "REGISTRATION", "REGISTRATION_LOOKUP" -> context.getString(R.string.txn_type_registration)
     else -> value
 }
 
@@ -63,6 +73,7 @@ internal fun OrganizerMvpAttendee.matchesOrganizerAttendeeQuery(query: String, f
         "Checked In" -> statusBucket().equals("Checked In", ignoreCase = true)
         "Exited" -> statusBucket().equals("Exited", ignoreCase = true)
         "No Show" -> statusBucket().equals("No Show", ignoreCase = true)
+        "Cancelled" -> statusBucket().equals("Cancelled", ignoreCase = true)
         else -> statusBucket().equals(filter, ignoreCase = true) || registrationStatus.equals(filter, ignoreCase = true)
     }
     if (!matchesFilter) return false

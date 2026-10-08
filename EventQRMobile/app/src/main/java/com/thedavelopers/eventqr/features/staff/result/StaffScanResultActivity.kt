@@ -70,6 +70,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
             isValid = isValid,
             qrActive = intent.getBooleanExtra(StaffScreenExtras.EXTRA_QR_ACTIVE, true),
             registrationStatus = intent.getStringExtra(StaffScreenExtras.EXTRA_REGISTRATION_STATUS),
+            eligible = intent.getBooleanExtra(StaffScreenExtras.EXTRA_ELIGIBLE, true),
         )
         bindStaticFields(isValid)
         applyActionLabels()
@@ -113,7 +114,11 @@ open class StaffScanResultActivity : AppCompatActivity() {
             
             findViewById<TextView>(R.id.txtScanResultAttendeeName).text = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_NAME).orUnknown()
             findViewById<TextView>(R.id.txtScanResultAttendeeEmail).text = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_EMAIL).orUnknown()
-            findViewById<TextView>(R.id.txtScanResultRegistrationStatus).text = intent.getStringExtra(StaffScreenExtras.EXTRA_REGISTRATION_STATUS).orUnknown()
+            findViewById<TextView>(R.id.txtScanResultRegistrationStatus).text =
+                intent.getStringExtra(StaffScreenExtras.EXTRA_REGISTRATION_STATUS)
+                    ?.let { raw -> runCatching { com.thedavelopers.eventqr.core.api.dto.RegistrationStatus.valueOf(raw.trim().uppercase()) }.getOrNull() }
+                    ?.let { com.thedavelopers.eventqr.features.registrations.RegistrationStatusBadgeStyler.displayLabel(it) }
+                    ?: intent.getStringExtra(StaffScreenExtras.EXTRA_REGISTRATION_STATUS).orUnknown()
             findViewById<TextView>(R.id.txtScanResultStatusHint).text =
                 intent.getStringExtra(StaffScreenExtras.EXTRA_MESSAGE)?.takeIf { it.isNotBlank() }
                     ?: getString(R.string.staff_scan_result_qr_active_hint)
@@ -127,6 +132,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
             findViewById<Button>(R.id.btnContinueTransaction).visibility = View.VISIBLE
             findViewById<Button>(R.id.btnViewAttendeeDetails).visibility = View.VISIBLE
             if (scanState == ScanResultState.INACTIVE) bindInactiveState()
+            if (scanState == ScanResultState.NOT_ELIGIBLE) bindNotEligibleState()
         } else {
             findViewById<View>(R.id.headerApproved).visibility = View.GONE
             findViewById<View>(R.id.headerRejected).visibility = View.VISIBLE
@@ -149,6 +155,20 @@ open class StaffScanResultActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.txtScanResultReason).text =
             intent.getStringExtra(StaffScreenExtras.EXTRA_MESSAGE)?.takeIf { it.isNotBlank() }
                 ?: getString(R.string.staff_scan_result_qr_inactive_reason)
+        findViewById<View>(R.id.layoutRejectedReason).visibility = View.VISIBLE
+        findViewById<View>(R.id.cardVerificationDetails).visibility = View.GONE
+        findViewById<Button>(R.id.btnContinueTransaction).visibility = View.GONE
+    }
+
+    /** Active QR, but the backend says this scan would be rejected: show the backend reason, make logging impossible. */
+    private fun bindNotEligibleState() {
+        findViewById<View>(R.id.headerApproved).visibility = View.GONE
+        findViewById<View>(R.id.headerRejected).visibility = View.VISIBLE
+        findViewById<TextView>(R.id.txtScanResultStateRejected).text = getString(R.string.staff_scan_result_not_allowed)
+        findViewById<TextView>(R.id.txtScanResultStatusHintRejected).text = getString(R.string.staff_scan_result_not_allowed_hint)
+        findViewById<TextView>(R.id.txtScanResultReason).text =
+            intent.getStringExtra(StaffScreenExtras.EXTRA_MESSAGE)?.takeIf { it.isNotBlank() }
+                ?: getString(R.string.staff_scan_result_not_allowed_reason)
         findViewById<View>(R.id.layoutRejectedReason).visibility = View.VISIBLE
         findViewById<View>(R.id.cardVerificationDetails).visibility = View.GONE
         findViewById<Button>(R.id.btnContinueTransaction).visibility = View.GONE

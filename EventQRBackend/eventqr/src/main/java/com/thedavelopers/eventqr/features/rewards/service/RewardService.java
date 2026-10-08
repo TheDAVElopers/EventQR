@@ -36,6 +36,7 @@ import com.thedavelopers.eventqr.shared.constants.RewardStatus;
 import com.thedavelopers.eventqr.shared.constants.ScanPurposeCode;
 import com.thedavelopers.eventqr.shared.constants.TransactionResult;
 import com.thedavelopers.eventqr.shared.constants.TransactionType;
+import com.thedavelopers.eventqr.shared.interfaces.AttendeeDirectoryPort;
 import com.thedavelopers.eventqr.shared.interfaces.TransactionRecordedEvent;
 import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
 import com.thedavelopers.eventqr.shared.exceptions.ConflictException;
@@ -52,13 +53,19 @@ public class RewardService {
     private final RewardRedemptionRepository rewardRedemptionRepository;
     private final EventRepository eventRepository;
     private final ScanPurposeRepository scanPurposeRepository;
+    private final AttendeeDirectoryPort attendeeDirectoryPort;
+    private final DuplicateRewardClaimChecker duplicateRewardClaimChecker;
 
     public RewardService(AttendeePointBalanceRepository attendeePointBalanceRepository,
                          PointTransactionRepository pointTransactionRepository,
                          RewardRepository rewardRepository,
                          RewardRedemptionRepository rewardRedemptionRepository,
                          EventRepository eventRepository,
-                         ScanPurposeRepository scanPurposeRepository, NotificationService notificationService) {
+                         ScanPurposeRepository scanPurposeRepository, NotificationService notificationService,
+                         AttendeeDirectoryPort attendeeDirectoryPort,
+                         DuplicateRewardClaimChecker duplicateRewardClaimChecker) {
+        this.attendeeDirectoryPort = attendeeDirectoryPort;
+        this.duplicateRewardClaimChecker = duplicateRewardClaimChecker;
         this.notificationService = notificationService;
         this.attendeePointBalanceRepository = attendeePointBalanceRepository;
         this.pointTransactionRepository = pointTransactionRepository;
@@ -68,7 +75,7 @@ public class RewardService {
         this.scanPurposeRepository = scanPurposeRepository;
     }
 
-    @CacheEvict(cacheNames = {"scan-purposes", "transaction-rules"}, key = "#request.eventId()")
+    @CacheEvict(cacheNames = {"scan-purposes"}, allEntries = true)
     public RewardResponse saveReward(RewardRequest request) {
         Reward reward = new Reward();
         reward.setEventId(request.eventId());
@@ -101,7 +108,7 @@ public class RewardService {
         scanPurposeRepository.save(scanPurpose);
     }
 
-    @CacheEvict(cacheNames = {"scan-purposes", "transaction-rules"}, key = "#eventId")
+    @CacheEvict(cacheNames = {"scan-purposes"}, allEntries = true)
     public RewardResponse updateReward(UUID eventId, UUID rewardId, RewardRequest request) {
         // Row lock: serialises with redemptions (both paths lock the reward first) so the
         // total - claimed computation below cannot race a concurrent claim and lose its decrement.
@@ -122,7 +129,7 @@ public class RewardService {
         return toResponse(rewardRepository.save(reward), claimed);
     }
 
-    @CacheEvict(cacheNames = {"scan-purposes", "transaction-rules"}, key = "#eventId")
+    @CacheEvict(cacheNames = {"scan-purposes"}, allEntries = true)
     public void deleteReward(UUID eventId, UUID rewardId) {
         Reward reward = rewardRepository.findById(rewardId)
                 .orElseThrow(() -> new ResourceNotFoundException("Reward not found"));
@@ -164,7 +171,7 @@ public class RewardService {
         pointTransactionRepository.save(transaction);
         Event event = eventRepository.findById(eventId).orElse(null);
         if (event != null && notificationService != null) {
-            notificationService.createPointsAdjustedNotification(eventId, event.getOrganizerUserId(), event.getTitle(), attendeeUserId != null ? attendeeUserId.toString() : "", points, reason == null ? "Points assigned" : reason, true);
+            notificationService.createPointsAdjustedNotification(eventId, event.getOrganizerUserId(), event.getTitle(), attendeeDisplayName(attendeeUserId), points, reason == null ? "Points assigned" : reason, true);
             if (attendeeUserId != null) {
                 notificationService.createPointsAdjustedForAttendeeNotification(eventId, attendeeUserId, event.getTitle(), points, reason, true);
             }
@@ -193,7 +200,7 @@ public class RewardService {
         pointTransactionRepository.save(transaction);
         Event event = eventRepository.findById(eventId).orElse(null);
         if (event != null && notificationService != null) {
-            notificationService.createPointsAdjustedNotification(eventId, event.getOrganizerUserId(), event.getTitle(), attendeeUserId != null ? attendeeUserId.toString() : "", points, reason == null ? "Points deducted" : reason, false);
+            notificationService.createPointsAdjustedNotification(eventId, event.getOrganizerUserId(), event.getTitle(), attendeeDisplayName(attendeeUserId), points, reason == null ? "Points deducted" : reason, false);
             if (attendeeUserId != null) {
                 notificationService.createPointsAdjustedForAttendeeNotification(eventId, attendeeUserId, event.getTitle(), points, reason, false);
             }
@@ -201,7 +208,22 @@ public class RewardService {
         return new PointBalanceResponse(balance.getEventId(), balance.getAttendeeUserId(), balance.getPointsBalance());
     }
 
+    private String attendeeDisplayName(UUID attendeeUserId) {
+        if (attendeeUserId == null || attendeeDirectoryPort == null) {
+            return "";
+        }
+        return attendeeDirectoryPort.findById(attendeeUserId)
+                .map(AttendeeDirectoryPort.AttendeeSnapshot::fullName)
+                .filter(name -> name != null && !name.isBlank())
+                .orElse("an attendee");
+    }
+
     public RewardRedemptionResponse redeem(RewardRedemptionRequest request) {
+        Event redeemEvent = eventRepository.findById(request.eventId())
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + request.eventId()));
+        if (!redeemEvent.isRewardsEnabled()) {
+            throw new ConflictException("Reward redemption is disabled for this event");
+        }
         Reward reward = rewardRepository.findByIdForUpdate(request.rewardId())
                 .orElseThrow(() -> new ResourceNotFoundException("Reward not found"));
         if (reward.getStatus() != RewardStatus.ACTIVE) {
@@ -214,12 +236,10 @@ public class RewardService {
         if (balance.getPointsBalance() < reward.getPointsRequired()) {
             throw new ConflictException("Not enough points to redeem reward");
         }
-        rewardRedemptionRepository.findByEventIdAndAttendeeUserIdAndRewardId(request.eventId(), request.attendeeUserId(), request.rewardId())
-                .ifPresent(existing -> {
-                    if (existing.getStatus() == RedemptionStatus.REDEEMED) {
-                        throw new ConflictException("Reward already redeemed by this attendee");
-                    }
-                });
+        if (duplicateRewardClaimChecker != null
+                && duplicateRewardClaimChecker.checkDuplicate(reward, request.attendeeUserId()) != null) {
+            throw new ConflictException("Reward already claimed. Duplicate claims are not allowed for this reward.");
+        }
 
         // Same atomic guarded decrement as RewardRedemptionService (NULL stock = unlimited).
         if (rewardRepository.decrementStockIfAvailable(reward.getId()) == 0) {
@@ -247,8 +267,8 @@ public class RewardService {
         transaction.setReason("Reward redemption");
         pointTransactionRepository.save(transaction);
 
-        Event event = eventRepository.findById(request.eventId()).orElse(null);
-        if (event != null && notificationService != null && request.attendeeUserId() != null) {
+        Event event = redeemEvent;
+        if (notificationService != null && request.attendeeUserId() != null) {
             notificationService.createRewardRedeemedNotification(request.eventId(), request.attendeeUserId(), event.getTitle(), reward.getName(), reward.getPointsRequired());
         }
 

@@ -60,13 +60,13 @@ class AdminAuditLogAdapter : RecyclerView.Adapter<AdminAuditLogAdapter.AdminAudi
                     background = R.drawable.bg_admin_role_badge_green
                     tint = 0xFF10B981.toInt()
                 }
-                normalized.contains("account") || normalized.contains("role") || normalized.contains("user") -> {
-                    background = R.drawable.bg_admin_role_badge_blue
-                    tint = 0xFF4F46E5.toInt()
-                }
                 normalized.contains("disable") || normalized.contains("delete") -> {
                     background = R.drawable.bg_admin_role_badge_pink
                     tint = 0xFFEF4444.toInt()
+                }
+                normalized.contains("account") || normalized.contains("role") || normalized.contains("user") -> {
+                    background = R.drawable.bg_admin_role_badge_blue
+                    tint = 0xFF4F46E5.toInt()
                 }
                 else -> {
                     background = R.drawable.bg_admin_role_badge_purple

@@ -249,13 +249,13 @@ internal fun AppCompatActivity.openOrganizerPage(target: Class<*>, eventId: Stri
     overridePendingTransition(0, 0)
 }
 
-internal fun AppCompatActivity.showMissingEventScreen(screenTitle: String, message: String = "Event ID is missing.") {
+internal fun AppCompatActivity.showMissingEventScreen(screenTitle: String, message: String = getString(R.string.organizer_event_id_missing)) {
     organizerShell(screenTitle, message, showBack = true)
         .addView(emptyState(
             iconRes = R.drawable.ic_calendar,
-            title = "No event selected",
-            subtext = "$message Open this screen from My Events or the event hub.",
-            actionLabel = "Open My Events",
+            title = getString(R.string.organizer_no_event_selected),
+            subtext = getString(R.string.organizer_no_event_selected_hint, message),
+            actionLabel = getString(R.string.organizer_open_my_events),
             onAction = { openOrganizerPage(com.thedavelopers.eventqr.features.organizer.events.ManageEventsActivity::class.java) },
         ))
 }
@@ -399,8 +399,8 @@ internal fun AppCompatActivity.organizerHeader(
         }
     }
     val defaultSub = when (selectedNav) {
-        NAV_REPORTS -> "View and generate event reports"
-        NAV_REWARDS -> "View and manage event rewards"
+        NAV_REPORTS -> getString(R.string.organizer_reports_subtitle)
+        NAV_REWARDS -> getString(R.string.organizer_rewards_subtitle)
         else -> null
     }
     return EventQrTabHeader(this).apply {

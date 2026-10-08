@@ -59,6 +59,20 @@ public class QrCredentialService implements QrCredentialPort {
     }
 
     @Override
+    public QrCredentialSnapshot reissueCredential(UUID eventId, UUID attendeeUserId, UUID registrationId, String attendeeEmail) {
+        QrCredential existing = qrCredentialRepository.findByRegistrationId(registrationId).orElse(null);
+        if (existing == null) {
+            return issueCredential(eventId, attendeeUserId, registrationId, attendeeEmail);
+        }
+        existing.setQrValue(generateUniqueQrValue());
+        existing.setDisplayStatus(QrDisplayStatus.PENDING);
+        existing.setDeliveryStatus(QrDeliveryStatus.QUEUED);
+        existing.setDownloaded(false);
+        existing.setActive(true);
+        return qrCredentialRepository.save(existing).toSnapshot();
+    }
+
+    @Override
     public Optional<QrCredentialSnapshot> findById(UUID qrCredentialId) {
         return qrCredentialRepository.findById(qrCredentialId).map(QrCredential::toSnapshot);
     }

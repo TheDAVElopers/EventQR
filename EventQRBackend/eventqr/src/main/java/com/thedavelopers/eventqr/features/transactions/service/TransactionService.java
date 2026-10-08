@@ -15,8 +15,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -59,6 +57,7 @@ public class TransactionService {
 
     private static final Logger log = LoggerFactory.getLogger(TransactionService.class);
     private static final String DEFAULT_METADATA = "{}";
+    public static final String REWARDS_DISABLED_MESSAGE = "Reward redemption is disabled for this event";
     /** Stable newest-first order: id breaks scannedAt ties so pages never overlap or skip rows. */
     private static final Sort NEWEST_FIRST = Sort.by(Sort.Order.desc("scannedAt"), Sort.Order.asc("id"));
     private static final java.util.Set<TransactionType> CHECK_IN_TYPES = EnumSet.of(TransactionType.ENTRY, TransactionType.ATTENDANCE);
@@ -108,12 +107,17 @@ public class TransactionService {
         if (eventSnapshot.status() == EventStatus.ENDED) {
             throw new ForbiddenException("Event has ended. Scanning is disabled.");
         }
+        if (eventSnapshot.status() == EventStatus.REJECTED || eventSnapshot.status() == EventStatus.CANCELLED) {
+            throw new ForbiddenException("Event is not available for scan transactions");
+        }
         var purpose = scanPurposePort.requireActive(request.scanPurposeId());
         if (!eventSnapshot.eventId().equals(purpose.eventId())) {
             throw new ForbiddenException("Scan purpose does not belong to the event");
         }
         TransactionRule rule = loadRule(request.eventId(), request.scanPurposeId());
         validateStaff(request.eventId(), request.staffUserId(), rule.isRequiresStaffAssignment());
+        boolean rewardScan = purpose.code() == ScanPurposeCode.REWARD_REDEMPTION_SCAN
+                || purpose.code() == ScanPurposeCode.REWARD_REDEMPTION;
 
         // Resolve QR credential — either by short Attendee ID or by raw QR value
         QrCredentialPort.QrCredentialSnapshot qrSnapshot;
@@ -134,10 +138,14 @@ public class TransactionService {
             }
             // Unlike the raw-QR path this lookup does not reject an inactive credential, so the response must
             // say so honestly: qrActive mirrors the credential and eligible is false (a scan would be rejected).
-            boolean eligible = qrSnapshot.active();
-            String message = eligible
-                    ? "Attendee ID #" + regNum + " verified"
-                    : "Attendee ID #" + regNum + " found, but the QR credential is inactive";
+            String blockReason = qrSnapshot.active()
+                    ? scanBlockReason(registration, rule, rewardScan, eventSnapshot.rewardsEnabled()) : null;
+            boolean eligible = qrSnapshot.active() && blockReason == null;
+            String message = !qrSnapshot.active()
+                    ? "Attendee ID #" + regNum + " found, but the QR credential is inactive"
+                    : blockReason != null
+                            ? "Attendee ID #" + regNum + " found, but a scan would be rejected: " + blockReason
+                            : "Attendee ID #" + regNum + " verified (scan not yet recorded)";
             return new ScanVerificationResponse(eventSnapshot.eventId(), registration.attendeeUserId(), registration.registrationId(),
                     qrSnapshot.qrCredentialId(), qrSnapshot.qrValue(), registration.attendeeName(), registration.attendeeEmail(),
                     registration.status(), purpose.scanPurposeId(), purpose.code(), qrSnapshot.active(),
@@ -163,13 +171,16 @@ public class TransactionService {
         if (isNotScannable(registration.status())) {
             throw new ForbiddenException("Registration is not active");
         }
+        String blockReason = scanBlockReason(registration, rule, rewardScan, eventSnapshot.rewardsEnabled());
         return new ScanVerificationResponse(eventSnapshot.eventId(), registration.attendeeUserId(), registration.registrationId(),
                 qrSnapshot.qrCredentialId(), qrSnapshot.qrValue(), registration.attendeeName(), registration.attendeeEmail(),
                 registration.status(), purpose.scanPurposeId(), purpose.code(), qrSnapshot.active(),
-                "QR credential verified", Instant.now(), true);
+                blockReason == null
+                        ? "QR credential verified (scan not yet recorded)"
+                        : "QR credential verified, but a scan would be rejected: " + blockReason,
+                Instant.now(), blockReason == null);
     }
 
-    @CacheEvict(cacheNames = "transaction-rules", key = "#request.eventId()")
     public TransactionResponse record(TransactionRequest request) {
         UUID clientRequestId = request.clientRequestId();
         if (clientRequestId == null) {
@@ -238,6 +249,12 @@ public class TransactionService {
         }
 
         boolean rewardRedemptionScan = purpose.code() == ScanPurposeCode.REWARD_REDEMPTION_SCAN;
+        if ((rewardRedemptionScan || purpose.code() == ScanPurposeCode.REWARD_REDEMPTION) && !eventSnapshot.rewardsEnabled()) {
+            return reject(eventSnapshot.eventId(), registration.attendeeUserId(), registration.registrationId(),
+                registration.qrCredentialId(), purpose.scanPurposeId(), request.staffUserId(),
+                REWARDS_DISABLED_MESSAGE,
+                transactionType, 0, request.notes(), request.qrValue(), purpose.code().name(), purpose.name());
+        }
         String duplicateReason = rewardRedemptionScan ? null : determineDuplicateReason(registration, rule);
         if (duplicateReason != null) {
             return reject(eventSnapshot.eventId(), registration.attendeeUserId(), registration.registrationId(),
@@ -264,6 +281,76 @@ public class TransactionService {
                 saved.getTransactionType(), saved.getTransactionResult(), saved.getPointsDelta(), saved.getStaffUserId(),
                 saved.getReason()));
         return toResponse(saved);
+    }
+
+    /** Reason a scan for this registration would currently be rejected, or null when it would be accepted. */
+    private String scanBlockReason(RegistrationLookupPort.RegistrationSnapshot registration, TransactionRule rule,
+                                   boolean rewardScan, boolean rewardsEnabled) {
+        if (isNotScannable(registration.status())) {
+            return "Registration is not active";
+        }
+        if (rewardScan) {
+            return rewardsEnabled ? null : REWARDS_DISABLED_MESSAGE;
+        }
+        return determineDuplicateReason(registration, rule);
+    }
+
+    /**
+     * Builds the user-facing outcome message from the recorded result so a rejected scan is never reported as
+     * recorded successfully. The label is e.g. "Entry".
+     */
+    public static String describeOutcome(String label, TransactionResponse response) {
+        if (response.transactionResult() == TransactionResult.APPROVED) {
+            return label + " recorded";
+        }
+        String reason = response.reason();
+        return label + " rejected" + (reason == null || reason.isBlank() ? "" : ": " + reason);
+    }
+
+    /**
+     * Staff-initiated manual rejection: always logs a REJECTED transaction with no points and no side effects
+     * on the registration. The reason is taken from the request notes.
+     */
+    public TransactionResponse rejectManually(TransactionRequest request) {
+        var eventSnapshot = eventLookupPort.requireEvent(request.eventId());
+        if (eventSnapshot.status() == EventStatus.ENDED) {
+            throw new ForbiddenException("Event has ended. Scanning is disabled.");
+        }
+        if (eventSnapshot.status() == EventStatus.REJECTED || eventSnapshot.status() == EventStatus.CANCELLED) {
+            throw new ForbiddenException("Event is not available for scan transactions");
+        }
+        var purpose = scanPurposePort.requireActive(request.scanPurposeId());
+        if (!eventSnapshot.eventId().equals(purpose.eventId())) {
+            throw new ForbiddenException("Scan purpose does not belong to the event");
+        }
+        TransactionRule rule = loadRule(request.eventId(), request.scanPurposeId());
+        validateStaff(request.eventId(), request.staffUserId(), rule.isRequiresStaffAssignment());
+        if (request.qrValue() == null || request.qrValue().isBlank()) {
+            throw new BadRequestException("QR value is required to reject a scan");
+        }
+        var qrSnapshot = qrCredentialPort.findByQrValue(request.qrValue())
+                .orElseThrow(() -> new ResourceNotFoundException("Invalid QR credential"));
+        if (!eventSnapshot.eventId().equals(qrSnapshot.eventId())) {
+            throw new ForbiddenException("Wrong event QR");
+        }
+        String notes = sanitizeNotes(request.notes());
+        String reason = notes == null
+                ? "Rejected manually by staff"
+                : "Rejected manually by staff: " + notes;
+        return reject(eventSnapshot.eventId(), qrSnapshot.attendeeUserId(), qrSnapshot.registrationId(),
+                qrSnapshot.qrCredentialId(), purpose.scanPurposeId(), request.staffUserId(), reason,
+                resolveTransactionType(purpose.code().name()), 0, notes, request.qrValue(),
+                purpose.code().name(), purpose.name());
+    }
+
+    private static final int MAX_NOTES_LENGTH = 500;
+
+    /** Strips control characters, trims, and caps length; returns null when nothing remains. */
+    static String sanitizeNotes(String notes) {
+        if (notes == null) return null;
+        String cleaned = notes.replaceAll("\\p{Cntrl}", " ").trim();
+        if (cleaned.length() > MAX_NOTES_LENGTH) cleaned = cleaned.substring(0, MAX_NOTES_LENGTH);
+        return cleaned.isEmpty() ? null : cleaned;
     }
 
     private static boolean isNotScannable(RegistrationStatus status) {
@@ -411,7 +498,7 @@ public class TransactionService {
         return toResponse(log);
     }
 
-    @Cacheable(cacheNames = "transaction-rules", key = "#eventId + ':' + #scanPurposeId")
+    // Not cached: invoked via self-call, so a proxy-based @Cacheable would never apply (and must not serve stale rules).
     public TransactionRule loadRule(UUID eventId, UUID scanPurposeId) {
         return transactionRuleRepository.findByEventIdAndScanPurposeId(eventId, scanPurposeId)
                 .orElseGet(() -> defaultRule(eventId, scanPurposeId));
@@ -463,6 +550,7 @@ public class TransactionService {
         if (!rule.isAllowDuplicate()) {
             return "Duplicate scan is not allowed for this scan purpose";
         }
+        // maxUsesPerRegistration <= 0 means unlimited uses
         if (rule.getMaxUsesPerRegistration() > 0 && approvedUses >= rule.getMaxUsesPerRegistration()) {
             return "Scan limit reached for this scan purpose";
         }

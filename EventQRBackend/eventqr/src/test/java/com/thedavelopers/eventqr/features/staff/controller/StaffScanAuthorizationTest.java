@@ -68,6 +68,14 @@ class StaffScanAuthorizationTest {
                                 rewardService, eventStaffAssignmentRepository, scanPurposeService, jwtService))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
+        org.mockito.Mockito.lenient().when(scanPurposeService.requireActive(any())).thenReturn(
+                new com.thedavelopers.eventqr.shared.interfaces.ScanPurposePort.ScanPurposeSnapshot(UUID.randomUUID(), eventId,
+                        "Entry", com.thedavelopers.eventqr.shared.constants.ScanPurposeCode.ENTRY, true, false, null));
+        org.mockito.Mockito.lenient().when(transactionService.record(any())).thenReturn(
+                new com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse(UUID.randomUUID(), eventId, null,
+                        UUID.randomUUID(), null, UUID.randomUUID(), null, UUID.randomUUID(), UUID.randomUUID(), null,
+                        com.thedavelopers.eventqr.shared.constants.TransactionType.ENTRY,
+                        com.thedavelopers.eventqr.shared.constants.TransactionResult.APPROVED, 0, null, java.time.Instant.now()));
     }
 
     // --- helpers -----------------------------------------------------------
@@ -183,6 +191,31 @@ class StaffScanAuthorizationTest {
         actingAs(callerId, AccountRole.ADMIN);
         eventStatus(EventStatus.ENDED, UUID.randomUUID());
         postEntry(403);
+    }
+
+    @Test
+    void scanEntry_scanPurposeBelongsToOtherEvent_isForbidden() throws Exception {
+        actingAs(callerId, AccountRole.STAFF);
+        eventStatus(EventStatus.ACTIVE, UUID.randomUUID());
+        activeAssignment(true);
+        UUID otherEventId = UUID.randomUUID();
+        given(scanPurposeService.requireActive(any())).willReturn(
+                new com.thedavelopers.eventqr.shared.interfaces.ScanPurposePort.ScanPurposeSnapshot(UUID.randomUUID(), otherEventId,
+                        "Entry", com.thedavelopers.eventqr.shared.constants.ScanPurposeCode.ENTRY, true, false, null));
+
+        postEntry(403);
+    }
+
+    @Test
+    void scanEntry_scanPurposeCodeMismatchedRoute_isBadRequest() throws Exception {
+        actingAs(callerId, AccountRole.STAFF);
+        eventStatus(EventStatus.ACTIVE, UUID.randomUUID());
+        activeAssignment(true);
+        given(scanPurposeService.requireActive(any())).willReturn(
+                new com.thedavelopers.eventqr.shared.interfaces.ScanPurposePort.ScanPurposeSnapshot(UUID.randomUUID(), eventId,
+                        "Exit", com.thedavelopers.eventqr.shared.constants.ScanPurposeCode.EXIT, true, false, null));
+
+        postEntry(400);
     }
 
     // --- assignment-guarded read endpoint -----------------------------------

@@ -32,23 +32,23 @@ open class TransactionRulesActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         repository = OrganizerRepository(this)
-        val eventId = intentEventId() ?: return showMissingEventScreen("Transaction Rules")
+        val eventId = intentEventId() ?: return showMissingEventScreen(getString(R.string.transaction_rules_title))
         lifecycleScope.launch {
             selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
                 ?: run {
-                    showMissingEventScreen("Transaction Rules")
+                    showMissingEventScreen(getString(R.string.transaction_rules_title))
                     return@launch
                 }
 
             Log.d(TAG, "TransactionRulesActivity started for eventId: $eventId")
-            content = organizerShell("Transaction Rules", showBack = true)
+            content = organizerShell(getString(R.string.transaction_rules_title), showBack = true)
             loadData()
         }
     }
 
     private fun loadData() {
         content.removeAllViews()
-        content.addView(loadingState("Loading transaction rules..."))
+        content.addView(loadingState(getString(R.string.transaction_rules_loading)))
 
         MainScope().launch {
             // Every saved purpose can have its own rule; only persisted purposes (with an id) can be edited.
@@ -113,7 +113,7 @@ open class TransactionRulesActivity : AppCompatActivity() {
 
         // Card 1: Duplicate Prevention
         val card1 = card(16).apply {
-            addView(text("Duplicate Prevention", 17, true).apply { setPadding(0, 0, 0, dp(8)) })
+            addView(text(getString(R.string.transaction_rules_duplicate_prevention), 17, true).apply { setPadding(0, 0, 0, dp(8)) })
         }
 
         val allowDuplicateToggle = ruleToggle(
@@ -136,16 +136,19 @@ open class TransactionRulesActivity : AppCompatActivity() {
 
         // Card 2: Scan Limits
         val card2 = card(16).apply {
-            addView(text("Scan Limits", 17, true).apply { setPadding(0, 0, 0, dp(8)) })
+            addView(text(getString(R.string.transaction_rules_scan_limits), 17, true).apply { setPadding(0, 0, 0, dp(8)) })
         }
 
         val cooldownInput = labeledInput(
-            "Duplicate Cooldown (minutes)",
+            getString(R.string.transaction_rules_cooldown_label),
             rule.duplicateWindowMinutes.toString(),
             hint = "60",
             inputType = InputType.TYPE_CLASS_NUMBER
         ) { }
         card2.addView(cooldownInput)
+        card2.addView(text(getString(R.string.transaction_rules_cooldown_helper), 12, false, MUTED).apply {
+            setPadding(0, dp(6), 0, dp(10))
+        })
 
         val maxScansInput = labeledInput(
             getString(R.string.transaction_rules_max_scans_label),
@@ -205,7 +208,7 @@ open class TransactionRulesActivity : AppCompatActivity() {
                 Toast.makeText(this@TransactionRulesActivity, this@TransactionRulesActivity.getString(R.string.transaction_rules_rules_saved_successfully), Toast.LENGTH_SHORT).show()
                 loadData()
             } else {
-                Toast.makeText(this@TransactionRulesActivity, "Failed to save: ${result.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@TransactionRulesActivity, getString(R.string.transaction_rules_failed_save, result.message), Toast.LENGTH_SHORT).show()
             }
         }
     }

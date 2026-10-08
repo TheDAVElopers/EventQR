@@ -239,7 +239,7 @@ fun EventRequestDetailScreen(
                                     icon = Icons.Default.CalendarToday,
                                     label = "EVENT DURATION",
                                     value = listOf(request.startDateTime, request.endDateTime)
-                                        .joinToString(" - ") { it?.let(DateFormatters::formatEventDate) ?: "—" },
+                                        .joinToString(" - ") { it?.let(DateFormatters::formatEventDateTime) ?: "—" },
                                 )
 
                                 if (request.registrationStartDateTime != null || request.registrationEndDateTime != null) {
@@ -251,7 +251,7 @@ fun EventRequestDetailScreen(
                                         icon = Icons.Default.CalendarToday,
                                         label = "REGISTRATION WINDOW",
                                         value = listOf(request.registrationStartDateTime, request.registrationEndDateTime)
-                                            .joinToString(" - ") { it?.let(DateFormatters::formatEventDate) ?: "—" },
+                                            .joinToString(" - ") { it?.let(DateFormatters::formatEventDateTime) ?: "—" },
                                     )
                                 }
 

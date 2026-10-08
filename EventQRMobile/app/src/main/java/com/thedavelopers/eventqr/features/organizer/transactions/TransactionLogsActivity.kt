@@ -33,15 +33,15 @@ open class TransactionLogsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         repository = OrganizerRepository(this)
-        val eventId = intentEventId() ?: return showMissingEventScreen("Event Logs")
+        val eventId = intentEventId() ?: return showMissingEventScreen(getString(R.string.transaction_logs_title))
         lifecycleScope.launch {
             val selectableEvents = repository.getApprovedOrganizerEvents()
             selectedEvent = resolveSelectedEvent(selectableEvents, eventId) ?: run {
-                showMissingEventScreen("Event Logs")
+                showMissingEventScreen(getString(R.string.transaction_logs_title))
                 return@launch
             }
             attendeeId = intent.getStringExtra(SearchAttendeesActivity.EXTRA_ATTENDEE_ID)
-            val content = organizerShell("Event Logs", null, null, showBack = true)
+            val content = organizerShell(getString(R.string.transaction_logs_title), null, null, showBack = true)
 
             if (selectableEvents.isNotEmpty()) {
                 content.addView(buildEventSelectorCard(selectableEvents, selectedEvent.id) {
@@ -57,7 +57,7 @@ open class TransactionLogsActivity : AppCompatActivity() {
                 orientation = LinearLayout.VERTICAL
             }
             content.addView(list)
-            list.addView(loadingState("Loading event logs..."))
+            list.addView(loadingState(getString(R.string.transaction_logs_loading)))
             loadLogs()
         }
     }
@@ -73,14 +73,14 @@ open class TransactionLogsActivity : AppCompatActivity() {
         log.status.equals("Approved", true) || log.status.equals("Successful", true)
 
     private fun normalizedStatus(log: OrganizerMvpTransaction): String =
-        if (isApproved(log)) "Approved" else log.status
+        if (isApproved(log)) getString(R.string.common_approved) else log.status
 
     private fun render() {
         val allLogs = logsSource.data
         val logs = attendeeId?.let { id -> allLogs.filter { it.attendeeId == id } } ?: allLogs
         list.removeAllViews()
         if (allLogs.isEmpty() && logsSource.source == OrganizerMvpDataSource.ERROR) {
-            list.addView(errorState(logsSource.message ?: "Event logs could not be loaded.") { loadLogs() })
+            list.addView(errorState(logsSource.message ?: getString(R.string.transaction_logs_load_failed)) { loadLogs() })
             return
         }
         if (logs.isEmpty()) {
@@ -102,12 +102,12 @@ open class TransactionLogsActivity : AppCompatActivity() {
         onSelected: (OrganizerMvpEvent) -> Unit,
     ): View {
         val approvedEvents = events.approvedOnly()
-        val titles = approvedEvents.map { it.title.ifBlank { "Untitled Event" } }
+        val titles = approvedEvents.map { it.title.ifBlank { getString(R.string.common_untitled_event) } }
         var selectedIndex = approvedEvents.indexOfFirst { it.id == selectedEventId }.takeIf { it >= 0 } ?: 0
         if (approvedEvents.isEmpty()) selectedIndex = -1
 
         val eventTitleText = TextView(this).apply {
-            text = titles.getOrNull(selectedIndex) ?: "Select Event"
+            text = titles.getOrNull(selectedIndex) ?: getString(R.string.user_transaction_history_select_event)
             textSize = 14f
             setTypeface(typeface, Typeface.BOLD)
             setTextColor(Color.parseColor("#111827"))
@@ -116,7 +116,7 @@ open class TransactionLogsActivity : AppCompatActivity() {
         val arrow = ImageView(this).apply {
             setImageResource(R.drawable.ic_arrow_drop_down)
             setColorFilter(Color.parseColor("#8E8CAE"))
-            contentDescription = "Select event"
+            contentDescription = getString(R.string.transaction_logs_select_event_cd)
         }
 
         val card = LinearLayout(this).apply {
@@ -155,7 +155,7 @@ open class TransactionLogsActivity : AppCompatActivity() {
                 }
 
                 addView(TextView(this@TransactionLogsActivity).apply {
-                    text = "EVENT"
+                    text = getString(R.string.transaction_logs_event_caption)
                     textSize = 10f
                     setTypeface(typeface, Typeface.BOLD)
                     setTextColor(Color.parseColor("#8E8CAE"))
@@ -356,7 +356,7 @@ open class TransactionLogsActivity : AppCompatActivity() {
                 addView(topRow)
 
                 val subtitleText = TextView(this@TransactionLogsActivity).apply {
-                    text = "${log.type} • $status"
+                    text = getString(R.string.transaction_logs_type_status, transactionTypeLabel(this@TransactionLogsActivity, log.type), status)
                     textSize = 12f
                     setTypeface(typeface, Typeface.BOLD)
                     setTextColor(if (isRejected) Color.parseColor("#EF4444") else Color.parseColor("#10B981"))
@@ -374,20 +374,20 @@ open class TransactionLogsActivity : AppCompatActivity() {
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                     ).apply { topMargin = dp(6) }
 
-                    addView(detailRow(R.drawable.ic_calendar, "Event: ${log.eventTitle}"))
-                    addView(detailRow(R.drawable.ic_profile_person, "Attendee: ${log.attendeeEmail.ifBlank { "No email" }}"))
+                    addView(detailRow(R.drawable.ic_calendar, getString(R.string.transaction_logs_detail_event, log.eventTitle)))
+                    addView(detailRow(R.drawable.ic_profile_person, getString(R.string.transaction_logs_detail_attendee, log.attendeeEmail.ifBlank { getString(R.string.transaction_logs_no_email) })))
 
                     val staffText = if (log.staffEmail.isNotBlank() && log.staffEmail != "No email" && log.staffEmail != log.staffName) {
-                        "Staff: ${log.staffName} (${log.staffEmail})"
+                        getString(R.string.transaction_logs_detail_staff_email, log.staffName, log.staffEmail)
                     } else {
-                        "Staff: ${log.staffName}"
+                        getString(R.string.transaction_logs_detail_staff, log.staffName)
                     }
                     addView(detailRow(R.drawable.ic_group, staffText))
 
-                    val timeText = if (log.timestamp.startsWith("Scanned At:", ignoreCase = true)) {
+                    val timeText = if (log.timestamp.startsWith(getString(R.string.transaction_logs_scanned_at_prefix), ignoreCase = true)) {
                         log.timestamp
                     } else {
-                        "Scanned At: ${log.timestamp}"
+                        getString(R.string.transaction_logs_detail_scanned_at, log.timestamp)
                     }
                     addView(detailRow(R.drawable.ic_row_clock, timeText))
                 }
@@ -417,7 +417,7 @@ open class TransactionLogsActivity : AppCompatActivity() {
                         })
 
                         val spannable = SpannableStringBuilder().apply {
-                            append("Reason: ", StyleSpan(Typeface.BOLD), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                            append(getString(R.string.transaction_logs_reason_label), StyleSpan(Typeface.BOLD), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                             append(log.reason)
                         }
 

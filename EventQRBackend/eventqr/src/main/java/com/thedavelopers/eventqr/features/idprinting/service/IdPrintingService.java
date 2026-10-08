@@ -46,6 +46,9 @@ public class IdPrintingService {
         IdTemplate template = idTemplateRepository.findFirstByEventIdAndActiveTrue(request.eventId())
                 .orElseThrow(() -> new ResourceNotFoundException("Active ID template not found for event"));
         var registration = registrationLookupPort.requireById(qr.registrationId());
+        if (registration.status() == com.thedavelopers.eventqr.shared.constants.RegistrationStatus.CANCELLED) {
+            throw new ConflictException("Cannot print an ID for a cancelled registration");
+        }
 
         IdPrintLog log = new IdPrintLog();
         log.setEventId(request.eventId());
@@ -56,7 +59,7 @@ public class IdPrintingService {
         log.setReprint(request.reprint());
         log.setSuccess(true);
         log.setPrintedAt(Instant.now());
-        log.setMessage(request.reprint() ? "Reprint simulated successfully" : "Print simulated successfully");
+        log.setMessage(request.reprint() ? "Reprint logged (no physical printer connected)" : "Print logged (no physical printer connected)");
         IdPrintLog saved = idPrintLogRepository.save(log);
         return new IdPrintResponse(saved.getId(), saved.getEventId(), saved.getAttendeeUserId(), saved.getRegistrationId(),
                 saved.getQrCredentialId(), saved.getTemplateId(), saved.isReprint(), saved.isSuccess(), saved.getMessage(),

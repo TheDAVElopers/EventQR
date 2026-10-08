@@ -108,7 +108,6 @@ class EventRegistrationsPresenter(
                     if (pages.onSuccess(ticket, result.data)) {
                         if (requestedQuery.isEmpty() && eventTotal == null) {
                             eventTotal = result.data.totalElements
-                            if (counts.total == null) publishCounts(counts.copy(total = eventTotal))
                         }
                         view?.renderRegistrations(pages.items, requestedQuery.isNotEmpty())
                     }
@@ -130,18 +129,19 @@ class EventRegistrationsPresenter(
         countsJob?.cancel()
         val id = eventId
         countsJob = scope.launch {
-            val total = async { repository.countRegistrations(id) }
             val entered = async { repository.countRegistrations(id, RegistrationStatus.ENTERED) }
             val exited = async { repository.countRegistrations(id, RegistrationStatus.EXITED) }
             val registered = async { repository.countRegistrations(id, RegistrationStatus.REGISTERED) }
-            val totalValue = (total.await() as? NetworkResult.Success)?.data
             val enteredValue = (entered.await() as? NetworkResult.Success)?.data
             val exitedValue = (exited.await() as? NetworkResult.Success)?.data
             val registeredValue = (registered.await() as? NetworkResult.Success)?.data
+            val checkedIn = if (enteredValue != null && exitedValue != null) enteredValue + exitedValue else null
+            // Total counts only registrations that count as registered (excludes CANCELLED / NO_SHOW),
+            // so it is always Registered + Checked In.
             publishCounts(
                 RegistrationCounts(
-                    total = totalValue ?: eventTotal,
-                    checkedIn = if (enteredValue != null && exitedValue != null) enteredValue + exitedValue else null,
+                    total = if (checkedIn != null && registeredValue != null) checkedIn + registeredValue else null,
+                    checkedIn = checkedIn,
                     registered = registeredValue,
                 )
             )

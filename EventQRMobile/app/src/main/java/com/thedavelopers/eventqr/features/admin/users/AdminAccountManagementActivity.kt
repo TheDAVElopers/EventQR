@@ -87,6 +87,10 @@ class AdminAccountManagementActivity : AppCompatActivity() {
         recyclerAccounts.adapter = adapter
 
         val isSuperAdmin = isSuperAdmin()
+        if (isSuperAdmin) {
+            findViewById<TextView>(R.id.nav_header_subtitle)?.text =
+                getString(R.string.admin_account_management_manage_admin_and_user_accounts)
+        }
         findViewById<View>(R.id.buttonCreateAdminAccount).visibility = if (isSuperAdmin) View.VISIBLE else View.GONE
         findViewById<View>(R.id.buttonCreateAdminAccount).setOnClickListener {
             startActivity(Intent(this, CreateAdminAccountActivity::class.java))

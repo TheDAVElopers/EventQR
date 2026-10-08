@@ -77,7 +77,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<UserResponse>> register(@Valid @RequestBody RegisterRequest request) {
         UserRequest userRequest = new UserRequest(request.email(), request.fullName(), request.phoneNumber(), request.password(), AccountRole.ATTENDEE);
-        return ResponseEntity.ok(ApiResponse.success("Registration completed", userService.register(userRequest)));
+        return ResponseEntity.ok(ApiResponse.success("Account created", userService.register(userRequest)));
     }
 
     @PostMapping("/login")
@@ -186,7 +186,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Map<String, Boolean>>> validateResetToken(@RequestParam String token) {
         boolean valid = passwordResetService.validateToken(token);
         if (!valid) {
-            return ResponseEntity.badRequest().body(ApiResponse.success("Token is invalid or expired", Map.of("valid", false)));
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "Token is invalid or expired", Map.of("valid", false), java.time.Instant.now()));
         }
         return ResponseEntity.ok(ApiResponse.success(Map.of("valid", true)));
     }

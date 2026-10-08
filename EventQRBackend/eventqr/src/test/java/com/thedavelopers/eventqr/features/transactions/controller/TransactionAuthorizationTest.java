@@ -63,6 +63,11 @@ class TransactionAuthorizationTest {
                 .build();
         given(transactionService.findByEvent(any(UUID.class), any(Pageable.class)))
                 .willReturn(Page.empty());
+        org.mockito.Mockito.lenient().when(transactionService.record(any())).thenReturn(
+                new com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse(UUID.randomUUID(), eventId, null,
+                        UUID.randomUUID(), null, UUID.randomUUID(), null, UUID.randomUUID(), UUID.randomUUID(), null,
+                        com.thedavelopers.eventqr.shared.constants.TransactionType.ENTRY,
+                        com.thedavelopers.eventqr.shared.constants.TransactionResult.APPROVED, 0, null, java.time.Instant.now()));
     }
 
     // --- helpers -----------------------------------------------------------
@@ -195,5 +200,22 @@ class TransactionAuthorizationTest {
         mockMvc.perform(get("/api/v1/transactions/event/{eventId}", eventId)
                         .header("Authorization", "Bearer token"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void record_ignoresBodyStaffUserId_usesAuthenticatedCaller() throws Exception {
+        actingAs(callerId, AccountRole.ADMIN);
+        UUID spoofed = UUID.randomUUID();
+        String spoofBody = "{\"eventId\":\"" + eventId + "\",\"scanPurposeId\":\"" + UUID.randomUUID() + "\","
+                + "\"staffUserId\":\"" + spoofed + "\"}";
+        mockMvc.perform(post("/api/v1/transactions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(spoofBody)
+                        .header("Authorization", "Bearer token"))
+                .andExpect(status().isOk());
+        org.mockito.ArgumentCaptor<com.thedavelopers.eventqr.features.transactions.model.dto.TransactionRequest> captor =
+                org.mockito.ArgumentCaptor.forClass(com.thedavelopers.eventqr.features.transactions.model.dto.TransactionRequest.class);
+        verify(transactionService).record(captor.capture());
+        org.assertj.core.api.Assertions.assertThat(captor.getValue().staffUserId()).isEqualTo(callerId);
     }
 }

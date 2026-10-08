@@ -38,34 +38,34 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
     private var loadRequestSerial: Int = 0
     private var refreshCount: Int = 0
 
-    private val purposeTypes = listOf(
-        ScanPurposeType("Event Entry", ScanPurposeCode.ENTRY, "Event"),
-        ScanPurposeType("Session Attendance", ScanPurposeCode.ATTENDANCE, "Session"),
-        ScanPurposeType("Booth Visit", ScanPurposeCode.BOOTH_VISIT, "Booth"),
-        ScanPurposeType("Session Visit", ScanPurposeCode.SESSION_VISIT, "Session"),
-        ScanPurposeType("Benefit Claim", ScanPurposeCode.BENEFIT_CLAIM, "Benefit"),
-        ScanPurposeType("Reward Redemption", ScanPurposeCode.REWARD_REDEMPTION_SCAN, "Reward"),
-        ScanPurposeType("Event Exit", ScanPurposeCode.EXIT, "Event"),
-        ScanPurposeType("ID Print", ScanPurposeCode.ID_PRINT, "Event"),
-    )
+    private val purposeTypes by lazy { listOf(
+        ScanPurposeType(getString(R.string.scan_purpose_type_event_entry), ScanPurposeCode.ENTRY, "Event"),
+        ScanPurposeType(getString(R.string.scan_purpose_type_session_attendance), ScanPurposeCode.ATTENDANCE, "Session"),
+        ScanPurposeType(getString(R.string.scan_purpose_type_booth_visit), ScanPurposeCode.BOOTH_VISIT, "Booth"),
+        ScanPurposeType(getString(R.string.scan_purpose_type_session_visit), ScanPurposeCode.SESSION_VISIT, "Session"),
+        ScanPurposeType(getString(R.string.scan_purpose_type_benefit_claim), ScanPurposeCode.BENEFIT_CLAIM, "Benefit"),
+        ScanPurposeType(getString(R.string.scan_purpose_type_reward_redemption), ScanPurposeCode.REWARD_REDEMPTION_SCAN, "Reward"),
+        ScanPurposeType(getString(R.string.scan_purpose_type_event_exit), ScanPurposeCode.EXIT, "Event"),
+        ScanPurposeType(getString(R.string.scan_purpose_type_id_print), ScanPurposeCode.ID_PRINT, "Event"),
+    ) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         repository = OrganizerRepository(this)
-        val eventId = intentEventId() ?: return showMissingEventScreen("Scan Purposes")
+        val eventId = intentEventId() ?: return showMissingEventScreen(getString(R.string.manage_scan_purposes_title))
         lifecycleScope.launch {
             val selectableEvents = repository.getApprovedOrganizerEvents()
             selectedEvent = resolveSelectedEvent(selectableEvents, eventId) ?: run {
-                showMissingEventScreen("Scan Purposes")
+                showMissingEventScreen(getString(R.string.manage_scan_purposes_title))
                 return@launch
             }
             Log.d(TAG, "Loading scan purposes for eventId: $eventId")
             Log.d(persistenceTag, "selectedEventId=$eventId screen=ScanPurposes")
 
             val shell = organizerRefreshShell(
-                title = "Scan Purposes",
+                title = getString(R.string.manage_scan_purposes_title),
                 showBack = true,
-                topRightLabel = "+ Add",
+                topRightLabel = getString(R.string.manage_scan_purposes_add_action),
                 onTopRight = { showAddEditDialog() },
                 onRefresh = { loadPurposes(showInitialLoading = false) }
             )
@@ -85,7 +85,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         val requestSerial = ++loadRequestSerial
         if (showInitialLoading && !swipeRefresh.isRefreshing) {
             purposeHost.removeAllViews()
-            purposeHost.addView(loadingState("Loading scan purposes..."))
+            purposeHost.addView(loadingState(getString(R.string.manage_scan_purposes_loading)))
         }
         MainScope().launch {
             val source = repository.loadScanPurposesForMvp(selectedEvent.id)
@@ -125,9 +125,9 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         if (purposes.isEmpty()) {
             purposeHost.addView(emptyState(
                 iconRes = R.drawable.ic_scan,
-                title = "No scan purposes yet",
-                subtext = "Create scan purposes to track attendee check-ins and activities.",
-                actionLabel = "+ Add",
+                title = getString(R.string.manage_scan_purposes_empty_title),
+                subtext = getString(R.string.manage_scan_purposes_empty_subtext),
+                actionLabel = getString(R.string.manage_scan_purposes_add_action),
                 onAction = { showAddEditDialog() },
             ))
             return
@@ -135,9 +135,9 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
 
         purposes.forEach { purpose ->
             val subtitle = buildString {
-                append(purpose.code?.toDisplayTypeLabel() ?: "Custom Scan")
+                append(purpose.code?.toDisplayTypeLabel() ?: getString(R.string.manage_scan_purposes_custom_scan))
                 append(" · ")
-                if (purpose.pointsEnabled && purpose.pointsValue > 0) append("+${purpose.pointsValue} pts · ")
+                if (purpose.pointsEnabled && purpose.pointsValue > 0) append(getString(R.string.common_points_short, "+${purpose.pointsValue}")); append(" · ")
                 append(getString(if (purpose.duplicateRule.lowercase().contains("allow")) R.string.manage_scan_purposes_allows_duplicates else R.string.manage_scan_purposes_no_duplicates))
             }
 
@@ -189,7 +189,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
                     toggle?.setOnCheckedChangeListener { _, checked ->
                         togglePurpose(purpose, checked, toggle)
                     }
-                    Toast.makeText(this@ManageScanPurposesActivity, "Failed to update: ${result.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@ManageScanPurposesActivity, getString(R.string.manage_scan_purposes_failed_update, result.message), Toast.LENGTH_SHORT).show()
                 }
                 NetworkResult.Loading -> Log.d(TAG, "eventId=${selectedEvent.id} purposeId=${purpose.id} toggleApiResult=LOADING")
             }
@@ -209,7 +209,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
 
         val duplicateHelper = TextView(this).apply {
             id = com.thedavelopers.eventqr.R.id.msp_duplicate_helper
-            text = "Always allowed for reward redemption — controlled per-reward on the Rewards page."
+            text = getString(R.string.manage_scan_purposes_reward_duplicate_helper)
             textSize = 12f
             setTextColor(Color.parseColor("#6B7280"))
             setPadding(dp(4), dp(2), dp(4), 0)
@@ -217,7 +217,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         }
         val duplicateCheck = CheckBox(this).apply {
             id = com.thedavelopers.eventqr.R.id.msp_duplicate_check
-            text = "Allow duplicate scans"
+            text = getString(R.string.manage_scan_purposes_allow_duplicate_scans)
             isChecked = purpose?.duplicateRule?.lowercase()?.contains("allow") ?: false
         }
         val applyDuplicateLock: (ScanPurposeType) -> Unit = { type ->
@@ -225,7 +225,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
             duplicateCheck.isEnabled = !isReward
             duplicateCheck.alpha = if (isReward) 0.5f else 1f
             if (isReward) {
-                duplicateCheck.isChecked = true
+                duplicateCheck.isChecked = false
             }
             duplicateHelper.visibility = if (isReward) View.VISIBLE else View.GONE
         }
@@ -251,26 +251,26 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
 
         val nameInput = EditText(this).apply {
             id = com.thedavelopers.eventqr.R.id.msp_name_input
-            hint = "Custom name, e.g. Sponsor Booth A"
+            hint = getString(R.string.manage_scan_purposes_hint_name)
             setText(purpose?.label.orEmpty())
             setSingleLine(true)
         }
         val descInput = EditText(this).apply {
             id = com.thedavelopers.eventqr.R.id.msp_desc_input
-            hint = "Description, e.g. Track visits for Sponsor Booth A"
+            hint = getString(R.string.manage_scan_purposes_hint_description)
             setText(purpose?.description.orEmpty())
             minLines = 2
         }
         val pointsInput = EditText(this).apply {
             id = com.thedavelopers.eventqr.R.id.msp_points_input
-            hint = "Points awarded"
+            hint = getString(R.string.manage_scan_purposes_hint_points)
             inputType = InputType.TYPE_CLASS_NUMBER
             setText(purpose?.pointsValue?.takeIf { it > 0 }?.toString() ?: "0")
             setSingleLine(true)
         }
         val trackingOnlyCheck = CheckBox(this).apply {
             id = com.thedavelopers.eventqr.R.id.msp_tracking_only_check
-            text = "Tracking only (no points)"
+            text = getString(R.string.manage_scan_purposes_tracking_only)
             isChecked = purpose?.trackingOnly ?: ((purpose?.pointsValue ?: 0) <= 0 && purpose?.pointsEnabled != true)
             setOnCheckedChangeListener { _, checked ->
                 pointsInput.isEnabled = !checked
@@ -279,13 +279,13 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         }
         pointsInput.isEnabled = !trackingOnlyCheck.isChecked
 
-        dialogView.addView(text("Scan Type", 14, true))
+        dialogView.addView(text(getString(R.string.manage_scan_purposes_label_scan_type), 14, true))
         dialogView.addView(typeSpinner)
-        dialogView.addView(text("Custom Name", 14, true).apply { setPadding(0, dp(12), 0, 0) })
+        dialogView.addView(text(getString(R.string.manage_scan_purposes_label_custom_name), 14, true).apply { setPadding(0, dp(12), 0, 0) })
         dialogView.addView(nameInput)
-        dialogView.addView(text("Description", 14, true).apply { setPadding(0, dp(12), 0, 0) })
+        dialogView.addView(text(getString(R.string.common_description), 14, true).apply { setPadding(0, dp(12), 0, 0) })
         dialogView.addView(descInput)
-        dialogView.addView(text("Points", 14, true).apply { setPadding(0, dp(12), 0, 0) })
+        dialogView.addView(text(getString(R.string.manage_scan_purposes_label_points), 14, true).apply { setPadding(0, dp(12), 0, 0) })
         dialogView.addView(pointsInput)
         dialogView.addView(duplicateCheck)
         dialogView.addView(duplicateHelper)
@@ -366,7 +366,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
                 }
                 is NetworkResult.Error -> {
                     Log.w(persistenceTag, "eventId=${selectedEvent.id} saveError message=${result.message}")
-                    Toast.makeText(this@ManageScanPurposesActivity, "Failed to save: ${result.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@ManageScanPurposesActivity, getString(R.string.manage_scan_purposes_failed_save, result.message), Toast.LENGTH_SHORT).show()
                 }
                 NetworkResult.Loading -> Unit
             }
@@ -382,7 +382,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
 
         AlertDialog.Builder(this)
             .setTitle(getString(R.string.manage_scan_purposes_delete_scan_purpose))
-            .setMessage("${purpose.label} will be permanently removed only if it has no transaction logs yet. If it was already used, disable it instead so old logs stay intact.")
+            .setMessage(getString(R.string.manage_scan_purposes_delete_message, purpose.label))
             .setPositiveButton(getString(R.string.admin_account_management_delete)) { _, _ -> deletePurposeIfUnused(purposeId, purpose.label) }
             .setNegativeButton(getString(R.string.request_event_cancel), null)
             .show()
@@ -406,7 +406,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
             if (usageCount > 0) {
                 Toast.makeText(
                     this@ManageScanPurposesActivity,
-                    "$purposeName has $usageCount transaction log(s). Disable it instead.",
+                    getString(R.string.manage_scan_purposes_in_use, purposeName, usageCount),
                     Toast.LENGTH_LONG,
                 ).show()
                 return@launch
@@ -418,7 +418,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
                     loadPurposes()
                 }
                 is NetworkResult.Error -> {
-                    Toast.makeText(this@ManageScanPurposesActivity, "Failed to delete: ${deleteResult.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@ManageScanPurposesActivity, getString(R.string.manage_scan_purposes_failed_delete, deleteResult.message), Toast.LENGTH_LONG).show()
                 }
                 NetworkResult.Loading -> Unit
             }
@@ -441,26 +441,26 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
 
     private fun defaultDescription(name: String, type: ScanPurposeType?): String {
         return when (type?.code) {
-            ScanPurposeCode.BOOTH_VISIT -> "Track visits for $name."
-            ScanPurposeCode.SESSION_VISIT, ScanPurposeCode.ATTENDANCE -> "Record attendance for $name."
-            ScanPurposeCode.BENEFIT_CLAIM -> "Validate benefit claims for $name."
-            ScanPurposeCode.REWARD_REDEMPTION, ScanPurposeCode.REWARD_REDEMPTION_SCAN -> "Process reward redemption for $name."
-            ScanPurposeCode.EXIT -> "Record event exit."
-            ScanPurposeCode.ID_PRINT -> "Print or reprint attendee ID."
-            else -> "Record scan transaction for $name."
+            ScanPurposeCode.BOOTH_VISIT -> getString(R.string.manage_scan_purposes_desc_track, name)
+            ScanPurposeCode.SESSION_VISIT, ScanPurposeCode.ATTENDANCE -> getString(R.string.manage_scan_purposes_desc_attend, name)
+            ScanPurposeCode.BENEFIT_CLAIM -> getString(R.string.manage_scan_purposes_desc_benefit, name)
+            ScanPurposeCode.REWARD_REDEMPTION, ScanPurposeCode.REWARD_REDEMPTION_SCAN -> getString(R.string.manage_scan_purposes_desc_reward, name)
+            ScanPurposeCode.EXIT -> getString(R.string.manage_scan_purposes_desc_exit)
+            ScanPurposeCode.ID_PRINT -> getString(R.string.manage_scan_purposes_desc_id_print)
+            else -> getString(R.string.manage_scan_purposes_desc_default, name)
         }
     }
 
     private fun ScanPurposeCode.toDisplayTypeLabel(): String = when (this) {
-        ScanPurposeCode.ENTRY -> "Event Entry"
-        ScanPurposeCode.ATTENDANCE -> "Session Attendance"
-        ScanPurposeCode.BENEFIT_CLAIM -> "Benefit Claim"
-        ScanPurposeCode.BOOTH_VISIT -> "Booth Visit"
-        ScanPurposeCode.SESSION_VISIT -> "Session Visit"
-        ScanPurposeCode.REWARD_REDEMPTION, ScanPurposeCode.REWARD_REDEMPTION_SCAN -> "Reward Redemption"
-        ScanPurposeCode.EXIT -> "Event Exit"
-        ScanPurposeCode.ID_PRINT -> "ID Print"
-        ScanPurposeCode.REGISTRATION_LOOKUP -> "Registration Lookup"
+        ScanPurposeCode.ENTRY -> getString(R.string.scan_purpose_type_event_entry)
+        ScanPurposeCode.ATTENDANCE -> getString(R.string.scan_purpose_type_session_attendance)
+        ScanPurposeCode.BENEFIT_CLAIM -> getString(R.string.scan_purpose_type_benefit_claim)
+        ScanPurposeCode.BOOTH_VISIT -> getString(R.string.scan_purpose_type_booth_visit)
+        ScanPurposeCode.SESSION_VISIT -> getString(R.string.scan_purpose_type_session_visit)
+        ScanPurposeCode.REWARD_REDEMPTION, ScanPurposeCode.REWARD_REDEMPTION_SCAN -> getString(R.string.scan_purpose_type_reward_redemption)
+        ScanPurposeCode.EXIT -> getString(R.string.scan_purpose_type_event_exit)
+        ScanPurposeCode.ID_PRINT -> getString(R.string.scan_purpose_type_id_print)
+        ScanPurposeCode.REGISTRATION_LOOKUP -> getString(R.string.scan_purpose_type_registration_lookup)
     }
 
     private fun ScanPurposeCode.defaultRequiredSelection(): String = when (this) {

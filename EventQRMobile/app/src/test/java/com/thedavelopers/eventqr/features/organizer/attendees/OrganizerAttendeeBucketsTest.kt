@@ -46,6 +46,20 @@ class OrganizerAttendeeBucketsTest {
         assertEquals("Exited", attendee("Exited").statusBucket())
         assertEquals("Cancelled", attendee("Cancelled", counted = false).statusBucket())
         assertEquals("No Show", attendee("No Show", counted = false).statusBucket())
+
+        // Raw enum values
+        assertEquals("Checked In", attendee("ENTERED").statusBucket())
+        assertEquals("Exited", attendee("EXITED").statusBucket())
+        assertEquals("Cancelled", attendee("CANCELLED", counted = false).statusBucket())
+        assertEquals("No Show", attendee("NO_SHOW", counted = false).statusBucket())
+        assertEquals("Registered", attendee("REGISTERED").statusBucket())
+
+        // Fallback to registrationStatus when currentEventStatus is blank
+        assertEquals("Checked In", attendee("", registration = "ENTERED").statusBucket())
+        assertEquals("Exited", attendee("", registration = "EXITED").statusBucket())
+        assertEquals("Cancelled", attendee("", counted = false, registration = "CANCELLED").statusBucket())
+        assertEquals("No Show", attendee("", counted = false, registration = "NO_SHOW").statusBucket())
+        assertEquals("Registered", attendee("", registration = "REGISTERED").statusBucket())
     }
 
     @Test

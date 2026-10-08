@@ -13,6 +13,9 @@ import com.thedavelopers.eventqr.shared.constants.RedemptionStatus;
 @Service
 public class DuplicateRewardClaimChecker {
 
+    public static final String DUPLICATE_CLAIM_MESSAGE =
+            "Reward already claimed. Duplicate claims are not allowed for this reward.";
+
     private final RewardRedemptionRepository rewardRedemptionRepository;
 
     public DuplicateRewardClaimChecker(RewardRedemptionRepository rewardRedemptionRepository) {
@@ -27,7 +30,7 @@ public class DuplicateRewardClaimChecker {
         List<RewardRedemption> redeemed = rewardRedemptionRepository
                 .findByAttendeeUserIdAndRewardIdAndStatus(attendeeUserId, reward.getId(), RedemptionStatus.REDEEMED);
         if (!redeemed.isEmpty() && !reward.isAllowDuplicateClaims()) {
-            return "DUPLICATE_CLAIM";
+            return DUPLICATE_CLAIM_MESSAGE;
         }
         return null;
     }

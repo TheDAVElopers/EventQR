@@ -161,8 +161,8 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
             ?: "Attendee").firstNameOnly()
 
         summaryEvents.text = summary.totalEvents.toString()
-        summaryRegistrations.text = summary.totalRegistrations.toString()
-        summaryCompleted.text = summary.completedEventsCount.toString()
+        summaryRegistrations.text = summary.totalRegistrations?.toString() ?: getString(R.string.dashboard_value_unavailable)
+        summaryCompleted.text = summary.completedEventsCount?.toString() ?: getString(R.string.dashboard_value_unavailable)
         updateNotificationBadge(summary.totalNotifications)
 
         setupPortalSwitcher()
@@ -206,7 +206,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     private fun renderUpcomingEvents(events: List<DashboardUpcomingEvent>) {
         val rows = events.take(1)
         if (rows.isEmpty()) {
-            renderEmptyState(upcomingEventsLayout, upcomingEventHolders, "No upcoming registered events.")
+            renderEmptyState(upcomingEventsLayout, upcomingEventHolders, getString(R.string.registered_events_none_upcoming))
             return
         }
         syncEventRows(upcomingEventsLayout, upcomingEventHolders, rows)
@@ -214,7 +214,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
 
     private fun renderDiscoverEvents(events: List<DashboardUpcomingEvent>) {
         if (events.isEmpty()) {
-            renderEmptyState(discoverEventsLayout, discoverEventHolders, "No discoverable events right now.")
+            renderEmptyState(discoverEventsLayout, discoverEventHolders, getString(R.string.attendee_events_no_upcoming_events))
             return
         }
         syncEventRows(discoverEventsLayout, discoverEventHolders, events)

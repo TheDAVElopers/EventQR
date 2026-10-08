@@ -39,6 +39,7 @@ class RewardServiceStockTest {
     private final UUID rewardId = UUID.randomUUID();
     private RewardRepository rewards;
     private RewardRedemptionRepository redemptions;
+    private EventRepository events;
     private RewardService service;
     private AttendeePointBalanceRepository balances;
     private Reward reward;
@@ -48,9 +49,12 @@ class RewardServiceStockTest {
         rewards = mock(RewardRepository.class);
         redemptions = mock(RewardRedemptionRepository.class);
         balances = mock(AttendeePointBalanceRepository.class);
+        events = mock(EventRepository.class);
         service = new RewardService(balances, mock(PointTransactionRepository.class),
-                rewards, redemptions, mock(EventRepository.class), mock(ScanPurposeRepository.class),
-                mock(NotificationService.class));
+                rewards, redemptions, events, mock(ScanPurposeRepository.class),
+                mock(NotificationService.class),
+                mock(com.thedavelopers.eventqr.shared.interfaces.AttendeeDirectoryPort.class),
+                mock(DuplicateRewardClaimChecker.class));
         reward = new Reward();
         reward.setId(rewardId);
         reward.setEventId(eventId);
@@ -190,6 +194,10 @@ class RewardServiceStockTest {
     // --- legacy redeem(): stock check + decrement through the shared guarded query ---
 
     private void redeemSetup(Integer stock, int decrementResult) {
+        com.thedavelopers.eventqr.features.events.model.entity.Event event =
+                new com.thedavelopers.eventqr.features.events.model.entity.Event();
+        event.setRewardsEnabled(true);
+        when(events.findById(eventId)).thenReturn(Optional.of(event));
         reward.setStockQuantity(stock);
         reward.setStatus(RewardStatus.ACTIVE);
         AttendeePointBalance balance = new AttendeePointBalance();
@@ -212,6 +220,18 @@ class RewardServiceStockTest {
     }
 
     @Test
+    void legacyRedeemRejectedWhenRewardsDisabled() {
+        redeemSetup(2, 1);
+        com.thedavelopers.eventqr.features.events.model.entity.Event event =
+                new com.thedavelopers.eventqr.features.events.model.entity.Event();
+        event.setRewardsEnabled(false);
+        when(events.findById(eventId)).thenReturn(Optional.of(event));
+        assertThatThrownBy(() -> service.redeem(new RewardRedemptionRequest(eventId, UUID.randomUUID(), rewardId)))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage("Reward redemption is disabled for this event");
+    }
+
+    @Test
     void legacyRedeemOnUnlimitedRewardStillSucceeds() {
         redeemSetup(null, 1); // guarded query returns 1 for NULL stock
         service.redeem(new RewardRedemptionRequest(eventId, UUID.randomUUID(), rewardId));
@@ -226,5 +246,53 @@ class RewardServiceStockTest {
             Reward snapshot = reward;
             assertThat(RewardResponse.of(snapshot, redeemed).totalQuantity()).isEqualTo(2);
         }
+    }
+
+    @Test
+    void rewardNotFoundThrows404() {
+        UUID unknown = UUID.randomUUID();
+        when(rewards.findById(unknown)).thenReturn(Optional.empty());
+        when(rewards.findByIdForUpdate(unknown)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.findReward(eventId, unknown))
+                .isInstanceOf(com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException.class)
+                .hasMessage("Reward not found");
+
+        assertThatThrownBy(() -> service.updateReward(eventId, unknown, update(null, null, 10, null)))
+                .isInstanceOf(com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException.class)
+                .hasMessage("Reward not found");
+
+        assertThatThrownBy(() -> service.deleteReward(eventId, unknown))
+                .isInstanceOf(com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException.class)
+                .hasMessage("Reward not found");
+    }
+
+    @Test
+    void rewardMismatchedEventThrows404FailClosed() {
+        UUID otherEventId = UUID.randomUUID();
+        when(rewards.findById(rewardId)).thenReturn(Optional.of(reward));
+        when(rewards.findByIdForUpdate(rewardId)).thenReturn(Optional.of(reward));
+
+        assertThatThrownBy(() -> service.findReward(otherEventId, rewardId))
+                .isInstanceOf(com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException.class)
+                .hasMessage("Reward not found for event");
+
+        assertThatThrownBy(() -> service.updateReward(otherEventId, rewardId, update(null, null, 10, null)))
+                .isInstanceOf(com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException.class)
+                .hasMessage("Reward not found for event");
+
+        assertThatThrownBy(() -> service.deleteReward(otherEventId, rewardId))
+                .isInstanceOf(com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException.class)
+                .hasMessage("Reward not found for event");
+    }
+
+    @Test
+    void redeemFailsClosedWhenRewardBelongsToAnotherEvent() {
+        redeemSetup(5, 1);
+        reward.setEventId(UUID.randomUUID());
+
+        assertThatThrownBy(() -> service.redeem(new RewardRedemptionRequest(eventId, UUID.randomUUID(), rewardId)))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage("Reward does not belong to the event");
     }
 }

@@ -30,13 +30,13 @@ open class EventManagementHubActivity : AppCompatActivity() {
     // stale numbers.
     override fun onResume() {
         super.onResume()
-        val eventId = intentEventId() ?: return showMissingEventScreen("Event Management")
+        val eventId = intentEventId() ?: return showMissingEventScreen(getString(R.string.event_management_hub_title))
         renderEvent(eventId)
     }
 
     private fun renderEvent(eventId: String) {
-        val content = organizerShell("Event Management", showBack = true)
-        content.addView(loadingState("Loading event details..."))
+        val content = organizerShell(getString(R.string.event_management_hub_title), showBack = true)
+        content.addView(loadingState(getString(R.string.event_management_hub_loading_details)))
 
         MainScope().launch {
             val load = repository.loadEventForMvp(eventId)
@@ -46,13 +46,13 @@ open class EventManagementHubActivity : AppCompatActivity() {
                 dataSourceBanner(load)?.let { content.addView(it) }
                 content.addView(
                     if (load.source == OrganizerMvpDataSource.ERROR) {
-                        errorState(load.message ?: "Event details could not be loaded.") { recreate() }
+                        errorState(load.message ?: getString(R.string.event_management_hub_details_load_failed)) { recreate() }
                     } else {
                         emptyState(
                             iconRes = R.drawable.ic_calendar,
-                            title = "Event not found",
-                            subtext = "This event is not available for organizer management.",
-                            actionLabel = "Open My Events",
+                            title = getString(R.string.event_management_hub_event_not_found),
+                            subtext = getString(R.string.event_management_hub_event_not_available),
+                            actionLabel = getString(R.string.organizer_open_my_events),
                             onAction = { openOrganizerPage(ManageEventsActivity::class.java) },
                         )
                     },
@@ -132,7 +132,7 @@ open class EventManagementHubActivity : AppCompatActivity() {
 
                     // Subtitle / Description
                     val descText = event.description.ifBlank {
-                        "Manage your event details, attendees, and settings all in one place."
+                        getString(R.string.event_management_hub_default_description)
                     }
                     addView(text(descText, 12, false, Color.argb(220, 255, 255, 255)).apply {
                         setPadding(0, dp(4), 0, 0)
@@ -167,15 +167,15 @@ open class EventManagementHubActivity : AppCompatActivity() {
                     setMargins(0, 0, 0, dp(16))
                 }
 
-                val stat1 = createStatCard("Registered", formatCount(registeredCount), R.drawable.ic_profile_person).apply {
+                val stat1 = createStatCard(getString(R.string.event_management_hub_stat_registered), formatCount(registeredCount), R.drawable.ic_profile_person).apply {
                     id = R.id.emh_stat_registered
                     layoutParams = (layoutParams as LinearLayout.LayoutParams).apply { marginEnd = dp(4) }
                 }
-                val stat2 = createStatCard("Capacity", formatCount(capacity), R.drawable.ic_group).apply {
+                val stat2 = createStatCard(getString(R.string.event_management_hub_stat_capacity), formatCount(capacity), R.drawable.ic_group).apply {
                     id = R.id.emh_stat_capacity
                     layoutParams = (layoutParams as LinearLayout.LayoutParams).apply { marginStart = dp(4); marginEnd = dp(4) }
                 }
-                val stat3 = createStatCard("Available", formatCount(available), R.drawable.ic_row_star).apply {
+                val stat3 = createStatCard(getString(R.string.event_management_hub_stat_available), formatCount(available), R.drawable.ic_row_star).apply {
                     id = R.id.emh_stat_available
                     layoutParams = (layoutParams as LinearLayout.LayoutParams).apply { marginStart = dp(4) }
                 }
@@ -187,7 +187,7 @@ open class EventManagementHubActivity : AppCompatActivity() {
             content.addView(statsRow)
 
             // Section Title
-            content.addView(text("Event Management", 16, true, Color.parseColor("#111827")).apply {
+            content.addView(text(getString(R.string.event_management_hub_section_title), 16, true, Color.parseColor("#111827")).apply {
                 id = R.id.emh_section_title
                 setPadding(dp(2), dp(4), dp(2), dp(12))
             })
@@ -198,35 +198,35 @@ open class EventManagementHubActivity : AppCompatActivity() {
             val menuItems = listOf(
                 MenuSpec(
                     label = editLabel,
-                    subtitle = "Check event information, schedule, and more.",
+                    subtitle = getString(R.string.event_management_hub_menu_edit_sub),
                     iconRes = if (canEdit) R.drawable.ic_edit_pencil else R.drawable.ic_event_request,
                     target = EditEventDetailsActivity::class.java,
                     id = R.id.emh_menu_edit,
                 ),
                 MenuSpec(
-                    label = "Staff Assignment",
-                    subtitle = "Manage staff and their assigned roles.",
+                    label = getString(R.string.event_management_hub_menu_staff),
+                    subtitle = getString(R.string.event_management_hub_menu_staff_sub),
                     iconRes = R.drawable.ic_admin_users,
                     target = ManageUsersActivity::class.java,
                     id = R.id.emh_menu_staff,
                 ),
                 MenuSpec(
-                    label = "Scan Purposes",
-                    subtitle = "View and manage scan purposes for this event.",
+                    label = getString(R.string.event_management_hub_menu_scan),
+                    subtitle = getString(R.string.event_management_hub_menu_scan_sub),
                     iconRes = R.drawable.ic_scan,
                     target = ManageScanPurposesActivity::class.java,
                     id = R.id.emh_menu_scan,
                 ),
                 MenuSpec(
-                    label = "Transaction Rules",
-                    subtitle = "Configure transaction rules and settings.",
+                    label = getString(R.string.event_management_hub_menu_transaction),
+                    subtitle = getString(R.string.event_management_hub_menu_transaction_sub),
                     iconRes = R.drawable.ic_admin_shield,
                     target = TransactionRulesActivity::class.java,
                     id = R.id.emh_menu_transaction,
                 ),
                 MenuSpec(
-                    label = "ID Display Settings",
-                    subtitle = "Customize how attendee IDs are displayed.",
+                    label = getString(R.string.event_management_hub_menu_id),
+                    subtitle = getString(R.string.event_management_hub_menu_id_sub),
                     iconRes = R.drawable.ic_id,
                     target = com.thedavelopers.eventqr.features.organizer.idtemplate.IdTemplateSettingsActivity::class.java,
                     id = R.id.emh_menu_id,
@@ -251,7 +251,7 @@ open class EventManagementHubActivity : AppCompatActivity() {
                     label = spec.label,
                     subtitle = spec.subtitle,
                     iconRes = spec.iconRes,
-                    onClick = { openOrganizerPage(spec.target, event.id, event.title, viewOnly = spec.label == "View Event Details") },
+                    onClick = { openOrganizerPage(spec.target, event.id, event.title, viewOnly = spec.id == R.id.emh_menu_edit && !canEdit) },
                 ).apply {
                     id = spec.id
                 }

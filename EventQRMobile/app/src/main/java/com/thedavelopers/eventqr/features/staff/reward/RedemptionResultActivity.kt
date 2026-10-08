@@ -23,6 +23,9 @@ class RedemptionResultActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         val approved = intent.getBooleanExtra(StaffScreenExtras.EXTRA_IS_VALID, false)
         val message = intent.getStringExtra(StaffScreenExtras.EXTRA_REASON).orEmpty()
+            .let { raw ->
+                if (raw.trim().equals("DUPLICATE_CLAIM", ignoreCase = true)) getString(R.string.redemption_result_duplicate_claim) else raw
+            }
             .ifBlank { getString(if (approved) R.string.redemption_result_reward_redeemed_successfully else R.string.redemption_result_reward_redemption_rejected) }
         val points = intent.getIntExtra(StaffScreenExtras.EXTRA_POINTS_DELTA, 0)
         val remaining = intent.getIntExtra(AppRewardExtras.EXTRA_POINTS_BALANCE, 0)

@@ -146,19 +146,34 @@ public class RegistrationService implements RegistrationLookupPort, Registration
             throw new ConflictException("Event is at capacity");
         }
         String normalizedEmail = request.email().trim();
-        if (registrationRepository.existsByEventIdAndAttendeeEmailIgnoreCase(request.eventId(), normalizedEmail)) {
-            throw new ConflictException("Duplicate registration for this event and attendee");
+        EventRegistration cancelledByEmail = null;
+        var byEmail = registrationRepository.findByEventIdAndAttendeeEmailIgnoreCase(request.eventId(), normalizedEmail);
+        if (byEmail.isPresent()) {
+            if (byEmail.get().getStatus() != RegistrationStatus.CANCELLED) {
+                rejectDuplicate(byEmail.get());
+            }
+            cancelledByEmail = byEmail.get();
         }
 
         AttendeeDirectoryPort.AttendeeSnapshot attendeeSnapshot = attendeeDirectoryPort.findOrCreateAttendee(
                 normalizedEmail, request.fullName(), request.phoneNumber(), AccountRole.ATTENDEE);
 
         if (eventSnapshot.organizerUserId() != null && eventSnapshot.organizerUserId().equals(attendeeSnapshot.userId())) {
-            throw new ForbiddenException("Organizers cannot register for their own event");
+            throw new ForbiddenException("You cannot register for your own event");
         }
 
-        if (registrationRepository.existsByEventIdAndAttendeeUserId(request.eventId(), attendeeSnapshot.userId())) {
-            throw new ConflictException("Duplicate registration for this event and attendee");
+        EventRegistration cancelled = cancelledByEmail;
+        var byUser = registrationRepository.findFirstByEventIdAndAttendeeUserId(request.eventId(), attendeeSnapshot.userId());
+        if (byUser.isPresent()) {
+            if (byUser.get().getStatus() != RegistrationStatus.CANCELLED) {
+                rejectDuplicate(byUser.get());
+            }
+            if (cancelled == null) {
+                cancelled = byUser.get();
+            }
+        }
+        if (cancelled != null) {
+            return reactivate(cancelled, eventSnapshot, attendeeSnapshot);
         }
 
         EventRegistration registration = new EventRegistration();
@@ -174,21 +189,56 @@ public class RegistrationService implements RegistrationLookupPort, Registration
 
         eventService.incrementCurrentAttendeeCount(request.eventId());
 
+        return finishRegistration(registration.getId(), eventSnapshot, attendeeSnapshot, false);
+    }
+
+    /**
+     * Restores a CANCELLED registration. The seat is claimed first with the capacity-guarded counter increment (a
+     * full event throws and leaves the row CANCELLED, the counter untouched); the guarded status flip then decides
+     * which concurrent caller wins, and the loser returns the seat. Same window/status/organizer rules as a new
+     * registration have already been applied by the caller.
+     */
+    private RegistrationSubmissionResponse reactivate(EventRegistration cancelled, EventSnapshot eventSnapshot,
+                                                      AttendeeDirectoryPort.AttendeeSnapshot attendeeSnapshot) {
+        UUID registrationId = cancelled.getId();
+        eventService.incrementCurrentAttendeeCount(cancelled.getEventId());
+        int updated = registrationRepository.updateStatusIfCurrent(registrationId,
+                RegistrationStatus.CANCELLED.name(), RegistrationStatus.REGISTERED.name());
+        if (updated == 0) {
+            eventService.decrementCurrentAttendeeCount(cancelled.getEventId());
+            throw new ConflictException("Duplicate registration for this event and attendee");
+        }
+        entityManager.flush();
+        entityManager.clear();
+        EventRegistration restored = registrationRepository.findById(registrationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Registration not found: " + registrationId));
+        restored.setRegisteredAt(Instant.now());
+        restored.setEnteredAt(null);
+        restored.setExitedAt(null);
+        restored.setAttendedAt(null);
+        registrationRepository.saveAndFlush(restored);
+        log.info("Registration reactivated registrationId={} eventId={} attendeeUserId={}",
+                registrationId, restored.getEventId(), restored.getAttendeeUserId());
+        return finishRegistration(registrationId, eventSnapshot, attendeeSnapshot, true);
+    }
+
+    private RegistrationSubmissionResponse finishRegistration(UUID registrationId, EventSnapshot eventSnapshot,
+                                                              AttendeeDirectoryPort.AttendeeSnapshot attendeeSnapshot,
+                                                              boolean reissueQr) {
         entityManager.flush();
         entityManager.clear();
 
-        UUID registrationId = registration.getId();
         EventRegistration savedRegistration = registrationRepository.findById(registrationId)
             .orElseThrow(() -> new ResourceNotFoundException("Registration not found: " + registrationId));
 
         notifyOrganizerOnRegistration(eventSnapshot, attendeeSnapshot.fullName());
-        notificationService.createRegistrationConfirmationNotification(
-                request.eventId(), attendeeSnapshot.userId(), eventSnapshot.title());
 
         log.info("Generating or recovering QR credential registrationId={}", registrationId);
-        QrCredentialSnapshot qrCredential = qrCredentialPort.issueOrReturnExisting(
-            savedRegistration.getEventId(), savedRegistration.getAttendeeUserId(),
-            savedRegistration.getId(), savedRegistration.getAttendeeEmail());
+        QrCredentialSnapshot qrCredential = reissueQr
+            ? qrCredentialPort.reissueCredential(savedRegistration.getEventId(), savedRegistration.getAttendeeUserId(),
+                savedRegistration.getId(), savedRegistration.getAttendeeEmail())
+            : qrCredentialPort.issueOrReturnExisting(savedRegistration.getEventId(), savedRegistration.getAttendeeUserId(),
+                savedRegistration.getId(), savedRegistration.getAttendeeEmail());
         if (!qrCredential.qrCredentialId().equals(savedRegistration.getQrCredentialId())) {
             savedRegistration.setQrCredentialId(qrCredential.qrCredentialId());
             savedRegistration = registrationRepository.saveAndFlush(savedRegistration);
@@ -198,6 +248,10 @@ public class RegistrationService implements RegistrationLookupPort, Registration
             log.info("QR credential already linked registrationId={} qrCredentialId={}",
                 registrationId, qrCredential.qrCredentialId());
         }
+
+        // Confirmation is only created once the QR pass actually exists.
+        notificationService.createRegistrationConfirmationNotification(
+                eventSnapshot.eventId(), attendeeSnapshot.userId(), eventSnapshot.title());
 
         log.info("Starting QR email delivery registrationId={} qrCredentialId={}",
             registrationId, qrCredential.qrCredentialId());
@@ -220,7 +274,9 @@ public class RegistrationService implements RegistrationLookupPort, Registration
                 eventSnapshot.eventId(), eventSnapshot.organizerUserId(), eventSnapshot.title(), attendeeName);
         int capacity = eventSnapshot.capacity();
         if (capacity > 0) {
-            long currentCount = registrationRepository.countByEventId(eventSnapshot.eventId());
+            // Post-increment counter on the event row (excludes cancelled registrations).
+            long currentCount = eventLookupPort.findById(eventSnapshot.eventId())
+                    .map(EventSnapshot::currentAttendeeCount).orElse(eventSnapshot.currentAttendeeCount() + 1);
             if (currentCount >= capacity) {
                 notificationService.createCapacityFullNotification(
                         eventSnapshot.eventId(), eventSnapshot.organizerUserId(), eventSnapshot.title(),
@@ -233,6 +289,10 @@ public class RegistrationService implements RegistrationLookupPort, Registration
                         (int) currentCount, capacity);
             }
         }
+    }
+
+    private void rejectDuplicate(EventRegistration existing) {
+        throw new ConflictException("Duplicate registration for this event and attendee");
     }
 
     private void notifyAssignedStaffCapacityFull(UUID eventId, UUID organizerUserId, String eventTitle, int count, int capacity) {
@@ -294,10 +354,23 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         if (!registration.getAttendeeUserId().equals(attendeeUserId)) {
             throw new ForbiddenException("You can only cancel your own registration");
         }
-        if (registration.getStatus() != RegistrationStatus.CANCELLED) {
-            registration.setStatus(RegistrationStatus.CANCELLED);
-            registrationRepository.save(registration);
-            eventService.decrementCurrentAttendeeCount(registration.getEventId());
+        RegistrationStatus current = registration.getStatus();
+        if (current == RegistrationStatus.ENTERED || current == RegistrationStatus.EXITED
+                || current == RegistrationStatus.NO_SHOW) {
+            throw new ConflictException("This registration can no longer be cancelled because the attendee has already "
+                    + (current == RegistrationStatus.NO_SHOW ? "been marked as a no-show" : "checked in"));
+        }
+        if (current == RegistrationStatus.REGISTERED) {
+            // Guarded transition: only the caller that wins the update decrements the counter.
+            int updated = registrationRepository.updateStatusIfCurrent(registrationId,
+                    RegistrationStatus.REGISTERED.name(), RegistrationStatus.CANCELLED.name());
+            if (updated == 1) {
+                eventService.decrementCurrentAttendeeCount(registration.getEventId());
+            }
+            entityManager.flush();
+            entityManager.clear();
+            registration = registrationRepository.findById(registrationId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Registration not found: " + registrationId));
         }
         if (registration.getQrCredentialId() != null) {
             qrCredentialPort.findById(registration.getQrCredentialId()).ifPresent(qr -> qrCredentialPort.deactivate(qr.qrCredentialId()));

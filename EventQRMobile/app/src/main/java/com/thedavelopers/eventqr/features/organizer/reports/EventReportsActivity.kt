@@ -53,7 +53,7 @@ open class EventReportsActivity : AppCompatActivity() {
         reportsRepository = OrganizerReportsRepository(this)
 
         content = organizerShell(
-            title = "Event Reports",
+            title = getString(R.string.event_reports_screen_title),
             selectedNav = NAV_REPORTS,
         )
 
@@ -72,8 +72,8 @@ open class EventReportsActivity : AppCompatActivity() {
                 content.removeAllViews()
                 content.addView(centeredEmptyState(
                     iconRes = R.drawable.ic_organizer_reports,
-                    title = "No Events Available",
-                    subtext = "Create an event in the Events tab to view and generate reports.",
+                    title = getString(R.string.event_reports_no_events_title),
+                    subtext = getString(R.string.event_reports_no_events_subtext),
                 ))
             }
         }
@@ -116,18 +116,18 @@ open class EventReportsActivity : AppCompatActivity() {
             val events = repository.getApprovedOrganizerEvents()
             container.addView(buildSelectEventCard(events))
             container.addView(buildSummaryHeaderCard())
-            container.addView(sectionHeader("Generate Reports"))
+            container.addView(sectionHeader(getString(R.string.event_reports_generate_reports)))
             container.addView(buildReportCatalogContainer(reportCatalog()))
         }
     }
 
     private fun buildSelectEventCard(events: List<OrganizerMvpEvent>): LinearLayout {
         val approvedEvents = events.approvedOnly()
-        val titles = approvedEvents.map { it.title.ifBlank { "Untitled Event" } }
+        val titles = approvedEvents.map { it.title.ifBlank { getString(R.string.common_untitled_event) } }
         var selectedIndex = approvedEvents.indexOfFirst { it.id == selectedEvent.id }.takeIf { it >= 0 } ?: 0
         if (approvedEvents.isEmpty()) selectedIndex = -1
 
-        val currentTitleText = text(titles.getOrNull(selectedIndex) ?: "Select Event", 15, true, TEXT)
+        val currentTitleText = text(titles.getOrNull(selectedIndex) ?: getString(R.string.event_reports_select_event), 15, true, TEXT)
         val arrow = ImageView(this).apply {
             setImageResource(R.drawable.ic_arrow_drop_down)
             setColorFilter(Color.parseColor("#94A3B8"))
@@ -164,7 +164,7 @@ open class EventReportsActivity : AppCompatActivity() {
                 marginStart = dp(12)
                 marginEnd = dp(8)
             }
-            addView(text("SELECT EVENT", 10, true, Color.parseColor("#8E8EA9")))
+            addView(text(getString(R.string.event_reports_select_event_caps), 10, true, Color.parseColor("#8E8EA9")))
             addView(currentTitleText)
         }
         card.addView(textLayout)
@@ -297,7 +297,7 @@ open class EventReportsActivity : AppCompatActivity() {
                     })
 
                     addView(TextView(this@EventReportsActivity).apply {
-                        text = "Selected Event"
+                        text = getString(R.string.event_reports_selected_event)
                         textSize = 11f
                         setTypeface(typeface, Typeface.BOLD)
                         setTextColor(Color.parseColor("#E0E7FF"))
@@ -315,21 +315,21 @@ open class EventReportsActivity : AppCompatActivity() {
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                 )
 
-                addView(summaryStatColumn("Registered", summary.registeredCount))
+                addView(summaryStatColumn(getString(R.string.common_registered), summary.registeredCount))
 
                 addView(View(this@EventReportsActivity).apply {
                     setBackgroundColor(Color.parseColor("#30FFFFFF"))
                     layoutParams = LinearLayout.LayoutParams(dp(1), dp(36))
                 })
 
-                addView(summaryStatColumn("Checked In", summary.checkedInCount))
+                addView(summaryStatColumn(getString(R.string.common_checked_in), summary.checkedInCount))
 
                 addView(View(this@EventReportsActivity).apply {
                     setBackgroundColor(Color.parseColor("#30FFFFFF"))
                     layoutParams = LinearLayout.LayoutParams(dp(1), dp(36))
                 })
 
-                addView(summaryStatColumn("Exited", summary.exitedCount))
+                addView(summaryStatColumn(getString(R.string.event_reports_exited), summary.exitedCount))
             }
             addView(statsRow)
         }
@@ -367,7 +367,7 @@ open class EventReportsActivity : AppCompatActivity() {
             setOnClickListener { generateAllReports() }
 
             addView(TextView(this@EventReportsActivity).apply {
-                text = "Generate All"
+                text = getString(R.string.event_reports_generate_all)
                 textSize = 14f
                 setTypeface(typeface, Typeface.BOLD)
                 setTextColor(Color.parseColor("#4F46E5"))
@@ -473,14 +473,14 @@ open class EventReportsActivity : AppCompatActivity() {
     }
 
     private fun getReportSubtitle(type: EventReportType): String = when (type) {
-        EventReportType.ROSTER -> "View the list of all registered attendees."
-        EventReportType.NO_SHOWS -> "View attendees who have not checked in yet."
-        EventReportType.ENTRY_LOGS -> "View entry logs and scan history."
-        EventReportType.ATTENDANCE -> "View attendance summary and statistics."
-        EventReportType.CLAIMS -> "View benefit claims and redemption details."
-        EventReportType.BOOTH_VISITS -> "View booth and session visit details."
-        EventReportType.EXIT_LOGS -> "View exit logs and departure history."
-        EventReportType.POINTS -> "View attendee points and transactions."
+        EventReportType.ROSTER -> getString(R.string.event_reports_subtitle_roster)
+        EventReportType.NO_SHOWS -> getString(R.string.event_reports_subtitle_no_shows)
+        EventReportType.ENTRY_LOGS -> getString(R.string.event_reports_subtitle_entry_logs)
+        EventReportType.ATTENDANCE -> getString(R.string.event_reports_subtitle_attendance)
+        EventReportType.CLAIMS -> getString(R.string.event_reports_subtitle_claims)
+        EventReportType.BOOTH_VISITS -> getString(R.string.event_reports_subtitle_booth_visits)
+        EventReportType.EXIT_LOGS -> getString(R.string.event_reports_subtitle_exit_logs)
+        EventReportType.POINTS -> getString(R.string.event_reports_subtitle_points)
     }
 
     private fun reportsSkeleton(): LinearLayout = LinearLayout(this).apply {
@@ -488,7 +488,7 @@ open class EventReportsActivity : AppCompatActivity() {
 
         addView(buildSelectEventSkeletonCard())
         addView(buildSummarySkeletonCard())
-        addView(sectionHeader("Generate Reports"))
+        addView(sectionHeader(getString(R.string.event_reports_generate_reports)))
         addView(buildReportCatalogSkeletonContainer())
     }
 
@@ -516,7 +516,7 @@ open class EventReportsActivity : AppCompatActivity() {
                 marginStart = dp(12)
                 marginEnd = dp(8)
             }
-            addView(text("SELECT EVENT", 10, true, Color.parseColor("#8E8EA9")))
+            addView(text(getString(R.string.event_reports_select_event_caps), 10, true, Color.parseColor("#8E8EA9")))
             addView(View(this@EventReportsActivity).apply {
                 background = ResourcesCompat.getDrawable(resources, R.drawable.bg_staff_skeleton_bar, theme)
                 layoutParams = LinearLayout.LayoutParams(dp(120), dp(16)).apply {
@@ -589,17 +589,17 @@ open class EventReportsActivity : AppCompatActivity() {
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                 )
 
-                addView(summaryStatColumn("Registered", 0))
+                addView(summaryStatColumn(getString(R.string.common_registered), 0))
                 addView(View(this@EventReportsActivity).apply {
                     setBackgroundColor(Color.parseColor("#30FFFFFF"))
                     layoutParams = LinearLayout.LayoutParams(dp(1), dp(36))
                 })
-                addView(summaryStatColumn("Checked In", 0))
+                addView(summaryStatColumn(getString(R.string.common_checked_in), 0))
                 addView(View(this@EventReportsActivity).apply {
                     setBackgroundColor(Color.parseColor("#30FFFFFF"))
                     layoutParams = LinearLayout.LayoutParams(dp(1), dp(36))
                 })
-                addView(summaryStatColumn("Exited", 0))
+                addView(summaryStatColumn(getString(R.string.event_reports_exited), 0))
             }
             addView(statsRow)
         }
@@ -678,7 +678,7 @@ open class EventReportsActivity : AppCompatActivity() {
         }
 
         root.addView(text(item.label, 18, true))
-        root.addView(text("Optional filters", 13, false, MUTED).apply {
+        root.addView(text(getString(R.string.event_reports_optional_filters), 13, false, MUTED).apply {
             setPadding(0, dp(4), 0, dp(12))
         })
 
@@ -703,11 +703,11 @@ open class EventReportsActivity : AppCompatActivity() {
             }
         }
 
-        val startDateInput = buildDateInput("Start Date") { picked ->
+        val startDateInput = buildDateInput(getString(R.string.event_reports_start_date)) { picked ->
             startDate = picked
             refreshGenerateState()
         }
-        val endDateInput = buildDateInput("End Date") { picked ->
+        val endDateInput = buildDateInput(getString(R.string.event_reports_end_date)) { picked ->
             endDate = picked
             refreshGenerateState()
         }
@@ -725,7 +725,7 @@ open class EventReportsActivity : AppCompatActivity() {
             root.addView(statusSelector { status = it })
         }
 
-        generateButton = primaryButton("Generate") {
+        generateButton = primaryButton(getString(R.string.event_reports_generate)) {
             if (!ReportFilterRules.canGenerate(startDate, endDate)) {
                 refreshGenerateState()
                 return@primaryButton
@@ -794,7 +794,7 @@ open class EventReportsActivity : AppCompatActivity() {
 
                 is NetworkResult.Error -> {
                     Snackbar.make(sheetRoot, result.message, Snackbar.LENGTH_LONG)
-                        .setAction("Retry") { generateSingleReport(item, filters, dialog, sheetRoot) }
+                        .setAction(getString(R.string.common_retry)) { generateSingleReport(item, filters, dialog, sheetRoot) }
                         .show()
                 }
 
@@ -840,20 +840,20 @@ open class EventReportsActivity : AppCompatActivity() {
     }
 
     private fun reportCatalog(): List<EventReportCatalogItem> = listOf(
-        EventReportCatalogItem(EventReportType.ROSTER, "Attendee Roster Report", R.drawable.ic_group, Color.parseColor("#6366F1"), Color.parseColor("#EEF2FF")),
-        EventReportCatalogItem(EventReportType.NO_SHOWS, "Not Checked In Report", R.drawable.ic_nav_profile, Color.parseColor("#EF4444"), Color.parseColor("#FEE2E2")),
-        EventReportCatalogItem(EventReportType.ENTRY_LOGS, "Entry Logs Report", R.drawable.ic_scan, Color.parseColor("#8B5CF6"), Color.parseColor("#F3E8FF")),
-        EventReportCatalogItem(EventReportType.ATTENDANCE, "Attendance Report", R.drawable.ic_organizer_bar_chart, Color.parseColor("#4F46E5"), Color.parseColor("#EEF2FF")),
-        EventReportCatalogItem(EventReportType.CLAIMS, "Benefit Claims Report", R.drawable.ic_nav_gift, Color.parseColor("#F59E0B"), Color.parseColor("#FEF3C7")),
-        EventReportCatalogItem(EventReportType.BOOTH_VISITS, "Booth/Session Visits Report", R.drawable.ic_calendar, Color.parseColor("#10B981"), Color.parseColor("#DCFCE7")),
-        EventReportCatalogItem(EventReportType.EXIT_LOGS, "Exit Logs Report", R.drawable.ic_chevron_right, Color.parseColor("#0EA5E9"), Color.parseColor("#E0F2FE")),
-        EventReportCatalogItem(EventReportType.POINTS, "Points Report", R.drawable.ic_organizer_reports, Color.parseColor("#06B6D4"), Color.parseColor("#CFFAFE")),
+        EventReportCatalogItem(EventReportType.ROSTER, getString(R.string.event_reports_title_roster), R.drawable.ic_group, Color.parseColor("#6366F1"), Color.parseColor("#EEF2FF")),
+        EventReportCatalogItem(EventReportType.NO_SHOWS, getString(R.string.event_reports_title_no_shows), R.drawable.ic_nav_profile, Color.parseColor("#EF4444"), Color.parseColor("#FEE2E2")),
+        EventReportCatalogItem(EventReportType.ENTRY_LOGS, getString(R.string.event_reports_title_entry_logs), R.drawable.ic_scan, Color.parseColor("#8B5CF6"), Color.parseColor("#F3E8FF")),
+        EventReportCatalogItem(EventReportType.ATTENDANCE, getString(R.string.event_reports_title_attendance), R.drawable.ic_organizer_bar_chart, Color.parseColor("#4F46E5"), Color.parseColor("#EEF2FF")),
+        EventReportCatalogItem(EventReportType.CLAIMS, getString(R.string.event_reports_title_claims), R.drawable.ic_nav_gift, Color.parseColor("#F59E0B"), Color.parseColor("#FEF3C7")),
+        EventReportCatalogItem(EventReportType.BOOTH_VISITS, getString(R.string.event_reports_title_booth_visits), R.drawable.ic_calendar, Color.parseColor("#10B981"), Color.parseColor("#DCFCE7")),
+        EventReportCatalogItem(EventReportType.EXIT_LOGS, getString(R.string.event_reports_title_exit_logs), R.drawable.ic_chevron_right, Color.parseColor("#0EA5E9"), Color.parseColor("#E0F2FE")),
+        EventReportCatalogItem(EventReportType.POINTS, getString(R.string.event_reports_title_points), R.drawable.ic_organizer_reports, Color.parseColor("#06B6D4"), Color.parseColor("#CFFAFE")),
     )
 
     private data class DateInputHolder(val wrapper: LinearLayout, val valueView: TextView)
 
     private fun buildDateInput(label: String, onChanged: (LocalDate?) -> Unit): DateInputHolder {
-        val valueView = text("Select", 14, false, MUTED)
+        val valueView = text(getString(R.string.event_reports_select), 14, false, MUTED)
         val wrapper = card(12).apply {
             addView(text(label, 13, true))
             addView(row().apply {
@@ -902,7 +902,7 @@ open class EventReportsActivity : AppCompatActivity() {
     }
 
     private fun statusSelector(onSelected: (EventReportFilterStatus) -> Unit): LinearLayout = card(12).apply {
-        addView(text("Transaction Status", 13, true))
+        addView(text(getString(R.string.event_reports_transaction_status), 13, true))
         val chipRow = row().apply {
             setPadding(0, dp(10), 0, 0)
             gravity = Gravity.START
@@ -927,9 +927,9 @@ open class EventReportsActivity : AppCompatActivity() {
             }
         }
 
-        chipRow.addView(statusChip("All", EventReportFilterStatus.ALL))
-        chipRow.addView(statusChip("Approved", EventReportFilterStatus.APPROVED))
-        chipRow.addView(statusChip("Rejected", EventReportFilterStatus.REJECTED))
+        chipRow.addView(statusChip(getString(R.string.common_all), EventReportFilterStatus.ALL))
+        chipRow.addView(statusChip(getString(R.string.common_approved), EventReportFilterStatus.APPROVED))
+        chipRow.addView(statusChip(getString(R.string.common_rejected), EventReportFilterStatus.REJECTED))
         addView(chipRow)
     }
 }

@@ -17,8 +17,7 @@ public class CacheConfig {
         CaffeineCacheManager manager = new CaffeineCacheManager(
                 "events",
                 "registrations",
-                "scan-purposes",
-                "transaction-rules");
+                "scan-purposes");
         manager.setCaffeine(Caffeine.newBuilder()
                 .expireAfterWrite(5, TimeUnit.MINUTES)
                 .maximumSize(10_000));

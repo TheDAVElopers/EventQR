@@ -54,7 +54,7 @@ class ReportPresentationTest {
     @Test
     fun searchHint_mentionsNameIdAndEmail() {
         assertEquals("Type a name, ID or email", context.getString(R.string.event_reports_attendee_search_hint))
-        assertEquals("Attendee Search (Name or ID)", context.getString(R.string.event_reports_attendee_search_label))
+        assertEquals("Attendee Search (Name, ID or Email)", context.getString(R.string.event_reports_attendee_search_label))
     }
 
     // ---- points sign rendering

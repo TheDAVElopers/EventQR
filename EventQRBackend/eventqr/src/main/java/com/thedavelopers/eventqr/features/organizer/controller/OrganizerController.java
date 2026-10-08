@@ -84,7 +84,7 @@ public class OrganizerController {
                                                                        @RequestParam String status) {
         requireOrganizer(request);
         return ResponseEntity.ok(ApiResponse.success("Event status updated",
-                organizerService.updateStatus(currentUserId(request), eventId, currentRole(request), com.thedavelopers.eventqr.shared.constants.EventStatus.valueOf(status))));
+                organizerService.updateStatus(currentUserId(request), eventId, currentRole(request), parseEventStatus(status))));
     }
 
     @GetMapping("/events/{eventId}/dashboard")
@@ -313,5 +313,14 @@ public class OrganizerController {
 
     private AccountRole currentRole(HttpServletRequest request) {
         return jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
+    }
+
+    private static com.thedavelopers.eventqr.shared.constants.EventStatus parseEventStatus(String status) {
+        try {
+            return com.thedavelopers.eventqr.shared.constants.EventStatus.valueOf(status == null ? "" : status.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new com.thedavelopers.eventqr.shared.exceptions.BadRequestException("Invalid event status '" + status + "'. Allowed: "
+                    + java.util.Arrays.toString(com.thedavelopers.eventqr.shared.constants.EventStatus.values()));
+        }
     }
 }

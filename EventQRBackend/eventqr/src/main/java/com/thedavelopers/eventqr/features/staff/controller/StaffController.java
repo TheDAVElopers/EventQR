@@ -39,6 +39,8 @@ import com.thedavelopers.eventqr.features.transactions.service.TransactionServic
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.AccountRoles;
 import com.thedavelopers.eventqr.shared.constants.EventStatus;
+import com.thedavelopers.eventqr.shared.constants.ScanPurposeCode;
+import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.interfaces.ScanPurposePort.ScanPurposeSnapshot;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
@@ -150,7 +152,7 @@ public class StaffController {
                                                                          @PathVariable UUID eventId,
                                                                          @Valid @RequestBody TransactionRequest body) {
         requireScanPermission(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success(transactionService.verify(normalize(eventId, body))));
+        return ResponseEntity.ok(ApiResponse.success(transactionService.verify(normalize(request, eventId, body))));
     }
 
     @PostMapping("/events/{eventId}/scan/entry")
@@ -158,7 +160,7 @@ public class StaffController {
                                                                   @PathVariable UUID eventId,
                                                                   @Valid @RequestBody TransactionRequest body) {
         requireScanPermission(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success("Entry recorded", transactionService.record(normalize(eventId, body))));
+        return recordScan(request, eventId, body, "Entry", ScanPurposeCode.ENTRY);
     }
 
     @PostMapping("/events/{eventId}/scan/attendance")
@@ -166,7 +168,7 @@ public class StaffController {
                                                                       @PathVariable UUID eventId,
                                                                       @Valid @RequestBody TransactionRequest body) {
         requireScanPermission(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success("Attendance recorded", transactionService.record(normalize(eventId, body))));
+        return recordScan(request, eventId, body, "Attendance", ScanPurposeCode.ATTENDANCE);
     }
 
     @PostMapping("/events/{eventId}/scan/benefit-claim")
@@ -174,7 +176,7 @@ public class StaffController {
                                                                       @PathVariable UUID eventId,
                                                                       @Valid @RequestBody TransactionRequest body) {
         requireScanPermission(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success("Benefit claim recorded", transactionService.record(normalize(eventId, body))));
+        return recordScan(request, eventId, body, "Benefit claim", ScanPurposeCode.BENEFIT_CLAIM);
     }
 
     @PostMapping("/events/{eventId}/scan/booth-visit")
@@ -182,7 +184,7 @@ public class StaffController {
                                                                        @PathVariable UUID eventId,
                                                                        @Valid @RequestBody TransactionRequest body) {
         requireScanPermission(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success("Booth visit recorded", transactionService.record(normalize(eventId, body))));
+        return recordScan(request, eventId, body, "Booth visit", ScanPurposeCode.BOOTH_VISIT, ScanPurposeCode.SESSION_VISIT);
     }
 
     @PostMapping("/events/{eventId}/scan/reward-redemption")
@@ -190,7 +192,7 @@ public class StaffController {
                                                                                @PathVariable UUID eventId,
                                                                                @Valid @RequestBody TransactionRequest body) {
         requireScanPermission(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success("Reward redemption scan recorded", transactionService.record(normalize(eventId, body))));
+        return recordScan(request, eventId, body, "Reward redemption scan", ScanPurposeCode.REWARD_REDEMPTION_SCAN, ScanPurposeCode.REWARD_REDEMPTION);
     }
 
     @PostMapping("/events/{eventId}/scan/exit")
@@ -198,7 +200,7 @@ public class StaffController {
                                                                   @PathVariable UUID eventId,
                                                                   @Valid @RequestBody TransactionRequest body) {
         requireScanPermission(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success("Exit recorded", transactionService.record(normalize(eventId, body))));
+        return recordScan(request, eventId, body, "Exit", ScanPurposeCode.EXIT);
     }
 
     @PostMapping("/events/{eventId}/scan/reject")
@@ -206,7 +208,7 @@ public class StaffController {
                                                                   @PathVariable UUID eventId,
                                                                   @Valid @RequestBody TransactionRequest body) {
         requireScanPermission(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success("Scan rejected", transactionService.record(normalize(eventId, body))));
+        return ResponseEntity.ok(ApiResponse.success("Scan rejected", transactionService.rejectManually(normalize(request, eventId, body))));
     }
 
     @GetMapping("/events/{eventId}/scan/latest")
@@ -259,6 +261,9 @@ public class StaffController {
                                                                         @PathVariable UUID rewardId,
                                                                         @Valid @RequestBody RewardRedemptionRequest body) {
         requireActiveAssignment(request, eventId);
+        if (!eventService.findOne(eventId).rewardsEnabled()) {
+            throw new BadRequestException(TransactionService.REWARDS_DISABLED_MESSAGE);
+        }
         RewardRedemptionRequest normalized = new RewardRedemptionRequest(eventId, body.attendeeUserId(), rewardId);
         return ResponseEntity.ok(ApiResponse.success("Reward redeemed", rewardService.redeem(normalized)));
     }
@@ -279,12 +284,31 @@ public class StaffController {
         return ResponseEntity.ok(ApiResponse.success("Points deducted", rewardService.deductPoints(eventId, body.attendeeUserId(), body.points(), body.reason())));
     }
 
+    /**
+     * Records a scan on a purpose-specific route. The scan purpose in the body must be one this route handles,
+     * and the message reflects the real outcome (an approved scan is "recorded", a rejected one carries its reason).
+     */
+    private ResponseEntity<ApiResponse<TransactionResponse>> recordScan(HttpServletRequest request, UUID eventId, TransactionRequest body, String label,
+                                                                       ScanPurposeCode... allowed) {
+        var purpose = scanPurposeService.requireActive(body.scanPurposeId());
+        if (!eventId.equals(purpose.eventId())) {
+            throw new ForbiddenException("Scan purpose does not belong to the event");
+        }
+        ScanPurposeCode actual = purpose.code();
+        if (!java.util.Arrays.asList(allowed).contains(actual)) {
+            throw new BadRequestException("Scan purpose " + actual + " cannot be recorded on the " + label.toLowerCase() + " route");
+        }
+        TransactionResponse response = transactionService.record(normalize(request, eventId, body));
+        return ResponseEntity.ok(ApiResponse.success(TransactionService.describeOutcome(label, response), response));
+    }
+
     private static Pageable pageable(int page, int size) {
         return PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100));
     }
 
-    private TransactionRequest normalize(UUID eventId, TransactionRequest request) {
-        return new TransactionRequest(eventId, request.scanPurposeId(), request.qrValue(), request.shortId(), request.staffUserId(), request.notes(),
+    private TransactionRequest normalize(HttpServletRequest httpRequest, UUID eventId, TransactionRequest request) {
+        // staffUserId is always the authenticated caller; any body value is ignored.
+        return new TransactionRequest(eventId, request.scanPurposeId(), request.qrValue(), request.shortId(), currentUserId(httpRequest), request.notes(),
                 request.clientRequestId());
     }
 

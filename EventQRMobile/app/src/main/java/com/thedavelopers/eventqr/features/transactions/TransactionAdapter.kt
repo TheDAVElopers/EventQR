@@ -63,6 +63,9 @@ class TransactionAdapter : RecyclerView.Adapter<TransactionAdapter.ViewHolder>()
                 // A rejected/failed scan awards nothing; never render it as a green "+0 pts".
                 pointsView.text = "Rejected"
                 pointsView.setTextColor(Color.parseColor("#EF4444"))
+            } else if (item.pointsDelta == 0) {
+                pointsView.text = itemView.context.getString(R.string.transaction_no_points)
+                pointsView.setTextColor(Color.parseColor("#6B7280"))
             } else {
                 val deltaPrefix = if (isEarned) "+" else ""
                 pointsView.text = "$deltaPrefix${item.pointsDelta} pts"

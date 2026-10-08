@@ -33,6 +33,7 @@
 		<!-- Override BOM-managed tomcat (10.1.55) with 10.1.59 to fix the Aug-2026
 		     Tomcat CVEs (CVE-2026-65905, CVE-2026-65182, CVE-2026-65637, ...). -->
 		<tomcat.version>10.1.59</tomcat.version>
+		<argLine>-XX:+EnableDynamicAgentLoading -Djdk.attach.allowAttachSelf=true -javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/1.17.8/byte-buddy-agent-1.17.8.jar</argLine>
 	</properties>
 	<dependencies>
 		<dependency>

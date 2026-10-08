@@ -12,6 +12,12 @@ public interface QrCredentialPort {
 
     QrCredentialSnapshot issueOrReturnExisting(UUID eventId, UUID attendeeUserId, UUID registrationId, String attendeeEmail);
 
+    /**
+     * Replaces the registration's credential with a fresh, active one (new QR value, delivery state reset); issues
+     * one if none exists. Used when a cancelled registration is reactivated so the old pass stays dead.
+     */
+    QrCredentialSnapshot reissueCredential(UUID eventId, UUID attendeeUserId, UUID registrationId, String attendeeEmail);
+
     Optional<QrCredentialSnapshot> findById(UUID qrCredentialId);
 
     Optional<QrCredentialSnapshot> findByRegistrationId(UUID registrationId);

@@ -58,6 +58,7 @@ public class EventService implements EventLookupPort {
         return toResponse(eventRepository.save(event));
     }
 
+    @CacheEvict(cacheNames = "events", allEntries = true)
     public EventResponse review(UUID eventId, EventApprovalRequest request) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
@@ -68,6 +69,7 @@ public class EventService implements EventLookupPort {
         return toResponse(eventRepository.save(event));
     }
 
+    @CacheEvict(cacheNames = "events", allEntries = true)
     public EventResponse activate(UUID eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));

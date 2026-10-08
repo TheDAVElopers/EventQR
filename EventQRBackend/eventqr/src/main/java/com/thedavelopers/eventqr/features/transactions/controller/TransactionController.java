@@ -48,7 +48,11 @@ public class TransactionController {
     public ResponseEntity<ApiResponse<TransactionResponse>> record(HttpServletRequest request,
                                                                    @Valid @RequestBody TransactionRequest body) {
         requireStaffOrOrganizerForEvent(request, body.eventId());
-        return ResponseEntity.ok(ApiResponse.success("Transaction recorded", transactionService.record(body)));
+        // staffUserId is always the authenticated caller; any body value is ignored.
+        TransactionRequest effective = new TransactionRequest(body.eventId(), body.scanPurposeId(), body.qrValue(), body.shortId(),
+                jwtService.extractUserIdFromBearer(request.getHeader("Authorization")), body.notes(), body.clientRequestId());
+        TransactionResponse response = transactionService.record(effective);
+        return ResponseEntity.ok(ApiResponse.success(TransactionService.describeOutcome("Transaction", response), response));
     }
 
     @GetMapping("/event/{eventId}")

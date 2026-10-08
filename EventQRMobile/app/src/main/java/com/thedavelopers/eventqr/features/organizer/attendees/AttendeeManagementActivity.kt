@@ -131,7 +131,7 @@ open class AttendeeManagementActivity : AppCompatActivity() {
     }
 
     private fun formatDateOnly(rawDate: String): String {
-        if (rawDate.isBlank()) return "2026-09-22"
+        if (rawDate.isBlank()) return "-"
         val cleaned = rawDate
             .replace(Regex("T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z?"), "")
             .trim()
@@ -140,7 +140,7 @@ open class AttendeeManagementActivity : AppCompatActivity() {
             .substringBefore("T")
             .substringBefore("·")
             .trim()
-        return datePart.ifBlank { "2026-09-22" }
+        return datePart.ifBlank { "-" }
     }
 
     private fun setupEventSelector(events: List<OrganizerMvpEvent>) {
@@ -196,7 +196,7 @@ open class AttendeeManagementActivity : AppCompatActivity() {
                 }
 
                 val titleTv = TextView(this@AttendeeManagementActivity).apply {
-                    text = event.title.ifBlank { "Untitled Event" }
+                    text = event.title.ifBlank { getString(R.string.organizer_untitled_event) }
                     setTextColor(if (isSelected) Color.parseColor("#5B25C9") else Color.parseColor("#121735"))
                     textSize = 14f
                     setTypeface(null, if (isSelected) Typeface.BOLD else Typeface.NORMAL)
@@ -271,7 +271,7 @@ open class AttendeeManagementActivity : AppCompatActivity() {
 
     private fun bindEventHeader() {
         val event = selectedEvent ?: return
-        txtEventTitle.text = event.title.ifBlank { "Choose an Event" }
+        txtEventTitle.text = event.title.ifBlank { getString(R.string.organizer_choose_an_event) }
         txtEventSelectorDate.text = formatDateOnly(event.shortDate)
     }
 
@@ -285,7 +285,7 @@ open class AttendeeManagementActivity : AppCompatActivity() {
         emptyStateTitle.text = getString(R.string.attendee_management_no_event_selected)
         emptyStateSub.text = getString(R.string.attendee_management_select_an_event_from_the_dropdown_ab)
         txtEventTitle.text = getString(R.string.attendee_management_choose_an_event)
-        txtEventSelectorDate.text = "2026-09-22"
+        txtEventSelectorDate.text = "-"
     }
 
     private fun showNoEventsAvailableState() {
@@ -325,7 +325,7 @@ open class AttendeeManagementActivity : AppCompatActivity() {
         when {
             load.source == OrganizerMvpDataSource.ERROR -> {
                 emptyStateTitle.text = getString(R.string.attendee_management_unable_to_load_attendees)
-                emptyStateSub.text = load.message ?: "Please try again later."
+                emptyStateSub.text = load.message ?: getString(R.string.organizer_try_again_later)
             }
             attendees.isEmpty() -> {
                 emptyStateTitle.text = getString(R.string.attendee_management_no_attendees_registered_yet)

@@ -175,23 +175,22 @@ class DashboardPresenter(
                 .filter { !isEnded(it) }
                 .sortedWith(activeOrUpcomingComparator)
 
-            val discoverEvents = if (activeOrUpcomingCandidates.isNotEmpty()) {
-                activeOrUpcomingCandidates.take(5)
-            } else {
-                remainingCandidates
-                    .sortedByDescending { it.eventStartAt ?: it.eventEndAt ?: Instant.MIN }
-                    .take(5)
-            }
+            // Never show past events here; an empty list renders the "No upcoming events" state.
+            val discoverEvents = activeOrUpcomingCandidates.take(5)
 
             // Same definitions as the Registered tab chips: Registered = live registrations whose event
             // has not ended; Completed = live registrations whose event has ended.
             val tabCounts = DashboardStats.registrationCounts(registrations, now)
-            val registeredCount = if (registrationsResult is NetworkResult.Success) {
-                tabCounts.registered
-            } else if (summaryResult is NetworkResult.Success) {
-                summaryResult.data.totalRegistrations.toInt()
+            // When /registrations failed, derive from the summary: counted registrations minus completed ones
+            // (so ended events are not counted as Registered). Without a completed count the value is unknown.
+            val summaryCompleted: Long? = (summaryResult as? NetworkResult.Success)?.data?.completedEventsCount
+            val summaryTotalRegs: Long? = (summaryResult as? NetworkResult.Success)?.data?.totalRegistrations
+            val registeredCount: Long? = if (registrationsResult is NetworkResult.Success) {
+                tabCounts.registered.toLong()
+            } else if (summaryTotalRegs != null && summaryCompleted != null) {
+                (summaryTotalRegs - summaryCompleted).coerceAtLeast(0L)
             } else {
-                tabCounts.registered
+                null
             }
 
             val upcomingCount = if (eventsResult is NetworkResult.Success || allEvents.isNotEmpty()) {
@@ -202,19 +201,17 @@ class DashboardPresenter(
                 0
             }
 
-            val completedCount = if (registrationsResult is NetworkResult.Success) {
-                tabCounts.completed
-            } else if (summaryResult is NetworkResult.Success) {
-                summaryResult.data.completedEventsCount.toInt()
+            val completedCount: Long? = if (registrationsResult is NetworkResult.Success) {
+                tabCounts.completed.toLong()
             } else {
-                0
+                summaryCompleted
             }
 
             if (summaryResult is NetworkResult.Success) {
                 val summary = summaryResult.data.copy(
-                    totalRegistrations = registeredCount.toLong(),
+                    totalRegistrations = registeredCount,
                     totalEvents = upcomingCount.toLong(),
-                    completedEventsCount = completedCount.toLong(),
+                    completedEventsCount = completedCount,
                     upcomingEvents = nextEventList,
                     discoverEvents = discoverEvents,
                 )
@@ -222,10 +219,10 @@ class DashboardPresenter(
             } else if (allEvents.isNotEmpty() || registrations.isNotEmpty()) {
                 val fallbackSummary = DashboardSummary(
                     totalEvents = upcomingCount.toLong(),
-                    totalRegistrations = registeredCount.toLong(),
+                    totalRegistrations = registeredCount,
                     totalTransactions = 0L,
                     totalPoints = 0L,
-                    completedEventsCount = completedCount.toLong(),
+                    completedEventsCount = completedCount,
                     totalNotifications = 0L,
                     fullName = sessionManager.getFullName(),
                     upcomingEvents = nextEventList,

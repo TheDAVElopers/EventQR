@@ -103,6 +103,7 @@ class OrganizerControllerTest {
                 new Object[] {HttpMethod.GET, e + "/staff"},
                 new Object[] {HttpMethod.GET, e + "/staff/search?query=bob"},
                 new Object[] {HttpMethod.DELETE, e + "/staff/" + a},
+                new Object[] {HttpMethod.DELETE, e + "/scan-purposes/" + a},
                 new Object[] {HttpMethod.GET, "/api/v1/organizer/users/search?query=bob"},
                 new Object[] {HttpMethod.GET, e + "/scan-purposes"});
     }
@@ -241,5 +242,30 @@ class OrganizerControllerTest {
         when(organizerService.event(userId, eventId, AccountRole.ORGANIZER)).thenReturn(disabled);
         mvc.perform(get("/api/v1/organizer/events/{id}/reward-settings", eventId).header("Authorization", ORGANIZER))
                 .andExpect(jsonPath("$.data").value(false));
+    }
+
+    @Test
+    void deletingScanPurposeReportsSuccessAndCallsTheService() throws Exception {
+        UUID purposeId = UUID.randomUUID();
+
+        mvc.perform(delete("/api/v1/organizer/events/{id}/scan-purposes/{purposeId}", eventId, purposeId)
+                        .header("Authorization", ORGANIZER))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Scan purpose deleted"));
+
+        verify(organizerService).deleteScanPurpose(userId, eventId, AccountRole.ORGANIZER, purposeId);
+    }
+
+    @Test
+    void deletingScanPurposeWhenTransactionsExistReturns409() throws Exception {
+        UUID purposeId = UUID.randomUUID();
+        org.mockito.Mockito.doThrow(new com.thedavelopers.eventqr.shared.exceptions.ConflictException(
+                        "Scan purpose cannot be deleted because transaction logs exist"))
+                .when(organizerService).deleteScanPurpose(userId, eventId, AccountRole.ORGANIZER, purposeId);
+
+        mvc.perform(delete("/api/v1/organizer/events/{id}/scan-purposes/{purposeId}", eventId, purposeId)
+                        .header("Authorization", ORGANIZER))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("Scan purpose cannot be deleted because transaction logs exist"));
     }
 }

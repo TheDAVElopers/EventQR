@@ -138,6 +138,26 @@ class StaffScreensTest {
     }
 
     @Test
+    fun scanResult_ineligibleScanShowsBackendReasonNotInactiveCopy() {
+        val intent = Intent().apply {
+            putExtra(StaffScreenExtras.EXTRA_IS_VALID, true)
+            putExtra(StaffScreenExtras.EXTRA_QR_ACTIVE, true)
+            putExtra(StaffScreenExtras.EXTRA_ELIGIBLE, false)
+            putExtra(StaffScreenExtras.EXTRA_MESSAGE, "Already scanned for this purpose")
+            putExtra(StaffScreenExtras.EXTRA_REGISTRATION_STATUS, "REGISTERED")
+        }
+        val activity = Robolectric.buildActivity(StaffScanResultActivity::class.java, intent).create().get()
+
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.headerRejected).visibility)
+        assertEquals(
+            context.getString(R.string.staff_scan_result_not_allowed),
+            activity.findViewById<TextView>(R.id.txtScanResultStateRejected).text.toString(),
+        )
+        assertEquals("Already scanned for this purpose", activity.findViewById<TextView>(R.id.txtScanResultReason).text.toString())
+        assertEquals(View.GONE, activity.findViewById<Button>(R.id.btnContinueTransaction).visibility)
+    }
+
+    @Test
     fun scanResult_noHardCodedVerifiedSuccessfullyCopyForActiveScans() {
         val activity = scanResult(qrActive = true)
         val hint = activity.findViewById<TextView>(R.id.txtScanResultStatusHint).text.toString()

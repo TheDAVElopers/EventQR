@@ -26,7 +26,8 @@ public class ScanPurposeService implements ScanPurposePort {
         this.scanPurposeRepository = scanPurposeRepository;
     }
 
-    @CacheEvict(cacheNames = "scan-purposes", key = "#request.eventId()")
+    // Two key shapes share this cache (eventId and "snap:"+eventId), so evict everything.
+    @CacheEvict(cacheNames = "scan-purposes", allEntries = true)
     public ScanPurposeResponse create(ScanPurposeRequest request) {
         ScanPurpose scanPurpose = new ScanPurpose();
         scanPurpose.setEventId(request.eventId());

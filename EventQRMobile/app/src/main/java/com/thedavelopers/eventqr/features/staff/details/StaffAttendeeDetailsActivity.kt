@@ -46,7 +46,7 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
     private var cachedRole: String = ""
     private var cachedEventDate: String = ""
 
-    private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH)
+    private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a", Locale.ENGLISH).withZone(ZoneId.of("Asia/Manila"))
         .withZone(ZoneId.of("Asia/Manila"))
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -121,7 +121,7 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.txtDetailRegistrationId).text =
             RegistrationNumberFormatter.format(item.registrationNumber) ?: shortRegistrationId(item.registrationId)
         RegistrationStatusBadgeStyler.bind(findViewById(R.id.txtDetailRegistrationStatus), item.status)
-        findViewById<TextView>(R.id.txtDetailCheckInTime).text = formatTime(item.enteredAt ?: item.attendedAt)
+        findViewById<TextView>(R.id.txtDetailCheckInTime).text = formatTime(item.enteredAt)
         findViewById<TextView>(R.id.txtDetailPointsBalance).text = "${item.pointsEarned} pts"
         findViewById<TextView>(R.id.txtDetailTransactionCount).text = getString(R.string.common_value_unavailable)
 

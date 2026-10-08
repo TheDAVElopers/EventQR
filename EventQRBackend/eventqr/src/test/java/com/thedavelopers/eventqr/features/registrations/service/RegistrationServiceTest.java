@@ -217,8 +217,8 @@ class RegistrationServiceTest {
     @Test
     void registeringTwiceWithTheSameEmailIsAConflictEvenIfTheCaseDiffers() {
         when(eventLookupPort.findById(eventId)).thenReturn(Optional.of(openEvent()));
-        when(registrationRepository.existsByEventIdAndAttendeeEmailIgnoreCase(eventId, "jane@example.com"))
-                .thenReturn(true);
+        when(registrationRepository.findByEventIdAndAttendeeEmailIgnoreCase(eventId, "jane@example.com"))
+                .thenReturn(Optional.of(registration(UUID.randomUUID(), attendeeId, RegistrationStatus.REGISTERED)));
 
         assertThatThrownBy(() -> service.register(request)).isInstanceOf(ConflictException.class);
         verify(attendeeDirectoryPort, never()).findOrCreateAttendee(any(), any(), any(), any());
@@ -228,7 +228,8 @@ class RegistrationServiceTest {
     void theSameUserCannotRegisterTwiceEvenUnderADifferentEmail() {
         when(eventLookupPort.findById(eventId)).thenReturn(Optional.of(openEvent()));
         when(attendeeDirectoryPort.findOrCreateAttendee(any(), any(), any(), any())).thenReturn(attendee(attendeeId));
-        when(registrationRepository.existsByEventIdAndAttendeeUserId(eventId, attendeeId)).thenReturn(true);
+        when(registrationRepository.findFirstByEventIdAndAttendeeUserId(eventId, attendeeId))
+                .thenReturn(Optional.of(registration(UUID.randomUUID(), attendeeId, RegistrationStatus.REGISTERED)));
 
         assertThatThrownBy(() -> service.register(request)).isInstanceOf(ConflictException.class);
         verify(registrationRepository, never()).saveAndFlush(any());
@@ -248,8 +249,8 @@ class RegistrationServiceTest {
     void theOrganizerIsToldWhenTheEventFillsUp() {
         givenSuccessfulRegistrationDependencies();
         when(eventLookupPort.findById(eventId)).thenReturn(Optional.of(
-                event(EventStatus.APPROVED, Instant.now().minusSeconds(60), Instant.now().plusSeconds(60), 10, 9)));
-        when(registrationRepository.countByEventId(eventId)).thenReturn(10L);
+                event(EventStatus.APPROVED, Instant.now().minusSeconds(60), Instant.now().plusSeconds(60), 10, 9)),
+                Optional.of(event(EventStatus.APPROVED, Instant.now().minusSeconds(60), Instant.now().plusSeconds(60), 10, 10)));
 
         service.register(request);
 
@@ -260,13 +261,117 @@ class RegistrationServiceTest {
     void theOrganizerGetsAWarningAtEightyPercent() {
         givenSuccessfulRegistrationDependencies();
         when(eventLookupPort.findById(eventId)).thenReturn(Optional.of(
-                event(EventStatus.APPROVED, Instant.now().minusSeconds(60), Instant.now().plusSeconds(60), 10, 7)));
-        when(registrationRepository.countByEventId(eventId)).thenReturn(8L);
+                event(EventStatus.APPROVED, Instant.now().minusSeconds(60), Instant.now().plusSeconds(60), 10, 7)),
+                Optional.of(event(EventStatus.APPROVED, Instant.now().minusSeconds(60), Instant.now().plusSeconds(60), 10, 8)));
 
         service.register(request);
 
         verify(notificationService).createCapacityWarningNotification(eventId, organizerId, "Tech Conf", 8, 10);
         verify(notificationService, never()).createCapacityFullNotification(any(), any(), any(), anyInt(), anyInt());
+    }
+
+    // ----- reactivating a cancelled registration -----
+
+    private EventRegistration givenCancelledRegistration() {
+        givenSuccessfulRegistrationDependencies();
+        EventRegistration cancelled = registration(UUID.randomUUID(), attendeeId, RegistrationStatus.CANCELLED);
+        cancelled.setEnteredAt(Instant.now().minusSeconds(500));
+        cancelled.setExitedAt(Instant.now().minusSeconds(400));
+        when(registrationRepository.findByEventIdAndAttendeeEmailIgnoreCase(eventId, "jane@example.com"))
+                .thenReturn(Optional.of(cancelled));
+        when(registrationRepository.updateStatusIfCurrent(cancelled.getId(), "CANCELLED", "REGISTERED")).thenAnswer(inv -> {
+            cancelled.setStatus(RegistrationStatus.REGISTERED);
+            return 1;
+        });
+        when(registrationRepository.findById(cancelled.getId())).thenReturn(Optional.of(cancelled));
+        when(qrCredentialPort.reissueCredential(any(), any(), any(), any())).thenReturn(qr());
+        return cancelled;
+    }
+
+    @Test
+    void aCancelledRegistrationIsReactivatedWithAFreshQrAndASingleSeat() {
+        EventRegistration cancelled = givenCancelledRegistration();
+
+        RegistrationSubmissionResponse response = service.register(request);
+
+        assertThat(response.registration().registrationId()).isEqualTo(cancelled.getId());
+        assertThat(cancelled.getStatus()).isEqualTo(RegistrationStatus.REGISTERED);
+        assertThat(cancelled.getEnteredAt()).isNull();
+        assertThat(cancelled.getExitedAt()).isNull();
+        verify(eventService).incrementCurrentAttendeeCount(eventId);
+        verify(eventService, never()).decrementCurrentAttendeeCount(any());
+        verify(registrationRepository, never()).saveAndFlush(argThatNew());
+        verify(qrCredentialPort).reissueCredential(eq(eventId), eq(attendeeId), eq(cancelled.getId()), any());
+        verify(qrCredentialPort, never()).issueOrReturnExisting(any(), any(), any(), any());
+        verify(notificationService).createRegistrationConfirmationNotification(eventId, attendeeId, "Tech Conf");
+        verify(applicationEventPublisher).publishEvent(any(Object.class));
+    }
+
+    @Test
+    void reactivationAlsoMatchesTheCancelledRowByUserWhenTheEmailDiffers() {
+        EventRegistration cancelled = givenCancelledRegistration();
+        when(registrationRepository.findByEventIdAndAttendeeEmailIgnoreCase(any(), any())).thenReturn(Optional.empty());
+        when(registrationRepository.findFirstByEventIdAndAttendeeUserId(eventId, attendeeId)).thenReturn(Optional.of(cancelled));
+
+        service.register(request);
+
+        assertThat(cancelled.getStatus()).isEqualTo(RegistrationStatus.REGISTERED);
+        verify(eventService).incrementCurrentAttendeeCount(eventId);
+    }
+
+    @Test
+    void reactivationOnAFullEventLeavesTheRegistrationCancelled() {
+        EventRegistration cancelled = givenCancelledRegistration();
+        org.mockito.Mockito.doThrow(new ConflictException("Event is at capacity"))
+                .when(eventService).incrementCurrentAttendeeCount(eventId);
+
+        assertThatThrownBy(() -> service.register(request)).isInstanceOf(ConflictException.class);
+
+        assertThat(cancelled.getStatus()).isEqualTo(RegistrationStatus.CANCELLED);
+        verify(registrationRepository, never()).updateStatusIfCurrent(any(), any(), any());
+        verify(qrCredentialPort, never()).reissueCredential(any(), any(), any(), any());
+        verify(notificationService, never()).createRegistrationConfirmationNotification(any(), any(), any());
+    }
+
+    @Test
+    void losingTheReactivationRaceReturnsTheSeatAndConflicts() {
+        EventRegistration cancelled = givenCancelledRegistration();
+        org.mockito.Mockito.doReturn(0).when(registrationRepository)
+                .updateStatusIfCurrent(cancelled.getId(), "CANCELLED", "REGISTERED");
+
+        assertThatThrownBy(() -> service.register(request)).isInstanceOf(ConflictException.class);
+
+        verify(eventService).incrementCurrentAttendeeCount(eventId);
+        verify(eventService).decrementCurrentAttendeeCount(eventId);
+        verify(qrCredentialPort, never()).reissueCredential(any(), any(), any(), any());
+    }
+
+    @Test
+    void reactivationFollowsTheRegistrationWindowAndEventStatusRules() {
+        givenCancelledRegistration();
+        when(eventLookupPort.findById(eventId)).thenReturn(Optional.of(
+                event(EventStatus.APPROVED, Instant.now().minusSeconds(7_200), Instant.now().minusSeconds(60), 100, 0)));
+        assertThatThrownBy(() -> service.register(request)).isInstanceOf(ForbiddenException.class);
+
+        when(eventLookupPort.findById(eventId)).thenReturn(Optional.of(
+                event(EventStatus.ENDED, Instant.now().minusSeconds(60), Instant.now().plusSeconds(60), 100, 0)));
+        assertThatThrownBy(() -> service.register(request)).isInstanceOf(ForbiddenException.class);
+
+        verify(eventService, never()).incrementCurrentAttendeeCount(any());
+    }
+
+    @Test
+    void anOrganizerWithACancelledRowStillCannotRegisterForTheirOwnEvent() {
+        givenCancelledRegistration();
+        when(attendeeDirectoryPort.findOrCreateAttendee(any(), any(), any(), any())).thenReturn(attendee(organizerId));
+
+        assertThatThrownBy(() -> service.register(request))
+                .isInstanceOf(ForbiddenException.class).hasMessageContaining("own event");
+        verify(eventService, never()).incrementCurrentAttendeeCount(any());
+    }
+
+    private static EventRegistration argThatNew() {
+        return org.mockito.ArgumentMatchers.argThat(r -> r != null && r.getId() == null);
     }
 
     // ----- lookup and ownership -----
@@ -300,12 +405,26 @@ class RegistrationServiceTest {
         EventRegistration registration = registration(id, attendeeId, RegistrationStatus.REGISTERED);
         when(registrationRepository.findById(id)).thenReturn(Optional.of(registration));
         when(eventLookupPort.findById(eventId)).thenReturn(Optional.of(openEvent()));
+        when(registrationRepository.updateStatusIfCurrent(id, "REGISTERED", "CANCELLED")).thenAnswer(inv -> {
+            registration.setStatus(RegistrationStatus.CANCELLED);
+            return 1;
+        });
 
         service.cancel(id, attendeeId);
         service.cancel(id, attendeeId);
 
         assertThat(registration.getStatus()).isEqualTo(RegistrationStatus.CANCELLED);
         verify(eventService).decrementCurrentAttendeeCount(eventId);
+    }
+
+    @Test
+    void cancellingACheckedInRegistrationIsRefused() {
+        UUID id = UUID.randomUUID();
+        EventRegistration registration = registration(id, attendeeId, RegistrationStatus.ENTERED);
+        when(registrationRepository.findById(id)).thenReturn(Optional.of(registration));
+
+        assertThatThrownBy(() -> service.cancel(id, attendeeId)).isInstanceOf(ConflictException.class);
+        verify(eventService, never()).decrementCurrentAttendeeCount(any());
     }
 
     @Test

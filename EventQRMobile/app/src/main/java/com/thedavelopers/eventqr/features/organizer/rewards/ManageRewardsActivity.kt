@@ -78,7 +78,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
         repository = OrganizerRepository(this)
 
         val shell = organizerRefreshShell(
-            title = "Rewards",
+            title = getString(R.string.manage_rewards_title),
             selectedNav = NAV_REWARDS,
             showBack = false,
             topRightLabel = null,
@@ -107,8 +107,8 @@ open class ManageRewardsActivity : AppCompatActivity() {
                 content.removeAllViews()
                 content.addView(centeredEmptyState(
                     iconRes = R.drawable.ic_nav_gift,
-                    title = "No Events Available",
-                    subtext = "Create an event in the Events tab to manage reward redemptions.",
+                    title = getString(R.string.manage_rewards_no_events_title),
+                    subtext = getString(R.string.manage_rewards_no_events_subtext),
                 ))
                 content.setBackgroundColor(BG)
             }
@@ -122,7 +122,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
         // Card 1: SELECT EVENT
         content.addView(card(16).apply {
             id = com.thedavelopers.eventqr.R.id.mrw_event_selector
-            addView(text("SELECT EVENT", 11, true, Color.parseColor("#8E8EA9")).apply {
+            addView(text(getString(R.string.organizer_select_event_header), 11, true, Color.parseColor("#8E8EA9")).apply {
                 letterSpacing = 0.05f
                 setPadding(0, 0, 0, dp(8))
             })
@@ -159,10 +159,10 @@ open class ManageRewardsActivity : AppCompatActivity() {
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
                     marginEnd = dp(8)
                 }
-                addView(text("Event Rewards", 16, true, TEXT).apply {
+                addView(text(getString(R.string.manage_rewards_event_rewards), 16, true, TEXT).apply {
                     id = com.thedavelopers.eventqr.R.id.mrw_rewards_label
                 })
-                addView(text("Enable or disable reward redemption for this event.", 13, false, MUTED).apply {
+                addView(text(getString(R.string.manage_rewards_event_rewards_desc), 13, false, MUTED).apply {
                     id = com.thedavelopers.eventqr.R.id.mrw_rewards_desc
                     setPadding(0, dp(2), 0, 0)
                 })
@@ -192,7 +192,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
         })
 
         // Section Title: Rewards
-        content.addView(text("Rewards", 18, true, TEXT).apply {
+        content.addView(text(getString(R.string.manage_rewards_title), 18, true, TEXT).apply {
             id = com.thedavelopers.eventqr.R.id.mrw_section_title
             setPadding(dp(2), dp(14), dp(2), dp(10))
         })
@@ -218,7 +218,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
         var selectedIndex = approvedEvents.indexOfFirst { it.id == selected.id }.coerceAtLeast(0)
         val currentEvent = approvedEvents.getOrNull(selectedIndex) ?: selected
 
-        val titleText = text(currentEvent.title.ifBlank { "Select Event" }, 15, true, TEXT).apply {
+        val titleText = text(currentEvent.title.ifBlank { getString(R.string.manage_rewards_select_event_title) }, 15, true, TEXT).apply {
             maxLines = 1
             ellipsize = android.text.TextUtils.TruncateAt.END
         }
@@ -235,7 +235,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
         val arrow = ImageView(this).apply {
             setImageResource(R.drawable.ic_arrow_drop_down)
             setColorFilter(MUTED)
-            contentDescription = "Select event"
+            contentDescription = getString(R.string.manage_rewards_select_event)
         }
 
         val box = LinearLayout(this).apply {
@@ -288,7 +288,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
                     setOnClickListener {
                         selectedIndex = index
                         val sel = approvedEvents[index]
-                        titleText.text = sel.title.ifBlank { "Untitled Event" }
+                        titleText.text = sel.title.ifBlank { getString(R.string.manage_rewards_untitled_event) }
                         subtitleText.text = eventDateLabel(sel)
                         popup?.dismiss()
                         onSelected(sel)
@@ -296,7 +296,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
                     addView(LinearLayout(this@ManageRewardsActivity).apply {
                         orientation = LinearLayout.VERTICAL
                         layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-                        addView(text(event.title.ifBlank { "Untitled Event" }, 15, true, if (isCurrent) PURPLE else TEXT))
+                        addView(text(event.title.ifBlank { getString(R.string.manage_rewards_untitled_event) }, 15, true, if (isCurrent) PURPLE else TEXT))
                         val dateStr = eventDateLabel(event)
                         if (dateStr.isNotBlank()) {
                             addView(text(dateStr, 12, false, MUTED))
@@ -336,7 +336,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
     private fun loadRewards(showInitialLoading: Boolean = true) {
         if (showInitialLoading && !refreshLayout.isRefreshing) {
             rewardHost.removeAllViews()
-            rewardHost.addView(text("Loading rewards...", 14, false, MUTED).apply {
+            rewardHost.addView(text(getString(R.string.manage_rewards_loading), 14, false, MUTED).apply {
                 gravity = Gravity.CENTER
                 setPadding(0, dp(24), 0, dp(24))
             })
@@ -352,7 +352,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
                     return@launch
                 }
                 if (!rewardsResponse.success) {
-                    throw IllegalStateException(rewardsResponse.message ?: "Unable to load rewards.")
+                    throw IllegalStateException(rewardsResponse.message ?: getString(R.string.manage_rewards_load_failed))
                 }
                 rewards = rewardsResponse.data.orEmpty().sortedBy { it.name.lowercase() }
                 redemptions = redemptionsResponse.data.orEmpty()
@@ -362,8 +362,8 @@ open class ManageRewardsActivity : AppCompatActivity() {
                 if (selectedEvent.id != eventId) return@launch
                 refreshLayout.isRefreshing = false
                 rewardHost.removeAllViews()
-                rewardHost.addView(errorState(error.message ?: "Unable to load rewards.") { loadRewards() })
-                Toast.makeText(this@ManageRewardsActivity, error.message ?: "Unable to load rewards.", Toast.LENGTH_SHORT).show()
+                rewardHost.addView(errorState(error.message ?: getString(R.string.manage_rewards_load_failed)) { loadRewards() })
+                Toast.makeText(this@ManageRewardsActivity, error.message ?: getString(R.string.manage_rewards_load_failed), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -383,7 +383,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
                     setColorFilter(resources.getColor(R.color.text_disabled, theme))
                     contentDescription = null
                 })
-                addView(text("No rewards created yet", 16, true, resources.getColor(R.color.text_primary, theme)).apply {
+                addView(text(getString(R.string.manage_rewards_empty_title), 16, true, resources.getColor(R.color.text_primary, theme)).apply {
                     gravity = Gravity.CENTER
                     setPadding(0, dp(12), 0, dp(4))
                     layoutParams = LinearLayout.LayoutParams(
@@ -391,14 +391,14 @@ open class ManageRewardsActivity : AppCompatActivity() {
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                     ).apply { gravity = Gravity.CENTER_HORIZONTAL }
                 })
-                addView(text("Create rewards to let attendees redeem perks during the event.", 14, false, resources.getColor(R.color.text_secondary, theme)).apply {
+                addView(text(getString(R.string.manage_rewards_empty_subtext), 14, false, resources.getColor(R.color.text_secondary, theme)).apply {
                     gravity = Gravity.CENTER
                     layoutParams = LinearLayout.LayoutParams(
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                     ).apply { gravity = Gravity.CENTER_HORIZONTAL }
                 })
-                addView(primaryButton("Add Reward") { showRewardDialog(null) }.apply {
+                addView(primaryButton(getString(R.string.manage_rewards_add_reward)) { showRewardDialog(null) }.apply {
                     layoutParams = LinearLayout.LayoutParams(
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                         dp(48),
@@ -416,19 +416,28 @@ open class ManageRewardsActivity : AppCompatActivity() {
         }
     }
 
+    private enum class RewardBadge { DISABLED, OUT_OF_STOCK, AVAILABLE }
+
     private fun rewardCard(reward: RewardResponse, rewardsEnabled: Boolean): LinearLayout {
         val stockState = RewardCardState.of(reward)
         val outOfStock = stockState.outOfStock
         val active = rewardsEnabled && reward.status == RewardStatus.ACTIVE && !outOfStock
-        val badgeText = when {
-            !rewardsEnabled || reward.status == RewardStatus.INACTIVE -> "Disabled"
-            outOfStock -> getString(R.string.reward_details_out_of_stock)
-            else -> "Available"
+        val badgeKind = when {
+            !rewardsEnabled || reward.status == RewardStatus.INACTIVE -> RewardBadge.DISABLED
+            outOfStock -> RewardBadge.OUT_OF_STOCK
+            else -> RewardBadge.AVAILABLE
         }
-        val (badgeBg, badgeTextColor, dotColor) = when (badgeText) {
-            "Available" -> Triple(Color.parseColor("#DCFCE7"), Color.parseColor("#047857"), Color.parseColor("#10B981"))
-            getString(R.string.reward_details_out_of_stock) -> Triple(Color.parseColor("#FEE2E2"), Color.parseColor("#B91C1C"), Color.parseColor("#EF4444"))
-            else -> Triple(Color.parseColor("#F3F4F6"), Color.parseColor("#374151"), Color.parseColor("#9CA3AF"))
+        val badgeText = getString(
+            when (badgeKind) {
+                RewardBadge.DISABLED -> R.string.manage_rewards_badge_disabled
+                RewardBadge.OUT_OF_STOCK -> R.string.reward_details_out_of_stock
+                RewardBadge.AVAILABLE -> R.string.manage_rewards_badge_available
+            }
+        )
+        val (badgeBg, badgeTextColor, dotColor) = when (badgeKind) {
+            RewardBadge.AVAILABLE -> Triple(Color.parseColor("#DCFCE7"), Color.parseColor("#047857"), Color.parseColor("#10B981"))
+            RewardBadge.OUT_OF_STOCK -> Triple(Color.parseColor("#FEE2E2"), Color.parseColor("#B91C1C"), Color.parseColor("#EF4444"))
+            RewardBadge.DISABLED -> Triple(Color.parseColor("#F3F4F6"), Color.parseColor("#374151"), Color.parseColor("#9CA3AF"))
         }
 
         return card(16).apply {
@@ -524,7 +533,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
             addView(topRow)
 
             if (reward.allowDuplicateClaims) {
-                addView(text("Attendees may claim this reward more than once", 12, false, PURPLE).apply {
+                addView(text(getString(R.string.manage_rewards_duplicate_claims_note), 12, false, PURPLE).apply {
                     setPadding(0, dp(8), 0, 0)
                 })
             }
@@ -539,7 +548,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
             }
 
             val editBtn = buildActionButton(
-                label = "Edit",
+                label = getString(R.string.manage_rewards_edit),
                 iconRes = R.drawable.ic_edit_pencil,
                 bgColor = Color.parseColor("#EEF2FF"),
                 textColor = PURPLE,
@@ -553,7 +562,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
             }
 
             val removeBtn = buildActionButton(
-                label = "Remove",
+                label = getString(R.string.manage_rewards_remove),
                 iconRes = R.drawable.ic_trash,
                 bgColor = Color.parseColor("#8B1D2C"),
                 textColor = Color.WHITE,
@@ -612,13 +621,13 @@ open class ManageRewardsActivity : AppCompatActivity() {
         }
         val titleInput = EditText(this).apply {
             id = com.thedavelopers.eventqr.R.id.mrw_reward_title_input
-            hint = "e.g. Coffee Voucher"
+            hint = getString(R.string.manage_rewards_title_hint)
             setText(reward?.name.orEmpty())
             isSingleLine = true
         }
         val pointsInput = EditText(this).apply {
             id = com.thedavelopers.eventqr.R.id.mrw_reward_points_input
-            hint = "e.g. 100"
+            hint = getString(R.string.manage_rewards_points_hint)
             inputType = InputType.TYPE_CLASS_NUMBER
             setText(reward?.pointsRequired?.toString().orEmpty())
             isSingleLine = true
@@ -640,20 +649,20 @@ open class ManageRewardsActivity : AppCompatActivity() {
         }
         val duplicateSwitch = SwitchCompat(this).apply {
             id = com.thedavelopers.eventqr.R.id.mrw_reward_duplicate_switch
-            text = "Allow duplicate claims"
+            text = getString(R.string.manage_rewards_allow_duplicate_claims)
             isChecked = reward?.allowDuplicateClaims == true
             setTextColor(0xFF151A2D.toInt())
             setPadding(dp(2), dp(8), dp(2), dp(8))
         }
-        form.addView(fieldLabel("Reward Title"))
+        form.addView(fieldLabel(getString(R.string.manage_rewards_reward_title)))
         form.addView(titleInput)
-        form.addView(fieldLabel("Points Cost"))
+        form.addView(fieldLabel(getString(R.string.manage_rewards_points_cost)))
         form.addView(pointsInput)
         form.addView(fieldLabel(getString(R.string.manage_rewards_total_quantity)))
         form.addView(quantityInput)
         form.addView(fieldLabel(getString(R.string.manage_rewards_description)))
         form.addView(descriptionInput)
-        form.addView(fieldLabel("Settings"))
+        form.addView(fieldLabel(getString(R.string.manage_rewards_settings)))
         form.addView(duplicateSwitch)
 
         AlertDialog.Builder(this)
@@ -701,12 +710,12 @@ open class ManageRewardsActivity : AppCompatActivity() {
                 } else {
                     rewardsService.updateReward(eventId, existingReward.rewardId.toString(), request)
                 }
-                if (!response.success) throw IllegalStateException(response.message ?: "Reward could not be saved.")
-                Toast.makeText(this@ManageRewardsActivity, response.message ?: "Reward saved.", Toast.LENGTH_SHORT).show()
+                if (!response.success) throw IllegalStateException(response.message ?: getString(R.string.manage_rewards_save_failed))
+                Toast.makeText(this@ManageRewardsActivity, response.message ?: getString(R.string.manage_rewards_saved), Toast.LENGTH_SHORT).show()
                 loadRewards()
             } catch (error: Exception) {
                 val serverMessage = (error as? retrofit2.HttpException)?.let { com.thedavelopers.eventqr.core.api.parseHttpErrorMessage(it) }
-                Toast.makeText(this@ManageRewardsActivity, serverMessage ?: error.message ?: "Reward could not be saved.", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@ManageRewardsActivity, serverMessage ?: error.message ?: getString(R.string.manage_rewards_save_failed), Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -714,7 +723,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
     private fun confirmDeleteReward(reward: RewardResponse) {
         AlertDialog.Builder(this)
             .setTitle(getString(R.string.manage_rewards_remove_reward))
-            .setMessage("Remove ${reward.name} from ${selectedEvent.title}?")
+            .setMessage(getString(R.string.manage_rewards_remove_confirm, reward.name, selectedEvent.title))
             .setNegativeButton(getString(R.string.request_event_cancel), null)
             .setPositiveButton(getString(R.string.staff_remove)) { _, _ -> deleteReward(reward) }
             .show()
@@ -725,11 +734,11 @@ open class ManageRewardsActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val response = rewardsService.deleteReward(eventId, reward.rewardId.toString())
-                if (!response.success) throw IllegalStateException(response.message ?: "Reward could not be removed.")
-                Toast.makeText(this@ManageRewardsActivity, response.message ?: "Reward removed.", Toast.LENGTH_SHORT).show()
+                if (!response.success) throw IllegalStateException(response.message ?: getString(R.string.manage_rewards_remove_failed))
+                Toast.makeText(this@ManageRewardsActivity, response.message ?: getString(R.string.manage_rewards_removed), Toast.LENGTH_SHORT).show()
                 loadRewards()
             } catch (error: Exception) {
-                Toast.makeText(this@ManageRewardsActivity, error.message ?: "Reward could not be removed.", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@ManageRewardsActivity, error.message ?: getString(R.string.manage_rewards_remove_failed), Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -757,7 +766,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
             try {
                 val response = rewardsService.updateRewardSettings(eventId, RewardSettingsRequest(enabled))
                 if (selectedEvent.id != eventId) return@launch
-                if (!response.success) throw IllegalStateException(response.message ?: "Could not update reward settings.")
+                if (!response.success) throw IllegalStateException(response.message ?: getString(R.string.manage_rewards_settings_failed))
                 response.data?.let { rewardsEnabled = it.rewardsEnabled }
                 bindEventSummary()
                 renderRewards()
@@ -772,7 +781,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
                 rewardsEnabledSwitch.setOnCheckedChangeListener { _, checked -> setRewardsEnabled(checked) }
                 Toast.makeText(
                     this@ManageRewardsActivity,
-                    "Could not update reward settings: ${error.message ?: "try again."}",
+                    getString(R.string.manage_rewards_update_settings_failed, error.message ?: getString(R.string.common_try_again_lower)),
                     Toast.LENGTH_LONG,
                 ).show()
             }

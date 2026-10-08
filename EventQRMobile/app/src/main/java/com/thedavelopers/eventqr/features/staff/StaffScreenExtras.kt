@@ -26,6 +26,7 @@ object StaffScreenExtras {
     const val EXTRA_EVENT_TITLE_FALLBACK = "extra_event_title_fallback"
     const val EXTRA_ATTENDEE_EVENT_STATUS = "extra_attendee_event_status"
     const val EXTRA_QR_ACTIVE = "extra_qr_active"
+    const val EXTRA_ELIGIBLE = "extra_eligible"
     const val EXTRA_SCAN_REJECTED = "extra_scan_rejected"
     const val EXTRA_SCAN_REJECTION_REASON = "extra_scan_rejection_reason"
 }

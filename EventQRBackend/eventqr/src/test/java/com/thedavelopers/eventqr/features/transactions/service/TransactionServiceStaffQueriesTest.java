@@ -251,7 +251,7 @@ class TransactionServiceStaffQueriesTest {
         assertThat(response.qrActive()).isTrue();
         assertThat(response.eligible()).isTrue();
         assertThat(response.registrationStatus()).isEqualTo(RegistrationStatus.ENTERED);
-        assertThat(response.message()).isEqualTo("Attendee ID #12 verified");
+        assertThat(response.message()).isEqualTo("Attendee ID #12 verified (scan not yet recorded)");
     }
 
     @Test
@@ -266,6 +266,6 @@ class TransactionServiceStaffQueriesTest {
 
         assertThat(response.qrActive()).isTrue();
         assertThat(response.eligible()).isTrue();
-        assertThat(response.message()).isEqualTo("QR credential verified");
+        assertThat(response.message()).isEqualTo("QR credential verified (scan not yet recorded)");
     }
 }

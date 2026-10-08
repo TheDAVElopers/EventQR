@@ -55,7 +55,10 @@ public class GlobalExceptionHandler {
             }
             return build(HttpStatus.CONFLICT, "Transaction failed due to invalid transaction data.", request);
         }
-        return build(HttpStatus.CONFLICT, "Registration failed. Please try again.", request);
+        if (request.getRequestURI() != null && request.getRequestURI().contains("/registrations")) {
+            return build(HttpStatus.CONFLICT, "Registration failed. Please try again.", request);
+        }
+        return build(HttpStatus.CONFLICT, "Request conflicts with existing data", request);
     }
 
     @ExceptionHandler(ForbiddenException.class)

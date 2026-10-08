@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpAttendee
 import com.thedavelopers.eventqr.features.organizer.statusBucket
+import com.thedavelopers.eventqr.features.organizer.statusLabel
 
 class SearchAttendeesAdapter(
     private val onClick: (OrganizerMvpAttendee) -> Unit,
@@ -44,7 +45,7 @@ class SearchAttendeesAdapter(
             emailText.text = item.email
 
             val status = item.statusBucket()
-            statusText.text = status
+            statusText.text = item.statusLabel(itemView.context)
             val (backgroundColor, textColor) = when (status) {
                 "Checked In" -> Color.parseColor("#D1FAE5") to Color.parseColor("#059669")
                 "Registered" -> Color.parseColor("#E0E7FF") to Color.parseColor("#4F46E5")

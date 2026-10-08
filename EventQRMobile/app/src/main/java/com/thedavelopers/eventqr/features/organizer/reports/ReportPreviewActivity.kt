@@ -113,7 +113,7 @@ class ReportPreviewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         repository = OrganizerReportsRepository(this)
 
-        eventId = intent.getStringExtra(EXTRA_EVENT_ID) ?: return finishWithError("Event ID is missing")
+        eventId = intent.getStringExtra(EXTRA_EVENT_ID) ?: return finishWithError(getString(R.string.report_preview_event_id_missing))
         isCombined = intent.getBooleanExtra(EXTRA_IS_COMBINED, false)
         summary = intent.getSerializableExtra(EXTRA_SUMMARY) as? EventReportSummaryDto ?: EventReportSummaryDto()
 
@@ -126,15 +126,15 @@ class ReportPreviewActivity : AppCompatActivity() {
         }
 
         if (!isCombined && singleReport == null) {
-            return finishWithError("Report data is missing")
+            return finishWithError(getString(R.string.report_preview_report_data_missing))
         }
 
-        val reportTitle = if (isCombined) "Combined Report" else (singleReport?.reportTitle ?: "Report")
+        val reportTitle = if (isCombined) getString(R.string.report_preview_combined_report) else (singleReport?.reportTitle ?: getString(R.string.report_preview_report))
         content = organizerShell(
-            title = "Report Preview",
+            title = getString(R.string.report_preview_title),
             selectedNav = NAV_REPORTS,
             showBack = true,
-            topRightLabel = "Export",
+            topRightLabel = getString(R.string.report_preview_export),
             onTopRight = { showExportDialog() },
         )
 
@@ -158,13 +158,13 @@ class ReportPreviewActivity : AppCompatActivity() {
                 )
             }
 
-            val pageTitle = if (isCombined) "Combined Event Report" else (report?.reportTitle ?: "Report")
+            val pageTitle = if (isCombined) getString(R.string.report_preview_combined_title) else (report?.reportTitle ?: getString(R.string.report_preview_report))
             titleRow.addView(text(pageTitle, 18, true, TEXT).apply {
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             })
 
             val recordBadge = TextView(this@ReportPreviewActivity).apply {
-                text = if (isCombined) "${combinedReports?.size ?: 0} Reports" else "${report?.rows?.size ?: 0} Records"
+                text = if (isCombined) getString(R.string.report_preview_reports_count, combinedReports?.size ?: 0) else getString(R.string.report_preview_records_count_caps, report?.rows?.size ?: 0)
                 textSize = 11f
                 setTypeface(typeface, Typeface.BOLD)
                 setTextColor(NAV_PURPLE)
@@ -193,7 +193,7 @@ class ReportPreviewActivity : AppCompatActivity() {
             if (!isCombined) {
                 addView(buildFilterChips(sourceFilters).apply { setPadding(0, dp(6), 0, 0) })
             } else {
-                addView(text("Contains all 8 event performance and audit reports", 12, false, MUTED).apply {
+                addView(text(getString(R.string.report_preview_combined_contains), 12, false, MUTED).apply {
                     setPadding(0, dp(4), 0, 0)
                 })
             }
@@ -211,18 +211,18 @@ class ReportPreviewActivity : AppCompatActivity() {
     private fun buildFilterChips(filters: EventReportFiltersDto): LinearLayout = row().apply {
         gravity = Gravity.START
         if (filters.startDate != null || filters.endDate != null) {
-            val start = filters.startDate?.format(DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH)) ?: "Start"
-            val end = filters.endDate?.format(DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH)) ?: "End"
-            addView(chip("Date: $start – $end", false, PRIMARY))
+            val start = filters.startDate?.format(DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH)) ?: getString(R.string.report_preview_filter_start)
+            val end = filters.endDate?.format(DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH)) ?: getString(R.string.report_preview_filter_end)
+            addView(chip(getString(R.string.report_preview_chip_date, start, end), false, PRIMARY))
         }
         if (filters.attendeeQuery?.isNotBlank() == true) {
-            addView(chip("Attendee: ${filters.attendeeQuery}", false, PRIMARY))
+            addView(chip(getString(R.string.report_preview_chip_attendee, filters.attendeeQuery.orEmpty()), false, PRIMARY))
         }
         if (filters.status != EventReportFilterStatus.ALL) {
-            addView(chip("Status: ${filters.status.name}", false, PRIMARY))
+            addView(chip(getString(R.string.report_preview_chip_status, filters.status.name), false, PRIMARY))
         }
         if (filters.startDate == null && filters.endDate == null && filters.attendeeQuery.isNullOrBlank() && filters.status == EventReportFilterStatus.ALL) {
-            addView(chip("No filters applied", false, MUTED))
+            addView(chip(getString(R.string.report_preview_chip_no_filters), false, MUTED))
         }
     }
 
@@ -232,10 +232,10 @@ class ReportPreviewActivity : AppCompatActivity() {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
                 setPadding(dp(4), dp(16), dp(4), dp(4))
-                addView(text(report.reportTitle ?: "Section", 16, true, PRIMARY).apply {
+                addView(text(report.reportTitle ?: getString(R.string.report_preview_section), 16, true, PRIMARY).apply {
                     layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
                 })
-                addView(text("${report.rows.size} records", 12, false, MUTED))
+                addView(text(getString(R.string.report_preview_records_count, report.rows.size), 12, false, MUTED))
             }
             content.addView(sectionHeader)
         }
@@ -254,17 +254,17 @@ class ReportPreviewActivity : AppCompatActivity() {
             EventReportEmptyState.NO_FILTER_MATCH -> {
                 content.addView(emptyState(
                     iconRes = R.drawable.ic_organizer_reports,
-                    title = "No matching records",
-                    subtext = "No records matched your filters. Try adjusting your criteria.",
-                    actionLabel = "Back to Filters",
+                    title = getString(R.string.report_preview_no_matching_title),
+                    subtext = getString(R.string.report_preview_no_matching_subtext),
+                    actionLabel = getString(R.string.report_preview_back_to_filters),
                     onAction = { finish() },
                 ))
             }
             EventReportEmptyState.NO_EVENT_RECORDS -> {
                 content.addView(emptyState(
                     iconRes = R.drawable.ic_organizer_reports,
-                    title = "No records yet",
-                    subtext = "No records exist for this event yet. Data will appear as attendees interact.",
+                    title = getString(R.string.report_preview_no_records_title),
+                    subtext = getString(R.string.report_preview_no_records_subtext),
                 ))
             }
             else -> {
@@ -274,8 +274,8 @@ class ReportPreviewActivity : AppCompatActivity() {
                 } else {
                     content.addView(emptyState(
                         iconRes = R.drawable.ic_organizer_reports,
-                        title = "No data to display",
-                        subtext = "There is no data available for this report.",
+                        title = getString(R.string.report_preview_no_data_title),
+                        subtext = getString(R.string.report_preview_no_data_subtext),
                     ))
                 }
             }
@@ -297,27 +297,27 @@ class ReportPreviewActivity : AppCompatActivity() {
 
     private fun getChartTitle(report: EventReportDto): String {
         return when (report.reportType) {
-            EventReportType.ROSTER -> "Registration Status Breakdown"
-            EventReportType.NO_SHOWS -> "Unchecked Attendees Breakdown"
-            EventReportType.ENTRY_LOGS -> "Entry Scan Outcomes"
-            EventReportType.ATTENDANCE -> "Activity Attendance Breakdown"
-            EventReportType.CLAIMS -> "Benefit Claim Outcomes"
-            EventReportType.BOOTH_VISITS -> "Booth & Session Popularity"
-            EventReportType.EXIT_LOGS -> "Exit Scan Outcomes"
-            EventReportType.POINTS -> "Points Awarded by Activity"
+            EventReportType.ROSTER -> getString(R.string.report_preview_chart_title_roster)
+            EventReportType.NO_SHOWS -> getString(R.string.report_preview_chart_title_no_shows)
+            EventReportType.ENTRY_LOGS -> getString(R.string.report_preview_chart_title_entry_logs)
+            EventReportType.ATTENDANCE -> getString(R.string.report_preview_chart_title_attendance)
+            EventReportType.CLAIMS -> getString(R.string.report_preview_chart_title_claims)
+            EventReportType.BOOTH_VISITS -> getString(R.string.report_preview_chart_title_booth_visits)
+            EventReportType.EXIT_LOGS -> getString(R.string.report_preview_chart_title_exit_logs)
+            EventReportType.POINTS -> getString(R.string.report_preview_chart_title_points)
         }
     }
 
     private fun getChartSubtitle(report: EventReportDto): String {
         return when (report.reportType) {
-            EventReportType.ROSTER -> "Proportion of registered, entered, and absent attendees"
-            EventReportType.NO_SHOWS -> "Breakdown of marked no-shows vs. unentered registrations"
-            EventReportType.ENTRY_LOGS -> "Distribution of successful check-ins and scan errors"
-            EventReportType.ATTENDANCE -> "Total attendance count across sessions and activities"
+            EventReportType.ROSTER -> getString(R.string.report_preview_roster_chart_subtitle)
+            EventReportType.NO_SHOWS -> getString(R.string.report_preview_chart_subtitle_no_shows)
+            EventReportType.ENTRY_LOGS -> getString(R.string.report_preview_chart_subtitle_entry_logs)
+            EventReportType.ATTENDANCE -> getString(R.string.report_preview_attendance_chart_subtitle)
             EventReportType.CLAIMS -> getString(R.string.report_preview_claims_chart_subtitle)
-            EventReportType.BOOTH_VISITS -> "Relative visit frequency across sponsor and event booths"
-            EventReportType.EXIT_LOGS -> "Summary of successful and invalid exit scans"
-            EventReportType.POINTS -> "Total points awarded categorized by triggering action"
+            EventReportType.BOOTH_VISITS -> getString(R.string.report_preview_booth_chart_subtitle)
+            EventReportType.EXIT_LOGS -> getString(R.string.report_preview_chart_subtitle_exit_logs)
+            EventReportType.POINTS -> getString(R.string.report_preview_chart_subtitle_points)
         }
     }
 
@@ -410,12 +410,12 @@ class ReportPreviewActivity : AppCompatActivity() {
                 }
             }
 
-            headerRow.addView(text("Detailed Records", 15, true, TEXT).apply {
+            headerRow.addView(text(getString(R.string.report_preview_detailed_records), 15, true, TEXT).apply {
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             })
 
             val countBadge = TextView(this@ReportPreviewActivity).apply {
-                text = "${report.rows.size} records"
+                text = getString(R.string.report_preview_records_count, report.rows.size)
                 textSize = 11f
                 setTypeface(typeface, Typeface.BOLD)
                 setTextColor(MUTED)
@@ -589,7 +589,7 @@ class ReportPreviewActivity : AppCompatActivity() {
     private fun showExportDialog() {
         val rootView = content.rootView ?: content
         if (isCombined && combinedReports.isNullOrEmpty()) {
-            Snackbar.make(rootView, "No report data available to export.", Snackbar.LENGTH_LONG).show()
+            Snackbar.make(rootView, getString(R.string.report_preview_no_data_available_export), Snackbar.LENGTH_LONG).show()
             return
         }
         val dialog = AlertDialog.Builder(this)
@@ -608,11 +608,11 @@ class ReportPreviewActivity : AppCompatActivity() {
         if (isCombined) {
             val reports = combinedReports.orEmpty()
             if (reports.isEmpty()) {
-                Snackbar.make(rootView, "No report data to export.", Snackbar.LENGTH_LONG).show()
+                Snackbar.make(rootView, getString(R.string.report_preview_no_data_export), Snackbar.LENGTH_LONG).show()
                 return
             }
 
-            Snackbar.make(rootView, "Preparing combined $format export...", Snackbar.LENGTH_SHORT).show()
+            Snackbar.make(rootView, getString(R.string.report_preview_preparing_combined, format), Snackbar.LENGTH_SHORT).show()
 
             MainScope().launch {
                 try {
@@ -632,15 +632,15 @@ class ReportPreviewActivity : AppCompatActivity() {
                     }
                     saveAndShareFile(bytes, fileName, contentType)
                 } catch (e: Exception) {
-                    Snackbar.make(rootView, "Export failed: ${e.message}", Snackbar.LENGTH_LONG)
-                        .setAction("Retry") { exportReport(format) }
+                    Snackbar.make(rootView, getString(R.string.report_preview_export_failed, e.message.orEmpty()), Snackbar.LENGTH_LONG)
+                        .setAction(getString(R.string.common_retry)) { exportReport(format) }
                         .show()
                 }
             }
             return
         }
 
-        Snackbar.make(rootView, "Preparing $format export...", Snackbar.LENGTH_SHORT).show()
+        Snackbar.make(rootView, getString(R.string.report_preview_preparing, format), Snackbar.LENGTH_SHORT).show()
 
         MainScope().launch {
             val reportType = singleReport?.reportType ?: EventReportType.ROSTER
@@ -666,12 +666,13 @@ class ReportPreviewActivity : AppCompatActivity() {
                                     generateCombinedCsv(listOf(report))
                                 }
                             }
+                            fallbackFailureReason = result.message
                             saveAndShareFile(bytes, fileName, contentType, fromFallback = true)
                             return@launch
                         } catch (_: Exception) {}
                     }
-                    Snackbar.make(rootView, "Export failed: ${result.message}", Snackbar.LENGTH_LONG)
-                        .setAction("Retry") { exportReport(format) }
+                    Snackbar.make(rootView, getString(R.string.report_preview_export_failed, result.message), Snackbar.LENGTH_LONG)
+                        .setAction(getString(R.string.common_retry)) { exportReport(format) }
                         .show()
                 }
                 NetworkResult.Loading -> Unit
@@ -683,15 +684,15 @@ class ReportPreviewActivity : AppCompatActivity() {
         val stringWriter = StringWriter()
         val writer = PrintWriter(stringWriter)
 
-        writer.println(csv("Combined Event Report"))
-        writer.println("${csv("Event")},${csv(summary.eventName ?: "Event")}")
-        writer.println("${csv("Generated")},${csv(dateFormatter.format(Instant.now()))}")
+        writer.println(csv(combinedReportTitle(reports)))
+        writer.println("${csv(getString(R.string.report_preview_event))},${csv(summary.eventName ?: getString(R.string.report_preview_event))}")
+        writer.println("${csv(getString(R.string.report_preview_generated_label))},${csv(dateFormatter.format(combinedGeneratedAt(reports)))}")
         writer.println()
 
         reports.forEachIndexed { index, report ->
             writer.println(csv("================================================================================"))
-            writer.println(csv(report.reportTitle ?: "Section ${index + 1}"))
-            report.generatedAtInstant?.let { writer.println("${csv("Generated")},${csv(dateFormatter.format(it))}") }
+            writer.println(csv(report.reportTitle ?: getString(R.string.report_preview_section_n, index + 1)))
+            report.generatedAtInstant?.let { writer.println("${csv(getString(R.string.report_preview_generated_label))},${csv(dateFormatter.format(it))}") }
             writer.println()
 
             // Header columns
@@ -710,7 +711,7 @@ class ReportPreviewActivity : AppCompatActivity() {
             // Chart series
             if (report.chartSeries.isNotEmpty()) {
                 writer.println()
-                writer.println(csv("Chart Summary"))
+                writer.println(csv(getString(R.string.report_preview_chart_summary)))
                 for ((k, v) in report.chartSeries) {
                     writer.println("${csv(k ?: "")},${csv(v.toString())}")
                 }
@@ -807,7 +808,7 @@ class ReportPreviewActivity : AppCompatActivity() {
 
         fun drawFooter() {
             canvas.drawLine(margin, pageHeight - margin - 10f, margin + contentWidth, pageHeight - margin - 10f, linePaint)
-            val footerText = "EventQR Report • Page $pageNumber"
+            val footerText = getString(R.string.report_preview_pdf_footer, pageNumber)
             canvas.drawText(footerText, margin, pageHeight - margin, footerPaint)
         }
 
@@ -834,11 +835,11 @@ class ReportPreviewActivity : AppCompatActivity() {
         }
 
         // Header on page 1
-        canvas.drawText("Combined Event Report", margin, y, titlePaint)
+        canvas.drawText(combinedReportTitle(reports), margin, y, titlePaint)
         y += 18f
-        canvas.drawText("Event: ${summary.eventName ?: "Event"}", margin, y, subtitlePaint)
+        canvas.drawText(getString(R.string.report_preview_pdf_event, summary.eventName ?: getString(R.string.report_preview_event)), margin, y, subtitlePaint)
         y += 13f
-        canvas.drawText("Generated: ${dateFormatter.format(Instant.now())}", margin, y, subtitlePaint)
+        canvas.drawText(getString(R.string.report_preview_pdf_generated, dateFormatter.format(combinedGeneratedAt(reports))), margin, y, subtitlePaint)
         y += 16f
         canvas.drawLine(margin, y, margin + contentWidth, y, linePaint)
         y += 20f
@@ -848,10 +849,10 @@ class ReportPreviewActivity : AppCompatActivity() {
 
             // Section Banner
             canvas.drawRect(margin, y - 13f, margin + contentWidth, y + 9f, sectionBannerPaint)
-            canvas.drawText(report.reportTitle ?: "Report Section", margin + 8f, y + 2f, sectionTitlePaint)
+            canvas.drawText(report.reportTitle ?: getString(R.string.report_preview_report_section), margin + 8f, y + 2f, sectionTitlePaint)
             y += 22f
 
-            val generatedAtText = report.generatedAtInstant?.let { "Generated: ${dateFormatter.format(it)}" } ?: ""
+            val generatedAtText = report.generatedAtInstant?.let { getString(R.string.report_preview_pdf_generated, dateFormatter.format(it)) } ?: ""
             if (generatedAtText.isNotBlank()) {
                 canvas.drawText(generatedAtText, margin + 4f, y, subtitlePaint)
                 y += 13f
@@ -875,7 +876,7 @@ class ReportPreviewActivity : AppCompatActivity() {
             // Table Rows
             if (report.rows.isEmpty()) {
                 ensureSpace(20f)
-                canvas.drawText("No records available for this section.", margin + 4f, y, cellMutedPaint)
+                canvas.drawText(getString(R.string.report_preview_pdf_no_records), margin + 4f, y, cellMutedPaint)
                 y += 20f
             } else {
                 report.rows.forEachIndexed { rowIndex, row ->
@@ -897,10 +898,10 @@ class ReportPreviewActivity : AppCompatActivity() {
             if (report.chartSeries.isNotEmpty()) {
                 ensureSpace(30f + (report.chartSeries.size * 13f))
                 y += 6f
-                canvas.drawText("Chart Summary", margin + 4f, y, tableHeaderPaint)
+                canvas.drawText(getString(R.string.report_preview_chart_summary), margin + 4f, y, tableHeaderPaint)
                 y += 13f
                 for ((k, v) in report.chartSeries) {
-                    val keyText = k ?: "Item"
+                    val keyText = k ?: getString(R.string.report_preview_item)
                     canvas.drawText("$keyText: $v", margin + 12f, y, cellPaint)
                     y += 12f
                 }
@@ -917,6 +918,21 @@ class ReportPreviewActivity : AppCompatActivity() {
         return stream.toByteArray()
     }
 
+    private var fallbackFailureReason: String? = null
+
+    private fun emptyChartTextRes(type: EventReportType): Int = when (type) {
+        EventReportType.POINTS -> R.string.report_preview_empty_points
+        EventReportType.ATTENDANCE -> R.string.report_preview_empty_attendance
+        EventReportType.BOOTH_VISITS -> R.string.report_preview_empty_booth
+        else -> R.string.report_preview_empty_chart
+    }
+
+    private fun combinedReportTitle(reports: List<EventReportDto>): String =
+        if (reports.size == 1) reports.first().reportTitle ?: getString(R.string.report_preview_combined_title) else getString(R.string.report_preview_combined_title)
+
+    private fun combinedGeneratedAt(reports: List<EventReportDto>): Instant =
+        reports.mapNotNull { it.generatedAtInstant }.maxOrNull() ?: Instant.now()
+
     private fun saveAndShareFile(bytes: ByteArray, fileName: String, contentType: String, fromFallback: Boolean = false) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             saveToPublicDownloads(bytes, fileName, contentType, fromFallback)
@@ -926,7 +942,11 @@ class ReportPreviewActivity : AppCompatActivity() {
     }
 
     private fun showSavedMessage(fromFallback: Boolean, normal: String) {
-        val message = fallbackSavedMessageRes(fromFallback)?.let { getString(it) } ?: normal
+        val message = fallbackSavedMessageRes(fromFallback)?.let { res ->
+            val reason = fallbackFailureReason?.takeIf { it.isNotBlank() }
+            if (reason != null) getString(R.string.report_preview_export_fallback_saved_reason, reason) else getString(res)
+        } ?: normal
+        fallbackFailureReason = null
         Snackbar.make(content, message, Snackbar.LENGTH_LONG).show()
     }
 
@@ -950,13 +970,13 @@ class ReportPreviewActivity : AppCompatActivity() {
             }
             if (intent.resolveActivity(packageManager) != null) {
                 startActivity(intent)
-                showSavedMessage(fromFallback, "Export saved to Downloads/$fileName")
+                showSavedMessage(fromFallback, getString(R.string.report_preview_saved_downloads, fileName))
             } else {
-                showSavedMessage(fromFallback, "Export saved to Downloads (open manually)")
+                showSavedMessage(fromFallback, getString(R.string.report_preview_saved_downloads_manual))
             }
         } catch (e: Exception) {
             resolver.delete(uri, null, null) // Clean up on failure
-            Snackbar.make(content, "Failed to save export: ${e.message}", Snackbar.LENGTH_LONG).show()
+            Snackbar.make(content, getString(R.string.report_preview_save_failed, e.message.orEmpty()), Snackbar.LENGTH_LONG).show()
         }
     }
 
@@ -972,12 +992,12 @@ class ReportPreviewActivity : AppCompatActivity() {
             }
             if (intent.resolveActivity(packageManager) != null) {
                 startActivity(intent)
-                showSavedMessage(fromFallback, "Export saved and opened (app storage)")
+                showSavedMessage(fromFallback, getString(R.string.report_preview_saved_opened))
             } else {
-                showSavedMessage(fromFallback, "Export saved to app storage/$fileName")
+                showSavedMessage(fromFallback, getString(R.string.report_preview_saved_app_storage, fileName))
             }
         } catch (e: Exception) {
-            Snackbar.make(content, "Failed to save export: ${e.message}", Snackbar.LENGTH_LONG).show()
+            Snackbar.make(content, getString(R.string.report_preview_save_failed, e.message.orEmpty()), Snackbar.LENGTH_LONG).show()
         }
     }
 
@@ -1048,7 +1068,7 @@ class ReportPreviewActivity : AppCompatActivity() {
 
             if (total <= 0L || filteredData.isEmpty()) {
                 val emptyTv = TextView(context).apply {
-                    text = "No categorical activity recorded"
+                    text = getString(emptyChartTextRes(report.reportType))
                     textSize = 13f
                     setTextColor(MUTED)
                     gravity = Gravity.CENTER
@@ -1177,7 +1197,7 @@ class ReportPreviewActivity : AppCompatActivity() {
                 canvas.drawOval(rect, arcPaint)
                 val textY = cy - ((centerValPaint.descent() + centerValPaint.ascent()) / 2f) - dp(8).toFloat()
                 canvas.drawText("0", cx, textY, centerValPaint)
-                canvas.drawText("TOTAL", cx, textY + dp(16).toFloat(), centerLblPaint)
+                canvas.drawText(getString(R.string.report_preview_total_caps), cx, textY + dp(16).toFloat(), centerLblPaint)
                 return
             }
 
@@ -1202,7 +1222,7 @@ class ReportPreviewActivity : AppCompatActivity() {
             // Center total text
             val textY = cy - ((centerValPaint.descent() + centerValPaint.ascent()) / 2f) - dp(8).toFloat()
             canvas.drawText(total.toString(), cx, textY, centerValPaint)
-            canvas.drawText("TOTAL", cx, textY + dp(16).toFloat(), centerLblPaint)
+            canvas.drawText(getString(R.string.report_preview_total_caps), cx, textY + dp(16).toFloat(), centerLblPaint)
         }
     }
 
@@ -1249,7 +1269,7 @@ class ReportPreviewActivity : AppCompatActivity() {
             headerRow.addView(title)
 
             val countPill = TextView(context).apply {
-                text = "${filteredData.size} items"
+                text = getString(R.string.report_preview_items_count, filteredData.size)
                 textSize = 11f
                 setTypeface(typeface, Typeface.BOLD)
                 setTextColor(NAV_PURPLE)
@@ -1270,7 +1290,7 @@ class ReportPreviewActivity : AppCompatActivity() {
 
             if (filteredData.isEmpty() || total <= 0L) {
                 val emptyTv = TextView(context).apply {
-                    text = "No activity or visits recorded"
+                    text = getString(R.string.report_preview_no_activity)
                     textSize = 13f
                     setTextColor(MUTED)
                     gravity = Gravity.CENTER

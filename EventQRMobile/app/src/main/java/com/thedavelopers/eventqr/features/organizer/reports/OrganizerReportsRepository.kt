@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.organizer.reports
 
 import android.content.Context
+import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.ApiClient
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.safeApiCall
@@ -19,7 +20,7 @@ data class ExportedReportFile(
     val bytes: ByteArray,
 )
 
-class OrganizerReportsRepository(context: Context) {
+class OrganizerReportsRepository(private val context: Context) {
     private val apiService = ApiClient.getService(context)
 
     suspend fun fetchSummary(eventId: String): NetworkResult<EventReportSummaryDto> =
@@ -64,9 +65,9 @@ class OrganizerReportsRepository(context: Context) {
             )
             if (!response.isSuccessful) {
                 val errorBody = response.errorBody()?.string().orEmpty()
-                throw IllegalStateException(errorBody.ifBlank { "Unable to export report" })
+                throw IllegalStateException(errorBody.ifBlank { context.getString(R.string.organizer_reports_export_unable) })
             }
-            val body = response.body() ?: throw IllegalStateException("Export file is empty")
+            val body = response.body() ?: throw IllegalStateException(context.getString(R.string.organizer_reports_export_empty))
             val fileName = response.headers()["Content-Disposition"]
                 ?.substringAfter("filename=")
                 ?.trim()
@@ -79,7 +80,7 @@ class OrganizerReportsRepository(context: Context) {
             ExportedReportFile(fileName = fileName, contentType = contentType, bytes = body.bytes())
         }.fold(
             onSuccess = { NetworkResult.Success(it) },
-            onFailure = { throwable -> NetworkResult.Error(throwable.message ?: "Unable to export report", throwable) },
+            onFailure = { throwable -> NetworkResult.Error(throwable.message ?: context.getString(R.string.organizer_reports_export_unable), throwable) },
         )
     }
 

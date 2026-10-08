@@ -231,9 +231,9 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
         skeletonLoading.visibility = View.GONE
         findViewById<View>(R.id.statsGrid).visibility = View.VISIBLE
         val dashboardData = dashboard?.data
-        val name = dashboardData?.organizerName.orEmpty().ifBlank { sessionManager.getFullName().orEmpty().ifBlank { "Organizer" } }
+        val name = dashboardData?.organizerName.orEmpty().ifBlank { sessionManager.getFullName().orEmpty().ifBlank { getString(R.string.organizer_dashboard_default_name) } }
 
-        findViewById<TextView>(R.id.txtHeaderTitle).text = PortalSwitcher.PORTAL_ORGANIZER
+        findViewById<TextView>(R.id.txtHeaderTitle).text = PortalSwitcher.title(this, PortalSwitcher.PORTAL_ORGANIZER)
         findViewById<TextView>(R.id.txtHeaderSubtitle).text = name.firstNameOnly()
 
         val events = load.data.approvedOnly()
@@ -261,7 +261,7 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
 
         val hasError = load.source == OrganizerMvpDataSource.ERROR
         findViewById<View>(R.id.layoutDashboardError).visibility = if (hasError && events.isEmpty()) View.VISIBLE else View.GONE
-        findViewById<TextView>(R.id.txtDashboardError).text = load.message ?: "Organizer events could not be loaded."
+        findViewById<TextView>(R.id.txtDashboardError).text = load.message ?: getString(R.string.organizer_dashboard_events_load_failed)
 
         if (activeEvents.isEmpty()) {
             emptyEvents.visibility = View.VISIBLE

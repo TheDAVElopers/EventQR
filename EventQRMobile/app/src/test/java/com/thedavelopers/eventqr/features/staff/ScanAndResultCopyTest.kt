@@ -27,6 +27,13 @@ class ScanAndResultCopyTest {
     }
 
     @Test
+    fun ineligibleActiveScanIsNotEligibleNotInactive() {
+        assertEquals(ScanResultState.NOT_ELIGIBLE, ScanResultState.from(true, true, "REGISTERED", eligible = false))
+        assertEquals(ScanResultState.INACTIVE, ScanResultState.from(true, false, "REGISTERED", eligible = false))
+        assertEquals(ScanResultState.ACTIVE, ScanResultState.from(true, true, "REGISTERED", eligible = true))
+    }
+
+    @Test
     fun invalidVerificationIsRejected() {
         assertEquals(ScanResultState.REJECTED, ScanResultState.from(false, true, null))
     }

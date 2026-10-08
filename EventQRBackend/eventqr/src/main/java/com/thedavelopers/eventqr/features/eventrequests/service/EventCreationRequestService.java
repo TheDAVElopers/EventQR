@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.EventRequestStatus;
 import com.thedavelopers.eventqr.shared.constants.EventStatus;
 import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
+import com.thedavelopers.eventqr.shared.exceptions.ConflictException;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
 import com.thedavelopers.eventqr.shared.interfaces.AttendeeDirectoryPort;
@@ -105,8 +107,10 @@ public class EventCreationRequestService {
         return toResponse(requireRequest(requestId));
     }
 
+    @CacheEvict(cacheNames = "events", allEntries = true)
     public EventRequestResponse approve(UUID requestId, UUID adminUserId, String adminFullName, String remarks) {
         EventCreationRequest request = requireRequest(requestId);
+        requirePending(request, "approved");
         request.setStatus(EventRequestStatus.APPROVED);
         request.setAdminRemarks(trimToNull(remarks));
         request.setReviewedByUserId(adminUserId);
@@ -124,11 +128,16 @@ public class EventCreationRequestService {
                 savedRequest.getRequesterUserId());
         notificationService.createEventApprovedNotification(
                 linkedEvent.getId(), savedRequest.getRequesterUserId(), savedRequest.getEventName());
+        if (linkedEvent.getStatus() == EventStatus.ACTIVE) {
+            // Approved straight to ACTIVE (start already passed): the scheduler never sees this transition.
+            notificationService.createEventStartingSoonNotifications(List.of(linkedEvent));
+        }
         return toResponse(savedRequest);
     }
 
     public EventRequestResponse reject(UUID requestId, UUID adminUserId, String adminFullName, String remarks) {
         EventCreationRequest request = requireRequest(requestId);
+        requirePending(request, "rejected");
         request.setStatus(EventRequestStatus.REJECTED);
         request.setAdminRemarks(trimToNull(remarks));
         request.setReviewedByUserId(adminUserId);
@@ -142,7 +151,7 @@ public class EventCreationRequestService {
                 savedRequest.getEventId(),
                 savedRequest.getRequesterUserId());
         notificationService.createEventRejectedNotification(
-                savedRequest.getEventId(), savedRequest.getRequesterUserId(), savedRequest.getEventName(), remarks);
+                savedRequest.getEventId(), savedRequest.getRequesterUserId(), savedRequest.getEventName(), savedRequest.getAdminRemarks());
         return toResponse(savedRequest);
     }
 
@@ -160,6 +169,13 @@ public class EventCreationRequestService {
                 request.getEventId(),
                 request.getRequesterUserId());
         return toResponse(request);
+    }
+
+    private void requirePending(EventCreationRequest request, String action) {
+        if (request.getStatus() != EventRequestStatus.PENDING) {
+            throw new ConflictException("Only pending requests can be " + action
+                    + ". This request is already " + request.getStatus().name().toLowerCase() + ".");
+        }
     }
 
     private EventCreationRequest requireRequest(UUID requestId) {

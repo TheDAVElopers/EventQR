@@ -4,9 +4,10 @@ import java.util.UUID;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 public record TransactionRequest(@NotNull UUID eventId, @NotNull UUID scanPurposeId, String qrValue,
-                                 String shortId, UUID staffUserId, String notes,
+                                 String shortId, UUID staffUserId, @Size(max = 500) String notes,
                                  UUID clientRequestId) {
 
     /** Backward-compatible constructor for callers that predate the idempotency key. */

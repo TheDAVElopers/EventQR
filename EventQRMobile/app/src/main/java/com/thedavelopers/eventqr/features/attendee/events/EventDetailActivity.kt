@@ -109,7 +109,15 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         val timeFormatter = java.time.format.DateTimeFormatter.ofPattern("hh:mm a", java.util.Locale.ENGLISH).withZone(manilaZone)
         
         if (event.eventStartAt != null) {
-            findViewById<TextView>(R.id.txtDetailDate).text = dateFormatter.format(event.eventStartAt)
+            val endAt = event.eventEndAt
+            val multiDay = endAt != null &&
+                event.eventStartAt.atZone(manilaZone).toLocalDate() != endAt.atZone(manilaZone).toLocalDate()
+            findViewById<TextView>(R.id.txtDetailDate).text = if (multiDay && endAt != null) {
+                val shortFormatter = java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy", java.util.Locale.ENGLISH).withZone(manilaZone)
+                getString(R.string.event_detail_date_range, shortFormatter.format(event.eventStartAt), shortFormatter.format(endAt))
+            } else {
+                dateFormatter.format(event.eventStartAt)
+            }
             val startTime = timeFormatter.format(event.eventStartAt)
             findViewById<TextView>(R.id.txtDetailTime).text =
                 event.eventEndAt?.let { "$startTime - ${timeFormatter.format(it)}" } ?: startTime
@@ -228,14 +236,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     }
 
     private fun checkOwnedEventThenAvailability(event: AttendeeEventResponse) {
-        val normalizedRole = RoleMapper.normalizeRole(SessionManager(this).getUserRole())
-        val roleCanOwnEvents = normalizedRole.contains("ORGANIZER") || normalizedRole.contains("ADMIN") || normalizedRole.contains("SUPER_ADMIN")
-        if (!roleCanOwnEvents) {
-            loadEventAvailability(event)
-            return
-        }
-
-        // Backend-derived flag replaces the full organizer-events list fetch.
+        // Ownership is decided by the backend flag regardless of the current role.
         isOwnedByCurrentOrganizer = event.isOwnedByCurrentUser == true
         if (isOwnedByCurrentOrganizer) {
             setOwnedEventState()
@@ -406,7 +407,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     private fun setOwnedEventState() {
         findViewById<Button>(R.id.btnRegisterForEvent).apply {
             isEnabled = true
-            text = "Manage Event"
+            text = getString(R.string.event_detail_manage_event)
             setBackgroundResource(R.drawable.bg_detail_register_button)
         }
     }

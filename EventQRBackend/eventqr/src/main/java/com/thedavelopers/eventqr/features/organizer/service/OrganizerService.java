@@ -10,8 +10,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +42,7 @@ import com.thedavelopers.eventqr.features.organizer.model.entity.EventStaffAssig
 import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignmentRepository;
 import com.thedavelopers.eventqr.features.registrations.model.entity.EventRegistration;
 import com.thedavelopers.eventqr.features.registrations.repository.EventRegistrationRepository;
+import com.thedavelopers.eventqr.features.registrations.service.RegistrationService;
 import com.thedavelopers.eventqr.features.rewards.repository.PointTransactionRepository;
 import com.thedavelopers.eventqr.features.rewards.repository.RewardRedemptionRepository;
 import com.thedavelopers.eventqr.features.scanning.model.entity.ScanPurpose;
@@ -83,7 +87,30 @@ public class OrganizerService {
     private final UserProfileRepository userProfileRepository;
     private final IdTemplateRepository idTemplateRepository;
     private final NotificationService notificationService;
+    private final RegistrationService registrationService;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    private static final String EVENTS_CACHE = "events";
+    private static final String REGISTRATIONS_CACHE = "registrations";
+    private static final String SCAN_PURPOSES_CACHE = "scan-purposes";
+
+    /** Attendee status moves an organizer may make by hand. CANCELLED goes through RegistrationService.cancel. */
+    private static final Map<RegistrationStatus, java.util.Set<RegistrationStatus>> ATTENDEE_TRANSITIONS = Map.of(
+            RegistrationStatus.REGISTERED, java.util.Set.of(RegistrationStatus.ENTERED, RegistrationStatus.NO_SHOW, RegistrationStatus.CANCELLED),
+            RegistrationStatus.ENTERED, java.util.Set.of(RegistrationStatus.EXITED),
+            RegistrationStatus.EXITED, java.util.Set.of(RegistrationStatus.ENTERED),
+            RegistrationStatus.NO_SHOW, java.util.Set.of(RegistrationStatus.REGISTERED),
+            RegistrationStatus.CANCELLED, java.util.Set.of());
+
+    /** Event lifecycle moves an organizer may make. ENDED is terminal. */
+    private static final Map<EventStatus, java.util.Set<EventStatus>> EVENT_TRANSITIONS = Map.of(
+            EventStatus.APPROVED, java.util.Set.of(EventStatus.ACTIVE, EventStatus.ENDED, EventStatus.CANCELLED),
+            EventStatus.ACTIVE, java.util.Set.of(EventStatus.ENDED, EventStatus.CANCELLED),
+            EventStatus.ENDED, java.util.Set.of());
+
+    @org.springframework.beans.factory.annotation.Autowired
     public OrganizerService(EventRepository eventRepository,
                             EventRegistrationRepository registrationRepository,
                             TransactionLogRepository transactionLogRepository,
@@ -94,7 +121,8 @@ public class OrganizerService {
                             EventStaffAssignmentRepository staffAssignmentRepository,
                             UserProfileRepository userProfileRepository,
                             IdTemplateRepository idTemplateRepository,
-                            NotificationService notificationService) {
+                            NotificationService notificationService,
+                            RegistrationService registrationService) {
         this.eventRepository = eventRepository;
         this.registrationRepository = registrationRepository;
         this.transactionLogRepository = transactionLogRepository;
@@ -106,6 +134,7 @@ public class OrganizerService {
         this.userProfileRepository = userProfileRepository;
         this.idTemplateRepository = idTemplateRepository;
         this.notificationService = notificationService;
+        this.registrationService = registrationService;
     }
 
     @Transactional(readOnly = true)
@@ -129,6 +158,7 @@ public class OrganizerService {
     //
     // SCOPE DEVIATION: Event Update Log Repository (SDD 3.5) omitted in MVP — tracked separately
     // for capstone defense.
+    @CacheEvict(cacheNames = EVENTS_CACHE, allEntries = true)
     public EventResponse updateEvent(UUID organizerUserId, UUID eventId, AccountRole role, EventRequest request) {
         Event event = requireOrganizerEvent(organizerUserId, eventId, role);
         // SDD 3.5 / UC-20 edit lock: once an event is Active (Ongoing) or Completed the
@@ -176,8 +206,19 @@ public class OrganizerService {
                 event.getOrganizerUserId(), event.getApprovedByUserId(), event.getApprovedAt(), event.getRejectionReason());
     }
 
+    @CacheEvict(cacheNames = EVENTS_CACHE, allEntries = true)
     public EventResponse updateStatus(UUID organizerUserId, UUID eventId, AccountRole role, EventStatus status) {
         Event event = requireOrganizerEvent(organizerUserId, eventId, role);
+        if (status == null) {
+            throw new BadRequestException("Event status is required");
+        }
+        if (status != event.getStatus()) {
+            java.util.Set<EventStatus> allowed = EVENT_TRANSITIONS.getOrDefault(event.getStatus(), java.util.Set.of());
+            if (!allowed.contains(status)) {
+                throw new BadRequestException("Cannot change event status from " + event.getStatus() + " to " + status
+                        + (allowed.isEmpty() ? "" : ". Allowed: " + allowed));
+            }
+        }
         event.setStatus(status);
         return new EventResponse(eventRepository.save(event).getId(), event.getTitle(), event.getDescription(), event.getCategory(), event.getLocation(),
                 event.getRegistrationOpenAt(), event.getRegistrationCloseAt(), event.getEventStartAt(), event.getEventEndAt(),
@@ -185,6 +226,7 @@ public class OrganizerService {
                 event.getOrganizerUserId(), event.getApprovedByUserId(), event.getApprovedAt(), event.getRejectionReason());
     }
 
+    @CacheEvict(cacheNames = {EVENTS_CACHE, SCAN_PURPOSES_CACHE}, allEntries = true)
     public EventResponse updateRewardSettings(UUID organizerUserId, UUID eventId, AccountRole role, RewardSettingsRequest request) {
         Event event = requireOrganizerEvent(organizerUserId, eventId, role);
         event.setRewardsEnabled(request.enabled());
@@ -276,16 +318,83 @@ public class OrganizerService {
                 .toList();
     }
 
+    @CacheEvict(cacheNames = {EVENTS_CACHE, REGISTRATIONS_CACHE}, allEntries = true)
     public OrganizerAttendeeResponse updateAttendeeStatus(UUID organizerUserId, UUID eventId, AccountRole role, UUID attendeeId, String status) {
-        requireOrganizerEvent(organizerUserId, eventId, role);
+        Event event = requireOrganizerEvent(organizerUserId, eventId, role);
+        RegistrationStatus target = parseAttendeeStatus(status);
         EventRegistration registration = registrationRepository.findByEventId(eventId).stream()
                 .filter(item -> item.getAttendeeUserId().equals(attendeeId) || item.getId().equals(attendeeId))
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Attendee not found for event"));
-        registration.setStatus(com.thedavelopers.eventqr.shared.constants.RegistrationStatus.valueOf(status));
-        registrationRepository.save(registration);
+        RegistrationStatus current = registration.getStatus();
+        if (current != target) {
+            java.util.Set<RegistrationStatus> allowed = ATTENDEE_TRANSITIONS.getOrDefault(current, java.util.Set.of());
+            if (!allowed.contains(target)) {
+                throw new BadRequestException("Cannot change attendee status from " + current + " to " + target
+                        + (allowed.isEmpty() ? " (" + current + " is final)" : ". Allowed: " + allowed));
+            }
+            if (target == RegistrationStatus.CANCELLED) {
+                // Shared cancel logic: guarded transition, seat release, QR deactivation.
+                registrationService.cancel(registration.getId(), registration.getAttendeeUserId());
+                // Only the organizer path notifies; an attendee cancelling their own registration does not.
+                notificationService.createRegistrationCancelledByOrganizerNotification(
+                        eventId, registration.getAttendeeUserId(), event.getTitle());
+            } else {
+                applyAttendeeTransition(registration, current, target);
+            }
+            entityManager.flush();
+            entityManager.clear();
+            registration = registrationRepository.findById(registration.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Attendee not found for event"));
+        }
         return toAttendee(registration, transactionLogRepository.findByEventId(eventId),
                 earnedPoints(eventId, List.of(registration)).getOrDefault(registration.getAttendeeUserId(), 0));
+    }
+
+    private RegistrationStatus parseAttendeeStatus(String status) {
+        if (status == null || status.isBlank()) {
+            throw new BadRequestException("Attendee status is required");
+        }
+        try {
+            return RegistrationStatus.valueOf(status.trim().toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException("Invalid attendee status '" + status + "'. Allowed: "
+                    + Arrays.toString(RegistrationStatus.values()));
+        }
+    }
+
+    /**
+     * Guarded status move (loses cleanly to a concurrent change), keeps events.current_attendee_count aligned with
+     * {@link RegistrationStatus#isCountedAsRegistered()} (CANCELLED and NO_SHOW free their seat) and stamps
+     * entered/exited timestamps.
+     */
+    private void applyAttendeeTransition(EventRegistration registration, RegistrationStatus current, RegistrationStatus target) {
+        int updated = registrationRepository.updateStatusIfCurrent(registration.getId(), current.name(), target.name());
+        if (updated == 0) {
+            throw new ConflictException("Attendee status changed in the meantime. Refresh and try again.");
+        }
+        boolean wasCounted = current.isCountedAsRegistered();
+        boolean isCounted = target.isCountedAsRegistered();
+        if (wasCounted && !isCounted) {
+            eventRepository.decrementAttendeeCount(registration.getEventId());
+        } else if (!wasCounted && isCounted && eventRepository.incrementAttendeeCountIfAvailable(registration.getEventId()) == 0) {
+            throw new ConflictException("Event is at capacity");
+        }
+        if (target == RegistrationStatus.ENTERED || target == RegistrationStatus.EXITED) {
+            entityManager.flush();
+            entityManager.clear();
+            EventRegistration fresh = registrationRepository.findById(registration.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Attendee not found for event"));
+            if (target == RegistrationStatus.ENTERED) {
+                // EXITED -> ENTERED is a re-entry: keep the original first-entry timestamp.
+                if (fresh.getEnteredAt() == null) {
+                    fresh.setEnteredAt(Instant.now());
+                }
+            } else {
+                fresh.setExitedAt(Instant.now());
+            }
+            registrationRepository.save(fresh);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -547,6 +656,7 @@ public class OrganizerService {
         return purposes.stream().map(this::toScanPurpose).toList();
     }
 
+    @CacheEvict(cacheNames = {SCAN_PURPOSES_CACHE}, allEntries = true)
     public OrganizerScanPurposeResponse saveScanPurpose(UUID organizerUserId, UUID eventId, AccountRole role,
                                                         OrganizerScanPurposeRequest request) {
         requireOrganizerEvent(organizerUserId, eventId, role);
@@ -581,6 +691,14 @@ public class OrganizerService {
             rule.setMaxUsesPerRegistration(1);
             rule.setRequiresStaffAssignment(true);
         }
+        // "Allow duplicates" must actually allow them: max uses 0 = unlimited (see
+        // TransactionService.determineDuplicateReason). A custom limit (>1) set via the rule editor is kept.
+        if (!request.allowDuplicate()) {
+            rule.setMaxUsesPerRegistration(1);
+            rule.setDuplicateWindowMinutes(0);
+        } else if (rule.getMaxUsesPerRegistration() == 1) {
+            rule.setMaxUsesPerRegistration(0);
+        }
         rule.setPointsAwarded(request.pointsEnabled() ? request.pointsValue() : 0);
         transactionRuleRepository.save(rule);
         OrganizerScanPurposeResponse response = toScanPurpose(purpose);
@@ -590,6 +708,7 @@ public class OrganizerService {
         return response;
     }
 
+    @CacheEvict(cacheNames = {SCAN_PURPOSES_CACHE}, allEntries = true)
     public void deleteScanPurpose(UUID organizerUserId, UUID eventId, AccountRole role, UUID purposeId) {
         requireOrganizerEvent(organizerUserId, eventId, role);
         ScanPurpose purpose = scanPurposeRepository.findById(purposeId)
@@ -597,9 +716,15 @@ public class OrganizerService {
         if (!purpose.getEventId().equals(eventId)) {
             throw new ResourceNotFoundException("Scan purpose not found for event");
         }
+        if (transactionLogRepository.existsByScanPurposeId(purposeId)) {
+            throw new ConflictException("Scan purpose cannot be deleted because transaction logs exist");
+        }
+        transactionRuleRepository.findByEventIdAndScanPurposeId(eventId, purposeId)
+                .ifPresent(transactionRuleRepository::delete);
         scanPurposeRepository.delete(purpose);
     }
 
+    @CacheEvict(cacheNames = {SCAN_PURPOSES_CACHE}, allEntries = true)
     public OrganizerScanPurposeResponse enableScanPurpose(UUID organizerUserId, UUID eventId, AccountRole role, UUID purposeId, boolean enabled) {
         requireOrganizerEvent(organizerUserId, eventId, role);
         ScanPurpose purpose = scanPurposeRepository.findById(purposeId)
@@ -617,9 +742,7 @@ public class OrganizerService {
             rule.setDuplicateWindowMinutes(0);
             rule.setMaxUsesPerRegistration(1);
         }
-        if (!enabled) {
-            rule.setAllowDuplicate(false);
-        }
+        // allowDuplicate is a separate setting: toggling a purpose on/off must not change it.
         transactionRuleRepository.save(rule);
         OrganizerScanPurposeResponse response = toScanPurpose(purpose);
         log.debug("ScanPurposePersistence eventId={} action=toggle purposeId={} enabled={} backendResponseName={} code={}",
@@ -627,6 +750,7 @@ public class OrganizerService {
         return response;
     }
 
+    @CacheEvict(cacheNames = {SCAN_PURPOSES_CACHE}, allEntries = true)
     public OrganizerScanPurposeResponse toggleTrackingOnly(UUID organizerUserId, UUID eventId, AccountRole role, UUID purposeId, boolean trackingOnly) {
         requireOrganizerEvent(organizerUserId, eventId, role);
         ScanPurpose purpose = scanPurposeRepository.findById(purposeId)
@@ -662,6 +786,7 @@ public class OrganizerService {
         return saveTransactionRule(organizerUserId, eventId, role, null, request);
     }
 
+    @CacheEvict(cacheNames = {SCAN_PURPOSES_CACHE}, allEntries = true)
     public OrganizerTransactionRuleResponse saveTransactionRule(UUID organizerUserId, UUID eventId, AccountRole role, UUID ruleId, TransactionRuleRequest request) {
         requireOrganizerEvent(organizerUserId, eventId, role);
         ScanPurpose purpose = scanPurposeRepository.findById(request.scanPurposeId())
@@ -682,18 +807,21 @@ public class OrganizerService {
         rule.setActive(request.active());
         rule.setAllowDuplicate(request.allowDuplicate());
         rule.setDuplicateWindowMinutes(normalizeNonNegative(request.duplicateWindowMinutes(), 0));
-        rule.setMaxUsesPerRegistration(normalizePositive(request.maxUsesPerRegistration(), 1));
+        // 0 = unlimited uses, only meaningful when duplicates are allowed; otherwise a single use.
+        rule.setMaxUsesPerRegistration(request.allowDuplicate()
+                ? normalizeNonNegative(request.maxUsesPerRegistration(), 0) : 1);
         rule.setRequiresStaffAssignment(request.requiresStaffAssignment());
         rule.setPointsAwarded(request.pointsAwarded());
-        return toTransactionRule(transactionRuleRepository.save(rule));
+        TransactionRule saved = transactionRuleRepository.saveAndFlush(rule);
+        // DB triggers may normalize duplicate settings on write; re-read so the response shows persisted values.
+        if (entityManager.contains(saved)) {
+            entityManager.refresh(saved);
+        }
+        return toTransactionRule(saved);
     }
 
     private int normalizeNonNegative(int value, int fallback) {
         return value < 0 ? fallback : value;
-    }
-
-    private int normalizePositive(int value, int fallback) {
-        return value <= 0 ? fallback : value;
     }
 
     private Event requireOrganizerEvent(UUID organizerUserId, UUID eventId, AccountRole role) {
@@ -723,14 +851,23 @@ public class OrganizerService {
         int currentAttendeeCount = (int) registrations.stream()
                 .filter(reg -> reg.getStatus().isCountedAsRegistered())
                 .count();
-        return new OrganizerEventResponse(eventId, event.getTitle(), "Organizer", formatRange(event.getEventStartAt(), event.getEventEndAt()),
+        String organizerName = event.getOrganizerUserId() == null ? "Organizer"
+                : userProfileRepository.findById(event.getOrganizerUserId()).map(UserProfile::getFullName)
+                        .filter(name -> name != null && !name.isBlank()).orElse("Organizer");
+        // Unlimited capacity (0) is reported as -1 available slots; otherwise remaining seats.
+        int availableSlots = capacity <= 0 ? -1 : Math.max(0, capacity - currentAttendeeCount);
+        long attendedDistinct = transactions.stream()
+                .filter(tx -> tx.getTransactionResult() == TransactionResult.APPROVED
+                        && tx.getTransactionType() == TransactionType.ATTENDANCE)
+                .map(TransactionLog::getAttendeeUserId).distinct().count();
+        return new OrganizerEventResponse(eventId, event.getTitle(), organizerName, formatRange(event.getEventStartAt(), event.getEventEndAt()),
                 format(event.getEventStartAt()), event.getLocation(), displayStatus(event.getStatus()),
-                format(event.getRegistrationOpenAt()), event.getRejectionReason(), event.getDescription(),
+                format(event.getCreatedAt()), event.getRejectionReason(), event.getDescription(),
                 event.getEventStartAt(), event.getEventEndAt(), event.getRegistrationOpenAt(), event.getRegistrationCloseAt(),
-                capacity, currentAttendeeCount, Math.max(0, capacity - currentAttendeeCount), List.of(), (long) currentAttendeeCount,
-                registrations.stream().filter(reg -> reg.getStatus() == RegistrationStatus.ENTERED).count(),
-                transactions.stream().filter(tx -> tx.getTransactionResult() == TransactionResult.APPROVED
-                        && tx.getTransactionType() == TransactionType.ATTENDANCE).count(),
+                capacity, currentAttendeeCount, availableSlots, List.of(), (long) currentAttendeeCount,
+                registrations.stream().filter(reg -> reg.getStatus() == RegistrationStatus.ENTERED
+                        || reg.getStatus() == RegistrationStatus.EXITED).count(),
+                attendedDistinct,
                 registrations.stream().filter(reg -> reg.getStatus() == RegistrationStatus.EXITED).count(),
                 registrations.stream().filter(reg -> reg.getStatus() == RegistrationStatus.NO_SHOW).count(),
                 transactions.size(),
@@ -740,7 +877,9 @@ public class OrganizerService {
                 transactions.stream().filter(tx -> tx.getTransactionResult() == TransactionResult.APPROVED
                         && (tx.getTransactionType() == TransactionType.BOOTH_VISIT || tx.getTransactionType() == TransactionType.SESSION_VISIT)).count(),
                 redemptions,
-                transactions.stream().filter(tx -> tx.getTransactionResult() == TransactionResult.APPROVED)
+                // Points handed out only: redemptions are negative deltas and must not net the total down.
+                transactions.stream().filter(tx -> tx.getTransactionResult() == TransactionResult.APPROVED
+                                && tx.getPointsDelta() > 0)
                         .mapToLong(TransactionLog::getPointsDelta).sum(),
                 idTemplateRepository.findFirstByEventIdAndActiveTrue(eventId).isPresent() ? "Configured" : "Not configured",
                 event.isRewardsEnabled() ? "Enabled" : "Disabled",
@@ -777,7 +916,9 @@ public class OrganizerService {
                 registration.getQrCredentialId(), registration.getAttendeeName(), registration.getAttendeeEmail(),
                 null, registration.getStatus().name(), eventStatus(registration),
                 pointsEarned,
-                attendeeLogs.stream().map(TransactionLog::getScannedAt).max(Instant::compareTo).map(this::format).orElse("-"),
+                attendeeLogs.stream().filter(log -> log.getTransactionResult() == TransactionResult.APPROVED)
+                        .map(TransactionLog::getScannedAt).filter(java.util.Objects::nonNull)
+                        .max(Instant::compareTo).map(this::format).orElse("-"),
                 format(registration.getRegisteredAt()),
                 registration.getQrCredentialId() == null ? "Pending" : "Issued",
                 attendeeLogs.stream().filter(log -> log.getTransactionResult() == TransactionResult.APPROVED)
@@ -991,7 +1132,8 @@ public class OrganizerService {
             // Upcoming (APPROVED) event from one that is ongoing and therefore edit-locked.
             case ACTIVE -> "Active";
             case ENDED -> "Completed";
-            case REJECTED, CANCELLED -> "Rejected";
+            case REJECTED -> "Rejected";
+            case CANCELLED -> "Cancelled";
             default -> "Pending";
         };
     }

@@ -202,7 +202,8 @@ n.setMessage("Your event request '" + eventName + "' has been approved.");
         n.setRecipientUserId(requesterUserId);
         n.setNotificationType(NotificationType.EVENT_REJECTED);
         n.setTitle("Event rejected: " + eventName);
-n.setMessage("Your event request '" + eventName + "' was rejected. Remarks: " + remarks);
+n.setMessage("Your event request '" + eventName + "' was rejected."
+                + (remarks == null || remarks.isBlank() ? "" : " Remarks: " + remarks.trim()));
         n.setStatus(NotificationStatus.SENT);
         notificationRepository.save(n);
     }
@@ -210,10 +211,10 @@ n.setMessage("Your event request '" + eventName + "' was rejected. Remarks: " + 
 public void createEventStartingSoonNotifications(List<com.thedavelopers.eventqr.features.events.model.entity.Event> events) {
         for (com.thedavelopers.eventqr.features.events.model.entity.Event event : events) {
             save(NotificationType.EVENT_STARTING_SOON, event.getId(), event.getOrganizerUserId(),
-                    "Starting soon: " + event.getTitle(), "Event '" + event.getTitle() + "' starts soon.");
+                    "Event started: " + event.getTitle(), "Event '" + event.getTitle() + "' has started.");
             for (UUID attendeeId : attendeeIds(event.getId())) {
                 save(NotificationType.EVENT_STARTING_SOON, event.getId(), attendeeId,
-                        "Starting soon: " + event.getTitle(), "Event '" + event.getTitle() + "' starts soon.");
+                        "Event started: " + event.getTitle(), "Event '" + event.getTitle() + "' has started.");
             }
         }
     }
@@ -278,8 +279,20 @@ public void createEventStartingSoonNotifications(List<com.thedavelopers.eventqr.
         notificationRepository.save(n);
     }
 
+    public void createRegistrationCancelledByOrganizerNotification(UUID eventId, UUID attendeeUserId, String eventTitle) {
+        Notification n = new Notification();
+        n.setEventId(eventId);
+        n.setRecipientUserId(attendeeUserId);
+        n.setNotificationType(NotificationType.GENERAL);
+        n.setTitle("Registration cancelled: " + eventTitle);
+        n.setMessage("Your registration for '" + eventTitle + "' was cancelled by the organizer.");
+        n.setStatus(NotificationStatus.SENT);
+        notificationRepository.save(n);
+    }
+
     private List<UUID> attendeeIds(UUID eventId) {
         return registrationRepository.findByEventId(eventId).stream()
+                .filter(registration -> registration.getStatus() != null && registration.getStatus().isCountedAsRegistered())
                 .map(registration -> registration.getAttendeeUserId())
                 .distinct()
                 .toList();

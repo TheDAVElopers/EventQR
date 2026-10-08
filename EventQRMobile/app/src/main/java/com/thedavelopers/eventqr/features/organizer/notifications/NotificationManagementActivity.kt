@@ -38,7 +38,7 @@ class NotificationManagementActivity : AppCompatActivity() {
     private lateinit var eventSpinner: Spinner
     private lateinit var typeSpinner: Spinner
     private val eventOptions = mutableListOf<String>()
-    private val typeOptions = listOf("All types") + NotificationType.entries.map { it.name }
+    private val typeOptions by lazy { listOf(getString(R.string.notification_mgmt_all_types)) + NotificationType.entries.map { it.name } }
     private val eventIdsByLabel = mutableMapOf<String, UUID?>()
 
     private var eventPopup: PopupWindow? = null
@@ -81,7 +81,7 @@ class NotificationManagementActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val events = repo.getApprovedOrganizerEvents()
             eventOptions.clear()
-            eventOptions.add("All events")
+            eventOptions.add(getString(R.string.notification_mgmt_all_events))
             events.forEach { event ->
                 eventOptions.add(event.title.ifBlank { event.id })
                 eventIdsByLabel[event.title.ifBlank { event.id }] = event.id.takeIf { it.isNotBlank() }?.let { runCatching { UUID.fromString(it) }.getOrNull() }

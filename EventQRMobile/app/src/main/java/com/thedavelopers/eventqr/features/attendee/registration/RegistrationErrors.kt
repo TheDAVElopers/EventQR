@@ -9,6 +9,7 @@ fun toFriendlyRegistrationError(
 ): String {
     val normalized = message.lowercase()
     return when {
+        normalized.contains("your own event") || normalized.contains("own event") -> strings.get(R.string.registration_error_own_event)
         normalized.contains("own account email") -> ownEmailMessage
         normalized.contains("duplicate registration") || normalized.contains("already registered") || normalized.contains("duplicate key") || normalized.contains("unique constraint") -> strings.get(R.string.registration_error_already_registered)
         normalized.contains("event is at capacity") || normalized.contains("capacity") || normalized.contains("full") -> strings.get(R.string.registration_error_event_full)

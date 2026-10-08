@@ -79,7 +79,7 @@ class OrganizerServiceAuthorizationTest {
         organizerService = new OrganizerService(eventRepository, registrationRepository,
                 transactionLogRepository, scanPurposeRepository, transactionRuleRepository,
                 rewardRedemptionRepository, pointTransactionRepository, staffAssignmentRepository,
-                userProfileRepository, idTemplateRepository, notificationService);
+                userProfileRepository, idTemplateRepository, notificationService, mock(com.thedavelopers.eventqr.features.registrations.service.RegistrationService.class));
     }
 
     // --- helpers -----------------------------------------------------------

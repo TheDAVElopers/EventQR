@@ -28,6 +28,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.thedavelopers.eventqr.features.events.model.dto.EventResponse;
+import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse;
+import com.thedavelopers.eventqr.shared.constants.TransactionType;
+import com.thedavelopers.eventqr.shared.constants.TransactionResult;
 import com.thedavelopers.eventqr.features.events.service.EventService;
 import com.thedavelopers.eventqr.features.organizer.model.entity.EventStaffAssignment;
 import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignmentRepository;
@@ -74,6 +77,19 @@ class StaffControllerTest {
                 .build();
         when(jwtService.extractUserIdFromBearer(AUTH)).thenReturn(staffId);
         when(jwtService.extractRoleFromBearer(AUTH)).thenReturn(AccountRole.STAFF);
+        when(transactionService.record(any())).thenReturn(response(TransactionResult.APPROVED, null));
+        when(transactionService.rejectManually(any())).thenReturn(response(TransactionResult.REJECTED, "Rejected manually by staff"));
+        stubPurpose(ScanPurposeCode.ENTRY);
+    }
+
+    private void stubPurpose(ScanPurposeCode code) {
+        when(scanPurposeService.requireActive(any())).thenReturn(
+                new ScanPurposeSnapshot(purposeId, eventId, "Purpose", code, true, false, null));
+    }
+
+    private TransactionResponse response(TransactionResult result, String reason) {
+        return new TransactionResponse(UUID.randomUUID(), eventId, null, UUID.randomUUID(), null, UUID.randomUUID(), null,
+                UUID.randomUUID(), purposeId, null, TransactionType.ENTRY, result, 0, reason, Instant.now());
     }
 
     private EventStaffAssignment assignment(boolean canScan) {
@@ -188,17 +204,57 @@ class StaffControllerTest {
         assigned(true, EventStatus.ACTIVE);
         String body = json("{'eventId':'" + eventId + "','scanPurposeId':'" + purposeId + "','qrValue':'qr-1'}");
         String[][] routes = {
-                {"entry", "Entry recorded"}, {"attendance", "Attendance recorded"},
-                {"benefit-claim", "Benefit claim recorded"}, {"booth-visit", "Booth visit recorded"},
-                {"reward-redemption", "Reward redemption scan recorded"}, {"exit", "Exit recorded"},
-                {"reject", "Scan rejected"}};
+                {"entry", "ENTRY", "Entry recorded"}, {"attendance", "ATTENDANCE", "Attendance recorded"},
+                {"benefit-claim", "BENEFIT_CLAIM", "Benefit claim recorded"}, {"booth-visit", "BOOTH_VISIT", "Booth visit recorded"},
+                {"reward-redemption", "REWARD_REDEMPTION_SCAN", "Reward redemption scan recorded"}, {"exit", "EXIT", "Exit recorded"},
+                {"reject", "ENTRY", "Scan rejected"}};
 
         for (String[] route : routes) {
+            stubPurpose(ScanPurposeCode.valueOf(route[1]));
             mvc.perform(post("/api/v1/staff/events/{id}/scan/" + route[0], eventId).header("Authorization", AUTH)
                             .contentType(MediaType.APPLICATION_JSON).content(body))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.message").value(route[1]));
+                    .andExpect(jsonPath("$.message").value(route[2]));
         }
+    }
+
+    @Test
+    void aRejectedScanIsNotReportedAsRecorded() throws Exception {
+        assigned(true, EventStatus.ACTIVE);
+        when(transactionService.record(any())).thenReturn(response(TransactionResult.REJECTED, "Duplicate scan is not allowed"));
+
+        mvc.perform(post("/api/v1/staff/events/{id}/scan/entry", eventId).header("Authorization", AUTH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'eventId':'" + eventId + "','scanPurposeId':'" + purposeId + "','qrValue':'qr-1'}")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Entry rejected: Duplicate scan is not allowed"));
+    }
+
+    @Test
+    void aPurposeThatDoesNotBelongToTheRouteIsABadRequest() throws Exception {
+        assigned(true, EventStatus.ACTIVE);
+        stubPurpose(ScanPurposeCode.EXIT);
+
+        mvc.perform(post("/api/v1/staff/events/{id}/scan/entry", eventId).header("Authorization", AUTH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'eventId':'" + eventId + "','scanPurposeId':'" + purposeId + "','qrValue':'qr-1'}")))
+                .andExpect(status().isBadRequest());
+        verify(transactionService, never()).record(any());
+    }
+
+    @Test
+    void aPurposeFromAnotherEventIsForbiddenBeforeTheRouteCodeCheck() throws Exception {
+        assigned(true, EventStatus.ACTIVE);
+        // An EXIT purpose on the entry route would be a 400, but ownership is checked first and must win with a 403.
+        when(scanPurposeService.requireActive(any())).thenReturn(
+                new ScanPurposeSnapshot(purposeId, UUID.randomUUID(), "Other event purpose", ScanPurposeCode.EXIT, true, false, null));
+
+        mvc.perform(post("/api/v1/staff/events/{id}/scan/entry", eventId).header("Authorization", AUTH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'eventId':'" + eventId + "','scanPurposeId':'" + purposeId + "','qrValue':'qr-1'}")))
+                .andExpect(status().isForbidden());
+
+        verify(transactionService, never()).record(any());
     }
 
     @Test

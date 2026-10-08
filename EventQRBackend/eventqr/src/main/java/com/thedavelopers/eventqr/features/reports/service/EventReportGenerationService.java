@@ -166,6 +166,7 @@ public class EventReportGenerationService {
         List<RowData> filtered = applyDateFilter(all, filters)
                 .stream()
                 .filter(row -> attendeeMatches(filters, row, registrationByUser))
+                .filter(row -> rosterStatusMatches(filters, row, registrationByUser))
                 .toList();
 
         Map<String, Long> chart = chartBy(columns.get(1), filtered.stream()
@@ -176,8 +177,14 @@ public class EventReportGenerationService {
 
     private ReportAssembly buildNoShows(Event event, List<EventRegistration> registrations, EventReportFilters filters) {
         List<String> columns = List.of("Name", "Registered On", "Reason");
+        // Before the event starts nobody can be "not checked in" yet, so only explicitly marked no-shows are listed.
+        // While running / after it ended, registrations that never entered are listed too.
+        Instant now = Instant.now();
+        boolean notStarted = event.getStatus() != com.thedavelopers.eventqr.shared.constants.EventStatus.ENDED
+                && (event.getEventStartAt() == null || event.getEventStartAt().isAfter(now));
         List<RowData> all = registrations.stream()
-                .filter(registration -> registration.getStatus() == RegistrationStatus.REGISTERED || registration.getStatus() == RegistrationStatus.NO_SHOW)
+                .filter(registration -> registration.getStatus() == RegistrationStatus.NO_SHOW
+                        || (!notStarted && registration.getStatus() == RegistrationStatus.REGISTERED))
                 .sorted(Comparator.comparing(EventRegistration::getRegisteredAt, Comparator.nullsLast(Comparator.reverseOrder())))
                 .map(registration -> new RowData(
                         new EventReportRow(List.of(
@@ -193,7 +200,8 @@ public class EventReportGenerationService {
         List<RowData> filtered = applyDateFilter(all, filters);
         Map<String, Long> chart = chartBy("Reason", filtered.stream()
                 .collect(Collectors.groupingBy(row -> row.row().values().get(2), LinkedHashMap::new, Collectors.counting())));
-        return new ReportAssembly("Not Checked In Report", columns, all, filtered, chart);
+        String title = notStarted ? "Not Checked In Report (event has not started)" : "Not Checked In Report";
+        return new ReportAssembly(title, columns, all, filtered, chart);
     }
 
     private ReportAssembly buildEntryLogs(Event event,
@@ -219,14 +227,15 @@ public class EventReportGenerationService {
                                            Map<UUID, EventRegistration> registrationByUser,
                                            List<TransactionLog> transactions,
                                            EventReportFilters filters) {
-        List<String> columns = List.of("Name", "Session/Activity", "Timestamp");
+        List<String> columns = List.of("Name", "Session/Activity", "Timestamp", "Result");
         List<RowData> all = transactions.stream()
                 .filter(transaction -> transaction.getTransactionType() == TransactionType.ATTENDANCE)
                 .map(transaction -> new RowData(
                         new EventReportRow(List.of(
                                 safeAttendeeName(registrationByUser, transaction.getAttendeeUserId()),
                                 extractActivityLabel(transaction),
-                                formatDateTime(transaction.getScannedAt())
+                                formatDateTime(transaction.getScannedAt()),
+                                prettyResult(transaction.getTransactionResult())
                         )),
                         transaction.getScannedAt(),
                         safeAttendeeName(registrationByUser, transaction.getAttendeeUserId()),
@@ -241,7 +250,9 @@ public class EventReportGenerationService {
                 .filter(row -> attendeeMatches(filters, row, registrationByUser))
                 .toList();
 
+        // Chart counts successful (APPROVED) attendance only; rejected scans stay visible in the table.
         Map<String, Long> chart = chartBy("Activity", filtered.stream()
+                .filter(row -> row.result() == TransactionResult.APPROVED)
                 .collect(Collectors.groupingBy(row -> row.row().values().get(1), LinkedHashMap::new, Collectors.counting())));
         return new ReportAssembly("Attendance Report", columns, all, filtered, chart);
     }
@@ -270,7 +281,7 @@ public class EventReportGenerationService {
                                             Map<UUID, EventRegistration> registrationByUser,
                                             List<TransactionLog> transactions,
                                             EventReportFilters filters) {
-        List<String> columns = List.of("Name", "Booth/Session", "Visit Time");
+        List<String> columns = List.of("Name", "Booth/Session", "Visit Time", "Result");
         List<RowData> all = transactions.stream()
                 .filter(transaction -> transaction.getTransactionType() == TransactionType.BOOTH_VISIT
                         || transaction.getTransactionType() == TransactionType.SESSION_VISIT)
@@ -278,7 +289,8 @@ public class EventReportGenerationService {
                         new EventReportRow(List.of(
                                 safeAttendeeName(registrationByUser, transaction.getAttendeeUserId()),
                                 extractActivityLabel(transaction),
-                                formatDateTime(transaction.getScannedAt())
+                                formatDateTime(transaction.getScannedAt()),
+                                prettyResult(transaction.getTransactionResult())
                         )),
                         transaction.getScannedAt(),
                         safeAttendeeName(registrationByUser, transaction.getAttendeeUserId()),
@@ -289,7 +301,9 @@ public class EventReportGenerationService {
                 .toList();
 
         List<RowData> filtered = applyStatusFilter(applyDateFilter(all, filters), filters);
+        // Chart counts successful (APPROVED) visits only; rejected scans stay visible in the table.
         Map<String, Long> chart = chartBy("Visit Type", filtered.stream()
+                .filter(row -> row.result() == TransactionResult.APPROVED)
                 .collect(Collectors.groupingBy(row -> row.row().values().get(1), LinkedHashMap::new, Collectors.counting())));
         return new ReportAssembly("Booth/Session Visits Report", columns, all, filtered, chart);
     }
@@ -307,7 +321,7 @@ public class EventReportGenerationService {
                         prettyResult(transaction.getTransactionResult())))
                 .toList();
 
-        List<RowData> filtered = applyDateFilter(all, filters);
+        List<RowData> filtered = applyStatusFilter(applyDateFilter(all, filters), filters);
         Map<String, Long> chart = chartBy("Result", filtered.stream()
                 .collect(Collectors.groupingBy(row -> row.row().values().get(2), LinkedHashMap::new, Collectors.counting())));
         return new ReportAssembly("Exit Logs Report", columns, all, filtered, chart);
@@ -376,6 +390,23 @@ public class EventReportGenerationService {
             case ALL -> row -> true;
         };
         return rows.stream().filter(matcher).toList();
+    }
+
+    /**
+     * Roster has no scan result, so the status filter maps onto registration state: APPROVED keeps registrations that
+     * count as registered (not cancelled / no-show), REJECTED keeps the cancelled and no-show ones.
+     */
+    private boolean rosterStatusMatches(EventReportFilters filters, RowData row,
+                                        Map<UUID, EventRegistration> registrationByUser) {
+        if (filters == null || filters.status() == null || filters.status() == ReportFilterStatus.ALL) {
+            return true;
+        }
+        EventRegistration registration = row.attendeeUserId() == null ? null : registrationByUser.get(row.attendeeUserId());
+        if (registration == null) {
+            return false;
+        }
+        boolean counted = registration.getStatus().isCountedAsRegistered();
+        return filters.status() == ReportFilterStatus.APPROVED ? counted : !counted;
     }
 
     private boolean attendeeMatches(EventReportFilters filters, RowData row,

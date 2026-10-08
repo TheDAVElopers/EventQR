@@ -23,6 +23,7 @@ import com.thedavelopers.eventqr.features.organizer.intentEventId
 import com.thedavelopers.eventqr.features.organizer.resolveSelectedEvent
 import com.thedavelopers.eventqr.features.organizer.selectedEventId
 import com.thedavelopers.eventqr.features.organizer.statusBucket
+import com.thedavelopers.eventqr.features.organizer.statusLabel
 import com.thedavelopers.eventqr.features.organizer.statusPalette
 import com.thedavelopers.eventqr.features.organizer.transactionTypeLabel
 import kotlinx.coroutines.MainScope
@@ -91,17 +92,17 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
             try {
                 val attendeeLoad = repository.loadAttendeesForMvp(eventId)
                 if (attendeeLoad.source == OrganizerMvpDataSource.ERROR) {
-                    showAttendeeError(attendeeLoad.message ?: "Attendee record could not be loaded.")
+                    showAttendeeError(attendeeLoad.message ?: getString(R.string.attendee_details_record_load_failed))
                     return@launch
                 }
                 attendee = attendeeLoad.data.firstOrNull { it.id == attendeeId } ?: run {
-                    showAttendeeError("Attendee record not found for this event.")
+                    showAttendeeError(getString(R.string.attendee_details_record_not_found))
                     return@launch
                 }
                 renderProfile()
                 renderDetails()
             } catch (error: Exception) {
-                showAttendeeError(error.message ?: "Attendee record could not be loaded.")
+                showAttendeeError(error.message ?: getString(R.string.attendee_details_record_load_failed))
             }
         }
     }
@@ -126,7 +127,7 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.txtDetailEventValue).text = selectedEvent.title
         findViewById<TextView>(R.id.txtDetailRegistrationIdValue).text = formatRegistrationId(attendee.id)
         findViewById<TextView>(R.id.txtDetailStatusValue).apply {
-            text = attendee.statusBucket()
+            text = attendee.statusLabel(this@AttendeeDetailsActivity)
             val (bgColor, textColor) = attendee.statusPalette(this@AttendeeDetailsActivity)
             background = GradientDrawable().apply {
                 setColor(bgColor)
@@ -145,7 +146,7 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
         }
         findViewById<TextView>(R.id.txtDetailRegisteredValue).text = formatRegisteredDate(attendee.registeredDate)
         findViewById<TextView>(R.id.txtDetailLastActivityValue).text = formatLastActivity(attendee.lastTransactionTime)
-        findViewById<TextView>(R.id.txtDetailPointsValue).text = "${attendee.points} pts"
+        findViewById<TextView>(R.id.txtDetailPointsValue).text = getString(R.string.attendee_details_points_value, attendee.points)
         renderTransactionHistory()
         findViewById<View>(R.id.cardAttendeeDetails).visibility = View.VISIBLE
     }
@@ -222,7 +223,7 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
                         val textStack = LinearLayout(this@AttendeeDetailsActivity).apply {
                             orientation = LinearLayout.VERTICAL
                             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-                            val label = transactionTypeLabel(entry.type)
+                            val label = transactionTypeLabel(this@AttendeeDetailsActivity, entry.type)
                             val time = formatEntryTimestamp(entry.timestamp)
                             addView(TextView(this@AttendeeDetailsActivity).apply {
                                 text = label
@@ -267,7 +268,7 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
 
     private fun formatLastActivity(value: String): String {
         val cleaned = value.trim()
-        if (cleaned.isBlank() || cleaned == "-") return "No activity yet"
+        if (cleaned.isBlank() || cleaned == "-") return getString(R.string.attendee_details_no_activity_yet)
         return parseToLocalDateTime(cleaned)?.format(lastActivityFormatter)?.uppercase(Locale.ENGLISH) ?: cleaned
     }
 

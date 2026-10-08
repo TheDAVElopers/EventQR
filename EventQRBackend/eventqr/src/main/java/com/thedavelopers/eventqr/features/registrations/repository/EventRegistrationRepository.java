@@ -51,8 +51,10 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
 
     Page<EventRegistration> findByEventIdAndAttendeeUserId(UUID eventId, UUID attendeeUserId, Pageable pageable);
 
-    // Counts every registration row for the event (matches currentAttendeeCount semantics
-    // used across organizer reporting; no status filtering).
+    Optional<EventRegistration> findFirstByEventIdAndAttendeeUserId(UUID eventId, UUID attendeeUserId);
+
+    // Counts every registration row for the event INCLUDING CANCELLED and NO_SHOW rows. This is NOT
+    // the attendee count; use events.current_attendee_count (or a status-filtered count) for that.
     long countByEventId(UUID eventId);
 
     /**

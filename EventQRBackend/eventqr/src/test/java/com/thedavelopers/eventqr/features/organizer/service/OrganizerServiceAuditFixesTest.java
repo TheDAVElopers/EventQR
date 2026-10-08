@@ -55,6 +55,8 @@ class OrganizerServiceAuditFixesTest {
     private UserProfileRepository users;
     private EventRepository events;
     private Event event;
+    private NotificationService notificationService;
+    private com.thedavelopers.eventqr.features.registrations.service.RegistrationService registrationService;
     private OrganizerService service;
 
     @BeforeEach
@@ -64,10 +66,13 @@ class OrganizerServiceAuditFixesTest {
         registrations = mock(EventRegistrationRepository.class);
         redemptions = mock(RewardRedemptionRepository.class);
         staffRepo = mock(EventStaffAssignmentRepository.class);
+        notificationService = mock(NotificationService.class);
+        registrationService = mock(com.thedavelopers.eventqr.features.registrations.service.RegistrationService.class);
         service = new OrganizerService(events, registrations, mock(TransactionLogRepository.class),
                 mock(ScanPurposeRepository.class), mock(TransactionRuleRepository.class), redemptions,
                 mock(PointTransactionRepository.class), staffRepo, users, mock(IdTemplateRepository.class),
-                mock(NotificationService.class));
+                notificationService, registrationService);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "entityManager", mock(jakarta.persistence.EntityManager.class));
         event = new Event();
         event.setId(eventId);
         event.setTitle("Expo");
@@ -270,5 +275,18 @@ class OrganizerServiceAuditFixesTest {
                 new StaffAssignmentUpdateRequest(null, null, false, false, null, null, List.of("Scan QR", "Print ID")));
         assertThat(a.isCanScan()).isFalse();
         assertThat(a.isCanPrintId()).isFalse();
+    }
+
+    @Test
+    void organizerCancellingAttendeeSendsNotification() {
+        EventRegistration r = reg(RegistrationStatus.REGISTERED, false);
+        when(registrations.findByEventId(eventId)).thenReturn(List.of(r));
+        when(registrations.findById(r.getId())).thenReturn(Optional.of(r));
+
+        service.updateAttendeeStatus(organizerId, eventId, AccountRole.ORGANIZER, r.getAttendeeUserId(), "CANCELLED");
+
+        org.mockito.Mockito.verify(registrationService).cancel(r.getId(), r.getAttendeeUserId());
+        org.mockito.Mockito.verify(notificationService).createRegistrationCancelledByOrganizerNotification(
+                eventId, r.getAttendeeUserId(), "Expo");
     }
 }

@@ -57,17 +57,17 @@ open class SearchAttendeesActivity : AppCompatActivity() {
         }
 
         val eventId = intentEventId() ?: selectedEventId().takeIf { it.isNotBlank() }
-            ?: return showMissingEventScreen("Search Attendees")
+            ?: return showMissingEventScreen(getString(R.string.search_attendees_title))
 
         lifecycleScope.launch {
             selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
                 ?: run {
-                    showMissingEventScreen("Search Attendees")
+                    showMissingEventScreen(getString(R.string.search_attendees_title))
                     return@launch
                 }
 
             // Always dynamically display the chosen event's title
-            findViewById<TextView>(R.id.txtSearchSubtitle).text = selectedEvent.title.ifBlank { "Selected Event" }
+            findViewById<TextView>(R.id.txtSearchSubtitle).text = selectedEvent.title.ifBlank { getString(R.string.organizer_selected_event) }
 
             searchInput = findViewById(R.id.edtSearchAttendees)
             searchInput.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, R.drawable.ic_search, 0)
@@ -86,6 +86,7 @@ open class SearchAttendeesActivity : AppCompatActivity() {
                 "Registered" to findViewById(R.id.chipRegistered),
                 "Checked In" to findViewById(R.id.chipCheckedIn),
                 "Exited" to findViewById(R.id.chipExited),
+                "Cancelled" to findViewById(R.id.chipCancelled),
                 // No "No Show" chip: nothing in the system sets RegistrationStatus.NO_SHOW, so it would always be empty.
             )
             filterChips.forEach { (label, chip) ->

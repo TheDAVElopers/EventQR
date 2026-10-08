@@ -182,7 +182,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif-medium"
-                    android:text="@string/common_upcoming"
+                    android:text="@string/user_dashboard_open_events"
                     android:textColor="#80FFFFFF"
                     android:textSize="12sp" />
 

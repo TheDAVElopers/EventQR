@@ -16,6 +16,10 @@ public final class OrganizerDtos {
     private OrganizerDtos() {
     }
 
+    /**
+     * Organizer event view. {@code availableSlots} is the remaining seats, or -1 when the event has unlimited
+     * capacity (capacity 0).
+     */
     public record OrganizerEventResponse(UUID eventId, String title, String organizerName, String dateTime,
                                          String shortDate, String venue, String status, String submittedDate,
                                          String adminRemarks, String description, Instant eventStartAt,

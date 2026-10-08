@@ -20,6 +20,7 @@ import com.thedavelopers.eventqr.features.users.repository.UserProfileRepository
 import com.thedavelopers.eventqr.shared.constants.EventStatus;
 import com.thedavelopers.eventqr.shared.constants.NotificationStatus;
 import com.thedavelopers.eventqr.shared.constants.RegistrationStatus;
+import com.thedavelopers.eventqr.shared.constants.TransactionResult;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
 
 @Service
@@ -65,8 +66,34 @@ public class DashboardService {
         List<DashboardUpcomingEvent> upcomingEvents = loadUpcomingEvents(now, userId);
         long unreadNotifications = notificationRepository.countByRecipientUserIdAndStatusNot(userId, NotificationStatus.READ);
 
-        return new DashboardSummary(availableEventsCount, registeredCount, transactionLogRepository.countByAttendeeUserId(userId),
-                pointsCount, unreadNotifications, profile.getFullName(), upcomingEvents);
+        long completedCount = countCompleted(registrations);
+        long approvedTransactions = transactionLogRepository.countByAttendeeUserIdAndTransactionResult(
+                userId, TransactionResult.APPROVED);
+
+        return new DashboardSummary(availableEventsCount, registeredCount, approvedTransactions,
+                pointsCount, unreadNotifications, profile.getFullName(), upcomingEvents,
+                completedCount, unreadNotifications, pointsCount, availableEventsCount);
+    }
+
+    /** Counted registrations whose event has ENDED (by status or end time) or that were attended. */
+    private long countCompleted(List<EventRegistration> registrations) {
+        List<EventRegistration> counted = registrations.stream()
+                .filter(reg -> reg.getStatus().isCountedAsRegistered()).toList();
+        if (counted.isEmpty()) {
+            return 0;
+        }
+        Instant now = Instant.now();
+        java.util.Map<UUID, com.thedavelopers.eventqr.features.events.model.entity.Event> events = new java.util.HashMap<>();
+        eventRepository.findAllById(counted.stream().map(EventRegistration::getEventId).distinct().toList())
+                .forEach(e -> events.put(e.getId(), e));
+        return counted.stream().filter(reg -> {
+            if (reg.getAttendedAt() != null) {
+                return true;
+            }
+            var event = events.get(reg.getEventId());
+            return event != null && (event.getStatus() == EventStatus.ENDED
+                    || (event.getEventEndAt() != null && !event.getEventEndAt().isAfter(now)));
+        }).count();
     }
 
     private List<DashboardUpcomingEvent> loadUpcomingEvents(Instant now, UUID userId) {
@@ -83,8 +110,9 @@ public class DashboardService {
                 event.getDescription(),
                 event.getEventEndAt(),
                 event.getCapacity(),
-                (int) eventRegistrationRepository.countByEventId(event.getId()),
-                userId != null && eventRegistrationRepository.existsByEventIdAndAttendeeUserId(event.getId(), userId)
+                event.getCurrentAttendeeCount() == null ? 0 : event.getCurrentAttendeeCount(),
+                userId != null && eventRegistrationRepository.findFirstByEventIdAndAttendeeUserId(event.getId(), userId)
+                    .map(r -> r.getStatus() != RegistrationStatus.CANCELLED).orElse(false)
             ))
             .toList();
     }

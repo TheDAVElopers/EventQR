@@ -164,7 +164,7 @@ public class AdminController {
             throw new BadRequestException("Account must be disabled before deletion");
         }
         if (userService.hasDependentRecords(userId)) {
-            throw new BadRequestException("Account has transaction history, cannot be deleted");
+            throw new BadRequestException("Account has registration or transaction history, cannot be deleted");
         }
         logAdminAction(request, "ACCOUNT_DELETED", target.fullName(), null, userId);
         userService.hardDelete(userId);

@@ -131,7 +131,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
             showLoading(true)
             when (val eventsResult = repository.getEvents()) {
                 is NetworkResult.Success -> {
-                    assignedEvents = eventsResult.data.filter { it.canScan && it.status.name != "ENDED" }
+                    assignedEvents = eventsResult.data.filter { it.canScan || it.canViewLogs }
                     selectedEventId = intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_ID)
                         ?.takeIf { extra -> assignedEvents.any { it.eventId.toString() == extra } }
                     if (assignedEvents.isEmpty()) {

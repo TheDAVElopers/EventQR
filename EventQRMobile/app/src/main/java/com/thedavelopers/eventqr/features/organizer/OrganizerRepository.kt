@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.organizer
 
 import android.content.Context
+import com.thedavelopers.eventqr.R
 import com.google.gson.JsonElement
 import com.thedavelopers.eventqr.core.api.ApiClient
 import com.thedavelopers.eventqr.core.api.NetworkResult
@@ -72,7 +73,7 @@ class OrganizerRepository(private val context: Context) {
             val result = fetchOrganizerEvents()
             when (result) {
                 is NetworkResult.Success -> {
-                    val mapped = result.data.map { it.toMvpEvent() }
+                    val mapped = result.data.map { it.toMvpEvent(context) }
                     cachedEvents = mapped
                     lastCacheTime = System.currentTimeMillis()
                     mapped.manageable()
@@ -102,7 +103,7 @@ class OrganizerRepository(private val context: Context) {
     suspend fun loadEventsForMvp(): OrganizerMvpLoad<List<OrganizerMvpEvent>> {
         return when (val result = fetchOrganizerEvents()) {
                     is NetworkResult.Success -> {
-                        val mapped = result.data.map { it.toMvpEvent() }
+                        val mapped = result.data.map { it.toMvpEvent(context) }
                         cachedEvents = mapped
                         lastCacheTime = System.currentTimeMillis()
                         OrganizerMvpLoad(mapped, OrganizerMvpDataSource.BACKEND)
@@ -114,7 +115,7 @@ class OrganizerRepository(private val context: Context) {
 
     suspend fun loadEventForMvp(eventId: String): OrganizerMvpLoad<OrganizerMvpEvent?> {
         return when (val result = fetchOrganizerEvent(eventId)) {
-            is NetworkResult.Success -> OrganizerMvpLoad(result.data.toMvpEvent(), OrganizerMvpDataSource.BACKEND)
+            is NetworkResult.Success -> OrganizerMvpLoad(result.data.toMvpEvent(context), OrganizerMvpDataSource.BACKEND)
             is NetworkResult.Error -> OrganizerMvpLoad(null, OrganizerMvpDataSource.ERROR, result.message)
             NetworkResult.Loading -> OrganizerMvpLoad(null, OrganizerMvpDataSource.ERROR, null)
         }
@@ -130,7 +131,7 @@ class OrganizerRepository(private val context: Context) {
 
     suspend fun loadAttendeesForMvp(eventId: String): OrganizerMvpLoad<List<OrganizerMvpAttendee>> {
         return when (val result = fetchOrganizerAttendees(eventId)) {
-            is NetworkResult.Success -> OrganizerMvpLoad(result.data.map { it.toMvpAttendee() }, OrganizerMvpDataSource.BACKEND)
+            is NetworkResult.Success -> OrganizerMvpLoad(result.data.map { it.toMvpAttendee(context) }, OrganizerMvpDataSource.BACKEND)
             is NetworkResult.Error -> OrganizerMvpLoad(emptyList(), OrganizerMvpDataSource.ERROR, result.message)
             NetworkResult.Loading -> OrganizerMvpLoad(emptyList(), OrganizerMvpDataSource.ERROR, null)
         }
@@ -138,7 +139,7 @@ class OrganizerRepository(private val context: Context) {
 
     suspend fun loadTransactionsForMvp(eventId: String, eventTitle: String): OrganizerMvpLoad<List<OrganizerMvpTransaction>> {
         return when (val result = fetchOrganizerTransactions(eventId)) {
-            is NetworkResult.Success -> OrganizerMvpLoad(result.data.map { it.toMvpTransaction(eventTitle) }, OrganizerMvpDataSource.BACKEND)
+            is NetworkResult.Success -> OrganizerMvpLoad(result.data.map { it.toMvpTransaction(context, eventTitle) }, OrganizerMvpDataSource.BACKEND)
             is NetworkResult.Error -> OrganizerMvpLoad(emptyList(), OrganizerMvpDataSource.ERROR, result.message)
             NetworkResult.Loading -> OrganizerMvpLoad(emptyList(), OrganizerMvpDataSource.ERROR, null)
         }
@@ -146,7 +147,7 @@ class OrganizerRepository(private val context: Context) {
 
     suspend fun loadScanPurposesForMvp(eventId: String): OrganizerMvpLoad<List<OrganizerMvpScanPurpose>> {
         return when (val result = fetchOrganizerScanPurposes(eventId)) {
-            is NetworkResult.Success -> OrganizerMvpLoad(result.data.map { it.toMvpScanPurpose() }, OrganizerMvpDataSource.BACKEND)
+            is NetworkResult.Success -> OrganizerMvpLoad(result.data.map { it.toMvpScanPurpose(context) }, OrganizerMvpDataSource.BACKEND)
             is NetworkResult.Error -> OrganizerMvpLoad(emptyList(), OrganizerMvpDataSource.ERROR, result.message)
             NetworkResult.Loading -> OrganizerMvpLoad(emptyList(), OrganizerMvpDataSource.ERROR, null)
         }
@@ -155,7 +156,7 @@ class OrganizerRepository(private val context: Context) {
     suspend fun loadStaffForMvp(event: OrganizerMvpEvent): OrganizerMvpLoad<List<OrganizerMvpStaff>> {
         return when (val result = fetchOrganizerStaff(event.id)) {
             is NetworkResult.Success -> {
-                val mapped = result.data.map { it.toMvpStaff(event.title) }
+                val mapped = result.data.map { it.toMvpStaff(context, event.title) }
                 OrganizerMvpLoad(mapped, OrganizerMvpDataSource.BACKEND)
             }
             is NetworkResult.Error -> OrganizerMvpLoad(emptyList(), OrganizerMvpDataSource.ERROR, result.message)
@@ -165,7 +166,7 @@ class OrganizerRepository(private val context: Context) {
 
     suspend fun searchStaffUsersForMvp(query: String): OrganizerMvpLoad<List<OrganizerMvpStaff>> {
         return when (val result = searchOrganizerUsers(query)) {
-            is NetworkResult.Success -> OrganizerMvpLoad(result.data.map { it.toAvailableStaff() }, OrganizerMvpDataSource.BACKEND)
+            is NetworkResult.Success -> OrganizerMvpLoad(result.data.map { it.toAvailableStaff(context) }, OrganizerMvpDataSource.BACKEND)
             is NetworkResult.Error -> OrganizerMvpLoad(emptyList(), OrganizerMvpDataSource.ERROR, result.message)
             NetworkResult.Loading -> OrganizerMvpLoad(emptyList(), OrganizerMvpDataSource.ERROR, null)
         }
@@ -174,7 +175,7 @@ class OrganizerRepository(private val context: Context) {
     suspend fun addStaffForMvp(event: OrganizerMvpEvent, staff: OrganizerMvpStaff): OrganizerMvpLoad<OrganizerMvpStaff> {
         val request = buildStaffAssignmentRequest(staff)
         return when (val result = addOrganizerStaff(event.id, request)) {
-            is NetworkResult.Success -> OrganizerMvpLoad(result.data.toMvpStaff(event.title), OrganizerMvpDataSource.BACKEND)
+            is NetworkResult.Success -> OrganizerMvpLoad(result.data.toMvpStaff(context, event.title), OrganizerMvpDataSource.BACKEND)
             is NetworkResult.Error -> OrganizerMvpLoad(staff, OrganizerMvpDataSource.ERROR, result.message)
             NetworkResult.Loading -> OrganizerMvpLoad(staff, OrganizerMvpDataSource.ERROR, null)
         }
@@ -184,7 +185,7 @@ class OrganizerRepository(private val context: Context) {
     suspend fun updateStaffForMvp(event: OrganizerMvpEvent, staff: OrganizerMvpStaff): OrganizerMvpLoad<OrganizerMvpStaff> {
         val request = buildStaffUpdateRequest(staff)
         return when (val result = updateOrganizerStaff(event.id, staff.id, request)) {
-            is NetworkResult.Success -> OrganizerMvpLoad(result.data.toMvpStaff(event.title), OrganizerMvpDataSource.BACKEND)
+            is NetworkResult.Success -> OrganizerMvpLoad(result.data.toMvpStaff(context, event.title), OrganizerMvpDataSource.BACKEND)
             is NetworkResult.Error -> OrganizerMvpLoad(staff, OrganizerMvpDataSource.ERROR, result.message)
             NetworkResult.Loading -> OrganizerMvpLoad(staff, OrganizerMvpDataSource.ERROR, null)
         }
@@ -208,7 +209,7 @@ class OrganizerRepository(private val context: Context) {
                 updateOrganizerScanPurpose(eventId, purpose.id, request)
             }
             when (result) {
-                is NetworkResult.Success -> saved.add(result.data.toMvpScanPurpose())
+                is NetworkResult.Success -> saved.add(result.data.toMvpScanPurpose(context))
                 is NetworkResult.Error -> return OrganizerMvpLoad(emptyList(), OrganizerMvpDataSource.ERROR, result.message)
                 NetworkResult.Loading -> Unit
             }
@@ -357,16 +358,16 @@ class OrganizerRepository(private val context: Context) {
 // Kept in sync with backend OrganizerService.displayStatus() (and lifecycleStatus()/approvedOnly()
 // on the client): ACTIVE is a distinct label from APPROVED so an ongoing event is never misclassified
 // as Upcoming.
-private fun OrganizerEventDto.toMvpEvent(): OrganizerMvpEvent = OrganizerMvpEvent(
+private fun OrganizerEventDto.toMvpEvent(context: Context): OrganizerMvpEvent = OrganizerMvpEvent(
     id = eventId.toString(),
     title = title ?: "",
-    organizerName = organizerName ?: "Organizer",
+    organizerName = organizerName ?: context.getString(R.string.organizer_repo_organizer),
     dateTime = dateTime ?: "-",
     shortDate = shortDate ?: "-",
     venue = venue ?: "Venue not set",
     status = status ?: "Pending",
     submittedDate = submittedDate ?: "-",
-    adminRemarks = adminRemarks ?: "No admin remarks.",
+    adminRemarks = adminRemarks ?: context.getString(R.string.organizer_repo_no_admin_remarks),
     additionalOrganizers = additionalOrganizers.orEmpty().filterNotNull(),
     registeredCount = registeredCount,
     enteredCount = enteredCount,
@@ -380,8 +381,8 @@ private fun OrganizerEventDto.toMvpEvent(): OrganizerMvpEvent = OrganizerMvpEven
     boothSessionVisits = boothSessionVisits,
     rewardRedemptions = rewardRedemptions,
     totalPointsAwarded = totalPointsAwarded,
-    idTemplateStatus = idTemplateStatus ?: "Not configured",
-    rewardsStatus = rewardsStatus ?: "Not configured",
+    idTemplateStatus = idTemplateStatus ?: context.getString(R.string.organizer_repo_not_configured),
+    rewardsStatus = rewardsStatus ?: context.getString(R.string.organizer_repo_not_configured),
     staffCount = staffCount,
     scanPurposesCount = scanPurposesCount,
     description = description.orEmpty(),
@@ -391,12 +392,12 @@ private fun OrganizerEventDto.toMvpEvent(): OrganizerMvpEvent = OrganizerMvpEven
     availableSlots = availableSlots,
 )
 
-private fun OrganizerAttendeeDto.toMvpAttendee(): OrganizerMvpAttendee = OrganizerMvpAttendee(
+private fun OrganizerAttendeeDto.toMvpAttendee(context: Context): OrganizerMvpAttendee = OrganizerMvpAttendee(
     id = attendeeId?.toString() ?: registrationId.toString(),
     eventId = eventId.toString(),
-    name = name ?: "Unnamed attendee",
-    email = email ?: "No email",
-    phone = phone ?: "Not available",
+    name = name ?: context.getString(R.string.organizer_repo_unnamed_attendee),
+    email = email ?: context.getString(R.string.organizer_repo_no_email),
+    phone = phone ?: context.getString(R.string.organizer_repo_not_available),
     registrationStatus = registrationStatus ?: "Registered",
     currentEventStatus = currentEventStatus ?: "Registered",
     points = points,
@@ -422,36 +423,36 @@ private fun JsonElement.toMvpTransactionEntry(): OrganizerMvpTransactionEntry? =
     else -> null
 }
 
-private fun OrganizerTransactionDto.toMvpTransaction(fallbackEventTitle: String): OrganizerMvpTransaction {
+private fun OrganizerTransactionDto.toMvpTransaction(context: Context, fallbackEventTitle: String): OrganizerMvpTransaction {
     val rejected = resultStatus == TransactionResult.REJECTED
-    val displayType = transactionType.toDisplayType()
+    val displayType = transactionType.toDisplayType(context)
     return OrganizerMvpTransaction(
         id = transactionId.toString(),
         eventId = eventId.toString(),
         eventTitle = eventTitle ?: fallbackEventTitle,
         attendeeId = attendeeId?.toString() ?: registrationId?.toString() ?: "unknown",
-        attendeeName = attendeeName ?: "Unknown attendee",
+        attendeeName = attendeeName ?: context.getString(R.string.organizer_repo_unknown_attendee),
         attendeeEmail = attendeeEmail.orEmpty(),
         qrId = qrId ?: qrCredentialId?.toString().orEmpty(),
-        staffId = staffId?.toString() ?: "Not available",
-        staffName = staffName ?: "Staff not available",
+        staffId = staffId?.toString() ?: context.getString(R.string.organizer_repo_not_available),
+        staffName = staffName ?: context.getString(R.string.organizer_repo_staff_not_available),
         staffEmail = staffEmail.orEmpty(),
         scanPurpose = scanPurpose ?: displayType,
         type = displayType,
         timestamp = DateFormatters.formatInstant(createdTimestamp),
         status = if (rejected) "Rejected" else "Approved",
-        message = message ?: if (rejected) "Scan rejected" else "$displayType recorded",
-        reason = reason ?: if (rejected) "Rejected scan" else "Approved scan",
-        deviceSource = deviceSource ?: "Not available",
+        message = message ?: if (rejected) context.getString(R.string.organizer_repo_scan_rejected) else context.getString(R.string.organizer_repo_type_recorded, displayType),
+        reason = reason ?: if (rejected) context.getString(R.string.organizer_repo_rejected_scan) else context.getString(R.string.organizer_repo_approved_scan),
+        deviceSource = deviceSource ?: context.getString(R.string.organizer_repo_not_available),
         pointsDelta = pointsDelta,
-        relatedItem = relatedItem ?: "Not available",
+        relatedItem = relatedItem ?: context.getString(R.string.organizer_repo_not_available),
     )
 }
 
-private fun OrganizerStaffDto.toMvpStaff(eventTitle: String): OrganizerMvpStaff = OrganizerMvpStaff(
+private fun OrganizerStaffDto.toMvpStaff(context: Context, eventTitle: String): OrganizerMvpStaff = OrganizerMvpStaff(
     id = assignmentId.toString(),
-    name = name ?: "Unknown staff",
-    email = email ?: "No email",
+    name = name ?: context.getString(R.string.organizer_repo_unknown_staff),
+    email = email ?: context.getString(R.string.organizer_repo_no_email),
     assignedEventId = eventId.toString(),
     assignedEvent = eventTitle,
     roleLabel = roleLabel ?: "Scanner",
@@ -472,23 +473,23 @@ private fun OrganizerStaffDto.toMvpStaff(eventTitle: String): OrganizerMvpStaff 
     canManageRewards = canManageRewards,
 )
 
-private fun OrganizerUserSearchDto.toAvailableStaff(): OrganizerMvpStaff = OrganizerMvpStaff(
+private fun OrganizerUserSearchDto.toAvailableStaff(context: Context): OrganizerMvpStaff = OrganizerMvpStaff(
     id = userId.toString(),
-    name = name ?: "Unnamed user",
-    email = email ?: "No email",
+    name = name ?: context.getString(R.string.organizer_repo_unnamed_user),
+    email = email ?: context.getString(R.string.organizer_repo_no_email),
     assignedEventId = "",
-    assignedEvent = "Not assigned",
+    assignedEvent = context.getString(R.string.organizer_repo_not_assigned),
     roleLabel = if (role.equals("STAFF", ignoreCase = true)) "Scanner" else "Support Staff",
     accessStatus = status ?: "Available",
-    addedDate = "Not added",
+    addedDate = context.getString(R.string.organizer_repo_not_added),
     // Real defaults for a new assignment: scan only. The organizer picks the rest before assigning.
     permissions = listOf(StaffPermissions.SCAN),
     accountRole = role.orEmpty(),
 )
 
-private fun OrganizerScanPurposeDto.toMvpScanPurpose(): OrganizerMvpScanPurpose = OrganizerMvpScanPurpose(
-    label = title?.takeIf { it.isNotBlank() } ?: code.toDisplayPurposeName(),
-    description = description ?: title ?: code.toDisplayPurposeName(),
+private fun OrganizerScanPurposeDto.toMvpScanPurpose(context: Context): OrganizerMvpScanPurpose = OrganizerMvpScanPurpose(
+    label = title?.takeIf { it.isNotBlank() } ?: code.toDisplayPurposeName(context),
+    description = description ?: title ?: code.toDisplayPurposeName(context),
     enabled = enabled,
     duplicateRule = duplicateRuleSummary ?: code.defaultDuplicateRule(),
     trackingOnly = trackingOnly,
@@ -537,29 +538,29 @@ internal fun buildStaffUpdateRequest(staff: OrganizerMvpStaff) = StaffAssignment
 
 private fun String.toUuidOrNull(): UUID? = runCatching { UUID.fromString(this) }.getOrNull()
 
-private fun TransactionType.toDisplayType(): String = when (this) {
-    TransactionType.ENTRY -> "Entry"
-    TransactionType.ATTENDANCE -> "Attendance"
-    TransactionType.BENEFIT_CLAIM -> "Benefit Claim"
-    TransactionType.BOOTH_VISIT -> "Booth/Session Visit"
-    TransactionType.SESSION_VISIT -> "Booth/Session Visit"
-    TransactionType.REWARD_REDEMPTION_SCAN, TransactionType.REWARD_REDEMPTION -> "Reward Redemption"
-    TransactionType.EXIT -> "Exit"
-    TransactionType.ID_PRINT -> "ID Printing"
-    TransactionType.REGISTRATION -> "Registration"
+private fun TransactionType.toDisplayType(context: Context): String = when (this) {
+    TransactionType.ENTRY -> context.getString(R.string.organizer_repo_type_entry)
+    TransactionType.ATTENDANCE -> context.getString(R.string.organizer_repo_type_attendance)
+    TransactionType.BENEFIT_CLAIM -> context.getString(R.string.organizer_repo_type_benefit_claim)
+    TransactionType.BOOTH_VISIT -> context.getString(R.string.organizer_repo_type_booth_session_visit)
+    TransactionType.SESSION_VISIT -> context.getString(R.string.organizer_repo_type_booth_session_visit)
+    TransactionType.REWARD_REDEMPTION_SCAN, TransactionType.REWARD_REDEMPTION -> context.getString(R.string.organizer_repo_type_reward_redemption)
+    TransactionType.EXIT -> context.getString(R.string.organizer_repo_type_exit)
+    TransactionType.ID_PRINT -> context.getString(R.string.organizer_repo_type_id_printing)
+    TransactionType.REGISTRATION -> context.getString(R.string.organizer_repo_type_registration)
 }
 
-private fun com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.toDisplayPurposeName(): String = when (this) {
-    com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.ENTRY -> "Entrance Logging"
-    com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.ATTENDANCE -> "Attendance Recording"
-    com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.BENEFIT_CLAIM -> "Benefit Claiming"
+private fun com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.toDisplayPurposeName(context: Context): String = when (this) {
+    com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.ENTRY -> context.getString(R.string.organizer_repo_purpose_entrance_logging)
+    com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.ATTENDANCE -> context.getString(R.string.organizer_repo_purpose_attendance_recording)
+    com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.BENEFIT_CLAIM -> context.getString(R.string.organizer_repo_purpose_benefit_claiming)
     com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.BOOTH_VISIT,
-    com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.SESSION_VISIT -> "Booth/Session Visit"
+    com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.SESSION_VISIT -> context.getString(R.string.organizer_repo_purpose_booth_session_visit)
     com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.REWARD_REDEMPTION_SCAN,
-    com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.REWARD_REDEMPTION -> "Reward Redemption"
-    com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.EXIT -> "Exit Logging"
-    com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.ID_PRINT -> "ID Printing"
-    com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.REGISTRATION_LOOKUP -> "ID Reprinting"
+    com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.REWARD_REDEMPTION -> context.getString(R.string.organizer_repo_purpose_reward_redemption)
+    com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.EXIT -> context.getString(R.string.organizer_repo_purpose_exit_logging)
+    com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.ID_PRINT -> context.getString(R.string.organizer_repo_purpose_id_printing)
+    com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.REGISTRATION_LOOKUP -> context.getString(R.string.organizer_repo_purpose_id_reprinting)
 }
 
 private fun com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.defaultDuplicateRule(): String = when (this) {
@@ -594,31 +595,32 @@ private fun String.toScanPurposeCode(): com.thedavelopers.eventqr.core.api.dto.S
 }
 
 private fun TransactionResponse.toMvpTransaction(
+    context: Context,
     eventTitle: String,
     attendeeName: String?,
     purpose: ScanPurposeResponse?,
 ): OrganizerMvpTransaction {
     val rejected = transactionResult == TransactionResult.REJECTED
-    val displayType = transactionType.toDisplayType()
+    val displayType = transactionType.toDisplayType(context)
     return OrganizerMvpTransaction(
         id = transactionId.toString(),
         eventId = eventId.toString(),
         eventTitle = eventTitle,
         attendeeId = attendeeUserId.toString(),
-        attendeeName = attendeeName ?: "Attendee",
+        attendeeName = attendeeName ?: context.getString(R.string.organizer_repo_attendee),
         attendeeEmail = "",
         qrId = qrCredentialId.toString(),
-        staffId = "Not available",
-        staffName = "Staff not available",
+        staffId = context.getString(R.string.organizer_repo_not_available),
+        staffName = context.getString(R.string.organizer_repo_staff_not_available),
         staffEmail = "",
         scanPurpose = purpose?.name ?: displayType,
         type = displayType,
         timestamp = DateFormatters.formatInstant(scannedAt),
         status = if (rejected) "Rejected" else "Successful",
-        message = reason ?: if (rejected) "Scan rejected" else "$displayType recorded",
-        reason = reason ?: if (rejected) "Rejected scan" else "Approved scan",
-        deviceSource = "Not available",
+        message = reason ?: if (rejected) context.getString(R.string.organizer_repo_scan_rejected) else context.getString(R.string.organizer_repo_type_recorded, displayType),
+        reason = reason ?: if (rejected) context.getString(R.string.organizer_repo_rejected_scan) else context.getString(R.string.organizer_repo_approved_scan),
+        deviceSource = context.getString(R.string.organizer_repo_not_available),
         pointsDelta = pointsDelta,
-        relatedItem = purpose?.description ?: "Not available",
+        relatedItem = purpose?.description ?: context.getString(R.string.organizer_repo_not_available),
     )
 }

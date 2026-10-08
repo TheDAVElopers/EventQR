@@ -52,10 +52,10 @@ class SearchUserAccountActivity : AppCompatActivity() {
         repository = OrganizerRepository(this)
 
         lifecycleScope.launch {
-            val eventId = intentEventId() ?: return@launch showMissingEventScreen("Search User Account")
+            val eventId = intentEventId() ?: return@launch showMissingEventScreen(getString(R.string.search_user_account_title))
             selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
                 ?: run {
-                    showMissingEventScreen("Search User Account")
+                    showMissingEventScreen(getString(R.string.search_user_account_title))
                     return@launch
                 }
 

@@ -51,7 +51,7 @@ class AttendeeManagementAdapter(
             }
 
             val (backgroundColor, textColor) = item.statusPalette(itemView.context)
-            statusText.text = item.statusBucket()
+            statusText.text = item.statusLabel(itemView.context)
             statusText.background = GradientDrawable().apply {
                 setColor(backgroundColor)
                 cornerRadius = 999f

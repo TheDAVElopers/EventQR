@@ -71,6 +71,9 @@
     <string name="common_status">Status</string>
     <string name="common_registered">Registered</string>
     <string name="attendee_details_last_activity">Last Activity</string>
+    <string name="attendee_details_last_approved_scan">Last Approved Scan</string>
+    <string name="attendee_details_recent_approved_transactions">Recent Approved Transactions</string>
+    <string name="attendee_details_no_approved_transactions_yet">No approved transactions yet</string>
     <string name="common_points_earned">Points Earned</string>
     <string name="common_transaction_history">Transaction History</string>
     <string name="attendee_details_view_event_log">View Event Log</string>
@@ -79,6 +82,7 @@
     <string name="common_current_event">CURRENT EVENT</string>
     <string name="attendee_management_choose_an_event">Choose an Event</string>
     <string name="common_total">Total</string>
+    <string name="event_registrations_all_registrations">Total Registered</string>
     <string name="common_checked_in">Checked In</string>
     <string name="common_no_show">No Show</string>
     <string name="attendee_management_no_attendees_registered_yet">No attendees registered yet</string>
@@ -119,6 +123,8 @@
     <string name="event_detail_event_poster">Event poster</string>
     <string name="event_detail_event_description">Event Description</string>
     <string name="event_detail_by_organizer">by Organizer</string>
+    <string name="event_detail_date_range">%1$s - %2$s</string>
+    <string name="event_detail_manage_event">Manage Event</string>
     <string name="event_detail_date">DATE</string>
     <string name="event_detail_time">TIME</string>
     <string name="event_detail_category">CATEGORY</string>
@@ -127,7 +133,7 @@
     <string name="event_detail_location">LOCATION</string>
     <string name="event_detail_capacity">CAPACITY</string>
     <string name="event_detail_rewards">REWARDS</string>
-    <string name="event_detail_rewards_available">Rewards Available</string>
+    <string name="event_detail_rewards_available">Rewards enabled</string>
     <string name="event_detail_registration_status">Registration Status</string>
     <string name="event_detail_register">Register</string>
     <string name="event_registration_development">Development</string>
@@ -177,7 +183,7 @@
     <string name="organizer_dashboard_organizer">Organizer</string>
     <string name="common_notifications">Notifications</string>
     <string name="organizer_dashboard_unable_to_load_organizer_dashboard">Unable to load organizer dashboard</string>
-    <string name="organizer_dashboard_total_events">Total Events</string>
+    <string name="organizer_dashboard_total_events">Approved Events</string>
     <string name="organizer_dashboard_details">Details</string>
     <string name="organizer_dashboard_total_registrations">Total Registrations</string>
     <string name="common_transactions">Transactions</string>
@@ -263,6 +269,7 @@
     <string name="search_attendees_search_by_name_or_email">SEARCH BY NAME OR EMAIL</string>
     <string name="search_attendees_search_name_or_email">Search name or email...</string>
     <string name="search_attendees_exited">Exited</string>
+    <string name="search_attendees_cancelled">Cancelled</string>
     <string name="signin_sign_in_to_start_scanning_and_stream">Sign in to start scanning and streamline event entry.</string>
     <string name="common_password">Password</string>
     <string name="signin_forgot_password">Forgot Password?</string>
@@ -283,8 +290,8 @@
     <string name="staff_dashboard_successful_check_ins">Check-ins Today</string>
     <string name="staff_dashboard_today_s_activity">Today\'s Activity</string>
     <string name="common_valid">Valid</string>
-    <string name="staff_scan_result_qr_code_valid">QR Code Valid</string>
-    <string name="staff_scan_result_attendee_verified_successfully">Attendee verified successfully</string>
+    <string name="staff_scan_result_qr_code_valid">QR Code Verified</string>
+    <string name="staff_scan_result_attendee_verified_successfully">Attendee identity verified</string>
     <string name="staff_scan_result_qr_code_invalid">QR Code Invalid</string>
     <string name="staff_scan_result_this_scan_could_not_be_completed">This scan could not be completed</string>
     <string name="staff_scan_result_event">EVENT</string>
@@ -326,6 +333,8 @@
     <string name="user_dashboard_browse_events">Browse Events</string>
     <string name="user_dashboard_history">History</string>
     <string name="user_dashboard_request_event">Request Event</string>
+    <string name="user_dashboard_open_events">Open Events</string>
+    <string name="dashboard_value_unavailable">--</string>
     <string name="user_dashboard_next_event">Next Event</string>
     <string name="user_dashboard_discover_events">Discover Events</string>
     <string name="user_dashboard_see_all">See All</string>
@@ -564,12 +573,13 @@
     <string name="staff_transaction_result_rejected_by_backend">Rejected by backend</string>
     <string name="redemption_result_reward_redeemed_successfully">Reward redeemed successfully</string>
     <string name="redemption_result_reward_redemption_rejected">Reward redemption rejected</string>
+    <string name="redemption_result_duplicate_claim">Already claimed. Duplicate claims are not allowed for this reward.</string>
     <string name="redemption_result_redemption_approved">REDEMPTION APPROVED</string>
     <string name="redemption_result_redemption_rejected">REDEMPTION REJECTED</string>
     <string name="reward_redemption_scan_result_duplicate_claims_allowed">Duplicate claims allowed</string>
     <string name="reward_redemption_scan_result_one_claim_only">One claim only</string>
     <string name="common_failed_with_reason">Failed: %1$s</string>
-    <string name="admin_account_confirm_delete">Permanently delete %1$s? This cannot be undone and requires the account to be disabled first with no transaction history.</string>
+    <string name="admin_account_confirm_delete">Permanently delete %1$s? This cannot be undone and requires the account to be disabled first with no registration or transaction history.</string>
     <string name="audit_actor_fallback">Admin User</string>
     <string name="audit_target_fallback">--</string>
     <string name="audit_actor_target">By %1$s · Target: %2$s</string>
@@ -592,6 +602,7 @@
     <string name="login_login_successful">Login successful</string>
     <string name="register_account_created">Account created</string>
     <string name="attendee_registration_registration_successful">Registration successful</string>
+    <string name="registration_error_own_event">You cannot register for your own event.</string>
     <string name="registration_error_already_registered">You are already registered for this event.</string>
     <string name="registration_error_event_full">This event is full.</string>
     <string name="registration_error_closed">Registration is closed.</string>
@@ -647,6 +658,7 @@
 
     <!-- Screen headers and empty states (app:title / app:subtitle). -->
     <string name="admin_account_management_account_management">Account Management</string>
+    <string name="admin_account_management_manage_user_accounts">Manage user accounts</string>
     <string name="admin_account_management_manage_admin_and_user_accounts">Manage admin and user accounts</string>
     <string name="admin_account_management_no_accounts_found_yet_2">No accounts found yet</string>
     <string name="admin_account_management_created_accounts_will_show_up_here">Created accounts will show up here.</string>
@@ -698,7 +710,8 @@
     <string name="user_rewards_register_for_an_event_to_start_earni">Register for an event to start earning rewards</string>
     <string name="user_rewards_no_rewards_available_yet">No rewards available yet</string>
     <string name="user_rewards_check_back_later_for_rewards_for_thi">Check back later for rewards for this event</string>
-    <string name="user_transaction_history_points_you_earn_and_spend_will_show">Points you earn and spend will show up here.</string>
+    <string name="transaction_no_points">No points</string>
+    <string name="user_transaction_history_points_you_earn_and_spend_will_show">Your scans and rewards will show up here.</string>
     <string name="registered_events_none_upcoming">No upcoming registered events</string>
     <string name="registered_events_none_active">No active registered events</string>
     <string name="registered_events_none_completed">No completed registered events</string>
@@ -715,10 +728,35 @@
     <string name="staff_scan_result_qr_active_hint">QR code is active</string>
     <string name="staff_scan_result_qr_inactive">QR Code Inactive</string>
     <string name="staff_scan_result_qr_inactive_hint">This QR code or registration is not active.</string>
+    <string name="staff_scan_result_not_allowed">Scan Not Allowed</string>
+    <string name="staff_scan_result_not_allowed_hint">This scan cannot be logged, so nothing was recorded.</string>
+    <string name="staff_scan_result_not_allowed_reason">This scan is not allowed for this attendee.</string>
     <string name="staff_scan_result_qr_inactive_reason">The registration is not active, so no transaction can be logged.</string>
     <string name="staff_attendee_details_scans">Scans</string>
 
     <!-- Organizer rewards -->
+    <string name="manage_rewards_title">Rewards</string>
+    <string name="manage_rewards_no_events_title">No Events Available</string>
+    <string name="manage_rewards_no_events_subtext">Create an event in the Events tab to manage reward redemptions.</string>
+    <string name="manage_rewards_event_rewards">Event Rewards</string>
+    <string name="manage_rewards_event_rewards_desc">Enable or disable reward redemption for this event.</string>
+    <string name="manage_rewards_add_reward">Add Reward</string>
+    <string name="manage_rewards_badge_disabled">Disabled</string>
+    <string name="manage_rewards_badge_available">Available</string>
+    <string name="manage_rewards_duplicate_claims_note">Attendees may claim this reward more than once</string>
+    <string name="manage_rewards_edit">Edit</string>
+    <string name="manage_rewards_remove">Remove</string>
+    <string name="manage_rewards_title_hint">e.g. Coffee Voucher</string>
+    <string name="manage_rewards_points_hint">e.g. 100</string>
+    <string name="manage_rewards_allow_duplicate_claims">Allow duplicate claims</string>
+    <string name="manage_rewards_reward_title">Reward Title</string>
+    <string name="manage_rewards_points_cost">Points Cost</string>
+    <string name="manage_rewards_settings">Settings</string>
+    <string name="manage_rewards_update_settings_failed">Could not update reward settings: %1$s</string>
+    <string name="common_try_again_lower">try again.</string>
+    <string name="manage_rewards_select_event">Select event</string>
+    <string name="manage_rewards_select_event_title">Select Event</string>
+    <string name="manage_rewards_untitled_event">Untitled Event</string>
     <string name="manage_rewards_unlimited">Unlimited</string>
     <string name="manage_rewards_claimed_ratio">%1$s/%2$s claimed</string>
     <string name="manage_rewards_quantity_hint">Leave blank for unlimited</string>
@@ -731,12 +769,43 @@
     </plurals>
 
     <!-- Organizer reports -->
+    <string name="event_reports_title_roster">Attendee Roster Report</string>
+    <string name="event_reports_title_no_shows">Not Checked In Report</string>
+    <string name="event_reports_title_entry_logs">Entry Logs Report</string>
+    <string name="event_reports_title_attendance">Attendance Report</string>
+    <string name="event_reports_title_claims">Benefit Claims Report</string>
+    <string name="event_reports_title_booth_visits">Booth/Session Visits Report</string>
+    <string name="event_reports_title_exit_logs">Exit Logs Report</string>
+    <string name="event_reports_title_points">Points Report</string>
+    <!-- Event management hub -->
+    <string name="event_management_hub_stat_registered">Registered</string>
+    <string name="event_management_hub_stat_capacity">Capacity</string>
+    <string name="event_management_hub_stat_available">Available</string>
+    <string name="event_management_hub_section_title">Event Management</string>
+    <string name="event_management_hub_menu_edit_sub">Check event information, schedule, and more.</string>
+    <string name="event_management_hub_menu_staff">Staff Assignment</string>
+    <string name="event_management_hub_menu_staff_sub">Manage staff and their assigned roles.</string>
+    <string name="event_management_hub_menu_scan">Scan Purposes</string>
+    <string name="event_management_hub_menu_scan_sub">View and manage scan purposes for this event.</string>
+    <string name="event_management_hub_menu_transaction">Transaction Rules</string>
+    <string name="event_management_hub_menu_transaction_sub">Configure transaction rules and settings.</string>
+    <string name="event_management_hub_menu_id">ID Display Settings</string>
+    <string name="event_management_hub_menu_id_sub">Customize how attendee IDs are displayed.</string>
     <string name="event_reports_dates_optional_hint">Dates are optional. Pick a start date, an end date, both, or neither.</string>
-    <string name="event_reports_attendee_search_label">Attendee Search (Name or ID)</string>
+    <string name="event_reports_attendee_search_label">Attendee Search (Name, ID or Email)</string>
     <string name="event_reports_attendee_search_hint">Type a name, ID or email</string>
     <string name="event_reports_skip_date_filters">Skip dates / View All</string>
     <string name="report_preview_generated_at">Generated %1$s</string>
     <string name="report_preview_claims_chart_subtitle">Approved vs rejected scans</string>
+    <string name="report_preview_roster_chart_subtitle">Registrations by status</string>
+    <string name="report_preview_attendance_chart_subtitle">Approved scans per session and activity</string>
+    <string name="report_preview_booth_chart_subtitle">Approved visits per booth and session</string>
+    <string name="report_preview_empty_chart">No categorical activity recorded</string>
+    <string name="report_preview_empty_points">No points awarded</string>
+    <string name="report_preview_empty_attendance">No approved attendance scans</string>
+    <string name="report_preview_empty_booth">No approved booth or session visits</string>
+    <string name="report_preview_combined_title">Combined Event Report</string>
+    <string name="report_preview_export_fallback_saved_reason">Server export failed (%1$s), saved a locally generated copy</string>
     <string name="report_preview_chart_total">Total: %1$d</string>
     <string name="report_preview_export_fallback_saved">Server export failed, saved a locally generated copy</string>
 
@@ -750,6 +819,8 @@
     <string name="transaction_rules_require_staff_title">Require assigned staff</string>
     <string name="transaction_rules_require_staff_desc">Only staff assigned to this event can log scans</string>
     <string name="transaction_rules_max_scans_label">Max scans per attendee (whole event)</string>
+    <string name="transaction_rules_cooldown_label">Duplicate Cooldown (minutes)</string>
+    <string name="transaction_rules_cooldown_helper">Applies only when Allow duplicate scans is on.</string>
     <string name="transaction_rules_max_scans_helper">Applies only when Allow duplicate scans is on.</string>
 
     <!-- Organizer staff permissions -->

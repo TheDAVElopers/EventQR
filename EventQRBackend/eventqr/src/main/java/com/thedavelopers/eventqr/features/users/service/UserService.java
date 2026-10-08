@@ -244,7 +244,7 @@ userProfile.setFullName(fullName.trim());
     public void hardDelete(UUID userId) {
         UserProfile userProfile = requireUser(userId);
         if (hasDependentRecords(userId)) {
-            throw new BadRequestException("Account has transaction history, cannot be deleted");
+            throw new BadRequestException("Account has registration or transaction history, cannot be deleted");
         }
         userProfileRepository.delete(userProfile);
     }

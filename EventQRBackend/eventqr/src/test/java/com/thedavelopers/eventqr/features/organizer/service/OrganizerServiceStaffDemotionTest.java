@@ -73,7 +73,7 @@ class OrganizerServiceStaffDemotionTest {
                 staffRepo,
                 userRepo,
                 mock(IdTemplateRepository.class),
-                notificationService
+                notificationService, mock(com.thedavelopers.eventqr.features.registrations.service.RegistrationService.class)
         );
 
         event = new Event();

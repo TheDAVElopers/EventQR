@@ -14,9 +14,11 @@ import com.thedavelopers.eventqr.features.events.repository.EventRepository;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionGrantRequest;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResultResponse;
 import com.thedavelopers.eventqr.features.rewards.model.entity.AttendeePointBalance;
+import com.thedavelopers.eventqr.features.rewards.model.entity.PointTransaction;
 import com.thedavelopers.eventqr.features.rewards.model.entity.Reward;
 import com.thedavelopers.eventqr.features.rewards.model.entity.RewardRedemption;
 import com.thedavelopers.eventqr.features.rewards.repository.AttendeePointBalanceRepository;
+import com.thedavelopers.eventqr.features.rewards.repository.PointTransactionRepository;
 import com.thedavelopers.eventqr.features.rewards.repository.RewardRedemptionRepository;
 import com.thedavelopers.eventqr.features.rewards.repository.RewardRepository;
 import com.thedavelopers.eventqr.features.transactions.model.entity.TransactionLog;
@@ -42,6 +44,7 @@ private final NotificationService notificationService;
     private final TransactionLogRepository transactionLogRepository;
     private final DuplicateRewardClaimChecker duplicateRewardClaimChecker;
     private final EventRepository eventRepository;
+    private final PointTransactionRepository pointTransactionRepository;
 
     public RewardRedemptionService(RewardRepository rewardRepository,
                                    RewardRedemptionRepository rewardRedemptionRepository,
@@ -49,7 +52,9 @@ private final NotificationService notificationService;
                                    TransactionLogRepository transactionLogRepository,
                                    DuplicateRewardClaimChecker duplicateRewardClaimChecker,
                                    EventRepository eventRepository,
-                                   NotificationService notificationService) {
+                                   NotificationService notificationService,
+                                   PointTransactionRepository pointTransactionRepository) {
+        this.pointTransactionRepository = pointTransactionRepository;
         this.notificationService = notificationService;
         this.rewardRepository = rewardRepository;
         this.rewardRedemptionRepository = rewardRedemptionRepository;
@@ -67,6 +72,11 @@ private final NotificationService notificationService;
                 .orElseThrow(() -> new ResourceNotFoundException("Reward not found"));
         if (!reward.getEventId().equals(request.eventId())) {
             return reject(request, reward, scanLog, "Reward does not belong to the event");
+        }
+        Event rewardEvent = eventRepository.findById(request.eventId())
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+        if (!rewardEvent.isRewardsEnabled()) {
+            return reject(request, reward, scanLog, "Reward redemption is disabled for this event");
         }
         if (reward.getStatus() != RewardStatus.ACTIVE) {
             return reject(request, reward, scanLog, "Reward is no longer active");
@@ -114,6 +124,17 @@ private final NotificationService notificationService;
         redemption.setStaffUserId(request.staffUserId());
         RewardRedemption saved = rewardRedemptionRepository.save(redemption);
 
+        // Ledger entry for the deduction, mirroring RewardService.redeem. (writeTransactionLog only writes the
+        // scan audit row in transaction_logs; it never touches point_transactions, so there is no double write.)
+        PointTransaction pointTransaction = new PointTransaction();
+        pointTransaction.setEventId(request.eventId());
+        pointTransaction.setAttendeeUserId(request.attendeeUserId());
+        pointTransaction.setSourceTransactionId(saved.getId());
+        pointTransaction.setPointsChanged(-reward.getPointsRequired());
+        pointTransaction.setOccurredAt(Instant.now());
+        pointTransaction.setReason("Reward redemption");
+        pointTransactionRepository.save(pointTransaction);
+
         writeTransactionLog(scanLog, reward, request.staffUserId(), TransactionResult.APPROVED,
                 reward.getPointsRequired(), null);
 
@@ -136,7 +157,7 @@ private final NotificationService notificationService;
         redemption.setEventId(request.eventId());
         redemption.setAttendeeUserId(request.attendeeUserId());
         redemption.setRewardId(reward.getId());
-        redemption.setPointsSpent(reward.getPointsRequired());
+        redemption.setPointsSpent(0); // a rejected redemption spends nothing
         redemption.setStatus(RedemptionStatus.REJECTED);
         redemption.setReason(reason);
         redemption.setRedemptionScanLogId(request.redemptionScanLogId());

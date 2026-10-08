@@ -108,7 +108,7 @@ internal fun AppCompatActivity.errorState(
             )
         })
         if (onRetry != null) {
-            addView(ghostButton("Retry", onRetry).apply {
+            addView(ghostButton(getString(R.string.organizer_retry), onRetry).apply {
                 layoutParams = LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                     dp(44),
@@ -120,7 +120,7 @@ internal fun AppCompatActivity.errorState(
 
 internal fun <T> AppCompatActivity.dataSourceBanner(load: OrganizerMvpLoad<T>): View? {
     if (load.source == OrganizerMvpDataSource.BACKEND) return null
-    val message = load.message?.takeIf { it.isNotBlank() } ?: "Showing limited local data. Pull down to refresh."
+    val message = load.message?.takeIf { it.isNotBlank() } ?: getString(R.string.organizer_limited_local_data)
     return TextView(this).apply {
         text = message
         textSize = 13f
@@ -141,14 +141,14 @@ internal fun AppCompatActivity.eventSelector(
     onSelected: (OrganizerMvpEvent) -> Unit,
 ): View {
     val approvedEvents = events.approvedOnly()
-    val titles = approvedEvents.map { it.title.ifBlank { "Untitled Event" } }
+    val titles = approvedEvents.map { it.title.ifBlank { getString(R.string.organizer_untitled_event) } }
     var selectedIndex = approvedEvents.indexOfFirst { it.id == selectedEventId }.takeIf { it >= 0 } ?: 0
     if (approvedEvents.isEmpty()) selectedIndex = -1
 
-    val titleText = text(titles.getOrNull(selectedIndex) ?: "Select Event", 15, false, TEXT)
+    val titleText = text(titles.getOrNull(selectedIndex) ?: getString(R.string.organizer_select_event), 15, false, TEXT)
     val arrow = ImageView(this).apply {
         setImageResource(R.drawable.ic_arrow_drop_down)
-        contentDescription = "Select event"
+        contentDescription = getString(R.string.organizer_select_event_description)
     }
     val card = LinearLayout(this).apply {
         orientation = LinearLayout.HORIZONTAL

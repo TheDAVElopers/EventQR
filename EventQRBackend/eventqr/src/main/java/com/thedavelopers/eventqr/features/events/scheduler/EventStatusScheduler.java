@@ -1,14 +1,18 @@
 package com.thedavelopers.eventqr.features.events.scheduler;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.thedavelopers.eventqr.features.events.model.entity.Event;
 import com.thedavelopers.eventqr.features.events.repository.EventRepository;
@@ -32,10 +36,34 @@ public class EventStatusScheduler {
 
     private final EventRepository eventRepository;
     private final NotificationService notificationService;
+    private final CacheManager cacheManager;
 
-    public EventStatusScheduler(EventRepository eventRepository, NotificationService notificationService) {
+    public EventStatusScheduler(EventRepository eventRepository, NotificationService notificationService,
+                                CacheManager cacheManager) {
+        this.cacheManager = cacheManager;
         this.eventRepository = eventRepository;
         this.notificationService = notificationService;
+    }
+
+    /** Evicts after the surrounding transaction commits so readers cannot re-cache pre-commit state. */
+    private void evictEventsCache() {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    clearEventsCache();
+                }
+            });
+        } else {
+            clearEventsCache();
+        }
+    }
+
+    private void clearEventsCache() {
+        Cache cache = cacheManager.getCache("events");
+        if (cache != null) {
+            cache.clear();
+        }
     }
 
     @Scheduled(fixedRate = SWEEP_INTERVAL_MS)
@@ -43,10 +71,15 @@ public class EventStatusScheduler {
     public void transitionOverdueEvents() {
         Instant now = Instant.now();
 
-        List<Event> startingSoon = eventRepository.findByStatusAndEventStartAtLessThanEqual(
+        List<Event> started = eventRepository.findByStatusAndEventStartAtLessThanEqual(
                 EventStatus.APPROVED, now);
-        List<Event> completing = eventRepository.findByStatusAndEventEndAtLessThanEqual(
-                EventStatus.ACTIVE, now);
+        // Events already ACTIVE whose end has passed, plus events that start AND end within this sweep
+        // (activated below, then ended in the same sweep) so they still receive a completed notification.
+        List<Event> completing = new ArrayList<>(eventRepository.findByStatusAndEventEndAtLessThanEqual(
+                EventStatus.ACTIVE, now));
+        started.stream()
+                .filter(e -> e.getEventEndAt() != null && !e.getEventEndAt().isAfter(now))
+                .forEach(completing::add);
 
         int activated = eventRepository.bulkUpdateStatusForStartedEvents(
                 EventStatus.APPROVED, EventStatus.ACTIVE, now);
@@ -57,8 +90,12 @@ public class EventStatusScheduler {
             log.info("Event status sweep: {} event(s) moved to ACTIVE, {} event(s) moved to ENDED", activated, ended);
         }
 
-        if (!startingSoon.isEmpty()) {
-            notificationService.createEventStartingSoonNotifications(startingSoon);
+        if (activated > 0 || ended > 0) {
+            evictEventsCache();
+        }
+
+        if (!started.isEmpty()) {
+            notificationService.createEventStartingSoonNotifications(started);
         }
         if (!completing.isEmpty()) {
             notificationService.createEventCompletedNotifications(completing);

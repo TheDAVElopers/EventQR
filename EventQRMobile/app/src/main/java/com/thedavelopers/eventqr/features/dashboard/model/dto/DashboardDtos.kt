@@ -5,10 +5,12 @@ import java.util.UUID
 
 data class DashboardSummary(
     val totalEvents: Long,
-    val totalRegistrations: Long,
+    /** Null when it could not be determined; the tile then renders "--". */
+    val totalRegistrations: Long?,
     val totalTransactions: Long,
     val totalPoints: Long,
-    val completedEventsCount: Long = 0,
+    /** Server-provided completed count; null when the backend did not send it (older servers). */
+    val completedEventsCount: Long? = null,
     val totalNotifications: Long,
     val fullName: String? = null,
     val upcomingEvents: List<DashboardUpcomingEvent>? = emptyList(),

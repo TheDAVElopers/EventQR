@@ -201,7 +201,7 @@ class AdminControllerTest {
 
         mvc.perform(delete("/api/v1/admin/users/{id}", targetId).header("Authorization", ADMIN))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Account has transaction history, cannot be deleted"));
+                .andExpect(jsonPath("$.message").value("Account has registration or transaction history, cannot be deleted"));
 
         verify(userService, never()).hardDelete(any());
     }

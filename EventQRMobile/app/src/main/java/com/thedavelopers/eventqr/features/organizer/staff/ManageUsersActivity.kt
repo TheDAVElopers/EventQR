@@ -50,10 +50,10 @@ open class ManageUsersActivity : AppCompatActivity() {
         repository = OrganizerRepository(this)
 
         lifecycleScope.launch {
-            val eventId = intentEventId() ?: return@launch showMissingEventScreen("Staff Assignment")
+            val eventId = intentEventId() ?: return@launch showMissingEventScreen(getString(R.string.manage_users_title))
             selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
                 ?: run {
-                    showMissingEventScreen("Staff Assignment")
+                    showMissingEventScreen(getString(R.string.manage_users_title))
                     return@launch
                 }
 
@@ -196,7 +196,7 @@ open class ManageUsersActivity : AppCompatActivity() {
     private fun confirmRemove(staff: OrganizerMvpStaff) {
         AlertDialog.Builder(this)
             .setTitle(getString(R.string.manage_users_remove_staff))
-            .setMessage("Remove ${staff.name} from ${staff.assignedEvent}?")
+            .setMessage(getString(R.string.manage_users_remove_confirm, staff.name, staff.assignedEvent))
             .setNegativeButton(getString(R.string.request_event_cancel), null)
             .setPositiveButton(getString(R.string.staff_remove)) { _, _ ->
                 removeStaff(staff)
