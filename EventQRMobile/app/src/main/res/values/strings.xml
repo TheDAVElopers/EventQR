@@ -121,6 +121,9 @@
     <string name="event_detail_by_organizer">by Organizer</string>
     <string name="event_detail_date">DATE</string>
     <string name="event_detail_time">TIME</string>
+    <string name="event_detail_category">CATEGORY</string>
+    <string name="event_detail_target_audience">TARGET AUDIENCE</string>
+    <string name="event_detail_registration_window">REGISTRATION</string>
     <string name="event_detail_location">LOCATION</string>
     <string name="event_detail_capacity">CAPACITY</string>
     <string name="event_detail_rewards">REWARDS</string>

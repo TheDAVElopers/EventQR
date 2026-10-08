@@ -110,11 +110,39 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         
         if (event.eventStartAt != null) {
             findViewById<TextView>(R.id.txtDetailDate).text = dateFormatter.format(event.eventStartAt)
-            findViewById<TextView>(R.id.txtDetailTime).text = timeFormatter.format(event.eventStartAt)
+            val startTime = timeFormatter.format(event.eventStartAt)
+            findViewById<TextView>(R.id.txtDetailTime).text =
+                event.eventEndAt?.let { "$startTime - ${timeFormatter.format(it)}" } ?: startTime
         } else {
             findViewById<TextView>(R.id.txtDetailDate).text = "--"
             findViewById<TextView>(R.id.txtDetailTime).text = "-"
         }
+
+        val category = event.category?.takeIf { it.isNotBlank() }
+        findViewById<TextView>(R.id.txtDetailCategory).text = category.orEmpty()
+        val categoryVisibility = if (category != null) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.layoutCategoryRow).visibility = categoryVisibility
+        findViewById<View>(R.id.viewCategoryDivider).visibility = categoryVisibility
+
+        val audience = event.targetAudience?.takeIf { it.isNotBlank() }
+        findViewById<TextView>(R.id.txtDetailAudience).text = audience.orEmpty()
+        val audienceVisibility = if (audience != null) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.layoutAudienceRow).visibility = audienceVisibility
+        findViewById<View>(R.id.viewAudienceDivider).visibility = audienceVisibility
+
+        val regFormatter = java.time.format.DateTimeFormatter.ofPattern("MMM d, h:mm a", java.util.Locale.ENGLISH).withZone(manilaZone)
+        val regOpen = event.registrationOpenAt?.let { regFormatter.format(it) }
+        val regClose = event.registrationCloseAt?.let { regFormatter.format(it) }
+        val regWindow = when {
+            regOpen != null && regClose != null -> "$regOpen - $regClose"
+            regClose != null -> "Closes $regClose"
+            regOpen != null -> "Opens $regOpen"
+            else -> null
+        }
+        findViewById<TextView>(R.id.txtDetailRegWindow).text = regWindow.orEmpty()
+        val regVisibility = if (regWindow != null) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.layoutRegWindowRow).visibility = regVisibility
+        findViewById<View>(R.id.viewRegWindowDivider).visibility = regVisibility
 
         updateRegistrationStatusUI(event.currentAttendeeCount, event.capacity)
 

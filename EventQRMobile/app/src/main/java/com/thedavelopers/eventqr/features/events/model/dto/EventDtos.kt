@@ -65,6 +65,7 @@ data class AttendeeEventResponse(
     // Backend-derived flag; nullable so reflective Gson (no Kotlin adapter) tolerates
     // a missing/explicit-null field — treat null as "not owned" (default false).
     val isOwnedByCurrentUser: Boolean? = null,
+    val targetAudience: String? = null,
 )
 
 data class EventAvailabilityResponse(

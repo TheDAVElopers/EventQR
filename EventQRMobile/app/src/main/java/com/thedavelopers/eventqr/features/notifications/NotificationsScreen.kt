@@ -90,22 +90,32 @@ fun NotificationsScreen(
                     }
                 }
                 errorMessage != null && notifications.isEmpty() -> {
-                    EmptyStateView(
-                        icon = Icons.Default.Error,
-                        title = "Couldn't Load Notifications",
-                        description = errorMessage,
-                        actionLabel = "Retry",
-                        onActionClick = onRetryClick,
-                        iconTint = colorScheme.error,
-                        iconBackgroundColor = colorScheme.errorContainer,
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        EmptyStateView(
+                            icon = Icons.Default.Error,
+                            title = "Couldn't Load Notifications",
+                            description = errorMessage,
+                            actionLabel = "Retry",
+                            onActionClick = onRetryClick,
+                            iconTint = colorScheme.error,
+                            iconBackgroundColor = colorScheme.errorContainer,
+                        )
+                    }
                 }
                 notifications.isEmpty() -> {
-                    EmptyStateView(
-                        icon = Icons.Default.NotificationsOff,
-                        title = "No Notifications",
-                        description = "You're all caught up! When you receive updates about your events or registrations, they will appear here.",
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        EmptyStateView(
+                            icon = Icons.Default.NotificationsOff,
+                            title = "No Notifications",
+                            description = "You're all caught up! When you receive updates about your events or registrations, they will appear here.",
+                        )
+                    }
                 }
                 else -> {
                     LazyColumn(

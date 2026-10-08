@@ -147,6 +147,30 @@
                             </FrameLayout>
                         </LinearLayout>
                     </LinearLayout>
+                    <View android:id="@+id/viewCategoryDivider" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="40dp" android:layout_marginVertical="16dp" android:background="#F3F4F6" android:visibility="gone" />
+                    <LinearLayout android:id="@+id/layoutCategoryRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:visibility="gone">
+                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_row_tag" app:tint="#4F46E5" />
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="16dp" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_category" android:textColor="@color/text_disabled" android:textSize="12sp" android:textStyle="bold" />
+                            <TextView android:id="@+id/txtDetailCategory" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+                        </LinearLayout>
+                    </LinearLayout>
+                    <View android:id="@+id/viewAudienceDivider" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="40dp" android:layout_marginVertical="16dp" android:background="#F3F4F6" android:visibility="gone" />
+                    <LinearLayout android:id="@+id/layoutAudienceRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:visibility="gone">
+                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_nav_profile" app:tint="#4F46E5" />
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="16dp" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_target_audience" android:textColor="@color/text_disabled" android:textSize="12sp" android:textStyle="bold" />
+                            <TextView android:id="@+id/txtDetailAudience" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+                        </LinearLayout>
+                    </LinearLayout>
+                    <View android:id="@+id/viewRegWindowDivider" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="40dp" android:layout_marginVertical="16dp" android:background="#F3F4F6" android:visibility="gone" />
+                    <LinearLayout android:id="@+id/layoutRegWindowRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:visibility="gone">
+                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_calendar" app:tint="#4F46E5" />
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="16dp" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_registration_window" android:textColor="@color/text_disabled" android:textSize="12sp" android:textStyle="bold" />
+                            <TextView android:id="@+id/txtDetailRegWindow" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:maxLines="1" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="10sp" android:autoSizeMaxTextSize="14sp" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+                        </LinearLayout>
+                    </LinearLayout>
                     <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="40dp" android:layout_marginVertical="16dp" android:background="#F3F4F6" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
                         <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_nav_profile" app:tint="#4F46E5" />

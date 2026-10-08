@@ -31,6 +31,8 @@ public class Event extends BaseEntity {
 
     private String category;
 
+    private String targetAudience;
+
     private String eventLogoUrl;
 
     private Instant registrationOpenAt;

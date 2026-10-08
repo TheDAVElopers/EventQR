@@ -20,12 +20,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -235,9 +237,47 @@ fun EventRequestDetailScreen(
 
                                 InfoRow(
                                     icon = Icons.Default.CalendarToday,
-                                    label = "PROPOSED DATE",
-                                    value = DateFormatters.formatEventDate(request.startDateTime),
+                                    label = "EVENT DURATION",
+                                    value = listOf(request.startDateTime, request.endDateTime)
+                                        .joinToString(" - ") { it?.let(DateFormatters::formatEventDate) ?: "—" },
                                 )
+
+                                if (request.registrationStartDateTime != null || request.registrationEndDateTime != null) {
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(vertical = spacing.mediumSmall),
+                                        color = colorScheme.outlineVariant,
+                                    )
+                                    InfoRow(
+                                        icon = Icons.Default.CalendarToday,
+                                        label = "REGISTRATION WINDOW",
+                                        value = listOf(request.registrationStartDateTime, request.registrationEndDateTime)
+                                            .joinToString(" - ") { it?.let(DateFormatters::formatEventDate) ?: "—" },
+                                    )
+                                }
+
+                                request.eventCategory?.takeIf { it.isNotBlank() }?.let { category ->
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(vertical = spacing.mediumSmall),
+                                        color = colorScheme.outlineVariant,
+                                    )
+                                    InfoRow(
+                                        icon = Icons.Default.Category,
+                                        label = "CATEGORY",
+                                        value = category,
+                                    )
+                                }
+
+                                request.targetAudience?.takeIf { it.isNotBlank() }?.let { audience ->
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(vertical = spacing.mediumSmall),
+                                        color = colorScheme.outlineVariant,
+                                    )
+                                    InfoRow(
+                                        icon = Icons.Default.Groups,
+                                        label = "TARGET AUDIENCE",
+                                        value = audience,
+                                    )
+                                }
 
                                 HorizontalDivider(
                                     modifier = Modifier.padding(vertical = spacing.mediumSmall),
@@ -270,6 +310,38 @@ fun EventRequestDetailScreen(
                                         icon = Icons.Default.Person,
                                         label = "CONTACT EMAIL",
                                         value = request.contactEmail,
+                                    )
+                                }
+
+                                if (isAdmin && !request.contactNumber.isNullOrBlank()) {
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(vertical = spacing.mediumSmall),
+                                        color = colorScheme.outlineVariant,
+                                    )
+                                    InfoRow(
+                                        icon = Icons.Default.Phone,
+                                        label = "CONTACT NUMBER",
+                                        value = request.contactNumber,
+                                    )
+                                }
+
+                                if (!request.reasonForRequest.isNullOrBlank()) {
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(vertical = spacing.cardContentGap),
+                                        color = colorScheme.outlineVariant,
+                                    )
+                                    Text(
+                                        text = "REASON FOR REQUEST",
+                                        style = MaterialTheme.typography.labelMedium.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = colorScheme.onSurfaceVariant,
+                                        ),
+                                    )
+                                    Spacer(modifier = Modifier.height(spacing.extraSmall))
+                                    Text(
+                                        text = request.reasonForRequest,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = colorScheme.onSurface,
                                     )
                                 }
                             }
