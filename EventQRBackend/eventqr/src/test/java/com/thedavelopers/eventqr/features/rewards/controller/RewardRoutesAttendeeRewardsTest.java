@@ -68,19 +68,19 @@ class RewardRoutesAttendeeRewardsTest {
                 .andExpect(status().isOk());
 
         verify(rewardService).findClaimableRewards(eventId);
-        verify(rewardService, never()).findRewards(any());
+        verify(rewardService, never()).findRewardsForAttendee(any());
     }
 
     @Test
     void includeUnavailableReturnsAllRewards() throws Exception {
-        given(rewardService.findRewards(eventId)).willReturn(List.of());
+        given(rewardService.findRewardsForAttendee(eventId)).willReturn(List.of());
 
         mockMvc.perform(get("/api/v1/attendees/me/events/{id}/rewards", eventId)
                         .param("includeUnavailable", "true")
                         .header("Authorization", "Bearer t"))
                 .andExpect(status().isOk());
 
-        verify(rewardService).findRewards(eventId);
+        verify(rewardService).findRewardsForAttendee(eventId);
         verify(rewardService, never()).findClaimableRewards(any());
     }
 
@@ -93,7 +93,7 @@ class RewardRoutesAttendeeRewardsTest {
                 .andExpect(status().isForbidden());
 
         verify(rewardService, never()).findClaimableRewards(any());
-        verify(rewardService, never()).findRewards(any());
+        verify(rewardService, never()).findRewardsForAttendee(any());
     }
 
     @Test
@@ -106,14 +106,14 @@ class RewardRoutesAttendeeRewardsTest {
                 .andExpect(status().isForbidden());
 
         verify(rewardService, never()).findClaimableRewards(any());
-        verify(rewardService, never()).findRewards(any());
+        verify(rewardService, never()).findRewardsForAttendee(any());
     }
 
     @Test
     void cancelledRegistrationUserStillAllowed() throws Exception {
         // Status-agnostic exists query: a cancelled registration row still returns true.
         given(eventRegistrationRepository.existsByEventIdAndAttendeeUserId(eventId, userId)).willReturn(true);
-        given(rewardService.findRewards(eventId)).willReturn(List.of());
+        given(rewardService.findRewardsForAttendee(eventId)).willReturn(List.of());
 
         mockMvc.perform(get("/api/v1/attendees/me/events/{id}/rewards", eventId)
                         .param("includeUnavailable", "true")

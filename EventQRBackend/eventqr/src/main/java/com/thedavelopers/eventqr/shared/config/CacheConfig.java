@@ -18,9 +18,7 @@ public class CacheConfig {
                 "events",
                 "registrations",
                 "scan-purposes",
-                "transaction-rules",
-                "report-summaries",
-                "report-snapshots");
+                "transaction-rules");
         manager.setCaffeine(Caffeine.newBuilder()
                 .expireAfterWrite(5, TimeUnit.MINUTES)
                 .maximumSize(10_000));

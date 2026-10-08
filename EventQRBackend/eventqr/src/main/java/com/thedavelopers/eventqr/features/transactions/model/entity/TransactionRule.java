@@ -31,6 +31,10 @@ public class TransactionRule extends BaseEntity {
     @Column(nullable = false)
     private int duplicateWindowMinutes;
 
+    /**
+     * Maximum approved scans per registration for the WHOLE EVENT (not per day). Only enforced when
+     * {@code allowDuplicate} is true; otherwise any second approved scan is rejected as a duplicate.
+     */
     @Column(nullable = false)
     private int maxUsesPerRegistration = 1;
 

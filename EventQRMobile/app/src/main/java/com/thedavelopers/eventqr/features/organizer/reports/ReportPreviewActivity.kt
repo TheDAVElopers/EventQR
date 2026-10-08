@@ -182,10 +182,12 @@ class ReportPreviewActivity : AppCompatActivity() {
             }
 
             // Generated date & time
-            val generatedText = report?.generatedAtInstant?.let { "Generated ${dateFormatter.format(it)}" } ?: "Generated just now"
-            addView(text(generatedText, 12, false, MUTED).apply {
-                setPadding(0, dp(2), 0, dp(4))
-            })
+            // Server generatedAt only; never invent a client-side time.
+            report?.generatedAtInstant?.let { generatedAt ->
+                addView(text(getString(R.string.report_preview_generated_at, dateFormatter.format(generatedAt)), 12, false, MUTED).apply {
+                    setPadding(0, dp(2), 0, dp(4))
+                })
+            }
 
             // Filters
             if (!isCombined) {
@@ -312,7 +314,7 @@ class ReportPreviewActivity : AppCompatActivity() {
             EventReportType.NO_SHOWS -> "Breakdown of marked no-shows vs. unentered registrations"
             EventReportType.ENTRY_LOGS -> "Distribution of successful check-ins and scan errors"
             EventReportType.ATTENDANCE -> "Total attendance count across sessions and activities"
-            EventReportType.CLAIMS -> "Overview of redeemed benefits and duplicate attempts"
+            EventReportType.CLAIMS -> getString(R.string.report_preview_claims_chart_subtitle)
             EventReportType.BOOTH_VISITS -> "Relative visit frequency across sponsor and event booths"
             EventReportType.EXIT_LOGS -> "Summary of successful and invalid exit scans"
             EventReportType.POINTS -> "Total points awarded categorized by triggering action"
@@ -322,6 +324,7 @@ class ReportPreviewActivity : AppCompatActivity() {
     private fun getSliceColor(label: String, index: Int): Int {
         val lower = label.lowercase()
         return when {
+            label == OTHER_CHART_LABEL -> Color.parseColor("#9CA3AF")
             lower.contains("success") || lower.contains("entered") || lower.contains("completed") -> Color.parseColor("#10B981")
             lower.contains("no show") || lower.contains("invalid") || lower.contains("cancelled") || lower.contains("failed") -> Color.parseColor("#EF4444")
             lower.contains("duplicate") || lower.contains("not entered") || lower.contains("already") || lower.contains("warning") -> Color.parseColor("#F59E0B")
@@ -361,7 +364,7 @@ class ReportPreviewActivity : AppCompatActivity() {
             EventReportType.POINTS -> {
                 when (index) {
                     0 -> 1.0f // Name
-                    1 -> 0.8f // Points Earned
+                    1 -> 0.8f // Points (+/-)
                     else -> 1.4f // Source Activity
                 }
             }
@@ -449,7 +452,7 @@ class ReportPreviewActivity : AppCompatActivity() {
             val isFourCol = columnCount >= 4
             report.columns.forEachIndexed { index, column ->
                 colHeader.addView(TextView(this@ReportPreviewActivity).apply {
-                    text = column ?: ""
+                    text = displayColumnName(report.reportType, index, column)
                     textSize = if (isFourCol) 11f else 12f
                     setTypeface(typeface, Typeface.BOLD)
                     setTextColor(Color.parseColor("#4B5563"))
@@ -537,7 +540,9 @@ class ReportPreviewActivity : AppCompatActivity() {
 
                 for (i in views.indices) {
                     val value = if (i < row.values.size) row.values[i] else null
-                    val displayValue = value?.ifBlank { "—" } ?: "—"
+                    val isPointsCell = report.reportType == EventReportType.POINTS && i == 1
+                    val pointsCell = if (isPointsCell) formatPointsCell(value) else null
+                    val displayValue = pointsCell?.text ?: (value?.ifBlank { "—" } ?: "—")
                     views[i].text = displayValue
                     val isFirst = (i == 0)
                     views[i].gravity = getColumnGravity(i, columnCount, report.reportType)
@@ -546,6 +551,8 @@ class ReportPreviewActivity : AppCompatActivity() {
 
                     val lower = displayValue.lowercase()
                     val cellColor = when {
+                        pointsCell?.sign == PointsSign.NEGATIVE -> Color.parseColor("#DC2626")
+                        pointsCell?.sign == PointsSign.POSITIVE -> Color.parseColor("#059669")
                         lower == "success" || lower == "entered" || lower == "completed" -> Color.parseColor("#059669")
                         lower == "no show" || lower == "marked no show" || lower == "invalid" || lower == "failed" -> Color.parseColor("#DC2626")
                         lower == "duplicate" || lower == "already claimed" || lower == "not entered" -> Color.parseColor("#D97706")
@@ -659,7 +666,7 @@ class ReportPreviewActivity : AppCompatActivity() {
                                     generateCombinedCsv(listOf(report))
                                 }
                             }
-                            saveAndShareFile(bytes, fileName, contentType)
+                            saveAndShareFile(bytes, fileName, contentType, fromFallback = true)
                             return@launch
                         } catch (_: Exception) {}
                     }
@@ -684,8 +691,7 @@ class ReportPreviewActivity : AppCompatActivity() {
         reports.forEachIndexed { index, report ->
             writer.println(csv("================================================================================"))
             writer.println(csv(report.reportTitle ?: "Section ${index + 1}"))
-            val genText = report.generatedAtInstant?.let { dateFormatter.format(it) } ?: "Just now"
-            writer.println("${csv("Generated")},${csv(genText)}")
+            report.generatedAtInstant?.let { writer.println("${csv("Generated")},${csv(dateFormatter.format(it))}") }
             writer.println()
 
             // Header columns
@@ -911,16 +917,21 @@ class ReportPreviewActivity : AppCompatActivity() {
         return stream.toByteArray()
     }
 
-    private fun saveAndShareFile(bytes: ByteArray, fileName: String, contentType: String) {
+    private fun saveAndShareFile(bytes: ByteArray, fileName: String, contentType: String, fromFallback: Boolean = false) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            saveToPublicDownloads(bytes, fileName, contentType)
+            saveToPublicDownloads(bytes, fileName, contentType, fromFallback)
         } else {
-            saveToLegacyPrivateStorage(bytes, fileName, contentType)
+            saveToLegacyPrivateStorage(bytes, fileName, contentType, fromFallback)
         }
     }
 
+    private fun showSavedMessage(fromFallback: Boolean, normal: String) {
+        val message = fallbackSavedMessageRes(fromFallback)?.let { getString(it) } ?: normal
+        Snackbar.make(content, message, Snackbar.LENGTH_LONG).show()
+    }
+
     @RequiresApi(Build.VERSION_CODES.Q)
-    private fun saveToPublicDownloads(bytes: ByteArray, fileName: String, contentType: String) {
+    private fun saveToPublicDownloads(bytes: ByteArray, fileName: String, contentType: String, fromFallback: Boolean) {
         val resolver: ContentResolver = contentResolver
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
@@ -939,9 +950,9 @@ class ReportPreviewActivity : AppCompatActivity() {
             }
             if (intent.resolveActivity(packageManager) != null) {
                 startActivity(intent)
-                Snackbar.make(content, "Export saved to Downloads/$fileName", Snackbar.LENGTH_LONG).show()
+                showSavedMessage(fromFallback, "Export saved to Downloads/$fileName")
             } else {
-                Snackbar.make(content, "Export saved to Downloads (open manually)", Snackbar.LENGTH_LONG).show()
+                showSavedMessage(fromFallback, "Export saved to Downloads (open manually)")
             }
         } catch (e: Exception) {
             resolver.delete(uri, null, null) // Clean up on failure
@@ -949,7 +960,7 @@ class ReportPreviewActivity : AppCompatActivity() {
         }
     }
 
-    private fun saveToLegacyPrivateStorage(bytes: ByteArray, fileName: String, contentType: String) {
+    private fun saveToLegacyPrivateStorage(bytes: ByteArray, fileName: String, contentType: String, fromFallback: Boolean) {
         val downloadsDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: filesDir
         val file = File(downloadsDir, fileName)
         try {
@@ -961,9 +972,9 @@ class ReportPreviewActivity : AppCompatActivity() {
             }
             if (intent.resolveActivity(packageManager) != null) {
                 startActivity(intent)
-                Snackbar.make(content, "Export saved and opened (app storage)", Snackbar.LENGTH_LONG).show()
+                showSavedMessage(fromFallback, "Export saved and opened (app storage)")
             } else {
-                Snackbar.make(content, "Export saved to app storage/$fileName", Snackbar.LENGTH_LONG).show()
+                showSavedMessage(fromFallback, "Export saved to app storage/$fileName")
             }
         } catch (e: Exception) {
             Snackbar.make(content, "Failed to save export: ${e.message}", Snackbar.LENGTH_LONG).show()
@@ -995,10 +1006,9 @@ class ReportPreviewActivity : AppCompatActivity() {
         }
 
         private fun setupView() {
-            val filteredData = report.chartSeries.filterKeys { it != null }
-                .mapKeys { it.key!! }
-                .filterValues { it >= 0 }
-            val total = filteredData.values.sum()
+            val chart = chartDataOf(report, sortByValue = false)
+            val filteredData = chart.entries.toMap(LinkedHashMap())
+            val total = chart.total
 
             // Header row
             val headerRow = LinearLayout(context).apply {
@@ -1017,7 +1027,7 @@ class ReportPreviewActivity : AppCompatActivity() {
             headerRow.addView(title)
 
             val totalPill = TextView(context).apply {
-                text = "Total: $total"
+                text = getString(R.string.report_preview_chart_total, total)
                 textSize = 11f
                 setTypeface(typeface, Typeface.BOLD)
                 setTextColor(NAV_PURPLE)
@@ -1216,14 +1226,11 @@ class ReportPreviewActivity : AppCompatActivity() {
         }
 
         private fun setupView() {
-            val filteredData = report.chartSeries.filterKeys { it != null }
-                .mapKeys { it.key!! }
-                .filterValues { it >= 0 }
-                .entries
-                .sortedByDescending { it.value }
+            val chart = chartDataOf(report, sortByValue = true)
+            val filteredData = chart.entries.map { java.util.AbstractMap.SimpleEntry(it.first, it.second) }
 
             val maxValue = filteredData.maxOfOrNull { it.value } ?: 1L
-            val total = filteredData.sumOf { it.value }
+            val total = chart.total
 
             // Header row
             val headerRow = LinearLayout(context).apply {

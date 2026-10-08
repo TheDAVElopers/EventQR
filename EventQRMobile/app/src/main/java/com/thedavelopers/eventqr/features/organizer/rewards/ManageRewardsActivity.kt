@@ -20,7 +20,6 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.ApiConfig
 import com.thedavelopers.eventqr.core.api.dto.ApiResponse
 import com.thedavelopers.eventqr.core.api.sharedGson
-import com.thedavelopers.eventqr.core.api.dto.RedemptionStatus
 import com.thedavelopers.eventqr.core.api.dto.RewardStatus
 import com.thedavelopers.eventqr.features.events.model.dto.EventResponse
 import com.thedavelopers.eventqr.features.organizer.BG
@@ -91,9 +90,8 @@ open class ManageRewardsActivity : AppCompatActivity() {
         lifecycleScope.launch {
             eventOptions = repository.getApprovedOrganizerEvents()
             val requestedEventId = intentEventId() ?: selectedEventId().takeIf { it.isNotBlank() }
-            val resolvedEvent = if (requestedEventId != null) {
-                resolveSelectedEvent(eventOptions, requestedEventId)
-            } else null
+            // Falls back to the saved, then the first, manageable event when nothing was requested.
+            val resolvedEvent = resolveSelectedEvent(eventOptions, requestedEventId)
 
             val hasEvent = resolvedEvent != null
             refreshLayout.isEnabled = hasEvent
@@ -406,29 +404,23 @@ open class ManageRewardsActivity : AppCompatActivity() {
             return
         }
 
-        val claimedByReward = redemptions
-            .filter { it.status == RedemptionStatus.REDEEMED }
-            .groupingBy { it.rewardId }
-            .eachCount()
-
         rewards.forEach { reward ->
-            val claimed = claimedByReward[reward.rewardId] ?: 0
-            rewardHost.addView(rewardCard(reward, claimed, enabled))
+            rewardHost.addView(rewardCard(reward, enabled))
         }
     }
 
-    private fun rewardCard(reward: RewardResponse, claimed: Int, rewardsEnabled: Boolean): LinearLayout {
-        val stock = reward.stockQuantity
-        val outOfStock = stock != null && stock <= claimed
+    private fun rewardCard(reward: RewardResponse, rewardsEnabled: Boolean): LinearLayout {
+        val stockState = RewardCardState.of(reward)
+        val outOfStock = stockState.outOfStock
         val active = rewardsEnabled && reward.status == RewardStatus.ACTIVE && !outOfStock
         val badgeText = when {
             !rewardsEnabled || reward.status == RewardStatus.INACTIVE -> "Disabled"
-            outOfStock -> "Out of Stock"
+            outOfStock -> getString(R.string.reward_details_out_of_stock)
             else -> "Available"
         }
         val (badgeBg, badgeTextColor, dotColor) = when (badgeText) {
             "Available" -> Triple(Color.parseColor("#DCFCE7"), Color.parseColor("#047857"), Color.parseColor("#10B981"))
-            "Out of Stock" -> Triple(Color.parseColor("#FEE2E2"), Color.parseColor("#B91C1C"), Color.parseColor("#EF4444"))
+            getString(R.string.reward_details_out_of_stock) -> Triple(Color.parseColor("#FEE2E2"), Color.parseColor("#B91C1C"), Color.parseColor("#EF4444"))
             else -> Triple(Color.parseColor("#F3F4F6"), Color.parseColor("#374151"), Color.parseColor("#9CA3AF"))
         }
 
@@ -477,17 +469,12 @@ open class ManageRewardsActivity : AppCompatActivity() {
                 setColorFilter(MUTED)
                 contentDescription = null
             })
-            pointsRow.addView(text("₱ ${formatCount(reward.pointsRequired)}.00", 13, false, MUTED).apply {
+            pointsRow.addView(text(resources.getQuantityString(R.plurals.manage_rewards_cost_pts, reward.pointsRequired, formatCount(reward.pointsRequired)), 13, false, MUTED).apply {
                 id = com.thedavelopers.eventqr.R.id.mrw_reward_points
             })
             middleCol.addView(pointsRow)
 
-            val claimedStr = when {
-                claimed == 0 && stock == null -> "No claimed"
-                claimed == 0 && stock != null -> "0/${formatCount(stock)} claimed"
-                stock == null -> "${formatCount(claimed)} claimed"
-                else -> "${formatCount(claimed)}/${formatCount(stock)} claimed"
-            }
+            val claimedStr = rewardClaimedText(this@ManageRewardsActivity, stockState)
             middleCol.addView(text(claimedStr, 12, false, MUTED).apply {
                 id = com.thedavelopers.eventqr.R.id.mrw_reward_stock
             })
@@ -631,10 +618,18 @@ open class ManageRewardsActivity : AppCompatActivity() {
         }
         val quantityInput = EditText(this).apply {
             id = com.thedavelopers.eventqr.R.id.mrw_reward_quantity_input
-            hint = "e.g. 50"
             inputType = InputType.TYPE_CLASS_NUMBER
-            setText(reward?.stockQuantity?.toString().orEmpty())
+            // Total supply, never the remaining stock; blank means unlimited.
+            setText(reward?.totalQuantity?.toString().orEmpty())
+            hint = getString(R.string.manage_rewards_quantity_hint)
             isSingleLine = true
+        }
+        val descriptionInput = EditText(this).apply {
+            id = com.thedavelopers.eventqr.R.id.mrw_reward_description_input
+            hint = getString(R.string.manage_rewards_description_hint)
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+            setText(reward?.description.orEmpty())
+            minLines = 2
         }
         val duplicateSwitch = SwitchCompat(this).apply {
             id = com.thedavelopers.eventqr.R.id.mrw_reward_duplicate_switch
@@ -647,8 +642,10 @@ open class ManageRewardsActivity : AppCompatActivity() {
         form.addView(titleInput)
         form.addView(fieldLabel("Points Cost"))
         form.addView(pointsInput)
-        form.addView(fieldLabel("Total Quantity"))
+        form.addView(fieldLabel(getString(R.string.manage_rewards_total_quantity)))
         form.addView(quantityInput)
+        form.addView(fieldLabel(getString(R.string.manage_rewards_description)))
+        form.addView(descriptionInput)
         form.addView(fieldLabel("Settings"))
         form.addView(duplicateSwitch)
 
@@ -659,12 +656,19 @@ open class ManageRewardsActivity : AppCompatActivity() {
             .setPositiveButton(getString(if (isEdit) R.string.manage_scan_purposes_save else R.string.manage_rewards_create)) { _, _ ->
                 val title = titleInput.text.toString().trim()
                 val points = pointsInput.text.toString().toIntOrNull()
-                val quantity = quantityInput.text.toString().toIntOrNull()
-                if (title.isBlank() || points == null || points <= 0 || quantity == null || quantity <= 0) {
+                val quantity = resolveRewardQuantity(quantityInput.text.toString(), reward?.let { it.totalQuantity?.toString().orEmpty() })
+                if (title.isBlank() || points == null || points <= 0 || quantity is RewardQuantity.Invalid) {
                     Toast.makeText(this, this.getString(R.string.manage_rewards_enter_a_valid_reward_title_points_co), Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
-                saveReward(reward, title, points, quantity, duplicateSwitch.isChecked)
+                saveReward(
+                    reward,
+                    title,
+                    points,
+                    quantity,
+                    resolveRewardDescription(descriptionInput.text.toString(), reward?.description, isEdit),
+                    duplicateSwitch.isChecked,
+                )
             }
             .show()
     }
@@ -673,9 +677,16 @@ open class ManageRewardsActivity : AppCompatActivity() {
         setPadding(0, dp(12), 0, dp(4))
     }
 
-    private fun saveReward(existingReward: RewardResponse?, title: String, points: Int, quantity: Int, allowDuplicateClaims: Boolean) {
+    private fun saveReward(
+        existingReward: RewardResponse?,
+        title: String,
+        points: Int,
+        quantity: RewardQuantity,
+        description: String?,
+        allowDuplicateClaims: Boolean,
+    ) {
         val eventId = selectedEvent.id
-        val request = RewardRequest(UUID.fromString(eventId), title, points, quantity, allowDuplicateClaims)
+        val request = buildRewardRequest(UUID.fromString(eventId), title, points, quantity, description, allowDuplicateClaims)
         lifecycleScope.launch {
             try {
                 val response = if (existingReward == null) {
@@ -687,7 +698,8 @@ open class ManageRewardsActivity : AppCompatActivity() {
                 Toast.makeText(this@ManageRewardsActivity, response.message ?: "Reward saved.", Toast.LENGTH_SHORT).show()
                 loadRewards()
             } catch (error: Exception) {
-                Toast.makeText(this@ManageRewardsActivity, error.message ?: "Reward could not be saved.", Toast.LENGTH_LONG).show()
+                val serverMessage = (error as? retrofit2.HttpException)?.let { com.thedavelopers.eventqr.core.api.parseHttpErrorMessage(it) }
+                Toast.makeText(this@ManageRewardsActivity, serverMessage ?: error.message ?: "Reward could not be saved.", Toast.LENGTH_LONG).show()
             }
         }
     }

@@ -145,7 +145,10 @@ public class OrganizerService {
         if (request.capacity() == null || request.capacity() <= 0) {
             throw new BadRequestException("Capacity must be greater than 0");
         }
-        long registeredCount = registrationRepository.countByEventId(eventId);
+        // Same definition as the Hub "Registered" tile: excludes CANCELLED and NO_SHOW.
+        long registeredCount = registrationRepository.findByEventId(eventId).stream()
+                .filter(reg -> reg.getStatus().isCountedAsRegistered())
+                .count();
         if (request.capacity() < registeredCount) {
             throw new BadRequestException(
                     "Capacity cannot be less than current registered attendees (" + registeredCount + ")");
@@ -229,12 +232,13 @@ public class OrganizerService {
         long totalAttendees = events.stream().mapToLong(OrganizerEventResponse::registeredCount).sum();
         long totalTransactions = events.stream().mapToLong(OrganizerEventResponse::totalTransactions).sum();
         long totalPoints = events.stream().mapToLong(OrganizerEventResponse::totalPointsAwarded).sum();
+        long totalRedemptions = events.stream().mapToLong(OrganizerEventResponse::rewardRedemptions).sum();
         long rewardEvents = events.stream().filter(event -> "Enabled".equalsIgnoreCase(event.rewardsStatus())).count();
         OrganizerEventResponse firstEvent = events.isEmpty() ? null : events.get(0);
         return new OrganizerDashboardResponse(organizer.getId(), organizer.getFullName(), organizer.getEmail(), null,
                 events.size(), totalAttendees, totalTransactions, totalPoints,
                 rewardEvents == 0 ? "Rewards not configured" : rewardEvents + " event(s) with rewards enabled",
-                events.stream().limit(5).toList(), firstEvent);
+                events.stream().limit(5).toList(), firstEvent, totalAttendees, totalRedemptions);
     }
 
     @Transactional(readOnly = true)
@@ -243,7 +247,8 @@ public class OrganizerService {
         return new OrganizerDashboardResponse(summary.organizerUserId(), summary.organizerName(), summary.organizerEmail(),
                 summary.organization(), summary.totalEvents(), summary.totalAttendees(), summary.totalTransactions(),
                 summary.totalPointsAwarded(), summary.rewardsSummary(), summary.recentEvents(),
-                toOrganizerEvent(requireOrganizerEvent(organizerUserId, eventId, role)));
+                toOrganizerEvent(requireOrganizerEvent(organizerUserId, eventId, role)),
+                summary.totalRegistrations(), summary.rewardRedemptions());
     }
 
     @Transactional(readOnly = true)
@@ -325,6 +330,7 @@ public class OrganizerService {
 
     public OrganizerStaffResponse addStaff(UUID organizerUserId, UUID eventId, AccountRole role, StaffAssignmentRequest request) {
         Event event = requireOrganizerEvent(organizerUserId, eventId, role);
+        validatePermissionTokens(request.permissions());
         UserProfile staffUser = resolveStaffUser(request);
         log.debug(
                 "Organizer staff add request eventId={} staffUserId={} email={}",
@@ -364,11 +370,25 @@ public class OrganizerService {
         assignment.setRoleLabel(roleLabel);
         assignment.setStaffRole(toStaffRole(roleLabel));
         assignment.setPermissions(String.join(",", emptyToDefault(request.permissions(), DEFAULT_PERMISSIONS)));
-        assignment.setCanScan(boolOrDefault(request.canScan(), true));
-        assignment.setCanPrintId(boolOrDefault(request.canPrintId(), false));
-        assignment.setCanViewLogs(boolOrDefault(request.canViewLogs(), false));
-        assignment.setCanManageRewards(boolOrDefault(request.canManageRewards(), false));
+        // Defaults: canScan=true, everything else false; a permissions list overrides the defaults and
+        // explicit boolean flags override both.
+        assignment.setCanScan(true);
+        assignment.setCanPrintId(false);
+        assignment.setCanViewLogs(false);
+        assignment.setCanManageRewards(false);
         applyPermissionOverrides(assignment, request.permissions());
+        if (request.canScan() != null) {
+            assignment.setCanScan(request.canScan());
+        }
+        if (request.canPrintId() != null) {
+            assignment.setCanPrintId(request.canPrintId());
+        }
+        if (request.canViewLogs() != null) {
+            assignment.setCanViewLogs(request.canViewLogs());
+        }
+        if (request.canManageRewards() != null) {
+            assignment.setCanManageRewards(request.canManageRewards());
+        }
         if (assignment.getAddedAt() == null) {
             assignment.setAddedAt(Instant.now());
         }
@@ -387,7 +407,9 @@ public class OrganizerService {
                 saved.isActive(),
                 existingAssignment.isPresent());
 
+        boolean promotedToStaff = false;
         if (staffUser.getRole() == AccountRole.ATTENDEE) {
+            promotedToStaff = true;
             staffUser.setRole(AccountRole.STAFF);
             userProfileRepository.save(staffUser);
             log.debug("Organizer staff add upgraded role eventId={} staffUserId={} fromRole=ATTENDEE toRole=STAFF",
@@ -409,12 +431,17 @@ public class OrganizerService {
             }
         }
 
-        return toStaff(saved);
+        OrganizerStaffResponse response = toStaff(saved);
+        return new OrganizerStaffResponse(response.assignmentId(), response.eventId(), response.staffUserId(),
+                response.name(), response.email(), response.roleLabel(), response.active(), response.canScan(),
+                response.canPrintId(), response.canViewLogs(), response.canManageRewards(), response.permissions(),
+                response.addedAt(), promotedToStaff);
     }
 
     public OrganizerStaffResponse updateStaff(UUID organizerUserId, UUID eventId, AccountRole role, UUID assignmentId,
                                               StaffAssignmentUpdateRequest request) {
         requireOrganizerEvent(organizerUserId, eventId, role);
+        validatePermissionTokens(request.permissions());
         EventStaffAssignment assignment = requireAssignment(eventId, assignmentId);
         if (request.active() != null) {
             assignment.setActive(request.active());
@@ -424,6 +451,11 @@ public class OrganizerService {
             assignment.setRoleLabel(roleLabel);
             assignment.setStaffRole(toStaffRole(roleLabel));
         }
+        if (request.permissions() != null) {
+            assignment.setPermissions(String.join(",", request.permissions()));
+            applyPermissionOverrides(assignment, request.permissions());
+        }
+        // Explicit flags are applied last so they win over a permissions list in the same request.
         if (request.canScan() != null) {
             assignment.setCanScan(request.canScan());
         }
@@ -435,10 +467,6 @@ public class OrganizerService {
         }
         if (request.canManageRewards() != null) {
             assignment.setCanManageRewards(request.canManageRewards());
-        }
-        if (request.permissions() != null) {
-            assignment.setPermissions(String.join(",", request.permissions()));
-            applyPermissionOverrides(assignment, request.permissions());
         }
         return toStaff(staffAssignmentRepository.save(assignment));
     }
@@ -736,7 +764,8 @@ public class OrganizerService {
                         .map(log -> new TransactionEntry(log.getTransactionType().name(), format(log.getScannedAt())))
                         .limit(5).toList(),
                 attendeeLogs.stream().filter(log -> log.getTransactionResult() == TransactionResult.REJECTED)
-                        .map(TransactionLog::getReason).limit(5).toList());
+                        .map(TransactionLog::getReason).limit(5).toList(),
+                registration.getStatus().isCountedAsRegistered());
     }
 
     private OrganizerTransactionResponse toTransaction(Event event, TransactionLog log, List<EventRegistration> registrations,
@@ -769,7 +798,7 @@ public class OrganizerService {
                 user == null ? "Unknown staff" : user.getFullName(), user == null ? "" : user.getEmail(),
                 resolveRoleLabel(assignment), assignment.isActive(), assignment.isCanScan(), assignment.isCanPrintId(),
                 assignment.isCanViewLogs(), assignment.isCanManageRewards(), splitPermissions(assignment.getPermissions()),
-                assignment.getAddedAt());
+                assignment.getAddedAt(), false);
     }
 
     private OrganizerScanPurposeResponse toScanPurpose(ScanPurpose purpose) {
@@ -885,27 +914,53 @@ public class OrganizerService {
         };
     }
 
+    /**
+     * Exact permission tokens (case-insensitive) the mobile app and defaults use. Anything else is a 400.
+     * "View attendee details" is informational and maps to no flag.
+     */
+    private static final java.util.Set<String> ALLOWED_PERMISSION_TOKENS = java.util.Set.of(
+            "scan qr", "print id", "view logs", "manage rewards", "view attendee details");
+
+    private void validatePermissionTokens(List<String> permissions) {
+        if (permissions == null) {
+            return;
+        }
+        for (String token : permissions) {
+            if (token == null || !ALLOWED_PERMISSION_TOKENS.contains(token.trim().toLowerCase(java.util.Locale.ROOT))) {
+                throw new BadRequestException("Unknown permission: " + token);
+            }
+        }
+    }
+
+    /**
+     * Maps a (validated) permissions list to the flags. Print/logs/rewards are set by presence; canScan
+     * is only ever turned ON by a "Scan QR" token and is never cleared implicitly by a list.
+     */
     private void applyPermissionOverrides(EventStaffAssignment assignment, List<String> permissions) {
         if (permissions == null || permissions.isEmpty()) {
             return;
         }
-        String normalized = String.join("|", permissions).toLowerCase();
-        assignment.setCanScan(normalized.contains("scan"));
-        assignment.setCanPrintId(normalized.contains("print"));
-        assignment.setCanViewLogs(normalized.contains("log"));
-        assignment.setCanManageRewards(normalized.contains("reward"));
+        validatePermissionTokens(permissions);
+        java.util.Set<String> tokens = permissions.stream()
+                .map(token -> token.trim().toLowerCase(java.util.Locale.ROOT))
+                .collect(java.util.stream.Collectors.toSet());
+        if (tokens.contains("scan qr")) {
+            assignment.setCanScan(true);
+        }
+        assignment.setCanPrintId(tokens.contains("print id"));
+        assignment.setCanViewLogs(tokens.contains("view logs"));
+        assignment.setCanManageRewards(tokens.contains("manage rewards"));
     }
 
     private String eventStatus(EventRegistration registration) {
-        if (registration.getAttendedAt() != null) {
-            return "Attended";
-        }
+        // Derived purely from the registration status (attendedAt is ignored: an EXITED attendee
+        // also has attendedAt set but must not read as checked in).
         return switch (registration.getStatus()) {
-            case ENTERED -> "Checked In / Entered";
+            case ENTERED -> "Checked In";
             case EXITED -> "Exited";
-            case NO_SHOW -> "No-show";
+            case NO_SHOW -> "No Show";
             case CANCELLED -> "Cancelled";
-            default -> "Registered";
+            case REGISTERED -> "Registered";
         };
     }
 

@@ -63,7 +63,7 @@ open class EventReportsActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             val events = repository.getApprovedOrganizerEvents()
-            val resolvedEvent = if (eventId != null) resolveSelectedEvent(events, eventId) else null
+            val resolvedEvent = resolveSelectedEvent(events, eventId)
 
             if (resolvedEvent != null) {
                 selectedEvent = resolvedEvent
@@ -687,16 +687,20 @@ open class EventReportsActivity : AppCompatActivity() {
         var status: EventReportFilterStatus = EventReportFilterStatus.ALL
 
         val dateError = text("", 12, false, ERROR).apply { visibility = View.GONE }
-        val dateHint = text("Select both Start Date and End Date to generate.", 12, false, MUTED)
-            .apply { visibility = View.GONE }
+        val dateHint = text(getString(R.string.event_reports_dates_optional_hint), 12, false, MUTED)
 
         lateinit var generateButton: Button
+        // Every filter is optional: no dates, only a start, only an end or both. Only end < start blocks Generate.
         fun refreshGenerateState() {
-            val ready = startDate != null && endDate != null
+            val ready = ReportFilterRules.canGenerate(startDate, endDate)
             generateButton.isEnabled = ready
             generateButton.alpha = if (ready) 1f else 0.6f
-            dateHint.visibility = if (ready) View.GONE else View.VISIBLE
-            if (ready) dateError.visibility = View.GONE
+            if (ready) {
+                dateError.visibility = View.GONE
+            } else {
+                dateError.text = getString(R.string.event_reports_end_date_must_be_after_start_date)
+                dateError.visibility = View.VISIBLE
+            }
         }
 
         val startDateInput = buildDateInput("Start Date") { picked ->
@@ -714,7 +718,7 @@ open class EventReportsActivity : AppCompatActivity() {
 
         var attendeeQuery = ""
         if (OrganizerReportsRepository.attendeeQueryApplicable.contains(item.reportType)) {
-            root.addView(labeledSearchInput("Attendee Search (Name or ID)") { attendeeQuery = it })
+            root.addView(labeledSearchInput(getString(R.string.event_reports_attendee_search_label)) { attendeeQuery = it })
         }
 
         if (OrganizerReportsRepository.transactionStatusApplicable.contains(item.reportType)) {
@@ -722,9 +726,8 @@ open class EventReportsActivity : AppCompatActivity() {
         }
 
         generateButton = primaryButton("Generate") {
-            if (endDate!!.isBefore(startDate!!)) {
-                dateError.text = getString(R.string.event_reports_end_date_must_be_after_start_date)
-                dateError.visibility = View.VISIBLE
+            if (!ReportFilterRules.canGenerate(startDate, endDate)) {
+                refreshGenerateState()
                 return@primaryButton
             }
 
@@ -737,8 +740,15 @@ open class EventReportsActivity : AppCompatActivity() {
             generateSingleReport(item, filters, dialog, root)
         }
 
-        val skipButton = ghostButton("Skip filters / View All") {
-            generateSingleReport(item, OrganizerReportsRepository.defaultFilters(), dialog, root)
+        // Clears only the DATE filters; the attendee search and status chips stay applied.
+        val skipButton = ghostButton(getString(R.string.event_reports_skip_date_filters)) {
+            val current = EventReportFiltersDto(
+                startDate = startDate,
+                endDate = endDate,
+                attendeeQuery = attendeeQuery.takeIf { it.isNotBlank() },
+                status = status,
+            )
+            generateSingleReport(item, ReportFilterRules.clearDates(current), dialog, root)
         }
 
         root.addView(dateHint.apply {
@@ -879,7 +889,7 @@ open class EventReportsActivity : AppCompatActivity() {
     private fun labeledSearchInput(label: String, onChanged: (String) -> Unit): LinearLayout = card(12).apply {
         addView(text(label, 13, true))
         addView(EditText(this@EventReportsActivity).apply {
-            hint = "Type a name or attendee ID"
+            hint = getString(R.string.event_reports_attendee_search_hint)
             setPadding(dp(12), dp(10), dp(12), dp(10))
             background = rounded(Color.parseColor("#F9FAFB"), 10, BORDER, density = resources.displayMetrics.density)
             setTextColor(TEXT)

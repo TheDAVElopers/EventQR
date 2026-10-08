@@ -79,6 +79,16 @@
             app:title="@string/search_user_account_no_accounts_found" />
         </FrameLayout>
 
+        <LinearLayout
+            android:id="@+id/layoutPermissionsHost"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@android:color/white"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:visibility="gone" />
+
         <Button
             android:id="@+id/btnAssignStaff"
             android:layout_width="match_parent"

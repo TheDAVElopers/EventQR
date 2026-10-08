@@ -86,7 +86,7 @@ open class SearchAttendeesActivity : AppCompatActivity() {
                 "Registered" to findViewById(R.id.chipRegistered),
                 "Checked In" to findViewById(R.id.chipCheckedIn),
                 "Exited" to findViewById(R.id.chipExited),
-                "No Show" to findViewById(R.id.chipNoShow),
+                // No "No Show" chip: nothing in the system sets RegistrationStatus.NO_SHOW, so it would always be empty.
             )
             filterChips.forEach { (label, chip) ->
                 chip.setOnClickListener {

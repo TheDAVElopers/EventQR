@@ -9,22 +9,25 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode
 import com.thedavelopers.eventqr.features.organizer.*
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerTransactionRuleDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.TransactionRuleRequest
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import java.util.UUID
-import com.thedavelopers.eventqr.R
 
 open class TransactionRulesActivity : AppCompatActivity() {
     private val TAG = "TransactionRulesActivity"
     private lateinit var repository: OrganizerRepository
     private lateinit var selectedEvent: OrganizerMvpEvent
     private lateinit var content: LinearLayout
-    
+
     private var currentRule: OrganizerTransactionRuleDto? = null
-    private var entryPurposeId: String? = null
+    private var purposes: List<OrganizerMvpScanPurpose> = emptyList()
+    private var rules: List<OrganizerTransactionRuleDto> = emptyList()
+    private var selectedPurposeId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,71 +49,96 @@ open class TransactionRulesActivity : AppCompatActivity() {
     private fun loadData() {
         content.removeAllViews()
         content.addView(loadingState("Loading transaction rules..."))
-        
+
         MainScope().launch {
-            // 1. Load scan purposes to find ENTRY
-            val purposes = repository.loadScanPurposesForMvp(selectedEvent.id)
-            val entryPurpose = purposes.data.find { it.code == com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode.ENTRY }
-                ?: purposes.data.firstOrNull()
-            
-            entryPurposeId = entryPurpose?.id
-            
-            // 2. Load transaction rules
-            val rules = repository.loadTransactionRulesForMvp(selectedEvent.id)
-            Log.d(TAG, "Loaded ${rules.data.size} transaction rules. EntryPurposeId: $entryPurposeId")
-            
-            currentRule = rules.data.find { it.scanPurposeId.toString() == entryPurposeId }
-                ?: rules.data.firstOrNull()
-            
+            // Every saved purpose can have its own rule; only persisted purposes (with an id) can be edited.
+            purposes = repository.loadScanPurposesForMvp(selectedEvent.id).data.filter { !it.id.isNullOrBlank() }
+            rules = repository.loadTransactionRulesForMvp(selectedEvent.id).data
+            Log.d(TAG, "Loaded ${rules.size} transaction rules for ${purposes.size} purposes")
+
+            if (selectedPurposeId == null || purposes.none { it.id == selectedPurposeId }) {
+                selectedPurposeId = (purposes.firstOrNull { it.code == ScanPurposeCode.ENTRY } ?: purposes.firstOrNull())?.id
+            }
             renderUI()
         }
     }
 
     private fun renderUI() {
         content.removeAllViews()
-        
+
+        val purposeId = selectedPurposeId
+        if (purposes.isEmpty() || purposeId == null) {
+            content.addView(emptyState(
+                iconRes = R.drawable.ic_organizer_reports,
+                title = getString(R.string.transaction_rules_no_purposes_title),
+                subtext = getString(R.string.transaction_rules_no_purposes_message),
+            ))
+            content.addView(primaryButton(getString(R.string.transaction_rules_save)) { }.apply {
+                id = R.id.txr_save_button
+                isEnabled = false
+                alpha = 0.5f
+                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(54))
+            })
+            return
+        }
+
+        currentRule = rules.find { it.scanPurposeId.toString() == purposeId }
         val rule = currentRule ?: OrganizerTransactionRuleDto(
             eventId = UUID.fromString(selectedEvent.id),
-            scanPurposeId = UUID.fromString(entryPurposeId ?: UUID.randomUUID().toString())
+            scanPurposeId = UUID.fromString(purposeId),
         )
-        
-        // Use mutable values to collect final state on save button click
-        // To simplify, we'll just read from the UI elements or use a temporary state object.
-        // For this implementation, we'll recreate the request from the latest UI values.
-        
+
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
         }
         content.addView(container)
 
+        // Purpose selector: one rule per scan purpose.
+        container.addView(card(16).apply {
+            addView(text(getString(R.string.transaction_rules_purpose_label), 14, true).apply { setPadding(0, 0, 0, dp(8)) })
+            addView(android.widget.HorizontalScrollView(this@TransactionRulesActivity).apply {
+                isHorizontalScrollBarEnabled = false
+                addView(row().apply {
+                    purposes.forEach { purpose ->
+                        addView(chip(purpose.label, purpose.id == purposeId).apply {
+                            setOnClickListener {
+                                selectedPurposeId = purpose.id
+                                renderUI()
+                            }
+                        })
+                    }
+                })
+            })
+        })
+
         // Card 1: Duplicate Prevention
         val card1 = card(16).apply {
             addView(text("Duplicate Prevention", 17, true).apply { setPadding(0, 0, 0, dp(8)) })
         }
-        
+
         val allowDuplicateToggle = ruleToggle(
-            "Allow Duplicate Entry Scans",
-            "Allow attendee to check in more than once",
+            getString(R.string.transaction_rules_allow_duplicate_title),
+            getString(R.string.transaction_rules_allow_duplicate_desc),
             rule.allowDuplicate
         ) { }
         card1.addView(allowDuplicateToggle)
         card1.addView(divider())
-        
+
         val requiresStaffToggle = ruleToggle(
-            "Require Verification Before Entry",
-            "Staff must verify QR before logging entry",
+            getString(R.string.transaction_rules_require_staff_title),
+            getString(R.string.transaction_rules_require_staff_desc),
             rule.requiresStaffAssignment
         ) { }
         card1.addView(requiresStaffToggle)
         card1.addView(divider())
-        
+
         container.addView(card1)
 
         // Card 2: Scan Limits
         val card2 = card(16).apply {
             addView(text("Scan Limits", 17, true).apply { setPadding(0, 0, 0, dp(8)) })
         }
-        
+
         val cooldownInput = labeledInput(
             "Duplicate Cooldown (minutes)",
             rule.duplicateWindowMinutes.toString(),
@@ -118,54 +146,61 @@ open class TransactionRulesActivity : AppCompatActivity() {
             inputType = InputType.TYPE_CLASS_NUMBER
         ) { }
         card2.addView(cooldownInput)
-        
+
         val maxScansInput = labeledInput(
-            "Max Scans Per Day (per attendee)",
+            getString(R.string.transaction_rules_max_scans_label),
             rule.maxUsesPerRegistration.toString(),
             hint = "10",
             inputType = InputType.TYPE_CLASS_NUMBER
         ) { }
         card2.addView(maxScansInput)
-        
+        card2.addView(text(getString(R.string.transaction_rules_max_scans_helper), 12, false, MUTED).apply {
+            setPadding(0, dp(6), 0, 0)
+        })
+
         container.addView(card2)
 
         content.addView(spacer(20))
-        
-        content.addView(primaryButton("Save Rules") {
-            val allowDuplicate = (allowDuplicateToggle.getChildAt(0) as LinearLayout).let { 
-                (it.getChildAt(1) as androidx.appcompat.widget.SwitchCompat).isChecked 
+
+        content.addView(primaryButton(getString(R.string.transaction_rules_save)) {
+            val allowDuplicate = (allowDuplicateToggle.getChildAt(0) as LinearLayout).let {
+                (it.getChildAt(1) as androidx.appcompat.widget.SwitchCompat).isChecked
             }
-            val requiresStaff = (requiresStaffToggle.getChildAt(0) as LinearLayout).let { 
-                (it.getChildAt(1) as androidx.appcompat.widget.SwitchCompat).isChecked 
+            val requiresStaff = (requiresStaffToggle.getChildAt(0) as LinearLayout).let {
+                (it.getChildAt(1) as androidx.appcompat.widget.SwitchCompat).isChecked
             }
             val cooldown = (cooldownInput.getChildAt(1) as android.widget.EditText).text.toString().toIntOrNull() ?: 0
             val maxScans = (maxScansInput.getChildAt(1) as android.widget.EditText).text.toString().toIntOrNull() ?: 1
-            
+
             saveRules(allowDuplicate, requiresStaff, cooldown, maxScans)
         }.apply {
+            id = R.id.txr_save_button
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(54))
         })
     }
 
     private fun saveRules(allowDuplicate: Boolean, requiresStaff: Boolean, cooldown: Int, maxScans: Int) {
-        val purposeId = entryPurposeId ?: return
-        
-        val request = TransactionRuleRequest(
-            scanPurposeId = UUID.fromString(purposeId),
-            active = true,
+        val purposeId = selectedPurposeId
+        if (purposeId == null) {
+            Toast.makeText(this, getString(R.string.transaction_rules_no_purposes_message), Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val request = buildTransactionRuleRequest(
+            purposeId = UUID.fromString(purposeId),
+            existing = currentRule,
             allowDuplicate = allowDuplicate,
-            duplicateWindowMinutes = cooldown,
-            maxUsesPerRegistration = maxScans,
-            requiresStaffAssignment = requiresStaff,
-            pointsAwarded = currentRule?.pointsAwarded ?: 0
+            requiresStaff = requiresStaff,
+            cooldown = cooldown,
+            maxScans = maxScans,
         )
-        
+
         Log.d(TAG, "Saving rules for event ${selectedEvent.id}: $request")
-        
+
         MainScope().launch {
             val result = repository.saveTransactionRuleForMvp(selectedEvent.id, request)
             Log.d(TAG, "Save result: ${result.source}, message: ${result.message}")
-            
+
             if (result.source == OrganizerMvpDataSource.BACKEND) {
                 Toast.makeText(this@TransactionRulesActivity, this@TransactionRulesActivity.getString(R.string.transaction_rules_rules_saved_successfully), Toast.LENGTH_SHORT).show()
                 loadData()
@@ -183,3 +218,20 @@ open class TransactionRulesActivity : AppCompatActivity() {
     }
 }
 
+/** Keeps the saved rule's `active` and points; a purpose with no rule yet starts active. */
+internal fun buildTransactionRuleRequest(
+    purposeId: UUID,
+    existing: OrganizerTransactionRuleDto?,
+    allowDuplicate: Boolean,
+    requiresStaff: Boolean,
+    cooldown: Int,
+    maxScans: Int,
+): TransactionRuleRequest = TransactionRuleRequest(
+    scanPurposeId = purposeId,
+    active = existing?.active ?: true,
+    allowDuplicate = allowDuplicate,
+    duplicateWindowMinutes = cooldown,
+    maxUsesPerRegistration = maxScans,
+    requiresStaffAssignment = requiresStaff,
+    pointsAwarded = existing?.pointsAwarded ?: 0,
+)

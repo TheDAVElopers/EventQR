@@ -19,4 +19,6 @@ data class OrganizerMvpAttendee(
     val qrCredentialStatus: String,
     val recentTransactions: List<OrganizerMvpTransactionEntry>,
     val recentRejectedScans: List<String>,
+    /** Backend `countedAsRegistered`: false for Cancelled / No Show registrations. */
+    val countedAsRegistered: Boolean = true,
 )

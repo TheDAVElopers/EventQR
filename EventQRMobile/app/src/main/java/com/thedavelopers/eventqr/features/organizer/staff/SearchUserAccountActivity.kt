@@ -41,6 +41,8 @@ class SearchUserAccountActivity : AppCompatActivity() {
     private lateinit var assignButton: Button
     private lateinit var userAdapter: SearchUserAccountAdapter
 
+    private lateinit var permissionsHost: android.widget.LinearLayout
+    private var permissionsForm: StaffPermissionsForm? = null
     private var selectedUser: OrganizerMvpStaff? = null
     private var assigning = false
     private val activeStaffEmails = mutableSetOf<String>()
@@ -77,6 +79,7 @@ class SearchUserAccountActivity : AppCompatActivity() {
         progressBar = findViewById(R.id.progressSearchUsers)
         emptyStateText = findViewById(R.id.txtSearchEmpty)
         assignButton = findViewById(R.id.btnAssignStaff)
+        permissionsHost = findViewById(R.id.layoutPermissionsHost)
     }
 
     private fun setupList() {
@@ -86,6 +89,8 @@ class SearchUserAccountActivity : AppCompatActivity() {
         }
         recyclerUsers.layoutManager = LinearLayoutManager(this)
         recyclerUsers.adapter = userAdapter
+        // Scan QR is always on; Print IDs, View logs and Manage rewards default to off.
+        permissionsForm = StaffPermissionsForm(this).also { form -> permissionsHost.addView(form.view) }
     }
 
     private fun bindActions() {
@@ -129,7 +134,21 @@ class SearchUserAccountActivity : AppCompatActivity() {
     }
 
     private fun assignSelectedUser() {
-        val user = selectedUser ?: return
+        val picked = selectedUser ?: return
+        val user = permissionsForm?.applyTo(picked) ?: picked
+        if (user.willBePromotedToStaff) {
+            AlertDialog.Builder(this)
+                .setTitle(getString(R.string.staff_promote_title))
+                .setMessage(getString(R.string.staff_promote_message, user.name))
+                .setNegativeButton(getString(R.string.request_event_cancel), null)
+                .setPositiveButton(getString(R.string.staff_assign_button)) { _, _ -> performAssign(user) }
+                .show()
+            return
+        }
+        performAssign(user)
+    }
+
+    private fun performAssign(user: OrganizerMvpStaff) {
         val normalizedEmail = user.email.trim().lowercase()
         if (activeStaffEmails.contains(normalizedEmail)) {
             Toast.makeText(this, this.getString(R.string.search_user_account_duplicate_staff_assignment), Toast.LENGTH_SHORT).show()
@@ -142,6 +161,13 @@ class SearchUserAccountActivity : AppCompatActivity() {
             val source = repository.addStaffForMvp(selectedEvent, user)
             source.message?.let {
                 Toast.makeText(this@SearchUserAccountActivity, it, Toast.LENGTH_SHORT).show()
+            }
+            if (source.source == OrganizerMvpDataSource.BACKEND && source.data.promotedToStaff) {
+                Toast.makeText(
+                    this@SearchUserAccountActivity,
+                    getString(R.string.staff_promoted_toast, source.data.name),
+                    Toast.LENGTH_LONG,
+                ).show()
             }
 
             val alreadyAssigned = source.message?.contains("already assigned", ignoreCase = true) == true
@@ -163,6 +189,7 @@ class SearchUserAccountActivity : AppCompatActivity() {
         val canAssign = selectedUser != null && !assigning
         assignButton.isEnabled = canAssign
         assignButton.text = if (assigning) getString(R.string.staff_assigning) else getString(R.string.staff_assign_button)
+        permissionsHost.visibility = if (selectedUser != null) View.VISIBLE else View.GONE
     }
 
     private fun showSuccessDialog() {

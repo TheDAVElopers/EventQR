@@ -286,7 +286,7 @@
                     </FrameLayout>
 
                     <TextView
-                        android:id="@+id/txtNoShowCount"
+                        android:id="@+id/txtExitedCount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:gravity="center_horizontal"
@@ -301,7 +301,7 @@
                         android:layout_marginTop="2dp"
                         android:gravity="center_horizontal"
                         android:maxLines="1"
-                        android:text="@string/common_no_show"
+                        android:text="@string/search_attendees_exited"
                         android:textColor="#6B7280"
                         android:textSize="12sp" />
                 </LinearLayout>

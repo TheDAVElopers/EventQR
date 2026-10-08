@@ -1,7 +1,9 @@
 package com.thedavelopers.eventqr.features.rewards.service;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.cache.annotation.CacheEvict;
@@ -35,6 +37,7 @@ import com.thedavelopers.eventqr.shared.constants.ScanPurposeCode;
 import com.thedavelopers.eventqr.shared.constants.TransactionResult;
 import com.thedavelopers.eventqr.shared.constants.TransactionType;
 import com.thedavelopers.eventqr.shared.interfaces.TransactionRecordedEvent;
+import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
 import com.thedavelopers.eventqr.shared.exceptions.ConflictException;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
 
@@ -72,12 +75,12 @@ public class RewardService {
         reward.setName(request.name());
         reward.setDescription(request.description());
         reward.setPointsRequired(request.pointsRequired());
-        reward.setStockQuantity(request.stockQuantity());
+        reward.setStockQuantity(resolveCreateStock(request));
         reward.setAllowDuplicateClaims(request.allowDuplicateClaims());
         reward.setStatus(RewardStatus.ACTIVE);
         Reward saved = rewardRepository.save(reward);
         ensureRewardRedemptionScanPurposeForReward(request.eventId());
-        return toResponse(saved);
+        return toResponse(saved, 0L);
     }
 
     private void ensureRewardRedemptionScanPurposeForReward(UUID eventId) {
@@ -100,17 +103,23 @@ public class RewardService {
 
     @CacheEvict(cacheNames = {"scan-purposes", "transaction-rules"}, key = "#eventId")
     public RewardResponse updateReward(UUID eventId, UUID rewardId, RewardRequest request) {
-        Reward reward = rewardRepository.findById(rewardId)
+        // Row lock: serialises with redemptions (both paths lock the reward first) so the
+        // total - claimed computation below cannot race a concurrent claim and lose its decrement.
+        Reward reward = rewardRepository.findByIdForUpdate(rewardId)
                 .orElseThrow(() -> new ResourceNotFoundException("Reward not found"));
         if (!reward.getEventId().equals(eventId)) {
             throw new ResourceNotFoundException("Reward not found for event");
         }
         reward.setName(request.name());
-        reward.setDescription(request.description());
+        if (request.description() != null) {
+            // null/absent keeps the stored value; "" (or blank) clears it; otherwise replace.
+            reward.setDescription(request.description().isBlank() ? null : request.description());
+        }
         reward.setPointsRequired(request.pointsRequired());
-        reward.setStockQuantity(request.stockQuantity());
+        long claimed = claimedCount(reward.getId());
+        applyUpdateStock(reward, request, claimed);
         reward.setAllowDuplicateClaims(request.allowDuplicateClaims());
-        return toResponse(rewardRepository.save(reward));
+        return toResponse(rewardRepository.save(reward), claimed);
     }
 
     @CacheEvict(cacheNames = {"scan-purposes", "transaction-rules"}, key = "#eventId")
@@ -129,7 +138,7 @@ public class RewardService {
         if (!reward.getEventId().equals(eventId)) {
             throw new ResourceNotFoundException("Reward not found for event");
         }
-        return toResponse(reward);
+        return toResponse(reward, claimedCount(reward.getId()));
     }
 
     public PointBalanceResponse getBalance(UUID eventId, UUID attendeeUserId) {
@@ -193,7 +202,7 @@ public class RewardService {
     }
 
     public RewardRedemptionResponse redeem(RewardRedemptionRequest request) {
-        Reward reward = rewardRepository.findById(request.rewardId())
+        Reward reward = rewardRepository.findByIdForUpdate(request.rewardId())
                 .orElseThrow(() -> new ResourceNotFoundException("Reward not found"));
         if (reward.getStatus() != RewardStatus.ACTIVE) {
             throw new ConflictException("Reward is inactive");
@@ -211,6 +220,11 @@ public class RewardService {
                         throw new ConflictException("Reward already redeemed by this attendee");
                     }
                 });
+
+        // Same atomic guarded decrement as RewardRedemptionService (NULL stock = unlimited).
+        if (rewardRepository.decrementStockIfAvailable(reward.getId()) == 0) {
+            throw new ConflictException("Reward is out of stock");
+        }
 
         balance.setPointsBalance(balance.getPointsBalance() - reward.getPointsRequired());
         attendeePointBalanceRepository.save(balance);
@@ -244,15 +258,20 @@ public class RewardService {
     }
 
     public List<RewardResponse> findRewards(UUID eventId) {
-        return rewardRepository.findByEventId(eventId).stream().map(this::toResponse).toList();
+        return toResponses(eventId, rewardRepository.findByEventId(eventId));
     }
 
-    /** Rewards an attendee can still claim: ACTIVE and unlimited (null stock) or in stock. */
+    /** Attendee-facing / unguarded read: no claimedCount or totalQuantity. */
+    public List<RewardResponse> findRewardsForAttendee(UUID eventId) {
+        return rewardRepository.findByEventId(eventId).stream().map(RewardResponse::withoutCounts).toList();
+    }
+
+    /** Rewards an attendee can still claim: ACTIVE and unlimited (null stock) or in stock (no counts). */
     public List<RewardResponse> findClaimableRewards(UUID eventId) {
         return rewardRepository.findByEventId(eventId).stream()
                 .filter(r -> r.getStatus() == RewardStatus.ACTIVE
                         && (r.getStockQuantity() == null || r.getStockQuantity() > 0))
-                .map(this::toResponse).toList();
+                .map(RewardResponse::withoutCounts).toList();
     }
 
     public List<RewardRedemptionResponse> findRedemptions(UUID eventId) {
@@ -313,8 +332,48 @@ public class RewardService {
                 });
     }
 
-    private RewardResponse toResponse(Reward reward) {
-        return new RewardResponse(reward.getId(), reward.getEventId(), reward.getName(), reward.getDescription(), reward.getPointsRequired(),
-                reward.getStatus(), reward.getStockQuantity(), reward.isAllowDuplicateClaims());
+    private Integer resolveCreateStock(RewardRequest request) {
+        if (Boolean.TRUE.equals(request.unlimitedStock())) {
+            return null;
+        }
+        if (request.totalQuantity() != null) {
+            return request.totalQuantity();
+        }
+        return request.stockQuantity();
+    }
+
+    private void applyUpdateStock(Reward reward, RewardRequest request, long claimed) {
+        if (Boolean.TRUE.equals(request.unlimitedStock())) {
+            reward.setStockQuantity(null);
+        } else if (request.totalQuantity() != null) {
+            long remaining = (long) request.totalQuantity() - claimed;
+            if (remaining < 0) {
+                throw new BadRequestException(
+                        "Total quantity cannot be less than the " + claimed + " already claimed");
+            }
+            reward.setStockQuantity((int) remaining);
+        } else if (request.stockQuantity() != null) {
+            reward.setStockQuantity(request.stockQuantity());
+        }
+    }
+
+    private long claimedCount(UUID rewardId) {
+        return rewardRedemptionRepository.countByRewardIdAndStatus(rewardId, RedemptionStatus.REDEEMED);
+    }
+
+    /** Maps rewards with a single batched claimed-count query for the whole event (no N+1). */
+    private List<RewardResponse> toResponses(UUID eventId, List<Reward> rewards) {
+        if (rewards.isEmpty()) {
+            return List.of();
+        }
+        Map<UUID, Long> claimed = new HashMap<>();
+        for (var row : rewardRedemptionRepository.countByEventIdAndStatusGroupedByReward(eventId, RedemptionStatus.REDEEMED)) {
+            claimed.put(row.getRewardId(), row.getTotal() == null ? 0L : row.getTotal());
+        }
+        return rewards.stream().map(r -> RewardResponse.of(r, claimed.getOrDefault(r.getId(), 0L))).toList();
+    }
+
+    private RewardResponse toResponse(Reward reward, long claimed) {
+        return RewardResponse.of(reward, claimed);
     }
 }

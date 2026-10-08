@@ -26,9 +26,14 @@ public final class EventReportDtos {
     public record EventReportRow(List<String> values) {
     }
 
+    /**
+     * {@code total} is the sum of {@code chartSeries} (full, unbucketed). For the POINTS report this is the
+     * total points AWARDED (positive rows only), so it differs from the signed sum of the table rows,
+     * which also include deductions.
+     */
     public record EventReportResponse(UUID eventId, ReportType reportType, String reportTitle, String eventName,
                                       Instant generatedAt, List<String> columns, List<EventReportRow> rows,
-                                      Map<String, Long> chartSeries, ReportEmptyState emptyState,
+                                      Map<String, Long> chartSeries, long total, ReportEmptyState emptyState,
                                       EventReportFilters appliedFilters) {
     }
 

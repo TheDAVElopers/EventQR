@@ -74,7 +74,10 @@ open class ManageUsersActivity : AppCompatActivity() {
     }
 
     private fun setupList() {
-        staffAdapter = StaffAssignmentAdapter { staff -> confirmRemove(staff) }
+        staffAdapter = StaffAssignmentAdapter(
+            onRemoveClicked = { staff -> confirmRemove(staff) },
+            onEditPermissionsClicked = { staff -> showEditPermissions(staff) },
+        )
         recyclerStaff.layoutManager = LinearLayoutManager(this)
         recyclerStaff.adapter = staffAdapter
     }
@@ -156,6 +159,38 @@ open class ManageUsersActivity : AppCompatActivity() {
         recyclerStaff.visibility = if (hasStaff) View.VISIBLE else View.GONE
         emptyStateText.text = getString(R.string.staff_assignment_empty)
         return staff.size
+    }
+
+    private fun showEditPermissions(staff: OrganizerMvpStaff) {
+        val form = StaffPermissionsForm(this, staff)
+        val container = android.widget.FrameLayout(this).apply {
+            val pad = (20 * resources.displayMetrics.density).toInt()
+            setPadding(pad, pad / 2, pad, 0)
+            addView(form.view)
+        }
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.staff_edit_permissions_title, staff.name))
+            .setView(container)
+            .setNegativeButton(getString(R.string.request_event_cancel), null)
+            .setPositiveButton(getString(R.string.manage_scan_purposes_save)) { _, _ -> savePermissions(form.applyTo(staff)) }
+            .show()
+    }
+
+    private fun savePermissions(updated: OrganizerMvpStaff) {
+        lifecycleScope.launch {
+            // updated.id is the ASSIGNMENT id, as the PATCH endpoint expects.
+            val source = repository.updateStaffForMvp(selectedEvent, updated)
+            if (source.source == OrganizerMvpDataSource.BACKEND) {
+                Toast.makeText(this@ManageUsersActivity, getString(R.string.staff_permissions_updated), Toast.LENGTH_SHORT).show()
+                loadAssigned()
+            } else {
+                Toast.makeText(
+                    this@ManageUsersActivity,
+                    source.message ?: getString(R.string.staff_permissions_update_failed),
+                    Toast.LENGTH_LONG,
+                ).show()
+            }
+        }
     }
 
     private fun confirmRemove(staff: OrganizerMvpStaff) {

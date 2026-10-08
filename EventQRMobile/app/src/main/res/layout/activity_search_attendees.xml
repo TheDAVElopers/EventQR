@@ -181,18 +181,7 @@
                     android:textColor="#4B5563"
                     android:textSize="13sp"
                     android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/chipNoShow"
-                    android:layout_width="wrap_content"
-                    android:layout_height="38dp"
-                    android:background="@drawable/bg_event_filter_chip_unselected"
-                    android:gravity="center"
-                    android:paddingHorizontal="16dp"
-                    android:text="@string/common_no_show"
-                    android:textColor="#4B5563"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
+                <!-- "No Show" chip intentionally removed: nothing in the system sets RegistrationStatus.NO_SHOW yet. -->
             </LinearLayout>
         </HorizontalScrollView>
     </LinearLayout>

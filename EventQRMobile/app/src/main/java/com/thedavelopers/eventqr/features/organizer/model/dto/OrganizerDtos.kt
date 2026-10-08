@@ -56,6 +56,10 @@ data class OrganizerDashboardDto(
     val organization: String? = null,
     val totalEvents: Long = 0L,
     val totalAttendees: Long = 0L,
+    /** Counted-as-registered across approved/active/ended events (same number as totalAttendees). */
+    val totalRegistrations: Long? = null,
+    /** Count of REDEEMED reward redemptions. */
+    val rewardRedemptions: Long? = null,
     val totalTransactions: Long = 0L,
     val totalPointsAwarded: Long = 0L,
     val rewardsSummary: String? = null,
@@ -79,6 +83,7 @@ data class OrganizerAttendeeDto(
     val qrCredentialStatus: String? = null,
     val recentTransactions: List<JsonElement> = emptyList(),
     val recentRejectedScans: List<String> = emptyList(),
+    val countedAsRegistered: Boolean? = null,
 )
 
 data class OrganizerTransactionDto(
@@ -120,6 +125,8 @@ data class OrganizerStaffDto(
     val canManageRewards: Boolean = false,
     val permissions: List<String> = emptyList(),
     val addedAt: Instant? = null,
+    /** True only in the add response, when an ATTENDEE account was promoted to STAFF. */
+    val promotedToStaff: Boolean = false,
 )
 
 data class StaffAssignmentRequestDto(

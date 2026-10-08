@@ -34,14 +34,16 @@ public final class OrganizerDtos {
                                              String organization, long totalEvents, long totalAttendees,
                                              long totalTransactions, long totalPointsAwarded,
                                              String rewardsSummary, List<OrganizerEventResponse> recentEvents,
-                                             OrganizerEventResponse event) {
+                                             OrganizerEventResponse event, long totalRegistrations,
+                                             long rewardRedemptions) {
     }
 
     public record OrganizerAttendeeResponse(UUID attendeeId, UUID registrationId, UUID eventId, UUID qrCredentialId,
                                             String name, String email, String phone, String registrationStatus,
                                             String currentEventStatus, int points, String lastTransactionTime,
                                             String registeredDate, String qrCredentialStatus,
-                                            List<TransactionEntry> recentTransactions, List<String> recentRejectedScans) {
+                                            List<TransactionEntry> recentTransactions, List<String> recentRejectedScans,
+                                            boolean countedAsRegistered) {
     }
 
     public record TransactionEntry(String type, String timestamp) {
@@ -60,7 +62,7 @@ public final class OrganizerDtos {
     public record OrganizerStaffResponse(UUID assignmentId, UUID eventId, UUID staffUserId, String name, String email,
                                          String roleLabel, boolean active, boolean canScan, boolean canPrintId,
                                          boolean canViewLogs, boolean canManageRewards,
-                                         List<String> permissions, Instant addedAt) {
+                                         List<String> permissions, Instant addedAt, boolean promotedToStaff) {
     }
 
     public record StaffAssignmentRequest(UUID staffUserId, String email, String name, String roleLabel,

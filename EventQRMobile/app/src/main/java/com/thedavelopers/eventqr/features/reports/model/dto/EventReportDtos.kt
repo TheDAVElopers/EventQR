@@ -59,6 +59,8 @@ data class EventReportDto(
     val columns: List<String?> = emptyList(),
     val rows: List<EventReportRowDto> = emptyList(),
     val chartSeries: Map<String?, Long> = emptyMap(),
+    /** Full total across every category (including the "Other" bucket); 0 from older servers. */
+    val total: Long = 0L,
     val emptyState: EventReportEmptyState = EventReportEmptyState.NONE,
     val appliedFilters: EventReportFiltersDto = EventReportFiltersDto(),
 ) : Serializable {

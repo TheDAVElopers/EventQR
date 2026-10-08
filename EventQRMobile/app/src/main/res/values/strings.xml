@@ -175,13 +175,13 @@
     <string name="organizer_dashboard_unable_to_load_organizer_dashboard">Unable to load organizer dashboard</string>
     <string name="organizer_dashboard_total_events">Total Events</string>
     <string name="organizer_dashboard_details">Details</string>
-    <string name="organizer_dashboard_total_attendees">Total Attendees</string>
+    <string name="organizer_dashboard_total_registrations">Total Registrations</string>
     <string name="common_transactions">Transactions</string>
-    <string name="organizer_dashboard_rewards_given">Rewards Given</string>
+    <string name="organizer_dashboard_rewards_redeemed">Rewards Redeemed</string>
     <string name="organizer_dashboard_live">Live</string>
     <string name="organizer_dashboard_see_all">See All ›</string>
     <string name="organizer_dashboard_no_active_events">No active events</string>
-    <string name="organizer_dashboard_approve_or_create_events_to_see_them">Approve or create events to see them here.</string>
+    <string name="organizer_dashboard_no_events_happening_now">No events are happening right now.</string>
     <string name="common_search_events">Search events...</string>
     <string name="common_upcoming">Upcoming</string>
     <string name="common_active">Active</string>
@@ -461,7 +461,7 @@
     <string name="report_preview_choose_export_format">Choose export format:</string>
     <string name="report_preview_csv">CSV</string>
     <string name="report_preview_pdf">PDF</string>
-    <string name="manage_rewards_enter_a_valid_reward_title_points_co">Enter a valid reward title, points cost, and total quantity.</string>
+    <string name="manage_rewards_enter_a_valid_reward_title_points_co">Enter a valid reward title and points cost. Quantity must be a whole number, or leave it blank for unlimited.</string>
     <string name="manage_rewards_remove_reward">Remove reward?</string>
     <string name="manage_scan_purposes_unable_to_update_unsaved_scan_purpos">Unable to update unsaved scan purpose.</string>
     <string name="manage_scan_purposes_saved_successfully">Saved successfully</string>
@@ -713,4 +713,57 @@
     <string name="staff_scan_result_qr_inactive_hint">This QR code or registration is not active.</string>
     <string name="staff_scan_result_qr_inactive_reason">The registration is not active, so no transaction can be logged.</string>
     <string name="staff_attendee_details_scans">Scans</string>
+
+    <!-- Organizer rewards -->
+    <string name="manage_rewards_unlimited">Unlimited</string>
+    <string name="manage_rewards_claimed_ratio">%1$s/%2$s claimed</string>
+    <string name="manage_rewards_quantity_hint">Leave blank for unlimited</string>
+    <string name="manage_rewards_total_quantity">Total Quantity (optional)</string>
+    <string name="manage_rewards_description">Description (optional)</string>
+    <string name="manage_rewards_description_hint">What attendees get</string>
+    <plurals name="manage_rewards_cost_pts">
+        <item quantity="one">%1$s pt</item>
+        <item quantity="other">%1$s pts</item>
+    </plurals>
+
+    <!-- Organizer reports -->
+    <string name="event_reports_dates_optional_hint">Dates are optional. Pick a start date, an end date, both, or neither.</string>
+    <string name="event_reports_attendee_search_label">Attendee Search (Name or ID)</string>
+    <string name="event_reports_attendee_search_hint">Type a name, ID or email</string>
+    <string name="event_reports_skip_date_filters">Skip dates / View All</string>
+    <string name="report_preview_generated_at">Generated %1$s</string>
+    <string name="report_preview_claims_chart_subtitle">Approved vs rejected scans</string>
+    <string name="report_preview_chart_total">Total: %1$d</string>
+    <string name="report_preview_export_fallback_saved">Server export failed, saved a locally generated copy</string>
+
+    <!-- Organizer transaction rules -->
+    <string name="transaction_rules_save">Save Rules</string>
+    <string name="transaction_rules_purpose_label">Scan purpose</string>
+    <string name="transaction_rules_no_purposes_title">No scan purposes yet</string>
+    <string name="transaction_rules_no_purposes_message">Save at least one scan purpose for this event before editing its rules.</string>
+    <string name="transaction_rules_allow_duplicate_title">Allow duplicate scans</string>
+    <string name="transaction_rules_allow_duplicate_desc">Allow an attendee to be scanned more than once for this purpose</string>
+    <string name="transaction_rules_require_staff_title">Require assigned staff</string>
+    <string name="transaction_rules_require_staff_desc">Only staff assigned to this event can log scans</string>
+    <string name="transaction_rules_max_scans_label">Max scans per attendee (whole event)</string>
+    <string name="transaction_rules_max_scans_helper">Applies only when Allow duplicate scans is on.</string>
+
+    <!-- Organizer staff permissions -->
+    <string name="staff_permission_scan">Scan QR (always on)</string>
+    <string name="staff_permission_print_ids">Print IDs</string>
+    <string name="staff_permission_view_logs">View logs</string>
+    <string name="staff_permission_manage_rewards">Manage rewards</string>
+    <string name="staff_permission_summary_scan">Scan</string>
+    <string name="staff_permission_summary_print_ids">Print IDs</string>
+    <string name="staff_permission_summary_view_logs">View logs</string>
+    <string name="staff_permission_summary_manage_rewards">Manage rewards</string>
+    <string name="staff_permission_summary_none">No permissions</string>
+    <string name="staff_permissions_summary">Permissions: %1$s</string>
+    <string name="staff_edit_permissions">Edit permissions</string>
+    <string name="staff_edit_permissions_title">Permissions for %1$s</string>
+    <string name="staff_permissions_updated">Permissions updated.</string>
+    <string name="staff_permissions_update_failed">Could not update permissions.</string>
+    <string name="staff_promote_title">Assign as staff?</string>
+    <string name="staff_promote_message">%1$s will become a Staff member. They keep their attendee access.</string>
+    <string name="staff_promoted_toast">%1$s is now a Staff member. They keep their attendee access.</string>
 </resources>

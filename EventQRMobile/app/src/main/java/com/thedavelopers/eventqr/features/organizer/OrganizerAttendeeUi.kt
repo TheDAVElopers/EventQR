@@ -4,22 +4,33 @@ import android.content.Context
 import com.thedavelopers.eventqr.R
 import java.util.Locale
 
+/**
+ * Buckets come straight from the backend `currentEventStatus`: Registered / Checked In / Exited / Cancelled / No Show.
+ * "Checked In" means exactly that; an attendee who already left is "Exited", never double counted as checked in.
+ * Falls back to `registrationStatus` only when the server sent no current status.
+ */
 internal fun OrganizerMvpAttendee.statusBucket(): String {
     val current = currentEventStatus.trim()
     val registration = registrationStatus.trim()
+    val source = current.ifBlank { registration }
     return when {
-        current.contains("checked in", ignoreCase = true) ||
-            current.contains("entered", ignoreCase = true) ||
-            current.contains("attended", ignoreCase = true) -> "Checked In"
-        current.contains("exited", ignoreCase = true) || registration.equals("Exited", ignoreCase = true) -> "Exited"
-        current.contains("no-show", ignoreCase = true) || current.contains("no show", ignoreCase = true) ||
-            registration.contains("no-show", ignoreCase = true) || registration.contains("no show", ignoreCase = true) -> "No Show"
-        registration.equals("Registered", ignoreCase = true) -> "Registered"
-        current.isNotBlank() -> current
-        registration.isNotBlank() -> registration
+        source.equals("Checked In", ignoreCase = true) -> "Checked In"
+        source.equals("Exited", ignoreCase = true) -> "Exited"
+        source.equals("Cancelled", ignoreCase = true) || source.equals("Canceled", ignoreCase = true) -> "Cancelled"
+        source.contains("no-show", ignoreCase = true) || source.contains("no show", ignoreCase = true) ||
+            source.equals("NO_SHOW", ignoreCase = true) -> "No Show"
+        source.equals("Registered", ignoreCase = true) -> "Registered"
+        source.isNotBlank() -> source
         else -> "Registered"
     }
 }
+
+/** Attendees shown in the "Total" tile: only those the backend counts as registered (excludes Cancelled / No Show). */
+internal fun List<OrganizerMvpAttendee>.registeredTotal(): Int = count { it.countedAsRegistered }
+
+internal fun List<OrganizerMvpAttendee>.cancelledTotal(): Int = count { it.statusBucket() == "Cancelled" }
+
+internal fun List<OrganizerMvpAttendee>.checkedInTotal(): Int = count { it.statusBucket() == "Checked In" }
 
 internal fun OrganizerMvpAttendee.statusPalette(context: Context): Pair<Int, Int> {
     val (bgRes, textRes) = when (statusBucket()) {

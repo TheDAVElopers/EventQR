@@ -75,8 +75,8 @@ public class RewardRoutesController {
     public ResponseEntity<ApiResponse<RewardResponse>> createReward(HttpServletRequest request,
                                                                     @PathVariable UUID eventId,
                                                                     @Valid @RequestBody RewardRequest body) {
-        requireOwnerOrStaff(request, eventId);
-        RewardRequest normalized = new RewardRequest(eventId, body.name(), body.description(), body.pointsRequired(), body.stockQuantity(), body.allowDuplicateClaims());
+        requireRewardWriteAccess(request, eventId);
+        RewardRequest normalized = new RewardRequest(eventId, body.name(), body.description(), body.pointsRequired(), body.stockQuantity(), body.allowDuplicateClaims(), body.totalQuantity(), body.unlimitedStock());
         return ResponseEntity.ok(ApiResponse.success("Reward created", rewardService.saveReward(normalized)));
     }
 
@@ -85,8 +85,8 @@ public class RewardRoutesController {
                                                                     @PathVariable UUID eventId,
                                                                     @PathVariable UUID rewardId,
                                                                     @Valid @RequestBody RewardRequest body) {
-        requireOwnerOrStaff(request, eventId);
-        RewardRequest normalized = new RewardRequest(eventId, body.name(), body.description(), body.pointsRequired(), body.stockQuantity(), body.allowDuplicateClaims());
+        requireRewardWriteAccess(request, eventId);
+        RewardRequest normalized = new RewardRequest(eventId, body.name(), body.description(), body.pointsRequired(), body.stockQuantity(), body.allowDuplicateClaims(), body.totalQuantity(), body.unlimitedStock());
         return ResponseEntity.ok(ApiResponse.success("Reward updated", rewardService.updateReward(eventId, rewardId, normalized)));
     }
 
@@ -94,7 +94,7 @@ public class RewardRoutesController {
     public ResponseEntity<ApiResponse<Void>> deleteReward(HttpServletRequest request,
                                                           @PathVariable UUID eventId,
                                                           @PathVariable UUID rewardId) {
-        requireOwnerOrStaff(request, eventId);
+        requireRewardWriteAccess(request, eventId);
         rewardService.deleteReward(eventId, rewardId);
         return ResponseEntity.ok(ApiResponse.success("Reward deleted", null));
     }
@@ -119,7 +119,7 @@ public class RewardRoutesController {
                                                                               @RequestParam(defaultValue = "false") boolean includeUnavailable) {
         requireRegistered(eventId, currentUserId(request));
         List<RewardResponse> rewards = includeUnavailable
-                ? rewardService.findRewards(eventId)
+                ? rewardService.findRewardsForAttendee(eventId)
                 : rewardService.findClaimableRewards(eventId);
         return ResponseEntity.ok(ApiResponse.success(rewards));
     }
@@ -161,6 +161,36 @@ public class RewardRoutesController {
         if (jwtService.extractRoleFromBearer(request.getHeader("Authorization")) == AccountRole.ATTENDEE) {
             throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Organizer or admin access required");
         }
+    }
+
+    /**
+     * Create/update/delete: event owner or admin, or an actively assigned staff member whose
+     * assignment has canManageRewards=true. (Read routes use requireOwnerOrStaff.)
+     */
+    private void requireRewardWriteAccess(HttpServletRequest request, UUID eventId) {
+        AccountRole role = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
+        if (role == AccountRole.ADMIN || role == AccountRole.SUPER_ADMIN) {
+            return;
+        }
+        UUID callerId = currentUserId(request);
+        if (role == AccountRole.ORGANIZER) {
+            if (eventService.findOne(eventId).organizerUserId().equals(callerId)) {
+                return;
+            }
+            throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Event ownership required");
+        }
+        if (role == AccountRole.STAFF) {
+            var assignment = eventStaffAssignmentRepository
+                    .findByEventIdAndStaffUserIdAndActiveTrue(eventId, callerId)
+                    .orElseThrow(() -> new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException(
+                            "Staff user is not actively assigned to this event"));
+            if (assignment.isCanManageRewards()) {
+                return;
+            }
+            throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException(
+                    "Staff user is not allowed to manage rewards for this event");
+        }
+        throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Organizer or admin access required");
     }
 
     private void requireOwnerOrStaff(HttpServletRequest request, UUID eventId) {

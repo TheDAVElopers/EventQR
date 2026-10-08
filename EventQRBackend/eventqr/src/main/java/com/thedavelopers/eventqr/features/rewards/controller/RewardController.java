@@ -65,7 +65,7 @@ public class RewardController {
     // Intentionally unguarded: attendee-floor browse semantics for the reward catalog.
     @GetMapping("/event/{eventId}")
     public ResponseEntity<ApiResponse<List<RewardResponse>>> findRewards(@PathVariable UUID eventId) {
-        return ResponseEntity.ok(ApiResponse.success(rewardService.findRewards(eventId)));
+        return ResponseEntity.ok(ApiResponse.success(rewardService.findRewardsForAttendee(eventId)));
     }
 
     @GetMapping("/balance/{eventId}/{attendeeUserId}")

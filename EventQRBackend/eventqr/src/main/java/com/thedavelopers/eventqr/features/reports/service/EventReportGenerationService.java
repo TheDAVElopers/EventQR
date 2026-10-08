@@ -20,8 +20,6 @@ import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +43,10 @@ import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
 
+/**
+ * Builds organizer reports on demand. Deliberately NOT cached: every call re-runs the organizer
+ * ownership check and returns live data, so a cached result can never leak across callers.
+ */
 @Service
 @Transactional(readOnly = true)
 public class EventReportGenerationService {
@@ -73,7 +75,6 @@ public class EventReportGenerationService {
         this.objectMapper = objectMapper;
     }
 
-    @Cacheable(cacheNames = "report-summaries", key = "#eventId")
     public EventReportSummaryResponse summary(UUID organizerUserId, UUID eventId) {
         Event event = requireOrganizerEvent(organizerUserId, eventId);
         List<EventRegistration> registrations = registrationRepository.findByEventId(eventId);
@@ -88,10 +89,11 @@ public class EventReportGenerationService {
         return new EventReportSummaryResponse(eventId, event.getTitle(), registered, checkedIn, exited, hasAnyRecords);
     }
 
-    @Cacheable(cacheNames = "report-snapshots",
-               key = "#eventId + ':' + #reportType + ':' + #filters.startDate() + ':' + #filters.endDate() + ':' + #filters.status() + ':' + #filters.attendeeQuery()")
     public EventReportResponse generate(UUID organizerUserId, UUID eventId, ReportType reportType, EventReportFilters filters) {
         validateDateRange(filters);
+        if (filters != null && filters.attendeeQuery() != null && filters.attendeeQuery().length() > MAX_ATTENDEE_QUERY_LENGTH) {
+            throw new BadRequestException("attendeeQuery must be at most " + MAX_ATTENDEE_QUERY_LENGTH + " characters");
+        }
         Event event = requireOrganizerEvent(organizerUserId, eventId);
         List<EventRegistration> registrations = registrationRepository.findByEventId(eventId);
         List<TransactionLog> transactions = transactionLogRepository.findByEventIdOrderByScannedAtDesc(eventId);
@@ -100,7 +102,7 @@ public class EventReportGenerationService {
                 .collect(Collectors.toMap(EventRegistration::getAttendeeUserId, registration -> registration, (first, second) -> first));
 
         ReportAssembly assembly = switch (reportType) {
-            case ROSTER -> buildRoster(event, registrations, filters);
+            case ROSTER -> buildRoster(event, registrations, registrationByUser, filters);
             case NO_SHOWS -> buildNoShows(event, registrations, filters);
             case ENTRY_LOGS -> buildEntryLogs(event, registrationByUser, transactions, filters);
             case ATTENDANCE -> buildAttendance(event, registrationByUser, transactions, filters);
@@ -126,12 +128,14 @@ public class EventReportGenerationService {
                 assembly.columns(),
                 assembly.rows().stream().map(RowData::row).toList(),
                 assembly.chartSeries(),
+                assembly.chartSeries().values().stream().mapToLong(Long::longValue).sum(),
                 emptyState,
                 normalizeFilters(filters)
         );
     }
 
-    private ReportAssembly buildRoster(Event event, List<EventRegistration> registrations, EventReportFilters filters) {
+    private ReportAssembly buildRoster(Event event, List<EventRegistration> registrations,
+                                       Map<UUID, EventRegistration> registrationByUser, EventReportFilters filters) {
         List<String> columns = List.of("Name", "Registration Status", "Registered On");
         List<RowData> all = registrations.stream()
                 .sorted(Comparator.comparing(EventRegistration::getRegisteredAt, Comparator.nullsLast(Comparator.reverseOrder())))
@@ -143,12 +147,14 @@ public class EventReportGenerationService {
                         )),
                         registration.getRegisteredAt(),
                         safe(registration.getAttendeeName()),
-                        null
+                        null,
+                        registration.getAttendeeUserId(),
+                        0L
                 )).toList();
 
         List<RowData> filtered = applyDateFilter(all, filters)
                 .stream()
-                .filter(row -> attendeeMatches(filters, row.attendeeName()))
+                .filter(row -> attendeeMatches(filters, row, registrationByUser))
                 .toList();
 
         Map<String, Long> chart = chartBy(columns.get(1), filtered.stream()
@@ -213,13 +219,15 @@ public class EventReportGenerationService {
                         )),
                         transaction.getScannedAt(),
                         safeAttendeeName(registrationByUser, transaction.getAttendeeUserId()),
-                        transaction.getTransactionResult()
+                        transaction.getTransactionResult(),
+                        transaction.getAttendeeUserId(),
+                        0L
                 ))
                 .toList();
 
         List<RowData> filtered = applyStatusFilter(applyDateFilter(all, filters), filters)
                 .stream()
-                .filter(row -> attendeeMatches(filters, row.attendeeName()))
+                .filter(row -> attendeeMatches(filters, row, registrationByUser))
                 .toList();
 
         Map<String, Long> chart = chartBy("Activity", filtered.stream()
@@ -263,7 +271,9 @@ public class EventReportGenerationService {
                         )),
                         transaction.getScannedAt(),
                         safeAttendeeName(registrationByUser, transaction.getAttendeeUserId()),
-                        transaction.getTransactionResult()
+                        transaction.getTransactionResult(),
+                        transaction.getAttendeeUserId(),
+                        0L
                 ))
                 .toList();
 
@@ -296,7 +306,7 @@ public class EventReportGenerationService {
                                        Map<UUID, EventRegistration> registrationByUser,
                                        List<PointTransaction> pointTransactions,
                                        EventReportFilters filters) {
-        List<String> columns = List.of("Name", "Points Earned", "Source Activity");
+        List<String> columns = List.of("Name", "Points (+/-)", "Source Activity");
         List<RowData> all = pointTransactions.stream()
                 .sorted(Comparator.comparing(PointTransaction::getOccurredAt, Comparator.nullsLast(Comparator.reverseOrder())))
                 .map(transaction -> new RowData(
@@ -307,17 +317,22 @@ public class EventReportGenerationService {
                         )),
                         transaction.getOccurredAt(),
                         safeAttendeeName(registrationByUser, transaction.getAttendeeUserId()),
-                        null
+                        null,
+                        transaction.getAttendeeUserId(),
+                        transaction.getPointsChanged()
                 ))
                 .toList();
 
         List<RowData> filtered = applyDateFilter(all, filters)
                 .stream()
-                .filter(row -> attendeeMatches(filters, row.attendeeName()))
+                .filter(row -> attendeeMatches(filters, row, registrationByUser))
                 .toList();
 
+        // Chart sums POSITIVE points awarded per activity (not row counts); deductions are excluded.
         Map<String, Long> chart = chartBy("Source", filtered.stream()
-                .collect(Collectors.groupingBy(row -> row.row().values().get(2), LinkedHashMap::new, Collectors.counting())));
+                .filter(row -> row.points() > 0)
+                .collect(Collectors.groupingBy(row -> row.row().values().get(2), LinkedHashMap::new,
+                        Collectors.summingLong(RowData::points))));
         return new ReportAssembly("Points Report", columns, all, filtered, chart);
     }
 
@@ -352,12 +367,28 @@ public class EventReportGenerationService {
         return rows.stream().filter(matcher).toList();
     }
 
-    private boolean attendeeMatches(EventReportFilters filters, String attendeeName) {
+    private boolean attendeeMatches(EventReportFilters filters, RowData row,
+                                    Map<UUID, EventRegistration> registrationByUser) {
         if (filters == null || filters.attendeeQuery() == null || filters.attendeeQuery().isBlank()) {
             return true;
         }
-        return safe(attendeeName).toLowerCase(Locale.ENGLISH)
-                .contains(filters.attendeeQuery().trim().toLowerCase(Locale.ENGLISH));
+        String query = filters.attendeeQuery().trim().toLowerCase(Locale.ENGLISH);
+        if (safe(row.attendeeName()).toLowerCase(Locale.ENGLISH).contains(query)) {
+            return true;
+        }
+        EventRegistration registration = row.attendeeUserId() == null ? null : registrationByUser.get(row.attendeeUserId());
+        if (registration == null) {
+            return false;
+        }
+        if (safe(registration.getAttendeeEmail()).toLowerCase(Locale.ENGLISH).contains(query)) {
+            return true;
+        }
+        if (registration.getRegistrationNumber() != null) {
+            String number = String.valueOf(registration.getRegistrationNumber());
+            String numberQuery = query.startsWith("#") ? query.substring(1).trim() : query;
+            return !numberQuery.isEmpty() && number.contains(numberQuery);
+        }
+        return false;
     }
 
     private EventReportFilters normalizeFilters(EventReportFilters filters) {
@@ -399,7 +430,9 @@ public class EventReportGenerationService {
                 new EventReportRow(List.of(value1, value2, value3)),
                 transaction.getScannedAt(),
                 safeAttendeeName(registrationByUser, transaction.getAttendeeUserId()),
-                transaction.getTransactionResult()
+                transaction.getTransactionResult(),
+                transaction.getAttendeeUserId(),
+                0L
         );
     }
 
@@ -413,7 +446,9 @@ public class EventReportGenerationService {
                 new EventReportRow(List.of(value1, value2, value3, value4)),
                 transaction.getScannedAt(),
                 safeAttendeeName(registrationByUser, transaction.getAttendeeUserId()),
-                transaction.getTransactionResult()
+                transaction.getTransactionResult(),
+                transaction.getAttendeeUserId(),
+                0L
         );
     }
 
@@ -466,16 +501,30 @@ public class EventReportGenerationService {
         }
     }
 
+    private static final int CHART_TOP_CATEGORIES = 5;
+    private static final int MAX_ATTENDEE_QUERY_LENGTH = 100;
+
+    /** Top 5 categories by value plus an "Other" bucket so the series always sums to the full total. */
     private Map<String, Long> chartBy(String key, Map<String, Long> values) {
         if (values.isEmpty()) {
             return Map.of(key, 0L);
         }
-        LinkedHashMap<String, Long> sorted = values.entrySet().stream()
-                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
-                .limit(6)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (first, second) -> first,
-                        LinkedHashMap::new));
-        return sorted;
+        List<Map.Entry<String, Long>> sorted = values.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed().thenComparing(Map.Entry.comparingByKey()))
+                .toList();
+        LinkedHashMap<String, Long> result = new LinkedHashMap<>();
+        long other = 0L;
+        for (int i = 0; i < sorted.size(); i++) {
+            if (i < CHART_TOP_CATEGORIES) {
+                result.put(sorted.get(i).getKey(), sorted.get(i).getValue());
+            } else {
+                other += sorted.get(i).getValue();
+            }
+        }
+        if (other > 0) {
+            result.merge("Other", other, Long::sum);
+        }
+        return result;
     }
 
     private String prettyResult(TransactionResult result) {
@@ -529,7 +578,11 @@ public class EventReportGenerationService {
         return value == null ? "" : value;
     }
 
-    private record RowData(EventReportRow row, Instant occurredAt, String attendeeName, TransactionResult result) {
+    private record RowData(EventReportRow row, Instant occurredAt, String attendeeName, TransactionResult result,
+                           UUID attendeeUserId, long points) {
+        RowData(EventReportRow row, Instant occurredAt, String attendeeName, TransactionResult result) {
+            this(row, occurredAt, attendeeName, result, null, 0L);
+        }
     }
 
     private record ReportAssembly(String title,

@@ -239,9 +239,11 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
         val events = load.data.approvedOnly()
         val activeEvents = events.filter { it.lifecycleStatus() == "Active" }
         val selected = repository.resolveSelectedEvent(events, selectedEventId())
-        val totalAttendees = dashboardData?.totalAttendees ?: events.sumOf { it.registeredCount }
+        // Counted-as-registered across approved/active/ended events, from the backend.
+        val totalAttendees = dashboardData?.totalRegistrations ?: dashboardData?.totalAttendees ?: events.sumOf { it.registeredCount }
         val totalTransactions = dashboardData?.totalTransactions ?: events.sumOf { it.totalTransactions }
-        val totalPoints = if (events.isNotEmpty()) {
+        // Reward redemptions (a count of redeemed rewards, not points).
+        val totalPoints = dashboardData?.rewardRedemptions ?: if (events.isNotEmpty()) {
             events.sumOf { it.rewardRedemptions }
         } else {
             dashboardData?.recentEvents?.sumOf { it.rewardRedemptions } ?: 0L

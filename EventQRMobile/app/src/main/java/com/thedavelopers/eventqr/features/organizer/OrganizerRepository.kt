@@ -172,18 +172,7 @@ class OrganizerRepository(private val context: Context) {
     }
 
     suspend fun addStaffForMvp(event: OrganizerMvpEvent, staff: OrganizerMvpStaff): OrganizerMvpLoad<OrganizerMvpStaff> {
-        val permissionLower = staff.permissions.joinToString("|").lowercase()
-        val request = StaffAssignmentRequestDto(
-            staffUserId = staff.id.toUuidOrNull(),
-            email = staff.email,
-            name = staff.name,
-            roleLabel = staff.roleLabel,
-            canScan = permissionLower.contains("scan"),
-            canPrintId = permissionLower.contains("print"),
-            canViewLogs = permissionLower.contains("log"),
-            canManageRewards = permissionLower.contains("reward"),
-            permissions = staff.permissions,
-        )
+        val request = buildStaffAssignmentRequest(staff)
         return when (val result = addOrganizerStaff(event.id, request)) {
             is NetworkResult.Success -> OrganizerMvpLoad(result.data.toMvpStaff(event.title), OrganizerMvpDataSource.BACKEND)
             is NetworkResult.Error -> OrganizerMvpLoad(staff, OrganizerMvpDataSource.ERROR, result.message)
@@ -191,17 +180,9 @@ class OrganizerRepository(private val context: Context) {
         }
     }
 
+    /** PATCH /organizer/events/{eventId}/staff/{assignmentId}: [staff].id is the ASSIGNMENT id, not the user id. */
     suspend fun updateStaffForMvp(event: OrganizerMvpEvent, staff: OrganizerMvpStaff): OrganizerMvpLoad<OrganizerMvpStaff> {
-        val permissionLower = staff.permissions.joinToString("|").lowercase()
-        val request = StaffAssignmentUpdateRequestDto(
-            active = staff.accessStatus.equals("Active", ignoreCase = true),
-            roleLabel = staff.roleLabel,
-            canScan = permissionLower.contains("scan"),
-            canPrintId = permissionLower.contains("print"),
-            canViewLogs = permissionLower.contains("log"),
-            canManageRewards = permissionLower.contains("reward"),
-            permissions = staff.permissions,
-        )
+        val request = buildStaffUpdateRequest(staff)
         return when (val result = updateOrganizerStaff(event.id, staff.id, request)) {
             is NetworkResult.Success -> OrganizerMvpLoad(result.data.toMvpStaff(event.title), OrganizerMvpDataSource.BACKEND)
             is NetworkResult.Error -> OrganizerMvpLoad(staff, OrganizerMvpDataSource.ERROR, result.message)
@@ -424,6 +405,10 @@ private fun OrganizerAttendeeDto.toMvpAttendee(): OrganizerMvpAttendee = Organiz
     qrCredentialStatus = qrCredentialStatus ?: if (qrCredentialId != null) "Issued" else "Pending",
     recentTransactions = (recentTransactions ?: emptyList()).mapNotNull { it.toMvpTransactionEntry() },
     recentRejectedScans = recentRejectedScans,
+    countedAsRegistered = countedAsRegistered ?: !(
+        currentEventStatus.equals("Cancelled", ignoreCase = true) ||
+            currentEventStatus.equals("No Show", ignoreCase = true)
+        ),
 )
 
 private fun JsonElement.toMvpTransactionEntry(): OrganizerMvpTransactionEntry? = when {
@@ -474,12 +459,17 @@ private fun OrganizerStaffDto.toMvpStaff(eventTitle: String): OrganizerMvpStaff 
     addedDate = DateFormatters.formatInstant(addedAt),
     permissions = permissions.ifEmpty {
         buildList {
-            if (canScan) add("Scan QR")
-            if (canPrintId) add("Print ID")
-            if (canViewLogs) add("View Logs")
-            if (canManageRewards) add("Manage Rewards")
+            if (canScan) add(StaffPermissions.SCAN)
+            if (canPrintId) add(StaffPermissions.PRINT_ID)
+            if (canViewLogs) add(StaffPermissions.VIEW_LOGS)
+            if (canManageRewards) add(StaffPermissions.MANAGE_REWARDS)
         }
     },
+    promotedToStaff = promotedToStaff,
+    canScan = canScan,
+    canPrintId = canPrintId,
+    canViewLogs = canViewLogs,
+    canManageRewards = canManageRewards,
 )
 
 private fun OrganizerUserSearchDto.toAvailableStaff(): OrganizerMvpStaff = OrganizerMvpStaff(
@@ -491,7 +481,9 @@ private fun OrganizerUserSearchDto.toAvailableStaff(): OrganizerMvpStaff = Organ
     roleLabel = if (role.equals("STAFF", ignoreCase = true)) "Scanner" else "Support Staff",
     accessStatus = status ?: "Available",
     addedDate = "Not added",
-    permissions = listOf("Scan QR", "View attendee details"),
+    // Real defaults for a new assignment: scan only. The organizer picks the rest before assigning.
+    permissions = listOf(StaffPermissions.SCAN),
+    accountRole = role.orEmpty(),
 )
 
 private fun OrganizerScanPurposeDto.toMvpScanPurpose(): OrganizerMvpScanPurpose = OrganizerMvpScanPurpose(
@@ -519,6 +511,28 @@ private fun OrganizerMvpScanPurpose.toOrganizerRequest(): OrganizerScanPurposeRe
     duplicateRuleSummary = duplicateRule,
     requiredSelectionLabel = requiredSelectionLabel,
     description = description,
+)
+
+/** Add-staff body: Scan QR is always granted, the other flags come from the permission switches. */
+internal fun buildStaffAssignmentRequest(staff: OrganizerMvpStaff) = StaffAssignmentRequestDto(
+    staffUserId = staff.id.toUuidOrNull(),
+    email = staff.email,
+    name = staff.name,
+    roleLabel = staff.roleLabel,
+    canScan = true,
+    canPrintId = staff.canPrintId,
+    canViewLogs = staff.canViewLogs,
+    canManageRewards = staff.canManageRewards,
+)
+
+/** Update body for an existing assignment ([OrganizerMvpStaff.id] is the assignment id). */
+internal fun buildStaffUpdateRequest(staff: OrganizerMvpStaff) = StaffAssignmentUpdateRequestDto(
+    active = staff.accessStatus.equals("Active", ignoreCase = true),
+    roleLabel = staff.roleLabel,
+    canScan = true,
+    canPrintId = staff.canPrintId,
+    canViewLogs = staff.canViewLogs,
+    canManageRewards = staff.canManageRewards,
 )
 
 private fun String.toUuidOrNull(): UUID? = runCatching { UUID.fromString(this) }.getOrNull()

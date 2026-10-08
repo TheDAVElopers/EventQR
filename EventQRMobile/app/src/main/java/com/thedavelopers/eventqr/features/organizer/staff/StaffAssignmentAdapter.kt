@@ -10,6 +10,7 @@ import com.thedavelopers.eventqr.features.organizer.OrganizerMvpStaff
 
 class StaffAssignmentAdapter(
     private val onRemoveClicked: (OrganizerMvpStaff) -> Unit,
+    private val onEditPermissionsClicked: (OrganizerMvpStaff) -> Unit = {},
 ) : RecyclerView.Adapter<StaffAssignmentAdapter.StaffViewHolder>() {
     private val items = mutableListOf<OrganizerMvpStaff>()
 
@@ -36,11 +37,18 @@ class StaffAssignmentAdapter(
         private val nameText: TextView = itemView.findViewById(R.id.txtStaffName)
         private val emailText: TextView = itemView.findViewById(R.id.txtStaffEmail)
         private val removeText: TextView = itemView.findViewById(R.id.txtRemoveStaff)
+        private val permissionsText: TextView = itemView.findViewById(R.id.txtStaffPermissions)
+        private val editPermissionsText: TextView = itemView.findViewById(R.id.txtEditStaffPermissions)
 
         fun bind(item: OrganizerMvpStaff) {
             avatarInitial.text = item.name.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "?"
             nameText.text = item.name
             emailText.text = item.email
+            permissionsText.text = itemView.context.getString(
+                R.string.staff_permissions_summary,
+                staffPermissionSummary(itemView.context, item),
+            )
+            editPermissionsText.setOnClickListener { onEditPermissionsClicked(item) }
             removeText.setOnClickListener { onRemoveClicked(item) }
         }
     }

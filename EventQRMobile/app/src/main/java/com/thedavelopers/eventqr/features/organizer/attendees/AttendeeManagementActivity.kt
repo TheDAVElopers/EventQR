@@ -34,6 +34,8 @@ import com.thedavelopers.eventqr.features.organizer.intentEventId
 import com.thedavelopers.eventqr.features.organizer.resolveSelectedEvent
 import com.thedavelopers.eventqr.features.organizer.saveSelectedEventId
 import com.thedavelopers.eventqr.features.organizer.selectedEventId
+import com.thedavelopers.eventqr.features.organizer.checkedInTotal
+import com.thedavelopers.eventqr.features.organizer.registeredTotal
 import com.thedavelopers.eventqr.features.organizer.statusBucket
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -50,7 +52,7 @@ open class AttendeeManagementActivity : AppCompatActivity() {
     private lateinit var emptyStateSub: TextView
     private lateinit var txtTotal: TextView
     private lateinit var txtCheckedIn: TextView
-    private lateinit var txtNoShow: TextView
+    private lateinit var txtExited: TextView
     private lateinit var txtEventTitle: TextView
     private lateinit var txtEventSelectorDate: TextView
     private lateinit var eventSelectorHost: LinearLayout
@@ -68,7 +70,9 @@ open class AttendeeManagementActivity : AppCompatActivity() {
 
         txtTotal = findViewById(R.id.txtTotalCount)
         txtCheckedIn = findViewById(R.id.txtCheckedInCount)
-        txtNoShow = findViewById(R.id.txtNoShowCount)
+        // The "No Show" tile is hidden: nothing in the system sets RegistrationStatus.NO_SHOW yet, so it would
+        // always read 0. The third tile shows Exited instead.
+        txtExited = findViewById(R.id.txtExitedCount)
         txtEventTitle = findViewById(R.id.txtEventTitle)
         txtEventSelectorDate = findViewById(R.id.txtEventSelectorDate)
         swipeRefresh = findViewById(R.id.swipeRefreshAttendeeManagement)
@@ -114,9 +118,7 @@ open class AttendeeManagementActivity : AppCompatActivity() {
             setupEventSelector(events)
 
             val eventId = intentEventId() ?: selectedEventId().takeIf { it.isNotBlank() }
-            val resolvedEvent = if (eventId != null) {
-                resolveSelectedEvent(events, eventId)
-            } else null
+            val resolvedEvent = resolveSelectedEvent(events, eventId)
 
             if (resolvedEvent != null) {
                 selectedEvent = resolvedEvent
@@ -309,12 +311,14 @@ open class AttendeeManagementActivity : AppCompatActivity() {
 
     private fun render(load: OrganizerMvpLoad<List<OrganizerMvpAttendee>>) {
         skeletonLoading.visibility = View.GONE
-        val checkedIn = attendees.count { it.statusBucket().equals("Checked In", ignoreCase = true) }
-        val noShow = attendees.count { it.statusBucket().equals("No Show", ignoreCase = true) }
+        val checkedIn = attendees.checkedInTotal()
+        val exited = attendees.count { it.statusBucket() == "Exited" }
 
-        txtTotal.text = attendees.size.toString()
+        // Total counts only attendees the backend counts as registered (Cancelled / No Show are excluded).
+        // There is no room for a separate Cancelled tile, so cancelled attendees are not shown in the stats.
+        txtTotal.text = attendees.registeredTotal().toString()
         txtCheckedIn.text = checkedIn.toString()
-        txtNoShow.text = noShow.toString()
+        txtExited.text = exited.toString()
 
         adapter.submitItems(attendees)
         emptyStateLayout.visibility = if (attendees.isEmpty()) View.VISIBLE else View.GONE

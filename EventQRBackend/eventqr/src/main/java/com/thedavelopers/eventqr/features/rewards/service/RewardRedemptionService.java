@@ -63,7 +63,7 @@ private final NotificationService notificationService;
         TransactionLog scanLog = transactionLogRepository.findById(request.redemptionScanLogId())
                 .orElseThrow(() -> new ResourceNotFoundException("Redemption scan log not found"));
 
-        Reward reward = rewardRepository.findById(request.rewardId())
+        Reward reward = rewardRepository.findByIdForUpdate(request.rewardId())
                 .orElseThrow(() -> new ResourceNotFoundException("Reward not found"));
         if (!reward.getEventId().equals(request.eventId())) {
             return reject(request, reward, scanLog, "Reward does not belong to the event");
@@ -85,18 +85,21 @@ private final NotificationService notificationService;
             return reject(request, reward, scanLog, duplicateReason);
         }
 
+        // Single atomic guarded decrement (reward row is already locked above); NULL stock = unlimited.
+        // Done before touching the balance so an out-of-stock reject never costs points.
+        Integer stockBefore = reward.getStockQuantity();
+        if (rewardRepository.decrementStockIfAvailable(reward.getId()) == 0) {
+            return reject(request, reward, scanLog, "Reward is out of stock");
+        }
+
         balance.setPointsBalance(balance.getPointsBalance() - reward.getPointsRequired());
         attendeePointBalanceRepository.save(balance);
 
-        if (reward.getStockQuantity() != null) {
-            reward.setStockQuantity(reward.getStockQuantity() - 1);
-            rewardRepository.save(reward);
-            if (reward.getStockQuantity() == 0 && notificationService != null) {
-                Event event = eventRepository.findById(request.eventId()).orElse(null);
-                if (event != null) {
-                    notificationService.createRewardExhaustedNotification(request.eventId(), event.getOrganizerUserId(), event.getTitle(), reward.getName());
-                    notificationService.createRewardExhaustedAttendeeNotifications(List.of(event));
-                }
+        if (stockBefore != null && stockBefore == 1 && notificationService != null) {
+            Event event = eventRepository.findById(request.eventId()).orElse(null);
+            if (event != null) {
+                notificationService.createRewardExhaustedNotification(request.eventId(), event.getOrganizerUserId(), event.getTitle(), reward.getName());
+                notificationService.createRewardExhaustedAttendeeNotifications(List.of(event));
             }
         }
 
