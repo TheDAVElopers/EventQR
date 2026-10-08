@@ -26,6 +26,7 @@ import com.thedavelopers.eventqr.features.reports.model.ReportFilterStatus;
 import com.thedavelopers.eventqr.features.reports.model.ReportType;
 import com.thedavelopers.eventqr.features.reports.service.EventReportGenerationService;
 import com.thedavelopers.eventqr.features.reports.service.ReportExportService;
+import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
 import com.thedavelopers.eventqr.shared.security.JwtService;
 
@@ -51,7 +52,7 @@ public class EventReportController {
     @GetMapping("/summary")
     public ResponseEntity<ApiResponse<EventReportSummaryResponse>> summary(HttpServletRequest request,
                                                                            @PathVariable UUID eventId) {
-        EventReportSummaryResponse response = reportGenerationService.summary(currentUserId(request), eventId);
+        EventReportSummaryResponse response = reportGenerationService.summary(currentUserId(request), currentRole(request), eventId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -70,6 +71,7 @@ public class EventReportController {
                                                                     ReportFilterStatus status) {
         EventReportResponse response = reportGenerationService.generate(
                 currentUserId(request),
+                currentRole(request),
                 eventId,
                 reportType,
                 new EventReportFilters(startDate, endDate, attendeeQuery, status)
@@ -87,6 +89,7 @@ public class EventReportController {
                 : exportRequest.status();
         EventReportResponse report = reportGenerationService.generate(
                 currentUserId(request),
+                currentRole(request),
                 eventId,
                 reportType,
                 new EventReportFilters(
@@ -125,6 +128,10 @@ public class EventReportController {
             return ReportExportFormat.CSV;
         }
         return ReportExportFormat.valueOf(format.trim().toUpperCase());
+    }
+
+    private AccountRole currentRole(HttpServletRequest request) {
+        return jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
     }
 
     private UUID currentUserId(HttpServletRequest request) {

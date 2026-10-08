@@ -92,6 +92,24 @@ class EventReportGenerationServiceTest {
     }
 
     @Test
+    void adminsAndSuperAdminsMayReadAnyEventButOtherRolesStillNeedOwnership() {
+        when(registrations.findByEventId(eventId)).thenReturn(List.of(reg(UUID.randomUUID(), "A", "a@x.io", 1, RegistrationStatus.REGISTERED)));
+
+        for (var role : List.of(com.thedavelopers.eventqr.shared.constants.AccountRole.ADMIN,
+                com.thedavelopers.eventqr.shared.constants.AccountRole.SUPER_ADMIN)) {
+            assertThat(service.generate(stranger, role, eventId, ReportType.ROSTER, none()).rows()).hasSize(1);
+            assertThat(service.summary(stranger, role, eventId).registeredCount()).isEqualTo(1);
+        }
+        for (var role : List.of(com.thedavelopers.eventqr.shared.constants.AccountRole.ORGANIZER,
+                com.thedavelopers.eventqr.shared.constants.AccountRole.STAFF,
+                com.thedavelopers.eventqr.shared.constants.AccountRole.ATTENDEE)) {
+            assertThatThrownBy(() -> service.generate(stranger, role, eventId, ReportType.ROSTER, none()))
+                    .isInstanceOf(ForbiddenException.class);
+            assertThatThrownBy(() -> service.summary(stranger, role, eventId)).isInstanceOf(ForbiddenException.class);
+        }
+    }
+
+    @Test
     void sameCallTwiceReturnsFreshData() {
         UUID u = UUID.randomUUID();
         when(registrations.findByEventId(eventId))

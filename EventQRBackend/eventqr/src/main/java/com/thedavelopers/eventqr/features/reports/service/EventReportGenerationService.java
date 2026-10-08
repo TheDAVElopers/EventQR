@@ -39,6 +39,7 @@ import com.thedavelopers.eventqr.features.transactions.repository.TransactionLog
 import com.thedavelopers.eventqr.shared.constants.RegistrationStatus;
 import com.thedavelopers.eventqr.shared.constants.TransactionResult;
 import com.thedavelopers.eventqr.shared.constants.TransactionType;
+import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
@@ -76,7 +77,12 @@ public class EventReportGenerationService {
     }
 
     public EventReportSummaryResponse summary(UUID organizerUserId, UUID eventId) {
-        Event event = requireOrganizerEvent(organizerUserId, eventId);
+        return summary(organizerUserId, null, eventId);
+    }
+
+    /** @param callerRole ADMIN and SUPER_ADMIN may read any event's reports; everyone else must own the event. */
+    public EventReportSummaryResponse summary(UUID organizerUserId, AccountRole callerRole, UUID eventId) {
+        Event event = requireReportAccess(organizerUserId, callerRole, eventId);
         List<EventRegistration> registrations = registrationRepository.findByEventId(eventId);
         // Registered = registrations excluding CANCELLED and NO_SHOW — must stay in sync with DashboardService canonical count
         long registered = registrations.stream()
@@ -90,11 +96,16 @@ public class EventReportGenerationService {
     }
 
     public EventReportResponse generate(UUID organizerUserId, UUID eventId, ReportType reportType, EventReportFilters filters) {
+        return generate(organizerUserId, null, eventId, reportType, filters);
+    }
+
+    public EventReportResponse generate(UUID organizerUserId, AccountRole callerRole, UUID eventId, ReportType reportType,
+            EventReportFilters filters) {
         validateDateRange(filters);
         if (filters != null && filters.attendeeQuery() != null && filters.attendeeQuery().length() > MAX_ATTENDEE_QUERY_LENGTH) {
             throw new BadRequestException("attendeeQuery must be at most " + MAX_ATTENDEE_QUERY_LENGTH + " characters");
         }
-        Event event = requireOrganizerEvent(organizerUserId, eventId);
+        Event event = requireReportAccess(organizerUserId, callerRole, eventId);
         List<EventRegistration> registrations = registrationRepository.findByEventId(eventId);
         List<TransactionLog> transactions = transactionLogRepository.findByEventIdOrderByScannedAtDesc(eventId);
         List<PointTransaction> pointTransactions = pointTransactionRepository.findByEventId(eventId);
@@ -401,6 +412,15 @@ public class EventReportGenerationService {
                 filters.attendeeQuery(),
                 filters.status() == null ? ReportFilterStatus.ALL : filters.status()
         );
+    }
+
+    private Event requireReportAccess(UUID userId, AccountRole callerRole, UUID eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+        if (callerRole == AccountRole.ADMIN || callerRole == AccountRole.SUPER_ADMIN) {
+            return event;
+        }
+        return requireOrganizerEvent(userId, eventId);
     }
 
     private Event requireOrganizerEvent(UUID organizerUserId, UUID eventId) {

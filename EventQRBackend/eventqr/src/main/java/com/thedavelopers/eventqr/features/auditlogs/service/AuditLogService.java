@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.auditlogs.service;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -87,20 +88,38 @@ public class AuditLogService {
         Set<UUID> targetIds = logs.stream().map(AuditLog::getTargetUserId).filter(Objects::nonNull)
                 .collect(Collectors.toSet());
         Map<UUID, String> names = new HashMap<>();
+        Set<UUID> hiddenTargets = new HashSet<>();
         if (!targetIds.isEmpty()) {
             for (UserProfile user : userProfileRepository.findAllById(targetIds)) {
                 boolean hidden = callerRole != AccountRole.SUPER_ADMIN
                         && (user.getRole() == AccountRole.ADMIN || user.getRole() == AccountRole.SUPER_ADMIN);
-                if (!hidden) {
+                if (hidden) {
+                    hiddenTargets.add(user.getId());
+                } else {
                     names.put(user.getId(), user.getFullName());
                 }
             }
         }
-        return logs.stream().map(log -> mapToResponse(log, names.get(log.getTargetUserId()))).collect(Collectors.toList());
+        return logs.stream().map(log -> mapToResponse(log, names.get(log.getTargetUserId()),
+                hidesDetails(log, callerRole, names, hiddenTargets))).collect(Collectors.toList());
     }
 
-    private AuditLogResponse mapToResponse(AuditLog log, String targetUserFullName) {
-        return new AuditLogResponse(log.getId(), log.getAction(), log.getDetails(), log.getPerformedByUserId(),
+    /**
+     * Account actions store the target's name as their details, so those must be hidden with the target name: for
+     * ADMIN/SUPER_ADMIN targets, and for targets that no longer exist (their role can no longer be checked).
+     */
+    private boolean hidesDetails(AuditLog log, AccountRole callerRole, Map<UUID, String> visibleNames, Set<UUID> hiddenTargets) {
+        if (callerRole == AccountRole.SUPER_ADMIN || log.getTargetUserId() == null) {
+            return false;
+        }
+        if (hiddenTargets.contains(log.getTargetUserId())) {
+            return true;
+        }
+        return log.getAction() != null && log.getAction().startsWith("ACCOUNT_") && !visibleNames.containsKey(log.getTargetUserId());
+    }
+
+    private AuditLogResponse mapToResponse(AuditLog log, String targetUserFullName, boolean hideDetails) {
+        return new AuditLogResponse(log.getId(), log.getAction(), hideDetails ? null : log.getDetails(), log.getPerformedByUserId(),
                 log.getPerformedByFullName(), log.getEventId(), log.getTargetUserId(), log.getCreatedAt(), targetUserFullName);
     }
 

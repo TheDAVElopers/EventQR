@@ -142,6 +142,22 @@ class AuditLogServiceTest {
     }
 
     @Test
+    void aPlainAdminDoesNotSeeTheNameStoredInDetailsOfAnAdminOrVanishedTarget() {
+        UUID gone = UUID.randomUUID();
+        AuditLog nonAccount = entry(bobId);
+        nonAccount.setAction("EVENT_REQUEST_APPROVED");
+        List<AuditLog> logs = List.of(entry(aliceId), entry(bobId), entry(gone), nonAccount);
+        when(auditLogRepository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(logs));
+        when(userProfileRepository.findAllById(anyIterable())).thenReturn(List.of(
+                user(aliceId, "Alice", AccountRole.STAFF), user(bobId, "Bob", AccountRole.ADMIN)));
+
+        assertThat(service.findAll(0, 20, null, AccountRole.ADMIN).getContent()).extracting(AuditLogResponse::details)
+                .containsExactly("details", null, null, null);
+        assertThat(service.findAll(0, 20, null, AccountRole.SUPER_ADMIN).getContent()).extracting(AuditLogResponse::details)
+                .containsExactly("details", "details", "details", "details");
+    }
+
+    @Test
     void actionPrefixUsesTheDerivedPrefixQueryWithTheSameSort() {
         when(auditLogRepository.findByActionStartingWith(any(), any(Pageable.class))).thenReturn(new PageImpl<>(List.of()));
 

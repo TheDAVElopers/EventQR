@@ -27,6 +27,7 @@ import com.thedavelopers.eventqr.features.organizer.MUTED
 import com.thedavelopers.eventqr.features.organizer.NAV_REWARDS
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpEvent
 import com.thedavelopers.eventqr.features.organizer.OrganizerRepository
+import com.thedavelopers.eventqr.features.organizer.organizerEventDateLine
 import com.thedavelopers.eventqr.features.organizer.PURPLE
 import com.thedavelopers.eventqr.features.organizer.TEXT
 import com.thedavelopers.eventqr.features.organizer.approvedOnly
@@ -204,6 +205,10 @@ open class ManageRewardsActivity : AppCompatActivity() {
         content.addView(rewardHost)
     }
 
+    /** Date shown under an event name: the backend's date with the time-of-day and zone stripped (never a raw ISO stamp). */
+    private fun eventDateLabel(event: OrganizerMvpEvent): String =
+        organizerEventDateLine(event.shortDate.takeIf { it.isNotBlank() && it != "-" } ?: event.dateTime.takeIf { it != "-" }.orEmpty(), "", "")
+
     private fun customEventSelector(
         events: List<OrganizerMvpEvent>,
         selected: OrganizerMvpEvent,
@@ -218,7 +223,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
             ellipsize = android.text.TextUtils.TruncateAt.END
         }
         val subtitleText = text(
-            currentEvent.shortDate.takeIf { it.isNotBlank() && it != "-" } ?: currentEvent.dateTime.takeIf { it.isNotBlank() && it != "-" } ?: "",
+            eventDateLabel(currentEvent),
             13,
             false,
             MUTED,
@@ -284,7 +289,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
                         selectedIndex = index
                         val sel = approvedEvents[index]
                         titleText.text = sel.title.ifBlank { "Untitled Event" }
-                        subtitleText.text = sel.shortDate.takeIf { it.isNotBlank() && it != "-" } ?: sel.dateTime.takeIf { it.isNotBlank() && it != "-" } ?: ""
+                        subtitleText.text = eventDateLabel(sel)
                         popup?.dismiss()
                         onSelected(sel)
                     }
@@ -292,8 +297,8 @@ open class ManageRewardsActivity : AppCompatActivity() {
                         orientation = LinearLayout.VERTICAL
                         layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
                         addView(text(event.title.ifBlank { "Untitled Event" }, 15, true, if (isCurrent) PURPLE else TEXT))
-                        val dateStr = event.shortDate.takeIf { it.isNotBlank() && it != "-" } ?: event.dateTime
-                        if (dateStr.isNotBlank() && dateStr != "-") {
+                        val dateStr = eventDateLabel(event)
+                        if (dateStr.isNotBlank()) {
                             addView(text(dateStr, 12, false, MUTED))
                         }
                     })
@@ -304,10 +309,12 @@ open class ManageRewardsActivity : AppCompatActivity() {
         box.setOnClickListener {
             if (approvedEvents.isEmpty()) return@setOnClickListener
             popup?.dismiss()
+            // A long event list must scroll inside the popup instead of running off the screen.
+            val maxHeight = (resources.displayMetrics.heightPixels * 0.5f).toInt()
             popup = android.widget.PopupWindow(
-                buildDropdown(),
+                android.widget.ScrollView(this@ManageRewardsActivity).apply { addView(buildDropdown()) },
                 box.width.takeIf { it > 0 } ?: ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
+                if (approvedEvents.size > 6) maxHeight else ViewGroup.LayoutParams.WRAP_CONTENT,
                 true,
             ).apply {
                 isOutsideTouchable = true
