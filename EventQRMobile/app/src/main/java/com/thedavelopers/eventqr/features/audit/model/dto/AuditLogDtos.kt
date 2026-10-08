@@ -18,5 +18,6 @@ data class AuditLogResponse(
     val performedByFullName: String?,
     val eventId: UUID? = null,
     val targetUserId: UUID? = null,
+    val targetUserFullName: String? = null,
     val timestamp: Instant
 )

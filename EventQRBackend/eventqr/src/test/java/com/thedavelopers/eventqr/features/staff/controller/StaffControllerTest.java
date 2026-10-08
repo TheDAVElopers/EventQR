@@ -235,17 +235,18 @@ class StaffControllerTest {
         mvc.perform(get("/api/v1/staff/transactions").param("eventId", eventId.toString()).header("Authorization", AUTH))
                 .andExpect(status().isForbidden());
 
-        verify(transactionService, never()).findForStaff(any(), any(), any());
+        verify(transactionService, never()).findForStaff(any(), any(), any(), any());
     }
 
     @Test
     void anAssignedStaffMemberSeesTheirOwnTransactionsForTheEvent() throws Exception {
         assigned(true, EventStatus.ACTIVE);
-        when(transactionService.findForStaff(staffId, eventId, null)).thenReturn(List.of());
+        when(transactionService.findForStaff(eq(staffId), eq(eventId), eq(null), any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(org.springframework.data.domain.Page.empty(org.springframework.data.domain.PageRequest.of(0, 20)));
 
         mvc.perform(get("/api/v1/staff/transactions").param("eventId", eventId.toString()).header("Authorization", AUTH))
                 .andExpect(status().isOk());
 
-        verify(transactionService).findForStaff(eq(staffId), eq(eventId), eq(null));
+        verify(transactionService).findForStaff(eq(staffId), eq(eventId), eq(null), any(org.springframework.data.domain.Pageable.class));
     }
 }

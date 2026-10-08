@@ -82,7 +82,8 @@ class RegistrationRateLimitWebTest {
         RegistrationService registrationService = new RegistrationService(registrations, directory,
                 mock(NotificationService.class), mock(EventStaffAssignmentRepository.class), events, qrPort,
                 eventService, mock(QREmailService.class), mock(ApplicationEventPublisher.class),
-                new RegistrationRateLimiter());
+                new RegistrationRateLimiter(),
+                mock(com.thedavelopers.eventqr.features.rewards.repository.PointTransactionRepository.class));
         ReflectionTestUtils.setField(registrationService, "entityManager", mock(EntityManager.class));
 
         mvc = MockMvcBuilders.standaloneSetup(

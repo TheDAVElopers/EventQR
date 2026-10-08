@@ -26,6 +26,7 @@ import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationRe
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationSubmissionResponse;
 import com.thedavelopers.eventqr.features.registrations.service.RegistrationService;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
+import com.thedavelopers.eventqr.shared.constants.RegistrationStatus;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.interfaces.QrCredentialPort.QrCredentialSnapshot;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
@@ -89,9 +90,15 @@ public class RegistrationController {
     public ResponseEntity<ApiResponse<Page<RegistrationResponse>>> findByEvent(HttpServletRequest request,
                                                                                @PathVariable UUID eventId,
                                                                                @RequestParam(defaultValue = "0") int page,
-                                                                               @RequestParam(defaultValue = "20") int size) {
+                                                                               @RequestParam(defaultValue = "20") int size,
+                                                                               @RequestParam(required = false) String q,
+                                                                               @RequestParam(required = false) RegistrationStatus status) {
         requireEventAccess(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success(registrationService.findByEvent(eventId, PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100)))));
+        PageRequest pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100));
+        if ((q == null || q.isBlank()) && status == null) {
+            return ResponseEntity.ok(ApiResponse.success(registrationService.findByEvent(eventId, pageable)));
+        }
+        return ResponseEntity.ok(ApiResponse.success(registrationService.findByEvent(eventId, q, status, pageable)));
     }
 
     @PostMapping("/{registrationId}/qr")

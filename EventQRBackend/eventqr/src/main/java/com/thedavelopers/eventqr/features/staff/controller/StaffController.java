@@ -5,6 +5,9 @@ import java.util.UUID;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +31,8 @@ import com.thedavelopers.eventqr.features.rewards.service.RewardService;
 import com.thedavelopers.eventqr.features.scanning.service.ScanPurposeService;
 import com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResponse;
 import com.thedavelopers.eventqr.features.transactions.model.dto.ScanVerificationResponse;
+import com.thedavelopers.eventqr.features.transactions.model.dto.StaffTodaySummary;
+import com.thedavelopers.eventqr.features.transactions.model.dto.StaffTransactionSummary;
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionRequest;
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse;
 import com.thedavelopers.eventqr.features.transactions.service.TransactionService;
@@ -99,14 +104,32 @@ public class StaffController {
     }
 
     @GetMapping("/transactions")
-    public ResponseEntity<ApiResponse<List<TransactionResponse>>> myTransactions(HttpServletRequest request,
-                                                                                  @RequestParam(required = false) UUID eventId,
-                                                                                  @RequestParam(required = false) UUID purposeId) {
+    public ResponseEntity<ApiResponse<Page<TransactionResponse>>> myTransactions(HttpServletRequest request,
+                                                                                 @RequestParam(required = false) UUID eventId,
+                                                                                 @RequestParam(required = false) UUID purposeId,
+                                                                                 @RequestParam(defaultValue = "0") int page,
+                                                                                 @RequestParam(defaultValue = "20") int size) {
         UUID staffUserId = currentUserId(request);
         if (eventId != null) {
             requireActiveAssignment(request, eventId);
         }
-        return ResponseEntity.ok(ApiResponse.success(transactionService.findForStaff(staffUserId, eventId, purposeId)));
+        return ResponseEntity.ok(ApiResponse.success(transactionService.findForStaff(staffUserId, eventId, purposeId, pageable(page, size))));
+    }
+
+    @GetMapping("/transactions/summary")
+    public ResponseEntity<ApiResponse<StaffTransactionSummary>> myTransactionSummary(HttpServletRequest request,
+                                                                                     @RequestParam(required = false) UUID eventId,
+                                                                                     @RequestParam(required = false) UUID purposeId) {
+        UUID staffUserId = currentUserId(request);
+        if (eventId != null) {
+            requireActiveAssignment(request, eventId);
+        }
+        return ResponseEntity.ok(ApiResponse.success(transactionService.summarizeForStaff(staffUserId, eventId, purposeId)));
+    }
+
+    @GetMapping("/transactions/today/summary")
+    public ResponseEntity<ApiResponse<StaffTodaySummary>> myTodaySummary(HttpServletRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(transactionService.summarizeTodayForStaff(currentUserId(request))));
     }
 
     @GetMapping("/transactions/today")
@@ -194,10 +217,13 @@ public class StaffController {
     }
 
     @GetMapping("/events/{eventId}/transactions")
-    public ResponseEntity<ApiResponse<List<TransactionResponse>>> transactions(HttpServletRequest request,
-                                                                               @PathVariable UUID eventId) {
+    public ResponseEntity<ApiResponse<Page<TransactionResponse>>> transactions(HttpServletRequest request,
+                                                                                @PathVariable UUID eventId,
+                                                                                @RequestParam(required = false) UUID attendeeUserId,
+                                                                                @RequestParam(defaultValue = "0") int page,
+                                                                                @RequestParam(defaultValue = "20") int size) {
         requireActiveAssignment(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success(transactionService.findByEvent(eventId)));
+        return ResponseEntity.ok(ApiResponse.success(transactionService.findForEventStaff(eventId, attendeeUserId, pageable(page, size))));
     }
 
     @GetMapping("/events/{eventId}/transactions/today")
@@ -251,6 +277,10 @@ public class StaffController {
                                                                           @Valid @RequestBody PointAdjustmentRequest body) {
         requireActiveAssignment(request, eventId);
         return ResponseEntity.ok(ApiResponse.success("Points deducted", rewardService.deductPoints(eventId, body.attendeeUserId(), body.points(), body.reason())));
+    }
+
+    private static Pageable pageable(int page, int size) {
+        return PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100));
     }
 
     private TransactionRequest normalize(UUID eventId, TransactionRequest request) {

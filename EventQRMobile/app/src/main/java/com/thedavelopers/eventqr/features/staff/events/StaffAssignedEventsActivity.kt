@@ -20,7 +20,7 @@ import com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResp
 import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import java.time.Instant
-import kotlinx.coroutines.MainScope
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 
 open class StaffAssignedEventsActivity : AppCompatActivity() {
@@ -123,7 +123,7 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
         if (showLoading && !swipeRefresh.isRefreshing) {
             skeletonLoading.visibility = View.VISIBLE
         }
-        MainScope().launch {
+        lifecycleScope.launch {
             when (val result = repository.getEvents()) {
                 is NetworkResult.Success -> {
                     allEvents = result.data

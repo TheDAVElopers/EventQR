@@ -29,6 +29,7 @@ import com.thedavelopers.eventqr.features.uploads.model.dto.StoredFileResponse;
 import com.thedavelopers.eventqr.features.uploads.service.FileStorageService;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
+import com.thedavelopers.eventqr.shared.utils.LikePatterns;
 import com.thedavelopers.eventqr.shared.security.JwtService;
 
 @RestController
@@ -55,19 +56,27 @@ public class UserController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<UserResponse>>> list(HttpServletRequest request,
                                                                 @RequestParam(required = false) AccountRole role,
+                                                                @RequestParam(required = false) String q,
                                                                 @RequestParam(defaultValue = "0") int page,
                                                                 @RequestParam(defaultValue = "20") int size) {
         requireAdmin(request);
         AccountRole callerRole = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100), Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<UserResponse> users;
+        String pattern = LikePatterns.contains(q);
         if (callerRole == AccountRole.SUPER_ADMIN) {
-            users = role != null ? userService.findByRole(role, pageable) : userService.findAllUsers(pageable);
+            if (pattern != null) {
+                users = role != null ? userService.searchByRole(role, pattern, pageable) : userService.searchAllUsers(pattern, pageable);
+            } else {
+                users = role != null ? userService.findByRole(role, pageable) : userService.findAllUsers(pageable);
+            }
         } else if (role == AccountRole.ADMIN || role == AccountRole.SUPER_ADMIN) {
             // A plain ADMIN must never list admin accounts; an empty page keeps the contract uniform.
             users = Page.empty(pageable);
         } else if (role != null) {
-            users = userService.findByRole(role, pageable);
+            users = pattern != null ? userService.searchByRole(role, pattern, pageable) : userService.findByRole(role, pageable);
+        } else if (pattern != null) {
+            users = userService.searchByRoleNotIn(List.of(AccountRole.ADMIN, AccountRole.SUPER_ADMIN), pattern, pageable);
         } else {
             users = userService.findByRoleNotIn(List.of(AccountRole.ADMIN, AccountRole.SUPER_ADMIN), pageable);
         }

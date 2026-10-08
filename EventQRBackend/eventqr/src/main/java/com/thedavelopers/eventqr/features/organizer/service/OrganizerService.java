@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -249,22 +250,24 @@ public class OrganizerService {
     public List<OrganizerAttendeeResponse> attendees(UUID organizerUserId, UUID eventId, AccountRole role) {
         requireOrganizerEvent(organizerUserId, eventId, role);
         List<TransactionLog> logs = transactionLogRepository.findByEventId(eventId);
-        return registrationRepository.findByEventId(eventId).stream()
-                .map(registration -> toAttendee(registration, logs))
+        List<EventRegistration> registrations = registrationRepository.findByEventId(eventId);
+        Map<UUID, Integer> points = earnedPoints(eventId, registrations);
+        return registrations.stream()
+                .map(registration -> toAttendee(registration, logs, points.getOrDefault(registration.getAttendeeUserId(), 0)))
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public List<OrganizerAttendeeResponse> searchAttendees(UUID organizerUserId, UUID eventId, AccountRole role, String query) {
-        String safeQuery = query == null ? "" : query.trim().toLowerCase();
+        String safeQuery = query == null ? "" : query.trim().toLowerCase(java.util.Locale.ROOT);
         if (safeQuery.isBlank()) {
             return attendees(organizerUserId, eventId, role);
         }
         return attendees(organizerUserId, eventId, role).stream()
-                .filter(attendee -> attendee.name().toLowerCase().contains(safeQuery)
-                        || attendee.email().toLowerCase().contains(safeQuery)
-                        || attendee.registrationStatus().toLowerCase().contains(safeQuery)
-                        || attendee.currentEventStatus().toLowerCase().contains(safeQuery))
+                .filter(attendee -> attendee.name().toLowerCase(java.util.Locale.ROOT).contains(safeQuery)
+                        || attendee.email().toLowerCase(java.util.Locale.ROOT).contains(safeQuery)
+                        || attendee.registrationStatus().toLowerCase(java.util.Locale.ROOT).contains(safeQuery)
+                        || attendee.currentEventStatus().toLowerCase(java.util.Locale.ROOT).contains(safeQuery))
                 .toList();
     }
 
@@ -276,7 +279,8 @@ public class OrganizerService {
                 .orElseThrow(() -> new ResourceNotFoundException("Attendee not found for event"));
         registration.setStatus(com.thedavelopers.eventqr.shared.constants.RegistrationStatus.valueOf(status));
         registrationRepository.save(registration);
-        return toAttendee(registration, transactionLogRepository.findByEventId(eventId));
+        return toAttendee(registration, transactionLogRepository.findByEventId(eventId),
+                earnedPoints(eventId, List.of(registration)).getOrDefault(registration.getAttendeeUserId(), 0));
     }
 
     @Transactional(readOnly = true)
@@ -697,7 +701,26 @@ public class OrganizerService {
                 event.isRewardsEnabled(), event.getOrganizerUserId(), event.getEventLogoUrl());
     }
 
-    private OrganizerAttendeeResponse toAttendee(EventRegistration registration, List<TransactionLog> logs) {
+    /**
+     * Points earned per attendee for one event: sum of POSITIVE point_transactions (same rule as
+     * RegistrationService, so organizer and staff screens agree). One batched query.
+     */
+    private Map<UUID, Integer> earnedPoints(UUID eventId, List<EventRegistration> registrations) {
+        if (registrations.isEmpty()) {
+            return Map.of();
+        }
+        List<UUID> attendeeIds = registrations.stream().map(EventRegistration::getAttendeeUserId).distinct().toList();
+        Map<UUID, Integer> totals = new java.util.HashMap<>();
+        for (PointTransactionRepository.EarnedPointsRow row : pointTransactionRepository.sumEarnedPoints(List.of(eventId), attendeeIds)) {
+            if (eventId.equals(row.getEventId())) {
+                long total = row.getTotal() == null ? 0 : row.getTotal();
+                totals.put(row.getAttendeeUserId(), (int) Math.min(total, Integer.MAX_VALUE));
+            }
+        }
+        return totals;
+    }
+
+    private OrganizerAttendeeResponse toAttendee(EventRegistration registration, List<TransactionLog> logs, int pointsEarned) {
         List<TransactionLog> attendeeLogs = logs.stream()
                 .filter(log -> log.getRegistrationId().equals(registration.getId()))
                 .sorted(Comparator.comparing(TransactionLog::getScannedAt, Comparator.nullsLast(Comparator.reverseOrder())))
@@ -705,7 +728,7 @@ public class OrganizerService {
         return new OrganizerAttendeeResponse(registration.getAttendeeUserId(), registration.getId(), registration.getEventId(),
                 registration.getQrCredentialId(), registration.getAttendeeName(), registration.getAttendeeEmail(),
                 null, registration.getStatus().name(), eventStatus(registration),
-                registration.getPointsEarned() == null ? 0 : registration.getPointsEarned(),
+                pointsEarned,
                 attendeeLogs.stream().map(TransactionLog::getScannedAt).max(Instant::compareTo).map(this::format).orElse("-"),
                 format(registration.getRegisteredAt()),
                 registration.getQrCredentialId() == null ? "Pending" : "Issued",

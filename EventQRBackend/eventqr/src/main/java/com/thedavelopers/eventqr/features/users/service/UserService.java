@@ -158,6 +158,19 @@ public class UserService implements AttendeeDirectoryPort {
         return userProfileRepository.findByRoleNotIn(excludedRoles, pageable).map(this::toResponse);
     }
 
+    /** Search variants of the listings; {@code pattern} comes from {@code LikePatterns.contains}. */
+    public Page<UserResponse> searchAllUsers(String pattern, Pageable pageable) {
+        return userProfileRepository.searchAll(pattern, pageable).map(this::toResponse);
+    }
+
+    public Page<UserResponse> searchByRole(AccountRole role, String pattern, Pageable pageable) {
+        return userProfileRepository.searchByRole(role, pattern, pageable).map(this::toResponse);
+    }
+
+    public Page<UserResponse> searchByRoleNotIn(Collection<AccountRole> excludedRoles, String pattern, Pageable pageable) {
+        return userProfileRepository.searchByRoleNotIn(excludedRoles, pattern, pageable).map(this::toResponse);
+    }
+
     public UserResponse findOne(UUID userId) {
         return toResponse(requireUser(userId));
     }

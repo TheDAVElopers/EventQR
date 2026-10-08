@@ -8,6 +8,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.features.admin.auditTargetText
 import com.thedavelopers.eventqr.features.audit.model.dto.AuditLogResponse
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -44,7 +45,7 @@ class AdminAuditLogAdapter : RecyclerView.Adapter<AdminAuditLogAdapter.AdminAudi
             val action = item.action.ifBlank { "AUDIT_ENTRY" }
             textActionTitle.text = action.toFriendlyTitle()
             val actor = item.performedByFullName?.takeIf { it.isNotBlank() } ?: itemView.context.getString(R.string.audit_actor_fallback)
-            val target = item.details?.takeIf { it.isNotBlank() } ?: itemView.context.getString(R.string.audit_target_fallback)
+            val target = auditTargetText(item) ?: itemView.context.getString(R.string.audit_target_fallback)
             textAuditActorTarget.text = itemView.context.getString(R.string.audit_actor_target, actor, target)
             textAuditTimestamp.text = formatter.format(item.timestamp)
             bindIconStyle(action)
@@ -63,7 +64,7 @@ class AdminAuditLogAdapter : RecyclerView.Adapter<AdminAuditLogAdapter.AdminAudi
                     background = R.drawable.bg_admin_role_badge_blue
                     tint = 0xFF4F46E5.toInt()
                 }
-                normalized.contains("security") || normalized.contains("suspend") -> {
+                normalized.contains("disable") || normalized.contains("delete") -> {
                     background = R.drawable.bg_admin_role_badge_pink
                     tint = 0xFFEF4444.toInt()
                 }

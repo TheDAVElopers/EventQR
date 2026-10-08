@@ -30,7 +30,7 @@ import com.thedavelopers.eventqr.features.staff.details.StaffAttendeeDetailsActi
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionRequest
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
 import com.thedavelopers.eventqr.features.staff.model.dto.ScanVerificationResponse
-import kotlinx.coroutines.MainScope
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -39,6 +39,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
     private lateinit var repository: StaffRepository
     private lateinit var sessionManager: SessionManager
     private var savingTransaction = false
+    private var scanState = ScanResultState.REJECTED
 
     // One scan-result screen is one scan. Reusing this id on every retry tap (and across a
     // rotation) is what stops a timed-out-but-logged scan from being logged twice.
@@ -65,11 +66,16 @@ open class StaffScanResultActivity : AppCompatActivity() {
         repository = StaffRepository(this)
         
         val isValid = intent.getBooleanExtra(StaffScreenExtras.EXTRA_IS_VALID, false)
+        scanState = ScanResultState.from(
+            isValid = isValid,
+            qrActive = intent.getBooleanExtra(StaffScreenExtras.EXTRA_QR_ACTIVE, true),
+            registrationStatus = intent.getStringExtra(StaffScreenExtras.EXTRA_REGISTRATION_STATUS),
+        )
         bindStaticFields(isValid)
         applyActionLabels()
 
         findViewById<Button>(R.id.btnContinueTransaction).setOnClickListener {
-            if (isValid) {
+            if (scanState == ScanResultState.ACTIVE) {
                 recordTransaction()
             }
         }
@@ -90,8 +96,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
     private fun applyActionLabels() {
         val purposeCode = intent.getStringExtra(StaffScreenExtras.EXTRA_SCAN_PURPOSE_CODE).orEmpty()
         findViewById<Button>(R.id.btnContinueTransaction).text =
-            if (purposeCode == ScanPurposeCode.ID_PRINT.name) "Print ID"
-            else "Log Transaction"
+            getString(if (purposeCode == ScanPurposeCode.ID_PRINT.name) R.string.staff_attendee_details_print_id else R.string.staff_scan_result_log_transaction)
     }
 
     private fun bindStaticFields(isValid: Boolean) {
@@ -109,7 +114,9 @@ open class StaffScanResultActivity : AppCompatActivity() {
             findViewById<TextView>(R.id.txtScanResultAttendeeName).text = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_NAME).orUnknown()
             findViewById<TextView>(R.id.txtScanResultAttendeeEmail).text = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_EMAIL).orUnknown()
             findViewById<TextView>(R.id.txtScanResultRegistrationStatus).text = intent.getStringExtra(StaffScreenExtras.EXTRA_REGISTRATION_STATUS).orUnknown()
-            findViewById<TextView>(R.id.txtScanResultStatusHint).text = getString(R.string.staff_scan_result_attendee_verified_successfully)
+            findViewById<TextView>(R.id.txtScanResultStatusHint).text =
+                intent.getStringExtra(StaffScreenExtras.EXTRA_MESSAGE)?.takeIf { it.isNotBlank() }
+                    ?: getString(R.string.staff_scan_result_qr_active_hint)
             findViewById<Button>(R.id.btnContinueTransaction).visibility = View.VISIBLE
             findViewById<Button>(R.id.btnViewAttendeeDetails).visibility = View.VISIBLE
             
@@ -119,6 +126,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
 
             findViewById<Button>(R.id.btnContinueTransaction).visibility = View.VISIBLE
             findViewById<Button>(R.id.btnViewAttendeeDetails).visibility = View.VISIBLE
+            if (scanState == ScanResultState.INACTIVE) bindInactiveState()
         } else {
             findViewById<View>(R.id.headerApproved).visibility = View.GONE
             findViewById<View>(R.id.headerRejected).visibility = View.VISIBLE
@@ -130,6 +138,20 @@ open class StaffScanResultActivity : AppCompatActivity() {
             findViewById<Button>(R.id.btnContinueTransaction).visibility = View.GONE
             findViewById<Button>(R.id.btnViewAttendeeDetails).visibility = View.GONE
         }
+    }
+
+    /** Verified attendee, but the QR / registration is not active: show why and make logging impossible. */
+    private fun bindInactiveState() {
+        findViewById<View>(R.id.headerApproved).visibility = View.GONE
+        findViewById<View>(R.id.headerRejected).visibility = View.VISIBLE
+        findViewById<TextView>(R.id.txtScanResultStateRejected).text = getString(R.string.staff_scan_result_qr_inactive)
+        findViewById<TextView>(R.id.txtScanResultStatusHintRejected).text = getString(R.string.staff_scan_result_qr_inactive_hint)
+        findViewById<TextView>(R.id.txtScanResultReason).text =
+            intent.getStringExtra(StaffScreenExtras.EXTRA_MESSAGE)?.takeIf { it.isNotBlank() }
+                ?: getString(R.string.staff_scan_result_qr_inactive_reason)
+        findViewById<View>(R.id.layoutRejectedReason).visibility = View.VISIBLE
+        findViewById<View>(R.id.cardVerificationDetails).visibility = View.GONE
+        findViewById<Button>(R.id.btnContinueTransaction).visibility = View.GONE
     }
 
     private fun bindRejectedResult(message: String) {
@@ -145,6 +167,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
     }
 
     private fun recordTransaction() {
+        if (scanState != ScanResultState.ACTIVE) return
         if (savingTransaction) {
             Toast.makeText(this, this.getString(R.string.staff_scan_result_transaction_save_already_in_progress), Toast.LENGTH_SHORT).show()
             return
@@ -188,7 +211,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnContinueTransaction).isEnabled = false
         findViewById<Button>(R.id.btnContinueTransaction).text = getString(R.string.staff_scan_result_logging)
 
-        MainScope().launch {
+        lifecycleScope.launch {
             val request = TransactionRequest(
                 eventId = parsedEventId,
                 scanPurposeId = parsedPurposeId,
@@ -230,7 +253,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnContinueTransaction).isEnabled = false
         findViewById<Button>(R.id.btnContinueTransaction).text = getString(R.string.staff_scan_result_printing)
 
-        MainScope().launch {
+        lifecycleScope.launch {
             val apiService = com.thedavelopers.eventqr.core.api.ApiClient.getService(this@StaffScanResultActivity)
             val eventName = intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_TITLE).orEmpty()
             val attendeeName = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_NAME).orEmpty()

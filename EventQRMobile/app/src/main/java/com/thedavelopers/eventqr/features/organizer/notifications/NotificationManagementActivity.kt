@@ -218,17 +218,38 @@ class NotificationManagementActivity : AppCompatActivity() {
     }
 
     private fun observeState() {
-        viewModel.loading.observe(this) { loading ->
-            findViewById<View>(R.id.skeletonLoading).visibility = if (loading) View.VISIBLE else View.GONE
-            findViewById<SwipeRefreshLayout>(R.id.swipeRefreshNotifications).isRefreshing = loading
-        }
+        // One render function for every input, so exactly one of skeleton / error / empty / list is visible.
+        viewModel.loading.observe(this) { renderState() }
         viewModel.error.observe(this) { error ->
-            findViewById<View>(R.id.layoutNotificationError).visibility = if (error != null) View.VISIBLE else View.GONE
+            // With rows already on screen the error has no panel of its own, so say it briefly instead of dropping it.
+            if (error != null && viewModel.list.value.orEmpty().isNotEmpty()) {
+                android.widget.Toast.makeText(this, error, android.widget.Toast.LENGTH_SHORT).show()
+            }
+            renderState()
         }
+        viewModel.loaded.observe(this) { renderState() }
         viewModel.list.observe(this) { items ->
             adapter.submitItems(items)
-            findViewById<View>(R.id.layoutNotificationEmpty).visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
             findViewById<TextView>(R.id.txtMarkAllRead).isEnabled = true
+            renderState()
         }
+    }
+
+    private fun renderState() {
+        val loading = viewModel.loading.value == true
+        val items = viewModel.list.value.orEmpty()
+        val state = resolveNotificationsState(
+            loading = loading,
+            loaded = viewModel.loaded.value == true,
+            hasError = viewModel.error.value != null,
+            itemCount = items.size,
+        )
+        findViewById<View>(R.id.skeletonLoading).visibility = if (state == NotificationsScreenState.LOADING) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.layoutNotificationEmpty).visibility = if (state == NotificationsScreenState.EMPTY) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.layoutNotificationError).visibility = if (state == NotificationsScreenState.ERROR) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.recyclerNotifications).visibility = if (state == NotificationsScreenState.CONTENT) View.VISIBLE else View.GONE
+        // The pull-to-refresh spinner is the loading cue when rows are already on screen; the skeleton covers the rest.
+        findViewById<SwipeRefreshLayout>(R.id.swipeRefreshNotifications).isRefreshing =
+            loading && state == NotificationsScreenState.CONTENT
     }
 }

@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.staff
 
 import com.thedavelopers.eventqr.core.util.UiStrings
+import com.thedavelopers.eventqr.core.util.addNearEndListener
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import android.content.Intent
 import android.graphics.Typeface
@@ -26,14 +27,13 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
-import com.thedavelopers.eventqr.core.api.dto.RegistrationStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.idprinting.AndroidIdPrinter
 import com.thedavelopers.eventqr.features.registrations.RegistrationAdapter
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.features.staff.details.StaffAttendeeDetailsActivity
-import kotlinx.coroutines.MainScope
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -83,7 +83,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         setContentView(R.layout.activity_event_registrations)
 
         repository = StaffRepository(this)
-        presenter = EventRegistrationsPresenter(this, repository, UiStrings(this))
+        presenter = EventRegistrationsPresenter(this, repository, UiStrings(this), lifecycleScope)
         adapter = RegistrationAdapter(
             onClick = { registration ->
                 startActivity(Intent(this, StaffAttendeeDetailsActivity::class.java).apply {
@@ -100,7 +100,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         )
 
         bindViews()
-        findViewById<RecyclerView>(R.id.recyclerEventRegistrations).apply {
+        recycler.apply {
             layoutManager = LinearLayoutManager(this@EventRegistrationsActivity)
             adapter = this@EventRegistrationsActivity.adapter
         }
@@ -110,7 +110,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
             findViewById<EditText>(R.id.edtRegistrationsEventId).setText(selectedEventId)
             presenter.load(selectedEventId)
         } else {
-            MainScope().launch {
+            lifecycleScope.launch {
                 when (val eventsResult = StaffRepository(this@EventRegistrationsActivity).getEvents()) {
                     is NetworkResult.Success -> {
                         val firstEvent = eventsResult.data.firstOrNull()
@@ -119,7 +119,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
                             return@launch
                         }
                         selectedEventId = firstEvent.eventId.toString()
-                        eventTitleView.text = firstEvent.title.ifBlank { "Assigned Event" }
+                        eventTitleView.text = firstEvent.title.ifBlank { getString(R.string.event_registrations_assigned_event_fallback) }
                         findViewById<EditText>(R.id.edtRegistrationsEventId).setText(selectedEventId)
                         presenter.load(selectedEventId)
                     }
@@ -136,9 +136,13 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
     }
 
     override fun onDestroy() {
+        retrySnackbar?.dismiss()
         presenter.detach()
         super.onDestroy()
     }
+
+    private var retrySnackbar: com.google.android.material.snackbar.Snackbar? = null
+    private val recycler: RecyclerView by lazy { findViewById(R.id.recyclerEventRegistrations) }
 
     private fun bindViews() {
         swipeRefresh = findViewById(R.id.swipeRefreshEventRegistrations)
@@ -167,51 +171,55 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
             if (selectionMode) exitSelectionMode() else enterSelectionMode()
         }
         btnSelectAll.setOnClickListener {
-            if (adapter.isAllSelected()) adapter.clearSelection() else adapter.toggleSelectAll()
+            if (adapter.isAllSelected()) adapter.clearSelection() else presenter.selectAllForPrint()
         }
         btnPrintSelectedIds.setOnClickListener { printSelected() }
 
         swipeRefresh.setOnRefreshListener {
-            if (selectedEventId.isNotBlank()) presenter.load(selectedEventId) else swipeRefresh.isRefreshing = false
+            if (selectedEventId.isNotBlank()) presenter.load(selectedEventId, searchInput.text?.toString().orEmpty()) else swipeRefresh.isRefreshing = false
         }
+        recycler.addNearEndListener { presenter.loadMore() }
         searchInput.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                applyFilter(s?.toString().orEmpty())
+                presenter.onQueryChanged(s?.toString().orEmpty())
             }
             override fun afterTextChanged(s: Editable?) = Unit
         })
     }
 
-    override fun renderRegistrations(items: List<RegistrationResponse>) {
+    override fun renderRegistrations(items: List<RegistrationResponse>, hasQuery: Boolean) {
         skeletonLoading.visibility = View.GONE
-        allRegistrations = items
+        swipeRefresh.isRefreshing = false
         val title = items.firstOrNull()?.eventTitle?.takeIf { it.isNotBlank() }
             ?: intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_TITLE)?.takeIf { it.isNotBlank() }
-            ?: "Assigned Event"
-        eventTitleView.text = title
-        totalView.text = items.size.toString()
-        checkedInView.text = items.count { it.status == RegistrationStatus.ENTERED || it.status == RegistrationStatus.EXITED }.toString()
-        registeredView.text = items.count { it.status == RegistrationStatus.REGISTERED }.toString()
-        applyFilter(searchInput.text?.toString().orEmpty())
+        if (title != null || eventTitleView.text.isNullOrBlank()) {
+            eventTitleView.text = title ?: getString(R.string.event_registrations_assigned_event_fallback)
+        }
+        adapter.submitItems(items)
+        recycler.visibility = if (items.isEmpty()) View.GONE else View.VISIBLE
+        emptyState.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
+        emptyState.text = getString(if (hasQuery) R.string.search_attendees_no_attendees_match_your_search else R.string.event_registrations_no_attendees_found)
+        if (selectionMode) syncSelectionUi(adapter.getSelectedItems().size)
     }
 
-    private fun applyFilter(query: String) {
-        val normalized = query.trim().lowercase(Locale.US)
-        val filtered = if (normalized.isBlank()) {
-            allRegistrations
-        } else {
-            allRegistrations.filter {
-                it.attendeeName.lowercase(Locale.US).contains(normalized) ||
-                    it.attendeeEmail.lowercase(Locale.US).contains(normalized) ||
-                    it.registrationId.toString().lowercase(Locale.US).contains(normalized)
-            }
-        }
-        adapter.submitItems(filtered)
-        findViewById<RecyclerView>(R.id.recyclerEventRegistrations).visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
-        emptyState.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
-        emptyState.text = getString(if (allRegistrations.isEmpty()) R.string.event_registrations_no_attendees_found else R.string.search_attendees_no_attendees_match_your_search)
-        if (selectionMode) syncSelectionUi(adapter.getSelectedItems().size)
+    override fun renderCounts(counts: RegistrationCounts) {
+        totalView.text = counts.total?.toString() ?: getString(R.string.common_value_unavailable)
+        checkedInView.text = counts.checkedIn?.toString() ?: getString(R.string.common_value_unavailable)
+        registeredView.text = counts.registered?.toString() ?: getString(R.string.common_value_unavailable)
+    }
+
+    override fun selectAllForPrint(items: List<RegistrationResponse>) {
+        adapter.selectAll(items)
+    }
+
+    override fun showLoadMoreError(message: String) {
+        swipeRefresh.isRefreshing = false
+        skeletonLoading.visibility = View.GONE
+        retrySnackbar?.dismiss()
+        retrySnackbar = com.google.android.material.snackbar.Snackbar.make(recycler, message, com.google.android.material.snackbar.Snackbar.LENGTH_INDEFINITE)
+            .setAction(R.string.common_retry) { presenter.retry() }
+        retrySnackbar?.show()
     }
 
     override fun showMessage(message: String) {
@@ -274,7 +282,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         }
 
         showLoading(true)
-        MainScope().launch {
+        lifecycleScope.launch {
             val apiService = com.thedavelopers.eventqr.core.api.ApiClient.getService(this@EventRegistrationsActivity)
 
             var visibleFields = emptyList<String>()
@@ -375,7 +383,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
 
     private fun executeBatchPrint(cards: List<AndroidIdPrinter.CardData>, selected: List<RegistrationResponse>) {
         showLoading(true)
-        MainScope().launch {
+        lifecycleScope.launch {
             val successes = mutableListOf<AndroidIdPrinter.CardData>()
             val failures = mutableListOf<Pair<String, String>>()
             var index = 0

@@ -23,7 +23,7 @@ import com.thedavelopers.eventqr.features.staff.StaffScreenExtras
 import com.thedavelopers.eventqr.features.staff.orUnknown
 import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
 import com.thedavelopers.eventqr.features.transactions.TransactionLogAdapter
-import kotlinx.coroutines.MainScope
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
@@ -89,7 +89,7 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
         }
 
         findViewById<ProgressBar>(R.id.progressAttendeeDetails).visibility = View.VISIBLE
-        MainScope().launch {
+        lifecycleScope.launch {
             when (val attendeeResult = repository.getAttendeeByEvent(eventId, attendeeId)) {
                 is NetworkResult.Success -> {
                     renderRegistration(attendeeResult.data)
@@ -123,7 +123,7 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
         RegistrationStatusBadgeStyler.bind(findViewById(R.id.txtDetailRegistrationStatus), item.status)
         findViewById<TextView>(R.id.txtDetailCheckInTime).text = formatTime(item.enteredAt ?: item.attendedAt)
         findViewById<TextView>(R.id.txtDetailPointsBalance).text = "${item.pointsEarned} pts"
-        findViewById<TextView>(R.id.txtDetailTransactionCount).text = "0"
+        findViewById<TextView>(R.id.txtDetailTransactionCount).text = getString(R.string.common_value_unavailable)
 
         findViewById<TextView>(R.id.txtDetailQrStatus).text = getString(if (item.qrCredentialId == null) R.string.staff_attendee_details_qr_credential_pending else R.string.staff_attendee_details_qr_credential_issued)
         findViewById<TextView>(R.id.txtDetailEntryStatus).text = RegistrationStatusBadgeStyler.displayLabel(item.status)
@@ -139,13 +139,11 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
         val emptyText = findViewById<TextView>(R.id.txtDetailRecentTransactionsEmpty)
         val countText = findViewById<TextView>(R.id.txtDetailTransactionCount)
 
-        MainScope().launch {
-            when (val txResult = repository.getTransactionsByEvent(eventId)) {
-                is NetworkResult.Success -> {
-                    val count = txResult.data.count { it.attendeeUserId.toString() == attendeeId }
-                    countText.text = count.toString()
-                }
-                is NetworkResult.Error -> countText.text = "0"
+        lifecycleScope.launch {
+            // size=1: only totalElements is read, so the full list is never fetched.
+            when (val txResult = repository.getTransactionsByEvent(eventId, attendeeId, page = 0, size = 1)) {
+                is NetworkResult.Success -> countText.text = txResult.data.totalElements.toString()
+                is NetworkResult.Error -> countText.text = getString(R.string.common_value_unavailable)
                 NetworkResult.Loading -> Unit
             }
 
@@ -179,7 +177,7 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
             return
         }
 
-        MainScope().launch {
+        lifecycleScope.launch {
             when (val result = repository.getStaffPrintLogs(eventId)) {
                 is NetworkResult.Success -> {
                     hasPrintedId = result.data.any { it.attendeeUserId.toString() == attendeeId }
@@ -198,7 +196,7 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
         }
 
         findViewById<ProgressBar>(R.id.progressAttendeeDetails).visibility = View.VISIBLE
-        MainScope().launch {
+        lifecycleScope.launch {
             val apiService = com.thedavelopers.eventqr.core.api.ApiClient.getService(this@StaffAttendeeDetailsActivity)
 
             // Fetch template config for visible fields

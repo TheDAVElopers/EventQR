@@ -60,6 +60,9 @@ import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeRequ
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResponse
 import com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResponse
 import com.thedavelopers.eventqr.features.staff.model.dto.ScanVerificationResponse
+import com.thedavelopers.eventqr.features.staff.model.dto.StaffTodaySummary
+import com.thedavelopers.eventqr.features.staff.model.dto.StaffTransactionSummary
+import com.thedavelopers.eventqr.features.admin.model.dto.AdminStatsResponse
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionRequest
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
 import com.thedavelopers.eventqr.features.users.model.dto.UserRequest
@@ -127,7 +130,15 @@ interface ApiService {
     suspend fun createAdminUser(@Body request: UserRequest): ApiResponse<UserResponse>
 
     @GET("users")
-    suspend fun getUsers(@Query("role") role: String? = null): ApiResponse<PageResponse<UserResponse>>
+    suspend fun getUsers(
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 20,
+        @Query("role") role: String? = null,
+        @Query("q") query: String? = null,
+    ): ApiResponse<PageResponse<UserResponse>>
+
+    @GET("admin/stats")
+    suspend fun getAdminStats(): ApiResponse<AdminStatsResponse>
 
     @PATCH("admin/users/{userId}/disable")
     suspend fun disableUser(@Path("userId") userId: String): ApiResponse<UserResponse>
@@ -369,7 +380,13 @@ interface ApiService {
     suspend fun getRegistration(@Path("registrationId") registrationId: String): ApiResponse<RegistrationResponse>
 
     @GET("registrations/event/{eventId}")
-    suspend fun getRegistrationsByEvent(@Path("eventId") eventId: String): ApiResponse<PageResponse<RegistrationResponse>>
+    suspend fun getRegistrationsByEvent(
+        @Path("eventId") eventId: String,
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 20,
+        @Query("q") query: String? = null,
+        @Query("status") status: String? = null,
+    ): ApiResponse<PageResponse<RegistrationResponse>>
 
     @GET("qr-credentials/registration/{registrationId}")
     suspend fun getQrCredentialByRegistration(@Path("registrationId") registrationId: String): ApiResponse<QrCredentialSnapshot>
@@ -409,10 +426,11 @@ interface ApiService {
     suspend fun uploadProfilePhoto(@Part file: MultipartBody.Part): ApiResponse<Unit>
 
     @GET("admin/audit-logs")
-    suspend fun getAdminAuditLogs(): ApiResponse<List<AuditLogResponse>>
-
-    @GET("organizer/events/{eventId}/audit-logs")
-    suspend fun getOrganizerAuditLogs(@Path("eventId") eventId: String): ApiResponse<List<AuditLogResponse>>
+    suspend fun getAdminAuditLogs(
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 100,
+        @Query("actionPrefix") actionPrefix: String? = null,
+    ): ApiResponse<com.google.gson.JsonElement>
 
     @POST("audit-logs")
     suspend fun createAuditLog(@Body request: AuditLogRequest): ApiResponse<Unit>
@@ -528,9 +546,10 @@ interface ApiService {
     @GET("staff/events/{eventId}/transactions")
     suspend fun getStaffTransactions(
         @Path("eventId") eventId: String,
+        @Query("attendeeUserId") attendeeUserId: String? = null,
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 20
-    ): ApiResponse<List<TransactionResponse>>
+    ): ApiResponse<PageResponse<TransactionResponse>>
 
     @GET("staff/transactions")
     suspend fun getStaffMyTransactions(
@@ -538,10 +557,19 @@ interface ApiService {
         @Query("purposeId") purposeId: String? = null,
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 20,
-    ): ApiResponse<List<TransactionResponse>>
+    ): ApiResponse<PageResponse<TransactionResponse>>
+
+    @GET("staff/transactions/summary")
+    suspend fun getStaffTransactionSummary(
+        @Query("eventId") eventId: String? = null,
+        @Query("purposeId") purposeId: String? = null,
+    ): ApiResponse<StaffTransactionSummary>
 
     @GET("staff/events/{eventId}/transactions/today")
     suspend fun getStaffTodayTransactions(@Path("eventId") eventId: String): ApiResponse<List<TransactionResponse>>
+
+    @GET("staff/transactions/today/summary")
+    suspend fun getStaffTodaySummary(): ApiResponse<StaffTodaySummary>
 
     @GET("staff/transactions/today")
     suspend fun getStaffMyTodayTransactions(): ApiResponse<List<TransactionResponse>>

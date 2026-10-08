@@ -30,6 +30,18 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
 
     Page<EventRegistration> findByEventId(UUID eventId, Pageable pageable);
 
+    // Server-side search: :q is a lower-case pattern from LikePatterns (escape '!'); statuses is never empty.
+    @Query(value = "select r from EventRegistration r where r.eventId = :eventId and r.status in :statuses "
+            + "and (lower(r.attendeeName) like :q escape '!' or lower(r.attendeeEmail) like :q escape '!' "
+            + "or cast(r.registrationNumber as string) like :q escape '!') "
+            + "order by r.registeredAt desc, r.id asc",
+           countQuery = "select count(r) from EventRegistration r where r.eventId = :eventId and r.status in :statuses "
+            + "and (lower(r.attendeeName) like :q escape '!' or lower(r.attendeeEmail) like :q escape '!' "
+            + "or cast(r.registrationNumber as string) like :q escape '!')")
+    Page<EventRegistration> searchByEvent(@Param("eventId") UUID eventId, @Param("q") String q,
+                                          @Param("statuses") java.util.Collection<RegistrationStatus> statuses,
+                                          Pageable pageable);
+
     List<EventRegistration> findByAttendeeUserId(UUID attendeeUserId);
 
     @Query(value = "select r from EventRegistration r, com.thedavelopers.eventqr.features.events.model.entity.Event e where e.id = r.eventId and r.attendeeUserId = :attendeeUserId "

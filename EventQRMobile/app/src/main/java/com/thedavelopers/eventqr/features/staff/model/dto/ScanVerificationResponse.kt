@@ -19,4 +19,6 @@ data class ScanVerificationResponse(
     val qrActive: Boolean,
     val message: String? = null,
     val verifiedAt: Instant? = null,
+    /** Null when an older backend does not send it; treated as eligible. */
+    val eligible: Boolean? = null,
 )

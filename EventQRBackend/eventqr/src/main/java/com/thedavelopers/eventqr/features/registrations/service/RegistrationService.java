@@ -1,7 +1,13 @@
 package com.thedavelopers.eventqr.features.registrations.service;
 
 import java.time.Instant;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import jakarta.persistence.EntityManager;
@@ -11,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +32,7 @@ import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationRe
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationSubmissionResponse;
 import com.thedavelopers.eventqr.features.registrations.model.entity.EventRegistration;
 import com.thedavelopers.eventqr.features.registrations.repository.EventRegistrationRepository;
+import com.thedavelopers.eventqr.features.rewards.repository.PointTransactionRepository;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.EventStatus;
 import com.thedavelopers.eventqr.shared.constants.RegistrationStatus;
@@ -33,6 +41,7 @@ import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
 import com.thedavelopers.eventqr.shared.exceptions.TooManyRequestsException;
 import com.thedavelopers.eventqr.shared.security.RegistrationRateLimiter;
+import com.thedavelopers.eventqr.shared.utils.LikePatterns;
 import com.thedavelopers.eventqr.shared.interfaces.AttendeeDirectoryPort;
 import com.thedavelopers.eventqr.shared.interfaces.EventLookupPort;
 import com.thedavelopers.eventqr.shared.interfaces.EventLookupPort.EventSnapshot;
@@ -63,6 +72,7 @@ public class RegistrationService implements RegistrationLookupPort, Registration
     private final QREmailService qrEmailService;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final RegistrationRateLimiter registrationRateLimiter;
+    private final PointTransactionRepository pointTransactionRepository;
 
     public RegistrationService(EventRegistrationRepository registrationRepository,
                                AttendeeDirectoryPort attendeeDirectoryPort,
@@ -73,7 +83,8 @@ public class RegistrationService implements RegistrationLookupPort, Registration
                                EventService eventService,
                                QREmailService qrEmailService,
                                ApplicationEventPublisher applicationEventPublisher,
-                               RegistrationRateLimiter registrationRateLimiter) {
+                               RegistrationRateLimiter registrationRateLimiter,
+                               PointTransactionRepository pointTransactionRepository) {
         this.registrationRepository = registrationRepository;
         this.attendeeDirectoryPort = attendeeDirectoryPort;
         this.notificationService = notificationService;
@@ -84,6 +95,7 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         this.qrEmailService = qrEmailService;
         this.applicationEventPublisher = applicationEventPublisher;
         this.registrationRateLimiter = registrationRateLimiter;
+        this.pointTransactionRepository = pointTransactionRepository;
     }
 
     /**
@@ -196,7 +208,8 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         log.info("Registration workflow completed registrationId={} qrCredentialId={}",
             registrationId, qrCredential.qrCredentialId());
 
-        return new RegistrationSubmissionResponse(toResponse(savedRegistration), qrCredential);
+        // A registration that was just created cannot have earned points yet.
+        return new RegistrationSubmissionResponse(toResponse(savedRegistration, 0), qrCredential);
     }
 
     private void notifyOrganizerOnRegistration(EventSnapshot eventSnapshot, String attendeeName) {
@@ -231,19 +244,33 @@ public class RegistrationService implements RegistrationLookupPort, Registration
     }
 
     public List<RegistrationResponse> findByEvent(UUID eventId) {
-        return registrationRepository.findByEventId(eventId).stream().map(this::toResponse).toList();
+        return toResponses(registrationRepository.findByEventId(eventId));
     }
 
     public Page<RegistrationResponse> findByEvent(UUID eventId, Pageable pageable) {
-        return registrationRepository.findByEventId(eventId, pageable).map(this::toResponse);
+        return toResponsePage(registrationRepository.findByEventId(eventId, pageable));
+    }
+
+    /**
+     * Server-side search over an event's registrations. {@code q} is a case-insensitive contains match on
+     * attendee name, email or registration number; {@code status} optionally narrows by status. With
+     * neither filter this is the plain paged listing.
+     */
+    public Page<RegistrationResponse> findByEvent(UUID eventId, String q, RegistrationStatus status, Pageable pageable) {
+        String pattern = LikePatterns.contains(q == null ? null : q.trim().replaceFirst("^#", ""));
+        if (pattern == null && status == null) {
+            return findByEvent(eventId, pageable);
+        }
+        Set<RegistrationStatus> statuses = status == null ? EnumSet.allOf(RegistrationStatus.class) : EnumSet.of(status);
+        return toResponsePage(registrationRepository.searchByEvent(eventId, pattern == null ? "%" : pattern, statuses, pageable));
     }
 
     public List<RegistrationResponse> findByAttendeeUserId(UUID attendeeUserId) {
-        return registrationRepository.findByAttendeeUserId(attendeeUserId).stream().map(this::toResponse).toList();
+        return toResponses(registrationRepository.findByAttendeeUserId(attendeeUserId));
     }
 
     public Page<RegistrationResponse> findByAttendeeUserId(UUID attendeeUserId, Pageable pageable) {
-        return registrationRepository.findByAttendeeUserId(attendeeUserId, pageable).map(this::toResponse);
+        return toResponsePage(registrationRepository.findByAttendeeUserId(attendeeUserId, pageable));
     }
 
     public RegistrationResponse findOne(UUID registrationId) {
@@ -326,7 +353,7 @@ public class RegistrationService implements RegistrationLookupPort, Registration
 
     @Override
     public List<RegistrationSnapshot> listByEventId(UUID eventId) {
-        return registrationRepository.findByEventId(eventId).stream().map(this::toSnapshot).toList();
+        return toSnapshots(registrationRepository.findByEventId(eventId));
     }
 
     @Override
@@ -371,7 +398,48 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         registrationRepository.save(registration);
     }
 
+    private record PointsKey(UUID eventId, UUID attendeeUserId) {
+    }
+
+    /**
+     * Points earned = sum of POSITIVE point_transactions for (event, attendee); deductions are ignored.
+     * One batched query for the whole set of registrations.
+     */
+    private Map<PointsKey, Integer> earnedPoints(Collection<EventRegistration> registrations) {
+        if (registrations.isEmpty()) {
+            return Map.of();
+        }
+        Set<UUID> eventIds = new HashSet<>();
+        Set<UUID> attendeeIds = new HashSet<>();
+        for (EventRegistration registration : registrations) {
+            eventIds.add(registration.getEventId());
+            attendeeIds.add(registration.getAttendeeUserId());
+        }
+        Map<PointsKey, Integer> totals = new HashMap<>();
+        for (PointTransactionRepository.EarnedPointsRow row : pointTransactionRepository.sumEarnedPoints(eventIds, attendeeIds)) {
+            long total = row.getTotal() == null ? 0 : row.getTotal();
+            totals.put(new PointsKey(row.getEventId(), row.getAttendeeUserId()), (int) Math.min(total, Integer.MAX_VALUE));
+        }
+        return totals;
+    }
+
+    private List<RegistrationResponse> toResponses(List<EventRegistration> registrations) {
+        Map<PointsKey, Integer> points = earnedPoints(registrations);
+        return registrations.stream()
+                .map(r -> toResponse(r, points.getOrDefault(new PointsKey(r.getEventId(), r.getAttendeeUserId()), 0)))
+                .toList();
+    }
+
+    private Page<RegistrationResponse> toResponsePage(Page<EventRegistration> page) {
+        return new PageImpl<>(toResponses(page.getContent()), page.getPageable(), page.getTotalElements());
+    }
+
     private RegistrationResponse toResponse(EventRegistration registration) {
+        return toResponse(registration, earnedPoints(List.of(registration))
+                .getOrDefault(new PointsKey(registration.getEventId(), registration.getAttendeeUserId()), 0));
+    }
+
+    private RegistrationResponse toResponse(EventRegistration registration, int pointsEarned) {
         EventSnapshot eventSnapshot = eventLookupPort.findById(registration.getEventId())
             .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + registration.getEventId()));
         var attendeeSnapshot = attendeeDirectoryPort.findById(registration.getAttendeeUserId());
@@ -386,14 +454,26 @@ public class RegistrationService implements RegistrationLookupPort, Registration
             registration.getQrCredentialId(), registration.getRegisteredAt(), eventSnapshot.title(),
             eventSnapshot.location(), eventSnapshot.eventStartAt(), eventSnapshot.eventEndAt(), attendeePhoneNumber,
             registration.getEnteredAt(), registration.getExitedAt(), registration.getAttendedAt(),
-            registration.getPointsEarned(), registration.getRegistrationNumber(), attendeeRole);
+            pointsEarned, registration.getRegistrationNumber(), attendeeRole);
+    }
+
+    private List<RegistrationSnapshot> toSnapshots(List<EventRegistration> registrations) {
+        Map<PointsKey, Integer> points = earnedPoints(registrations);
+        return registrations.stream()
+                .map(r -> toSnapshot(r, points.getOrDefault(new PointsKey(r.getEventId(), r.getAttendeeUserId()), 0)))
+                .toList();
     }
 
     private RegistrationSnapshot toSnapshot(EventRegistration registration) {
+        return toSnapshot(registration, earnedPoints(List.of(registration))
+                .getOrDefault(new PointsKey(registration.getEventId(), registration.getAttendeeUserId()), 0));
+    }
+
+    private RegistrationSnapshot toSnapshot(EventRegistration registration, int pointsEarned) {
         return new RegistrationSnapshot(registration.getId(), registration.getEventId(), registration.getAttendeeUserId(),
                 registration.getAttendeeEmail(), registration.getAttendeeName(), registration.getStatus(),
                 registration.getQrCredentialId(), registration.getRegisteredAt(), registration.getEnteredAt(),
-                registration.getExitedAt(), registration.getAttendedAt(), registration.getPointsEarned(),
+                registration.getExitedAt(), registration.getAttendedAt(), pointsEarned,
                 registration.getRegistrationNumber());
     }
 }

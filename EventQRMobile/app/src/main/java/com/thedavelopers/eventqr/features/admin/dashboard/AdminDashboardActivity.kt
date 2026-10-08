@@ -15,7 +15,6 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.api.dto.EventRequestStatus
-import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.PortalSwitcher
 import com.thedavelopers.eventqr.core.util.RoleMapper
@@ -24,6 +23,7 @@ import com.thedavelopers.eventqr.features.admin.AdminBottomNavItem
 import com.thedavelopers.eventqr.features.admin.AdminEventApprovalBackendActivity
 import com.thedavelopers.eventqr.features.admin.AdminRepository
 import com.thedavelopers.eventqr.features.admin.configureAdminBottomNav
+import com.thedavelopers.eventqr.features.admin.model.dto.AdminStatsResponse
 import com.thedavelopers.eventqr.features.admin.logs.AdminAuditLogsActivity
 import com.thedavelopers.eventqr.features.admin.users.AdminAccountManagementActivity
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
@@ -171,38 +171,20 @@ class AdminDashboardActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val requestsDeferred = async { repository.loadAllEventRequests() }
-                val usersDeferred = async { repository.loadUsers() }
-                val eventsDeferred = async { repository.loadEvents() }
-                val auditLogsDeferred = async { repository.loadAuditLogs() }
+                val statsDeferred = async { repository.loadAdminStats() }
 
                 val requestsResult = requestsDeferred.await()
-                val usersResult = usersDeferred.await()
-                val eventsResult = eventsDeferred.await()
-                val auditLogsResult = auditLogsDeferred.await()
+                val statsResult = statsDeferred.await()
 
                 val pendingRequests = when (requestsResult) {
                     is NetworkResult.Success -> requestsResult.data.count { it.status == EventRequestStatus.PENDING }
                     else -> 0
                 }
-                val totalAccounts = when (usersResult) {
-                    is NetworkResult.Success -> usersResult.data.size
-                    else -> 0
-                }
-                val activeEvents = when (eventsResult) {
-                    is NetworkResult.Success -> eventsResult.data.count {
-                        it.status == EventStatus.ACTIVE || it.status == EventStatus.APPROVED
-                    }
-                    else -> 0
-                }
-                val auditLogs = when (auditLogsResult) {
-                    is NetworkResult.Success -> auditLogsResult.data.size
-                    else -> 0
-                }
+                val stats = (statsResult as? NetworkResult.Success)?.data
 
-                textPendingRequests.text = pendingRequests.toString()
-                textTotalAccounts.text = totalAccounts.toString()
-                textActiveEvents.text = activeEvents.toString()
-                textAuditLogs.text = formatCount(auditLogs)
+                textPendingRequests.text = if (requestsResult is NetworkResult.Success) pendingRequests.toString() else getString(R.string.common_value_unavailable)
+                // Server-side counts; when they cannot be loaded the tiles say "--", never 0.
+                renderStats(stats)
 
                 hasLoadedSummary = true
                 if (pendingRequests > 0) {
@@ -218,11 +200,8 @@ class AdminDashboardActivity : AppCompatActivity() {
                 }
 
                 textLoadHint.text = when {
-                    requestsResult is NetworkResult.Error -> "Unable to refresh pending requests right now."
-                    usersResult is NetworkResult.Error ||
-                        eventsResult is NetworkResult.Error ||
-                        auditLogsResult is NetworkResult.Error ->
-                        "Some dashboard stats are currently unavailable."
+                    requestsResult is NetworkResult.Error -> getString(R.string.admin_dashboard_pending_unavailable)
+                    stats == null -> getString(R.string.admin_dashboard_stats_unavailable)
                     else -> ""
                 }
                 textLoadHint.visibility = if (textLoadHint.text.isNullOrBlank()) View.GONE else View.VISIBLE
@@ -233,7 +212,13 @@ class AdminDashboardActivity : AppCompatActivity() {
         }
     }
 
-    private fun formatCount(value: Int): String {
+    internal fun renderStats(stats: AdminStatsResponse?) {
+        textTotalAccounts.text = stats?.let { formatCount(it.totalAccounts) } ?: getString(R.string.common_value_unavailable)
+        textActiveEvents.text = stats?.let { formatCount(it.activeEvents) } ?: getString(R.string.common_value_unavailable)
+        textAuditLogs.text = stats?.let { formatCount(it.auditLogCount) } ?: getString(R.string.common_value_unavailable)
+    }
+
+    private fun formatCount(value: Long): String {
         if (value < 1000) {
             return value.toString()
         }

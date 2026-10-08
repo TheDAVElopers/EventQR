@@ -159,7 +159,7 @@
                     android:layout_height="42dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/common_transactions" android:textColor="#6B7280" android:textSize="14sp" />
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/staff_attendee_details_scans" android:textColor="#6B7280" android:textSize="14sp" />
                     <TextView android:id="@+id/txtDetailTransactionCount" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:textColor="#111827" android:textSize="14sp" android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>

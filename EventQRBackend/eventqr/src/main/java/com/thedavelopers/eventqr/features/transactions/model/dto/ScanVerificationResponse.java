@@ -10,5 +10,5 @@ public record ScanVerificationResponse(UUID eventId, UUID attendeeUserId, UUID r
                                        String qrValue, String attendeeName, String attendeeEmail,
                                        RegistrationStatus registrationStatus, UUID scanPurposeId,
                                        ScanPurposeCode scanPurposeCode, boolean qrActive, String message,
-                                       Instant verifiedAt) {
+                                       Instant verifiedAt, boolean eligible) {
 }

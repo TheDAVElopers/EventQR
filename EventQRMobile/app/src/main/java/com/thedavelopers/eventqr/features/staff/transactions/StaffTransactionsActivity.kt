@@ -19,15 +19,18 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
-import com.thedavelopers.eventqr.core.api.dto.TransactionResult
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResponse
 import com.thedavelopers.eventqr.features.transactions.TransactionLogAdapter
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
-import kotlinx.coroutines.MainScope
+import com.google.android.material.snackbar.Snackbar
+import com.thedavelopers.eventqr.core.util.PagedAccumulator
+import com.thedavelopers.eventqr.core.util.addNearEndListener
+import com.thedavelopers.eventqr.features.staff.model.dto.StaffTransactionSummary
+import kotlinx.coroutines.Job
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
-import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -61,12 +64,15 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
     private var isEventPopupOpen = false
     private var isPurposePopupOpen = false
 
-    // Pagination state
-    private val PAGE_SIZE = 20
-    private var currentPage = 0
-    private var isLastPage = false
-    private var isLoadingMore = false
-    private var allItems = mutableListOf<TransactionResponse>()
+    // Pagination state: rows come newest-first from the server, one page at a time.
+    private val paging = PagedAccumulator<TransactionResponse, java.util.UUID> { it.transactionId }
+    private var purposesLoaded = false
+    private var summaryJob: Job? = null
+    private var retrySnackbar: Snackbar? = null
+
+    private companion object {
+        const val PAGE_SIZE = 20
+    }
 
     private val manilaZone: ZoneId = ZoneId.of("Asia/Manila")
 
@@ -107,22 +113,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         recyclerView.apply {
             layoutManager = LinearLayoutManager(this@StaffTransactionsActivity)
             adapter = this@StaffTransactionsActivity.adapter
-            addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    super.onScrolled(recyclerView, dx, dy)
-                    if (!isLastPage && !isLoadingMore && dy > 0) {
-                        val layoutManager = recyclerView.layoutManager as LinearLayoutManager
-                        val visibleItemCount = layoutManager.childCount
-                        val totalItemCount = layoutManager.itemCount
-                        val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
-                        if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 5
-                            && firstVisibleItemPosition >= 0
-                        ) {
-                            loadNextPage()
-                        }
-                    }
-                }
-            })
+            addNearEndListener { loadPage() }
         }
 
         eventCard.visibility = View.VISIBLE
@@ -136,7 +127,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
     }
 
     private fun loadAssignedEventsAndTransactions() {
-        MainScope().launch {
+        lifecycleScope.launch {
             showLoading(true)
             when (val eventsResult = repository.getEvents()) {
                 is NetworkResult.Success -> {
@@ -171,19 +162,34 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
             showPromptState()
             return
         }
-        currentPage = 0
-        isLastPage = false
-        allItems.clear()
+        retrySnackbar?.dismiss()
+        paging.reset()
+        purposesLoaded = false
         setPurposeCardEnabled(true)
+        loadSummary()
         loadPage()
+    }
+
+    private fun loadSummary() {
+        val eventId = selectedEventId ?: return
+        summaryJob?.cancel()
+        renderSummary(null)
+        summaryJob = lifecycleScope.launch {
+            when (val result = repository.getMyTransactionSummary(eventId, selectedPurposeId)) {
+                is NetworkResult.Success -> renderSummary(result.data)
+                is NetworkResult.Error -> renderSummary(null)
+                NetworkResult.Loading -> Unit
+            }
+        }
     }
 
     private fun showPromptState() {
         skeletonLoading.visibility = View.GONE
         swipeRefresh.isRefreshing = false
-        txtTotalScans.text = "0"
-        txtSuccessfulScans.text = "0"
-        txtRejectedScans.text = "0"
+        summaryJob?.cancel()
+        retrySnackbar?.dismiss()
+        paging.reset()
+        renderSummary(StaffTransactionSummary())
         adapter.submitItems(emptyList())
         txtEmptyState.text = getString(R.string.staff_transactions_select_an_event_to_view_its_transact)
         txtEmptyState.visibility = View.VISIBLE
@@ -198,51 +204,54 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
     }
 
     private fun loadPage() {
-        if (selectedEventId == null) return
-        MainScope().launch {
-            isLoadingMore = currentPage > 0
-            if (!isLoadingMore) {
-                showLoading(true)
-            } else {
-                pbLoadMore.visibility = View.VISIBLE
-            }
+        val eventId = selectedEventId ?: return
+        val ticket = paging.begin() ?: return
+        lifecycleScope.launch {
+            if (ticket.page == 0) showLoading(true) else pbLoadMore.visibility = View.VISIBLE
+            var current = true
 
-            when (val result = repository.getMyTransactions(selectedEventId, selectedPurposeId, currentPage, PAGE_SIZE)) {
+            when (val result = repository.getMyTransactions(eventId, selectedPurposeId, ticket.page, PAGE_SIZE)) {
                 is NetworkResult.Success -> {
-                    val newItems = result.data
-                    allItems.addAll(newItems)
-                    isLastPage = newItems.size < PAGE_SIZE
-                    currentPage++
-
-                    if (currentPage == 1) {
-                        purposeOptions = buildPurposeOptionsSync(allItems)
-                        if (selectedPurposeId != null && purposeOptions.none { it.id == selectedPurposeId }) {
-                            selectedPurposeId = null
+                    current = paging.onSuccess(ticket, result.data)
+                    if (current) {
+                        if (ticket.page == 0 && !purposesLoaded) {
+                            purposesLoaded = true
+                            purposeOptions = buildPurposeOptionsSync(paging.items)
+                            if (selectedPurposeId != null && purposeOptions.none { it.id == selectedPurposeId }) {
+                                selectedPurposeId = null
+                            }
+                            bindPurposeHeader()
                         }
-                        bindPurposeHeader()
+                        renderTransactions(paging.items)
                     }
-
-                    renderTransactions(allItems.sortedByDescending { it.scannedAt ?: Instant.EPOCH })
                 }
                 is NetworkResult.Error -> {
-                    if (currentPage == 1) {
-                        renderTransactions(emptyList())
+                    current = paging.onFailure(ticket)
+                    if (current) {
+                        if (paging.isEmpty) renderTransactions(emptyList())
+                        showLoadError(result.message)
                     }
-                    showMessage(result.message)
                 }
                 NetworkResult.Loading -> Unit
             }
 
-            isLoadingMore = false
-            pbLoadMore.visibility = View.GONE
-            showLoading(false)
+            // A stale response must not hide the loading state of the newer request that replaced it.
+            if (current) {
+                pbLoadMore.visibility = View.GONE
+                showLoading(false)
+            }
         }
     }
 
-    private fun loadNextPage() {
-        if (!isLastPage && !isLoadingMore) {
-            loadPage()
-        }
+    private fun showLoadError(message: String) {
+        swipeRefresh.isRefreshing = false
+        retrySnackbar?.dismiss()
+        retrySnackbar = Snackbar.make(recyclerView, message, Snackbar.LENGTH_INDEFINITE)
+            .setAction(R.string.common_retry) {
+                paging.retry()
+                loadPage()
+            }
+        retrySnackbar?.show()
     }
 
     private suspend fun buildPurposeOptionsSync(items: List<TransactionResponse>): List<PurposeOption> {
@@ -466,6 +475,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
     }
 
     override fun onDestroy() {
+        retrySnackbar?.dismiss()
         eventPopup?.dismiss()
         purposePopup?.dismiss()
         super.onDestroy()
@@ -475,11 +485,15 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         swipeRefresh.isRefreshing = false
         skeletonLoading.visibility = View.GONE
         adapter.submitItems(items)
-        txtTotalScans.text = items.size.toString()
-        txtSuccessfulScans.text = items.count { it.transactionResult == TransactionResult.APPROVED }.toString()
-        txtRejectedScans.text = items.count { it.transactionResult != TransactionResult.APPROVED }.toString()
         txtEmptyState.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
         recyclerView.visibility = if (items.isEmpty()) View.GONE else View.VISIBLE
+    }
+
+    /** Tiles come from the server summary, never from the loaded rows. A null summary shows "--". */
+    override fun renderSummary(summary: StaffTransactionSummary?) {
+        txtTotalScans.text = summary?.total?.toString() ?: getString(R.string.common_value_unavailable)
+        txtSuccessfulScans.text = summary?.approved?.toString() ?: getString(R.string.common_value_unavailable)
+        txtRejectedScans.text = summary?.rejected?.toString() ?: getString(R.string.common_value_unavailable)
     }
 
     override fun showMessage(message: String) {

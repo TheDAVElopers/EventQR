@@ -139,7 +139,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
                     android:gravity="center"
-                    android:text="@string/staff_transaction_result_transaction_was_not_recorded"
+                    android:text="@string/staff_transaction_result_scan_rejected_and_logged"
                     android:textColor="#111827"
                     android:textSize="14sp" />
             </LinearLayout>

@@ -30,6 +30,11 @@ import com.thedavelopers.eventqr.features.admin.configureAdminBottomNav
 import com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity
 import com.thedavelopers.eventqr.features.admin.logs.AdminAuditLogsActivity
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
+import com.google.android.material.snackbar.Snackbar
+import com.thedavelopers.eventqr.core.util.PagedAccumulator
+import com.thedavelopers.eventqr.core.util.addNearEndListener
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class AdminAccountManagementActivity : AppCompatActivity() {
@@ -42,7 +47,15 @@ class AdminAccountManagementActivity : AppCompatActivity() {
     private lateinit var textPlaceholder: EventQrEmptyState
     private lateinit var filterChipsLayout: ChipGroup
 
-    private var allUsers: List<UserResponse> = emptyList()
+    private val paging = PagedAccumulator<UserResponse, java.util.UUID> { it.userId }
+    private var searchQuery: String = ""
+    private var searchJob: Job? = null
+    private var retrySnackbar: Snackbar? = null
+
+    override fun onDestroy() {
+        retrySnackbar?.dismiss()
+        super.onDestroy()
+    }
     private var selectedRoleFilter: AccountRole? = null
     private val currentUserId: String? by lazy { sessionManager.getUserId() }
 
@@ -126,47 +139,64 @@ class AdminAccountManagementActivity : AppCompatActivity() {
     private fun bindSearch() {
         searchInput.addTextChangedListener { editable ->
             val query = editable?.toString().orEmpty().trim()
-            val filtered = if (query.isBlank()) {
-                allUsers
-            } else {
-                allUsers.filter { user ->
-                    user.fullName.contains(query, ignoreCase = true) ||
-                        user.email.contains(query, ignoreCase = true) ||
-                        user.role.name.contains(query, ignoreCase = true)
-                }
-            }
-            adapter.submitItems(filtered)
-            textPlaceholder.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
-            recyclerAccounts.visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
-            textPlaceholder.text = if (allUsers.isEmpty()) {
-                "No accounts found yet."
-            } else {
-                "No accounts match your search."
+            if (query == searchQuery) return@addTextChangedListener
+            // Server-side search: debounce keystrokes, then restart from page 0.
+            searchJob?.cancel()
+            searchJob = lifecycleScope.launch {
+                delay(SEARCH_DEBOUNCE_MS)
+                searchQuery = query
+                loadAccounts()
             }
         }
+        recyclerAccounts.addNearEndListener { loadPage() }
     }
 
+    /** Restarts paging from page 0 (role chip, search, refresh, or after a row action). */
     private fun loadAccounts() {
+        retrySnackbar?.dismiss()
+        paging.reset()
+        adapter.submitItems(emptyList())
         progressLoading.visibility = View.VISIBLE
         recyclerAccounts.visibility = View.GONE
         textPlaceholder.visibility = View.GONE
+        loadPage()
+    }
 
+    private fun loadPage() {
+        val ticket = paging.begin() ?: return
+        val role = selectedRoleFilter
+        val query = searchQuery
         lifecycleScope.launch {
-            when (val result = repository.loadUsers(selectedRoleFilter)) {
+            when (val result = repository.loadUsersPage(role, query, ticket.page)) {
                 is NetworkResult.Success -> {
-                    allUsers = result.data.sortedBy { it.fullName.lowercase() }
-                    progressLoading.visibility = View.GONE
-                    recyclerAccounts.visibility = if (allUsers.isEmpty()) View.GONE else View.VISIBLE
-                    textPlaceholder.visibility = if (allUsers.isEmpty()) View.VISIBLE else View.GONE
-                    textPlaceholder.text = getString(R.string.admin_account_management_no_accounts_found_yet)
-                    adapter.submitItems(allUsers)
+                    if (paging.onSuccess(ticket, result.data)) {
+                        val users = paging.items
+                        progressLoading.visibility = View.GONE
+                        recyclerAccounts.visibility = if (users.isEmpty()) View.GONE else View.VISIBLE
+                        textPlaceholder.visibility = if (users.isEmpty()) View.VISIBLE else View.GONE
+                        textPlaceholder.text = getString(
+                            if (query.isNotEmpty()) R.string.admin_account_management_no_accounts_match_your_search
+                            else R.string.admin_account_management_no_accounts_found_yet
+                        )
+                        adapter.submitItems(users)
+                    }
                 }
                 is NetworkResult.Error -> {
-                    allUsers = emptyList()
-                    progressLoading.visibility = View.GONE
-                    recyclerAccounts.visibility = View.GONE
-                    textPlaceholder.visibility = View.VISIBLE
-                    textPlaceholder.text = getString(R.string.admin_account_management_account_management_is_currently_unav)
+                    if (paging.onFailure(ticket)) {
+                        progressLoading.visibility = View.GONE
+                        if (paging.isEmpty) {
+                            recyclerAccounts.visibility = View.GONE
+                            textPlaceholder.visibility = View.VISIBLE
+                            textPlaceholder.text = getString(R.string.admin_account_management_account_management_is_currently_unav)
+                        }
+                        retrySnackbar?.dismiss()
+                        retrySnackbar = Snackbar.make(recyclerAccounts, result.message, Snackbar.LENGTH_INDEFINITE)
+                            .setAction(R.string.common_retry) {
+                                paging.retry()
+                                loadPage()
+                            }
+                        retrySnackbar?.show()
+                    }
                 }
                 NetworkResult.Loading -> Unit
             }
@@ -256,5 +286,9 @@ class AdminAccountManagementActivity : AppCompatActivity() {
 
     private fun isSuperAdmin(): Boolean {
         return RoleMapper.normalizeRole(sessionManager.getUserRole()) == AccountRole.SUPER_ADMIN.name
+    }
+
+    private companion object {
+        const val SEARCH_DEBOUNCE_MS = 350L
     }
 }

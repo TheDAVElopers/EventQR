@@ -18,13 +18,24 @@ class RegistrationAdapter(
     private val items = mutableListOf<RegistrationResponse>()
     private var selectionMode = false
     private val selectedIds = mutableSetOf<UUID>()
+    // Selected registrations are remembered here so a selection survives paging and search changes
+    // (the visible list is only one page / one query of the full result set).
+    private val selectedItems = LinkedHashMap<UUID, RegistrationResponse>()
 
     fun submitItems(newItems: List<RegistrationResponse>) {
         items.clear()
         items.addAll(newItems)
-        // Drop selections that no longer exist in the refreshed list.
-        selectedIds.retainAll(items.map { it.attendeeUserId }.toSet())
         notifyDataSetChanged()
+    }
+
+    /** Selects every selectable (QR-issued) registration in [all], including ones not currently shown. */
+    fun selectAll(all: List<RegistrationResponse>) {
+        all.filter { it.qrCredentialId != null }.forEach {
+            selectedIds.add(it.attendeeUserId)
+            selectedItems[it.attendeeUserId] = it
+        }
+        notifyDataSetChanged()
+        onSelectionChanged?.invoke(selectedIds.size)
     }
 
     fun setSelectionMode(enabled: Boolean) {
@@ -37,34 +48,43 @@ class RegistrationAdapter(
 
     fun isSelected(registration: RegistrationResponse): Boolean = registration.attendeeUserId in selectedIds
 
-    fun getSelectedItems(): List<RegistrationResponse> =
-        items.filter { it.attendeeUserId in selectedIds }
+    fun getSelectedItems(): List<RegistrationResponse> = selectedItems.values.toList()
+
+    private fun select(registration: RegistrationResponse, selected: Boolean) {
+        if (selected) {
+            selectedIds.add(registration.attendeeUserId)
+            selectedItems[registration.attendeeUserId] = registration
+        } else {
+            selectedIds.remove(registration.attendeeUserId)
+            selectedItems.remove(registration.attendeeUserId)
+        }
+    }
 
     fun toggleSelection(registration: RegistrationResponse) {
         if (!selectionMode) return
-        if (!selectedIds.add(registration.attendeeUserId)) selectedIds.remove(registration.attendeeUserId)
+        select(registration, registration.attendeeUserId !in selectedIds)
         notifyDataSetChanged()
         onSelectionChanged?.invoke(selectedIds.size)
     }
 
     fun toggleSelectAll() {
-        val allIds = items.filter { it.qrCredentialId != null }.map { it.attendeeUserId }.toSet()
-        selectedIds.clear()
-        selectedIds.addAll(allIds)
-        notifyDataSetChanged()
-        onSelectionChanged?.invoke(selectedIds.size)
+        selectAll(items)
     }
 
-    fun isAllSelected(): Boolean = items.isNotEmpty() && selectedIds.size == items.size
+    /** True when every selectable row currently shown is selected. */
+    fun isAllSelected(): Boolean {
+        val selectable = items.filter { it.qrCredentialId != null }
+        return selectable.isNotEmpty() && selectable.all { it.attendeeUserId in selectedIds }
+    }
 
     fun clearSelection() {
-        if (selectionMode) return
         clearSelectionInternal(notify = true)
     }
 
     private fun clearSelectionInternal(notify: Boolean) {
         if (selectedIds.isEmpty()) return
         selectedIds.clear()
+        selectedItems.clear()
         if (notify) {
             notifyDataSetChanged()
             onSelectionChanged?.invoke(0)
@@ -114,8 +134,7 @@ class RegistrationAdapter(
                 }
             }
             checkView.setOnClickListener {
-                if (checkView.isChecked) selectedIds.add(item.attendeeUserId)
-                else selectedIds.remove(item.attendeeUserId)
+                select(item, checkView.isChecked)
                 (itemView as? androidx.cardview.widget.CardView)?.setCardBackgroundColor(
                     if (isSelected(item)) 0xFFE0E7FF.toInt() else android.graphics.Color.WHITE
                 )

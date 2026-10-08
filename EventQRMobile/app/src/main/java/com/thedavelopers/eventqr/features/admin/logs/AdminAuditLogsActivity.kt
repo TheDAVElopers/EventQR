@@ -21,6 +21,11 @@ import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.admin.AdminBottomNavItem
 import com.thedavelopers.eventqr.features.admin.AdminRepository
+import com.thedavelopers.eventqr.features.admin.AuditCategory
+import com.thedavelopers.eventqr.features.admin.actionPrefix
+import com.google.android.material.snackbar.Snackbar
+import com.thedavelopers.eventqr.core.util.PagedAccumulator
+import com.thedavelopers.eventqr.core.util.addNearEndListener
 import com.thedavelopers.eventqr.features.admin.configureAdminBottomNav
 import com.thedavelopers.eventqr.features.audit.model.dto.AuditLogResponse
 import com.thedavelopers.eventqr.ui.components.FilterChipRow
@@ -36,8 +41,8 @@ class AdminAuditLogsActivity : AppCompatActivity() {
     private lateinit var textPlaceholder: EventQrEmptyState
     private lateinit var recyclerLogs: RecyclerView
 
-    private var allLogs: List<AuditLogResponse> = emptyList()
-    private val selectedFilter = MutableStateFlow(AuditFilter.ALL)
+    private val paging = PagedAccumulator<AuditLogResponse, java.util.UUID> { it.auditLogId }
+    private val selectedFilter = MutableStateFlow(AuditCategory.ALL)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,6 +71,7 @@ class AdminAuditLogsActivity : AppCompatActivity() {
         recyclerLogs.layoutManager = LinearLayoutManager(this)
         recyclerLogs.adapter = adapter
         swipeRefresh.setOnRefreshListener { loadLogs() }
+        recyclerLogs.addNearEndListener { loadPage() }
     }
 
     private fun bindFilterChips() {
@@ -75,10 +81,10 @@ class AdminAuditLogsActivity : AppCompatActivity() {
             EventQrTheme {
                 val filter = selectedFilter.collectAsStateWithLifecycle().value
                 FilterChipRow(
-                    items = AuditFilter.entries,
+                    items = AuditCategory.entries,
                     selectedItem = filter,
                     onItemSelected = { setFilter(it) },
-                    labelProvider = { it.label },
+                    labelProvider = { getString(it.labelRes) },
                 )
             }
         }
@@ -88,73 +94,74 @@ class AdminAuditLogsActivity : AppCompatActivity() {
         configureAdminBottomNav(AdminBottomNavItem.LOGS)
     }
 
+    private var retrySnackbar: Snackbar? = null
+
+    override fun onDestroy() {
+        retrySnackbar?.dismiss()
+        super.onDestroy()
+    }
+
     private fun loadLogs() {
+        retrySnackbar?.dismiss()
+        paging.reset()
         if (!swipeRefresh.isRefreshing) {
             progressLoading.visibility = View.VISIBLE
         }
         recyclerLogs.visibility = View.GONE
         textPlaceholder.visibility = View.GONE
+        loadPage()
+    }
 
+    private fun loadPage() {
+        val ticket = paging.begin() ?: return
         lifecycleScope.launch {
-            when (val result = repository.loadAuditLogs()) {
+            when (val result = repository.loadAuditLogsPage(ticket.page, actionPrefix = selectedFilter.value.actionPrefix())) {
                 is NetworkResult.Success -> {
-                    swipeRefresh.isRefreshing = false
-                    allLogs = result.data.sortedByDescending { it.timestamp }
-                    progressLoading.visibility = View.GONE
-                    applyFilter()
+                    if (paging.onSuccess(ticket, result.data)) {
+                        swipeRefresh.isRefreshing = false
+                        progressLoading.visibility = View.GONE
+                        applyRows()
+                    }
                 }
                 is NetworkResult.Error -> {
-                    swipeRefresh.isRefreshing = false
-                    allLogs = emptyList()
-                    progressLoading.visibility = View.GONE
-                    recyclerLogs.visibility = View.GONE
-                    textPlaceholder.visibility = View.VISIBLE
-                    textPlaceholder.text = getString(R.string.admin_audit_logs_unable_to_load_audit_logs_pull_down)
+                    if (paging.onFailure(ticket)) {
+                        swipeRefresh.isRefreshing = false
+                        progressLoading.visibility = View.GONE
+                        if (paging.isEmpty) {
+                            recyclerLogs.visibility = View.GONE
+                            textPlaceholder.visibility = View.VISIBLE
+                            textPlaceholder.text = getString(R.string.admin_audit_logs_unable_to_load_audit_logs_pull_down)
+                        }
+                        retrySnackbar = Snackbar.make(recyclerLogs, result.message, Snackbar.LENGTH_INDEFINITE)
+                            .setAction(R.string.common_retry) {
+                                paging.retry()
+                                loadPage()
+                            }
+                        retrySnackbar?.show()
+                    }
                 }
                 NetworkResult.Loading -> Unit
             }
         }
     }
 
-    private fun setFilter(filter: AuditFilter) {
+    /** A category change restarts paging at page 0; the server filters by action prefix. */
+    private fun setFilter(filter: AuditCategory) {
+        if (selectedFilter.value == filter) return
         selectedFilter.value = filter
-        applyFilter()
+        adapter.submitItems(emptyList())
+        loadLogs()
     }
 
-    private fun applyFilter() {
-        val activeFilter = selectedFilter.value
-
-        if (allLogs.isEmpty()) {
-            recyclerLogs.visibility = View.GONE
-            textPlaceholder.visibility = View.VISIBLE
-            textPlaceholder.text = getString(R.string.admin_audit_logs_no_audit_logs_yet)
-            adapter.submitItems(emptyList())
-            return
+    private fun applyRows() {
+        val rows = paging.items
+        adapter.submitItems(rows)
+        recyclerLogs.visibility = if (rows.isEmpty()) View.GONE else View.VISIBLE
+        textPlaceholder.visibility = if (rows.isEmpty()) View.VISIBLE else View.GONE
+        textPlaceholder.text = when {
+            rows.isNotEmpty() -> ""
+            selectedFilter.value == AuditCategory.ALL -> getString(R.string.admin_audit_logs_no_audit_logs_yet)
+            else -> getString(R.string.admin_audit_logs_no_logs_for_filter)
         }
-
-        val filtered = allLogs.filter { log ->
-            val actionText = log.action.lowercase()
-            val detailsText = log.details.orEmpty().lowercase()
-            when (activeFilter) {
-                AuditFilter.ALL -> true
-                AuditFilter.APPROVAL -> actionText.contains("approve") || actionText.contains("reject") || actionText.contains("request") || detailsText.contains("approve") || detailsText.contains("reject")
-                AuditFilter.ACCOUNT -> actionText.contains("account") || actionText.contains("user") || actionText.contains("role") || actionText.contains("suspend") || detailsText.contains("account") || detailsText.contains("role")
-                AuditFilter.SECURITY -> actionText.contains("security") || actionText.contains("suspend") || actionText.contains("permission") || detailsText.contains("security") || detailsText.contains("suspend")
-                AuditFilter.NOTIFICATION -> actionText.contains("notification") || detailsText.contains("notification")
-            }
-        }
-
-        adapter.submitItems(filtered)
-        recyclerLogs.visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
-        textPlaceholder.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
-        textPlaceholder.text = if (filtered.isEmpty()) "No audit logs for this filter." else ""
-    }
-
-    private enum class AuditFilter(val label: String) {
-        ALL("All"),
-        APPROVAL("Approval"),
-        ACCOUNT("Account"),
-        SECURITY("Security"),
-        NOTIFICATION("Notification"),
     }
 }

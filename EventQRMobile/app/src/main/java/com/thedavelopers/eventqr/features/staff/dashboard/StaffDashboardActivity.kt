@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.staff
 
+import com.thedavelopers.eventqr.core.util.UiStrings
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -50,7 +51,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
         findViewById<View>(R.id.headerDashboard).applyEventQrTopInsetPadding()
 
         repository = StaffRepository(this)
-        presenter = StaffDashboardPresenter(this, repository)
+        presenter = StaffDashboardPresenter(this, repository, UiStrings(this))
         adapter = TransactionLogAdapter()
         skeletonLoading = findViewById(R.id.skeletonLoading)
 
@@ -177,9 +178,9 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
         findViewById<EventQrEmptyState>(R.id.txtRecentScansEmpty).visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
     }
 
-    override fun updateStats(scans: Int, checkins: Int) {
-        findViewById<TextView>(R.id.txtScansToday).text = scans.toString()
-        findViewById<TextView>(R.id.txtCheckinsToday).text = checkins.toString()
+    override fun updateStats(scans: Int?, checkins: Int?) {
+        findViewById<TextView>(R.id.txtScansToday).text = scans?.toString() ?: getString(R.string.common_value_unavailable)
+        findViewById<TextView>(R.id.txtCheckinsToday).text = checkins?.toString() ?: getString(R.string.common_value_unavailable)
     }
 
     override fun showMessage(message: String) {

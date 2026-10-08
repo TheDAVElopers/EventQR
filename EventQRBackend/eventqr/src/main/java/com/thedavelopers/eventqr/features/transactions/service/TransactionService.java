@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,12 +19,16 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionRequest;
 import com.thedavelopers.eventqr.features.transactions.model.dto.ScanVerificationResponse;
+import com.thedavelopers.eventqr.features.transactions.model.dto.StaffTodaySummary;
+import com.thedavelopers.eventqr.features.transactions.model.dto.StaffTransactionSummary;
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse;
 import com.thedavelopers.eventqr.features.transactions.model.entity.TransactionLog;
 import com.thedavelopers.eventqr.features.transactions.model.entity.TransactionRule;
@@ -54,6 +59,9 @@ public class TransactionService {
 
     private static final Logger log = LoggerFactory.getLogger(TransactionService.class);
     private static final String DEFAULT_METADATA = "{}";
+    /** Stable newest-first order: id breaks scannedAt ties so pages never overlap or skip rows. */
+    private static final Sort NEWEST_FIRST = Sort.by(Sort.Order.desc("scannedAt"), Sort.Order.asc("id"));
+    private static final java.util.Set<TransactionType> CHECK_IN_TYPES = EnumSet.of(TransactionType.ENTRY, TransactionType.ATTENDANCE);
 
     private final TransactionLogRepository transactionLogRepository;
     private final TransactionRuleRepository transactionRuleRepository;
@@ -124,10 +132,16 @@ public class TransactionService {
             if (isNotScannable(registration.status())) {
                 throw new ForbiddenException("Registration is not active");
             }
+            // Unlike the raw-QR path this lookup does not reject an inactive credential, so the response must
+            // say so honestly: qrActive mirrors the credential and eligible is false (a scan would be rejected).
+            boolean eligible = qrSnapshot.active();
+            String message = eligible
+                    ? "Attendee ID #" + regNum + " verified"
+                    : "Attendee ID #" + regNum + " found, but the QR credential is inactive";
             return new ScanVerificationResponse(eventSnapshot.eventId(), registration.attendeeUserId(), registration.registrationId(),
                     qrSnapshot.qrCredentialId(), qrSnapshot.qrValue(), registration.attendeeName(), registration.attendeeEmail(),
                     registration.status(), purpose.scanPurposeId(), purpose.code(), qrSnapshot.active(),
-                    "Attendee ID #" + regNum + " verified", Instant.now());
+                    message, Instant.now(), eligible);
         }
 
         if (request.qrValue() == null || request.qrValue().isBlank()) {
@@ -152,7 +166,7 @@ public class TransactionService {
         return new ScanVerificationResponse(eventSnapshot.eventId(), registration.attendeeUserId(), registration.registrationId(),
                 qrSnapshot.qrCredentialId(), qrSnapshot.qrValue(), registration.attendeeName(), registration.attendeeEmail(),
                 registration.status(), purpose.scanPurposeId(), purpose.code(), qrSnapshot.active(),
-                "QR credential verified", Instant.now());
+                "QR credential verified", Instant.now(), true);
     }
 
     @CacheEvict(cacheNames = "transaction-rules", key = "#request.eventId()")
@@ -293,19 +307,73 @@ public class TransactionService {
                 .toList();
     }
 
+    /** The caller's own scans, newest first (scannedAt DESC, id ASC), optionally for one event and/or purpose. */
     @Transactional(readOnly = true)
-    public List<TransactionResponse> findForStaff(UUID staffUserId, UUID eventId, UUID scanPurposeId) {
-        List<TransactionLog> logs;
+    public Page<TransactionResponse> findForStaff(UUID staffUserId, UUID eventId, UUID scanPurposeId, Pageable pageable) {
+        Pageable sorted = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), NEWEST_FIRST);
+        Page<TransactionLog> logs;
         if (eventId != null && scanPurposeId != null) {
-            logs = transactionLogRepository.findByStaffUserIdAndEventIdAndScanPurposeIdOrderByScannedAtDesc(staffUserId, eventId, scanPurposeId);
+            logs = transactionLogRepository.findByStaffUserIdAndEventIdAndScanPurposeIdOrderByScannedAtDesc(staffUserId, eventId, scanPurposeId, sorted);
         } else if (eventId != null) {
-            logs = transactionLogRepository.findByStaffUserIdAndEventIdOrderByScannedAtDesc(staffUserId, eventId);
+            logs = transactionLogRepository.findByStaffUserIdAndEventIdOrderByScannedAtDesc(staffUserId, eventId, sorted);
         } else if (scanPurposeId != null) {
-            logs = transactionLogRepository.findByStaffUserIdAndScanPurposeIdOrderByScannedAtDesc(staffUserId, scanPurposeId);
+            logs = transactionLogRepository.findByStaffUserIdAndScanPurposeIdOrderByScannedAtDesc(staffUserId, scanPurposeId, sorted);
         } else {
-            logs = transactionLogRepository.findByStaffUserIdOrderByScannedAtDesc(staffUserId);
+            logs = transactionLogRepository.findByStaffUserIdOrderByScannedAtDesc(staffUserId, sorted);
         }
-        return logs.stream().map(this::toResponse).toList();
+        return logs.map(this::toResponse);
+    }
+
+    /**
+     * COUNT-only totals for the caller's own scans, optionally limited to one event and/or one scan purpose so the
+     * tiles always describe the same rows the list shows.
+     */
+    @Transactional(readOnly = true)
+    public StaffTransactionSummary summarizeForStaff(UUID staffUserId, UUID eventId, UUID scanPurposeId) {
+        if (eventId != null && scanPurposeId != null) {
+            return new StaffTransactionSummary(
+                    transactionLogRepository.countByStaffUserIdAndEventIdAndScanPurposeId(staffUserId, eventId, scanPurposeId),
+                    transactionLogRepository.countByStaffUserIdAndEventIdAndScanPurposeIdAndTransactionResult(staffUserId, eventId, scanPurposeId, TransactionResult.APPROVED),
+                    transactionLogRepository.countByStaffUserIdAndEventIdAndScanPurposeIdAndTransactionResult(staffUserId, eventId, scanPurposeId, TransactionResult.REJECTED));
+        }
+        if (scanPurposeId != null) {
+            return new StaffTransactionSummary(
+                    transactionLogRepository.countByStaffUserIdAndScanPurposeId(staffUserId, scanPurposeId),
+                    transactionLogRepository.countByStaffUserIdAndScanPurposeIdAndTransactionResult(staffUserId, scanPurposeId, TransactionResult.APPROVED),
+                    transactionLogRepository.countByStaffUserIdAndScanPurposeIdAndTransactionResult(staffUserId, scanPurposeId, TransactionResult.REJECTED));
+        }
+        if (eventId != null) {
+            return new StaffTransactionSummary(
+                    transactionLogRepository.countByStaffUserIdAndEventId(staffUserId, eventId),
+                    transactionLogRepository.countByStaffUserIdAndEventIdAndTransactionResult(staffUserId, eventId, TransactionResult.APPROVED),
+                    transactionLogRepository.countByStaffUserIdAndEventIdAndTransactionResult(staffUserId, eventId, TransactionResult.REJECTED));
+        }
+        return new StaffTransactionSummary(
+                transactionLogRepository.countByStaffUserId(staffUserId),
+                transactionLogRepository.countByStaffUserIdAndTransactionResult(staffUserId, TransactionResult.APPROVED),
+                transactionLogRepository.countByStaffUserIdAndTransactionResult(staffUserId, TransactionResult.REJECTED));
+    }
+
+    /**
+     * Today's (business-zone day) figures for the caller: every scan they made, and the number of distinct
+     * attendees they successfully checked in (APPROVED ENTRY/ATTENDANCE).
+     */
+    @Transactional(readOnly = true)
+    public StaffTodaySummary summarizeTodayForStaff(UUID staffUserId) {
+        Instant startOfToday = LocalDate.now(businessZone).atStartOfDay(businessZone).toInstant();
+        return new StaffTodaySummary(
+                transactionLogRepository.countByStaffUserIdAndScannedAtGreaterThanEqual(staffUserId, startOfToday),
+                transactionLogRepository.countDistinctAttendeesSince(staffUserId, startOfToday, TransactionResult.APPROVED, CHECK_IN_TYPES));
+    }
+
+    /** Staff view of an event's transactions: newest first, optionally narrowed to one attendee. */
+    @Transactional(readOnly = true)
+    public Page<TransactionResponse> findForEventStaff(UUID eventId, UUID attendeeUserId, Pageable pageable) {
+        Pageable sorted = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), NEWEST_FIRST);
+        Page<TransactionLog> logs = attendeeUserId == null
+                ? transactionLogRepository.findByEventId(eventId, sorted)
+                : transactionLogRepository.findByEventIdAndAttendeeUserId(eventId, attendeeUserId, sorted);
+        return logs.map(this::toResponse);
     }
 
     @Transactional(readOnly = true)

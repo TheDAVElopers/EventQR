@@ -1,8 +1,11 @@
 package com.thedavelopers.eventqr.features.staff
 
+import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.core.util.UiStrings
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
 import com.thedavelopers.eventqr.core.api.dto.NotificationStatus
-import com.thedavelopers.eventqr.core.api.dto.TransactionResult
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -11,6 +14,8 @@ import kotlinx.coroutines.launch
 class StaffDashboardPresenter(
     private var view: StaffDashboardContract.View?,
     private val repository: StaffRepository,
+    private val strings: UiStrings? = null,
+    private val scope: CoroutineScope = MainScope(),
 ) {
     private var job: Job? = null
 
@@ -21,11 +26,12 @@ class StaffDashboardPresenter(
 
     fun loadData() {
         view?.showLoading(true)
-        job = kotlinx.coroutines.MainScope().launch {
-            val (eventsResult, todayResult) = coroutineScope {
+        job = scope.launch {
+            val (eventsResult, todayResult, summaryResult) = coroutineScope {
                 val eventsDeferred = async { repository.getEvents() }
                 val todayDeferred = async { repository.getMyTodayTransactions() }
-                eventsDeferred.await() to todayDeferred.await()
+                val summaryDeferred = async { repository.getMyTodaySummary() }
+                Triple(eventsDeferred.await(), todayDeferred.await(), summaryDeferred.await())
             }
 
             when (eventsResult) {
@@ -35,24 +41,21 @@ class StaffDashboardPresenter(
             }
 
             when (todayResult) {
-                is NetworkResult.Success -> {
-                    val sortedTransactions = todayResult.data
-                        .sortedByDescending { it.scannedAt ?: java.time.Instant.EPOCH }
-                    view?.renderRecentScans(sortedTransactions.take(5))
-                    view?.updateStats(
-                        sortedTransactions.size,
-                        sortedTransactions.count {
-                            (it.transactionType.name == "ENTRY" || it.transactionType.name == "ATTENDANCE") &&
-                                it.transactionResult == TransactionResult.APPROVED
-                        },
-                    )
-                }
+                is NetworkResult.Success -> view?.renderRecentScans(
+                    todayResult.data.sortedByDescending { it.scannedAt ?: java.time.Instant.EPOCH }.take(5),
+                )
+                is NetworkResult.Error -> view?.renderRecentScans(emptyList())
+                NetworkResult.Loading -> Unit
+            }
+
+            // Tile counts are server-side, scoped to the caller's own scans today (check-ins = distinct
+            // attendees). Unknown is not zero: show "--" and say why.
+            when (summaryResult) {
+                is NetworkResult.Success ->
+                    view?.updateStats(summaryResult.data.scannedToday.toInt(), summaryResult.data.successfulCheckIns.toInt())
                 is NetworkResult.Error -> {
-                    view?.renderRecentScans(emptyList())
-                    view?.updateStats(
-                        0,
-                        0,
-                    )
+                    view?.updateStats(null, null)
+                    view?.showMessage(strings?.get(R.string.staff_dashboard_stats_unavailable) ?: summaryResult.message)
                 }
                 NetworkResult.Loading -> Unit
             }

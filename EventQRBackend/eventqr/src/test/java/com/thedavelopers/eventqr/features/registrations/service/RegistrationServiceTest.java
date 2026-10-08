@@ -83,7 +83,8 @@ class RegistrationServiceTest {
     void setUp() {
         service = new RegistrationService(registrationRepository, attendeeDirectoryPort, notificationService,
                 staffAssignmentRepository, eventLookupPort, qrCredentialPort, eventService, qrEmailService,
-                applicationEventPublisher, registrationRateLimiter);
+                applicationEventPublisher, registrationRateLimiter,
+                mock(com.thedavelopers.eventqr.features.rewards.repository.PointTransactionRepository.class));
         when(registrationRateLimiter.allow(any(), any())).thenReturn(true);
         // Injected by the container in production; flush/clear are no-ops for these unit tests.
         ReflectionTestUtils.setField(service, "entityManager", mock(EntityManager.class));

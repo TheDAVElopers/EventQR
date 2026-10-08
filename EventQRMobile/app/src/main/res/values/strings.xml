@@ -275,8 +275,8 @@
     <string name="common_welcome_back">Welcome back,</string>
     <string name="staff_dashboard_staff_name">Staff Name</string>
     <string name="staff_dashboard_staff">Staff</string>
-    <string name="staff_dashboard_scanned_today">Scanned Today</string>
-    <string name="staff_dashboard_successful_check_ins">Successful Check-ins</string>
+    <string name="staff_dashboard_scanned_today">My Scans Today</string>
+    <string name="staff_dashboard_successful_check_ins">Check-ins Today</string>
     <string name="staff_dashboard_today_s_activity">Today\'s Activity</string>
     <string name="common_valid">Valid</string>
     <string name="staff_scan_result_qr_code_valid">QR Code Valid</string>
@@ -301,12 +301,13 @@
     <string name="staff_transaction_logs_logs_for">Logs For</string>
     <string name="staff_transaction_logs_purpose_filter">Purpose Filter</string>
     <string name="staff_transaction_logs_all_purposes">All Purposes</string>
-    <string name="staff_transaction_logs_total_scans">Total scans</string>
+    <string name="staff_transaction_logs_total_scans">My scans</string>
     <string name="staff_transaction_logs_successful">Successful</string>
     <string name="staff_transaction_result_transaction_successful">Transaction Successful</string>
     <string name="staff_transaction_result_points_awarded_to_attendee">Points awarded to attendee</string>
     <string name="staff_transaction_result_transaction_rejected">Transaction Rejected</string>
-    <string name="staff_transaction_result_transaction_was_not_recorded">Transaction was not recorded</string>
+    <string name="staff_transaction_result_scan_rejected_and_logged">Scan rejected and logged</string>
+    <string name="staff_transaction_result_scan_recorded">Scan recorded</string>
     <string name="staff_transaction_result_type">Type</string>
     <string name="staff_transaction_result_scan_type">SCAN TYPE</string>
     <string name="staff_transaction_result_attendee">ATTENDEE</string>
@@ -566,7 +567,7 @@
     <string name="common_failed_with_reason">Failed: %1$s</string>
     <string name="admin_account_confirm_delete">Permanently delete %1$s? This cannot be undone and requires the account to be disabled first with no transaction history.</string>
     <string name="audit_actor_fallback">Admin User</string>
-    <string name="audit_target_fallback">System</string>
+    <string name="audit_target_fallback">--</string>
     <string name="audit_actor_target">By %1$s · Target: %2$s</string>
     <plurals name="request_event_more_issues">
         <item quantity="one">and %d more issue</item>
@@ -697,4 +698,19 @@
     <string name="registered_events_none_upcoming">No upcoming registered events</string>
     <string name="registered_events_none_active">No active registered events</string>
     <string name="registered_events_none_completed">No completed registered events</string>
+    <string name="common_value_unavailable">--</string>
+    <string name="event_registrations_assigned_event_fallback">Assigned Event</string>
+    <string name="staff_dashboard_stats_unavailable">Could not load your scan counts for today. Pull down to retry.</string>
+    <string name="admin_dashboard_pending_unavailable">Unable to refresh pending requests right now.</string>
+    <string name="admin_dashboard_stats_unavailable">Dashboard totals are currently unavailable.</string>
+    <string name="admin_account_management_no_accounts_match_your_search">No accounts match your search.</string>
+    <string name="audit_filter_all">All</string>
+    <string name="audit_filter_event_requests">Event requests</string>
+    <string name="audit_filter_account">Account</string>
+    <string name="admin_audit_logs_no_logs_for_filter">No audit logs for this filter.</string>
+    <string name="staff_scan_result_qr_active_hint">QR code is active</string>
+    <string name="staff_scan_result_qr_inactive">QR Code Inactive</string>
+    <string name="staff_scan_result_qr_inactive_hint">This QR code or registration is not active.</string>
+    <string name="staff_scan_result_qr_inactive_reason">The registration is not active, so no transaction can be logged.</string>
+    <string name="staff_attendee_details_scans">Scans</string>
 </resources>

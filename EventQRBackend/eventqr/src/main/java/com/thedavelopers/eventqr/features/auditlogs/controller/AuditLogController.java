@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.thedavelopers.eventqr.features.auditlogs.model.dto.AuditLogRequest;
@@ -22,16 +23,19 @@ public class AuditLogController {
     private final JwtService jwtService;
 
     @GetMapping("/admin/audit-logs")
-    public ResponseEntity<ApiResponse<List<AuditLogResponse>>> getAdminAuditLogs(HttpServletRequest request) {
-        requireAdmin(request);
-        return ResponseEntity.ok(ApiResponse.success(auditLogService.findAll()));
+    public ResponseEntity<ApiResponse<Page<AuditLogResponse>>> getAdminAuditLogs(HttpServletRequest request,
+                                                                                @RequestParam(defaultValue = "0") int page,
+                                                                                @RequestParam(defaultValue = "20") int size,
+                                                                                @RequestParam(required = false) String actionPrefix) {
+        AccountRole role = requireAdmin(request);
+        return ResponseEntity.ok(ApiResponse.success(auditLogService.findAll(page, size, actionPrefix, role)));
     }
 
     @GetMapping("/admin/events/{eventId}/audit-logs")
     public ResponseEntity<ApiResponse<List<AuditLogResponse>>> getOrganizerAuditLogs(HttpServletRequest request,
                                                                                      @PathVariable UUID eventId) {
-        requireAdmin(request);
-        return ResponseEntity.ok(ApiResponse.success(auditLogService.findByEvent(eventId)));
+        AccountRole role = requireAdmin(request);
+        return ResponseEntity.ok(ApiResponse.success(auditLogService.findByEvent(eventId, role)));
     }
 
     @PostMapping("/audit-logs")
@@ -41,10 +45,11 @@ public class AuditLogController {
         return ResponseEntity.ok(ApiResponse.success("Audit log created", null));
     }
 
-    private void requireAdmin(HttpServletRequest request) {
+    private AccountRole requireAdmin(HttpServletRequest request) {
         AccountRole role = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
         if (role != AccountRole.ADMIN && role != AccountRole.SUPER_ADMIN) {
             throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Admin access required");
         }
+        return role;
     }
 }

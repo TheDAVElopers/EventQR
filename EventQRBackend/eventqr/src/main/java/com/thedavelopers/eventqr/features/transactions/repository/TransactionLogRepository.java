@@ -12,6 +12,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.thedavelopers.eventqr.features.transactions.model.entity.TransactionLog;
+import com.thedavelopers.eventqr.shared.constants.TransactionResult;
+import com.thedavelopers.eventqr.shared.constants.TransactionType;
 
 public interface TransactionLogRepository extends JpaRepository<TransactionLog, UUID> {
 
@@ -39,6 +41,26 @@ public interface TransactionLogRepository extends JpaRepository<TransactionLog, 
     Page<TransactionLog> findByStaffUserIdAndEventIdOrderByScannedAtDesc(UUID staffUserId, UUID eventId, Pageable pageable);
     Page<TransactionLog> findByStaffUserIdAndScanPurposeIdOrderByScannedAtDesc(UUID staffUserId, UUID scanPurposeId, Pageable pageable);
     Page<TransactionLog> findByStaffUserIdAndEventIdAndScanPurposeIdOrderByScannedAtDesc(UUID staffUserId, UUID eventId, UUID scanPurposeId, Pageable pageable);
+
+    Page<TransactionLog> findByEventIdAndAttendeeUserId(UUID eventId, UUID attendeeUserId, Pageable pageable);
+
+    // COUNT queries for the staff summary (caller's own scans).
+    long countByStaffUserId(UUID staffUserId);
+    long countByStaffUserIdAndTransactionResult(UUID staffUserId, TransactionResult result);
+    long countByStaffUserIdAndEventId(UUID staffUserId, UUID eventId);
+    long countByStaffUserIdAndEventIdAndTransactionResult(UUID staffUserId, UUID eventId, TransactionResult result);
+    long countByStaffUserIdAndScannedAtGreaterThanEqual(UUID staffUserId, Instant scannedAt);
+    long countByStaffUserIdAndScanPurposeId(UUID staffUserId, UUID scanPurposeId);
+    long countByStaffUserIdAndScanPurposeIdAndTransactionResult(UUID staffUserId, UUID scanPurposeId, TransactionResult result);
+    long countByStaffUserIdAndEventIdAndScanPurposeId(UUID staffUserId, UUID eventId, UUID scanPurposeId);
+    long countByStaffUserIdAndEventIdAndScanPurposeIdAndTransactionResult(UUID staffUserId, UUID eventId, UUID scanPurposeId, TransactionResult result);
+
+    /** Distinct attendees with an APPROVED scan of one of the given types by the staff member since {@code since}. */
+    @Query("SELECT COUNT(DISTINCT t.attendeeUserId) FROM TransactionLog t WHERE t.staffUserId = :staffUserId "
+            + "AND t.scannedAt >= :since AND t.transactionResult = :result AND t.transactionType IN :types")
+    long countDistinctAttendeesSince(@Param("staffUserId") UUID staffUserId, @Param("since") Instant since,
+                                     @Param("result") TransactionResult result,
+                                     @Param("types") java.util.Collection<TransactionType> types);
 
     long countByEventId(UUID eventId);
     long countByAttendeeUserId(UUID attendeeUserId);

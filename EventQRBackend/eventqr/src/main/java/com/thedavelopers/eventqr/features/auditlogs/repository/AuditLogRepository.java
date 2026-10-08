@@ -8,4 +8,5 @@ import com.thedavelopers.eventqr.features.auditlogs.model.entity.AuditLog;
 public interface AuditLogRepository extends JpaRepository<AuditLog, UUID> {
     List<AuditLog> findByEventIdOrderByCreatedAtDesc(UUID eventId);
     List<AuditLog> findAllByOrderByCreatedAtDesc();
+    org.springframework.data.domain.Page<AuditLog> findByActionStartingWith(String actionPrefix, org.springframework.data.domain.Pageable pageable);
 }

@@ -565,7 +565,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
             putExtra(StaffScreenExtras.EXTRA_REGISTRATION_ID, result.registrationId.toString())
             putExtra(StaffScreenExtras.EXTRA_QR_CREDENTIAL_ID, result.qrCredentialId.toString())
             putExtra(StaffScreenExtras.EXTRA_REGISTRATION_STATUS, result.registrationStatus.name)
-            putExtra(StaffScreenExtras.EXTRA_QR_ACTIVE, result.qrActive)
+            putExtra(StaffScreenExtras.EXTRA_QR_ACTIVE, result.qrActive && result.eligible != false)
             putExtra(StaffScreenExtras.EXTRA_VERIFIED_AT, result.verifiedAt?.toString().orEmpty())
         })
     }

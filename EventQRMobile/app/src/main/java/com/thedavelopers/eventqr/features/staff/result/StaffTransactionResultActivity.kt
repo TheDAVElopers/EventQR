@@ -47,7 +47,12 @@ open class StaffTransactionResultActivity : AppCompatActivity() {
 
         findViewById<View>(R.id.headerApproved).visibility = if (approved) View.VISIBLE else View.GONE
         findViewById<View>(R.id.headerRejected).visibility = if (approved) View.GONE else View.VISIBLE
-        findViewById<View>(R.id.layoutTransactionApproved).visibility = if (approved) View.VISIBLE else View.GONE
+        val pointsDelta = intent.getIntExtra(StaffScreenExtras.EXTRA_POINTS_DELTA, 0)
+        // Points card + "Points awarded" copy only when points were really awarded.
+        findViewById<View>(R.id.layoutTransactionApproved).visibility =
+            if (TransactionResultCopy.showsPoints(approved, pointsDelta)) View.VISIBLE else View.GONE
+        findViewById<TextView>(R.id.txtTransactionStateHint).setText(TransactionResultCopy.hintRes(approved, pointsDelta))
+        findViewById<TextView>(R.id.txtTransactionStateHintRejected).setText(TransactionResultCopy.hintRes(approved, pointsDelta))
         findViewById<View>(R.id.layoutTransactionRejected).visibility = if (approved) View.GONE else View.VISIBLE
 
         findViewById<Button>(R.id.btnViewTransactionAttendee).visibility = if (approved) View.VISIBLE else View.GONE
