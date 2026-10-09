@@ -54,6 +54,15 @@ android {
                 "proguard-rules.pro"
             )
         }
+        // Release-equivalent but unminified and debug-signed, so the :baselineprofile module can install and
+        // profile it. Only built on demand by that module; CI never touches it.
+        create("benchmark") {
+            initWith(getByName("release"))
+            isMinifyEnabled = false
+            isShrinkResources = false
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

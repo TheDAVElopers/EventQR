@@ -384,6 +384,7 @@
 
     <!-- Extracted from Kotlin screens. -->
     <string name="event_qr_application_your_session_has_expired_please_sign">Your session has expired. Please sign in again.</string>
+    <string name="event_qr_application_your_role_was_updated">Your account role was updated.</string>
     <string name="admin_event_approval_backend_admin_access_required">Admin access required.</string>
     <string name="admin_event_request_detail_request_not_found">Request not found.</string>
     <string name="admin_event_request_detail_event_request_approved">Event request approved!</string>
@@ -446,7 +447,6 @@
     <string name="attendee_transactions_no_transactions_found_for_the_select">No transactions found for the selected event.</string>
     <string name="change_password_password_changed_successfully">Password changed successfully</string>
     <string name="login_unable_to_determine_account_role">Unable to determine account role</string>
-    <string name="landing_camera_permission_is_required_for_sc">Camera permission is required for scanning features</string>
     <string name="attendee_details_open_attendee_details_from_an_event">Open attendee details from an event to view live records.</string>
     <string name="attendee_details_selected_event_not_available">Selected event not available.</string>
     <string name="attendee_details_attendee_details">Attendee Details</string>

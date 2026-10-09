@@ -18,8 +18,7 @@
         android:layout_height="wrap_content"
         android:background="@android:color/transparent"
         android:orientation="vertical"
-        android:paddingHorizontal="16dp"
-        android:paddingBottom="16dp">
+        android:paddingHorizontal="16dp">
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilSearch"
@@ -49,11 +48,20 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
+    </LinearLayout>
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:paddingBottom="16dp"
+        android:scrollbars="none">
+
         <com.google.android.material.chip.ChipGroup
             android:id="@+id/chipGroupFilters"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:paddingHorizontal="16dp"
             app:singleSelection="true"
             app:selectionRequired="true">
 
@@ -122,8 +130,7 @@
                 app:textEndPadding="12dp" />
 
         </com.google.android.material.chip.ChipGroup>
-
-    </LinearLayout>
+    </HorizontalScrollView>
 
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshEvents"

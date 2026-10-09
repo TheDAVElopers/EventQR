@@ -25,4 +25,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "EventQR"
 include(":app")
+include(":baselineprofile")
  
