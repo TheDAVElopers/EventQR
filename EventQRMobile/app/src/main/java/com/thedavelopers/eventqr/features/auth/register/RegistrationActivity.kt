@@ -18,6 +18,7 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.auth.AuthRepository
 import com.thedavelopers.eventqr.features.auth.login.LoginActivity
+import com.thedavelopers.eventqr.features.terms.TermsLink
 
 open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View {
     private lateinit var presenter: RegistrationPresenter
@@ -87,6 +88,7 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
         termsCheckBox.setOnCheckedChangeListener { _, _ ->
             updateRegisterButtonState()
         }
+        TermsLink.apply(termsCheckBox, getString(R.string.terms_link_signup))
 
         registerButton.setOnClickListener {
             // EventQR - UI validation deviation beyond SRS UC-01 field spec

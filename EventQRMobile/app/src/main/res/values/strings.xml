@@ -864,4 +864,29 @@
     <string name="staff_promote_title">Assign as staff?</string>
     <string name="staff_promote_message">%1$s will become a Staff member. They keep their attendee access.</string>
     <string name="staff_promoted_toast">%1$s is now a Staff member. They keep their attendee access.</string>
+
+    <!-- Terms & Conditions -->
+    <string name="terms_title">Terms &amp; Conditions</string>
+    <string name="terms_link_signup">Terms &amp; Conditions</string>
+    <string name="terms_link_event">terms and conditions</string>
+    <string name="terms_intro">Please read how EventQR works, what we collect, and what we expect from you.</string>
+    <string name="terms_section_content_description">Section %1$d, %2$s</string>
+    <string name="terms_s1_title">Using EventQR</string>
+    <string name="terms_s1_body">EventQR lets you register for events, receive a personal QR credential, and have your attendance and rewards recorded at event check-ins. By creating an account or registering for an event you agree to these terms.</string>
+    <string name="terms_s2_title">Your account</string>
+    <string name="terms_s2_body">You are responsible for the accuracy of the details you provide and for keeping your password secure. Do not share your account or your QR credential with other people. Tell us if you think your account has been misused.</string>
+    <string name="terms_s3_title">Information we collect</string>
+    <string name="terms_s3_body">We collect the details you give us (name, email address, phone number), your event registrations, and check-in and reward activity recorded when your QR credential is scanned. Your QR credential is emailed to the address you registered with.</string>
+    <string name="terms_s4_title">How information is used</string>
+    <string name="terms_s4_body">Your information is used to run your account, issue and verify your QR credential, manage event entry and rewards, and send you account and event messages such as password reset codes. Event organizers can see the registration and attendance details for their own events.</string>
+    <string name="terms_s5_title">Acceptable use</string>
+    <string name="terms_s5_body">Do not attempt to forge, copy or tamper with QR credentials, interfere with check-in or scanning, or use the app to access accounts or data that are not yours.</string>
+    <string name="terms_s6_title">Events and rewards</string>
+    <string name="terms_s6_body">Events are run by their organizers. Entry, rewards and benefits are subject to each organizer’s rules and may change or be withdrawn. EventQR is not responsible for how an event is run.</string>
+    <string name="terms_s7_title">Suspension</string>
+    <string name="terms_s7_body">We may suspend or remove accounts that break these terms or are used to abuse the service.</string>
+    <string name="terms_s8_title">Changes</string>
+    <string name="terms_s8_body">We may update these terms. Continuing to use EventQR after an update means you accept the new terms.</string>
+    <string name="terms_s9_title">Questions</string>
+    <string name="terms_s9_body">For questions about these terms or your data, contact the event organizer or the EventQR team.</string>
 </resources>

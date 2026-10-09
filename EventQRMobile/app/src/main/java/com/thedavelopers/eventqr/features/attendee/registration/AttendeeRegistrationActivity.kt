@@ -15,6 +15,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.features.terms.TermsLink
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.Validators
@@ -76,6 +77,7 @@ open class AttendeeRegistrationActivity : AppCompatActivity(), RegistrationContr
         loadLatestProfilePrefill()
 
         termsCheckbox.setOnCheckedChangeListener { _, _ -> updateSubmitButtonState() }
+        TermsLink.apply(findViewById(R.id.txtRegistrationTerms), getString(R.string.terms_link_event))
         submitButton.setOnClickListener { submitRegistration() }
 
         updateSubmitButtonState()

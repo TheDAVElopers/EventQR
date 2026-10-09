@@ -31,7 +31,7 @@ The platform allows:
 ### Mobile App
 
 - Kotlin, Android (minSdk 26, targetSdk 35)
-- Jetpack Compose + Material 3
+- XML layouts with Material Components, using Activity / Contract / Presenter (MVP) for most screens, plus Jetpack Compose (Material 3) for a few
 - Retrofit + OkHttp + Gson for backend calls
 - ZXing for QR codes, uCrop for image cropping
 - Encrypted session storage (AndroidX Security Crypto)
@@ -54,7 +54,7 @@ EventQR/
 │   │   ├── application.properties
 │   │   ├── application-prod.properties
 │   │   ├── logback-spring.xml
-│   │   └── db/migration/        # Flyway migrations (V1 ... V38)
+│   │   └── db/migration/        # Flyway migrations (V1 ... V39)
 │   ├── src/test/                # Backend tests
 │   ├── .env.example             # All supported environment variables
 │   ├── Dockerfile
@@ -65,7 +65,7 @@ EventQR/
 │   │   ├── features/            # admin, attendee, audit, auth, common, dashboard,
 │   │   │                        # events, idprinting, landing, notifications,
 │   │   │                        # organizer, qrcredential, registrations, reports,
-│   │   │                        # rewards, scanpurposes, staff, transactions,
+│   │   │                        # rewards, scanpurposes, staff, terms, transactions,
 │   │   │                        # uploads, users
 │   │   └── ui/                  # shared components and theme
 │   ├── app/src/test, androidTest, benchmark
@@ -86,6 +86,7 @@ EventQR/
 - view transactions and event participation history
 - claim and redeem rewards
 - view notifications and profile data
+- create an account (with an in-app Terms & Conditions page), change password, and recover a forgotten password with an emailed code
 
 ### Staff features
 
@@ -127,7 +128,7 @@ The project uses:
 
 Examples of implemented API groups include:
 
-- `/api/v1/auth`
+- `/api/v1/auth` (login, refresh, register, change password, and the forgot / verify / reset password code flow)
 - `/api/v1/events`
 - `/api/v1/registrations`
 - `/api/v1/staff`
@@ -140,15 +141,25 @@ Examples of implemented API groups include:
 
 ## Mobile App Architecture
 
-The Android application is built with Jetpack Compose and organized into feature packages on top of a shared `core` layer (API client, navigation, session) and a `ui` layer (components, theme). The app includes:
+The Android application is organized into feature packages on top of a shared `core` layer (API client, navigation, session) and a `ui` layer (components, theme). Most screens are XML-layout Activities with a Contract and Presenter; a few use Jetpack Compose. The app includes:
 
-- landing, login, registration, password reset, and profile screens
+- landing, login, registration (with a Terms & Conditions page), password reset, and profile screens
 - role-based dashboards for attendees, staff, organizers, and admins
 - event browsing, registration, and QR credential display
 - attendee rewards, transactions, and notifications
 - staff scanning workflows (camera permission is requested only when the scanner opens) and transaction logs
 - organizer and admin screens for events, scan purposes, reports, ID printing, users, and audit logs
 - encrypted session storage with background token refresh
+
+### Password recovery
+
+Forgotten passwords are reset entirely inside the app with a one-time code, with no email link:
+
+1. The user enters their email on Forgot Password and taps Send Code. `POST /api/v1/auth/forgot-password` emails a 6-digit code that expires after 15 minutes.
+2. On the code screen the user enters the code. `POST /api/v1/auth/reset-password/verify` checks it without using it up.
+3. Once verified, the user chooses a new password. `POST /api/v1/auth/reset-password` takes the email, code and new password, then revokes the account's refresh tokens.
+
+Codes are stored only as a hash and lock after 5 wrong attempts. The endpoints are rate limited per IP and per email, resending is limited to one code per 30 seconds and 5 per hour per email, and the app adds an escalating resend cooldown (30s up to 8 minutes, at most 5 resends per visit to the screen). The limits have built-in defaults and can be overridden with `app.forgot-password-rate-limit.*`, `app.reset-verify-rate-limit.*` and `app.reset-password-rate-limit.*`.
 
 The backend base URL comes from the `EVENTQR_BASE_URL` Gradle property and falls back to the deployed backend. To point the app at a local backend, set it in `EventQRMobile/gradle.properties` or on the command line:
 
@@ -239,7 +250,7 @@ Do not commit real secrets, production URLs, or private deployment values to ver
 
 ## Database migrations (Flyway)
 
-- Migrations live in `EventQRBackend/eventqr/src/main/resources/db/migration` (currently V1 to V38). On a fresh database Flyway applies them in order; Hibernate's `ddl-auto=validate` only verifies the entity mapping against the migrated schema.
+- Migrations live in `EventQRBackend/eventqr/src/main/resources/db/migration` (currently V1 to V39). On a fresh database Flyway applies them in order; Hibernate's `ddl-auto=validate` only verifies the entity mapping against the migrated schema.
 - Never change `spring.jpa.hibernate.ddl-auto` back to `update` or `create` on any environment that Flyway has already migrated — the two approaches fight over schema ownership and Flyway checksums drift.
 - `spring.flyway.baseline-on-migrate=true` is only meant for pre-existing non-Flyway databases; a clean deploy does not rely on it.
 

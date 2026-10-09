@@ -98,6 +98,18 @@
         <item name="android:textColor">@color/text_on_paper</item>
     </style>
 
+    <style name="TextAppearance.EventQR.TermsSectionTitle" parent="">
+        <item name="android:fontFamily">@font/archivo_semibold</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <style name="TextAppearance.EventQR.TermsBadge" parent="">
+        <item name="android:fontFamily">@font/archivo_semibold</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/icon_tint_indigo</item>
+    </style>
+
     <style name="TextAppearance.EventQR.TextBodyCompact" parent="">
         <item name="android:fontFamily">@font/archivo_regular</item>
         <item name="android:textSize">@dimen/type_body_compact</item>

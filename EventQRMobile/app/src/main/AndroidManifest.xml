@@ -89,6 +89,7 @@
             android:windowSoftInputMode="adjustResize" />
 
         <activity android:name=".features.auth.changepassword.ChangePasswordActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".features.terms.TermsActivity" android:exported="false" />
         <activity android:name=".features.dashboard.DashboardActivity" android:exported="false" />
         <activity
             android:name=".features.auth.register.RegistrationActivity"
