@@ -271,6 +271,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
             setOwnedEventState()
             return
         }
+        if (applyCancelledEventState()) return
 
         val btn = findViewById<Button>(R.id.btnRegisterForEvent)
 
@@ -305,6 +306,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
             setOwnedEventState()
             return
         }
+        if (applyCancelledEventState()) return
 
         val btn = findViewById<Button>(R.id.btnRegisterForEvent)
 
@@ -332,6 +334,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
             setOwnedEventState()
             return
         }
+        if (applyCancelledEventState()) return
         if (isRegistered) {
             val btn = findViewById<Button>(R.id.btnRegisterForEvent)
             setAlreadyRegisteredState(btn)
@@ -412,6 +415,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
             setOwnedEventState()
             return
         }
+        if (applyCancelledEventState()) return
         setUnverifiableState(findViewById(R.id.btnRegisterForEvent))
     }
 
@@ -477,6 +481,17 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         button.isEnabled = false
         button.text = getString(R.string.event_detail_can_t_verify_registration)
         button.setBackgroundResource(R.drawable.bg_disabled_button)
+    }
+
+    // A cancelled event outranks every other primary-action state (Register, Already Registered, closed, ...).
+    private fun applyCancelledEventState(): Boolean {
+        if (!EventDetailPresenter.isEventCancelled(currentEvent)) return false
+        findViewById<Button>(R.id.btnRegisterForEvent).apply {
+            isEnabled = false
+            text = getString(R.string.event_detail_event_cancelled)
+            setBackgroundResource(R.drawable.bg_disabled_button)
+        }
+        return true
     }
 
     private fun setOwnedEventState() {

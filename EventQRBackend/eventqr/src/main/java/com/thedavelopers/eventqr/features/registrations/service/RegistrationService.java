@@ -415,18 +415,16 @@ public class RegistrationService implements RegistrationLookupPort, Registration
      * Attendee-only rules. Allowed only while registration is open (not past registrationCloseAt), before the event
      * begins and before any activity is recorded for the
      * attendee (points earned/spent, reward redemptions, approved scans): cancelling afterwards would orphan that
-     * history. A CANCELLED event is the exception: nothing will happen at it, so the attendee may always drop the
-     * registration. Already-CANCELLED rows never reach this check, so repeated cancels stay idempotent.
+     * history. There are no exceptions: a CANCELLED or REJECTED event is refused too.
+     * Already-CANCELLED rows never reach this check, so repeated cancels stay idempotent.
      */
     private void requireAttendeeMayCancel(EventRegistration registration) {
         EventSnapshot event = eventLookupPort.findById(registration.getEventId())
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + registration.getEventId()));
         EventStatus status = event.status();
-        if (status == EventStatus.CANCELLED) {
-            return;
-        }
-        if (status == EventStatus.REJECTED) {
-            throw new ConflictException("This registration can no longer be cancelled because the event is not available");
+        if (status == EventStatus.CANCELLED || status == EventStatus.REJECTED) {
+            throw new ConflictException("This registration can no longer be cancelled because the event is "
+                    + (status == EventStatus.CANCELLED ? "cancelled" : "not available"));
         }
         // Same convention as register(): closed only strictly after registrationCloseAt; a null close never closes.
         if (event.registrationCloseAt() != null && Instant.now().isAfter(event.registrationCloseAt())) {

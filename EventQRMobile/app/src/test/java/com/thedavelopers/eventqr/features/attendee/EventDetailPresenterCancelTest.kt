@@ -193,4 +193,15 @@ class EventDetailCancelWindowTest {
         // A CANCELLED event is refused by the server too, so it is hidden even while registration is nominally open.
         assertFalse(EventDetailPresenter.isCancelWindowOpen(event(future, regClose = now.plusSeconds(60), status = com.thedavelopers.eventqr.core.api.dto.EventStatus.CANCELLED), now))
     }
+
+    @Test
+    fun primaryAction_isEventCancelledOnlyForCancelledStatus() {
+        val future = now.plusSeconds(3600)
+        assertTrue(EventDetailPresenter.isEventCancelled(event(future, com.thedavelopers.eventqr.core.api.dto.EventStatus.CANCELLED)))
+        for (s in com.thedavelopers.eventqr.core.api.dto.EventStatus.values().filter { it.name != "CANCELLED" }) {
+            assertFalse(s.name, EventDetailPresenter.isEventCancelled(event(future, s)))
+        }
+        assertFalse(EventDetailPresenter.isEventCancelled(event(future, null)))
+        assertFalse(EventDetailPresenter.isEventCancelled(null))
+    }
 }

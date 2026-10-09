@@ -156,6 +156,9 @@ class EventDetailPresenter(
     }
 
     companion object {
+        /** A cancelled event can no longer be registered for, so its primary action is a disabled "Event cancelled". */
+        fun isEventCancelled(event: AttendeeEventResponse?): Boolean = event?.status == EventStatus.CANCELLED
+
         /**
          * Client-side mirror of the backend rule (the server stays the authority). Cancelling is allowed only
          * while registration is open (same convention as register(): closed strictly after registrationCloseAt, a

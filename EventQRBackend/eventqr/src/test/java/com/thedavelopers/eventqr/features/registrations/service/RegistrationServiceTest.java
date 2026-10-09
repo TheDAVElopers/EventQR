@@ -490,8 +490,8 @@ class RegistrationServiceTest {
     }
 
     @Test
-    void cancellingAnActiveEndedOrRejectedEventIsRefused() {
-        for (EventStatus status : List.of(EventStatus.ACTIVE, EventStatus.ENDED, EventStatus.REJECTED)) {
+    void cancellingAnActiveEndedCancelledOrRejectedEventIsRefused() {
+        for (EventStatus status : List.of(EventStatus.ACTIVE, EventStatus.ENDED, EventStatus.CANCELLED, EventStatus.REJECTED)) {
             EventRegistration registration = givenCancellableRegistration(
                     event(status, Instant.now().minusSeconds(3_600), Instant.now().plusSeconds(3_600), 100, 10));
             assertThatThrownBy(() -> service.cancel(registration.getId(), attendeeId)).isInstanceOf(ConflictException.class);
@@ -523,17 +523,6 @@ class RegistrationServiceTest {
         EventRegistration registration = givenCancellableRegistration(openEvent());
         service.cancel(registration.getId(), attendeeId);
         when(eventLookupPort.findById(eventId)).thenReturn(Optional.of(startedEvent(EventStatus.ACTIVE)));
-
-        service.cancel(registration.getId(), attendeeId);
-
-        assertThat(registration.getStatus()).isEqualTo(RegistrationStatus.CANCELLED);
-        verify(eventService).decrementCurrentAttendeeCount(eventId);
-    }
-
-    @Test
-    void anAttendeeMayDropARegistrationOnAnOrganizerCancelledEvent() {
-        EventRegistration registration = givenCancellableRegistration(startedEvent(EventStatus.CANCELLED));
-        when(activityLookupPort.hasRecordedActivity(any(), any(), any())).thenReturn(true);
 
         service.cancel(registration.getId(), attendeeId);
 
@@ -683,13 +672,13 @@ class RegistrationServiceTest {
     }
 
     @Test
-    void anAttendeeMayStillDropARegistrationOnACancelledEventAfterRegistrationClosed() {
+    void aCancelledEventIsRefusedEvenAfterRegistrationClosed() {
         EventRegistration registration = givenCancellableRegistration(
                 eventWithRegistrationClose(EventStatus.CANCELLED, Instant.now().minusSeconds(3_600)));
 
-        service.cancel(registration.getId(), attendeeId);
-
-        assertThat(registration.getStatus()).isEqualTo(RegistrationStatus.CANCELLED);
+        assertThatThrownBy(() -> service.cancel(registration.getId(), attendeeId)).isInstanceOf(ConflictException.class);
+        assertThat(registration.getStatus()).isEqualTo(RegistrationStatus.REGISTERED);
+        verify(eventService, never()).decrementCurrentAttendeeCount(any());
     }
 
     @Test
