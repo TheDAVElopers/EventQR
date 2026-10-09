@@ -70,7 +70,8 @@ class EventDetailPresenterCancelTest {
         presenter(view, repo).cancelRegistration(reg.registrationId.toString())
         shadowOf(Looper.getMainLooper()).idle()
 
-        assertEquals(listOf(msg), view.messages)
+        assertEquals(listOf(msg), view.failures)
+        assertTrue(view.messages.isEmpty())
         assertEquals(listOf(true, false), view.cancellingStates)
         assertTrue(view.cancelledMessages.isEmpty())
         assertTrue(view.cancellable.isEmpty())
@@ -86,7 +87,7 @@ class EventDetailPresenterCancelTest {
         presenter(view, repo).cancelRegistration(UUID.randomUUID().toString())
         shadowOf(Looper.getMainLooper()).idle()
 
-        assertEquals(listOf("Network problem. Check your connection and try again."), view.messages)
+        assertEquals(listOf("Network problem. Check your connection and try again."), view.failures)
     }
 
     @Test
@@ -139,12 +140,14 @@ class EventDetailPresenterCancelTest {
         val cancellable = mutableListOf<String?>()
         val registered = mutableListOf<Boolean>()
         val cancelledMessages = mutableListOf<String>()
+        val failures = mutableListOf<String>()
         override fun renderEvent(event: AttendeeEventResponse) = Unit
         override fun updateRegistrationStatus(isRegistered: Boolean) { registered += isRegistered }
         override fun onRegistrationStatusCheckFailed() = Unit
         override fun setCancellableRegistration(registrationId: String?) { cancellable += registrationId }
         override fun showCancelling(isCancelling: Boolean) { cancellingStates += isCancelling }
         override fun onRegistrationCancelled(message: String) { cancelledMessages += message }
+        override fun showCancelFailure(message: String) { failures += message }
         override fun openRegistration(eventId: String, eventTitle: String, email: String, fullName: String, phoneNumber: String) = Unit
         override fun getSessionUserId(): String? = userId
         override fun getSessionEmail(): String = ""
@@ -171,18 +174,15 @@ class EventDetailCancelWindowTest {
         assertTrue(EventDetailPresenter.isCancelWindowOpen(event(future, null), now))
         assertFalse(EventDetailPresenter.isCancelWindowOpen(event(now), now))
         assertFalse(EventDetailPresenter.isCancelWindowOpen(event(now.minusSeconds(60)), now))
-        for (s in listOf("ACTIVE", "ENDED", "REJECTED")) {
+        for (s in listOf("ACTIVE", "ENDED", "REJECTED", "CANCELLED")) {
             val status = com.thedavelopers.eventqr.core.api.dto.EventStatus.valueOf(s)
             assertFalse(s, EventDetailPresenter.isCancelWindowOpen(event(future, status), now))
         }
-        val cancelled = com.thedavelopers.eventqr.core.api.dto.EventStatus.CANCELLED
-        assertTrue(EventDetailPresenter.isCancelWindowOpen(event(future, cancelled), now))
-        assertTrue(EventDetailPresenter.isCancelWindowOpen(event(now.minusSeconds(60), cancelled), now))
         assertFalse(EventDetailPresenter.isCancelWindowOpen(null, now))
     }
 
     @Test
-    fun registrationEnd_hidesOnlyStrictlyAfterEnd_nullNeverCloses_cancelledEventExempt() {
+    fun registrationEnd_hidesOnlyStrictlyAfterEnd_nullNeverCloses() {
         val future = now.plusSeconds(3600)
         assertTrue(EventDetailPresenter.isCancelWindowOpen(event(future, regClose = now.plusSeconds(60)), now))
         // Boundary matches the server (and the Register button): closed only strictly after the end.
@@ -190,6 +190,7 @@ class EventDetailCancelWindowTest {
         assertFalse(EventDetailPresenter.isCancelWindowOpen(event(future, regClose = now.minusSeconds(1)), now))
         assertTrue(EventDetailPresenter.isCancelWindowOpen(event(future, regClose = null), now))
         val cancelled = com.thedavelopers.eventqr.core.api.dto.EventStatus.CANCELLED
-        assertTrue(EventDetailPresenter.isCancelWindowOpen(event(future, regClose = now.minusSeconds(1), status = cancelled), now))
+        // A CANCELLED event is refused by the server too, so it is hidden even while registration is nominally open.
+        assertFalse(EventDetailPresenter.isCancelWindowOpen(event(future, regClose = now.plusSeconds(60), status = com.thedavelopers.eventqr.core.api.dto.EventStatus.CANCELLED), now))
     }
 }

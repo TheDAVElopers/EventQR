@@ -11,6 +11,8 @@ interface EventDetailContract {
         fun setCancellableRegistration(registrationId: String?)
         fun showCancelling(isCancelling: Boolean)
         fun onRegistrationCancelled(message: String)
+        /** Cancel failures carry a full-sentence reason (e.g. the 409 message), so they must not be shown as a truncating toast. */
+        fun showCancelFailure(message: String)
         fun openRegistration(eventId: String, eventTitle: String, email: String, fullName: String, phoneNumber: String)
         fun getSessionUserId(): String?
         fun getSessionEmail(): String

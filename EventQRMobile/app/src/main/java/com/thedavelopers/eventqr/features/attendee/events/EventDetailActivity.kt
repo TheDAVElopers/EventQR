@@ -36,6 +36,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     private var registrationStatusCheckFailed = false
     private var cancellableRegistrationId: String? = null
     private var cancelDialog: androidx.appcompat.app.AlertDialog? = null
+    private var failureDialog: androidx.appcompat.app.AlertDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -374,6 +375,15 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         }
     }
 
+    override fun showCancelFailure(message: String) {
+        failureDialog?.dismiss()
+        failureDialog = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.event_detail_cancel_failed_title)
+            .setMessage(message)
+            .setPositiveButton(android.R.string.ok) { dialog, _ -> dialog.dismiss() }
+            .show()
+    }
+
     override fun onRegistrationCancelled(message: String) {
         showMessage(message)
         // Drop the stale "Already Registered" label right away; the availability check decides the final state.
@@ -390,6 +400,8 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     override fun onDestroy() {
         cancelDialog?.dismiss()
         cancelDialog = null
+        failureDialog?.dismiss()
+        failureDialog = null
         presenter.detach()
         super.onDestroy()
     }

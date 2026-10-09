@@ -131,7 +131,7 @@ class EventDetailPresenter(
                         val message = result.serverMessage?.takeIf { it.isNotBlank() }
                             ?: result.message.takeIf { it.isNotBlank() }
                             ?: strings.get(R.string.event_detail_cancel_registration_failed)
-                        view?.showMessage(message)
+                        view?.showCancelFailure(message)
                     }
                     NetworkResult.Loading -> Unit
                 }
@@ -157,19 +157,19 @@ class EventDetailPresenter(
 
     companion object {
         /**
-         * Client-side mirror of the backend rule (the server stays the authority). A CANCELLED event can always be
-         * left, so it skips the time rules. Otherwise cancelling is allowed only while registration is open (same
-         * convention as register(): closed strictly after registrationCloseAt, a null close never closes), before
-         * the event starts, and not while the event is ACTIVE / ENDED / REJECTED. An unknown event hides the action.
+         * Client-side mirror of the backend rule (the server stays the authority). Cancelling is allowed only
+         * while registration is open (same convention as register(): closed strictly after registrationCloseAt, a
+         * null close never closes), before the event starts, and not while the event is ACTIVE / ENDED / REJECTED /
+         * CANCELLED. An unknown event hides the action.
          */
         fun isCancelWindowOpen(event: AttendeeEventResponse?, now: Instant = Instant.now()): Boolean {
             if (event == null) return false
-            if (event.status == EventStatus.CANCELLED) return true
             val registrationClosed = event.registrationCloseAt?.let { now.isAfter(it) } == true
             val started = event.eventStartAt?.let { !it.isAfter(now) } == true
             val blocked = event.status == EventStatus.ACTIVE ||
                 event.status == EventStatus.ENDED ||
-                event.status == EventStatus.REJECTED
+                event.status == EventStatus.REJECTED ||
+                event.status == EventStatus.CANCELLED
             return !registrationClosed && !started && !blocked
         }
     }
