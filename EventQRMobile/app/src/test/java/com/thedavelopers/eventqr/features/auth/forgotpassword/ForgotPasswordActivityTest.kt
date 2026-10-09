@@ -61,17 +61,6 @@ class ForgotPasswordActivityTest {
     }
 
     @Test
-    fun clickBackButton_navigatesToLoginAndFinishes() {
-        val activity = buildActivity()
-
-        activity.findViewById<android.widget.ImageButton>(R.id.btnBackToSignIn).performClick()
-
-        val intent = shadowOf(activity).nextStartedActivity
-        assertEquals(LoginActivity::class.java.name, intent.component?.className)
-        assertTrue(activity.isFinishing)
-    }
-
-    @Test
     fun clickBackTextLink_navigatesToLogin() {
         val activity = buildActivity()
 

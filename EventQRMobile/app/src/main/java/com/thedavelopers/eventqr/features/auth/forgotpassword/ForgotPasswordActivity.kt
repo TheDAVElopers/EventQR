@@ -15,7 +15,6 @@ open class ForgotPasswordActivity : AppCompatActivity(), ForgotPasswordContract.
     private lateinit var presenter: ForgotPasswordPresenter
     private lateinit var emailInput: EditText
     private lateinit var sendButton: Button
-    private lateinit var backButton: android.widget.ImageButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,15 +23,10 @@ open class ForgotPasswordActivity : AppCompatActivity(), ForgotPasswordContract.
         presenter = ForgotPasswordPresenter()
         emailInput = findViewById(R.id.editEmail)
         sendButton = findViewById(R.id.btnSendCode)
-        backButton = findViewById(R.id.btnBackToSignIn)
         presenter.attach(this, this)
 
         sendButton.setOnClickListener {
             presenter.submitRequest(emailInput.text.toString())
-        }
-
-        backButton.setOnClickListener {
-            presenter.backToSignIn()
         }
 
         findViewById<View>(R.id.tvBackToSignIn).setOnClickListener {
