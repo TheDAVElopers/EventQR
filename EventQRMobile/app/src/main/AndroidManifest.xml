@@ -82,6 +82,11 @@
             android:name=".features.auth.resetpassword.ResetPasswordActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".features.auth.resetpassword.NewPasswordActivity"
+            android:exported="false"
+            android:parentActivityName=".features.auth.resetpassword.ResetPasswordActivity"
+            android:windowSoftInputMode="adjustResize" />
 
         <activity android:name=".features.auth.changepassword.ChangePasswordActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <activity android:name=".features.dashboard.DashboardActivity" android:exported="false" />

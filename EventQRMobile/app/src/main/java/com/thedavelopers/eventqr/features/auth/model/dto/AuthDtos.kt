@@ -35,6 +35,11 @@ data class ForgotPasswordRequest(
     val email: String
 )
 
+data class VerifyResetCodeRequest(
+    val email: String,
+    val code: String
+)
+
 data class ResetPasswordRequest(
     val email: String,
     val code: String,

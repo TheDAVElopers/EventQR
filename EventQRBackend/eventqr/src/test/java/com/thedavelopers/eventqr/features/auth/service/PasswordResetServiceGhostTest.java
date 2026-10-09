@@ -236,6 +236,80 @@ class PasswordResetServiceGhostTest {
         verify(tokens, never()).findLatestActiveForUpdate(any(), any());
     }
 
+    // ----- two-step flow: verifyCode -----
+
+    @Test
+    void verifyWithTheCorrectCodeSucceedsAndDoesNotConsumeIt() {
+        PasswordResetToken token = tokenFor(ghost, "123456");
+        activeToken(ghost, token);
+
+        service.verifyCode(EMAIL, "123456");
+
+        assertThat(token.isUsed()).isFalse();
+        assertThat(token.getFailedAttempts()).isZero();
+        verify(users, never()).save(any());
+        verify(refreshTokens, never()).revokeAllForUser(any());
+        verify(tokens, never()).save(any());
+
+        // The reset that follows with the same email + code still works.
+        service.resetPassword(EMAIL, "123456", STRONG, STRONG);
+        assertThat(ghost.getPasswordHash()).isEqualTo("enc(" + STRONG + ")");
+        assertThat(token.isUsed()).isTrue();
+    }
+
+    @Test
+    void verifyWithAWrongCodeIncrementsAttemptsAndTheFifthFailureLocksTheCode() {
+        PasswordResetToken token = tokenFor(ghost, "123456");
+        activeToken(ghost, token);
+
+        for (int i = 1; i <= 4; i++) {
+            assertThatThrownBy(() -> service.verifyCode(EMAIL, "000000"))
+                    .isInstanceOf(BadRequestException.class).hasMessage(GENERIC);
+            assertThat(token.getFailedAttempts()).isEqualTo(i);
+            assertThat(token.isUsed()).isFalse();
+        }
+        assertThatThrownBy(() -> service.verifyCode(EMAIL, "000000"))
+                .isInstanceOf(BadRequestException.class).hasMessage(GENERIC);
+        assertThat(token.getFailedAttempts()).isEqualTo(5);
+        assertThat(token.isUsed()).isTrue();
+        verify(users, never()).save(any());
+    }
+
+    @Test
+    void verifyWithAnotherUsersCodeFails() {
+        UserProfile other = new UserProfile();
+        other.setId(UUID.randomUUID());
+        PasswordResetToken victimToken = tokenFor(ghost, "654321");
+        activeToken(ghost, victimToken);
+
+        // "123456" would be the other user's code; the victim's hash is bound to the victim id.
+        assertThatThrownBy(() -> service.verifyCode(EMAIL, "123456"))
+                .isInstanceOf(BadRequestException.class).hasMessage(GENERIC);
+        assertThat(victimToken.getFailedAttempts()).isEqualTo(1);
+        assertThat(tokenFor(other, "123456").getToken()).isNotEqualTo(victimToken.getToken());
+    }
+
+    @Test
+    void verifyWithAnUnknownEmailOrNoActiveCodeGetsTheGenericError() {
+        when(users.findByEmailIgnoreCase(anyString())).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> service.verifyCode("nobody@example.com", "123456"))
+                .isInstanceOf(BadRequestException.class).hasMessage(GENERIC);
+        verify(tokens, never()).findLatestActiveForUpdate(any(), any());
+
+        activeToken(ghost, null);
+        assertThatThrownBy(() -> service.verifyCode(EMAIL, "123456"))
+                .isInstanceOf(BadRequestException.class).hasMessage(GENERIC);
+        verify(tokens, never()).save(any());
+    }
+
+    @Test
+    void verifyCommitsWrongGuessesDespiteTheBadRequest() throws Exception {
+        Transactional tx = PasswordResetService.class.getMethod("verifyCode", String.class, String.class)
+                .getAnnotation(Transactional.class);
+        assertThat(tx).isNotNull();
+        assertThat(tx.noRollbackFor()).contains(BadRequestException.class);
+    }
+
     @Test
     void wrongGuessAttemptsCommitDespiteTheBadRequest() throws Exception {
         Transactional tx = PasswordResetService.class

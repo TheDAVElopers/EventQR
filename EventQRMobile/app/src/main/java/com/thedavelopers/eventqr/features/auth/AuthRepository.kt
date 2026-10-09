@@ -12,6 +12,7 @@ import com.thedavelopers.eventqr.features.auth.model.dto.RegisterRequest
 import com.thedavelopers.eventqr.features.auth.model.dto.ChangePasswordRequest
 import com.thedavelopers.eventqr.features.auth.model.dto.ForgotPasswordRequest
 import com.thedavelopers.eventqr.features.auth.model.dto.ResetPasswordRequest
+import com.thedavelopers.eventqr.features.auth.model.dto.VerifyResetCodeRequest
 import com.thedavelopers.eventqr.features.users.model.dto.UserRequest
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
 
@@ -45,11 +46,16 @@ open class AuthRepository(context: Context) {
             )
         }
 
-    suspend fun forgotPassword(email: String) = safeApiCall {
+    open suspend fun forgotPassword(email: String): NetworkResult<Unit> = safeApiCall {
         apiService.forgotPassword(ForgotPasswordRequest(email))
     }
 
-    suspend fun resetPassword(email: String, code: String, newPassword: String, confirmPassword: String) = safeApiCall {
+    /** Checks the emailed code without consuming it, so the new-password step can resubmit it. */
+    open suspend fun verifyResetCode(email: String, code: String): NetworkResult<Unit> = safeApiCall {
+        apiService.verifyResetCode(VerifyResetCodeRequest(email, code))
+    }
+
+    open suspend fun resetPassword(email: String, code: String, newPassword: String, confirmPassword: String): NetworkResult<Unit> = safeApiCall {
         apiService.resetPassword(ResetPasswordRequest(email, code, newPassword, confirmPassword))
     }
 

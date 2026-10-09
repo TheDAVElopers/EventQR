@@ -26,6 +26,7 @@ import com.thedavelopers.eventqr.features.auth.model.dto.ChangePasswordRequest;
 import com.thedavelopers.eventqr.features.auth.model.dto.ForgotPasswordRequest;
 import com.thedavelopers.eventqr.features.auth.model.dto.RegisterRequest;
 import com.thedavelopers.eventqr.features.auth.model.dto.ResetPasswordRequest;
+import com.thedavelopers.eventqr.features.auth.model.dto.VerifyResetCodeRequest;
 import com.thedavelopers.eventqr.features.auth.service.AuthService;
 import com.thedavelopers.eventqr.features.auth.service.ChangePasswordService;
 import com.thedavelopers.eventqr.features.auth.service.PasswordResetService;
@@ -44,6 +45,8 @@ import com.thedavelopers.eventqr.shared.exceptions.TooManyRequestsException;
 import com.thedavelopers.eventqr.shared.exceptions.UnauthorizedException;
 import com.thedavelopers.eventqr.shared.security.JwtService;
 import com.thedavelopers.eventqr.shared.security.LoginRateLimiter;
+import com.thedavelopers.eventqr.shared.security.ResetCodeVerifyRateLimiter;
+import com.thedavelopers.eventqr.shared.security.ResetPasswordRateLimiter;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -58,11 +61,17 @@ public class AuthController {
     private final ChangePasswordService changePasswordService;
     private final ForgotPasswordRateLimiter forgotPasswordRateLimiter;
     private final LoginRateLimiter loginRateLimiter;
+    private final ResetCodeVerifyRateLimiter resetCodeVerifyRateLimiter;
+    private final ResetPasswordRateLimiter resetPasswordRateLimiter;
 
     public AuthController(AuthService authService, UserService userService, JwtService jwtService,
                           PasswordResetService passwordResetService, ChangePasswordService changePasswordService,
                           ForgotPasswordRateLimiter forgotPasswordRateLimiter,
-                          LoginRateLimiter loginRateLimiter) {
+                          LoginRateLimiter loginRateLimiter,
+                          ResetCodeVerifyRateLimiter resetCodeVerifyRateLimiter,
+                          ResetPasswordRateLimiter resetPasswordRateLimiter) {
+        this.resetCodeVerifyRateLimiter = resetCodeVerifyRateLimiter;
+        this.resetPasswordRateLimiter = resetPasswordRateLimiter;
         this.authService = authService;
         this.userService = userService;
         this.jwtService = jwtService;
@@ -180,8 +189,23 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("If an account with that email exists, a reset code has been sent", null));
     }
 
+    /** Step one: confirms the emailed code is valid without consuming it. */
+    @PostMapping("/reset-password/verify")
+    public ResponseEntity<ApiResponse<Void>> verifyResetCode(HttpServletRequest httpRequest,
+                                                             @Valid @RequestBody VerifyResetCodeRequest request) {
+        if (!resetCodeVerifyRateLimiter.allow(httpRequest, request.email())) {
+            throw new TooManyRequestsException("Too many reset attempts. Please try again later.");
+        }
+        passwordResetService.verifyCode(request.email(), request.code());
+        return ResponseEntity.ok(ApiResponse.success("Reset code is valid", null));
+    }
+
     @PostMapping("/reset-password")
-    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+    public ResponseEntity<ApiResponse<Void>> resetPassword(HttpServletRequest httpRequest,
+                                                           @Valid @RequestBody ResetPasswordRequest request) {
+        if (!resetPasswordRateLimiter.allow(httpRequest, request.email())) {
+            throw new TooManyRequestsException("Too many reset attempts. Please try again later.");
+        }
         passwordResetService.resetPassword(request.email(), request.code(), request.newPassword(), request.confirmPassword());
         return ResponseEntity.ok(ApiResponse.success("Password has been reset", null));
     }

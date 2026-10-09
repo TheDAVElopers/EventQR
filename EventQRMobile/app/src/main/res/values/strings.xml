@@ -260,7 +260,15 @@
     <string name="request_event_submit_request">Submit Request</string>
     <string name="request_event_cancel">Cancel</string>
     <string name="reset_password_reset_password">Reset Password</string>
-    <string name="reset_password_create_a_new_password_for_your_accou">Enter the 6-digit code from your email and choose a new password</string>
+    <string name="reset_password_create_a_new_password_for_your_accou">Choose a new password for your account</string>
+    <string name="reset_password_enter_code_subtitle">Enter the 6-digit code from your email</string>
+    <string name="reset_password_verify">Verify</string>
+    <string name="reset_password_verifying">Verifying...</string>
+    <string name="reset_password_code_incorrect">That code is incorrect or has expired. Request a new code if needed.</string>
+    <string name="reset_password_code_expired_resend">Your code expired. Request a new one to continue.</string>
+    <string name="reset_password_back_to_code">Back to code</string>
+    <string name="reset_password_resend_unavailable">Resend unavailable</string>
+    <string name="reset_password_resend_limit_reached">Resend limit reached. Please try again later.</string>
     <string name="reset_password_new_password">New Password</string>
     <string name="reset_password_enter_new_password">Enter new password</string>
     <string name="common_success">Success</string>

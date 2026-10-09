@@ -29,10 +29,74 @@ class ForgotPasswordRateLimiterTest {
     @BeforeEach
     void setUp() {
         clock = new TestMillis();
-        limiter = new ForgotPasswordRateLimiter(clock);
+        // Relaxed resend rules: the legacy window tests below exercise only the per-IP / per-email windows.
+        limiter = new ForgotPasswordRateLimiter(clock, 5, 5, 0, 1000);
         // getRemoteAddr() is only used on the fallback path, so stub leniently.
         lenient().when(request.getHeader("X-Forwarded-For")).thenReturn("203.0.113.9");
         lenient().when(request.getRemoteAddr()).thenReturn("10.0.0.1");
+    }
+
+    /** Distinct IPs and 31s spacing isolate the rule under test from the per-IP / min-interval rules. */
+    private boolean resendFrom(String ip, String email) {
+        when(request.getHeader("X-Forwarded-For")).thenReturn(ip);
+        return limiter.allow(request, email);
+    }
+
+    @Test
+    void minimumIntervalBlocksAResendWithin30SecondsAndAllowsItAfter() {
+        limiter = new ForgotPasswordRateLimiter(clock);
+        assertThat(limiter.allow(request, "victim@example.com")).isTrue();
+        clock.advance(29_000L);
+        assertThat(limiter.allow(request, "victim@example.com")).isFalse();
+        clock.advance(1_500L);
+        assertThat(limiter.allow(request, "victim@example.com")).isTrue();
+    }
+
+    @Test
+    void aRejectedResendDoesNotExtendTheMinimumInterval() {
+        limiter = new ForgotPasswordRateLimiter(clock);
+        assertThat(limiter.allow(request, "victim@example.com")).isTrue();
+        clock.advance(20_000L);
+        assertThat(limiter.allow(request, "victim@example.com")).isFalse();
+        clock.advance(11_000L); // 31s after the last accepted request
+        assertThat(limiter.allow(request, "victim@example.com")).isTrue();
+    }
+
+    @Test
+    void minimumIntervalIsKeyedOnTheCanonicalSubmittedEmail() {
+        limiter = new ForgotPasswordRateLimiter(clock);
+        assertThat(limiter.allow(request, "user+a@gmail.com")).isTrue();
+        assertThat(limiter.allow(request, "u.s.e.r+b@gmail.com")).isFalse();
+        // A different mailbox is unaffected.
+        assertThat(resendFrom("198.51.100.1", "other@example.com")).isTrue();
+    }
+
+    @Test
+    void hourlyCapAllowsFivePerHourThenRejectsUntilTheHourRolls() {
+        limiter = new ForgotPasswordRateLimiter(clock);
+        // 5 accepted codes spaced 31s apart (stay inside the hour).
+        for (int i = 0; i < 5; i++) {
+            assertThat(resendFrom("198.51.100." + i, "victim@example.com")).isTrue();
+            clock.advance(31_000L);
+        }
+        // The per-email 60s window has long since passed for the first ones; the hourly cap now blocks.
+        clock.advance(60_000L);
+        assertThat(resendFrom("198.51.100.99", "victim@example.com")).isFalse();
+        // Another mailbox is unaffected.
+        assertThat(resendFrom("198.51.100.98", "someone@example.com")).isTrue();
+        // After the first issuance leaves the 1h window, one more is allowed.
+        clock.advance(3_600_000L);
+        assertThat(resendFrom("198.51.100.97", "victim@example.com")).isTrue();
+    }
+
+    @Test
+    void configuredLimitsAreHonoured() {
+        limiter = new ForgotPasswordRateLimiter(clock, 100, 100, 5, 2);
+        assertThat(limiter.allow(request, "v@example.com")).isTrue();
+        clock.advance(6_000L);
+        assertThat(limiter.allow(request, "v@example.com")).isTrue();
+        clock.advance(6_000L);
+        assertThat(limiter.allow(request, "v@example.com")).isFalse();
     }
 
     @Test

@@ -49,15 +49,20 @@ class AuthControllerTest {
     @Mock private PasswordResetService passwordResetService;
     @Mock private ChangePasswordService changePasswordService;
     @Mock private ForgotPasswordRateLimiter forgotPasswordRateLimiter;
+    @Mock private com.thedavelopers.eventqr.shared.security.ResetCodeVerifyRateLimiter verifyLimiter;
+    @Mock private com.thedavelopers.eventqr.shared.security.ResetPasswordRateLimiter resetLimiter;
 
     private MockMvc mvc;
     private final UUID userId = UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
+        when(verifyLimiter.allow(any(), any())).thenReturn(true);
+        when(resetLimiter.allow(any(), any())).thenReturn(true);
         mvc = MockMvcBuilders.standaloneSetup(new AuthController(authService, userService, jwtService,
                         passwordResetService, changePasswordService, forgotPasswordRateLimiter,
-                        new com.thedavelopers.eventqr.shared.security.LoginRateLimiter(30, 6, 50)))
+                        new com.thedavelopers.eventqr.shared.security.LoginRateLimiter(30, 6, 50),
+                        verifyLimiter, resetLimiter))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
@@ -244,6 +249,78 @@ class AuthControllerTest {
                     .andExpect(status().isBadRequest());
         }
         verify(passwordResetService, never()).resetPassword(any(), any(), any(), any());
+    }
+
+    // ----- two-step reset: verify -----
+
+    @Test
+    void verifyResetCodePassesEmailAndCodeToTheServiceAndReturns200() throws Exception {
+        mvc.perform(post("/api/v1/auth/reset-password/verify").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'email':'a@b.com','code':'123456'}")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        verify(passwordResetService).verifyCode("a@b.com", "123456");
+        verify(passwordResetService, never()).resetPassword(any(), any(), any(), any());
+    }
+
+    @Test
+    void verifyWithAWrongCodeIsTheGenericBadRequest() throws Exception {
+        org.mockito.Mockito.doThrow(new BadRequestException("Reset code is invalid or expired"))
+                .when(passwordResetService).verifyCode(any(), any());
+
+        mvc.perform(post("/api/v1/auth/reset-password/verify").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'email':'a@b.com','code':'000000'}")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Reset code is invalid or expired"));
+    }
+
+    @Test
+    void verifyIsRateLimitedWith429AndNeverReachesTheService() throws Exception {
+        when(verifyLimiter.allow(any(), any())).thenReturn(false);
+
+        mvc.perform(post("/api/v1/auth/reset-password/verify").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'email':'a@b.com','code':'123456'}")))
+                .andExpect(status().isTooManyRequests());
+
+        verify(passwordResetService, never()).verifyCode(any(), any());
+    }
+
+    @Test
+    void resetPasswordIsRateLimitedWith429AndNeverReachesTheService() throws Exception {
+        when(resetLimiter.allow(any(), any())).thenReturn(false);
+
+        mvc.perform(post("/api/v1/auth/reset-password").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'email':'a@b.com','code':'123456','newPassword':'Passw0rd!!','confirmPassword':'Passw0rd!!'}")))
+                .andExpect(status().isTooManyRequests());
+
+        verify(passwordResetService, never()).resetPassword(any(), any(), any(), any());
+    }
+
+    @Test
+    void verifyBudgetIsNotSharedWithForgotPasswordOrReset() throws Exception {
+        when(verifyLimiter.allow(any(), any())).thenReturn(false);
+        when(forgotPasswordRateLimiter.allow(any(), any())).thenReturn(true);
+
+        mvc.perform(post("/api/v1/auth/forgot-password").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'email':'a@b.com'}")))
+                .andExpect(status().isOk());
+        mvc.perform(post("/api/v1/auth/reset-password").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'email':'a@b.com','code':'123456','newPassword':'Passw0rd!!','confirmPassword':'Passw0rd!!'}")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void malformedVerifyInputIsRejectedBeforeLimiterAndService() throws Exception {
+        for (String bad : new String[] {"{'email':'a@b.com','code':'12345'}", "{'email':'a@b.com','code':'12345a'}",
+                "{'email':'a@b.com','code':''}", "{'email':'not-an-email','code':'123456'}",
+                "{'email':'','code':'123456'}", "{'code':'123456'}", "{'email':'a@b.com'}"}) {
+            mvc.perform(post("/api/v1/auth/reset-password/verify").contentType(MediaType.APPLICATION_JSON)
+                            .content(json(bad)))
+                    .andExpect(status().isBadRequest());
+        }
+        verify(passwordResetService, never()).verifyCode(any(), any());
+        verify(verifyLimiter, never()).allow(any(), any());
     }
 
     @Test

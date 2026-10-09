@@ -69,6 +69,21 @@ class DtoSizeValidationTest {
     }
 
     @Test
+    void verifyResetCodeRequestEmailSizeAndCodeFormat() {
+        var valid = new com.thedavelopers.eventqr.features.auth.model.dto.VerifyResetCodeRequest("a@b.com", "123456");
+        assertThat(validator.validate(valid)).isEmpty();
+
+        var longEmail = new com.thedavelopers.eventqr.features.auth.model.dto.VerifyResetCodeRequest(
+                "a".repeat(250) + "@b.com", "123456");
+        assertThat(validator.validate(longEmail)).anyMatch(v -> v.getPropertyPath().toString().equals("email"));
+
+        for (String bad : new String[] {"12345", "1234567", "12345a", " 12345", ""}) {
+            var invalid = new com.thedavelopers.eventqr.features.auth.model.dto.VerifyResetCodeRequest("a@b.com", bad);
+            assertThat(validator.validate(invalid)).anyMatch(v -> v.getPropertyPath().toString().equals("code"));
+        }
+    }
+
+    @Test
     void passwordChangeRequestCurrentPasswordSizeLimit() {
         var valid = new PasswordChangeRequest("a".repeat(128), "ValidPass123!");
         assertThat(validator.validate(valid)).isEmpty();

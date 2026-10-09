@@ -155,6 +155,40 @@ public class PasswordResetService {
             throw new BadRequestException("Passwords do not match");
         }
         PasswordValidator.requireValid(newPassword);
+        CheckedCode checked = checkCode(email, code);
+        UserProfile user = checked.user();
+        PasswordResetToken resetToken = checked.token();
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userProfileRepository.save(user);
+        // Resetting a forgotten password is also how a stolen session gets cut off.
+        refreshTokenService.revokeAllForUser(user.getId());
+        resetToken.setUsed(true);
+        passwordResetTokenRepository.save(resetToken);
+    }
+
+    /**
+     * Step one of the two-step reset: confirms the code is currently valid for the email without consuming it
+     * (the client resubmits email + code with the new password). A wrong guess counts against the same
+     * {@link #MAX_FAILED_ATTEMPTS} budget as {@link #resetPassword} and commits despite the exception. Every failure
+     * (unknown email, no active code, expired, locked, wrong) gives the same generic error.
+     */
+    @Transactional(noRollbackFor = BadRequestException.class)
+    public void verifyCode(String email, String code) {
+        checkCode(email, code);
+    }
+
+    private record CheckedCode(UserProfile user, PasswordResetToken token) {
+    }
+
+    /**
+     * The single code-check path shared by verify and reset: pessimistic-lock lookup of the latest active token,
+     * constant-time hash compare, attempt counting and lockout. Must run inside a transaction that commits on
+     * {@link BadRequestException}.
+     */
+    private CheckedCode checkCode(String email, String code) {
+        if (email == null || email.isBlank() || code == null || code.isBlank()) {
+            throw new BadRequestException(INVALID_CODE_MESSAGE);
+        }
         UserProfile user = findUser(email)
                 .orElseThrow(() -> new BadRequestException(INVALID_CODE_MESSAGE));
         PasswordResetToken resetToken = passwordResetTokenRepository
@@ -171,12 +205,7 @@ public class PasswordResetService {
             passwordResetTokenRepository.save(resetToken);
             throw new BadRequestException(INVALID_CODE_MESSAGE);
         }
-        user.setPasswordHash(passwordEncoder.encode(newPassword));
-        userProfileRepository.save(user);
-        // Resetting a forgotten password is also how a stolen session gets cut off.
-        refreshTokenService.revokeAllForUser(user.getId());
-        resetToken.setUsed(true);
-        passwordResetTokenRepository.save(resetToken);
+        return new CheckedCode(user, resetToken);
     }
 
     private static String hashCode(UUID userId, String code) {

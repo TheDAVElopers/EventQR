@@ -69,9 +69,14 @@ class PasswordPolicyEndpointsTest {
         JwtService jwtService = mock(JwtService.class);
         when(jwtService.extractRoleFromBearer(any())).thenReturn(AccountRole.SUPER_ADMIN);
         when(jwtService.extractUserIdFromBearer(any())).thenReturn(UUID.randomUUID());
+        var verifyLimiter = mock(com.thedavelopers.eventqr.shared.security.ResetCodeVerifyRateLimiter.class);
+        var resetLimiter = mock(com.thedavelopers.eventqr.shared.security.ResetPasswordRateLimiter.class);
+        when(verifyLimiter.allow(any(), any())).thenReturn(true);
+        when(resetLimiter.allow(any(), any())).thenReturn(true);
         mvc = MockMvcBuilders.standaloneSetup(
                         new AuthController(mock(AuthService.class), userService, jwtService, resetService, changeService,
-                                mock(ForgotPasswordRateLimiter.class), new LoginRateLimiter(30, 6, 50)),
+                                mock(ForgotPasswordRateLimiter.class), new LoginRateLimiter(30, 6, 50),
+verifyLimiter, resetLimiter),
                         new UserController(userService, jwtService, mock(FileStorageService.class)),
                         new AdminUserController(userService, jwtService))
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
