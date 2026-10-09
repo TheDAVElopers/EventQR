@@ -20,132 +20,58 @@ The platform allows:
 ### Backend
 
 - Java 21
-- Spring Boot 3.5.x
-- Maven
-- PostgreSQL
-- Spring Security
-- JWT authentication
-- Flyway database migrations
-- Spring Data JPA
-- Docker-ready project structure
+- Spring Boot 3.5.x, Maven
+- PostgreSQL (Supabase) with Flyway migrations
+- Spring Security with JWT access and refresh tokens
+- Spring Data JPA, Caffeine caching, Actuator health checks
+- Brevo transactional email, PDFBox for ID printing, ZXing for QR generation
+- Uploads stored in Postgres or an S3-compatible bucket
+- Docker, deployed on Render
 
 ### Mobile App
 
-- Kotlin
-- Android SDK
-- Android Compose + Material 3
-- Retrofit + OkHttp for backend calls
-- ZXing for QR-related functionality
-- Session-aware app flow with role-based screens
+- Kotlin, Android (minSdk 26, targetSdk 35)
+- Jetpack Compose + Material 3
+- Retrofit + OkHttp + Gson for backend calls
+- ZXing for QR codes, uCrop for image cropping
+- Encrypted session storage (AndroidX Security Crypto)
+- Splash screen API and a generated Baseline Profile for fast cold start
 
 ## Repository Structure
 
 ```txt
 EventQR/
-├── .serena/                     # Serena AI configuration
-├── EventQRBackend/              # Java Spring Boot backend
-│   └── eventqr/
-│       ├── src/
-│       │   ├── main/
-│       │   │   ├── java/com/thedavelopers/eventqr/
-│       │   │   │   ├── features/
-│       │   │   │   │   ├── admin/
-│       │   │   │   │   │   ├── controller/
-│       │   │   │   │   │   ├── service/
-│       │   │   │   │   │   ├── repository/
-│       │   │   │   │   │   ├── model/
-│       │   │   │   │   │   └── dto/
-│       │   │   │   │   ├── attendance/
-│       │   │   │   │   │   ├── controller/
-│       │   │   │   │   │   ├── service/
-│       │   │   │   │   │   ├── repository/
-│       │   │   │   │   │   ├── model/
-│       │   │   │   │   │   └── dto/
-│       │   │   │   │   ├── auth/
-│       │   │   │   │   │   ├── controller/
-│       │   │   │   │   │   ├── service/
-│       │   │   │   │   │   ├── repository/
-│       │   │   │   │   │   ├── model/
-│       │   │   │   │   │   └── dto/
-│       │   │   │   │   ├── events/
-│       │   │   │   │   │   ├── controller/
-│       │   │   │   │   │   ├── service/
-│       │   │   │   │   │   ├── repository/
-│       │   │   │   │   │   ├── model/
-│       │   │   │   │   │   └── dto/
-│       │   │   │   │   ├── organizer/
-│       │   │   │   │   │   ├── controller/
-│       │   │   │   │   │   ├── service/
-│       │   │   │   │   │   ├── repository/
-│       │   │   │   │   │   ├── model/
-│       │   │   │   │   │   └── dto/
-│       │   │   │   │   ├── staff/
-│       │   │   │   │   │   ├── controller/
-│       │   │   │   │   │   ├── service/
-│       │   │   │   │   │   ├── repository/
-│       │   │   │   │   │   ├── model/
-│       │   │   │   │   │   └── dto/
-│       │   │   │   │   ├── notifications/
-│       │   │   │   │   │   ├── controller/
-│       │   │   │   │   │   ├── service/
-│       │   │   │   │   │   ├── repository/
-│       │   │   │   │   │   ├── model/
-│       │   │   │   │   │   └── dto/
-│       │   │   │   │   ├── qremail/
-│       │   │   │   │   │   ├── service/
-│       │   │   │   │   │   │   ├── EmailGatewayService.java
-│       │   │   │   │   │   │   ├── EmailTemplateBuilder.java
-│       │   │   │   │   │   │   └── QREmailService.java
-│       │   │   │   │   └── shared/
-│       │   │   │   │       ├── config/
-│       │   │   │   │       ├── security/
-│       │   │   │   │       ├── utils/
-│       │   │   │   │       └── exceptions/
-│       │   │   │   └── resources/
-│       │   │   │       ├── application.yml
-│       │   │   │       ├── application-dev.yml
-│       │   │   │       ├── schema.sql
-│       │   │   │       └── data.sql
-│       │   │   └── test/
-│       │   │       └── java/com/thedavelopers/eventqr/
-│       │   │           └── features/
-│       ├── pom.xml
-│       └── Dockerfile
-├── EventQRMobile/               # Kotlin Android mobile client
-│   ├── app/
-│   │   ├── src/
-│   │   │   ├── main/
-│   │   │   │   ├── java/com/thedavelopers/eventqr/
-│   │   │   │   │   ├── features/
-│   │   │   │   │   │   ├── auth/
-│   │   │   │   │   │   ├── attendance/
-│   │   │   │   │   │   ├── dashboard/
-│   │   │   │   │   │   ├── events/
-│   │   │   │   │   │   ├── organizers/
-│   │   │   │   │   │   ├── profile/
-│   │   │   │   │   │   ├── rewards/
-│   │   │   │   │   │   ├── staff/
-│   │   │   │   │   │   └── shared/
-│   │   │   │   │   └── res/
-│   │   │   │   │       ├── layout/
-│   │   │   │   │       ├── menu/
-│   │   │   │   │       ├── values/
-│   │   │   │   │       ├── drawable/
-│   │   │   │   │       └── navigation/
-│   │   │   │   └── test/
-│   │   │   │       └── java/com/thedavelopers/eventqr/
-│   │   │   │           └── features/
-│   ├── build.gradle
-│   └── proguard-rules.pro
-├── supabase/                    # Supabase configuration and migrations
-│   ├── migrations/
-│   │   ├── supabase/
-│   │   └── ...
-│   └── ...
+├── .github/workflows/           # CI, dependency scan, DB backup, Supabase keepalive
+├── EventQRBackend/eventqr/      # Spring Boot backend
+│   ├── src/main/java/com/thedavelopers/eventqr/
+│   │   ├── features/            # admin, attendance, auditlogs, auth, dashboard,
+│   │   │                        # eventrequests, events, idprinting, notifications,
+│   │   │                        # organizer, qrcredentials, qremail, registrations,
+│   │   │                        # reports, rewards, scanning, staff, transactions,
+│   │   │                        # uploads, users
+│   │   └── shared/              # config, security, utils, exceptions
+│   ├── src/main/resources/
+│   │   ├── application.properties
+│   │   ├── application-prod.properties
+│   │   ├── logback-spring.xml
+│   │   └── db/migration/        # Flyway migrations (V1 ... V38)
+│   ├── src/test/                # Backend tests
+│   ├── .env.example             # All supported environment variables
+│   ├── Dockerfile
+│   └── pom.xml
+├── EventQRMobile/               # Kotlin Android client
+│   ├── app/src/main/java/com/thedavelopers/eventqr/
+│   │   ├── core/                # api (Retrofit), navigation, session, util
+│   │   ├── features/            # admin, attendee, audit, auth, common, dashboard,
+│   │   │                        # events, idprinting, landing, notifications,
+│   │   │                        # organizer, qrcredential, registrations, reports,
+│   │   │                        # rewards, scanpurposes, staff, transactions,
+│   │   │                        # uploads, users
+│   │   └── ui/                  # shared components and theme
+│   ├── app/src/test, androidTest, benchmark
+│   ├── baselineprofile/         # Baseline Profile generator module
+│   └── build.gradle.kts
 ├── .gitignore
-├── AGENTS.md                    # Opencode agent configuration
-├── FinalFlow.md                 # Project workflow documentation
-├── opencode.json                # Opencode configuration
 └── README.md
 ```
 
@@ -188,15 +114,16 @@ EventQR/
 
 ## Backend Architecture
 
-The backend is organized as a feature-based Spring application under `com.thedavelopers.eventqr.features`. It includes controllers for auth, users, events, registrations, staff, organizer tools, rewards, reports, notifications, uploads, and admin operations.
+The backend is organized as a feature-based Spring application under `com.thedavelopers.eventqr.features`. It includes controllers for auth, users, events, event requests, registrations, QR credentials, scanning, staff, organizer tools, rewards, transactions, reports, audit logs, ID printing, notifications, uploads, and admin operations.
 
 The project uses:
 
 - REST controllers under `/api/v1/...`
-- Spring Security with JWT-based auth
+- Spring Security with JWT access and refresh tokens
 - Flyway migration scripts for schema evolution
 - PostgreSQL-backed persistence
 - role-aware access across attendee, staff, organizer, and admin flows
+- transactional check-in handling to keep concurrent scans consistent
 
 Examples of implemented API groups include:
 
@@ -209,28 +136,25 @@ Examples of implemented API groups include:
 - `/api/v1/rewards`
 - `/api/v1/reports`
 - `/api/v1/notifications`
+- `/api/v1/health`
 
 ## Mobile App Architecture
 
-The Android application is structured around feature packages and a shared core layer. The app currently includes:
+The Android application is built with Jetpack Compose and organized into feature packages on top of a shared `core` layer (API client, navigation, session) and a `ui` layer (components, theme). The app includes:
 
-- auth flows for login, registration, password reset, and profile changes
-- dashboard screens based on user role
-- event browsing and registration flows
-- attendee reward and transaction views
-- staff scanning workflows and transaction logs
-- organizer/admin screens for overview and management
-- API integration through a centralized Retrofit client and session handling
+- landing, login, registration, password reset, and profile screens
+- role-based dashboards for attendees, staff, organizers, and admins
+- event browsing, registration, and QR credential display
+- attendee rewards, transactions, and notifications
+- staff scanning workflows (camera permission is requested only when the scanner opens) and transaction logs
+- organizer and admin screens for events, scan purposes, reports, ID printing, users, and audit logs
+- encrypted session storage with background token refresh
 
-The current mobile app is configured to communicate with the deployed backend via a default base URL in `ApiConfig.kt`:
+The backend base URL comes from the `EVENTQR_BASE_URL` Gradle property and falls back to the deployed backend. To point the app at a local backend, set it in `EventQRMobile/gradle.properties` or on the command line:
 
-```kotlin
-object ApiConfig {
-    const val BASE_URL = "https://eventqr-backend-owoa.onrender.com/api/v1/"
-}
+```bash
+./gradlew assembleDebug -PEVENTQR_BASE_URL=http://10.0.2.2:10000/api/v1/
 ```
-
-If you are running the backend locally, update this value to your local API address before testing the app.
 
 ## Local Development Setup
 
@@ -258,6 +182,8 @@ cd EventQRBackend\eventqr
 mvnw.cmd spring-boot:run
 ```
 
+Run the tests with `./mvnw verify`.
+
 ### Docker (optional)
 
 ```bash
@@ -280,18 +206,19 @@ cd EventQRMobile
 gradlew.bat assembleDebug
 ```
 
-Then open the project in Android Studio and run it on an emulator or physical device.
+Then open `EventQRMobile` in Android Studio and run it on an emulator or physical device. Unit tests: `./gradlew testDebugUnitTest`.
 
 ## Required Configuration
 
-The backend currently relies on environment variables and default fallbacks defined in `application.properties`.
+The backend currently reads its configuration from environment variables (see `.env.example` for the full list) with defaults in `application.properties` and `application-prod.properties`.
 
 Typical configuration includes:
 
 - database host, port, and database name
 - database username and password
-- JWT secret
-- JWT expiration duration
+- JWT secret and token lifetimes
+- Brevo API key and sender address
+- file storage type (`db` or `s3`) and bucket settings
 - backend server port
 - mobile app API base URL
 
@@ -302,15 +229,17 @@ DB_URL=jdbc:postgresql://localhost:5432/eventqr
 DB_USERNAME=postgres
 DB_PASSWORD=postgres
 JWT_SECRET=your_jwt_secret_here
-JWT_EXPIRATION_MS=86400000
+JWT_EXPIRATION_MS=3600000
+BREVO_API_KEY=your_brevo_key
+BREVO_SENDER_EMAIL=noreply@example.com
 PORT=10000
 ```
 
 Do not commit real secrets, production URLs, or private deployment values to version control.
 
-## Database migrations (Flyway) — fresh-deploy path
+## Database migrations (Flyway)
 
-- The schema baseline lives in `V16__baseline_schema.sql` (`CREATE TABLE IF NOT EXISTS`, idempotent). On a fresh (empty) database, Flyway runs V16 then applies V17+ as normal migrations; Hibernate's `ddl-auto=validate` is safe because it only verifies the entity mapping against the migrated schema.
+- Migrations live in `EventQRBackend/eventqr/src/main/resources/db/migration` (currently V1 to V38). On a fresh database Flyway applies them in order; Hibernate's `ddl-auto=validate` only verifies the entity mapping against the migrated schema.
 - Never change `spring.jpa.hibernate.ddl-auto` back to `update` or `create` on any environment that Flyway has already migrated — the two approaches fight over schema ownership and Flyway checksums drift.
 - `spring.flyway.baseline-on-migrate=true` is only meant for pre-existing non-Flyway databases; a clean deploy does not rely on it.
 
