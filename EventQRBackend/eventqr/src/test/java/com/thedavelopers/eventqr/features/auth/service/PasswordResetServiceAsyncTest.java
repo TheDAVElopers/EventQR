@@ -48,7 +48,7 @@ class PasswordResetServiceAsyncTest {
         users = mock(UserProfileRepository.class);
         mail = mock(EmailGatewayService.class);
         PasswordResetService target = new PasswordResetService(tokens, users, mock(PasswordEncoder.class), mail,
-                mock(RefreshTokenService.class), "https://eventqr.app");
+                mock(RefreshTokenService.class));
         executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(2);
         executor.initialize();
@@ -123,7 +123,7 @@ class PasswordResetServiceAsyncTest {
             user.setFullName("Jane");
             when(users.findByEmailIgnoreCase("jane@example.com")).thenReturn(Optional.of(user));
             PasswordResetService target = new PasswordResetService(tokens, users, mock(PasswordEncoder.class), mail,
-                    mock(RefreshTokenService.class), "https://eventqr.app");
+                    mock(RefreshTokenService.class));
             ProxyFactory factory = new ProxyFactory(target);
             factory.setProxyTargetClass(true);
             AsyncAnnotationAdvisor advisor = new AsyncAnnotationAdvisor(tiny,
@@ -165,7 +165,7 @@ class PasswordResetServiceAsyncTest {
         logger.addAppender(appender);
         try {
             PasswordResetService direct = new PasswordResetService(tokens, users, mock(PasswordEncoder.class), mail,
-                    mock(RefreshTokenService.class), "https://eventqr.app");
+                    mock(RefreshTokenService.class));
             UserProfile user = new UserProfile();
             user.setId(UUID.randomUUID());
             user.setEmail("secret.jane@example.com");

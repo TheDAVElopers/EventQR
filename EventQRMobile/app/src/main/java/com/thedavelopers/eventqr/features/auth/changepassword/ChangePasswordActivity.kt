@@ -13,6 +13,7 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.Validators
+import com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
 
 open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.View {
     private lateinit var presenter: ChangePasswordPresenter
@@ -88,8 +89,8 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
             )
         }
 
-        findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.toolbarChangePassword)
-            .setNavigationOnClickListener { presenter.navigateBack() }
+        findViewById<EventQrDetailHeader>(R.id.toolbarChangePassword)
+            .backButton.setOnClickListener { presenter.navigateBack() }
     }
 
     override fun onDestroy() {

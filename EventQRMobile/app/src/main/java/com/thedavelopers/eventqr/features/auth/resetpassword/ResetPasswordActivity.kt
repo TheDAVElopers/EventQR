@@ -10,7 +10,6 @@ import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
-import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -25,10 +24,9 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
     private lateinit var newPasswordInput: EditText
     private lateinit var confirmPasswordInput: EditText
     private lateinit var resetButton: Button
-    private lateinit var progressBar: ProgressBar
-    private lateinit var formLayout: LinearLayout
-    private lateinit var errorLayout: LinearLayout
-    private lateinit var successLayout: LinearLayout
+    private lateinit var codeInput: EditText
+    private lateinit var resendButton: Button
+    private lateinit var codeSentToText: TextView
     private lateinit var requirementsLayout: LinearLayout
     private lateinit var passwordLengthRequirement: TextView
     private lateinit var passwordCapitalRequirement: TextView
@@ -46,10 +44,9 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
         newPasswordInput = findViewById(R.id.edtNewPassword)
         confirmPasswordInput = findViewById(R.id.edtConfirmPassword)
         resetButton = findViewById(R.id.btnResetPassword)
-        progressBar = findViewById(R.id.progressReset)
-        formLayout = findViewById(R.id.layoutForm)
-        errorLayout = findViewById(R.id.layoutError)
-        successLayout = findViewById(R.id.layoutSuccess)
+        codeInput = findViewById(R.id.edtResetCode)
+        resendButton = findViewById(R.id.btnResendCode)
+        codeSentToText = findViewById(R.id.txtCodeSentTo)
         requirementsLayout = findViewById(R.id.layoutPasswordRequirements)
         passwordLengthRequirement = findViewById(R.id.txtPasswordLengthRequirement)
         passwordCapitalRequirement = findViewById(R.id.txtPasswordCapitalRequirement)
@@ -78,6 +75,7 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
 
         resetButton.setOnClickListener {
             presenter.submitReset(
+                codeInput.text.toString(),
                 newPasswordInput.text.toString(),
                 confirmPasswordInput.text.toString()
             )
@@ -87,12 +85,12 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
             presenter.navigateToLogin()
         }
 
-        findViewById<Button>(R.id.btnGoToLoginSuccess).setOnClickListener {
-            presenter.navigateToLogin()
+        resendButton.setOnClickListener {
+            presenter.resendCode()
         }
 
-        val token = intent.data?.getQueryParameter("token")
-        presenter.validateToken(token)
+        updatePasswordRequirements(newPasswordInput.text.toString())
+        presenter.start(intent.getStringExtra(EXTRA_EMAIL))
     }
 
     override fun onDestroy() {
@@ -103,20 +101,23 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
     override fun showLoading(isLoading: Boolean) {
         resetButton.isEnabled = !isLoading
         resetButton.text = getString(if (isLoading) R.string.reset_password_resetting else R.string.reset_password_reset_password)
-        progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
-    override fun showTokenInvalid() {
-        formLayout.visibility = View.GONE
-        errorLayout.visibility = View.VISIBLE
-        successLayout.visibility = View.GONE
+    override fun showEmail(email: String) {
+        codeSentToText.text = getString(R.string.reset_password_code_sent_to, email)
     }
 
-    override fun showForm() {
-        formLayout.visibility = View.VISIBLE
-        errorLayout.visibility = View.GONE
-        successLayout.visibility = View.GONE
-        updatePasswordRequirements(newPasswordInput.text.toString())
+    override fun showCodeError(message: String?) {
+        codeInput.error = message
+    }
+
+    override fun showResendCooldown(secondsLeft: Int) {
+        resendButton.isEnabled = secondsLeft <= 0
+        resendButton.text = if (secondsLeft > 0) {
+            getString(R.string.reset_password_resend_code_in, secondsLeft)
+        } else {
+            getString(R.string.reset_password_resend_code)
+        }
     }
 
     override fun showPasswordError(message: String?) {
@@ -129,12 +130,6 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
 
     override fun showMessage(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-    }
-
-    override fun showSuccess() {
-        formLayout.visibility = View.GONE
-        errorLayout.visibility = View.GONE
-        successLayout.visibility = View.VISIBLE
     }
 
     override fun navigateToLogin() {
@@ -196,5 +191,9 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
                 false
             }
         }
+    }
+
+    companion object {
+        const val EXTRA_EMAIL = "extra_email"
     }
 }

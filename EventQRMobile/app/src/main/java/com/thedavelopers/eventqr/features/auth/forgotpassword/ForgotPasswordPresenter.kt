@@ -44,7 +44,7 @@ class ForgotPasswordPresenter() {
             when (val result = repository?.forgotPassword(emailValue)) {
                 is NetworkResult.Success -> {
                     view?.showLoading(false)
-                    view?.showConfirmation()
+                    view?.navigateToResetPassword(emailValue)
                 }
                 is NetworkResult.Error -> {
                     view?.showLoading(false)
@@ -52,18 +52,18 @@ class ForgotPasswordPresenter() {
                         // Offline or timed out: the request never got an answer, so don't tell
                         // the user an email is on its way.
                         ForgotPasswordOutcome.NetworkFailure -> view?.showMessage(result.message)
-                        // Rate limited / server failure: the link was NOT sent, say so.
+                        // Rate limited / server failure: the code was NOT sent, say so.
                         ForgotPasswordOutcome.RateLimited -> appContext?.let { view?.showMessage(it.getString(R.string.forgot_password_rate_limited)) }
                         ForgotPasswordOutcome.ServerError -> appContext?.let { view?.showMessage(it.getString(R.string.forgot_password_server_error)) }
-                        // 4xx validation-type answer: keep the neutral confirmation so the screen
+                        // 4xx validation-type answer: keep the neutral flow (go on to the code screen) so the screen
                         // doesn't reveal whether an account exists.
-                        ForgotPasswordOutcome.Neutral -> view?.showConfirmation()
+                        ForgotPasswordOutcome.Neutral -> view?.navigateToResetPassword(emailValue)
                     }
                 }
                 NetworkResult.Loading -> Unit
                 null -> {
                     view?.showLoading(false)
-                    view?.showConfirmation()
+                    view?.navigateToResetPassword(emailValue)
                 }
             }
         }

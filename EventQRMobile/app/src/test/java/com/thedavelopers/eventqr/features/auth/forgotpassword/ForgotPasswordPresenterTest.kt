@@ -13,7 +13,7 @@ import org.robolectric.annotation.Config
 
 /**
  * Presenter-level tests for the XML reverted Forgot Password flow. Only the
- * synchronous paths run: the reset-link request itself performs a network call
+ * synchronous paths run: the send-code request itself performs a network call
  * through [com.thedavelopers.eventqr.features.auth.AuthRepository] which has no
  * unit test seam (see coverage notes).
  */
@@ -38,7 +38,7 @@ class ForgotPasswordPresenterTest {
 
         assertEquals(listOf("Enter a valid email address"), view.emailErrors)
         assertTrue(view.loadingStates.isEmpty())
-        assertEquals(0, view.confirmationCount)
+        assertTrue(view.resetEmails.isEmpty())
     }
 
     @Test
@@ -55,7 +55,7 @@ class ForgotPasswordPresenterTest {
 
         assertEquals(listOf("Enter a valid email address"), view.emailErrors)
         assertTrue(view.loadingStates.isEmpty())
-        assertEquals(0, view.confirmationCount)
+        assertTrue(view.resetEmails.isEmpty())
     }
 
     @Test
@@ -80,7 +80,7 @@ class ForgotPasswordPresenterTest {
         val loadingStates = mutableListOf<Boolean>()
         val emailErrors = mutableListOf<String?>()
         val messages = mutableListOf<String>()
-        var confirmationCount = 0
+        val resetEmails = mutableListOf<String>()
         var backToSignInCount = 0
 
         override fun showLoading(isLoading: Boolean) {
@@ -95,8 +95,8 @@ class ForgotPasswordPresenterTest {
             messages += message
         }
 
-        override fun showConfirmation() {
-            confirmationCount++
+        override fun navigateToResetPassword(email: String) {
+            resetEmails += email
         }
 
         override fun navigateBackToSignIn() {

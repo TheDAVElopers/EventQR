@@ -3,12 +3,13 @@ package com.thedavelopers.eventqr.features.auth.resetpassword
 interface ResetPasswordContract {
     interface View {
         fun showLoading(isLoading: Boolean)
-        fun showTokenInvalid()
-        fun showForm()
+        fun showEmail(email: String)
+        fun showCodeError(message: String?)
         fun showPasswordError(message: String?)
         fun showConfirmPasswordError(message: String?)
         fun showMessage(message: String)
-        fun showSuccess()
+        /** Seconds left before the code can be requested again; 0 re-enables the resend action. */
+        fun showResendCooldown(secondsLeft: Int)
         fun navigateToLogin()
     }
 }

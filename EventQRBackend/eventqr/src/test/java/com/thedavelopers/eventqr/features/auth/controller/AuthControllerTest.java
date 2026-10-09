@@ -190,7 +190,7 @@ class AuthControllerTest {
         mvc.perform(post("/api/v1/auth/forgot-password").contentType(MediaType.APPLICATION_JSON)
                         .content(json("{'email':'jane@example.com'}")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("If an account with that email exists, a reset link has been sent"));
+                .andExpect(jsonPath("$.message").value("If an account with that email exists, a reset code has been sent"));
 
         verify(passwordResetService).requestReset("jane@example.com");
     }
@@ -207,41 +207,49 @@ class AuthControllerTest {
     }
 
     @Test
-    void anInvalidResetTokenIsReportedAs400() throws Exception {
-        when(passwordResetService.validateToken("bad")).thenReturn(false);
-
-        mvc.perform(get("/api/v1/auth/reset-password/validate").param("token", "bad"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.data.valid").value(false));
-    }
-
-    @Test
-    void aValidResetTokenIsReportedAsValid() throws Exception {
-        when(passwordResetService.validateToken("good")).thenReturn(true);
-
-        mvc.perform(get("/api/v1/auth/reset-password/validate").param("token", "good"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.valid").value(true));
-    }
-
-    @Test
     void aWeakNewPasswordIsRejectedBeforeTheServiceIsCalled() throws Exception {
         mvc.perform(post("/api/v1/auth/reset-password").contentType(MediaType.APPLICATION_JSON)
-                        .content(json("{'token':'t','newPassword':'alllowercase1','confirmPassword':'alllowercase1'}")))
+                        .content(json("{'email':'a@b.com','code':'123456','newPassword':'alllowercase1','confirmPassword':'alllowercase1'}")))
                 .andExpect(status().isBadRequest());
 
-        verify(passwordResetService, never()).resetPassword(any(), any(), any());
+        verify(passwordResetService, never()).resetPassword(any(), any(), any(), any());
     }
 
     @Test
     void mismatchedResetPasswordsFromTheServiceAre400() throws Exception {
         org.mockito.Mockito.doThrow(new BadRequestException("Passwords do not match"))
-                .when(passwordResetService).resetPassword(any(), any(), any());
+                .when(passwordResetService).resetPassword(any(), any(), any(), any());
 
         mvc.perform(post("/api/v1/auth/reset-password").contentType(MediaType.APPLICATION_JSON)
-                        .content(json("{'token':'t','newPassword':'Passw0rd!!','confirmPassword':'Different1!'}")))
+                        .content(json("{'email':'a@b.com','code':'123456','newPassword':'Passw0rd!!','confirmPassword':'Different1!'}")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Passwords do not match"));
+    }
+
+    @Test
+    void resetPasswordPassesEmailAndCodeToTheService() throws Exception {
+        mvc.perform(post("/api/v1/auth/reset-password").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'email':'a@b.com','code':'123456','newPassword':'Passw0rd!!','confirmPassword':'Passw0rd!!'}")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Password has been reset"));
+
+        verify(passwordResetService).resetPassword("a@b.com", "123456", "Passw0rd!!", "Passw0rd!!");
+    }
+
+    @Test
+    void aMalformedResetCodeIsRejectedBeforeTheServiceIsCalled() throws Exception {
+        for (String bad : new String[] {"12345", "1234567", "12345a", " 12345", ""}) {
+            mvc.perform(post("/api/v1/auth/reset-password").contentType(MediaType.APPLICATION_JSON)
+                            .content(json("{'email':'a@b.com','code':'" + bad + "','newPassword':'Passw0rd!!','confirmPassword':'Passw0rd!!'}")))
+                    .andExpect(status().isBadRequest());
+        }
+        verify(passwordResetService, never()).resetPassword(any(), any(), any(), any());
+    }
+
+    @Test
+    void resetValidateEndpointIsGone() throws Exception {
+        mvc.perform(get("/api/v1/auth/reset-password/validate").param("token", "x"))
+                .andExpect(status().is4xxClientError());
     }
 
     @Test

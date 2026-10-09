@@ -26,7 +26,7 @@ class PasswordResetServicePurgeTest {
 
         PasswordResetService service = new PasswordResetService(
                 tokenRepository, userRepository, passwordEncoder, emailGatewayService,
-                mock(RefreshTokenService.class), "https://eventqr.app");
+                mock(RefreshTokenService.class));
 
         service.purgeExpiredTokens();
 

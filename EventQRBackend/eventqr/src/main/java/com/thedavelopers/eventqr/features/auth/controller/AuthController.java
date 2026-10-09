@@ -1,6 +1,5 @@
 package com.thedavelopers.eventqr.features.auth.controller;
 
-import java.util.Map;
 import java.util.UUID;
 
 import jakarta.persistence.PersistenceException;
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.thedavelopers.eventqr.features.auth.model.dto.LoginRequest;
@@ -179,21 +177,12 @@ public class AuthController {
         // request thread so response time does not reveal whether the account exists. That executor's
         // caller-runs fallback means the task is never rejected (so there is nothing to swallow here).
         passwordResetService.requestReset(forgotPassword.email());
-        return ResponseEntity.ok(ApiResponse.success("If an account with that email exists, a reset link has been sent", null));
-    }
-
-    @GetMapping("/reset-password/validate")
-    public ResponseEntity<ApiResponse<Map<String, Boolean>>> validateResetToken(@RequestParam String token) {
-        boolean valid = passwordResetService.validateToken(token);
-        if (!valid) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "Token is invalid or expired", Map.of("valid", false), java.time.Instant.now()));
-        }
-        return ResponseEntity.ok(ApiResponse.success(Map.of("valid", true)));
+        return ResponseEntity.ok(ApiResponse.success("If an account with that email exists, a reset code has been sent", null));
     }
 
     @PostMapping("/reset-password")
     public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-        passwordResetService.resetPassword(request.token(), request.newPassword(), request.confirmPassword());
+        passwordResetService.resetPassword(request.email(), request.code(), request.newPassword(), request.confirmPassword());
         return ResponseEntity.ok(ApiResponse.success("Password has been reset", null));
     }
 }

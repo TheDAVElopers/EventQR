@@ -80,17 +80,8 @@
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".features.auth.resetpassword.ResetPasswordActivity"
-            android:exported="true">
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:scheme="https"
-                    android:host="eventqr-backend-owoa.onrender.com"
-                    android:pathPrefix="/reset-password" />
-            </intent-filter>
-        </activity>
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
 
         <activity android:name=".features.auth.changepassword.ChangePasswordActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <activity android:name=".features.dashboard.DashboardActivity" android:exported="false" />

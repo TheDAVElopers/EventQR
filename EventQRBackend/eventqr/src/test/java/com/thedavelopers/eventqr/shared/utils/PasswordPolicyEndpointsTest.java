@@ -96,7 +96,7 @@ class PasswordPolicyEndpointsTest {
         verify(userService, never()).register(any());
         verify(userService, never()).create(any());
         verify(userService, never()).changePassword(any(), any(), any());
-        verify(resetService, never()).resetPassword(any(), any(), any());
+        verify(resetService, never()).resetPassword(any(), any(), any(), any());
         verify(changeService, never()).changePassword(any(), any(), any(), any());
     }
 
@@ -127,7 +127,7 @@ class PasswordPolicyEndpointsTest {
     @Test
     void resetRejectsLowercaseLessPassword() throws Exception {
         rejected(json(post("/api/v1/auth/reset-password"),
-                "{'token':'t','newPassword':'" + WEAK + "','confirmPassword':'" + WEAK + "'}"), "newPassword");
+                "{'email':'a@b.com','code':'123456','newPassword':'" + WEAK + "','confirmPassword':'" + WEAK + "'}"), "newPassword");
     }
 
     @Test
@@ -146,7 +146,7 @@ class PasswordPolicyEndpointsTest {
                     "{'email':'a@b.com','fullName':'A','password':'" + pw + "'}"), "password",
                     PasswordValidator.TOO_LONG_MESSAGE);
             rejected(json(post("/api/v1/auth/reset-password"),
-                    "{'token':'t','newPassword':'" + pw + "','confirmPassword':'" + pw + "'}"), "newPassword",
+                    "{'email':'a@b.com','code':'123456','newPassword':'" + pw + "','confirmPassword':'" + pw + "'}"), "newPassword",
                     PasswordValidator.TOO_LONG_MESSAGE);
         }
     }
@@ -194,8 +194,8 @@ class PasswordPolicyEndpointsTest {
         com.thedavelopers.eventqr.features.auth.service.PasswordResetService reset = new com.thedavelopers.eventqr.features.auth.service.PasswordResetService(mock(
                 com.thedavelopers.eventqr.features.auth.repository.PasswordResetTokenRepository.class), repo, encoder,
                 mock(com.thedavelopers.eventqr.features.qremail.service.EmailGatewayService.class),
-                mock(RefreshTokenService.class), "https://x");
-        assertThatThrownBy(() -> reset.resetPassword("t", tooLong, tooLong))
+                mock(RefreshTokenService.class));
+        assertThatThrownBy(() -> reset.resetPassword("a@b.com", "123456", tooLong, tooLong))
                 .hasMessage(PasswordValidator.TOO_LONG_MESSAGE);
         com.thedavelopers.eventqr.features.auth.service.ChangePasswordService change =
                 new com.thedavelopers.eventqr.features.auth.service.ChangePasswordService(repo, encoder,

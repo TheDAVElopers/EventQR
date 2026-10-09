@@ -60,10 +60,10 @@ class DtoSizeValidationTest {
 
     @Test
     void resetPasswordRequestConfirmPasswordSizeLimit() {
-        var valid = new ResetPasswordRequest("token-123", "ValidPass123!", "a".repeat(128));
+        var valid = new ResetPasswordRequest("a@b.com", "123456", "ValidPass123!", "a".repeat(128));
         assertThat(validator.validate(valid)).isEmpty();
 
-        var invalid = new ResetPasswordRequest("token-123", "ValidPass123!", "a".repeat(129));
+        var invalid = new ResetPasswordRequest("a@b.com", "123456", "ValidPass123!", "a".repeat(129));
         assertThat(validator.validate(invalid))
                 .anyMatch(v -> v.getPropertyPath().toString().equals("confirmPassword"));
     }

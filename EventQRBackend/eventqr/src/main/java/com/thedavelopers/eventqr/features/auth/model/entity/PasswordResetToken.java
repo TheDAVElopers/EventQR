@@ -34,6 +34,9 @@ public class PasswordResetToken {
     @Column(nullable = false)
     private boolean used;
 
+    @Column(name = "failed_attempts", nullable = false)
+    private int failedAttempts;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 }

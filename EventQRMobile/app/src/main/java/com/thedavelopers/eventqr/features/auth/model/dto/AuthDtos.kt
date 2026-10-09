@@ -36,7 +36,8 @@ data class ForgotPasswordRequest(
 )
 
 data class ResetPasswordRequest(
-    val token: String,
+    val email: String,
+    val code: String,
     val newPassword: String,
     val confirmPassword: String
 )
@@ -45,8 +46,4 @@ data class ChangePasswordRequest(
     val currentPassword: String,
     val newPassword: String,
     val confirmPassword: String
-)
-
-data class ResetTokenValidationResponse(
-    val valid: Boolean
 )

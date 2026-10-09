@@ -5,7 +5,7 @@ interface ForgotPasswordContract {
         fun showLoading(isLoading: Boolean)
         fun showEmailError(message: String?)
         fun showMessage(message: String)
-        fun showConfirmation()
+        fun navigateToResetPassword(email: String)
         fun navigateBackToSignIn()
     }
 }

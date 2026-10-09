@@ -20,7 +20,7 @@ import org.robolectric.annotation.Config
 /**
  * Robolectric tests for the XML reverted ForgotPasswordActivity: invalid-email
  * handling (form stays, error shown) and the three back-to-sign-in entry points.
- * The reset-link network call is not unit-testable (see coverage notes).
+ * The send-code network call is not unit-testable (see coverage notes).
  */
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [35], shadows = [ShadowMasterKeys::class, ShadowEncryptedSharedPreferences::class])
@@ -30,11 +30,11 @@ class ForgotPasswordActivityTest {
         Robolectric.buildActivity(ForgotPasswordActivity::class.java).create().get()
 
     @Test
-    fun clickSend_resetLink_invalidEmail_showsErrorAndKeepsForm() {
+    fun clickSend_code_invalidEmail_showsErrorAndKeepsForm() {
         val activity = buildActivity()
         activity.findViewById<EditText>(R.id.editEmail).setText("not-an-email")
 
-        activity.findViewById<android.widget.Button>(R.id.btnSendResetLink).performClick()
+        activity.findViewById<android.widget.Button>(R.id.btnSendCode).performClick()
 
         assertEquals(
             "Enter a valid email address",
@@ -44,25 +44,18 @@ class ForgotPasswordActivityTest {
             View.VISIBLE,
             activity.findViewById<LinearLayout>(R.id.layoutForm).visibility,
         )
-        assertEquals(
-            View.GONE,
-            activity.findViewById<LinearLayout>(R.id.layoutConfirmation).visibility,
-        )
+        assertNull(shadowOf(activity).peekNextStartedActivity())
     }
 
     @Test
-    fun clickSend_resetLink_emptyEmail_showsErrorAndNoConfirmation() {
+    fun clickSend_code_emptyEmail_showsErrorAndNoNavigation() {
         val activity = buildActivity()
 
-        activity.findViewById<android.widget.Button>(R.id.btnSendResetLink).performClick()
+        activity.findViewById<android.widget.Button>(R.id.btnSendCode).performClick()
 
         assertEquals(
             "Enter a valid email address",
             activity.findViewById<EditText>(R.id.editEmail).error.toString(),
-        )
-        assertEquals(
-            View.GONE,
-            activity.findViewById<LinearLayout>(R.id.layoutConfirmation).visibility,
         )
         assertNull(shadowOf(activity).peekNextStartedActivity())
     }
@@ -83,17 +76,6 @@ class ForgotPasswordActivityTest {
         val activity = buildActivity()
 
         activity.findViewById<View>(R.id.tvBackToSignIn).performClick()
-
-        val intent = shadowOf(activity).nextStartedActivity
-        assertEquals(LoginActivity::class.java.name, intent.component?.className)
-        assertTrue(activity.isFinishing)
-    }
-
-    @Test
-    fun clickConfirmationBackButton_navigatesToLogin() {
-        val activity = buildActivity()
-
-        activity.findViewById<android.widget.Button>(R.id.btnBackToSignInConfirmation).performClick()
 
         val intent = shadowOf(activity).nextStartedActivity
         assertEquals(LoginActivity::class.java.name, intent.component?.className)

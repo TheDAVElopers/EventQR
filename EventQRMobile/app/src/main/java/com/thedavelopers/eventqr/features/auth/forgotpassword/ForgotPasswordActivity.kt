@@ -5,20 +5,17 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.auth.login.LoginActivity
+import com.thedavelopers.eventqr.features.auth.resetpassword.ResetPasswordActivity
 
 open class ForgotPasswordActivity : AppCompatActivity(), ForgotPasswordContract.View {
     private lateinit var presenter: ForgotPasswordPresenter
     private lateinit var emailInput: EditText
     private lateinit var sendButton: Button
     private lateinit var backButton: android.widget.ImageButton
-    private lateinit var formLayout: LinearLayout
-    private lateinit var confirmationLayout: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,10 +23,8 @@ open class ForgotPasswordActivity : AppCompatActivity(), ForgotPasswordContract.
 
         presenter = ForgotPasswordPresenter()
         emailInput = findViewById(R.id.editEmail)
-        sendButton = findViewById(R.id.btnSendResetLink)
+        sendButton = findViewById(R.id.btnSendCode)
         backButton = findViewById(R.id.btnBackToSignIn)
-        formLayout = findViewById(R.id.layoutForm)
-        confirmationLayout = findViewById(R.id.layoutConfirmation)
         presenter.attach(this, this)
 
         sendButton.setOnClickListener {
@@ -37,10 +32,6 @@ open class ForgotPasswordActivity : AppCompatActivity(), ForgotPasswordContract.
         }
 
         backButton.setOnClickListener {
-            presenter.backToSignIn()
-        }
-
-        findViewById<Button>(R.id.btnBackToSignInConfirmation).setOnClickListener {
             presenter.backToSignIn()
         }
 
@@ -56,7 +47,7 @@ open class ForgotPasswordActivity : AppCompatActivity(), ForgotPasswordContract.
 
     override fun showLoading(isLoading: Boolean) {
         sendButton.isEnabled = !isLoading
-        sendButton.text = getString(if (isLoading) R.string.forgot_password_sending else R.string.forgot_password_send_reset_link)
+        sendButton.text = getString(if (isLoading) R.string.forgot_password_sending else R.string.forgot_password_send_code)
     }
 
     override fun showEmailError(message: String?) {
@@ -67,9 +58,8 @@ open class ForgotPasswordActivity : AppCompatActivity(), ForgotPasswordContract.
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
-    override fun showConfirmation() {
-        formLayout.visibility = View.GONE
-        confirmationLayout.visibility = View.VISIBLE
+    override fun navigateToResetPassword(email: String) {
+        startActivity(Intent(this, ResetPasswordActivity::class.java).putExtra(ResetPasswordActivity.EXTRA_EMAIL, email))
     }
 
     override fun navigateBackToSignIn() {
