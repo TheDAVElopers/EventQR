@@ -45,8 +45,8 @@ val StatusRegisteredPurpleBg = Color(0xFFEDE9FE)
 val StatusRegisteredPurpleText = Color(0xFF4C1D95)
 
 // Event Card Status Accents
-val EventAccentUpcoming = Color(0xFF2D2A7C)
-val EventAccentUpcomingFill = Color(0xFF2563EB)
+val EventAccentUpcoming = Color(0xFF92400E)
+val EventAccentUpcomingFill = Color(0xFFB45309)
 val EventAccentActive = Color(0xFF065F46)
 val EventAccentActiveFill = Color(0xFF059669)
 val EventAccentCompleted = Color(0xFF374151)

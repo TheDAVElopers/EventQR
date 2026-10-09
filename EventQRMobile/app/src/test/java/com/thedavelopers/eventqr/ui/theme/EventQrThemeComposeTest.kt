@@ -76,8 +76,8 @@ class EventQrThemeComposeTest {
         assertEquals(Color(0xFF059669), EventAccentActiveFill)
         assertEquals(Color(0xFF374151), EventAccentCompleted)
         assertEquals(Color(0xFF6B7280), EventAccentCompletedFill)
-        assertEquals(Color(0xFF2D2A7C), EventAccentUpcoming)
-        assertEquals(Color(0xFF2563EB), EventAccentUpcomingFill)
+        assertEquals(Color(0xFF92400E), EventAccentUpcoming)
+        assertEquals(Color(0xFFB45309), EventAccentUpcomingFill)
     }
 
     @Test
