@@ -70,8 +70,7 @@ class EventCardComposeTest {
             setOf(EventBadgeStatus.REJECTED, EventBadgeStatus.CANCELLED),
             setOf(EventBadgeStatus.COMPLETED, EventBadgeStatus.DRAFT, EventBadgeStatus.UNKNOWN),
             setOf(EventBadgeStatus.ACTIVE),
-            setOf(EventBadgeStatus.UPCOMING),
-            setOf(EventBadgeStatus.PENDING),
+            setOf(EventBadgeStatus.UPCOMING, EventBadgeStatus.PENDING),
             setOf(EventBadgeStatus.APPROVED),
             setOf(EventBadgeStatus.REGISTERED),
         )
