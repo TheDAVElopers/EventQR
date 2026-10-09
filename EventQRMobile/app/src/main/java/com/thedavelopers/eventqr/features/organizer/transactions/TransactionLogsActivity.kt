@@ -19,7 +19,6 @@ import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.organizer.*
 import com.thedavelopers.eventqr.features.organizer.attendees.SearchAttendeesActivity
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
 open class TransactionLogsActivity : AppCompatActivity() {
@@ -63,7 +62,7 @@ open class TransactionLogsActivity : AppCompatActivity() {
     }
 
     private fun loadLogs() {
-        MainScope().launch {
+        lifecycleScope.launch {
             logsSource = repository.loadTransactionsForMvp(selectedEvent.id, selectedEvent.title)
             render()
         }

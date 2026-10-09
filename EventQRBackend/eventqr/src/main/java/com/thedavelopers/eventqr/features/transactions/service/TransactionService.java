@@ -61,6 +61,8 @@ public class TransactionService {
     /** Stable newest-first order: id breaks scannedAt ties so pages never overlap or skip rows. */
     private static final Sort NEWEST_FIRST = Sort.by(Sort.Order.desc("scannedAt"), Sort.Order.asc("id"));
     private static final java.util.Set<TransactionType> CHECK_IN_TYPES = EnumSet.of(TransactionType.ENTRY, TransactionType.ATTENDANCE);
+    /** Advisory-lock namespace for clientRequestId idempotency ("EQRC"). */
+    static final int CLIENT_REQUEST_LOCK_NAMESPACE = 0x45515243;
 
     private final TransactionLogRepository transactionLogRepository;
     private final TransactionRuleRepository transactionRuleRepository;
@@ -186,6 +188,11 @@ public class TransactionService {
         if (clientRequestId == null) {
             return recordNew(request);
         }
+        // Serialize attempts carrying the same key: a concurrent retry waits here until the first attempt
+        // commits, then finds its row below instead of logging a second one. The unique index on
+        // client_request_id remains the backstop (a hash collision only costs some extra waiting).
+        transactionLogRepository.boundLockWaits();
+        transactionLogRepository.acquireTransactionLock(CLIENT_REQUEST_LOCK_NAMESPACE, clientRequestId.hashCode());
         // Retry of a scan the server may already have logged (e.g. the response was lost):
         // return the original outcome, approved or rejected, without logging it again.
         var existing = transactionLogRepository.findByClientRequestId(clientRequestId);
@@ -232,14 +239,21 @@ public class TransactionService {
                     transactionType, 0, request.notes(), request.qrValue(), purpose.code().name(), purpose.name());
         }
 
-        var registration = registrationLookupPort.findByQrCredentialId(qrSnapshot.qrCredentialId())
+        var lookedUp = registrationLookupPort.findByQrCredentialId(qrSnapshot.qrCredentialId())
                 .orElseThrow(() -> new ResourceNotFoundException("Registration not found for QR credential"));
-        if (!eventSnapshot.eventId().equals(registration.eventId())) {
-            return reject(eventSnapshot.eventId(), registration.attendeeUserId(), registration.registrationId(),
-                registration.qrCredentialId(), purpose.scanPurposeId(), request.staffUserId(),
+        if (!eventSnapshot.eventId().equals(lookedUp.eventId())) {
+            return reject(eventSnapshot.eventId(), lookedUp.attendeeUserId(), lookedUp.registrationId(),
+                lookedUp.qrCredentialId(), purpose.scanPurposeId(), request.staffUserId(),
                 "Registration does not belong to selected event",
                 transactionType, 0, request.notes(), request.qrValue(), purpose.code().name(), purpose.name());
         }
+
+        // Row-lock the registration before any check that depends on its state or history: concurrent scans of the
+        // same QR now run one at a time, so the second one sees the first one's APPROVED log and is rejected as a
+        // duplicate instead of being approved (and awarded points) twice. Allow-duplicate rules need several
+        // APPROVED rows, so a unique index cannot enforce this. Every check below uses the snapshot read UNDER the
+        // lock (a registration cancelled concurrently is rejected); the lock is held until this transaction commits.
+        var registration = registrationCommandPort.lockForUpdate(lookedUp.registrationId());
 
         if (isNotScannable(registration.status())) {
             return reject(eventSnapshot.eventId(), registration.attendeeUserId(), registration.registrationId(),
@@ -264,9 +278,10 @@ public class TransactionService {
 
         int pointsDelta = purpose.trackingOnly() ? 0 : Math.max(0, rule.getPointsAwarded());
         String metadata = buildMetadata(request.qrValue(), purpose.code().name(), purpose.name(), request.notes(), "staff-scan");
-        log.debug("Transaction save request eventId={} registrationId={} qrCredentialId={} scanPurposeId={} staffUserId={} transactionType={} metadata={}",
+        // metadata is not logged: it carries the raw qrValue, which is a bearer credential.
+        log.debug("Transaction save request eventId={} registrationId={} qrCredentialId={} scanPurposeId={} staffUserId={} transactionType={} scanPurposeCode={}",
                 eventSnapshot.eventId(), registration.registrationId(), registration.qrCredentialId(), purpose.scanPurposeId(),
-                request.staffUserId(), transactionType, metadata);
+                request.staffUserId(), transactionType, purpose.code());
         TransactionLog transactionLog = createLog(eventSnapshot.eventId(), registration.attendeeUserId(), registration.registrationId(),
                 registration.qrCredentialId(), purpose.scanPurposeId(), request.staffUserId(), TransactionResult.APPROVED,
                 transactionType, pointsDelta, null, metadata);
@@ -589,8 +604,9 @@ public class TransactionService {
                                        TransactionType transactionType, int pointsDelta, String notes, String qrValue,
                                        String scanPurposeCode, String scanPurposeLabel) {
         String metadata = buildMetadata(qrValue, scanPurposeCode, scanPurposeLabel, notes, "staff-scan");
-        log.debug("Transaction reject save request eventId={} registrationId={} qrCredentialId={} scanPurposeId={} staffUserId={} transactionType={} metadata={} reason={}",
-                eventId, registrationId, qrCredentialId, scanPurposeId, staffUserId, transactionType, metadata, reason);
+        // metadata is not logged: it carries the raw qrValue, which is a bearer credential.
+        log.debug("Transaction reject save request eventId={} registrationId={} qrCredentialId={} scanPurposeId={} staffUserId={} transactionType={} scanPurposeCode={} reason={}",
+                eventId, registrationId, qrCredentialId, scanPurposeId, staffUserId, transactionType, scanPurposeCode, reason);
         TransactionLog transactionLog = createLog(eventId, attendeeUserId, registrationId, qrCredentialId, scanPurposeId, staffUserId,
                 TransactionResult.REJECTED, transactionType, pointsDelta, reason, metadata);
         TransactionLog saved = transactionLogRepository.save(transactionLog);

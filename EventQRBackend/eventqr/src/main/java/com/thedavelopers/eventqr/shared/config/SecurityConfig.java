@@ -46,7 +46,9 @@ public class SecurityConfig {
                         "/api/v1/auth/reset-password",
                         "/api/v1/auth/reset-password/validate",
                         "/api/v1/health",
-                        "/actuator/health")
+                        "/actuator/health",
+                        "/actuator/health/liveness",
+                        "/actuator/health/readiness")
                 .permitAll()
                 .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 .anyRequest().authenticated());

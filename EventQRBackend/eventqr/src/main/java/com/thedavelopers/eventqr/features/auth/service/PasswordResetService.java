@@ -98,7 +98,9 @@ public class PasswordResetService {
         Instant expiresAt = Instant.now().plus(RESET_TTL);
         PasswordResetToken resetToken = new PasswordResetToken();
         resetToken.setUserId(user.getId());
-        resetToken.setToken(token);
+        // Only the SHA-256 of the token is stored (like refresh tokens): a leaked table row cannot be used
+        // as a reset link, and lookups match on the hash rather than comparing secrets in application code.
+        resetToken.setToken(RefreshTokenService.sha256(token));
         resetToken.setExpiresAt(expiresAt);
         resetToken.setUsed(false);
         resetToken.setCreatedAt(Instant.now());
@@ -148,7 +150,7 @@ public class PasswordResetService {
             return false;
         }
         return passwordResetTokenRepository
-                .findByTokenAndUsedFalseAndExpiresAtAfter(token.trim(), Instant.now())
+                .findByTokenAndUsedFalseAndExpiresAtAfter(RefreshTokenService.sha256(token.trim()), Instant.now())
                 .isPresent();
     }
 
@@ -164,7 +166,7 @@ public class PasswordResetService {
         }
         PasswordValidator.requireValid(newPassword);
         PasswordResetToken resetToken = passwordResetTokenRepository
-                .findByTokenAndUsedFalseAndExpiresAtAfter(token.trim(), Instant.now())
+                .findByTokenAndUsedFalseAndExpiresAtAfter(RefreshTokenService.sha256(token.trim()), Instant.now())
                 .orElseThrow(() -> new BadRequestException("Reset token is invalid or expired"));
         UserProfile user = userProfileRepository.findById(resetToken.getUserId())
                 .orElseThrow(() -> new BadRequestException("User account not found"));

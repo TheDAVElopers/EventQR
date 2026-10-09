@@ -521,6 +521,22 @@
     <string name="scanner_configure_scan_purposes_first">Configure scan purposes first</string>
     <string name="scanner_allow_camera_access_to_scan_qr_codes">Allow camera access to scan QR codes</string>
     <string name="scanner_unable_to_start_camera">Unable to start camera</string>
+    <string name="scanner_no_assigned_event">No assigned event</string>
+    <string name="scanner_assigned_event_fallback">Assigned event</string>
+    <string name="scanner_purpose_desc_entry">Record attendee entry</string>
+    <string name="scanner_purpose_desc_attendance">Record session attendance</string>
+    <string name="scanner_purpose_desc_booth_visit">Track booth/exhibitor visits</string>
+    <string name="scanner_purpose_desc_benefit_claim">Validate benefit/meal claims</string>
+    <string name="scanner_purpose_desc_reward_redemption">Process reward redemptions</string>
+    <string name="scanner_purpose_desc_exit">Record attendee exit</string>
+    <string name="scanner_purpose_desc_default">Scan attendee QR credential</string>
+    <string name="scanner_camera_permission_title">Camera access needed</string>
+    <string name="scanner_camera_permission_rationale">EventQR uses the camera only to read attendee QR codes. You can still type the attendee ID below without it.</string>
+    <string name="scanner_camera_permission_denied_settings">Camera access is turned off for EventQR. Enable it in App settings to scan QR codes, or type the attendee ID below.</string>
+    <string name="scanner_camera_permission_allow">Allow</string>
+    <string name="scanner_camera_permission_open_settings">Open settings</string>
+    <string name="scanner_camera_permission_not_now">Not now</string>
+    <string name="scanner_camera_permission_tap_to_enable">Camera access is off. Tap here to enable it.</string>
     <string name="staff_transactions_no_scan_purposes_found_for_this_filt">No scan purposes found for this filter.</string>
     <string name="staff_transactions_select_an_event_to_view_its_transact">Select an event to view its transaction logs.</string>
 
@@ -588,12 +604,12 @@
         <item quantity="one">and %d more issue</item>
         <item quantity="other">and %d more issues</item>
     </plurals>
-    <string name="event_detail_capacity_unlimited">Unlimited (%1$s registered)</string>
-    <string name="event_detail_capacity_registered">%1$s / %2$s registered</string>
-    <string name="event_detail_percent_full">%1$s%% full</string>
-    <string name="event_detail_spots_remaining">%1$s spots remaining</string>
+    <string name="event_detail_capacity_unlimited">Unlimited (%1$d registered)</string>
+    <string name="event_detail_capacity_registered">%1$d / %2$d registered</string>
+    <string name="event_detail_percent_full">%1$d%% full</string>
+    <string name="event_detail_spots_remaining">%1$d spots remaining</string>
     <string name="registration_date_venue">%1$s · %2$s</string>
-    <string name="common_points_short">%1$s pts</string>
+    <string name="common_points_short">%1$d pts</string>
     <string name="login_unsupported_role">Unsupported account role: %1$s</string>
     <string name="unified_notifications_unable_to_mark_notification_as_read">Unable to mark notification as read.</string>
     <string name="unified_notifications_unable_to_mark_notifications_as_read">Unable to mark notifications as read.</string>

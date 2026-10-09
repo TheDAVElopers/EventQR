@@ -12,6 +12,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -20,6 +21,7 @@ import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.transaction.TransactionSystemException;
 
 import com.thedavelopers.eventqr.shared.response.ErrorResponse;
+import com.thedavelopers.eventqr.shared.utils.LogRedaction;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -37,10 +39,37 @@ public class GlobalExceptionHandler {
         return build(status, exception.getMessage(), request);
     }
 
+    static final String RETRYABLE_CONFLICT_MESSAGE = "The request collided with a concurrent update. Please try again.";
+    static final long RETRYABLE_CONFLICT_RETRY_AFTER_SECONDS = 1;
+
+    /**
+     * Lock timeouts and deadlocks on the row/advisory locks the scan and redemption paths take. Nothing was
+     * committed, so the client may simply resend: the mobile scan retry reuses its clientRequestId, which makes
+     * the resend idempotent. 409 + Retry-After, consistent with the other conflict responses.
+     */
+    @ExceptionHandler({PessimisticLockingFailureException.class,
+            jakarta.persistence.PessimisticLockException.class, jakarta.persistence.LockTimeoutException.class})
+    public ResponseEntity<ErrorResponse> handleLockFailure(RuntimeException exception, HttpServletRequest request) {
+        log.warn("Lock failure path={} cause={}", request.getRequestURI(), exception.getClass().getSimpleName());
+        return retryableConflict(request);
+    }
+
+    private ResponseEntity<ErrorResponse> retryableConflict(HttpServletRequest request) {
+        ResponseEntity<ErrorResponse> response = build(HttpStatus.CONFLICT, RETRYABLE_CONFLICT_MESSAGE, request);
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .header(HttpHeaders.RETRY_AFTER, Long.toString(RETRYABLE_CONFLICT_RETRY_AFTER_SECONDS))
+                .body(response.getBody());
+    }
+
     @ExceptionHandler({DataIntegrityViolationException.class, PersistenceException.class, JpaSystemException.class, TransactionSystemException.class})
     public ResponseEntity<ErrorResponse> handleDataIntegrity(RuntimeException exception, HttpServletRequest request) {
         String detail = rootCauseMessage(exception);
         log.warn("Data integrity error path={} detail={}", request.getRequestURI(), detail);
+        // Same-key scan retries are serialized by an advisory lock, so this index should never fire; if it does,
+        // the first attempt has (or is about to have) committed, and a resend with the same key returns it.
+        if (detail != null && detail.contains("ux_transaction_logs_client_request_id")) {
+            return retryableConflict(request);
+        }
         if (request.getRequestURI() != null
                 && request.getRequestURI().matches(".*/api/v1/organizer/events/.*/staff$")) {
             if (detail != null && detail.toLowerCase().contains("role_label")) {
@@ -133,6 +162,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception exception, HttpServletRequest request) {
+        // Full stack trace server-side only (messages email-redacted); the client still gets the generic body below.
+        log.error("Unhandled exception method={} path={}", request.getMethod(), request.getRequestURI(),
+                LogRedaction.redactedCopy(exception));
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred. Please try again.", request);
     }
 

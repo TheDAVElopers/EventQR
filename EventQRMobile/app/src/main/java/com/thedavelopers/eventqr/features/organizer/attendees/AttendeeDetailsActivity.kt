@@ -26,7 +26,6 @@ import com.thedavelopers.eventqr.features.organizer.statusBucket
 import com.thedavelopers.eventqr.features.organizer.statusLabel
 import com.thedavelopers.eventqr.features.organizer.statusPalette
 import com.thedavelopers.eventqr.features.organizer.transactionTypeLabel
-import kotlinx.coroutines.MainScope
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -88,7 +87,7 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
     private fun loadAttendee(eventId: String, attendeeId: String) {
         findViewById<View>(R.id.layoutAttendeeError).visibility = View.GONE
         skeletonLoading.visibility = View.VISIBLE
-        MainScope().launch {
+        lifecycleScope.launch {
             try {
                 val attendeeLoad = repository.loadAttendeesForMvp(eventId)
                 if (attendeeLoad.source == OrganizerMvpDataSource.ERROR) {

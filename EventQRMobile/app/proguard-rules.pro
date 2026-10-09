@@ -11,6 +11,13 @@
 -keep class com.thedavelopers.eventqr.**.dto.** { *; }
 -keep class com.thedavelopers.eventqr.features.organizer.rewards.RewardSettingsRequest { *; }
 
+# Strip verbose and debug logging from release builds; info/warn/error stay.
+-assumenosideeffects class android.util.Log {
+    public static boolean isLoggable(java.lang.String, int);
+    public static int v(...);
+    public static int d(...);
+}
+
 # uCrop (image cropper) inflates its views by reflection.
 -dontwarn com.yalantis.ucrop.**
 -keep class com.yalantis.ucrop.** { *; }

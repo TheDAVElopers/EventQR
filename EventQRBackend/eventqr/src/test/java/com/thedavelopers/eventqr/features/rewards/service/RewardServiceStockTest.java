@@ -202,7 +202,8 @@ class RewardServiceStockTest {
         reward.setStatus(RewardStatus.ACTIVE);
         AttendeePointBalance balance = new AttendeePointBalance();
         balance.setPointsBalance(100);
-        when(balances.findByEventIdAndAttendeeUserId(any(), any())).thenReturn(Optional.of(balance));
+        // Redeem must spend from the row-locked balance, never from a plain (unlocked) read.
+        when(balances.findByEventIdAndAttendeeUserIdForUpdate(any(), any())).thenReturn(Optional.of(balance));
         when(redemptions.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(rewards.decrementStockIfAvailable(rewardId)).thenReturn(decrementResult);
     }
@@ -229,6 +230,57 @@ class RewardServiceStockTest {
         assertThatThrownBy(() -> service.redeem(new RewardRedemptionRequest(eventId, UUID.randomUUID(), rewardId)))
                 .isInstanceOf(ConflictException.class)
                 .hasMessage("Reward redemption is disabled for this event");
+    }
+
+    @Test
+    void legacyRedeemLocksTheRewardThenTheBalanceRow() {
+        redeemSetup(null, 1);
+        service.redeem(new RewardRedemptionRequest(eventId, UUID.randomUUID(), rewardId));
+        var order = org.mockito.Mockito.inOrder(rewards, balances);
+        order.verify(rewards).findByIdForUpdate(rewardId);
+        order.verify(balances).findByEventIdAndAttendeeUserIdForUpdate(any(), any());
+        verify(balances, never()).findByEventIdAndAttendeeUserId(any(), any());
+    }
+
+    @Test
+    void scanPointsAreAwardedOnlyAfterTheScanTransactionCommits() throws Exception {
+        java.lang.reflect.Method listener = RewardService.class.getMethod("onTransactionRecorded",
+                com.thedavelopers.eventqr.shared.interfaces.TransactionRecordedEvent.class);
+        var annotation = listener.getAnnotation(org.springframework.transaction.event.TransactionalEventListener.class);
+
+        assertThat(annotation).isNotNull();
+        assertThat(annotation.phase()).isEqualTo(org.springframework.transaction.event.TransactionPhase.AFTER_COMMIT);
+        assertThat(annotation.fallbackExecution()).isFalse();
+        assertThat(listener.getAnnotation(org.springframework.context.event.EventListener.class)).isNull();
+        assertThat(listener.getAnnotation(org.springframework.scheduling.annotation.Async.class)).isNotNull();
+        assertThat(listener.getAnnotation(org.springframework.transaction.annotation.Transactional.class).propagation())
+                .isEqualTo(org.springframework.transaction.annotation.Propagation.REQUIRES_NEW);
+    }
+
+    @Test
+    void firstScanAwardCreatesTheBalanceRowBeforeLockingIt() {
+        // No balance row yet: it must be created via ON CONFLICT DO NOTHING (never a plain save that a concurrent
+        // first writer could collide with on the unique index), then locked and credited.
+        UUID attendeeId = UUID.randomUUID();
+        AttendeePointBalance created = new AttendeePointBalance();
+        created.setEventId(eventId);
+        created.setAttendeeUserId(attendeeId);
+        created.setPointsBalance(0);
+        when(balances.insertZeroIfAbsent(eventId, attendeeId)).thenReturn(1);
+        when(balances.findByEventIdAndAttendeeUserIdForUpdate(eventId, attendeeId)).thenReturn(Optional.of(created));
+
+        service.onTransactionRecorded(new com.thedavelopers.eventqr.shared.interfaces.TransactionRecordedEvent(
+                UUID.randomUUID(), eventId, attendeeId, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+                com.thedavelopers.eventqr.shared.constants.TransactionType.ENTRY,
+                com.thedavelopers.eventqr.shared.constants.TransactionResult.APPROVED, 15, UUID.randomUUID(), null));
+
+        var order = org.mockito.Mockito.inOrder(balances);
+        order.verify(balances).boundLockWaits();
+        order.verify(balances).insertZeroIfAbsent(eventId, attendeeId);
+        order.verify(balances).findByEventIdAndAttendeeUserIdForUpdate(eventId, attendeeId);
+        order.verify(balances).save(created);
+        assertThat(created.getPointsBalance()).isEqualTo(15);
+        verify(balances, never()).findByEventIdAndAttendeeUserId(any(), any());
     }
 
     @Test

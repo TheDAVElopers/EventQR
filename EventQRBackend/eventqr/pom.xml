@@ -33,6 +33,11 @@
 		<!-- Override BOM-managed tomcat (10.1.55) with 10.1.59 to fix the Aug-2026
 		     Tomcat CVEs (CVE-2026-65905, CVE-2026-65182, CVE-2026-65637, ...). -->
 		<tomcat.version>10.1.59</tomcat.version>
+		<!-- Override BOM-managed httpclient5 (5.5.x, via the AWS SDK apache5-client) with 5.6.4 to fix
+		     CVE-2026-71290. -->
+		<httpclient5.version>5.6.4</httpclient5.version>
+		<!-- httpclient5 5.6.4 is built against httpcore5 5.4.3 (the BOM pins 5.3.x). -->
+		<httpcore5.version>5.4.3</httpcore5.version>
 		<argLine>-XX:+EnableDynamicAgentLoading -Djdk.attach.allowAttachSelf=true -javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/1.17.8/byte-buddy-agent-1.17.8.jar</argLine>
 	</properties>
 	<dependencies>
@@ -52,11 +57,28 @@
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>s3</artifactId>
 			<version>2.55.11</version>
+			<exclusions>
+				<!-- S3ClientConfig builds the synchronous S3Client (apache5-client transport); the
+				     async Netty transport is never used and only shipped Netty CVEs. -->
+				<exclusion>
+					<groupId>software.amazon.awssdk</groupId>
+					<artifactId>netty-nio-client</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.brevo</groupId>
 			<artifactId>brevo</artifactId>
 			<version>1.0.0</version>
+			<exclusions>
+				<!-- brevo 1.0.0 wrongly declares its release-signing plugin as a compile dependency,
+				     dragging maven-core 3.0, maven-shared-utils, plexus-utils and commons-io 2.5 into
+				     the boot jar. The SDK never uses them at runtime. -->
+				<exclusion>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-gpg-plugin</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.google.zxing</groupId>

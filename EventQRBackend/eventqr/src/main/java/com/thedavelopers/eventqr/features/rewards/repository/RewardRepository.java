@@ -11,12 +11,13 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.thedavelopers.eventqr.shared.persistence.LockTimeoutSupport;
 import com.thedavelopers.eventqr.features.rewards.model.entity.Reward;
 import jakarta.persistence.LockModeType;
 import java.util.Optional;
 import com.thedavelopers.eventqr.shared.constants.RewardStatus;
 
-public interface RewardRepository extends JpaRepository<Reward, UUID> {
+public interface RewardRepository extends JpaRepository<Reward, UUID>, LockTimeoutSupport {
 
     /**
      * Loads the reward row with a pessimistic write lock (SELECT ... FOR UPDATE). updateReward and both

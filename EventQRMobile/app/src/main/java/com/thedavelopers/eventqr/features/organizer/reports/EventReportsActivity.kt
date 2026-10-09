@@ -31,7 +31,6 @@ import com.thedavelopers.eventqr.features.reports.model.dto.EventReportFilterSta
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportFiltersDto
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportSummaryDto
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportType
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
@@ -87,7 +86,7 @@ open class EventReportsActivity : AppCompatActivity() {
         skeletonLoading = reportsSkeleton()
         summaryContainer.addView(skeletonLoading)
 
-        MainScope().launch {
+        lifecycleScope.launch {
             when (val result = reportsRepository.fetchSummary(selectedEvent.id)) {
                 is NetworkResult.Success -> {
                     summary = result.data
@@ -777,7 +776,7 @@ open class EventReportsActivity : AppCompatActivity() {
         dialog: BottomSheetDialog,
         sheetRoot: LinearLayout,
     ) {
-        MainScope().launch {
+        lifecycleScope.launch {
             when (val result = reportsRepository.generateReport(selectedEvent.id, item.reportType, filters)) {
                 is NetworkResult.Success -> {
                     dialog.dismiss()
@@ -813,7 +812,7 @@ open class EventReportsActivity : AppCompatActivity() {
             .create()
         loading.show()
 
-        MainScope().launch {
+        val job = lifecycleScope.launch {
             for (type in allTypes) {
                 when (val result = reportsRepository.generateReport(selectedEvent.id, type, OrganizerReportsRepository.defaultFilters())) {
                     is NetworkResult.Success -> combined.add(result.data)
@@ -837,6 +836,8 @@ open class EventReportsActivity : AppCompatActivity() {
                 ),
             )
         }
+        // Leaving mid-generation cancels the job; drop the modal so it does not leak the window.
+        job.invokeOnCompletion { loading.dismiss() }
     }
 
     private fun reportCatalog(): List<EventReportCatalogItem> = listOf(

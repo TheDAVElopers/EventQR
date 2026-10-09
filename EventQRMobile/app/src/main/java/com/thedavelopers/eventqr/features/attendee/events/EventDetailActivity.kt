@@ -269,13 +269,13 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
 
         if (isAlreadyRegistered) {
             setAlreadyRegisteredState(btn)
-            logRegistrationWindow(event, availability, "Already Registered", false)
+            logRegistrationWindow(event, availability, false)
             return
         }
 
         if (registrationStatusCheckFailed) {
             setUnverifiableState(btn)
-            logRegistrationWindow(event, availability, "Registration status unavailable", false)
+            logRegistrationWindow(event, availability, false)
             return
         }
 
@@ -283,14 +283,14 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
             btn.isEnabled = true
             btn.text = getString(R.string.event_detail_register)
             btn.setBackgroundResource(R.drawable.bg_detail_register_button)
-            logRegistrationWindow(event, availability, availability.message, true)
+            logRegistrationWindow(event, availability, true)
             return
         }
 
         btn.isEnabled = false
         btn.text = availability.message.ifBlank { "Registration Unavailable" }
         btn.setBackgroundResource(R.drawable.bg_disabled_button)
-        logRegistrationWindow(event, availability, availability.message, false)
+        logRegistrationWindow(event, availability, false)
     }
 
     private fun updateRegisterButtonWithFallback(event: AttendeeEventResponse, message: String) {
@@ -303,7 +303,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
 
         if (isAlreadyRegistered) {
             setAlreadyRegisteredState(btn)
-            logRegistrationWindow(event, null, "Already Registered", false)
+            logRegistrationWindow(event, null, false)
             return
         }
 
@@ -315,7 +315,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         btn.isEnabled = true
         btn.text = getString(R.string.event_detail_register)
         btn.setBackgroundResource(R.drawable.bg_detail_register_button)
-        logRegistrationWindow(event, null, "Availability endpoint failed: $message", true)
+        logRegistrationWindow(event, null, true)
     }
 
     override fun updateRegistrationStatus(isRegistered: Boolean) {
@@ -425,10 +425,8 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     private fun logRegistrationWindow(
         event: AttendeeEventResponse,
         availability: EventAvailabilityResponse?,
-        availabilityMessage: String,
         finalButtonEnabled: Boolean,
     ) {
-        val finalButtonLabel = findViewById<Button>(R.id.btnRegisterForEvent).text?.toString().orEmpty()
         Log.d(
             "EventRegistrationWindow",
             "eventId=${event.eventId}," +
@@ -439,8 +437,8 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
                 " registrationCloseAt=${availability?.registrationCloseAt ?: event.registrationCloseAt}," +
                 " eventStartAt=${event.eventStartAt}," +
                 " eventEndAt=${event.eventEndAt}," +
-                " availabilityMessage=$availabilityMessage," +
-                " finalButtonState=enabled:$finalButtonEnabled,text:$finalButtonLabel"
+                " available=${availability?.available}," +
+                " finalButtonEnabled=$finalButtonEnabled"
         )
     }
 }

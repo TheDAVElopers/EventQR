@@ -5,6 +5,7 @@ import com.thedavelopers.eventqr.core.util.UiStrings
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.features.qrcredential.model.dto.QrCredentialSnapshot
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class QrCredentialPresenter(
@@ -12,16 +13,18 @@ class QrCredentialPresenter(
     private val repository: AttendeeRepository,
     private val strings: UiStrings,
 ) {
+    private val scope = kotlinx.coroutines.MainScope()
     private var job: Job? = null
 
     fun detach() {
         job?.cancel()
+        scope.cancel()
         view = null
     }
 
     fun load(registrationId: String, qrCredentialId: String? = null) {
         view?.showLoading(true)
-        job = kotlinx.coroutines.MainScope().launch {
+        job = scope.launch {
             val qrResult = when {
                 !qrCredentialId.isNullOrBlank() -> repository.getMyQrCredentialById(qrCredentialId)
                 registrationId.isNotBlank() -> repository.getMyQrCredentialByRegistration(registrationId)
@@ -54,6 +57,6 @@ class QrCredentialPresenter(
     }
 
     fun markDownloaded(qrCredentialId: String) {
-        job = kotlinx.coroutines.MainScope().launch { repository.markMyQrDownloaded(qrCredentialId) }
+        job = scope.launch { repository.markMyQrDownloaded(qrCredentialId) }
     }
 }

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lint>
+    <!-- nav_header_back / nav_header_title are declared in res/values/ids.xml and assigned at runtime by
+         ui/components/EventQrHeaders.kt, so lint cannot see them in the inflated layouts. -->
+    <issue id="MissingInflatedId">
+        <ignore regexp="does not contain a declaration with id `?nav_header_(back|title)`?" />
+    </issue>
+</lint>

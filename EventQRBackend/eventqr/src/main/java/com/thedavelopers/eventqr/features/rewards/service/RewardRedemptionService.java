@@ -68,6 +68,7 @@ private final NotificationService notificationService;
         TransactionLog scanLog = transactionLogRepository.findById(request.redemptionScanLogId())
                 .orElseThrow(() -> new ResourceNotFoundException("Redemption scan log not found"));
 
+        rewardRepository.boundLockWaits(); // bounded wait on the reward/balance row locks below
         Reward reward = rewardRepository.findByIdForUpdate(request.rewardId())
                 .orElseThrow(() -> new ResourceNotFoundException("Reward not found"));
         if (!reward.getEventId().equals(request.eventId())) {
@@ -85,7 +86,13 @@ private final NotificationService notificationService;
             return reject(request, reward, scanLog, "Reward is out of stock");
         }
 
-        AttendeePointBalance balance = balanceFor(request.eventId(), request.attendeeUserId());
+        // Lock the balance row (after the reward row, the same order RewardService.redeem uses) so two
+        // redemptions of different rewards cannot both spend from the same balance snapshot. The row is created
+        // first because FOR UPDATE cannot lock a row that does not exist yet.
+        attendeePointBalanceRepository.insertZeroIfAbsent(request.eventId(), request.attendeeUserId());
+        AttendeePointBalance balance = attendeePointBalanceRepository
+                .findByEventIdAndAttendeeUserIdForUpdate(request.eventId(), request.attendeeUserId())
+                .orElseThrow(() -> new IllegalStateException("Point balance row missing after insert"));
         if (balance.getPointsBalance() < reward.getPointsRequired()) {
             return reject(request, reward, scanLog, "Not enough points to redeem this reward");
         }

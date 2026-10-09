@@ -27,7 +27,6 @@ import com.thedavelopers.eventqr.features.organizer.matchesOrganizerAttendeeQuer
 import com.thedavelopers.eventqr.features.organizer.resolveSelectedEvent
 import com.thedavelopers.eventqr.features.organizer.selectedEventId
 import com.thedavelopers.eventqr.features.organizer.showMissingEventScreen
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
 open class SearchAttendeesActivity : AppCompatActivity() {
@@ -110,7 +109,7 @@ open class SearchAttendeesActivity : AppCompatActivity() {
 
     private fun loadAttendees() {
         progressBar.visibility = View.VISIBLE
-        MainScope().launch {
+        lifecycleScope.launch {
             val load = repository.loadAttendeesForMvp(selectedEvent.id)
             attendees = load.data
             progressBar.visibility = View.GONE

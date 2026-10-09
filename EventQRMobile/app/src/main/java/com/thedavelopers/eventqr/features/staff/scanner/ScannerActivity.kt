@@ -4,6 +4,8 @@ import com.thedavelopers.eventqr.core.util.UiStrings
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.Settings
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.hardware.Camera
@@ -27,6 +29,7 @@ import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -115,13 +118,27 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     private val dateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ENGLISH)
     private val manilaZone: ZoneId = ZoneId.of("Asia/Manila")
 
+    // The system permission dialog is requested automatically at most once per screen open; after that only a tap on
+    // the camera placeholder asks again, so onResume never loops the prompt after a denial.
+    private var cameraPermissionAutoRequested = false
+    private var cameraPermissionDenied = false
+    private var cameraPermissionDialog: AlertDialog? = null
+
     private val cameraPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         Log.d(tag, "inline camera permission result granted=$granted")
         if (granted) {
+            cameraPermissionDenied = false
             startInlineCameraIfReady()
         } else {
-            inlineCameraStatus.text = getString(R.string.scanner_camera_permission_is_required_for_qr)
-            Toast.makeText(this, this.getString(R.string.scanner_camera_permission_is_required_for_qr), Toast.LENGTH_LONG).show()
+            cameraPermissionDenied = true
+            inlineCameraStatus.text = getString(R.string.scanner_camera_permission_tap_to_enable)
+            if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
+                Toast.makeText(this, this.getString(R.string.scanner_camera_permission_is_required_for_qr), Toast.LENGTH_LONG).show()
+            } else {
+                // No rationale right after a denial means the system will not show its dialog again,
+                // so the only way back is the app's settings page.
+                showCameraSettingsDialog()
+            }
         }
     }
 
@@ -129,6 +146,8 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         super.onCreate(savedInstanceState)
 
         preselectedEventId = intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_ID)
+        cameraPermissionAutoRequested = savedInstanceState?.getBoolean(STATE_CAMERA_PERMISSION_REQUESTED) ?: false
+        cameraPermissionDenied = savedInstanceState?.getBoolean(STATE_CAMERA_PERMISSION_DENIED) ?: false
 
         val sessionManager = SessionManager(this)
         if (!RoleMapper.isAtLeast(sessionManager.getUserRole(), AccountRole.STAFF)) {
@@ -166,7 +185,6 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         purposeDropdown.visibility = View.GONE
         inlineCameraSurface.holder.addCallback(this)
         inlineCameraSurface.setZOrderMediaOverlay(false)
-        requestInlineCameraStart()
 
         selectedEventCard.setOnClickListener { setEventDropdownOpen(!isEventDropdownOpen) }
         selectedPurposeCard.setOnClickListener { setPurposeDropdownOpen(!isPurposeDropdownOpen) }
@@ -178,14 +196,19 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
             adapter = this@ScannerActivity.adapter
         }
 
-        findViewById<View>(R.id.layoutScannerPlaceholder)?.setOnClickListener { requestInlineCameraStart() }
+        findViewById<View>(R.id.layoutScannerPlaceholder)?.setOnClickListener { requestInlineCameraStart(userInitiated = true) }
         findViewById<Button>(R.id.btnSubmitScan).setOnClickListener { submitCurrentSelection(trigger = "manual") }
         presenter.loadEvents()
     }
 
-    override fun onResume() { super.onResume(); requestInlineCameraStart() }
+    override fun onResume() { super.onResume(); requestInlineCameraStart(userInitiated = false) }
     override fun onPause() { releaseInlineCamera(); eventPopup?.dismiss(); purposePopup?.dismiss(); super.onPause() }
-    override fun onDestroy() { presenter.detach(); eventPopup?.dismiss(); purposePopup?.dismiss(); releaseInlineCamera(); decoderExecutor.shutdownNow(); super.onDestroy() }
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(STATE_CAMERA_PERMISSION_REQUESTED, cameraPermissionAutoRequested)
+        outState.putBoolean(STATE_CAMERA_PERMISSION_DENIED, cameraPermissionDenied)
+    }
+    override fun onDestroy() { cameraPermissionDialog?.dismiss(); presenter.detach(); eventPopup?.dismiss(); purposePopup?.dismiss(); releaseInlineCamera(); decoderExecutor.shutdownNow(); super.onDestroy() }
 
     override fun surfaceCreated(holder: SurfaceHolder) { startInlineCameraIfReady() }
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) { releaseInlineCamera(); startInlineCameraIfReady() }
@@ -231,7 +254,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         purposeOptions.addAll(activePurposes)
         setPurposeDropdownOpen(false)
         if (activePurposes.isEmpty()) {
-            purposeSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listOf("No scan purposes enabled for this event."))
+            purposeSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listOf(getString(R.string.scanner_no_scan_purposes_enabled_for_this_ev)))
             purposeSpinner.isEnabled = false
             selectedPurposeName.text = getString(R.string.scanner_no_scan_purposes_enabled)
             selectedPurposePoints.text = getString(R.string.scanner_configure_scan_purposes_first)
@@ -253,9 +276,56 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     override fun showMessage(message: String) { Toast.makeText(this, message, Toast.LENGTH_SHORT).show() }
     override fun showLoading(isLoading: Boolean) { findViewById<Button>(R.id.btnSubmitScan).isEnabled = !isLoading }
 
-    private fun requestInlineCameraStart() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) startInlineCameraIfReady()
-        else { inlineCameraStatus.text = getString(R.string.scanner_allow_camera_access_to_scan_qr_codes); cameraPermissionLauncher.launch(Manifest.permission.CAMERA) }
+    private fun requestInlineCameraStart(userInitiated: Boolean) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            cameraPermissionDenied = false
+            startInlineCameraIfReady()
+            return
+        }
+        if (!userInitiated && cameraPermissionAutoRequested) {
+            inlineCameraStatus.text = getString(R.string.scanner_camera_permission_tap_to_enable)
+            return
+        }
+        cameraPermissionAutoRequested = true
+        when {
+            shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> showCameraRationaleDialog()
+            cameraPermissionDenied -> showCameraSettingsDialog()
+            else -> launchCameraPermissionRequest()
+        }
+    }
+
+    private fun launchCameraPermissionRequest() {
+        inlineCameraStatus.text = getString(R.string.scanner_allow_camera_access_to_scan_qr_codes)
+        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+    }
+
+    private fun showCameraRationaleDialog() {
+        if (cameraPermissionDialog?.isShowing == true) return
+        cameraPermissionDialog = AlertDialog.Builder(this)
+            .setTitle(R.string.scanner_camera_permission_title)
+            .setMessage(R.string.scanner_camera_permission_rationale)
+            .setPositiveButton(R.string.scanner_camera_permission_allow) { _, _ -> launchCameraPermissionRequest() }
+            .setNegativeButton(R.string.scanner_camera_permission_not_now) { _, _ ->
+                inlineCameraStatus.text = getString(R.string.scanner_camera_permission_tap_to_enable)
+            }
+            .show()
+    }
+
+    private fun showCameraSettingsDialog() {
+        if (cameraPermissionDialog?.isShowing == true) return
+        cameraPermissionDialog = AlertDialog.Builder(this)
+            .setTitle(R.string.scanner_camera_permission_title)
+            .setMessage(R.string.scanner_camera_permission_denied_settings)
+            .setPositiveButton(R.string.scanner_camera_permission_open_settings) { _, _ -> openAppSettings() }
+            .setNegativeButton(R.string.scanner_camera_permission_not_now, null)
+            .show()
+    }
+
+    private fun openAppSettings() {
+        val settingsIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null))
+        runCatching { startActivity(settingsIntent) }.onFailure {
+            Toast.makeText(this, getString(R.string.scanner_camera_permission_is_required_for_qr), Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun startInlineCameraIfReady() {
@@ -373,7 +443,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     private fun rotateLuma90(input: ByteArray, width: Int, height: Int): ByteArray { val output = ByteArray(width * height); var index = 0; for (x in 0 until width) { for (y in height - 1 downTo 0) { output[index++] = input[y * width + x] } }; return output }
     private fun loadSelectedPurposes() { selectedEvent()?.let { presenter.loadPurposes(it.id) } }
     private fun selectedEvent(): EventSpinnerOption? = eventOptions.getOrNull(eventSpinner.selectedItemPosition)
-    private fun bindSelectedEventHeader() { val event = selectedEvent(); selectedEventTitle.text = event?.label ?: "No assigned event"; selectedEventDate.text = event?.eventStartAt?.atZone(manilaZone)?.format(dateFormatter).orEmpty() }
+    private fun bindSelectedEventHeader() { val event = selectedEvent(); selectedEventTitle.text = event?.label ?: getString(R.string.scanner_no_assigned_event); selectedEventDate.text = event?.eventStartAt?.atZone(manilaZone)?.format(dateFormatter).orEmpty() }
     private fun bindSelectedPurposeHeader() {
         val purpose = purposeOptions.getOrNull(purposeSpinner.selectedItemPosition)
         if (purpose == null) {
@@ -431,7 +501,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
                         setTypeface(typeface, android.graphics.Typeface.BOLD)
                     })
                     addView(TextView(this@ScannerActivity).apply {
-                        text = event.eventStartAt?.atZone(manilaZone)?.format(dateFormatter).orEmpty().ifBlank { "Assigned event" }
+                        text = event.eventStartAt?.atZone(manilaZone)?.format(dateFormatter).orEmpty().ifBlank { getString(R.string.scanner_assigned_event_fallback) }
                         setTextColor(0xFF6B7280.toInt())
                         textSize = 13f
                     })
@@ -493,22 +563,22 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     }
 
     private fun ScanPurposeResponse.displayName(): String = when (code) {
-        ScanPurposeCode.ENTRY -> "Event Entry"
-        ScanPurposeCode.ATTENDANCE -> "Session Attendance"
-        ScanPurposeCode.BOOTH_VISIT -> "Booth Visit"
-        ScanPurposeCode.BENEFIT_CLAIM -> "Benefit Claim"
-        ScanPurposeCode.REWARD_REDEMPTION, ScanPurposeCode.REWARD_REDEMPTION_SCAN -> "Reward Redemption"
-        ScanPurposeCode.EXIT -> "Event Exit"
+        ScanPurposeCode.ENTRY -> getString(R.string.scan_purpose_type_event_entry)
+        ScanPurposeCode.ATTENDANCE -> getString(R.string.scan_purpose_type_session_attendance)
+        ScanPurposeCode.BOOTH_VISIT -> getString(R.string.scan_purpose_type_booth_visit)
+        ScanPurposeCode.BENEFIT_CLAIM -> getString(R.string.scan_purpose_type_benefit_claim)
+        ScanPurposeCode.REWARD_REDEMPTION, ScanPurposeCode.REWARD_REDEMPTION_SCAN -> getString(R.string.scan_purpose_type_reward_redemption)
+        ScanPurposeCode.EXIT -> getString(R.string.scan_purpose_type_event_exit)
         else -> name
     }
     private fun ScanPurposeResponse.defaultDescription(): String = when (code) {
-        ScanPurposeCode.ENTRY -> "Record attendee entry"
-        ScanPurposeCode.ATTENDANCE -> "Record session attendance"
-        ScanPurposeCode.BOOTH_VISIT -> "Track booth/exhibitor visits"
-        ScanPurposeCode.BENEFIT_CLAIM -> "Validate benefit/meal claims"
-        ScanPurposeCode.REWARD_REDEMPTION, ScanPurposeCode.REWARD_REDEMPTION_SCAN -> "Process reward redemptions"
-        ScanPurposeCode.EXIT -> "Record attendee exit"
-        else -> "Scan attendee QR credential"
+        ScanPurposeCode.ENTRY -> getString(R.string.scanner_purpose_desc_entry)
+        ScanPurposeCode.ATTENDANCE -> getString(R.string.scanner_purpose_desc_attendance)
+        ScanPurposeCode.BOOTH_VISIT -> getString(R.string.scanner_purpose_desc_booth_visit)
+        ScanPurposeCode.BENEFIT_CLAIM -> getString(R.string.scanner_purpose_desc_benefit_claim)
+        ScanPurposeCode.REWARD_REDEMPTION, ScanPurposeCode.REWARD_REDEMPTION_SCAN -> getString(R.string.scanner_purpose_desc_reward_redemption)
+        ScanPurposeCode.EXIT -> getString(R.string.scanner_purpose_desc_exit)
+        else -> getString(R.string.scanner_purpose_desc_default)
     }
 
     private fun submitCurrentSelection(trigger: String) {
@@ -614,4 +684,9 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     private fun firstNonBlank(vararg values: String?): String? = values.firstOrNull { !it.isNullOrBlank() }?.trim()
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
     private data class ParsedQrPayload(val qrValue: String, val qrCredentialId: String?)
+
+    private companion object {
+        const val STATE_CAMERA_PERMISSION_REQUESTED = "scanner_camera_permission_requested"
+        const val STATE_CAMERA_PERMISSION_DENIED = "scanner_camera_permission_denied"
+    }
 }

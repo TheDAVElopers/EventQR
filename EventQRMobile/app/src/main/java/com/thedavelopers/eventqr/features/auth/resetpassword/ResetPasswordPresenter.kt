@@ -7,10 +7,12 @@ import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.auth.AuthRepository
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class ResetPasswordPresenter() {
     private var view: ResetPasswordContract.View? = null
+    private val scope = MainScope()
     private var job: kotlinx.coroutines.Job? = null
     private var repository: AuthRepository? = null
     private var appContext: Context? = null
@@ -26,6 +28,7 @@ class ResetPasswordPresenter() {
 
     fun detach() {
         job?.cancel()
+        scope.cancel()
         view = null
         repository = null
         appContext = null
@@ -38,7 +41,7 @@ class ResetPasswordPresenter() {
         }
         this.token = token
         view?.showLoading(true)
-        job = MainScope().launch {
+        job = scope.launch {
             when (val result = repository?.validateResetToken(token)) {
                 is NetworkResult.Success -> {
                     view?.showLoading(false)
@@ -88,7 +91,7 @@ class ResetPasswordPresenter() {
         }
 
         view?.showLoading(true)
-        job = MainScope().launch {
+        job = scope.launch {
             when (val result = repository?.resetPassword(currentToken, newPassword, confirmPassword)) {
                 is NetworkResult.Success -> {
                     view?.showLoading(false)

@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.reports
 
+import androidx.lifecycle.lifecycleScope
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Context
@@ -40,7 +41,6 @@ import com.thedavelopers.eventqr.features.reports.model.dto.EventReportType
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportRowDto
 import androidx.annotation.RequiresApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
@@ -614,7 +614,7 @@ class ReportPreviewActivity : AppCompatActivity() {
 
             Snackbar.make(rootView, getString(R.string.report_preview_preparing_combined, format), Snackbar.LENGTH_SHORT).show()
 
-            MainScope().launch {
+            lifecycleScope.launch {
                 try {
                     val safeEventName = (summary.eventName?.takeIf { it.isNotBlank() } ?: "event")
                         .replace(Regex("[^a-zA-Z0-9_-]"), "-")
@@ -642,7 +642,7 @@ class ReportPreviewActivity : AppCompatActivity() {
 
         Snackbar.make(rootView, getString(R.string.report_preview_preparing, format), Snackbar.LENGTH_SHORT).show()
 
-        MainScope().launch {
+        lifecycleScope.launch {
             val reportType = singleReport?.reportType ?: EventReportType.ROSTER
 
             when (val result = repository.exportReport(eventId, reportType, format, sourceFilters)) {

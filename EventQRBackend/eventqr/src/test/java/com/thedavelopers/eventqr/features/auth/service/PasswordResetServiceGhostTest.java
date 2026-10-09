@@ -75,6 +75,24 @@ class PasswordResetServiceGhostTest {
     }
 
     @Test
+    void onlyTheHashOfTheEmailedTokenIsStored() {
+        when(users.findByEmailIgnoreCase("jane.doe+evt@gmail.com")).thenReturn(Optional.of(ghost));
+
+        service.requestReset("jane.doe+evt@gmail.com");
+
+        ArgumentCaptor<String> html = ArgumentCaptor.forClass(String.class);
+        verify(email).sendSimple(anyString(), anyString(), html.capture());
+        java.util.regex.Matcher link = java.util.regex.Pattern.compile("token=([0-9a-f]{64})").matcher(html.getValue());
+        assertThat(link.find()).isTrue();
+        String rawToken = link.group(1);
+        ArgumentCaptor<PasswordResetToken> saved = ArgumentCaptor.forClass(PasswordResetToken.class);
+        verify(tokens).save(saved.capture());
+        assertThat(saved.getValue().getToken())
+                .isNotEqualTo(rawToken)
+                .isEqualTo(RefreshTokenService.sha256(rawToken));
+    }
+
+    @Test
     void anAliasSpellingStillFindsTheAccountThroughTheCanonicalFallback() {
         UserProfile canonical = new UserProfile();
         canonical.setId(UUID.randomUUID());
@@ -102,9 +120,11 @@ class PasswordResetServiceGhostTest {
     void resettingThroughTheEmailedTokenSetsARealPasswordOnTheGhost() {
         PasswordResetToken token = new PasswordResetToken();
         token.setUserId(ghost.getId());
-        token.setToken("tok");
+        token.setToken(RefreshTokenService.sha256("tok"));
         token.setExpiresAt(Instant.now().plusSeconds(600));
-        when(tokens.findByTokenAndUsedFalseAndExpiresAtAfter(eq("tok"), any())).thenReturn(Optional.of(token));
+        // Looked up by the hash of the presented token, never by the raw value.
+        when(tokens.findByTokenAndUsedFalseAndExpiresAtAfter(eq(RefreshTokenService.sha256("tok")), any()))
+                .thenReturn(Optional.of(token));
         when(users.findById(ghost.getId())).thenReturn(Optional.of(ghost));
 
         service.resetPassword("tok", "Str0ngPass!word", "Str0ngPass!word");

@@ -1,123 +1,214 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
     <!--
-        CVE-2026-53914 is a build-cache deserialization vuln in kotlin-gradle-plugin (the
-        compiler/build tool).  OWASP matches it against kotlin-stdlib (and kotlin-stdlib-jdk7)
-        via the generic CPE "jetbrains:kotlin", but these are the runtime standard-library jars
-        and do NOT contain the build-cache code.  This is a false positive for the runtime jars.
+        SUPPRESSION POLICY
+        Every suppression below records: affected component, classification, concrete evidence,
+        review date, and a re-review trigger. Classifications:
+          NOT_APPLICABLE - the vulnerable feature/class is not on the classpath or never invoked.
+          MITIGATED      - the feature is present but the advisory's preconditions are not met.
+          (APPLICABLE findings are never suppressed here.)
+
+        App profile at review (2026-10-09): Spring Boot 3.5.16, Spring Framework 6.2.19, Spring
+        Security 6.5.11. Spring MVC on embedded Tomcat 10.1.x. Stateless JWT bearer auth via custom
+        JwtAuthenticationFilter (SessionCreationPolicy.STATELESS, CSRF disabled, no form login,
+        no httpBasic/Digest). JSON (Jackson) REST API only, no server-side view rendering.
+        Verified via `mvnw dependency:tree` on 2026-10-09: the classpath contains NO spring-webflux,
+        reactor-netty, spring-websocket/spring-messaging, spring-session, freemarker, aalto-xml,
+        unboundid-ldapsdk, webauthn4j, password4j or spring-security-oauth2-authorization-server.
+
+        Context: Spring Framework 6.2.x and Spring Security 6.5.x reached OSS EOL at 6.2.19/6.5.11.
+        The fixes (6.2.20 / 6.5.12) are Enterprise-Support-only; OSS fixes are 7.0.9 / 7.0.7 / 7.1.1
+        (Spring Boot 4). Product decision: no Boot 4 migration now; per-CVE applicability documented.
+
+        GLOBAL RE-REVIEW TRIGGERS (apply to every Spring suppression below):
+          - any Spring Boot / Spring Framework / Spring Security version change;
+          - adding any of the dependencies listed above, or spring-boot-starter-{webflux,websocket,
+            freemarker,data-ldap}, spring-session-*, or spring-security-{ldap,oauth2-authorization-server};
+          - quarterly at the latest (next: 2027-01-09).
     -->
+
+    <!-- ============================ Kotlin ============================ -->
     <suppress>
-        <notes>CVE-2026-53914 is in kotlin-gradle-plugin build cache, not kotlin-stdlib runtime library. False positive via generic CPE match.</notes>
+        <notes><![CDATA[
+CVE-2026-53914 | component: kotlin-gradle-plugin build cache (deserialization) | NOT_APPLICABLE (false positive).
+Evidence: OWASP matches the generic CPE "jetbrains:kotlin" against org.jetbrains.kotlin:kotlin-stdlib* runtime jars
+(transitive, e.g. via OkHttp in the Brevo client). Those jars do not contain the Gradle build-cache code, and this
+project builds with Maven, not Gradle. Reviewed 2026-10-09.
+Re-review: if a kotlin-gradle-plugin / kotlin-compiler artifact ever appears in this module's dependency tree.
+]]></notes>
         <packageUrl regex="true">pkg:maven/org\.jetbrains\.kotlin/kotlin-stdlib.*@.*</packageUrl>
         <cve>CVE-2026-53914</cve>
     </suppress>
 
-    <!--
-        Spring Framework 6.2.x CVEs published Aug 2026 (CVE-2026-59313/47890/47891/47892/59283/47893
-        /59282/59281/59280/59314).  Spring Framework 6.2 reached open-source EOL at 6.2.19 (25 Jun
-        2026). NO open-source 6.2.x patch fixes them; fixes ship only in Spring Framework 7.x
-        (Spring Boot 4) or paid extended support. Upgrading this app to Spring Boot 4 is a large
-        separate migration, out of scope for a dependency-version fix. The regex matches every
-        org.springframework module (spring-core, spring-tx, spring-jcl, ...) at 6.2.19 because the
-        generic CPE "spring_framework" causes the same CVE set to surface on each module. Suppressed
-        with acknowledgment; tracked for the Spring Boot 4 migration.
-    -->
+    <!-- ======================= Spring Framework 6.2.19 =======================
+         The regex matches every org.springframework module at 6.2.19 because the generic CPE
+         "spring_framework" surfaces the same CVE set on spring-core, spring-web, spring-tx, etc. -->
     <suppress>
-        <notes>No OSS fix exists for Spring Framework 6.2.x (EOL'd at 6.2.19). Fixed only in Spring Framework 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <notes><![CDATA[
+CVE-2026-59313 (LOW, AV:N/AC:H/PR:L/UI:R) | component: Spring MVC functional web framework SSE (RouterFunction /
+ServerResponse.sse()) - CRLF stream corruption | NOT_APPLICABLE.
+Evidence: grep of src/main for RouterFunction|ServerResponse|SseEmitter|text/event-stream returns nothing; all
+endpoints are annotated @RestController methods returning JSON. Advisory also requires plain-text (non-JSON) SSE payloads.
+Reviewed 2026-10-09. Re-review: any SSE/streaming endpoint or functional routing is introduced.
+]]></notes>
         <packageUrl regex="true">pkg:maven/org\.springframework/[^/]*@6\.2\.19</packageUrl>
         <cve>CVE-2026-59313</cve>
     </suppress>
     <suppress>
-        <notes>No OSS fix exists for Spring Framework 6.2.x (EOL'd at 6.2.19). Fixed only in Spring Framework 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <notes><![CDATA[
+CVE-2026-47890 (LOW) | component: Spring MVC/WebFlux SSE with view fragments (FragmentsRendering) | NOT_APPLICABLE.
+Evidence: no view technology on the classpath (no thymeleaf/freemarker/mustache/jsp in pom.xml), no SSE (grep for
+SseEmitter|text/event-stream|FragmentsRendering in src/main: none). API returns JSON only.
+Reviewed 2026-10-09. Re-review: a template engine or SSE endpoint is added.
+]]></notes>
         <packageUrl regex="true">pkg:maven/org\.springframework/[^/]*@6\.2\.19</packageUrl>
         <cve>CVE-2026-47890</cve>
     </suppress>
     <suppress>
-        <notes>No OSS fix exists for Spring Framework 6.2.x (EOL'd at 6.2.19). Fixed only in Spring Framework 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <notes><![CDATA[
+CVE-2026-47891 (MEDIUM, A:L) | component: spring-webflux Jaxb2Decoder maxInMemorySize bypass with Aalto XML | NOT_APPLICABLE.
+Evidence: no spring-webflux and no aalto-xml in dependency tree (mvnw dependency:tree, 2026-10-09). The jaxb-runtime
+present is Hibernate's transitive dependency and is not wired to any WebFlux codec. API accepts JSON only.
+Reviewed 2026-10-09. Re-review: spring-webflux or aalto-xml added, or XML request bodies accepted.
+]]></notes>
         <packageUrl regex="true">pkg:maven/org\.springframework/[^/]*@6\.2\.19</packageUrl>
         <cve>CVE-2026-47891</cve>
     </suppress>
     <suppress>
-        <notes>No OSS fix exists for Spring Framework 6.2.x (EOL'd at 6.2.19). Fixed only in Spring Framework 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <notes><![CDATA[
+CVE-2026-47892 (MEDIUM, CWE-863) | component: WebFlux functional endpoints header-predicate bypass on CORS pre-flight | NOT_APPLICABLE.
+Evidence: no spring-webflux on classpath; grep for RouterFunction / RequestPredicates in src/main returns nothing.
+Authorization is enforced by Spring Security filter chain (shared/config/SecurityConfig.java), not routing predicates.
+Reviewed 2026-10-09. Re-review: spring-webflux or functional endpoints (RouterFunction) introduced.
+]]></notes>
         <packageUrl regex="true">pkg:maven/org\.springframework/[^/]*@6\.2\.19</packageUrl>
         <cve>CVE-2026-47892</cve>
     </suppress>
     <suppress>
-        <notes>No OSS fix exists for Spring Framework 6.2.x (EOL'd at 6.2.19). Fixed only in Spring Framework 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <notes><![CDATA[
+CVE-2026-59283 (MEDIUM, A:H) | component: spring-expression SpEL compiler bypassing SimpleEvaluationContext guards | NOT_APPLICABLE.
+Evidence: grep for SpelExpressionParser|SimpleEvaluationContext|spring.expression.compiler.mode in src/main and
+application*.properties returns nothing; no @PreAuthorize/@PostAuthorize in src/main. spring-expression is present only
+transitively (spring-security-web). Both preconditions (SimpleEvaluationContext AND compiler mode IMMEDIATE/MIXED) unmet.
+Reviewed 2026-10-09. Re-review: any SpEL evaluation of user input, or spring.expression.compiler.mode is set (also as JVM -D flag).
+]]></notes>
         <packageUrl regex="true">pkg:maven/org\.springframework/[^/]*@6\.2\.19</packageUrl>
         <cve>CVE-2026-59283</cve>
     </suppress>
     <suppress>
-        <notes>No OSS fix exists for Spring Framework 6.2.x (EOL'd at 6.2.19). Fixed only in Spring Framework 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <notes><![CDATA[
+CVE-2026-47893 (LOW, CWE-209) | component: spring-webflux HandshakeWebSocketService (headers in exception reason) | NOT_APPLICABLE.
+Evidence: no spring-webflux and no spring-websocket in dependency tree; grep WebSocket in src/main returns nothing.
+(tomcat-embed-websocket is present transitively via spring-boot-starter-tomcat but is not Spring's handshake service.)
+Reviewed 2026-10-09. Re-review: WebSocket/STOMP or WebFlux support added.
+]]></notes>
         <packageUrl regex="true">pkg:maven/org\.springframework/[^/]*@6\.2\.19</packageUrl>
         <cve>CVE-2026-47893</cve>
     </suppress>
     <suppress>
-        <notes>No OSS fix exists for Spring Framework 6.2.x (EOL'd at 6.2.19). Fixed only in Spring Framework 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <notes><![CDATA[
+CVE-2026-59282 (MEDIUM, A:H) | component: spring-beans data binding (DataBinder/BeanWrapper) unbounded growth of a
+self-populating List on nested indexed paths | MITIGATED.
+Evidence: Spring MVC DataBinder IS active (implicit @ModelAttribute/@RequestParam binding of query/form params), but the
+advisory additionally requires a bind target with a self-populating List (get() allocates on demand) whose element type
+has sub-properties. grep src/main for AutoPopulatingList|LazyList|ListUtils|"implements List"|"extends AbstractList"|
+"extends ArrayList"|setAutoGrow|@InitBinder|WebDataBinder returns nothing; request DTOs are Jackson @RequestBody records
+(not DataBinder) with plain java.util.List fields, which throw IndexOutOfBoundsException (safe per advisory).
+Reviewed 2026-10-09. Re-review: any custom/auto-populating List type on a request/form-bound object, or @InitBinder changes.
+]]></notes>
         <packageUrl regex="true">pkg:maven/org\.springframework/[^/]*@6\.2\.19</packageUrl>
         <cve>CVE-2026-59282</cve>
     </suppress>
     <suppress>
-        <notes>No OSS fix exists for Spring Framework 6.2.x (EOL'd at 6.2.19). Fixed only in Spring Framework 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <notes><![CDATA[
+CVE-2026-59281 (MEDIUM, XSS) | component: spring-context EscapedErrors (HTML-escaped data-binding Errors rendered in views) | NOT_APPLICABLE.
+Evidence: no server-side HTML rendering (no template engine in pom.xml); grep EscapedErrors in src/main returns nothing.
+The only getFieldErrors() use is GlobalExceptionHandler.java:95 on a raw BindingResult (not EscapedErrors), serialized
+into a JSON ErrorResponse (application/json), not HTML.
+Reviewed 2026-10-09. Re-review: any HTML view/template rendering or EscapedErrors / RequestContext.getErrors(..., true) usage.
+]]></notes>
         <packageUrl regex="true">pkg:maven/org\.springframework/[^/]*@6\.2\.19</packageUrl>
         <cve>CVE-2026-59281</cve>
     </suppress>
     <suppress>
-        <notes>No OSS fix exists for Spring Framework 6.2.x (EOL'd at 6.2.19). Fixed only in Spring Framework 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <notes><![CDATA[
+CVE-2026-59280 (MEDIUM, CWE-22) | component: spring-context-support FreeMarker SpringTemplateLoader path traversal via
+backslash in view name | NOT_APPLICABLE.
+Evidence: no freemarker dependency in pom.xml/dependency tree; grep freemarker|SpringTemplateLoader|ModelAndView in
+src/main returns nothing; controllers return ResponseEntity/JSON, never untrusted view names.
+Reviewed 2026-10-09. Re-review: FreeMarker (or any view resolver) added, or a controller returns a String view name.
+]]></notes>
         <packageUrl regex="true">pkg:maven/org\.springframework/[^/]*@6\.2\.19</packageUrl>
         <cve>CVE-2026-59280</cve>
     </suppress>
     <suppress>
-        <notes>No OSS fix exists for Spring Framework 6.2.x (EOL'd at 6.2.19). Fixed only in Spring Framework 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <notes><![CDATA[
+CVE-2026-59314 (LOW, CWE-113) | component: spring-web ContentDisposition response/multipart header splitting from
+untrusted filename | MITIGATED.
+Evidence: (1) the only Content-Disposition header is EventReportController.java:122, built from
+ReportExportService.fileName() (ReportExportService.java:39-41) = slug(enum reportType) + "-" + UUID eventId + ".pdf|.csv"
+- fully server-controlled, no user-supplied filename. (2) The connector is embedded Tomcat, which the advisory states
+rejects malicious header characters (case 1 applies only to non-default/legacy connectors). (3) No outbound multipart
+bodies built with Spring's ContentDisposition/MultipartBodyBuilder (grep src/main: none); Brevo/S3 SDKs use their own
+clients. UploadController.java:70-83 /files/{id}/content sets no Content-Disposition.
+Reviewed 2026-10-09. Re-review: any Content-Disposition built from a user/stored filename (e.g. StoredFile.fileName),
+any outbound multipart via RestClient/WebClient, or a switch away from Tomcat.
+]]></notes>
         <packageUrl regex="true">pkg:maven/org\.springframework/[^/]*@6\.2\.19</packageUrl>
         <cve>CVE-2026-59314</cve>
     </suppress>
 
-    <!--
-        Spring Security 6.5 line reached OSS EOL at 6.5.11 (25 Jun 2026). CVE-2026-59270/47841/
-        47842/59276 have no OSS patch in the 6.5.x line; fixed only in Spring Security 7.x (Spring
-        Boot 4) or paid NES. Suppressed with acknowledgment; tracked for Spring Boot 4 migration.
-    -->
+    <!-- ======================= Spring Security 6.5.11 ======================= -->
     <suppress>
-        <notes>No OSS fix exists for Spring Security 6.5.x (line EOL'd at 6.5.11). Fixed only in Spring Security 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <notes><![CDATA[
+CVE-2026-59270 (CRITICAL, ~9.4) | component: spring-security-config UnboundIdContainer (embedded LDAP server binds
+0.0.0.0 with well-known admin bind DN) | NOT_APPLICABLE.
+Evidence: no com.unboundid:unboundid-ldapsdk and no spring-security-ldap / spring-ldap in dependency tree
+(mvnw dependency:tree 2026-10-09); grep ldap|UnboundId in src/main and application*.properties (no spring.ldap.embedded.*)
+returns nothing. The container class ships in spring-security-config but cannot start without the UnboundID SDK.
+Reviewed 2026-10-09. Re-review: ANY LDAP dependency or spring.ldap.embedded.* property is added. NOTE: this service binds
+server.address=0.0.0.0 (application.properties:31), so an embedded LDAP server would be network-reachable - treat that
+change as a blocker requiring this CVE to be un-suppressed.
+]]></notes>
         <packageUrl regex="true">pkg:maven/org\.springframework\.security/spring-security-[^/]*@6\.5\.11</packageUrl>
         <cve>CVE-2026-59270</cve>
     </suppress>
     <suppress>
-        <notes>No OSS fix exists for Spring Security 6.5.x (line EOL'd at 6.5.11). Fixed only in Spring Security 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <notes><![CDATA[
+CVE-2026-47841 (HIGH) | component: spring-security-web WebAuthn/passkey userVerification=REQUIRED bypass after HTTP
+session serialization | NOT_APPLICABLE.
+Evidence: all three preconditions unmet - no WebAuthn (no webauthn4j in dependency tree; grep webAuthn|passkey in
+src/main: none); no distributed session store (no spring-session-*); sessions disabled
+(SecurityConfig.java:38 SessionCreationPolicy.STATELESS).
+Reviewed 2026-10-09. Re-review: passkey/WebAuthn login, spring-session, or stateful sessions introduced.
+]]></notes>
         <packageUrl regex="true">pkg:maven/org\.springframework\.security/spring-security-[^/]*@6\.5\.11</packageUrl>
         <cve>CVE-2026-47841</cve>
     </suppress>
     <suppress>
-        <notes>No OSS fix exists for Spring Security 6.5.x (line EOL'd at 6.5.11). Fixed only in Spring Security 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <notes><![CDATA[
+CVE-2026-47842 (MEDIUM, ~6.5) | component: spring-security-crypto AesBytesEncryptor / Encryptors.standard|stronger|
+text|delux (null-IV AES/CBC, deterministic ciphertext) | NOT_APPLICABLE.
+Evidence: grep AesBytesEncryptor|Encryptors|Encryptor|Cipher|SecretKeySpec in src/main returns nothing. Only
+spring-security-crypto use is BCryptPasswordEncoder (shared/config/AppConfig.java:15). JWT signing is done by jjwt.
+Reviewed 2026-10-09. Re-review: any field-level/app-level encryption is added (use AES-GCM with random IV via JCA or
+Tink, never Encryptors.* on this line).
+]]></notes>
         <packageUrl regex="true">pkg:maven/org\.springframework\.security/spring-security-[^/]*@6\.5\.11</packageUrl>
         <cve>CVE-2026-47842</cve>
     </suppress>
     <suppress>
-        <notes>No OSS fix exists for Spring Security 6.5.x (line EOL'd at 6.5.11). Fixed only in Spring Security 7.x or paid NES. Tracked for Spring Boot 4 migration.</notes>
+        <notes><![CDATA[
+CVE-2026-59276 (MEDIUM, ~5.9) | component: Spring Security non-constant-time comparisons in DigestAuthenticationFilter,
+KeyBasedPersistenceTokenService, BalloonHashing/Pbkdf2 Password4j encoders, InMemoryOAuth2AuthorizationService | NOT_APPLICABLE.
+Evidence: grep DigestAuthentication|KeyBasedPersistenceTokenService|Password4j|OAuth2Authorization in src/main returns
+nothing; no password4j or spring-security-oauth2-authorization-server in dependency tree. Password encoder is
+BCryptPasswordEncoder (AppConfig.java:15); auth is a custom JWT bearer filter.
+Reviewed 2026-10-09. Re-review: Digest auth, Password4j encoders, KeyBasedPersistenceTokenService, or an embedded
+authorization server added. (Own code comparing secrets, e.g. refresh/reset token hashes, should use
+MessageDigest.isEqual - out of scope of this CVE.)
+]]></notes>
         <packageUrl regex="true">pkg:maven/org\.springframework\.security/spring-security-[^/]*@6\.5\.11</packageUrl>
         <cve>CVE-2026-59276</cve>
-    </suppress>
-
-    <!--
-        Maven build-tool tool-chain noise.  maven-core, maven-shared-utils and plexus-utils are
-        Maven's own runtime/plugin jars pulled in by the dependency-check-maven plugin's classpath,
-        NOT application dependencies.  Upgrading them means bumping the Maven distribution, which is
-        explicitly out of scope (do NOT bump Maven).  These findings are accepted as tool noise.
-    -->
-    <suppress>
-        <notes>Maven tool-chain runtime jar, not an application dependency. Bumping Maven is out of scope (do NOT bump Maven). Accepted tool-chain noise.</notes>
-        <packageUrl regex="true">pkg:maven/org\.apache\.maven/maven-core@3\.0</packageUrl>
-        <cve>CVE-2021-26291</cve>
-    </suppress>
-    <suppress>
-        <notes>Maven tool-chain runtime jar, not an application dependency. Bumping Maven is out of scope (do NOT bump Maven). Accepted tool-chain noise.</notes>
-        <packageUrl regex="true">pkg:maven/org\.apache\.maven\.shared/maven-shared-utils@3\.1\.0</packageUrl>
-        <cve>CVE-2022-29599</cve>
-    </suppress>
-    <suppress>
-        <notes>Maven tool-chain runtime jar, not an application dependency. Bumping Maven is out of scope (do NOT bump Maven). Accepted tool-chain noise.</notes>
-        <packageUrl regex="true">pkg:maven/org\.codehaus\.plexus/plexus-utils@3\.4\.2</packageUrl>
-        <cve>CVE-2025-67030</cve>
     </suppress>
 </suppressions>

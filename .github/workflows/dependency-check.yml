@@ -1,0 +1,57 @@
+name: Dependency Check
+
+# Weekly OWASP dependency-check of the backend's Maven dependencies (fails on CVSS >= 8,
+# see failBuildOnCVSS in pom.xml; suppressions live in dependency-check-suppression.xml).
+# Not run on every PR because the NVD data download is slow.
+# Needs the NVD_API_KEY repo secret (free key: https://nvd.nist.gov/developers/request-an-api-key);
+# without it the NVD download is heavily rate-limited and may time out.
+
+on:
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  owasp:
+    name: OWASP dependency-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: EventQRBackend/eventqr
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      # Restore the previous NVD database so only the delta is downloaded; a new cache entry
+      # is saved every run (unique key) so the next run starts from fresh data.
+      - name: Cache NVD data
+        uses: actions/cache@v4
+        with:
+          # Kept outside ~/.m2 so the setup-java Maven cache does not swallow the NVD database.
+          path: ~/.dependency-check-data
+          key: dependency-check-data-${{ github.run_id }}
+          restore-keys: |
+            dependency-check-data-
+      - name: Dependency check
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: |
+          if [ -z "$NVD_API_KEY" ]; then
+            echo "::warning::NVD_API_KEY secret is not set; the NVD download will be slow and may fail."
+          fi
+          mvn -B org.owasp:dependency-check-maven:check -DdataDirectory="$HOME/.dependency-check-data"
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: EventQRBackend/eventqr/target/dependency-check-report.html
+          if-no-files-found: warn
+          retention-days: 30

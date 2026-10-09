@@ -14,8 +14,10 @@ import com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode
 import com.thedavelopers.eventqr.features.organizer.*
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerTransactionRuleDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.TransactionRuleRequest
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
 import java.util.UUID
 
 open class TransactionRulesActivity : AppCompatActivity() {
@@ -50,7 +52,7 @@ open class TransactionRulesActivity : AppCompatActivity() {
         content.removeAllViews()
         content.addView(loadingState(getString(R.string.transaction_rules_loading)))
 
-        MainScope().launch {
+        lifecycleScope.launch {
             // Every saved purpose can have its own rule; only persisted purposes (with an id) can be edited.
             purposes = repository.loadScanPurposesForMvp(selectedEvent.id).data.filter { !it.id.isNullOrBlank() }
             rules = repository.loadTransactionRulesForMvp(selectedEvent.id).data
@@ -198,11 +200,11 @@ open class TransactionRulesActivity : AppCompatActivity() {
             maxScans = maxScans,
         )
 
-        Log.d(TAG, "Saving rules for event ${selectedEvent.id}: $request")
+        Log.d(TAG, "Saving rules for event ${selectedEvent.id}")
 
-        MainScope().launch {
-            val result = repository.saveTransactionRuleForMvp(selectedEvent.id, request)
-            Log.d(TAG, "Save result: ${result.source}, message: ${result.message}")
+        lifecycleScope.launch {
+            val result = withContext(NonCancellable) { repository.saveTransactionRuleForMvp(selectedEvent.id, request) }.also { ensureActive() }
+            Log.d(TAG, "Save result: ${result.source}")
 
             if (result.source == OrganizerMvpDataSource.BACKEND) {
                 Toast.makeText(this@TransactionRulesActivity, this@TransactionRulesActivity.getString(R.string.transaction_rules_rules_saved_successfully), Toast.LENGTH_SHORT).show()

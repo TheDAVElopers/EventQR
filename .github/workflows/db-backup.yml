@@ -1,0 +1,129 @@
+name: DB Backup
+
+# Daily logical backup of the Supabase `public` schema (the free tier has no automatic backups).
+# The dump is encrypted with a symmetric passphrase before upload, so the artifact never holds
+# plaintext PII. Artifacts are kept 7 days.
+#
+# The upstream repo is PUBLIC: any signed-in GitHub user can download these artifacts, so the GPG
+# passphrase is the ONLY thing protecting the data. It must be high-entropy and never reused.
+#
+# Required repo secrets:
+#   SUPABASE_DB_URL    postgres:// URL of the Supabase *session pooler* (port 5432), e.g.
+#                      postgresql://postgres.<project_ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres?sslmode=require
+#                      (the direct db.<ref>.supabase.co host is IPv6-only and unreachable from GitHub runners).
+#                      Percent-encode special characters in the password (@ -> %40, : -> %3A, / -> %2F).
+#   BACKUP_PASSPHRASE  high-entropy random passphrase, generated with `openssl rand -base64 48` (never a
+#                      human-chosen password). Store a copy outside GitHub (password manager); GitHub
+#                      secrets cannot be read back, so without that copy the backups are unrecoverable.
+#
+# Restore (Postgres 17 client tools):
+#   1. Download the artifact from the workflow run and unzip it.
+#   2. gpg -d -o eventqr.dump eventqr-<timestamp>.dump.gpg   (prompts for BACKUP_PASSPHRASE)
+#   3. pg_restore --clean --if-exists --no-owner -d '<target postgres:// url>' eventqr.dump
+#   Restoring over production replaces existing data in `public`; try a scratch database first.
+
+on:
+  schedule:
+    - cron: "30 18 * * *" # 02:30 Asia/Manila
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+    steps:
+      - name: Check secrets
+        run: |
+          missing=0
+          if [ -z "$SUPABASE_DB_URL" ]; then echo "::error::Repo secret SUPABASE_DB_URL is not set."; missing=1; fi
+          if [ -z "$BACKUP_PASSPHRASE" ]; then echo "::error::Repo secret BACKUP_PASSPHRASE is not set."; missing=1; fi
+          exit "$missing"
+
+      # Supabase runs Postgres 17; pg_dump must be the same major version or newer.
+      - name: Install postgresql-client-17 (PGDG)
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+            https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends postgresql-client-17
+          /usr/lib/postgresql/17/bin/pg_dump --version
+
+      - name: Dump and encrypt
+        id: dump
+        run: |
+          set -euo pipefail
+          umask 077
+          stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+          plain="$RUNNER_TEMP/eventqr.dump"
+          out="$RUNNER_TEMP/out/eventqr-$stamp.dump.gpg"
+          mkdir -p "$RUNNER_TEMP/out"
+          # Wipe credentials and the plaintext dump even if a later command fails.
+          trap 'shred -u "$RUNNER_TEMP/.pgpass" "$RUNNER_TEMP/pgconn.env" "$RUNNER_TEMP/eventqr.dump" 2>/dev/null || true' EXIT
+
+          # Split SUPABASE_DB_URL into libpq env vars and a 0600 ~/.pgpass so the password never
+          # appears on any command line (argv is visible in the process list). Nothing is echoed.
+          export PGPASSFILE="$RUNNER_TEMP/.pgpass"
+          conn_env="$RUNNER_TEMP/pgconn.env"
+          python3 - "$PGPASSFILE" "$conn_env" <<'PY'
+          import os, shlex, sys
+          from urllib.parse import urlsplit, unquote, parse_qs
+          passfile, envfile = sys.argv[1], sys.argv[2]
+          u = urlsplit(os.environ["SUPABASE_DB_URL"])
+          if u.scheme not in ("postgres", "postgresql") or not u.hostname or u.password is None:
+              sys.exit("::error::SUPABASE_DB_URL must be postgresql://user:password@host:port/db")
+          host, port = u.hostname, str(u.port or 5432)
+          user, pw = unquote(u.username or ""), unquote(u.password)
+          db = unquote(u.path.lstrip("/")) or "postgres"
+          sslmode = parse_qs(u.query).get("sslmode", ["require"])[0]
+          # .pgpass format: escape backslash first, then colon.
+          esc = lambda v: v.replace("\\", "\\\\").replace(":", "\\:")
+          fd = os.open(passfile, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+          with os.fdopen(fd, "w") as f:
+              f.write(":".join(esc(v) for v in (host, port, db, user, pw)) + "\n")
+          with open(envfile, "w") as f:
+              for k, v in (("PGHOST", host), ("PGPORT", port), ("PGDATABASE", db),
+                           ("PGUSER", user), ("PGSSLMODE", sslmode)):
+                  f.write(f"export {k}={shlex.quote(v)}\n")
+          PY
+          # Only host/port/db/user/sslmode (no password) are sourced; the password stays in .pgpass.
+          # shellcheck disable=SC1090
+          . "$conn_env"
+          unset SUPABASE_DB_URL
+
+          /usr/lib/postgresql/17/bin/pg_dump \
+            --format=custom --no-owner --no-privileges --schema=public \
+            --no-password --file="$plain"
+          shred -u "$PGPASSFILE" "$conn_env"
+
+          # Sanity check: the archive must be readable and contain table data.
+          /usr/lib/postgresql/17/bin/pg_restore --list "$plain" | grep -q "TABLE DATA" \
+            || { echo "::error::Dump contains no table data."; exit 1; }
+
+          # Passphrase goes through stdin, not argv.
+          printf '%s' "$BACKUP_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-fd 0 --symmetric --cipher-algo AES256 --output "$out" "$plain"
+          shred -u "$plain"
+
+          echo "Encrypted dump: $(basename "$out") ($(du -h "$out" | cut -f1))"
+          echo "name=eventqr-db-$stamp" >> "$GITHUB_OUTPUT"
+
+      - name: Upload encrypted dump
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.dump.outputs.name }}
+          path: ${{ runner.temp }}/out/*.dump.gpg
+          if-no-files-found: error
+          retention-days: 7

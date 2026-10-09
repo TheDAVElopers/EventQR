@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.events
 
+import androidx.lifecycle.lifecycleScope
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.net.Uri
@@ -39,8 +40,10 @@ import com.thedavelopers.eventqr.features.organizer.rounded
 import com.thedavelopers.eventqr.features.organizer.showMissingEventScreen
 import com.thedavelopers.eventqr.features.organizer.text
 import com.yalantis.ucrop.UCrop
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -481,7 +484,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
             bannerStatus.text = getString(R.string.edit_event_details_no_banner_set_tap_below_to_choose_a)
             return
         }
-        MainScope().launch {
+        lifecycleScope.launch {
             when (val result = repository.getStoredFile(fileId)) {
                 is NetworkResult.Success -> {
                     val encoded = result.data?.contentBase64
@@ -512,7 +515,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
     }
 
     private fun loadEvent() {
-        MainScope().launch {
+        lifecycleScope.launch {
             when (val result = repository.fetchOrganizerEvent(eventId)) {
                 is NetworkResult.Success -> result.data?.let { populate(it) }
                 is NetworkResult.Error -> {
@@ -598,9 +601,9 @@ class EditEventDetailsActivity : AppCompatActivity() {
 
         saveButton.isEnabled = false
         statusView.text = ""
-        MainScope().launch {
+        lifecycleScope.launch {
             val uploadResult = selectedBannerFile?.let { file ->
-                when (val result = repository.uploadEventBanner(file)) {
+                when (val result = withContext(NonCancellable) { repository.uploadEventBanner(file) }.also { ensureActive() }) {
                     is NetworkResult.Success -> result.data?.fileId?.toString()
                     is NetworkResult.Error -> {
                         statusView.text = result.message.ifBlank { "Could not upload banner. Please try another image." }
@@ -613,7 +616,8 @@ class EditEventDetailsActivity : AppCompatActivity() {
             }
             val bannerFileId = uploadResult ?: newBannerFileId ?: current.eventLogoUrl
 
-            when (val result = repository.updateOrganizerEvent(eventId, buildRequest(current, organizerId, bannerFileId))) {
+            val request = buildRequest(current, organizerId, bannerFileId)
+            when (val result = withContext(NonCancellable) { repository.updateOrganizerEvent(eventId, request) }.also { ensureActive() }) {
                 is NetworkResult.Success -> {
                     Toast.makeText(this@EditEventDetailsActivity, this@EditEventDetailsActivity.getString(R.string.edit_event_details_event_updated), Toast.LENGTH_SHORT).show()
                     finish()

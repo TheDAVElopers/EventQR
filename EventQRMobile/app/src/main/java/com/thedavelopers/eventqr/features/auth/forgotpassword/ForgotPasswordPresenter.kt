@@ -7,10 +7,12 @@ import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.auth.AuthRepository
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class ForgotPasswordPresenter() {
     private var view: ForgotPasswordContract.View? = null
+    private val scope = MainScope()
     private var job: kotlinx.coroutines.Job? = null
     private var repository: AuthRepository? = null
     private var appContext: Context? = null
@@ -23,6 +25,7 @@ class ForgotPasswordPresenter() {
 
     fun detach() {
         job?.cancel()
+        scope.cancel()
         view = null
         repository = null
         appContext = null
@@ -37,7 +40,7 @@ class ForgotPasswordPresenter() {
 
         view?.showEmailError(null)
         view?.showLoading(true)
-        job = MainScope().launch {
+        job = scope.launch {
             when (val result = repository?.forgotPassword(emailValue)) {
                 is NetworkResult.Success -> {
                     view?.showLoading(false)

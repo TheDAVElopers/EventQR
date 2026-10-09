@@ -37,7 +37,6 @@ import com.thedavelopers.eventqr.features.organizer.selectedEventId
 import com.thedavelopers.eventqr.features.organizer.checkedInTotal
 import com.thedavelopers.eventqr.features.organizer.registeredTotal
 import com.thedavelopers.eventqr.features.organizer.statusBucket
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
 open class AttendeeManagementActivity : AppCompatActivity() {
@@ -253,7 +252,7 @@ open class AttendeeManagementActivity : AppCompatActivity() {
             progressBar.visibility = View.GONE
             skeletonLoading.visibility = View.VISIBLE
         }
-        MainScope().launch {
+        lifecycleScope.launch {
             val eventIdAtRequestTime = event.id
             val load = repository.loadAttendeesForMvp(eventIdAtRequestTime)
             if (eventIdAtRequestTime != selectedEvent?.id) {

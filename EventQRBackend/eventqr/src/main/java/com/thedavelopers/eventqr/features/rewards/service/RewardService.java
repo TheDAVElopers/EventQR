@@ -7,11 +7,12 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.thedavelopers.eventqr.features.rewards.model.dto.PointBalanceResponse;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionRequest;
@@ -112,6 +113,7 @@ public class RewardService {
     public RewardResponse updateReward(UUID eventId, UUID rewardId, RewardRequest request) {
         // Row lock: serialises with redemptions (both paths lock the reward first) so the
         // total - claimed computation below cannot race a concurrent claim and lose its decrement.
+        rewardRepository.boundLockWaits(); // bounded wait on the reward row lock below
         Reward reward = rewardRepository.findByIdForUpdate(rewardId)
                 .orElseThrow(() -> new ResourceNotFoundException("Reward not found"));
         if (!reward.getEventId().equals(eventId)) {
@@ -157,7 +159,7 @@ public class RewardService {
         if (points < 0) {
             throw new ConflictException("Points must be non-negative");
         }
-        AttendeePointBalance balance = balanceFor(eventId, attendeeUserId);
+        AttendeePointBalance balance = balanceForUpdate(eventId, attendeeUserId);
         balance.setPointsBalance(balance.getPointsBalance() + points);
         attendeePointBalanceRepository.save(balance);
 
@@ -183,7 +185,7 @@ public class RewardService {
         if (points < 0) {
             throw new ConflictException("Points must be non-negative");
         }
-        AttendeePointBalance balance = balanceFor(eventId, attendeeUserId);
+        AttendeePointBalance balance = balanceForUpdate(eventId, attendeeUserId);
         if (balance.getPointsBalance() < points) {
             throw new ConflictException("Not enough points to deduct");
         }
@@ -224,6 +226,7 @@ public class RewardService {
         if (!redeemEvent.isRewardsEnabled()) {
             throw new ConflictException("Reward redemption is disabled for this event");
         }
+        rewardRepository.boundLockWaits(); // bounded wait on the reward/balance row locks below
         Reward reward = rewardRepository.findByIdForUpdate(request.rewardId())
                 .orElseThrow(() -> new ResourceNotFoundException("Reward not found"));
         if (reward.getStatus() != RewardStatus.ACTIVE) {
@@ -232,7 +235,7 @@ public class RewardService {
         if (!reward.getEventId().equals(request.eventId())) {
             throw new ConflictException("Reward does not belong to the event");
         }
-        AttendeePointBalance balance = balanceFor(request.eventId(), request.attendeeUserId());
+        AttendeePointBalance balance = balanceForUpdate(request.eventId(), request.attendeeUserId());
         if (balance.getPointsBalance() < reward.getPointsRequired()) {
             throw new ConflictException("Not enough points to redeem reward");
         }
@@ -314,8 +317,13 @@ public class RewardService {
         return pointTransactionRepository.findByEventIdAndAttendeeUserId(eventId, attendeeUserId);
     }
 
+    /**
+     * Awards scan points only once the scan's transaction has COMMITTED: a rolled-back scan never awards, and the
+     * award never runs ahead of (and FK-races) the transaction_logs row it references. Runs async in its own
+     * transaction. Scans are always recorded inside a transaction, so no fallbackExecution is needed.
+     */
     @Async("eventTaskExecutor")
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onTransactionRecorded(TransactionRecordedEvent event) {
         if (event.transactionResult() != TransactionResult.APPROVED) {
@@ -327,7 +335,7 @@ public class RewardService {
         if (event.transactionType() == TransactionType.REWARD_REDEMPTION_SCAN || event.transactionType() == TransactionType.REWARD_REDEMPTION) {
             return;
         }
-        AttendeePointBalance balance = balanceFor(event.eventId(), event.attendeeUserId());
+        AttendeePointBalance balance = balanceForUpdate(event.eventId(), event.attendeeUserId());
         balance.setPointsBalance(balance.getPointsBalance() + event.pointsDelta());
         attendeePointBalanceRepository.save(balance);
 
@@ -341,15 +349,29 @@ public class RewardService {
         pointTransactionRepository.save(transaction);
     }
 
+    /**
+     * Balance row locked FOR UPDATE: use before any read-modify-write of pointsBalance. The row is created first
+     * (INSERT ... ON CONFLICT DO NOTHING) because FOR UPDATE locks nothing when no row exists, which would let two
+     * first-time writers race on the unique index and lose one award.
+     */
+    private AttendeePointBalance balanceForUpdate(UUID eventId, UUID attendeeUserId) {
+        attendeePointBalanceRepository.boundLockWaits();
+        attendeePointBalanceRepository.insertZeroIfAbsent(eventId, attendeeUserId);
+        return attendeePointBalanceRepository.findByEventIdAndAttendeeUserIdForUpdate(eventId, attendeeUserId)
+                .orElseThrow(() -> new IllegalStateException("Point balance row missing after insert"));
+    }
+
     private AttendeePointBalance balanceFor(UUID eventId, UUID attendeeUserId) {
         return attendeePointBalanceRepository.findByEventIdAndAttendeeUserId(eventId, attendeeUserId)
-                .orElseGet(() -> {
-                    AttendeePointBalance balance = new AttendeePointBalance();
-                    balance.setEventId(eventId);
-                    balance.setAttendeeUserId(attendeeUserId);
-                    balance.setPointsBalance(0);
-                    return attendeePointBalanceRepository.save(balance);
-                });
+                .orElseGet(() -> newBalance(eventId, attendeeUserId));
+    }
+
+    private AttendeePointBalance newBalance(UUID eventId, UUID attendeeUserId) {
+        AttendeePointBalance balance = new AttendeePointBalance();
+        balance.setEventId(eventId);
+        balance.setAttendeeUserId(attendeeUserId);
+        balance.setPointsBalance(0);
+        return attendeePointBalanceRepository.save(balance);
     }
 
     private Integer resolveCreateStock(RewardRequest request) {

@@ -6,6 +6,7 @@ import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.auth.AuthRepository
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class RegistrationPresenter(
@@ -13,6 +14,7 @@ class RegistrationPresenter(
     private val repository: AuthRepository,
     private val strings: UiStrings,
 ) {
+    private val scope = kotlinx.coroutines.MainScope()
     private var registrationJob: Job? = null
 
     fun attach(view: RegistrationContract.View) {
@@ -21,6 +23,7 @@ class RegistrationPresenter(
 
     fun detach() {
         registrationJob?.cancel()
+        scope.cancel()
         view = null
     }
 
@@ -84,7 +87,7 @@ class RegistrationPresenter(
         }
 
         view?.showLoading(true)
-        registrationJob = kotlinx.coroutines.MainScope().launch {
+        registrationJob = scope.launch {
             val fullNameValue = listOf(firstNameValue, lastNameValue).filter { it.isNotBlank() }.joinToString(" ").trim()
             when (val result = repository.createUser(fullNameValue, emailValue, phoneValue, passwordValue)) {
                 is NetworkResult.Success -> {

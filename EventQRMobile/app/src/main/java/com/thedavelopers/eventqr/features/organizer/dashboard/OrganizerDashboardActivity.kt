@@ -35,7 +35,6 @@ import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationRe
 import com.thedavelopers.eventqr.ui.components.EventCardHolder
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
@@ -77,7 +76,7 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
         // Re-issue the access token so the CURRENT database role is used (an attendee
         // upgraded to organizer after approval should be able to open this dashboard
         // immediately, without a logout/login).
-        MainScope().launch {
+        lifecycleScope.launch {
             AuthRepository(this@OrganizerDashboardActivity).refreshSessionToken()
             loadDashboard()
         }
@@ -206,7 +205,7 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
             skeletonLoading.visibility = View.GONE
         }
         findViewById<View>(R.id.layoutDashboardError).visibility = View.GONE
-        MainScope().launch {
+        lifecycleScope.launch {
             try {
                 val dashboard = repository.loadDashboardForMvp()
                 val load = repository.loadEventsForMvp()

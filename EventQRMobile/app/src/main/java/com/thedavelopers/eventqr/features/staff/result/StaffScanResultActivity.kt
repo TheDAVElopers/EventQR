@@ -249,7 +249,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
                 }
                 is NetworkResult.Error -> {
                     val message = "Transaction failed: ${result.message}"
-                    Log.w(tag, "backendSaveResult success=false message=${result.message}")
+                    Log.w(tag, "backendSaveResult success=false eventId=$eventId scanPurposeId=$purposeId")
                     Toast.makeText(this@StaffScanResultActivity, message, Toast.LENGTH_SHORT).show()
                     bindRejectedResult(message)
                 }
@@ -305,7 +305,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
             // Call backend print endpoint
             when (val result = repository.printAttendeeId(eventId, attendeeId)) {
                 is NetworkResult.Success -> {
-                    Log.d(tag, "printResult success=true message=${result.data.message}")
+                    Log.d(tag, "printResult success=true eventId=$eventId")
 
                     // Open system print dialog with rendered ID card
                     val cardData = AndroidIdPrinter.CardData(
@@ -327,7 +327,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
                 }
                 is NetworkResult.Error -> {
                     val message = "Print failed: ${result.message}"
-                    Log.w(tag, "printResult success=false message=${result.message}")
+                    Log.w(tag, "printResult success=false eventId=$eventId")
                     Toast.makeText(this@StaffScanResultActivity, message, Toast.LENGTH_SHORT).show()
                     bindRejectedResult(message)
                 }

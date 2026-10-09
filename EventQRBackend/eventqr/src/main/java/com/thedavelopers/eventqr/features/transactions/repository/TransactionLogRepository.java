@@ -11,11 +11,20 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.thedavelopers.eventqr.shared.persistence.LockTimeoutSupport;
 import com.thedavelopers.eventqr.features.transactions.model.entity.TransactionLog;
 import com.thedavelopers.eventqr.shared.constants.TransactionResult;
 import com.thedavelopers.eventqr.shared.constants.TransactionType;
 
-public interface TransactionLogRepository extends JpaRepository<TransactionLog, UUID> {
+public interface TransactionLogRepository extends JpaRepository<TransactionLog, UUID>, LockTimeoutSupport {
+
+    /**
+     * Takes a transaction-scoped Postgres advisory lock on (namespace, key), waiting if another transaction holds
+     * it; released automatically at commit/rollback. Uses the two-int key space, which never overlaps the
+     * single-bigint locks taken by the registration-number trigger. Always returns 1.
+     */
+    @Query(value = "SELECT 1 FROM (SELECT pg_advisory_xact_lock(:namespace, :key)) AS lock_taken", nativeQuery = true)
+    int acquireTransactionLock(@Param("namespace") int namespace, @Param("key") int key);
 
     // List variants (preserved for existing service calls)
     java.util.Optional<TransactionLog> findByClientRequestId(UUID clientRequestId);

@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.events
 
+import androidx.lifecycle.lifecycleScope
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -19,7 +20,6 @@ import com.thedavelopers.eventqr.core.util.EventCardPresenter
 import com.thedavelopers.eventqr.features.organizer.*
 import com.thedavelopers.eventqr.ui.components.EventCardHolder
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
@@ -140,7 +140,7 @@ open class ManageEventsActivity : AppCompatActivity() {
         if (!swipeRefresh.isRefreshing) {
             showLoading()
         }
-        MainScope().launch {
+        lifecycleScope.launch {
             eventsSource = repository.loadEventsForMvp()
             swipeRefresh.isRefreshing = false
             allEvents = eventsSource.data

@@ -7,6 +7,7 @@ import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationRequest
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -19,10 +20,12 @@ class RegistrationPresenter(
     /** Shown for a 403 "own account email" rejection (string resource registration_own_email_required). */
     private val ownEmailMessage: String = strings.get(R.string.registration_own_email_required),
 ) {
+    private val scope = kotlinx.coroutines.MainScope()
     private var job: Job? = null
 
     fun detach() {
         job?.cancel()
+        scope.cancel()
         view = null
     }
 
@@ -47,7 +50,7 @@ class RegistrationPresenter(
         view?.showFieldError("fullName", null)
         view?.showFieldError("phone", null)
         view?.showLoading(true)
-        job = kotlinx.coroutines.MainScope().launch {
+        job = scope.launch {
             val regResult = repository.createRegistration(
                 RegistrationRequest(
                     eventId = UUID.fromString(eventId),

@@ -314,6 +314,47 @@ Do not commit real secrets, production URLs, or private deployment values to ver
 - Never change `spring.jpa.hibernate.ddl-auto` back to `update` or `create` on any environment that Flyway has already migrated — the two approaches fight over schema ownership and Flyway checksums drift.
 - `spring.flyway.baseline-on-migrate=true` is only meant for pre-existing non-Flyway databases; a clean deploy does not rely on it.
 
+## Deployment & operations
+
+The backend runs on Render (Docker, `EventQRBackend/eventqr/Dockerfile`) against a Supabase Postgres database.
+
+### Render environment
+
+- Every variable the backend reads is listed with a placeholder in `EventQRBackend/eventqr/.env.example`. Copy it to `.env` for local use; `.env` is git-ignored.
+- `SPRING_PROFILES_ACTIVE=prod` is required in production (small connection pool, graceful shutdown, virtual threads).
+- `DB_URL` must be the Supabase **session pooler** URL with SSL, e.g. `jdbc:postgresql://aws-0-<region>.pooler.supabase.com:5432/postgres?sslmode=require`, with `DB_USERNAME=postgres.<project_ref>`.
+- JVM memory flags come from `JAVA_TOOL_OPTIONS` in the Dockerfile; set the variable on Render to override them.
+- Set Render's **Health Check Path** to `/api/v1/health` (returns 503 when the database is unreachable).
+
+### GitHub secrets
+
+| Secret | Used by |
+|---|---|
+| `SUPABASE_ANON_KEY` | `supabase-keepalive.yml` (keeps the free-tier project from pausing) |
+| `SUPABASE_DB_URL` | `db-backup.yml`: `postgresql://` session pooler URL with `?sslmode=require` |
+| `BACKUP_PASSPHRASE` | `db-backup.yml`: encrypts the dump. Generate with `openssl rand -base64 48` and keep a copy outside GitHub (password manager) |
+| `NVD_API_KEY` | `dependency-check.yml`: weekly OWASP dependency scan |
+
+### Backups and restore
+
+`db-backup.yml` runs daily (and on demand from the Actions tab). It `pg_dump`s the `public` schema, encrypts it with GPG, and keeps it as a workflow artifact for 7 days.
+
+> The repository is public, so any signed-in GitHub user can download these artifacts. The GPG passphrase is the only protection for the data: it must be high-entropy (`openssl rand -base64 48`), never a human-chosen password, and must be stored outside GitHub — secrets cannot be read back, so losing it makes every backup unrecoverable. Download backups you want to keep longer than 7 days.
+
+To restore (Postgres 17 client tools):
+
+```bash
+gpg -d -o eventqr.dump eventqr-<timestamp>.dump.gpg     # prompts for BACKUP_PASSPHRASE
+pg_restore --clean --if-exists --no-owner -d '<target postgres:// url>' eventqr.dump
+```
+
+Restore into a scratch database first; `--clean` replaces existing data in `public`.
+
+### Rollback
+
+- Application: in the Render dashboard, open the service's **Events** and use **Rollback** on the last good deploy.
+- Schema: Flyway migrations are forward-only. A rolled-back app still sees the newer schema, so undo a schema change with a new migration (`V<next>__revert_<change>.sql`) rather than editing or deleting an applied one.
+
 ## Security Notes
 
 This repository should not expose:

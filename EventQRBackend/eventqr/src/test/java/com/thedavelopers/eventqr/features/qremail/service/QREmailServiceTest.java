@@ -62,4 +62,16 @@ class QREmailServiceTest {
         verify(emailGatewayService, times(2)).send(anyString(), any(EmailTemplateBuilder.EmailContent.class));
         verify(qrCredentialPort).markEmailSent(credentialId);
     }
+
+    @Test
+    void failureDescriptionsMaskRecipientAddressesInTheWholeCauseChain() {
+        Exception failure = new IllegalStateException("QR email could not be sent",
+                new RuntimeException("HTTP 400\nbody: jane.doe@example.com is blocked"));
+
+        String described = QREmailService.describe(failure);
+
+        assertThat(described)
+                .contains("IllegalStateException", "RuntimeException", "j***@example.com")
+                .doesNotContain("jane.doe", "\n");
+    }
 }

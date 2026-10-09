@@ -93,9 +93,11 @@ class TransactionServiceCancelledRegistrationTest {
     }
 
     private void givenRegistration(RegistrationStatus status) {
-        when(registrationLookupPort.findByQrCredentialId(qrId)).thenReturn(Optional.of(new RegistrationSnapshot(
+        RegistrationSnapshot snapshot = new RegistrationSnapshot(
                 registrationId, eventId, attendeeId, "a@example.com", "Jane", status, qrId,
-                Instant.now(), null, null, null, 0, 1)));
+                Instant.now(), null, null, null, 0, 1);
+        when(registrationLookupPort.findByQrCredentialId(qrId)).thenReturn(Optional.of(snapshot));
+        when(registrationCommandPort.lockForUpdate(registrationId)).thenReturn(snapshot);
     }
 
     private TransactionRequest request() {

@@ -23,8 +23,10 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.organizer.*
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerScanPurposeRequestDto
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
 import java.util.UUID
 
 open class ManageScanPurposesActivity : AppCompatActivity() {
@@ -87,7 +89,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
             purposeHost.removeAllViews()
             purposeHost.addView(loadingState(getString(R.string.manage_scan_purposes_loading)))
         }
-        MainScope().launch {
+        lifecycleScope.launch {
             val source = repository.loadScanPurposesForMvp(selectedEvent.id)
             val persistedPurposes = source.data.filter { !it.id.isNullOrBlank() }
             val droppedWithoutId = source.data.size - persistedPurposes.size
@@ -100,11 +102,11 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
             }
             Log.d(
                 TAG,
-                "eventId=${selectedEvent.id} refreshCount=$refreshCount loadedCount=${source.data.size} persistedCount=${persistedPurposes.size} droppedWithoutId=$droppedWithoutId source=${source.source} message=${source.message}"
+                "eventId=${selectedEvent.id} refreshCount=$refreshCount loadedCount=${source.data.size} persistedCount=${persistedPurposes.size} droppedWithoutId=$droppedWithoutId source=${source.source}"
             )
             Log.d(
                 persistenceTag,
-                "eventId=${selectedEvent.id} loadedCount=${source.data.size} persistedCount=${persistedPurposes.size} droppedWithoutId=$droppedWithoutId names=${persistedPurposes.joinToString { it.label }}"
+                "eventId=${selectedEvent.id} loadedCount=${source.data.size} persistedCount=${persistedPurposes.size} droppedWithoutId=$droppedWithoutId"
             )
             if (droppedWithoutId > 0) {
                 Log.w(
@@ -137,7 +139,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
             val subtitle = buildString {
                 append(purpose.code?.toDisplayTypeLabel() ?: getString(R.string.manage_scan_purposes_custom_scan))
                 append(" · ")
-                if (purpose.pointsEnabled && purpose.pointsValue > 0) append(getString(R.string.common_points_short, "+${purpose.pointsValue}")); append(" · ")
+                if (purpose.pointsEnabled && purpose.pointsValue > 0) append("+").append(getString(R.string.common_points_short, purpose.pointsValue)); append(" · ")
                 append(getString(if (purpose.duplicateRule.lowercase().contains("allow")) R.string.manage_scan_purposes_allows_duplicates else R.string.manage_scan_purposes_no_duplicates))
             }
 
@@ -164,26 +166,26 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         enabled: Boolean,
         toggle: androidx.appcompat.widget.SwitchCompat? = null,
     ) {
-        MainScope().launch {
+        lifecycleScope.launch {
             val purposeId = purpose.id?.takeIf { it.isNotBlank() }
             if (purposeId == null) {
-                Log.w(persistenceTag, "eventId=${selectedEvent.id} toggleSkipped reason=missingPurposeId name=${purpose.label}")
+                Log.w(persistenceTag, "eventId=${selectedEvent.id} toggleSkipped reason=missingPurposeId")
                 Toast.makeText(this@ManageScanPurposesActivity, this@ManageScanPurposesActivity.getString(R.string.manage_scan_purposes_unable_to_update_unsaved_scan_purpos), Toast.LENGTH_SHORT).show()
                 return@launch
             }
-            Log.d(TAG, "eventId=${selectedEvent.id} purposeId=$purposeId label=${purpose.label} toggleValue=$enabled")
-            Log.d(persistenceTag, "eventId=${selectedEvent.id} toggleRequest id=$purposeId name=${purpose.label} enabled=$enabled")
+            Log.d(TAG, "eventId=${selectedEvent.id} purposeId=$purposeId toggleValue=$enabled")
+            Log.d(persistenceTag, "eventId=${selectedEvent.id} toggleRequest id=$purposeId enabled=$enabled")
 
-            val result = repository.enableScanPurposeForMvp(selectedEvent.id, purposeId, enabled)
+            val result = withContext(NonCancellable) { repository.enableScanPurposeForMvp(selectedEvent.id, purposeId, enabled) }.also { ensureActive() }
             when (result) {
                 is NetworkResult.Success -> {
                     Log.d(TAG, "eventId=${selectedEvent.id} purposeId=$purposeId toggleApiResult=SUCCESS active=${result.data.enabled}")
-                    Log.d(persistenceTag, "eventId=${selectedEvent.id} toggleResponse id=${result.data.scanPurposeId ?: "null"} name=${result.data.title} enabled=${result.data.enabled}")
+                    Log.d(persistenceTag, "eventId=${selectedEvent.id} toggleResponse id=${result.data.scanPurposeId ?: "null"} enabled=${result.data.enabled}")
                     Toast.makeText(this@ManageScanPurposesActivity, "${purpose.label} ${getString(if (enabled) R.string.manage_scan_purposes_enabled else R.string.manage_scan_purposes_disabled)}", Toast.LENGTH_SHORT).show()
                     loadPurposes()
                 }
                 is NetworkResult.Error -> {
-                    Log.w(TAG, "eventId=${selectedEvent.id} purposeId=$purposeId toggleApiResult=ERROR message=${result.message}")
+                    Log.w(TAG, "eventId=${selectedEvent.id} purposeId=$purposeId toggleApiResult=ERROR")
                     toggle?.setOnCheckedChangeListener(null)
                     toggle?.isChecked = purpose.enabled
                     toggle?.setOnCheckedChangeListener { _, checked ->
@@ -350,22 +352,25 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
     }
 
     private fun savePurpose(purpose: OrganizerMvpScanPurpose) {
-        MainScope().launch {
+        lifecycleScope.launch {
             val existingPurposeId = purpose.id?.takeIf { it.isNotBlank() }
-            Log.d(persistenceTag, "eventId=${selectedEvent.id} saveRequest id=${existingPurposeId ?: "null"} name=${purpose.label} code=${purpose.code} enabled=${purpose.enabled} trackingOnly=${purpose.trackingOnly} pointsEnabled=${purpose.pointsEnabled} pointsValue=${purpose.pointsValue}")
-            val result = if (existingPurposeId == null) {
-                repository.createOrganizerScanPurpose(selectedEvent.id, purpose.toOrganizerRequest())
-            } else {
-                repository.updateOrganizerScanPurpose(selectedEvent.id, existingPurposeId, purpose.toOrganizerRequest())
-            }
+            Log.d(persistenceTag, "eventId=${selectedEvent.id} saveRequest id=${existingPurposeId ?: "null"} code=${purpose.code} enabled=${purpose.enabled} trackingOnly=${purpose.trackingOnly} pointsEnabled=${purpose.pointsEnabled} pointsValue=${purpose.pointsValue}")
+            val request = purpose.toOrganizerRequest()
+            val result = withContext(NonCancellable) {
+                if (existingPurposeId == null) {
+                    repository.createOrganizerScanPurpose(selectedEvent.id, request)
+                } else {
+                    repository.updateOrganizerScanPurpose(selectedEvent.id, existingPurposeId, request)
+                }
+            }.also { ensureActive() }
             when (result) {
                 is NetworkResult.Success -> {
-                    Log.d(persistenceTag, "eventId=${selectedEvent.id} saveResponse id=${result.data.scanPurposeId ?: "null"} name=${result.data.title} enabled=${result.data.enabled} code=${result.data.code}")
+                    Log.d(persistenceTag, "eventId=${selectedEvent.id} saveResponse id=${result.data.scanPurposeId ?: "null"} enabled=${result.data.enabled} code=${result.data.code}")
                     Toast.makeText(this@ManageScanPurposesActivity, this@ManageScanPurposesActivity.getString(R.string.manage_scan_purposes_saved_successfully), Toast.LENGTH_SHORT).show()
                     loadPurposes()
                 }
                 is NetworkResult.Error -> {
-                    Log.w(persistenceTag, "eventId=${selectedEvent.id} saveError message=${result.message}")
+                    Log.w(persistenceTag, "eventId=${selectedEvent.id} saveError")
                     Toast.makeText(this@ManageScanPurposesActivity, getString(R.string.manage_scan_purposes_failed_save, result.message), Toast.LENGTH_SHORT).show()
                 }
                 NetworkResult.Loading -> Unit
@@ -389,7 +394,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
     }
 
     private fun deletePurposeIfUnused(purposeId: String, purposeName: String) {
-        MainScope().launch {
+        lifecycleScope.launch {
             val transactionResult = repository.fetchOrganizerTransactions(selectedEvent.id)
             val usageCount = when (transactionResult) {
                 is NetworkResult.Success -> transactionResult.data.count { it.scanPurposeId?.toString() == purposeId }
@@ -412,7 +417,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
                 return@launch
             }
 
-            when (val deleteResult = repository.deleteScanPurposeForMvp(selectedEvent.id, purposeId)) {
+            when (val deleteResult = withContext(NonCancellable) { repository.deleteScanPurposeForMvp(selectedEvent.id, purposeId) }.also { ensureActive() }) {
                 is NetworkResult.Success -> {
                     Toast.makeText(this@ManageScanPurposesActivity, this@ManageScanPurposesActivity.getString(R.string.manage_scan_purposes_scan_purpose_deleted), Toast.LENGTH_SHORT).show()
                     loadPurposes()

@@ -16,6 +16,7 @@ import retrofit2.http.Body
 import retrofit2.http.POST
 import java.io.IOException
 import java.time.Instant
+import java.util.concurrent.TimeUnit
 
 object ApiClient {
     @Volatile
@@ -34,6 +35,7 @@ object ApiClient {
     fun newHttpClient(context: Context): OkHttpClient {
         val sessionManager = SessionManager(context.applicationContext)
         return OkHttpClient.Builder()
+            .withStandardTimeouts()
             .addInterceptor(AuthInterceptor(sessionManager))
             .authenticator(TokenAuthenticator(sessionManager, HttpRefreshCall(), SessionEvents::notifySessionExpired))
             .build()
@@ -51,6 +53,16 @@ object ApiClient {
     }
 }
 
+/**
+ * Shared by every OkHttp client in the app. Report exports and image uploads are the slowest calls, so the
+ * read/write windows are wider than OkHttp's 10s default; callTimeout caps the whole exchange.
+ */
+internal fun OkHttpClient.Builder.withStandardTimeouts(): OkHttpClient.Builder = this
+    .connectTimeout(15, TimeUnit.SECONDS)
+    .readTimeout(30, TimeUnit.SECONDS)
+    .writeTimeout(30, TimeUnit.SECONDS)
+    .callTimeout(45, TimeUnit.SECONDS)
+
 internal fun sharedGson() = GsonBuilder()
     .registerTypeAdapter(Instant::class.java, InstantTypeAdapter)
     .setLenient()
@@ -66,7 +78,7 @@ private class HttpRefreshCall : RefreshCall {
     private val api: RefreshApi by lazy {
         Retrofit.Builder()
             .baseUrl(ApiConfig.BASE_URL)
-            .client(OkHttpClient())
+            .client(OkHttpClient.Builder().withStandardTimeouts().build())
             .addConverterFactory(GsonConverterFactory.create(sharedGson()))
             .build()
             .create(RefreshApi::class.java)

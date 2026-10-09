@@ -13,6 +13,8 @@ import com.thedavelopers.eventqr.features.staff.model.dto.ScanVerificationRespon
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionRequest
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -22,16 +24,18 @@ class ScannerPresenter(
     private val strings: UiStrings,
 ) {
     private val tag = "StaffQrScanner"
+    private val scope = MainScope()
     private var job: Job? = null
 
     fun detach() {
         job?.cancel()
+        scope.cancel()
         view = null
     }
 
     fun loadEvents() {
         view?.showLoading(true)
-        job = kotlinx.coroutines.MainScope().launch {
+        job = scope.launch {
             when (val result = repository.getEvents()) {
                 is NetworkResult.Success -> {
                     val selectable = result.data
@@ -63,7 +67,7 @@ class ScannerPresenter(
         val isShortId = trimmed.startsWith("#") || trimmed.all { it.isDigit() }
 
         view?.showLoading(true)
-        job = kotlinx.coroutines.MainScope().launch {
+        job = scope.launch {
             val eventUuid = parseUuid(eventId)
             val staffUuid = staffUserId?.takeIf { it.isNotBlank() }?.let(::parseUuid)
             if (eventUuid == null || (!staffUserId.isNullOrBlank() && staffUuid == null)) {
@@ -90,7 +94,7 @@ class ScannerPresenter(
     fun loadPurposes(eventId: String) {
         android.util.Log.d(tag, "Loading scan purposes for eventId=$eventId")
         view?.showLoading(true)
-        job = kotlinx.coroutines.MainScope().launch {
+        job = scope.launch {
             when (val result = repository.getScanPurposesByEvent(eventId)) {
                 is NetworkResult.Success -> {
                     android.util.Log.d(tag, "Loaded ${result.data.size} purposes for eventId=$eventId")
@@ -117,7 +121,7 @@ class ScannerPresenter(
         val isShortId = trimmed.startsWith("#") || trimmed.all { it.isDigit() }
 
         view?.showLoading(true)
-        job = kotlinx.coroutines.MainScope().launch {
+        job = scope.launch {
             val eventUuid = parseUuid(eventId)
             val staffUuid = staffUserId?.takeIf { it.isNotBlank() }?.let(::parseUuid)
             if (eventUuid == null || (!staffUserId.isNullOrBlank() && staffUuid == null)) {
@@ -146,12 +150,12 @@ class ScannerPresenter(
                 is NetworkResult.Success -> {
                     android.util.Log.d(
                         tag,
-                        "backend verification result=SUCCESS eventId=${result.data.eventId} scanPurposeId=${result.data.scanPurposeId} message=${result.data.message}"
+                        "backend verification result=SUCCESS eventId=${result.data.eventId} scanPurposeId=${result.data.scanPurposeId}"
                     )
                     view?.showVerificationResult(result.data)
                 }
                 is NetworkResult.Error -> {
-                    android.util.Log.w(tag, "backend verification result=ERROR message=${result.message}")
+                    android.util.Log.w(tag, "backend verification result=ERROR eventId=$eventUuid scanPurposeId=${purpose.scanPurposeId}")
                     view?.showScanError(result.message)
                 }
                 NetworkResult.Loading -> Unit

@@ -64,4 +64,19 @@ class AsyncConfigTest {
             logger.detachAppender(appender);
         }
     }
+
+    @Test
+    void backgroundExecutorsCannotTakeTheWholeDefaultConnectionPool() {
+        AsyncConfig config = new AsyncConfig();
+        var event = (org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor) config.eventTaskExecutor();
+        var reset = (org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor) config.passwordResetExecutor();
+        try {
+            int defaultDbPoolMax = 5; // ${DB_POOL_MAX:5}
+            assertThat(event.getMaxPoolSize() + reset.getMaxPoolSize()).isLessThanOrEqualTo(3)
+                    .isLessThan(defaultDbPoolMax);
+        } finally {
+            event.shutdown();
+            reset.shutdown();
+        }
+    }
 }

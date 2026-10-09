@@ -40,9 +40,17 @@ public class AsyncConfig implements AsyncConfigurer {
      * Dedicated executor for password-reset mail. When the pool and queue are full the work runs on the
      * request thread (slower, but the email is never dropped), unlike the shared eventTaskExecutor.
      */
+    /*
+     * Async threads each hold a pooled DB connection while they run, so the executors are sized against the Hikari
+     * pool (DB_POOL_MAX, default 5): at most EVENT_MAX + PASSWORD_RESET_MAX = 3 connections go to background work,
+     * leaving at least 2 for request threads. Raise these only together with DB_POOL_MAX. Excess work queues.
+     */
+    static final int EVENT_MAX_THREADS = 2;
+    static final int PASSWORD_RESET_MAX_THREADS = 1;
+
     @Bean(name = "passwordResetExecutor")
     public TaskExecutor passwordResetExecutor() {
-        return buildPasswordResetExecutor(2, 4, 256);
+        return buildPasswordResetExecutor(PASSWORD_RESET_MAX_THREADS, PASSWORD_RESET_MAX_THREADS, 256);
     }
 
     public static ThreadPoolTaskExecutor buildPasswordResetExecutor(int core, int max, int queue) {
@@ -69,8 +77,10 @@ public class AsyncConfig implements AsyncConfigurer {
     @Bean(name = "eventTaskExecutor")
     public TaskExecutor eventTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(4);
-        executor.setMaxPoolSize(16);
+        // core == max: a ThreadPoolExecutor only grows past core once the queue is full, so a larger max would
+        // just be a burst that could take every pooled connection. See the sizing note above.
+        executor.setCorePoolSize(EVENT_MAX_THREADS);
+        executor.setMaxPoolSize(EVENT_MAX_THREADS);
         executor.setQueueCapacity(256);
         executor.setThreadNamePrefix("event-async-");
         executor.setWaitForTasksToCompleteOnShutdown(true);

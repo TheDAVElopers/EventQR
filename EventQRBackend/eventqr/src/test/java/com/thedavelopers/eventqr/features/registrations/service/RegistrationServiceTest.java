@@ -624,4 +624,29 @@ class RegistrationServiceTest {
                 .isEqualTo(RegistrationStatus.REGISTERED);
         verify(attendeeDirectoryPort).findOrCreateAttendee(eq("other@example.com"), any(), any(), any());
     }
+
+    @Test
+    void lockForUpdateRefreshesTheCachedRowUnderTheLockAndReturnsTheLockedState() {
+        EntityManager entityManager = mock(EntityManager.class);
+        ReflectionTestUtils.setField(service, "entityManager", entityManager);
+        UUID registrationId = UUID.randomUUID();
+        EventRegistration cached = new EventRegistration();
+        cached.setId(registrationId);
+        cached.setEventId(eventId);
+        cached.setAttendeeUserId(attendeeId);
+        cached.setStatus(RegistrationStatus.REGISTERED);
+        when(registrationRepository.findById(registrationId)).thenReturn(Optional.of(cached));
+        // A concurrent cancel committed before we got the lock: the locking refresh re-reads the row.
+        org.mockito.Mockito.doAnswer(inv -> {
+            cached.setStatus(RegistrationStatus.CANCELLED);
+            return null;
+        }).when(entityManager).refresh(cached, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+
+        var locked = service.lockForUpdate(registrationId);
+
+        assertThat(locked.status()).isEqualTo(RegistrationStatus.CANCELLED);
+        var order = org.mockito.Mockito.inOrder(registrationRepository, entityManager);
+        order.verify(registrationRepository).boundLockWaits();
+        order.verify(entityManager).refresh(cached, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+    }
 }

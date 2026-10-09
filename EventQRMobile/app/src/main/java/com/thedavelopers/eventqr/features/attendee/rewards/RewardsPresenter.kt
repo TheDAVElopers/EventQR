@@ -6,6 +6,7 @@ import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionRequest
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -14,16 +15,18 @@ class RewardsPresenter(
     private val repository: AttendeeRepository,
     private val strings: UiStrings,
 ) {
+    private val scope = kotlinx.coroutines.MainScope()
     private var job: Job? = null
 
     fun detach() {
         job?.cancel()
+        scope.cancel()
         view = null
     }
 
     fun load(eventId: String, attendeeUserId: String?) {
         view?.showLoading(true)
-        job = kotlinx.coroutines.MainScope().launch {
+        job = scope.launch {
             when (val rewardsResult = repository.getRewardsByEvent(eventId)) {
                 is NetworkResult.Success -> {
                     val balanceResult = attendeeUserId?.takeIf { it.isNotBlank() }?.let { repository.getRewardBalance(eventId, it) }
@@ -61,7 +64,7 @@ class RewardsPresenter(
             return
         }
         view?.showLoading(true)
-        job = kotlinx.coroutines.MainScope().launch {
+        job = scope.launch {
             when (val result = repository.redeemReward(
                 RewardRedemptionRequest(
                     eventId = UUID.fromString(eventId),

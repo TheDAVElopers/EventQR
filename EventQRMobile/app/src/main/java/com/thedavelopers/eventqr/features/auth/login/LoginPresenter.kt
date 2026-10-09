@@ -9,6 +9,7 @@ import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.auth.AuthRepository
 import retrofit2.HttpException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class LoginPresenter(
@@ -26,6 +27,7 @@ class LoginPresenter(
     /** Builds the 429 message from a whole-minute wait (string plural login_rate_limited_minutes). */
     private val rateLimitedMinutesMessage: (Int) -> String = { rateLimitedMessage },
 ) {
+    private val scope = kotlinx.coroutines.MainScope()
     private var loginJob: Job? = null
 
     fun attach(view: LoginContract.View) {
@@ -34,6 +36,7 @@ class LoginPresenter(
 
     fun detach() {
         loginJob?.cancel()
+        scope.cancel()
         view = null
     }
 
@@ -64,7 +67,7 @@ class LoginPresenter(
         }
 
         view?.showLoading(true)
-        loginJob = kotlinx.coroutines.MainScope().launch {
+        loginJob = scope.launch {
             when (val result = repository.login(emailValue, passwordValue)) {
                 is NetworkResult.Success -> {
                     val loginResponse = result.data

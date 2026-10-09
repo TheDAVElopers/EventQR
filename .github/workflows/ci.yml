@@ -5,9 +5,12 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   backend:
-    name: Backend tests
+    name: Backend verify
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -19,11 +22,13 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
-      - name: Test
-        run: mvn -B test
+      # verify = compile + unit tests + packaging + any verify-phase checks. The OWASP
+      # dependency-check is NOT run here (slow, NVD-dependent); see dependency-check.yml.
+      - name: Verify
+        run: mvn -B verify
 
   mobile:
-    name: Android build and unit tests
+    name: Android lint, build and unit tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -34,9 +39,12 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      # Caches the Gradle wrapper, dependencies, and build cache between runs.
       - uses: gradle/actions/setup-gradle@v4
       - name: Unit tests
         run: ./gradlew --no-daemon testDebugUnitTest
+      - name: Lint (release variant)
+        run: ./gradlew --no-daemon lintRelease
       # Builds the minified release APK (unsigned unless signing secrets are set) so
       # R8 keep-rule problems fail CI instead of crashing a shipped build.
       - name: Release build

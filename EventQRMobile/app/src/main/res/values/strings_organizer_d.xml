@@ -190,7 +190,7 @@
     <string name="manage_scan_purposes_empty_title">No scan purposes configured</string>
     <string name="manage_scan_purposes_empty_subtext">Configure scan purposes to define what staff can scan for this event.</string>
     <string name="manage_scan_purposes_custom_scan">Custom Scan</string>
-    <string name="manage_scan_purposes_failed_update">Failed to update scan purpose.</string>
+    <string name="manage_scan_purposes_failed_update">Failed to update scan purpose: %1$s</string>
     <string name="manage_scan_purposes_reward_duplicate_helper">Reward redemptions cannot allow duplicate scans.</string>
     <string name="manage_scan_purposes_allow_duplicate_scans">Allow duplicate scans</string>
     <string name="manage_scan_purposes_hint_name">Scan purpose name</string>
@@ -200,7 +200,7 @@
     <string name="manage_scan_purposes_label_scan_type">Scan Type</string>
     <string name="manage_scan_purposes_label_custom_name">Custom Name</string>
     <string name="manage_scan_purposes_label_points">Points</string>
-    <string name="manage_scan_purposes_failed_save">Failed to save scan purpose.</string>
+    <string name="manage_scan_purposes_failed_save">Failed to save scan purpose: %1$s</string>
     <string name="manage_scan_purposes_delete_message">Are you sure you want to delete %1$s?</string>
     <string name="manage_scan_purposes_in_use">Cannot delete %1$s because it has %2$d recorded scans.</string>
     <string name="manage_scan_purposes_failed_delete">Failed to delete scan purpose: %1$s</string>

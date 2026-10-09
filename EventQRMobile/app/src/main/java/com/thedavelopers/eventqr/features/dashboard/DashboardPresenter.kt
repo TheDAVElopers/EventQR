@@ -14,6 +14,7 @@ import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.time.Instant
 
@@ -24,6 +25,7 @@ class DashboardPresenter(
     private val sessionManager: SessionManager,
     private val strings: UiStrings,
 ) {
+    private val scope = MainScope()
     private var dashboardJob: Job? = null
 
     fun attach(view: DashboardContract.View) {
@@ -32,13 +34,14 @@ class DashboardPresenter(
 
     fun detach() {
         dashboardJob?.cancel()
+        scope.cancel()
         view = null
     }
 
     fun loadDashboard() {
         view?.updateHeader(sessionManager.getUserRole(), sessionManager.getFullName())
         view?.showLoading(true)
-        dashboardJob = MainScope().launch {
+        dashboardJob = scope.launch {
             val currentUserDeferred = async { repository.getCurrentUser() }
             val summaryDeferred = async { repository.getSummary() }
             val eventsDeferred = async {

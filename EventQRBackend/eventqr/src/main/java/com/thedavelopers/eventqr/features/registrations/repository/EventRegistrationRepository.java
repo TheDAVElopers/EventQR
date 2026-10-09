@@ -11,10 +11,11 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.thedavelopers.eventqr.shared.persistence.LockTimeoutSupport;
 import com.thedavelopers.eventqr.features.registrations.model.entity.EventRegistration;
 import com.thedavelopers.eventqr.shared.constants.RegistrationStatus;
 
-public interface EventRegistrationRepository extends JpaRepository<EventRegistration, UUID> {
+public interface EventRegistrationRepository extends JpaRepository<EventRegistration, UUID>, LockTimeoutSupport {
 
     boolean existsByEventIdAndAttendeeEmailIgnoreCase(UUID eventId, String attendeeEmail);
 

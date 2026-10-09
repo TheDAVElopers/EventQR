@@ -70,8 +70,7 @@ public class QREmailService {
             log.info("QR email delivery requested registrationId={}", registrationId);
             return sendForRegistration(registrationId);
         } catch (Exception exception) {
-            log.error("QR email delivery aborted registrationId={} reason={}", registrationId,
-                    exception.getMessage(), exception);
+            log.error("QR email delivery aborted registrationId={} reason={}", registrationId, describe(exception));
             return new DeliveryResult(registrationId, null, EmailDeliveryStatus.FAILED);
         }
     }
@@ -102,7 +101,7 @@ public class QREmailService {
             return sent(registration, credential, deliveryLog);
         } catch (Exception firstFailure) {
             log.warn("QR email first attempt failed registrationId={} reason={}",
-                    registration.getId(), firstFailure.getMessage());
+                    registration.getId(), describe(firstFailure));
             updateLog(deliveryLog, EmailDeliveryStatus.RETRY_PENDING, firstFailure.getMessage());
             sleepBeforeRetry();
             try {
@@ -110,7 +109,7 @@ public class QREmailService {
                 return sent(registration, credential, deliveryLog);
             } catch (Exception secondFailure) {
                 String error = secondFailure.getMessage() == null ? firstFailure.getMessage() : secondFailure.getMessage();
-                log.error("QR email retry failed registrationId={} reason={}", registration.getId(), error, secondFailure);
+                log.error("QR email retry failed registrationId={} reason={}", registration.getId(), describe(secondFailure));
                 return fail(registration, credential, deliveryLog, error);
             }
         }
@@ -133,7 +132,7 @@ public class QREmailService {
     private DeliveryResult fail(EventRegistration registration, QrCredential credential, EmailDeliveryLog deliveryLog, String error) {
         updateLog(deliveryLog, EmailDeliveryStatus.FAILED, error);
         qrCredentialPort.markEmailFailed(credential.getId());
-        log.warn("QR email delivery failed for registration {}: {}", registration.getId(), error);
+        log.warn("QR email delivery failed for registration {}: {}", registration.getId(), LogRedaction.redactEmails(error));
         return new DeliveryResult(registration.getId(), credential.getId(), EmailDeliveryStatus.FAILED);
     }
 
@@ -160,8 +159,28 @@ public class QREmailService {
         try {
             deliveryLogRepository.save(deliveryLog);
         } catch (RuntimeException exception) {
-            log.warn("Could not persist QR email delivery log: {}", exception.getMessage());
+            log.warn("Could not persist QR email delivery log: {}", describe(exception));
         }
+    }
+
+    /**
+     * Exception chain as "Type: message <- CauseType: message" with email addresses masked. Used instead of
+     * logging the throwable itself because provider errors (e.g. Brevo's ApiException) can echo the recipient
+     * address in their messages.
+     */
+    static String describe(Throwable throwable) {
+        StringBuilder text = new StringBuilder();
+        java.util.Set<Throwable> seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        for (Throwable cursor = throwable; cursor != null && seen.add(cursor); cursor = cursor.getCause()) {
+            if (text.length() > 0) {
+                text.append(" <- ");
+            }
+            text.append(cursor.getClass().getSimpleName());
+            if (cursor.getMessage() != null) {
+                text.append(": ").append(cursor.getMessage());
+            }
+        }
+        return LogRedaction.redactEmails(text.toString().replaceAll("[\\r\\n]+", " "));
     }
 
     private boolean isValidEmail(String email) {

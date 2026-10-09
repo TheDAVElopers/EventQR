@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.idtemplate
 
+import androidx.lifecycle.lifecycleScope
 import android.graphics.Color
 import android.os.Bundle
 import android.view.Gravity
@@ -14,8 +15,10 @@ import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.features.idprinting.IdCardLayoutConfig
 import com.thedavelopers.eventqr.features.organizer.*
 import com.thedavelopers.eventqr.features.registrations.RegistrationNumberFormatter
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
 /**
@@ -495,7 +498,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
     }
 
     private fun loadConfig() {
-        MainScope().launch {
+        lifecycleScope.launch {
             if (intentEventTitle().isNullOrBlank()) {
                 val eventLoad = organizerRepository.loadEventForMvp(eventId)
                 eventLoad.data?.title?.takeIf { it.isNotBlank() }?.let { fetchedTitle ->
@@ -521,8 +524,8 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
     private fun saveConfig() {
         val visibleFields = IdCardLayoutConfig.OPTIONAL_FIELDS.filter { fieldStates.getValue(it) }
         saveButton.isEnabled = false
-        MainScope().launch {
-            when (val result = repository.saveConfig(eventId, visibleFields)) {
+        lifecycleScope.launch {
+            when (val result = withContext(NonCancellable) { repository.saveConfig(eventId, visibleFields) }.also { ensureActive() }) {
                 is NetworkResult.Success -> showStatus("ID display settings saved.", isError = false)
                 is NetworkResult.Error -> showStatus(result.message, isError = true)
                 NetworkResult.Loading -> Unit

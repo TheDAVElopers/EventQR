@@ -9,6 +9,7 @@ import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class EventDetailPresenter(
@@ -16,16 +17,18 @@ class EventDetailPresenter(
     private val repository: AttendeeRepository,
     private val strings: UiStrings,
 ) {
+    private val scope = kotlinx.coroutines.MainScope()
     private var job: Job? = null
 
     fun detach() {
         job?.cancel()
+        scope.cancel()
         view = null
     }
 
     fun loadEventDetails(eventId: String) {
         view?.showLoading(true)
-        job = kotlinx.coroutines.MainScope().launch {
+        job = scope.launch {
             checkRegistrationStatus(eventId)
             val result = repository.getEvent(eventId)
             view?.showLoading(false)
@@ -61,7 +64,7 @@ class EventDetailPresenter(
             return
         }
 
-        kotlinx.coroutines.MainScope().launch {
+        scope.launch {
             val cachedRegistered = cached?.let { isRegisteredIn(it, eventId) }
             val result = repository.getMyRegistrations()
             when (result) {

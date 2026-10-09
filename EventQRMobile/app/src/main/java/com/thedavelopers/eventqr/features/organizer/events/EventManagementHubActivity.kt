@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.events
 
+import androidx.lifecycle.lifecycleScope
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
@@ -14,7 +15,6 @@ import com.thedavelopers.eventqr.features.organizer.*
 import com.thedavelopers.eventqr.features.organizer.scanpurposes.ManageScanPurposesActivity
 import com.thedavelopers.eventqr.features.organizer.staff.ManageUsersActivity
 import com.thedavelopers.eventqr.features.organizer.transactions.TransactionRulesActivity
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
 open class EventManagementHubActivity : AppCompatActivity() {
@@ -38,7 +38,7 @@ open class EventManagementHubActivity : AppCompatActivity() {
         val content = organizerShell(getString(R.string.event_management_hub_title), showBack = true)
         content.addView(loadingState(getString(R.string.event_management_hub_loading_details)))
 
-        MainScope().launch {
+        lifecycleScope.launch {
             val load = repository.loadEventForMvp(eventId)
             val event = load.data
             content.removeAllViews()

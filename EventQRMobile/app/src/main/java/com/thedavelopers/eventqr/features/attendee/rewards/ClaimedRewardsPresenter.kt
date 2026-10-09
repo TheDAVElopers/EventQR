@@ -5,23 +5,26 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class ClaimedRewardsPresenter(
     private var view: ClaimedRewardsContract.View?,
     private val repository: AttendeeRepository,
 ) {
+    private val scope = kotlinx.coroutines.MainScope()
     private var job: Job? = null
 
     fun detach() {
         job?.cancel()
+        scope.cancel()
         view = null
     }
 
     fun loadRedemptions(eventId: String) {
         job?.cancel()
         view?.showLoading(true)
-        job = kotlinx.coroutines.MainScope().launch {
+        job = scope.launch {
             when (val redemptionsResult = repository.getMyRewardRedemptions(eventId)) {
                 is NetworkResult.Success -> {
                     val rewardNames = when (val rewardsResult = repository.getRewardsByEvent(eventId, includeUnavailable = true)) {
@@ -50,7 +53,7 @@ class ClaimedRewardsPresenter(
     fun loadAllRedemptions(eventIds: List<String>, eventTitlesById: Map<String, String>) {
         job?.cancel()
         view?.showLoading(true)
-        job = kotlinx.coroutines.MainScope().launch {
+        job = scope.launch {
             val perEvent = coroutineScope {
                 eventIds.map { eventId ->
                     async {

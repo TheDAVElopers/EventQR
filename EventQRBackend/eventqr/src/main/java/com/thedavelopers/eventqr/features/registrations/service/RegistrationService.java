@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -427,6 +428,22 @@ public class RegistrationService implements RegistrationLookupPort, Registration
     @Override
     public List<RegistrationSnapshot> listByEventId(UUID eventId) {
         return toSnapshots(registrationRepository.findByEventId(eventId));
+    }
+
+    /**
+     * The registration is usually already in the persistence context (the scan path loaded it by QR credential),
+     * and a locking query would hand back that cached, pre-lock instance. refresh(..., PESSIMISTIC_WRITE) instead
+     * re-reads the row with SELECT ... FOR UPDATE and overwrites the cached state, so the returned snapshot and
+     * the later markEntered/markExited saves are based on the latest committed row. Lock waits are bounded by
+     * the transaction-local lock_timeout.
+     */
+    @Override
+    public RegistrationSnapshot lockForUpdate(UUID registrationId) {
+        EventRegistration registration = registrationRepository.findById(registrationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Registration not found: " + registrationId));
+        registrationRepository.boundLockWaits();
+        entityManager.refresh(registration, LockModeType.PESSIMISTIC_WRITE);
+        return toSnapshot(registration);
     }
 
     @Override
