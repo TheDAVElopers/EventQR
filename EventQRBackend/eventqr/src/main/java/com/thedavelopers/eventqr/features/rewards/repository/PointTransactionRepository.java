@@ -18,6 +18,8 @@ public interface PointTransactionRepository extends JpaRepository<PointTransacti
 
     long countByEventId(UUID eventId);
 
+    boolean existsByEventIdAndAttendeeUserId(UUID eventId, UUID attendeeUserId);
+
     /**
      * Sum of POSITIVE points_changed grouped per (event, attendee), for the given event and attendee id
      * sets. Callers pick the pairs they need from the result (a superset of the requested pairs).

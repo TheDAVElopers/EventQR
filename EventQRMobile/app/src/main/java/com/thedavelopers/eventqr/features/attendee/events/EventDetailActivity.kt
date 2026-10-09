@@ -13,6 +13,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.session.SessionManager
@@ -33,6 +34,8 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     private var isOwnedByCurrentOrganizer = false
     private var isFirstResume = true
     private var registrationStatusCheckFailed = false
+    private var cancellableRegistrationId: String? = null
+    private var cancelDialog: androidx.appcompat.app.AlertDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,6 +68,8 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         findViewById<View>(R.id.layoutRewardsRow)?.setOnClickListener {
             startActivity(Intent(this, AttendeeRewardsActivity::class.java).putExtra(EXTRA_EVENT_ID, eventId))
         }
+
+        findViewById<Button>(R.id.btnCancelRegistration).setOnClickListener { confirmCancelRegistration() }
 
         findViewById<Button>(R.id.btnRegisterForEvent).setOnClickListener {
             if (isOwnedByCurrentOrganizer) {
@@ -165,6 +170,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         }
 
         checkOwnedEventThenAvailability(event)
+        updateCancelButtonVisibility()
     }
 
     private fun renderEventPoster(eventLogoUrl: String?) {
@@ -329,6 +335,63 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
             val btn = findViewById<Button>(R.id.btnRegisterForEvent)
             setAlreadyRegisteredState(btn)
         }
+    }
+
+    override fun setCancellableRegistration(registrationId: String?) {
+        cancellableRegistrationId = registrationId
+        updateCancelButtonVisibility()
+    }
+
+    // Hidden for organizers on their own event and once the server would always refuse (event started/ended).
+    private fun updateCancelButtonVisibility() {
+        val visible = cancellableRegistrationId != null &&
+            !isOwnedByCurrentOrganizer &&
+            EventDetailPresenter.isCancelWindowOpen(currentEvent)
+        findViewById<Button>(R.id.btnCancelRegistration).visibility = if (visible) View.VISIBLE else View.GONE
+    }
+
+    private fun confirmCancelRegistration() {
+        val registrationId = cancellableRegistrationId ?: return
+        val title = currentEvent?.title ?: intent.getStringExtra(EXTRA_EVENT_TITLE).orEmpty()
+        cancelDialog?.dismiss()
+        cancelDialog = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.event_detail_cancel_registration_title)
+            .setMessage(getString(R.string.event_detail_cancel_registration_message, title))
+            .setPositiveButton(R.string.event_detail_cancel_registration_confirm) { dialog, _ ->
+                dialog.dismiss()
+                presenter.cancelRegistration(registrationId)
+            }
+            .setNegativeButton(R.string.event_detail_cancel_registration_keep) { dialog, _ -> dialog.dismiss() }
+            .show()
+    }
+
+    override fun showCancelling(isCancelling: Boolean) {
+        findViewById<Button>(R.id.btnCancelRegistration).apply {
+            isEnabled = !isCancelling
+            text = getString(
+                if (isCancelling) R.string.event_detail_cancelling_registration else R.string.event_detail_cancel_registration,
+            )
+        }
+    }
+
+    override fun onRegistrationCancelled(message: String) {
+        showMessage(message)
+        // Drop the stale "Already Registered" label right away; the availability check decides the final state.
+        isAlreadyRegistered = false
+        findViewById<Button>(R.id.btnRegisterForEvent).apply {
+            isEnabled = false
+            text = getString(R.string.event_detail_loading)
+            setBackgroundResource(R.drawable.bg_disabled_button)
+        }
+        // Register becomes available again if the registration window is still open.
+        currentEvent?.let { loadEventAvailability(it) }
+    }
+
+    override fun onDestroy() {
+        cancelDialog?.dismiss()
+        cancelDialog = null
+        presenter.detach()
+        super.onDestroy()
     }
 
     override fun onRegistrationStatusCheckFailed() {

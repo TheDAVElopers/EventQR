@@ -67,7 +67,8 @@ class RegistrationServicePointsAndSearchTest {
         events = mock(EventLookupPort.class);
         service = new RegistrationService(registrations, mock(AttendeeDirectoryPort.class), mock(NotificationService.class),
                 mock(EventStaffAssignmentRepository.class), events, mock(QrCredentialPort.class), mock(EventService.class),
-                mock(QREmailService.class), mock(ApplicationEventPublisher.class), new RegistrationRateLimiter(), points);
+                mock(QREmailService.class), mock(ApplicationEventPublisher.class), new RegistrationRateLimiter(), points,
+                List.of());
         for (UUID id : List.of(eventId, otherEventId)) {
             when(events.findById(id)).thenReturn(Optional.of(new EventSnapshot(id, "Event", "Hall", EventStatus.ACTIVE,
                     Instant.now(), Instant.now(), Instant.now(), Instant.now(), 100, 1, true, UUID.randomUUID())));

@@ -230,5 +230,17 @@
             android:textColor="#FFFFFF"
             android:textSize="16sp"
             android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnCancelRegistration"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="4dp"
+            android:text="@string/event_detail_cancel_registration"
+            android:textAllCaps="false"
+            android:textColor="@color/error"
+            android:textSize="14sp"
+            android:visibility="gone" />
     </LinearLayout>
 </RelativeLayout>

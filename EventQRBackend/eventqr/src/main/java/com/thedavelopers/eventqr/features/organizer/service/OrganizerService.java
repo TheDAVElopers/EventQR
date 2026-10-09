@@ -335,7 +335,7 @@ public class OrganizerService {
             }
             if (target == RegistrationStatus.CANCELLED) {
                 // Shared cancel logic: guarded transition, seat release, QR deactivation.
-                registrationService.cancel(registration.getId(), registration.getAttendeeUserId());
+                registrationService.cancelAsOrganizer(registration.getId());
                 // Only the organizer path notifies; an attendee cancelling their own registration does not.
                 notificationService.createRegistrationCancelledByOrganizerNotification(
                         eventId, registration.getAttendeeUserId(), event.getTitle());

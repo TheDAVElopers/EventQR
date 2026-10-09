@@ -379,6 +379,9 @@ interface ApiService {
     @GET("registrations/{registrationId}")
     suspend fun getRegistration(@Path("registrationId") registrationId: String): ApiResponse<RegistrationResponse>
 
+    @DELETE("registrations/{registrationId}")
+    suspend fun cancelRegistration(@Path("registrationId") registrationId: String): ApiResponse<RegistrationResponse>
+
     @GET("registrations/event/{eventId}")
     suspend fun getRegistrationsByEvent(
         @Path("eventId") eventId: String,

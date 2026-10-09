@@ -76,6 +76,7 @@ public interface TransactionLogRepository extends JpaRepository<TransactionLog, 
     long countByAttendeeUserIdAndTransactionResult(UUID attendeeUserId, TransactionResult result);
 
     boolean existsByScanPurposeId(UUID scanPurposeId);
+    boolean existsByRegistrationIdAndTransactionResult(UUID registrationId, TransactionResult result);
     boolean existsByEventIdAndScanPurposeId(UUID eventId, UUID scanPurposeId);
 
     Optional<TransactionLog> findFirstByEventIdOrderByScannedAtDesc(UUID eventId);

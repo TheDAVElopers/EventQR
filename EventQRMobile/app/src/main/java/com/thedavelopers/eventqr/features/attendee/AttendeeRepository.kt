@@ -65,6 +65,8 @@ open class AttendeeRepository(context: Context) {
     suspend fun createQrCredential(registrationId: String) = safeApiCall { apiService.createQrCredential(registrationId) }
     suspend fun linkQrCredential(registrationId: String) = safeApiCall { apiService.linkQrCredential(registrationId) }
     suspend fun getQrCredentialById(qrCredentialId: String) = safeApiCall { apiService.getQrCredentialById(qrCredentialId) }
+    open suspend fun cancelRegistration(registrationId: String): NetworkResult<RegistrationResponse> =
+        safeApiCall { apiService.cancelRegistration(registrationId) }
     suspend fun getRegistration(registrationId: String) = safeApiCall { apiService.getRegistration(registrationId) }
     suspend fun getRegistrationsByEvent(eventId: String): NetworkResult<List<RegistrationResponse>> =
         when (val result = safeApiCall { apiService.getRegistrationsByEvent(eventId) }) {

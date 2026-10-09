@@ -43,6 +43,7 @@ import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
 import com.thedavelopers.eventqr.shared.exceptions.TooManyRequestsException;
 import com.thedavelopers.eventqr.shared.security.RegistrationRateLimiter;
 import com.thedavelopers.eventqr.shared.utils.LikePatterns;
+import com.thedavelopers.eventqr.shared.interfaces.ActivityLookupPort;
 import com.thedavelopers.eventqr.shared.interfaces.AttendeeDirectoryPort;
 import com.thedavelopers.eventqr.shared.interfaces.EventLookupPort;
 import com.thedavelopers.eventqr.shared.interfaces.EventLookupPort.EventSnapshot;
@@ -74,6 +75,7 @@ public class RegistrationService implements RegistrationLookupPort, Registration
     private final ApplicationEventPublisher applicationEventPublisher;
     private final RegistrationRateLimiter registrationRateLimiter;
     private final PointTransactionRepository pointTransactionRepository;
+    private final List<ActivityLookupPort> activityLookupPorts;
 
     public RegistrationService(EventRegistrationRepository registrationRepository,
                                AttendeeDirectoryPort attendeeDirectoryPort,
@@ -85,7 +87,8 @@ public class RegistrationService implements RegistrationLookupPort, Registration
                                QREmailService qrEmailService,
                                ApplicationEventPublisher applicationEventPublisher,
                                RegistrationRateLimiter registrationRateLimiter,
-                               PointTransactionRepository pointTransactionRepository) {
+                               PointTransactionRepository pointTransactionRepository,
+                               List<ActivityLookupPort> activityLookupPorts) {
         this.registrationRepository = registrationRepository;
         this.attendeeDirectoryPort = attendeeDirectoryPort;
         this.notificationService = notificationService;
@@ -97,6 +100,7 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         this.applicationEventPublisher = applicationEventPublisher;
         this.registrationRateLimiter = registrationRateLimiter;
         this.pointTransactionRepository = pointTransactionRepository;
+        this.activityLookupPorts = activityLookupPorts;
     }
 
     /**
@@ -355,6 +359,31 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         if (!registration.getAttendeeUserId().equals(attendeeUserId)) {
             throw new ForbiddenException("You can only cancel your own registration");
         }
+        if (registration.getStatus() == RegistrationStatus.REGISTERED) {
+            // Same row lock the scan path takes: a concurrent scan either commits first (and is seen by the
+            // activity check below) or waits until this cancel commits and then rejects the cancelled registration.
+            // The lock refreshes the managed entity, so re-check the status it now holds.
+            registrationRepository.boundLockWaits();
+            entityManager.refresh(registration, LockModeType.PESSIMISTIC_WRITE);
+            if (registration.getStatus() == RegistrationStatus.REGISTERED) {
+                requireAttendeeMayCancel(registration);
+            }
+        }
+        return cancelRegistration(registrationId);
+    }
+
+    /**
+     * Organizer/admin cancellation: the shared guarded flip, seat release and QR deactivation, without the
+     * attendee-only rules (event started, points or scans recorded). Authorization is the caller's job.
+     */
+    @CacheEvict(cacheNames = {"events", "registrations"}, allEntries = true)
+    public RegistrationResponse cancelAsOrganizer(UUID registrationId) {
+        return cancelRegistration(registrationId);
+    }
+
+    private RegistrationResponse cancelRegistration(UUID registrationId) {
+        EventRegistration registration = registrationRepository.findById(registrationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Registration not found: " + registrationId));
         RegistrationStatus current = registration.getStatus();
         if (current == RegistrationStatus.ENTERED || current == RegistrationStatus.EXITED
                 || current == RegistrationStatus.NO_SHOW) {
@@ -365,18 +394,53 @@ public class RegistrationService implements RegistrationLookupPort, Registration
             // Guarded transition: only the caller that wins the update decrements the counter.
             int updated = registrationRepository.updateStatusIfCurrent(registrationId,
                     RegistrationStatus.REGISTERED.name(), RegistrationStatus.CANCELLED.name());
-            if (updated == 1) {
-                eventService.decrementCurrentAttendeeCount(registration.getEventId());
-            }
             entityManager.flush();
             entityManager.clear();
             registration = registrationRepository.findById(registrationId)
                     .orElseThrow(() -> new ResourceNotFoundException("Registration not found: " + registrationId));
+            if (updated == 1) {
+                eventService.decrementCurrentAttendeeCount(registration.getEventId());
+            } else if (registration.getStatus() != RegistrationStatus.CANCELLED) {
+                // Lost the race to a check-in/no-show: do not deactivate the QR of a live registration.
+                throw new ConflictException("This registration changed while it was being cancelled and can no longer be cancelled");
+            }
         }
         if (registration.getQrCredentialId() != null) {
             qrCredentialPort.findById(registration.getQrCredentialId()).ifPresent(qr -> qrCredentialPort.deactivate(qr.qrCredentialId()));
         }
         return toResponse(registration);
+    }
+
+    /**
+     * Attendee-only rules. Allowed only while registration is open (not past registrationCloseAt), before the event
+     * begins and before any activity is recorded for the
+     * attendee (points earned/spent, reward redemptions, approved scans): cancelling afterwards would orphan that
+     * history. A CANCELLED event is the exception: nothing will happen at it, so the attendee may always drop the
+     * registration. Already-CANCELLED rows never reach this check, so repeated cancels stay idempotent.
+     */
+    private void requireAttendeeMayCancel(EventRegistration registration) {
+        EventSnapshot event = eventLookupPort.findById(registration.getEventId())
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + registration.getEventId()));
+        EventStatus status = event.status();
+        if (status == EventStatus.CANCELLED) {
+            return;
+        }
+        if (status == EventStatus.REJECTED) {
+            throw new ConflictException("This registration can no longer be cancelled because the event is not available");
+        }
+        // Same convention as register(): closed only strictly after registrationCloseAt; a null close never closes.
+        if (event.registrationCloseAt() != null && Instant.now().isAfter(event.registrationCloseAt())) {
+            throw new ConflictException("Registration has closed, so this registration can no longer be cancelled");
+        }
+        boolean started = event.eventStartAt() != null && !event.eventStartAt().isAfter(Instant.now());
+        if (started || status == EventStatus.ACTIVE || status == EventStatus.ENDED) {
+            throw new ConflictException("This registration can no longer be cancelled because the event has already started or ended");
+        }
+        for (ActivityLookupPort port : activityLookupPorts) {
+            if (port.hasRecordedActivity(registration.getEventId(), registration.getAttendeeUserId(), registration.getId())) {
+                throw new ConflictException("This registration can no longer be cancelled because activity has already been recorded for it");
+            }
+        }
     }
 
     public QrCredentialSnapshot getOrCreateQrCredential(UUID registrationId) {

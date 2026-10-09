@@ -68,6 +68,7 @@ class RegistrationServiceTest {
     @Mock private QREmailService qrEmailService;
     @Mock private ApplicationEventPublisher applicationEventPublisher;
     @Mock private RegistrationRateLimiter registrationRateLimiter;
+    @Mock private com.thedavelopers.eventqr.shared.interfaces.ActivityLookupPort activityLookupPort;
 
     private RegistrationService service;
 
@@ -84,7 +85,8 @@ class RegistrationServiceTest {
         service = new RegistrationService(registrationRepository, attendeeDirectoryPort, notificationService,
                 staffAssignmentRepository, eventLookupPort, qrCredentialPort, eventService, qrEmailService,
                 applicationEventPublisher, registrationRateLimiter,
-                mock(com.thedavelopers.eventqr.features.rewards.repository.PointTransactionRepository.class));
+                mock(com.thedavelopers.eventqr.features.rewards.repository.PointTransactionRepository.class),
+                List.of(activityLookupPort));
         when(registrationRateLimiter.allow(any(), any())).thenReturn(true);
         // Injected by the container in production; flush/clear are no-ops for these unit tests.
         ReflectionTestUtils.setField(service, "entityManager", mock(EntityManager.class));
@@ -435,11 +437,259 @@ class RegistrationServiceTest {
         when(registrationRepository.findById(id)).thenReturn(Optional.of(registration));
         when(qrCredentialPort.findById(qrId)).thenReturn(Optional.of(qr()));
         when(eventLookupPort.findById(eventId)).thenReturn(Optional.of(openEvent()));
+        when(registrationRepository.updateStatusIfCurrent(id, "REGISTERED", "CANCELLED")).thenAnswer(inv -> {
+            registration.setStatus(RegistrationStatus.CANCELLED);
+            return 1;
+        });
 
         service.cancel(id, attendeeId);
 
         verify(qrCredentialPort).deactivate(qrId);
         verify(qrCredentialPort, never()).markEmailQueued(any());
+    }
+
+    private EventSnapshot startedEvent(EventStatus status) {
+        return new EventSnapshot(eventId, "Tech Conf", "Hall A", status, Instant.now().minusSeconds(7_200),
+                Instant.now().plusSeconds(3_600), Instant.now().minusSeconds(60), Instant.now().plusSeconds(3_600),
+                100, 10, false, organizerId);
+    }
+
+    private EventRegistration givenCancellableRegistration(EventSnapshot event) {
+        UUID id = UUID.randomUUID();
+        EventRegistration registration = registration(id, attendeeId, RegistrationStatus.REGISTERED);
+        registration.setQrCredentialId(qrId);
+        when(registrationRepository.findById(id)).thenReturn(Optional.of(registration));
+        when(eventLookupPort.findById(eventId)).thenReturn(Optional.of(event));
+        when(qrCredentialPort.findById(qrId)).thenReturn(Optional.of(qr()));
+        when(registrationRepository.updateStatusIfCurrent(id, "REGISTERED", "CANCELLED")).thenAnswer(inv -> {
+            registration.setStatus(RegistrationStatus.CANCELLED);
+            return 1;
+        });
+        return registration;
+    }
+
+    @Test
+    void cancellingBeforeTheEventStartsFreesTheSeatAndDeactivatesTheQr() {
+        EventRegistration registration = givenCancellableRegistration(openEvent());
+
+        service.cancel(registration.getId(), attendeeId);
+
+        assertThat(registration.getStatus()).isEqualTo(RegistrationStatus.CANCELLED);
+        verify(eventService).decrementCurrentAttendeeCount(eventId);
+        verify(qrCredentialPort).deactivate(qrId);
+    }
+
+    @Test
+    void cancellingAfterTheEventHasStartedIsRefused() {
+        EventRegistration registration = givenCancellableRegistration(startedEvent(EventStatus.APPROVED));
+
+        assertThatThrownBy(() -> service.cancel(registration.getId(), attendeeId)).isInstanceOf(ConflictException.class);
+        assertThat(registration.getStatus()).isEqualTo(RegistrationStatus.REGISTERED);
+        verify(eventService, never()).decrementCurrentAttendeeCount(any());
+        verify(qrCredentialPort, never()).deactivate(any());
+    }
+
+    @Test
+    void cancellingAnActiveEndedOrRejectedEventIsRefused() {
+        for (EventStatus status : List.of(EventStatus.ACTIVE, EventStatus.ENDED, EventStatus.REJECTED)) {
+            EventRegistration registration = givenCancellableRegistration(
+                    event(status, Instant.now().minusSeconds(3_600), Instant.now().plusSeconds(3_600), 100, 10));
+            assertThatThrownBy(() -> service.cancel(registration.getId(), attendeeId)).isInstanceOf(ConflictException.class);
+        }
+        verify(eventService, never()).decrementCurrentAttendeeCount(any());
+    }
+
+    @Test
+    void cancellingWithRecordedPointsOrRedemptionsIsRefused() {
+        EventRegistration registration = givenCancellableRegistration(openEvent());
+        when(activityLookupPort.hasRecordedActivity(eventId, attendeeId, registration.getId())).thenReturn(true);
+
+        assertThatThrownBy(() -> service.cancel(registration.getId(), attendeeId)).isInstanceOf(ConflictException.class);
+        verify(eventService, never()).decrementCurrentAttendeeCount(any());
+        verify(qrCredentialPort, never()).deactivate(any());
+    }
+
+    @Test
+    void cancellingWithAnotherModulesRecordedActivityIsRefused() {
+        EventRegistration registration = givenCancellableRegistration(openEvent());
+        when(activityLookupPort.hasRecordedActivity(eventId, attendeeId, registration.getId())).thenReturn(true);
+
+        assertThatThrownBy(() -> service.cancel(registration.getId(), attendeeId)).isInstanceOf(ConflictException.class);
+        verify(eventService, never()).decrementCurrentAttendeeCount(any());
+    }
+
+    @Test
+    void repeatedCancelStaysIdempotentEvenAfterTheEventStarted() {
+        EventRegistration registration = givenCancellableRegistration(openEvent());
+        service.cancel(registration.getId(), attendeeId);
+        when(eventLookupPort.findById(eventId)).thenReturn(Optional.of(startedEvent(EventStatus.ACTIVE)));
+
+        service.cancel(registration.getId(), attendeeId);
+
+        assertThat(registration.getStatus()).isEqualTo(RegistrationStatus.CANCELLED);
+        verify(eventService).decrementCurrentAttendeeCount(eventId);
+    }
+
+    @Test
+    void anAttendeeMayDropARegistrationOnAnOrganizerCancelledEvent() {
+        EventRegistration registration = givenCancellableRegistration(startedEvent(EventStatus.CANCELLED));
+        when(activityLookupPort.hasRecordedActivity(any(), any(), any())).thenReturn(true);
+
+        service.cancel(registration.getId(), attendeeId);
+
+        assertThat(registration.getStatus()).isEqualTo(RegistrationStatus.CANCELLED);
+        verify(eventService).decrementCurrentAttendeeCount(eventId);
+    }
+
+    @Test
+    void cancellingExactlyAtTheStartInstantOrWithNoStartTimeBehavesAtTheBoundary() {
+        // start == now (or already passed by the time the check runs): refused.
+        EventSnapshot atStart = new EventSnapshot(eventId, "Tech Conf", "Hall A", EventStatus.APPROVED,
+                Instant.now().minusSeconds(7_200), Instant.now().plusSeconds(3_600), Instant.now(),
+                Instant.now().plusSeconds(3_600), 100, 10, false, organizerId);
+        EventRegistration first = givenCancellableRegistration(atStart);
+        assertThatThrownBy(() -> service.cancel(first.getId(), attendeeId)).isInstanceOf(ConflictException.class);
+
+        // No start time set: the start check cannot trigger, so a REGISTERED cancel succeeds.
+        EventSnapshot noStart = new EventSnapshot(eventId, "Tech Conf", "Hall A", EventStatus.APPROVED,
+                Instant.now().minusSeconds(3_600), Instant.now().plusSeconds(3_600), null, null, 100, 10, false, organizerId);
+        EventRegistration second = givenCancellableRegistration(noStart);
+        service.cancel(second.getId(), attendeeId);
+        assertThat(second.getStatus()).isEqualTo(RegistrationStatus.CANCELLED);
+    }
+
+    @Test
+    void cancellingTakesTheRegistrationRowLockBeforeTheChecks() {
+        EventRegistration registration = givenCancellableRegistration(openEvent());
+
+        service.cancel(registration.getId(), attendeeId);
+
+        org.mockito.InOrder order = org.mockito.Mockito.inOrder(registrationRepository, activityLookupPort);
+        order.verify(registrationRepository).boundLockWaits();
+        order.verify(activityLookupPort).hasRecordedActivity(eventId, attendeeId, registration.getId());
+    }
+
+    @Test
+    void losingTheFlipRaceToACheckInRefusesAndKeepsTheQrActive() {
+        UUID id = UUID.randomUUID();
+        EventRegistration registration = registration(id, attendeeId, RegistrationStatus.REGISTERED);
+        registration.setQrCredentialId(qrId);
+        when(registrationRepository.findById(id)).thenReturn(Optional.of(registration));
+        when(eventLookupPort.findById(eventId)).thenReturn(Optional.of(openEvent()));
+        when(qrCredentialPort.findById(qrId)).thenReturn(Optional.of(qr()));
+        when(registrationRepository.updateStatusIfCurrent(id, "REGISTERED", "CANCELLED")).thenAnswer(inv -> {
+            registration.setStatus(RegistrationStatus.ENTERED);
+            return 0;
+        });
+
+        assertThatThrownBy(() -> service.cancel(id, attendeeId)).isInstanceOf(ConflictException.class);
+        verify(qrCredentialPort, never()).deactivate(any());
+        verify(eventService, never()).decrementCurrentAttendeeCount(any());
+    }
+
+    @Test
+    void losingTheFlipRaceToAnotherCancelIsIdempotent() {
+        UUID id = UUID.randomUUID();
+        EventRegistration registration = registration(id, attendeeId, RegistrationStatus.REGISTERED);
+        when(registrationRepository.findById(id)).thenReturn(Optional.of(registration));
+        when(eventLookupPort.findById(eventId)).thenReturn(Optional.of(openEvent()));
+        when(registrationRepository.updateStatusIfCurrent(id, "REGISTERED", "CANCELLED")).thenAnswer(inv -> {
+            registration.setStatus(RegistrationStatus.CANCELLED);
+            return 0;
+        });
+
+        service.cancel(id, attendeeId);
+
+        verify(eventService, never()).decrementCurrentAttendeeCount(any());
+    }
+
+    @Test
+    void cancelThenReRegisterThenCancelAgainWorks() {
+        givenSuccessfulRegistrationDependencies();
+        EventRegistration cancelled = givenCancelledRegistration();
+        UUID id = cancelled.getId();
+        when(registrationRepository.updateStatusIfCurrent(id, "REGISTERED", "CANCELLED")).thenAnswer(inv -> {
+            cancelled.setStatus(RegistrationStatus.CANCELLED);
+            return 1;
+        });
+
+        service.registerAs(request, attendeeId, AccountRole.ATTENDEE, IP);
+        assertThat(cancelled.getStatus()).isEqualTo(RegistrationStatus.REGISTERED);
+
+        service.cancel(id, attendeeId);
+
+        assertThat(cancelled.getStatus()).isEqualTo(RegistrationStatus.CANCELLED);
+        verify(eventService).decrementCurrentAttendeeCount(eventId);
+    }
+
+    @Test
+    void organizerCancelIgnoresAttendeeOnlyRules() {
+        EventRegistration registration = givenCancellableRegistration(startedEvent(EventStatus.ACTIVE));
+        when(activityLookupPort.hasRecordedActivity(any(), any(), any())).thenReturn(true);
+
+        service.cancelAsOrganizer(registration.getId());
+
+        assertThat(registration.getStatus()).isEqualTo(RegistrationStatus.CANCELLED);
+        verify(eventService).decrementCurrentAttendeeCount(eventId);
+        verify(qrCredentialPort).deactivate(qrId);
+        verify(activityLookupPort, never()).hasRecordedActivity(any(), any(), any());
+    }
+
+    private EventSnapshot eventWithRegistrationClose(EventStatus status, Instant closesAt) {
+        return new EventSnapshot(eventId, "Tech Conf", "Hall A", status, Instant.now().minusSeconds(7_200), closesAt,
+                Instant.now().plusSeconds(86_400), Instant.now().plusSeconds(90_000), 100, 10, false, organizerId);
+    }
+
+    @Test
+    void cancellingBeforeRegistrationClosesSucceeds() {
+        EventRegistration registration = givenCancellableRegistration(
+                eventWithRegistrationClose(EventStatus.APPROVED, Instant.now().plusSeconds(60)));
+
+        service.cancel(registration.getId(), attendeeId);
+
+        assertThat(registration.getStatus()).isEqualTo(RegistrationStatus.CANCELLED);
+    }
+
+    @Test
+    void cancellingAfterRegistrationClosedIsRefusedEvenBeforeTheEventStarts() {
+        EventRegistration registration = givenCancellableRegistration(
+                eventWithRegistrationClose(EventStatus.APPROVED, Instant.now().minusSeconds(1)));
+
+        assertThatThrownBy(() -> service.cancel(registration.getId(), attendeeId))
+                .isInstanceOf(ConflictException.class).hasMessageContaining("Registration has closed");
+        assertThat(registration.getStatus()).isEqualTo(RegistrationStatus.REGISTERED);
+        verify(eventService, never()).decrementCurrentAttendeeCount(any());
+        verify(qrCredentialPort, never()).deactivate(any());
+    }
+
+    @Test
+    void aNullRegistrationCloseNeverClosesCancellationJustLikeRegister() {
+        EventRegistration registration = givenCancellableRegistration(eventWithRegistrationClose(EventStatus.APPROVED, null));
+
+        service.cancel(registration.getId(), attendeeId);
+
+        assertThat(registration.getStatus()).isEqualTo(RegistrationStatus.CANCELLED);
+    }
+
+    @Test
+    void organizerCancelStillWorksAfterRegistrationClosed() {
+        EventRegistration registration = givenCancellableRegistration(
+                eventWithRegistrationClose(EventStatus.APPROVED, Instant.now().minusSeconds(3_600)));
+
+        service.cancelAsOrganizer(registration.getId());
+
+        assertThat(registration.getStatus()).isEqualTo(RegistrationStatus.CANCELLED);
+        verify(eventService).decrementCurrentAttendeeCount(eventId);
+    }
+
+    @Test
+    void anAttendeeMayStillDropARegistrationOnACancelledEventAfterRegistrationClosed() {
+        EventRegistration registration = givenCancellableRegistration(
+                eventWithRegistrationClose(EventStatus.CANCELLED, Instant.now().minusSeconds(3_600)));
+
+        service.cancel(registration.getId(), attendeeId);
+
+        assertThat(registration.getStatus()).isEqualTo(RegistrationStatus.CANCELLED);
     }
 
     @Test

@@ -422,6 +422,15 @@
     <string name="attendee_events_no_completed_events">No completed events</string>
     <string name="event_detail_missing_event_information">Missing event information.</string>
     <string name="event_detail_already_registered">Already Registered</string>
+    <string name="event_detail_cancel_registration">Cancel Registration</string>
+    <string name="event_detail_loading">Loading...</string>
+    <string name="event_detail_cancel_registration_title">Cancel registration?</string>
+    <string name="event_detail_cancel_registration_message">Cancel your registration for %1$s? You will lose your spot and your QR code will stop working.</string>
+    <string name="event_detail_cancel_registration_confirm">Yes, cancel</string>
+    <string name="event_detail_cancel_registration_keep">Keep registration</string>
+    <string name="event_detail_cancelling_registration">Cancelling...</string>
+    <string name="event_detail_registration_cancelled">Registration cancelled</string>
+    <string name="event_detail_cancel_registration_failed">Could not cancel your registration. Please try again.</string>
     <string name="event_detail_can_t_verify_registration">Can\'t verify registration</string>
     <string name="my_event_requests_no_event_requests_yet">No event requests yet.</string>
     <string name="attendee_qr_credential_qr_saved_to_gallery">QR saved to gallery</string>

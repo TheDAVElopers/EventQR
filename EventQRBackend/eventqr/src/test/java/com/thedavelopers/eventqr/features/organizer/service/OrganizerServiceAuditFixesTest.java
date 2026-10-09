@@ -278,6 +278,20 @@ class OrganizerServiceAuditFixesTest {
     }
 
     @Test
+    void organizerCanCancelARegisteredAttendeeOfAnActiveEventUsingTheOrganizerPath() {
+        event.setStatus(EventStatus.ACTIVE);
+        event.setEventStartAt(Instant.now().minusSeconds(3_600));
+        EventRegistration r = reg(RegistrationStatus.REGISTERED, false);
+        when(registrations.findByEventId(eventId)).thenReturn(List.of(r));
+        when(registrations.findById(r.getId())).thenReturn(Optional.of(r));
+
+        service.updateAttendeeStatus(organizerId, eventId, AccountRole.ORGANIZER, r.getAttendeeUserId(), "CANCELLED");
+
+        org.mockito.Mockito.verify(registrationService).cancelAsOrganizer(r.getId());
+        org.mockito.Mockito.verify(registrationService, org.mockito.Mockito.never()).cancel(any(), any());
+    }
+
+    @Test
     void organizerCancellingAttendeeSendsNotification() {
         EventRegistration r = reg(RegistrationStatus.REGISTERED, false);
         when(registrations.findByEventId(eventId)).thenReturn(List.of(r));
@@ -285,7 +299,7 @@ class OrganizerServiceAuditFixesTest {
 
         service.updateAttendeeStatus(organizerId, eventId, AccountRole.ORGANIZER, r.getAttendeeUserId(), "CANCELLED");
 
-        org.mockito.Mockito.verify(registrationService).cancel(r.getId(), r.getAttendeeUserId());
+        org.mockito.Mockito.verify(registrationService).cancelAsOrganizer(r.getId());
         org.mockito.Mockito.verify(notificationService).createRegistrationCancelledByOrganizerNotification(
                 eventId, r.getAttendeeUserId(), "Expo");
     }
