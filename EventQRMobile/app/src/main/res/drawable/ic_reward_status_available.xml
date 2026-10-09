@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="16dp"
+    android:height="16dp"
+    android:viewportWidth="16"
+    android:viewportHeight="16"
+    android:tint="@color/eventqr_badge_entered_text">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M8,0A8,8 0,1 0,16,8 8,8 0,0 0,8,0zM12.2,5.8l-5,5a0.7,0.7 0,0 1,-1 0l-2.5,-2.5a0.7,0.7 0,1 1,1,-1l2,2 4.5,-4.5a0.7,0.7 0,1 1,1,1z" />
+</vector>

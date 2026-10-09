@@ -900,4 +900,10 @@
     <string name="terms_s8_body">We may update these terms. Continuing to use EventQR after an update means you accept the new terms.</string>
     <string name="terms_s9_title">Questions</string>
     <string name="terms_s9_body">For questions about these terms or your data, contact the event organizer or the EventQR team.</string>
+    <string name="user_reward_details_pts_required">pts required</string>
+    <string name="reward_details_progress_format">%1$d / %2$d pts</string>
+    <string name="reward_details_points_to_go">%1$d more pts to unlock</string>
+    <string name="reward_details_enough_points">You have enough points</string>
+    <string name="reward_details_no_points_needed">No points needed</string>
+    <string name="user_reward_details_how_to_redeem">Show your QR code to event staff. They scan it to redeem this reward and deduct the points.</string>
 </resources>
