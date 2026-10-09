@@ -1,0 +1,23 @@
+# Hand-written baseline profile for the cold-launch path (no generator module: it needs a device/emulator run).
+# HSPL = hot, startup, post-startup. Wildcards cover each class and its members.
+HSPLcom/thedavelopers/eventqr/EventQrApplication;->**(**)**
+HSPLcom/thedavelopers/eventqr/EventQrApplication$*;->**(**)**
+HSPLcom/thedavelopers/eventqr/R$*;->**(**)**
+HSPLcom/thedavelopers/eventqr/features/landing/LandingActivity;->**(**)**
+HSPLcom/thedavelopers/eventqr/features/landing/LandingActivity$*;->**(**)**
+HSPLcom/thedavelopers/eventqr/core/session/SessionManager;->**(**)**
+HSPLcom/thedavelopers/eventqr/core/session/SessionRefresher;->**(**)**
+HSPLcom/thedavelopers/eventqr/core/session/SessionEvents;->**(**)**
+HSPLcom/thedavelopers/eventqr/core/util/RoleMapper;->**(**)**
+HSPLcom/thedavelopers/eventqr/features/dashboard/DashboardRouter;->**(**)**
+HSPLcom/thedavelopers/eventqr/features/dashboard/DashboardActivity;->**(**)**
+HSPLcom/thedavelopers/eventqr/features/dashboard/DashboardPresenter;->**(**)**
+HSPLcom/thedavelopers/eventqr/features/staff/StaffDashboardActivity;->**(**)**
+HSPLcom/thedavelopers/eventqr/features/organizer/dashboard/OrganizerDashboardActivity;->**(**)**
+HSPLcom/thedavelopers/eventqr/features/admin/dashboard/AdminDashboardActivity;->**(**)**
+HSPLcom/thedavelopers/eventqr/features/auth/AuthRepository;->**(**)**
+HSPLcom/thedavelopers/eventqr/features/auth/login/LoginActivity;->**(**)**
+HSPLcom/thedavelopers/eventqr/core/api/ApiClient;->**(**)**
+HSPLcom/thedavelopers/eventqr/core/api/NetworkResult**;->**(**)**
+HSPLcom/thedavelopers/eventqr/core/api/TokenAuthenticator;->**(**)**
+HSPLcom/thedavelopers/eventqr/ui/theme/**;->**(**)**

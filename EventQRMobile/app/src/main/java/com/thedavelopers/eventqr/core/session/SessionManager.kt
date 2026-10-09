@@ -8,19 +8,7 @@ import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.features.auth.model.dto.LoginResponse
 
 class SessionManager(context: Context) : TokenStore {
-    private val sharedPreferences: SharedPreferences = run {
-        // Stable security-crypto 1.0.0 API. getOrCreate(AES256_GCM_SPEC) uses the same
-        // Keystore alias as the alpha MasterKey.Builder default, so sessions saved by
-        // earlier builds stay readable.
-        val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
-        EncryptedSharedPreferences.create(
-            PREFS_NAME,
-            masterKeyAlias,
-            context,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-        )
-    }
+    private val sharedPreferences: SharedPreferences = sharedPrefsFor(context.applicationContext ?: context)
 
     fun saveLoginResponse(loginResponse: LoginResponse) {
         sharedPreferences.edit()
@@ -89,6 +77,43 @@ class SessionManager(context: Context) : TokenStore {
     }
 
     companion object {
+        private class Holder(val context: Context, val prefs: SharedPreferences)
+
+        @Volatile
+        private var holder: Holder? = null
+
+        /**
+         * Building EncryptedSharedPreferences (Keystore + Tink keyset) is the slow part of cold start, and used to
+         * be repeated by every SessionManager (landing, API client, auth repository, refresher, dashboard). Build it
+         * once per application context and share it. [warmUp] lets Application.onCreate do it off the main thread.
+         */
+        private fun sharedPrefsFor(appContext: Context): SharedPreferences {
+            holder?.takeIf { it.context === appContext }?.let { return it.prefs }
+            return synchronized(this) {
+                holder?.takeIf { it.context === appContext }?.prefs
+                    ?: create(appContext).also { holder = Holder(appContext, it) }
+            }
+        }
+
+        fun warmUp(context: Context) {
+            val appContext = context.applicationContext ?: context
+            Thread({ runCatching { sharedPrefsFor(appContext) } }, "session-warmup").start()
+        }
+
+        private fun create(context: Context): SharedPreferences {
+            // Stable security-crypto 1.0.0 API. getOrCreate(AES256_GCM_SPEC) uses the same
+            // Keystore alias as the alpha MasterKey.Builder default, so sessions saved by
+            // earlier builds stay readable.
+            val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+            return EncryptedSharedPreferences.create(
+                PREFS_NAME,
+                masterKeyAlias,
+                context,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+        }
+
         const val PREFS_NAME = "eventqr_session"
         private const val KEY_AUTH_TOKEN = "auth_token"
         private const val KEY_REFRESH_TOKEN = "refresh_token"
