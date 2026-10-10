@@ -839,9 +839,7 @@
     <string name="report_preview_empty_attendance">No approved attendance scans</string>
     <string name="report_preview_empty_booth">No approved booth or session visits</string>
     <string name="report_preview_combined_title">Combined Event Report</string>
-    <string name="report_preview_export_fallback_saved_reason">Server export failed (%1$s), saved a locally generated copy</string>
     <string name="report_preview_chart_total">Total: %1$d</string>
-    <string name="report_preview_export_fallback_saved">Server export failed, saved a locally generated copy</string>
 
     <!-- Organizer transaction rules -->
     <string name="transaction_rules_save">Save Rules</string>

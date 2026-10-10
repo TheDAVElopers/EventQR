@@ -4143,7 +4143,6 @@ Lcom/thedavelopers/eventqr/features/organizer/model/dto/StaffAssignmentRequestDt
 Lcom/thedavelopers/eventqr/features/organizer/model/dto/StaffAssignmentUpdateRequestDto;
 Lcom/thedavelopers/eventqr/features/organizer/model/dto/TransactionRuleRequest;
 Lcom/thedavelopers/eventqr/features/registrations/model/dto/RegistrationRequest;
-Lcom/thedavelopers/eventqr/features/reports/model/dto/EventReportExportRequestDto;
 Lcom/thedavelopers/eventqr/features/reports/model/dto/EventReportFilterStatus;
 Lcom/thedavelopers/eventqr/features/reports/model/dto/EventReportType;
 Lcom/thedavelopers/eventqr/features/rewards/model/dto/RewardRedemptionGrantRequest;

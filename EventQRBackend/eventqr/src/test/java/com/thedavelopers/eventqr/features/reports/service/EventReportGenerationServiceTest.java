@@ -187,6 +187,19 @@ class EventReportGenerationServiceTest {
         assertThat(search("zzz")).isEmpty();
     }
 
+    @Test
+    void attendeeSearchExactNameOrEmailExcludesLongerSiblingsButPartialStillSubstring() {
+        when(registrations.findByEventId(eventId)).thenReturn(List.of(
+                reg(UUID.randomUUID(), "QA Tester", "qa@mail.com", 1, RegistrationStatus.REGISTERED),
+                reg(UUID.randomUUID(), "QA Tester2", "qa2@mail.com", 2, RegistrationStatus.REGISTERED)));
+
+        assertThat(search("QA Tester")).containsExactly("QA Tester");
+        assertThat(search("  qa tester  ")).containsExactly("QA Tester");
+        assertThat(search("qa2@mail.com")).containsExactly("QA Tester2");
+        assertThat(search("QA Tester2")).containsExactly("QA Tester2");
+        assertThat(search("QA Test")).containsExactlyInAnyOrder("QA Tester", "QA Tester2");
+    }
+
     private List<String> search(String query) {
         return service.generate(owner, eventId, ReportType.ROSTER, new EventReportFilters(null, null, query, null))
                 .rows().stream().map(r -> r.values().get(0)).toList();

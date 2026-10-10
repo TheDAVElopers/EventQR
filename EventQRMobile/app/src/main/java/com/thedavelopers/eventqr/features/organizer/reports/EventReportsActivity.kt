@@ -108,11 +108,10 @@ open class EventReportsActivity : AppCompatActivity() {
     }
 
     private fun renderList(container: LinearLayout) {
-        skeletonLoading?.visibility = View.GONE
-        container.removeAllViews()
-
         lifecycleScope.launch {
             val events = repository.getApprovedOrganizerEvents()
+            skeletonLoading?.visibility = View.GONE
+            container.removeAllViews()
             container.addView(buildSelectEventCard(events))
             container.addView(buildSummaryHeaderCard())
             container.addView(sectionHeader(getString(R.string.event_reports_generate_reports)))
@@ -127,11 +126,7 @@ open class EventReportsActivity : AppCompatActivity() {
         if (approvedEvents.isEmpty()) selectedIndex = -1
 
         val currentTitleText = text(titles.getOrNull(selectedIndex) ?: getString(R.string.event_reports_select_event), 15, true, TEXT)
-        val arrow = ImageView(this).apply {
-            setImageResource(R.drawable.ic_arrow_drop_down)
-            setColorFilter(Color.parseColor("#94A3B8"))
-            layoutParams = LinearLayout.LayoutParams(dp(20), dp(20))
-        }
+        val arrow = buildSelectEventArrow()
 
         val card = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -145,17 +140,7 @@ open class EventReportsActivity : AppCompatActivity() {
             ).apply { setMargins(0, dp(4), 0, dp(14)) }
         }
 
-        val iconContainer = LinearLayout(this).apply {
-            gravity = Gravity.CENTER
-            background = rounded(Color.parseColor("#EEF2FF"), 12, null, density = resources.displayMetrics.density)
-            layoutParams = LinearLayout.LayoutParams(dp(44), dp(44))
-            addView(ImageView(this@EventReportsActivity).apply {
-                setImageResource(R.drawable.ic_calendar)
-                setColorFilter(Color.parseColor("#6366F1"))
-                layoutParams = LinearLayout.LayoutParams(dp(22), dp(22))
-            })
-        }
-        card.addView(iconContainer)
+        card.addView(buildSelectEventIcon())
 
         val textLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -232,13 +217,32 @@ open class EventReportsActivity : AppCompatActivity() {
         return card
     }
 
-    private fun buildSummaryHeaderCard(): LinearLayout {
-        val gradient = GradientDrawable(
-            GradientDrawable.Orientation.LEFT_RIGHT,
-            intArrayOf(Color.parseColor("#272262"), Color.parseColor("#4F46E5")),
-        ).apply {
+    // Shared by the loaded and skeleton select-event cards so the constant icon/arrow can't drift.
+    private fun buildSelectEventIcon(): LinearLayout = LinearLayout(this).apply {
+        gravity = Gravity.CENTER
+        background = rounded(Color.parseColor("#EEF2FF"), 12, null, density = resources.displayMetrics.density)
+        layoutParams = LinearLayout.LayoutParams(dp(44), dp(44))
+        addView(ImageView(this@EventReportsActivity).apply {
+            setImageResource(R.drawable.ic_calendar)
+            setColorFilter(Color.parseColor("#6366F1"))
+            layoutParams = LinearLayout.LayoutParams(dp(22), dp(22))
+        })
+    }
+
+    private fun buildSelectEventArrow(): ImageView = ImageView(this).apply {
+        setImageResource(R.drawable.ic_arrow_drop_down)
+        setColorFilter(Color.parseColor("#94A3B8"))
+        layoutParams = LinearLayout.LayoutParams(dp(20), dp(20))
+    }
+
+    // Same gradient as the organizer dashboard header, with the card's corner radius.
+    private fun dashboardGradient(): GradientDrawable =
+        (ResourcesCompat.getDrawable(resources, R.drawable.bg_dashboard_gradient, theme)!!.mutate() as GradientDrawable).apply {
             cornerRadius = dp(16).toFloat()
         }
+
+    private fun buildSummaryHeaderCard(): LinearLayout {
+        val gradient = dashboardGradient()
 
         return LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -258,17 +262,6 @@ open class EventReportsActivity : AppCompatActivity() {
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                 )
 
-                addView(LinearLayout(this@EventReportsActivity).apply {
-                    gravity = Gravity.CENTER
-                    background = rounded(Color.parseColor("#33FFFFFF"), 10, null, density = resources.displayMetrics.density)
-                    layoutParams = LinearLayout.LayoutParams(dp(38), dp(38))
-                    addView(ImageView(this@EventReportsActivity).apply {
-                        setImageResource(R.drawable.ic_organizer_reports)
-                        setColorFilter(Color.WHITE)
-                        layoutParams = LinearLayout.LayoutParams(dp(20), dp(20))
-                    })
-                })
-
                 addView(TextView(this@EventReportsActivity).apply {
                     text = selectedEvent.title
                     textSize = 17f
@@ -277,7 +270,6 @@ open class EventReportsActivity : AppCompatActivity() {
                     ellipsize = android.text.TextUtils.TruncateAt.END
                     maxLines = 1
                     layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-                        marginStart = dp(12)
                         marginEnd = dp(8)
                     }
                 })
@@ -289,7 +281,7 @@ open class EventReportsActivity : AppCompatActivity() {
                     setPadding(dp(10), dp(4), dp(10), dp(4))
 
                     addView(View(this@EventReportsActivity).apply {
-                        background = rounded(Color.parseColor("#22D3EE"), 3, null, density = resources.displayMetrics.density)
+                        background = rounded(ResourcesCompat.getColor(resources, R.color.green, theme), 3, null, density = resources.displayMetrics.density)
                         layoutParams = LinearLayout.LayoutParams(dp(6), dp(6)).apply {
                             marginEnd = dp(5)
                         }
@@ -307,26 +299,15 @@ open class EventReportsActivity : AppCompatActivity() {
 
             val statsRow = LinearLayout(this@EventReportsActivity).apply {
                 orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(0, dp(18), 0, 0)
+                setPadding(0, dp(16), 0, 0)
                 layoutParams = LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                 )
 
-                addView(summaryStatColumn(getString(R.string.common_registered), summary.registeredCount))
-
-                addView(View(this@EventReportsActivity).apply {
-                    setBackgroundColor(Color.parseColor("#30FFFFFF"))
-                    layoutParams = LinearLayout.LayoutParams(dp(1), dp(36))
-                })
+                addView(summaryStatColumn(getString(R.string.common_registered), summary.registeredCount, first = true))
 
                 addView(summaryStatColumn(getString(R.string.common_checked_in), summary.checkedInCount))
-
-                addView(View(this@EventReportsActivity).apply {
-                    setBackgroundColor(Color.parseColor("#30FFFFFF"))
-                    layoutParams = LinearLayout.LayoutParams(dp(1), dp(36))
-                })
 
                 addView(summaryStatColumn(getString(R.string.event_reports_exited), summary.exitedCount))
             }
@@ -334,16 +315,30 @@ open class EventReportsActivity : AppCompatActivity() {
         }
     }
 
-    private fun summaryStatColumn(label: String, value: Int): LinearLayout = LinearLayout(this).apply {
+    // Mirrors the attendee dashboard stat tiles: translucent tile, 12sp medium label (#80FFFFFF)
+    // above a 22sp bold white value. The card is already the dark dashboard gradient, so colours carry over.
+    private fun summaryStatColumn(label: String, value: Int, first: Boolean = false): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
         gravity = Gravity.CENTER
-        layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-        addView(text(formatCount(value), 26, true, Color.parseColor("#38BDF8")).apply {
+        background = ResourcesCompat.getDrawable(resources, R.drawable.bg_dashboard_stat_card, theme)
+        setPadding(0, dp(14), 0, dp(14))
+        layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
+            if (!first) marginStart = dp(8)
+        }
+        addView(TextView(this@EventReportsActivity).apply {
+            text = label
+            textSize = 12f
+            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            setTextColor(Color.parseColor("#80FFFFFF"))
             gravity = Gravity.CENTER
         })
-        addView(text(label, 12, false, Color.parseColor("#CDD6F5")).apply {
+        addView(TextView(this@EventReportsActivity).apply {
+            text = formatCount(value)
+            textSize = 22f
+            typeface = Typeface.create("sans-serif", Typeface.BOLD)
+            setTextColor(Color.WHITE)
             gravity = Gravity.CENTER
-            setPadding(0, dp(2), 0, 0)
+            setPadding(0, dp(4), 0, 0)
         })
     }
 
@@ -504,10 +499,7 @@ open class EventReportsActivity : AppCompatActivity() {
             ).apply { setMargins(0, dp(4), 0, dp(14)) }
         }
 
-        card.addView(View(this).apply {
-            background = ResourcesCompat.getDrawable(resources, R.drawable.bg_staff_skeleton_date_block, theme)
-            layoutParams = LinearLayout.LayoutParams(dp(44), dp(44))
-        })
+        card.addView(buildSelectEventIcon())
 
         val textLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -525,21 +517,13 @@ open class EventReportsActivity : AppCompatActivity() {
         }
         card.addView(textLayout)
 
-        card.addView(View(this).apply {
-            background = ResourcesCompat.getDrawable(resources, R.drawable.bg_staff_skeleton_date_block, theme)
-            layoutParams = LinearLayout.LayoutParams(dp(20), dp(20))
-        })
+        card.addView(buildSelectEventArrow())
 
         return card
     }
 
     private fun buildSummarySkeletonCard(): LinearLayout {
-        val gradient = GradientDrawable(
-            GradientDrawable.Orientation.LEFT_RIGHT,
-            intArrayOf(Color.parseColor("#272262"), Color.parseColor("#4F46E5")),
-        ).apply {
-            cornerRadius = dp(16).toFloat()
-        }
+        val gradient = dashboardGradient()
 
         return LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -559,49 +543,45 @@ open class EventReportsActivity : AppCompatActivity() {
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                 )
 
-                addView(View(this@EventReportsActivity).apply {
-                    background = ResourcesCompat.getDrawable(resources, R.drawable.bg_staff_skeleton_date_block, theme)
-                    layoutParams = LinearLayout.LayoutParams(dp(38), dp(38))
+                addView(summarySkeletonBlock(0, 18, 8).apply {
+                    layoutParams = LinearLayout.LayoutParams(0, dp(18), 1f).apply { marginEnd = dp(8) }
                 })
-
-                addView(View(this@EventReportsActivity).apply {
-                    background = ResourcesCompat.getDrawable(resources, R.drawable.bg_staff_skeleton_bar, theme)
-                    layoutParams = LinearLayout.LayoutParams(0, dp(20), 1f).apply {
-                        marginStart = dp(12)
-                        marginEnd = dp(8)
-                    }
-                })
-
-                addView(View(this@EventReportsActivity).apply {
-                    background = ResourcesCompat.getDrawable(resources, R.drawable.bg_staff_skeleton_bar, theme)
-                    layoutParams = LinearLayout.LayoutParams(dp(80), dp(22))
-                })
+                addView(summarySkeletonBlock(80, 22, 12))
             }
             addView(topRow)
 
             val statsRow = LinearLayout(this@EventReportsActivity).apply {
                 orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(0, dp(18), 0, 0)
+                setPadding(0, dp(16), 0, 0)
                 layoutParams = LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                 )
-
-                addView(summaryStatColumn(getString(R.string.common_registered), 0))
-                addView(View(this@EventReportsActivity).apply {
-                    setBackgroundColor(Color.parseColor("#30FFFFFF"))
-                    layoutParams = LinearLayout.LayoutParams(dp(1), dp(36))
-                })
-                addView(summaryStatColumn(getString(R.string.common_checked_in), 0))
-                addView(View(this@EventReportsActivity).apply {
-                    setBackgroundColor(Color.parseColor("#30FFFFFF"))
-                    layoutParams = LinearLayout.LayoutParams(dp(1), dp(36))
-                })
-                addView(summaryStatColumn(getString(R.string.event_reports_exited), 0))
+                repeat(3) { i -> addView(summaryStatSkeletonColumn(first = i == 0)) }
             }
             addView(statsRow)
         }
+    }
+
+    // Translucent white placeholder block for use on the purple gradient (never opaque).
+    private fun summarySkeletonBlock(widthDp: Int, heightDp: Int, radiusDp: Int): View = View(this).apply {
+        background = rounded(Color.parseColor("#33FFFFFF"), radiusDp, null, density = resources.displayMetrics.density)
+        layoutParams = LinearLayout.LayoutParams(dp(widthDp), dp(heightDp))
+    }
+
+    // Same tile geometry as summaryStatColumn (14dp padding, 12sp label + 22sp value) so there is no layout jump.
+    private fun summaryStatSkeletonColumn(first: Boolean): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        gravity = Gravity.CENTER_HORIZONTAL
+        background = ResourcesCompat.getDrawable(resources, R.drawable.bg_dashboard_stat_card, theme)
+        setPadding(0, dp(14), 0, dp(14))
+        layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
+            if (!first) marginStart = dp(8)
+        }
+        addView(summarySkeletonBlock(48, 12, 6))
+        addView(summarySkeletonBlock(32, 22, 6).apply {
+            (layoutParams as LinearLayout.LayoutParams).topMargin = dp(8)
+        })
     }
 
     private fun buildReportCatalogSkeletonContainer(): LinearLayout {

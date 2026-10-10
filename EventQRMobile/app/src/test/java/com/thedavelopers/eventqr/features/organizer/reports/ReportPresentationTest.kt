@@ -107,13 +107,4 @@ class ReportPresentationTest {
     fun claimsChartSubtitle_matchesApprovedVsRejected() {
         assertEquals("Approved vs rejected scans", context.getString(R.string.report_preview_claims_chart_subtitle))
     }
-
-    // ---- export fallback
-
-    @Test
-    fun fallbackExport_neverReadsAsPlainExportSaved() {
-        assertNull(fallbackSavedMessageRes(fromFallback = false))
-        val res = fallbackSavedMessageRes(fromFallback = true)!!
-        assertEquals("Server export failed, saved a locally generated copy", context.getString(res))
-    }
 }

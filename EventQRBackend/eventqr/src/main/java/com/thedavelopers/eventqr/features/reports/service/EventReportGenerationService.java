@@ -165,7 +165,7 @@ public class EventReportGenerationService {
 
         List<RowData> filtered = applyDateFilter(all, filters)
                 .stream()
-                .filter(row -> attendeeMatches(filters, row, registrationByUser))
+                .filter(attendeeMatcher(filters, registrationByUser))
                 .filter(row -> rosterStatusMatches(filters, row, registrationByUser))
                 .toList();
 
@@ -247,7 +247,7 @@ public class EventReportGenerationService {
 
         List<RowData> filtered = applyStatusFilter(applyDateFilter(all, filters), filters)
                 .stream()
-                .filter(row -> attendeeMatches(filters, row, registrationByUser))
+                .filter(attendeeMatcher(filters, registrationByUser))
                 .toList();
 
         // Chart counts successful (APPROVED) attendance only; rejected scans stay visible in the table.
@@ -350,7 +350,7 @@ public class EventReportGenerationService {
 
         List<RowData> filtered = applyDateFilter(all, filters)
                 .stream()
-                .filter(row -> attendeeMatches(filters, row, registrationByUser))
+                .filter(attendeeMatcher(filters, registrationByUser))
                 .toList();
 
         // Chart sums POSITIVE points awarded per activity (not row counts); deductions are excluded.
@@ -409,26 +409,44 @@ public class EventReportGenerationService {
         return filters.status() == ReportFilterStatus.APPROVED ? counted : !counted;
     }
 
-    private boolean attendeeMatches(EventReportFilters filters, RowData row,
-                                    Map<UUID, EventRegistration> registrationByUser) {
+    /**
+     * Substring search (name, email, registration number) for partial typing. When the trimmed query exactly equals
+     * (case-insensitive) some registrant's full name or email, only exact matches are kept, so "QA Tester" does not
+     * also return "QA Tester2". Evaluated once per report, across all registrations of the event.
+     */
+    private Predicate<RowData> attendeeMatcher(EventReportFilters filters,
+                                               Map<UUID, EventRegistration> registrationByUser) {
         if (filters == null || filters.attendeeQuery() == null || filters.attendeeQuery().isBlank()) {
-            return true;
+            return row -> true;
         }
         String query = filters.attendeeQuery().trim().toLowerCase(Locale.ENGLISH);
-        if (safe(row.attendeeName()).toLowerCase(Locale.ENGLISH).contains(query)) {
+        boolean exact = registrationByUser.values().stream().anyMatch(r ->
+                lower(r.getAttendeeName()).equals(query) || lower(r.getAttendeeEmail()).equals(query));
+        return row -> attendeeMatches(query, exact, row, registrationByUser);
+    }
+
+    private static String lower(String value) {
+        return value == null ? "" : value.trim().toLowerCase(Locale.ENGLISH);
+    }
+
+    private boolean attendeeMatches(String query, boolean exact, RowData row,
+                                    Map<UUID, EventRegistration> registrationByUser) {
+        String name = safe(row.attendeeName()).trim().toLowerCase(Locale.ENGLISH);
+        if (exact ? name.equals(query) : name.contains(query)) {
             return true;
         }
         EventRegistration registration = row.attendeeUserId() == null ? null : registrationByUser.get(row.attendeeUserId());
         if (registration == null) {
             return false;
         }
-        if (safe(registration.getAttendeeEmail()).toLowerCase(Locale.ENGLISH).contains(query)) {
+        String email = lower(registration.getAttendeeEmail());
+        if (exact ? email.equals(query) : email.contains(query)) {
             return true;
         }
         if (registration.getRegistrationNumber() != null) {
             String number = String.valueOf(registration.getRegistrationNumber());
             String numberQuery = query.startsWith("#") ? query.substring(1).trim() : query;
-            return !numberQuery.isEmpty() && number.contains(numberQuery);
+            return !numberQuery.isEmpty() && (exact ? number.equals(numberQuery) : number.contains(numberQuery));
         }
         return false;
     }

@@ -1,6 +1,5 @@
 package com.thedavelopers.eventqr.features.organizer.reports
 
-import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportDto
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportFiltersDto
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportType
@@ -61,7 +60,3 @@ fun chartDataOf(report: EventReportDto, sortByValue: Boolean): ChartData {
     val sum = entries.sumOf { it.second }
     return ChartData(entries, if (report.total > 0L) report.total else sum)
 }
-
-/** Notice shown after saving a locally built copy because the server export failed; null for a normal server export. */
-fun fallbackSavedMessageRes(fromFallback: Boolean): Int? =
-    if (fromFallback) R.string.report_preview_export_fallback_saved else null

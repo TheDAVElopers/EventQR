@@ -10,7 +10,6 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
-import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -34,7 +33,6 @@ import com.google.gson.JsonDeserializer
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializer
 import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.features.organizer.*
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportDto
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportEmptyState
@@ -44,13 +42,12 @@ import com.thedavelopers.eventqr.features.reports.model.dto.EventReportSummaryDt
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportType
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportRowDto
 import androidx.annotation.RequiresApi
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.PrintWriter
-import java.io.StringWriter
 import java.io.FileOutputStream
 import java.io.OutputStream
 import java.time.Instant
@@ -119,7 +116,6 @@ class ReportPreviewActivity : AppCompatActivity() {
         }
     }
 
-    private lateinit var repository: OrganizerReportsRepository
     private lateinit var content: LinearLayout
     private var eventId: String = ""
     private var isCombined = false
@@ -133,7 +129,6 @@ class ReportPreviewActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        repository = OrganizerReportsRepository(this)
 
         eventId = intent.getStringExtra(EXTRA_EVENT_ID) ?: return finishWithError(getString(R.string.report_preview_event_id_missing))
         isCombined = intent.getBooleanExtra(EXTRA_IS_COMBINED, false)
@@ -623,323 +618,57 @@ class ReportPreviewActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    private var exportJob: Job? = null
+
     private fun exportReport(format: String) {
+        if (exportJob?.isActive == true) return // ignore double taps while an export runs
         val rootView = content.rootView ?: content
-
-        if (isCombined) {
-            val reports = combinedReports.orEmpty()
-            if (reports.isEmpty()) {
-                Snackbar.make(rootView, getString(R.string.report_preview_no_data_export), Snackbar.LENGTH_LONG).show()
-                return
-            }
-
-            Snackbar.make(rootView, getString(R.string.report_preview_preparing_combined, format), Snackbar.LENGTH_SHORT).show()
-
-            lifecycleScope.launch {
-                try {
-                    val safeEventName = (summary.eventName?.takeIf { it.isNotBlank() } ?: "event")
-                        .replace(Regex("[^a-zA-Z0-9_-]"), "-")
-                        .trim('-')
-                        .lowercase()
-                    val fileName = "combined-report-$safeEventName.${format.lowercase()}"
-                    val contentType = getString(if (format.equals("PDF", ignoreCase = true)) R.string.report_preview_application_pdf else R.string.report_preview_text_csv)
-
-                    val bytes = withContext(Dispatchers.Default) {
-                        if (format.equals("PDF", ignoreCase = true)) {
-                            generateCombinedPdf(reports)
-                        } else {
-                            generateCombinedCsv(reports)
-                        }
-                    }
-                    saveAndShareFile(bytes, fileName, contentType)
-                } catch (e: Exception) {
-                    Snackbar.make(rootView, getString(R.string.report_preview_export_failed, e.message.orEmpty()), Snackbar.LENGTH_LONG)
-                        .setAction(getString(R.string.common_retry)) { exportReport(format) }
-                        .show()
-                }
-            }
+        val reports = if (isCombined) combinedReports.orEmpty() else listOfNotNull(singleReport)
+        if (reports.isEmpty()) {
+            Snackbar.make(rootView, getString(R.string.report_preview_no_data_export), Snackbar.LENGTH_LONG).show()
             return
         }
 
-        Snackbar.make(rootView, getString(R.string.report_preview_preparing, format), Snackbar.LENGTH_SHORT).show()
+        val exportFormat = if (format.equals("PDF", ignoreCase = true)) ReportExportFormat.PDF else ReportExportFormat.CSV
+        val preparing = if (isCombined) R.string.report_preview_preparing_combined else R.string.report_preview_preparing
+        Snackbar.make(rootView, getString(preparing, format), Snackbar.LENGTH_SHORT).show()
 
-        lifecycleScope.launch {
-            val reportType = singleReport?.reportType ?: EventReportType.ROSTER
-
-            when (val result = repository.exportReport(eventId, reportType, format, sourceFilters)) {
-                is NetworkResult.Success -> {
-                    saveAndShareFile(result.data.bytes, result.data.fileName, result.data.contentType)
+        exportJob = lifecycleScope.launch {
+            try {
+                val fileName = ReportFileNames.build(summary.eventName, reports, exportFormat)
+                val contentType = getString(if (exportFormat == ReportExportFormat.PDF) R.string.report_preview_application_pdf else R.string.report_preview_text_csv)
+                val exporter = reportExporter(reports)
+                val bytes = withContext(Dispatchers.Default) {
+                    if (exportFormat == ReportExportFormat.PDF) exporter.pdf(reports) else exporter.csv(reports)
                 }
-                is NetworkResult.Error -> {
-                    val report = singleReport
-                    if (report != null) {
-                        try {
-                            val safeTitle = (report.reportTitle ?: "report")
-                                .replace(Regex("[^a-zA-Z0-9_-]"), "-")
-                                .trim('-')
-                                .lowercase()
-                            val fileName = "$safeTitle-${eventId.take(8)}.${format.lowercase()}"
-                            val contentType = getString(if (format.equals("PDF", ignoreCase = true)) R.string.report_preview_application_pdf else R.string.report_preview_text_csv)
-                            val bytes = withContext(Dispatchers.Default) {
-                                if (format.equals("PDF", ignoreCase = true)) {
-                                    generateCombinedPdf(listOf(report))
-                                } else {
-                                    generateCombinedCsv(listOf(report))
-                                }
-                            }
-                            fallbackFailureReason = result.message
-                            saveAndShareFile(bytes, fileName, contentType, fromFallback = true)
-                            return@launch
-                        } catch (_: Exception) {}
-                    }
-                    Snackbar.make(rootView, getString(R.string.report_preview_export_failed, result.message), Snackbar.LENGTH_LONG)
-                        .setAction(getString(R.string.common_retry)) { exportReport(format) }
-                        .show()
-                }
-                NetworkResult.Loading -> Unit
+                saveAndShareFile(bytes, fileName, contentType)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Snackbar.make(rootView, getString(R.string.report_preview_export_failed, e.message.orEmpty()), Snackbar.LENGTH_LONG)
+                    .setAction(getString(R.string.common_retry)) { exportReport(format) }
+                    .show()
             }
         }
     }
 
-    private fun generateCombinedCsv(reports: List<EventReportDto>): ByteArray {
-        val stringWriter = StringWriter()
-        val writer = PrintWriter(stringWriter)
-
-        writer.println(csv(combinedReportTitle(reports)))
-        writer.println("${csv(getString(R.string.report_preview_event))},${csv(summary.eventName ?: getString(R.string.report_preview_event))}")
-        writer.println("${csv(getString(R.string.report_preview_generated_label))},${csv(dateFormatter.format(combinedGeneratedAt(reports)))}")
-        writer.println()
-
-        reports.forEachIndexed { index, report ->
-            writer.println(csv("================================================================================"))
-            writer.println(csv(report.reportTitle ?: getString(R.string.report_preview_section_n, index + 1)))
-            report.generatedAtInstant?.let { writer.println("${csv(getString(R.string.report_preview_generated_label))},${csv(dateFormatter.format(it))}") }
-            writer.println()
-
-            // Header columns
-            val cols = report.columns.map { csv(it ?: "") }
-            writer.println(cols.joinToString(","))
-
-            // Rows
-            for (row in report.rows) {
-                val values = (0 until report.columns.size).map { colIndex ->
-                    val cell = if (colIndex < row.values.size) row.values[colIndex] else null
-                    csv(cell ?: "")
-                }
-                writer.println(values.joinToString(","))
-            }
-
-            // Chart series
-            if (report.chartSeries.isNotEmpty()) {
-                writer.println()
-                writer.println(csv(getString(R.string.report_preview_chart_summary)))
-                for ((k, v) in report.chartSeries) {
-                    writer.println("${csv(k ?: "")},${csv(v.toString())}")
-                }
-            }
-            writer.println()
-        }
-
-        writer.flush()
-        return stringWriter.toString().toByteArray(Charsets.UTF_8)
+    private fun reportExporter(reports: List<EventReportDto>): ReportExporter {
+        val labels = ReportExportLabels(
+            event = getString(R.string.report_preview_event),
+            generated = getString(R.string.report_preview_generated_label),
+            summary = getString(R.string.report_export_summary),
+            category = getString(R.string.report_export_category),
+            count = getString(R.string.report_export_count),
+            total = getString(R.string.report_export_total),
+            noRecords = getString(R.string.report_preview_pdf_no_records),
+            combinedTitle = getString(R.string.report_preview_combined_title),
+            sectionFormat = getString(R.string.report_preview_section_n),
+            recordsFormat = getString(R.string.report_export_records),
+            pageFormat = getString(R.string.report_export_page),
+        )
+        val eventName = summary.eventName?.takeIf { it.isNotBlank() } ?: labels.event
+        return ReportExporter(labels, eventName, dateFormatter.format(combinedGeneratedAt(reports)))
     }
-
-    private fun csv(value: String): String {
-        val escaped = value.replace("\"", "\"\"")
-        return "\"$escaped\""
-    }
-
-    private fun generateCombinedPdf(reports: List<EventReportDto>): ByteArray {
-        val document = PdfDocument()
-        val pageWidth = 595
-        val pageHeight = 842
-        val margin = 36f
-        val contentWidth = pageWidth - (2 * margin)
-        var pageNumber = 1
-
-        var pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create()
-        var currentPage = document.startPage(pageInfo)
-        var canvas = currentPage.canvas
-        var y = margin + 20f
-
-        val titlePaint = Paint().apply {
-            color = Color.parseColor("#1E1B4B")
-            textSize = 18f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-            isAntiAlias = true
-        }
-
-        val subtitlePaint = Paint().apply {
-            color = Color.parseColor("#6B7280")
-            textSize = 10f
-            isAntiAlias = true
-        }
-
-        val footerPaint = Paint().apply {
-            color = Color.parseColor("#9CA3AF")
-            textSize = 8f
-            isAntiAlias = true
-        }
-
-        val sectionTitlePaint = Paint().apply {
-            color = Color.parseColor("#4F46E5")
-            textSize = 13f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-            isAntiAlias = true
-        }
-
-        val sectionBannerPaint = Paint().apply {
-            color = Color.parseColor("#EEF2FF")
-            style = Paint.Style.FILL
-        }
-
-        val tableHeaderBgPaint = Paint().apply {
-            color = Color.parseColor("#F9FAFB")
-            style = Paint.Style.FILL
-        }
-
-        val tableHeaderPaint = Paint().apply {
-            color = Color.parseColor("#111827")
-            textSize = 9.5f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-            isAntiAlias = true
-        }
-
-        val cellPaint = Paint().apply {
-            color = Color.parseColor("#374151")
-            textSize = 8.5f
-            isAntiAlias = true
-        }
-
-        val cellMutedPaint = Paint().apply {
-            color = Color.parseColor("#9CA3AF")
-            textSize = 8.5f
-            isAntiAlias = true
-        }
-
-        val altRowPaint = Paint().apply {
-            color = Color.parseColor("#F9FAFB")
-            style = Paint.Style.FILL
-        }
-
-        val linePaint = Paint().apply {
-            color = Color.parseColor("#E5E7EB")
-            strokeWidth = 1f
-        }
-
-        fun drawFooter() {
-            canvas.drawLine(margin, pageHeight - margin - 10f, margin + contentWidth, pageHeight - margin - 10f, linePaint)
-            val footerText = getString(R.string.report_preview_pdf_footer, pageNumber)
-            canvas.drawText(footerText, margin, pageHeight - margin, footerPaint)
-        }
-
-        fun ensureSpace(needed: Float) {
-            if (y + needed > pageHeight - margin - 20f) {
-                drawFooter()
-                document.finishPage(currentPage)
-                pageNumber++
-                pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create()
-                currentPage = document.startPage(pageInfo)
-                canvas = currentPage.canvas
-                y = margin + 20f
-            }
-        }
-
-        fun truncate(text: String, maxWidth: Float, paint: Paint): String {
-            if (maxWidth <= 0f) return ""
-            if (paint.measureText(text) <= maxWidth) return text
-            var truncated = text
-            while (truncated.isNotEmpty() && paint.measureText("$truncated...") > maxWidth) {
-                truncated = truncated.dropLast(1)
-            }
-            return if (truncated.isEmpty()) "" else "$truncated..."
-        }
-
-        // Header on page 1
-        canvas.drawText(combinedReportTitle(reports), margin, y, titlePaint)
-        y += 18f
-        canvas.drawText(getString(R.string.report_preview_pdf_event, summary.eventName ?: getString(R.string.report_preview_event)), margin, y, subtitlePaint)
-        y += 13f
-        canvas.drawText(getString(R.string.report_preview_pdf_generated, dateFormatter.format(combinedGeneratedAt(reports))), margin, y, subtitlePaint)
-        y += 16f
-        canvas.drawLine(margin, y, margin + contentWidth, y, linePaint)
-        y += 20f
-
-        reports.forEachIndexed { _, report ->
-            ensureSpace(80f)
-
-            // Section Banner
-            canvas.drawRect(margin, y - 13f, margin + contentWidth, y + 9f, sectionBannerPaint)
-            canvas.drawText(report.reportTitle ?: getString(R.string.report_preview_report_section), margin + 8f, y + 2f, sectionTitlePaint)
-            y += 22f
-
-            val generatedAtText = report.generatedAtInstant?.let { getString(R.string.report_preview_pdf_generated, dateFormatter.format(it)) } ?: ""
-            if (generatedAtText.isNotBlank()) {
-                canvas.drawText(generatedAtText, margin + 4f, y, subtitlePaint)
-                y += 13f
-            }
-
-            val columns = report.columns.map { it ?: "" }
-            val colCount = maxOf(columns.size, 1)
-            val colWidth = contentWidth / colCount
-
-            // Table Header
-            ensureSpace(28f)
-            canvas.drawRect(margin, y - 11f, margin + contentWidth, y + 7f, tableHeaderBgPaint)
-            canvas.drawLine(margin, y + 7f, margin + contentWidth, y + 7f, linePaint)
-            columns.forEachIndexed { i, col ->
-                val colX = margin + (i * colWidth) + 4f
-                val txt = truncate(col, colWidth - 8f, tableHeaderPaint)
-                canvas.drawText(txt, colX, y, tableHeaderPaint)
-            }
-            y += 16f
-
-            // Table Rows
-            if (report.rows.isEmpty()) {
-                ensureSpace(20f)
-                canvas.drawText(getString(R.string.report_preview_pdf_no_records), margin + 4f, y, cellMutedPaint)
-                y += 20f
-            } else {
-                report.rows.forEachIndexed { rowIndex, row ->
-                    ensureSpace(18f)
-                    if (rowIndex % 2 == 1) {
-                        canvas.drawRect(margin, y - 10f, margin + contentWidth, y + 6f, altRowPaint)
-                    }
-                    columns.forEachIndexed { colIndex, _ ->
-                        val cellVal = if (colIndex < row.values.size) row.values[colIndex] ?: "—" else "—"
-                        val colX = margin + (colIndex * colWidth) + 4f
-                        val txt = truncate(cellVal, colWidth - 8f, cellPaint)
-                        canvas.drawText(txt, colX, y, cellPaint)
-                    }
-                    y += 16f
-                }
-            }
-
-            // Chart Series Summary if any
-            if (report.chartSeries.isNotEmpty()) {
-                ensureSpace(30f + (report.chartSeries.size * 13f))
-                y += 6f
-                canvas.drawText(getString(R.string.report_preview_chart_summary), margin + 4f, y, tableHeaderPaint)
-                y += 13f
-                for ((k, v) in report.chartSeries) {
-                    val keyText = k ?: getString(R.string.report_preview_item)
-                    canvas.drawText("$keyText: $v", margin + 12f, y, cellPaint)
-                    y += 12f
-                }
-            }
-
-            y += 22f
-        }
-
-        drawFooter()
-        document.finishPage(currentPage)
-        val stream = ByteArrayOutputStream()
-        document.writeTo(stream)
-        document.close()
-        return stream.toByteArray()
-    }
-
-    private var fallbackFailureReason: String? = null
 
     private fun emptyChartTextRes(type: EventReportType): Int = when (type) {
         EventReportType.POINTS -> R.string.report_preview_empty_points
@@ -948,31 +677,23 @@ class ReportPreviewActivity : AppCompatActivity() {
         else -> R.string.report_preview_empty_chart
     }
 
-    private fun combinedReportTitle(reports: List<EventReportDto>): String =
-        if (reports.size == 1) reports.first().reportTitle ?: getString(R.string.report_preview_combined_title) else getString(R.string.report_preview_combined_title)
-
     private fun combinedGeneratedAt(reports: List<EventReportDto>): Instant =
         reports.mapNotNull { it.generatedAtInstant }.maxOrNull() ?: Instant.now()
 
-    private fun saveAndShareFile(bytes: ByteArray, fileName: String, contentType: String, fromFallback: Boolean = false) {
+    private fun saveAndShareFile(bytes: ByteArray, fileName: String, contentType: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            saveToPublicDownloads(bytes, fileName, contentType, fromFallback)
+            saveToPublicDownloads(bytes, fileName, contentType)
         } else {
-            saveToLegacyPrivateStorage(bytes, fileName, contentType, fromFallback)
+            saveToLegacyPrivateStorage(bytes, fileName, contentType)
         }
     }
 
-    private fun showSavedMessage(fromFallback: Boolean, normal: String) {
-        val message = fallbackSavedMessageRes(fromFallback)?.let { res ->
-            val reason = fallbackFailureReason?.takeIf { it.isNotBlank() }
-            if (reason != null) getString(R.string.report_preview_export_fallback_saved_reason, reason) else getString(res)
-        } ?: normal
-        fallbackFailureReason = null
+    private fun showSavedMessage(message: String) {
         Snackbar.make(content, message, Snackbar.LENGTH_LONG).show()
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
-    private fun saveToPublicDownloads(bytes: ByteArray, fileName: String, contentType: String, fromFallback: Boolean) {
+    private fun saveToPublicDownloads(bytes: ByteArray, fileName: String, contentType: String) {
         val resolver: ContentResolver = contentResolver
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
@@ -991,9 +712,9 @@ class ReportPreviewActivity : AppCompatActivity() {
             }
             if (intent.resolveActivity(packageManager) != null) {
                 startActivity(intent)
-                showSavedMessage(fromFallback, getString(R.string.report_preview_saved_downloads, fileName))
+                showSavedMessage(getString(R.string.report_preview_saved_downloads, fileName))
             } else {
-                showSavedMessage(fromFallback, getString(R.string.report_preview_saved_downloads_manual))
+                showSavedMessage(getString(R.string.report_preview_saved_downloads_manual))
             }
         } catch (e: Exception) {
             resolver.delete(uri, null, null) // Clean up on failure
@@ -1001,7 +722,7 @@ class ReportPreviewActivity : AppCompatActivity() {
         }
     }
 
-    private fun saveToLegacyPrivateStorage(bytes: ByteArray, fileName: String, contentType: String, fromFallback: Boolean) {
+    private fun saveToLegacyPrivateStorage(bytes: ByteArray, fileName: String, contentType: String) {
         val downloadsDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: filesDir
         val file = File(downloadsDir, fileName)
         try {
@@ -1013,9 +734,9 @@ class ReportPreviewActivity : AppCompatActivity() {
             }
             if (intent.resolveActivity(packageManager) != null) {
                 startActivity(intent)
-                showSavedMessage(fromFallback, getString(R.string.report_preview_saved_opened))
+                showSavedMessage(getString(R.string.report_preview_saved_opened))
             } else {
-                showSavedMessage(fromFallback, getString(R.string.report_preview_saved_app_storage, fileName))
+                showSavedMessage(getString(R.string.report_preview_saved_app_storage, fileName))
             }
         } catch (e: Exception) {
             Snackbar.make(content, getString(R.string.report_preview_save_failed, e.message.orEmpty()), Snackbar.LENGTH_LONG).show()

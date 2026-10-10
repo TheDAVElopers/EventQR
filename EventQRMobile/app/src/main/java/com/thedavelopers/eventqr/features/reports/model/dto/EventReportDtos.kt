@@ -69,14 +69,6 @@ data class EventReportDto(
         get() = generatedAt?.let { Instant.parse(it) }
 }
 
-data class EventReportExportRequestDto(
-    val format: String = "CSV",
-    val startDate: LocalDate? = null,
-    val endDate: LocalDate? = null,
-    val attendeeQuery: String? = null,
-    val status: EventReportFilterStatus = EventReportFilterStatus.ALL,
-)
-
 data class EventReportCatalogItem(
     val reportType: EventReportType,
     val label: String,

@@ -43,7 +43,6 @@ import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationRe
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationSubmissionResponse
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportDto
-import com.thedavelopers.eventqr.features.reports.model.dto.EventReportExportRequestDto
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportFilterStatus
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportSummaryDto
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportType
@@ -80,9 +79,7 @@ import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
-import retrofit2.http.Streaming
 import retrofit2.http.Url
-import retrofit2.Response
 
 interface ApiService {
     @POST("auth/login")
@@ -268,14 +265,6 @@ interface ApiService {
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 20,
     ): ApiResponse<EventReportDto>
-
-    @Streaming
-    @POST("events/{eventId}/reports/{reportType}/export")
-    suspend fun exportEventReport(
-        @Path("eventId") eventId: String,
-        @Path("reportType") reportType: EventReportType,
-        @Body request: EventReportExportRequestDto,
-    ): Response<ResponseBody>
 
     @GET("organizer/events/{eventId}/staff")
     suspend fun getOrganizerStaff(@Path("eventId") eventId: String): ApiResponse<List<OrganizerStaffDto>>
