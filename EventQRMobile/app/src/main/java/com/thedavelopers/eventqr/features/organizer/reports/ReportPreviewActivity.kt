@@ -29,6 +29,10 @@ import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonPrimitive
+import com.google.gson.JsonSerializer
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.features.organizer.*
@@ -50,6 +54,7 @@ import java.io.StringWriter
 import java.io.FileOutputStream
 import java.io.OutputStream
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -66,6 +71,23 @@ class ReportPreviewActivity : AppCompatActivity() {
         private const val EXTRA_SOURCE_FILTERS = "source_filters"
         private const val EXTRA_IS_COMBINED = "is_combined"
 
+        // Extras travel as JSON, not java.io.Serializable: Java serialization walks fields by
+        // reflection and throws NotSerializableException under R8 (release builds only).
+        private val extrasGson = GsonBuilder()
+            .registerTypeAdapter(LocalDate::class.java, JsonSerializer<LocalDate> { src, _, _ -> JsonPrimitive(src.toString()) })
+            .registerTypeAdapter(LocalDate::class.java, JsonDeserializer<LocalDate> { json, _, _ -> LocalDate.parse(json.asString) })
+            .create()
+
+        private fun <T> Intent.getJsonExtra(name: String, type: Class<T>): T? {
+            val json = getStringExtra(name) ?: return null
+            return try {
+                extrasGson.fromJson(json, type)
+            } catch (e: Exception) {
+                android.util.Log.e("ReportPreview", "Failed to read extra $name", e)
+                null
+            }
+        }
+
         fun newSingleIntent(
             context: Context,
             eventId: String,
@@ -75,9 +97,9 @@ class ReportPreviewActivity : AppCompatActivity() {
         ): Intent {
             return Intent(context, ReportPreviewActivity::class.java).apply {
                 putExtra(EXTRA_EVENT_ID, eventId)
-                putExtra(EXTRA_REPORT, report)
-                putExtra(EXTRA_SUMMARY, summary)
-                putExtra(EXTRA_SOURCE_FILTERS, sourceFilters)
+                putExtra(EXTRA_REPORT, extrasGson.toJson(report))
+                putExtra(EXTRA_SUMMARY, extrasGson.toJson(summary))
+                putExtra(EXTRA_SOURCE_FILTERS, extrasGson.toJson(sourceFilters))
                 putExtra(EXTRA_IS_COMBINED, false)
             }
         }
@@ -90,8 +112,8 @@ class ReportPreviewActivity : AppCompatActivity() {
         ): Intent {
             return Intent(context, ReportPreviewActivity::class.java).apply {
                 putExtra(EXTRA_EVENT_ID, eventId)
-                putExtra(EXTRA_REPORTS, reports.toTypedArray())
-                putExtra(EXTRA_SUMMARY, summary)
+                putExtra(EXTRA_REPORTS, extrasGson.toJson(reports))
+                putExtra(EXTRA_SUMMARY, extrasGson.toJson(summary))
                 putExtra(EXTRA_IS_COMBINED, true)
             }
         }
@@ -115,14 +137,13 @@ class ReportPreviewActivity : AppCompatActivity() {
 
         eventId = intent.getStringExtra(EXTRA_EVENT_ID) ?: return finishWithError(getString(R.string.report_preview_event_id_missing))
         isCombined = intent.getBooleanExtra(EXTRA_IS_COMBINED, false)
-        summary = intent.getSerializableExtra(EXTRA_SUMMARY) as? EventReportSummaryDto ?: EventReportSummaryDto()
+        summary = intent.getJsonExtra(EXTRA_SUMMARY, EventReportSummaryDto::class.java) ?: EventReportSummaryDto()
 
         if (isCombined) {
-            val array = intent.getSerializableExtra(EXTRA_REPORTS) as? Array<EventReportDto>
-            combinedReports = array?.toList() ?: emptyList()
+            combinedReports = intent.getJsonExtra(EXTRA_REPORTS, Array<EventReportDto>::class.java)?.toList() ?: emptyList()
         } else {
-            singleReport = intent.getSerializableExtra(EXTRA_REPORT) as? EventReportDto
-            sourceFilters = intent.getSerializableExtra(EXTRA_SOURCE_FILTERS) as? EventReportFiltersDto ?: EventReportFiltersDto()
+            singleReport = intent.getJsonExtra(EXTRA_REPORT, EventReportDto::class.java)
+            sourceFilters = intent.getJsonExtra(EXTRA_SOURCE_FILTERS, EventReportFiltersDto::class.java) ?: EventReportFiltersDto()
         }
 
         if (!isCombined && singleReport == null) {
