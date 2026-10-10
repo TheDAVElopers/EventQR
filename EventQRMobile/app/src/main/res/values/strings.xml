@@ -16,6 +16,7 @@
     <string name="staff_assigned_done">Done</string>
     <string name="claimed_reward_no_points_deducted">No points deducted</string>
     <string name="error_invalid_phone">Enter a valid mobile number: 12 digits starting with 63 (for example 639171234567).</string>
+    <string name="error_invalid_phone_prefixed">Enter the 10 digits after +63 (for example 9171234567).</string>
     <string name="login_account_disabled">Account is disabled. Contact support.</string>
     <string name="login_rate_limited">Too many login attempts. Please wait a moment and try again.</string>
     <plurals name="login_rate_limited_minutes">

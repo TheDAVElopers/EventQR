@@ -110,7 +110,7 @@ class AttendeeEditProfileActivityTest {
         activity.findViewById<android.widget.Button>(R.id.btnSaveChanges).performClick()
 
         assertEquals(
-            activity.getString(R.string.error_invalid_phone),
+            activity.getString(R.string.error_invalid_phone_prefixed),
             phoneInput(activity).error.toString(),
         )
     }

@@ -251,7 +251,7 @@ class RegistrationActivityTest {
         activity.findViewById<Button>(R.id.btnRegister).performClick()
 
         assertEquals(
-            activity.getString(R.string.error_invalid_phone),
+            activity.getString(R.string.error_invalid_phone_prefixed),
             activity.findViewById<EditText>(R.id.edtPhoneNumber).error.toString(),
         )
         assertNull(shadowOf(activity).peekNextStartedActivity())

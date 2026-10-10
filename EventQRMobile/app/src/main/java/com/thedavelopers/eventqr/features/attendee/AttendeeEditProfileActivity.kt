@@ -192,7 +192,7 @@ class AttendeeEditProfileActivity : AppCompatActivity() {
         // Same rule as registration: the field holds normalized national digits and the
         // assembled E.164 value must satisfy Validators.isValidPhoneNumber.
         if (!Validators.isValidPhoneNumber("+63$phone")) {
-            edtPhone.error = getString(R.string.error_invalid_phone)
+            edtPhone.error = getString(R.string.error_invalid_phone_prefixed)
             return false
         }
         return true

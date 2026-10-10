@@ -40,6 +40,7 @@ import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.AccountRoles;
 import com.thedavelopers.eventqr.shared.constants.EventStatus;
 import com.thedavelopers.eventqr.shared.constants.ScanPurposeCode;
+import com.thedavelopers.eventqr.shared.constants.TransactionResult;
 import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.interfaces.ScanPurposePort.ScanPurposeSnapshot;
@@ -222,10 +223,11 @@ public class StaffController {
     public ResponseEntity<ApiResponse<Page<TransactionResponse>>> transactions(HttpServletRequest request,
                                                                                 @PathVariable UUID eventId,
                                                                                 @RequestParam(required = false) UUID attendeeUserId,
+                                                                                @RequestParam(required = false) TransactionResult result,
                                                                                 @RequestParam(defaultValue = "0") int page,
                                                                                 @RequestParam(defaultValue = "20") int size) {
         requireActiveAssignment(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success(transactionService.findForEventStaff(eventId, attendeeUserId, pageable(page, size))));
+        return ResponseEntity.ok(ApiResponse.success(transactionService.findForEventStaff(eventId, attendeeUserId, result, pageable(page, size))));
     }
 
     @GetMapping("/events/{eventId}/transactions/today")

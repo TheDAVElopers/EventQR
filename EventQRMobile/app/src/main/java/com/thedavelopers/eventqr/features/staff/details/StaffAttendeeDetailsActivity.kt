@@ -140,8 +140,8 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
         val countText = findViewById<TextView>(R.id.txtDetailTransactionCount)
 
         lifecycleScope.launch {
-            // size=1: only totalElements is read, so the full list is never fetched.
-            when (val txResult = repository.getTransactionsByEvent(eventId, attendeeId, page = 0, size = 1)) {
+            // size=1: only totalElements is read, so the full list is never fetched. APPROVED only: rejected scans don't count.
+            when (val txResult = repository.getTransactionsByEvent(eventId, attendeeId, page = 0, size = 1, result = "APPROVED")) {
                 is NetworkResult.Success -> countText.text = txResult.data.totalElements.toString()
                 is NetworkResult.Error -> countText.text = getString(R.string.common_value_unavailable)
                 NetworkResult.Loading -> Unit

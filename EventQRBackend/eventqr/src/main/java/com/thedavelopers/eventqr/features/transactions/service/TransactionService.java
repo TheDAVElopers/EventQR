@@ -471,10 +471,23 @@ public class TransactionService {
     /** Staff view of an event's transactions: newest first, optionally narrowed to one attendee. */
     @Transactional(readOnly = true)
     public Page<TransactionResponse> findForEventStaff(UUID eventId, UUID attendeeUserId, Pageable pageable) {
+        return findForEventStaff(eventId, attendeeUserId, null, pageable);
+    }
+
+    /** As above, optionally restricted to one result (e.g. APPROVED so rejected scans are not counted). */
+    @Transactional(readOnly = true)
+    public Page<TransactionResponse> findForEventStaff(UUID eventId, UUID attendeeUserId, TransactionResult result, Pageable pageable) {
         Pageable sorted = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), NEWEST_FIRST);
-        Page<TransactionLog> logs = attendeeUserId == null
-                ? transactionLogRepository.findByEventId(eventId, sorted)
-                : transactionLogRepository.findByEventIdAndAttendeeUserId(eventId, attendeeUserId, sorted);
+        Page<TransactionLog> logs;
+        if (result == null) {
+            logs = attendeeUserId == null
+                    ? transactionLogRepository.findByEventId(eventId, sorted)
+                    : transactionLogRepository.findByEventIdAndAttendeeUserId(eventId, attendeeUserId, sorted);
+        } else {
+            logs = attendeeUserId == null
+                    ? transactionLogRepository.findByEventIdAndTransactionResult(eventId, result, sorted)
+                    : transactionLogRepository.findByEventIdAndAttendeeUserIdAndTransactionResult(eventId, attendeeUserId, result, sorted);
+        }
         return logs.map(this::toResponse);
     }
 

@@ -506,7 +506,8 @@ interface ApiService {
         @Path("eventId") eventId: String,
         @Query("attendeeUserId") attendeeUserId: String? = null,
         @Query("page") page: Int = 0,
-        @Query("size") size: Int = 20
+        @Query("size") size: Int = 20,
+        @Query("result") result: String? = null
     ): ApiResponse<PageResponse<TransactionResponse>>
 
     @GET("staff/transactions")

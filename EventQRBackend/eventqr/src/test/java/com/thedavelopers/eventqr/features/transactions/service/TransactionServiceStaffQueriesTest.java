@@ -149,6 +149,27 @@ class TransactionServiceStaffQueriesTest {
         assertThat(pageable.getValue().getSort()).isEqualTo(NEWEST_FIRST);
     }
 
+    @Test
+    void approvedOnlyAttendeeFilterUsesResultScopedQueryAndNeverTheUnfilteredOne() {
+        when(logs.findByEventIdAndAttendeeUserIdAndTransactionResult(eq(eventId), eq(attendeeId), eq(TransactionResult.APPROVED), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(log()), PageRequest.of(0, 1), 3));
+
+        Page<TransactionResponse> page = service.findForEventStaff(eventId, attendeeId, TransactionResult.APPROVED, PageRequest.of(0, 1));
+
+        assertThat(page.getTotalElements()).isEqualTo(3);
+        verify(logs, never()).findByEventIdAndAttendeeUserId(any(), any(), any());
+        verify(logs, never()).findByEventId(any(), any(Pageable.class));
+    }
+
+    @Test
+    void approvedOnlyEventFilterWithoutAttendeeUsesEventResultQuery() {
+        when(logs.findByEventIdAndTransactionResult(eq(eventId), eq(TransactionResult.APPROVED), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(log())));
+
+        assertThat(service.findForEventStaff(eventId, null, TransactionResult.APPROVED, PageRequest.of(0, 20)).getContent()).hasSize(1);
+        verify(logs, never()).findByEventId(any(), any(Pageable.class));
+    }
+
     // ----- summary -----
 
     @Test

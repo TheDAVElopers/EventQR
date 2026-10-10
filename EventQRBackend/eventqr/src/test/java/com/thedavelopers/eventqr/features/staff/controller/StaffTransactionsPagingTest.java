@@ -168,7 +168,7 @@ class StaffTransactionsPagingTest {
     @Test
     void eventTransactionsArePagedAndCanBeFilteredToOneAttendee() throws Exception {
         Page<TransactionResponse> page = new PageImpl<>(List.of(tx(), tx()), PageRequest.of(0, 1), 12);
-        when(transactionService.findForEventStaff(eq(eventId), eq(attendeeId), any(Pageable.class))).thenReturn(page);
+        when(transactionService.findForEventStaff(eq(eventId), eq(attendeeId), eq(null), any(Pageable.class))).thenReturn(page);
 
         mvc.perform(get("/api/v1/staff/events/{id}/transactions", eventId)
                         .param("attendeeUserId", attendeeId.toString()).param("size", "1").header("Authorization", AUTH))
@@ -177,13 +177,36 @@ class StaffTransactionsPagingTest {
                 .andExpect(jsonPath("$.data.content.length()").value(2));
 
         ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
-        verify(transactionService).findForEventStaff(eq(eventId), eq(attendeeId), pageable.capture());
+        verify(transactionService).findForEventStaff(eq(eventId), eq(attendeeId), eq(null), pageable.capture());
         assertThat(pageable.getValue().getPageSize()).isEqualTo(1);
     }
 
     @Test
+    void eventTransactionsResultParamIsPassedToService() throws Exception {
+        when(transactionService.findForEventStaff(eq(eventId), eq(attendeeId), eq(com.thedavelopers.eventqr.shared.constants.TransactionResult.APPROVED), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(tx()), PageRequest.of(0, 1), 4));
+
+        mvc.perform(get("/api/v1/staff/events/{id}/transactions", eventId)
+                        .param("attendeeUserId", attendeeId.toString()).param("result", "APPROVED").param("size", "1")
+                        .header("Authorization", AUTH))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(4));
+
+        verify(transactionService).findForEventStaff(eq(eventId), eq(attendeeId), eq(TransactionResult.APPROVED), any(Pageable.class));
+    }
+
+    @Test
+    void eventTransactionsRejectsUnknownResultValueWithoutCallingService() throws Exception {
+        mvc.perform(get("/api/v1/staff/events/{id}/transactions", eventId)
+                        .param("result", "bogus").header("Authorization", AUTH))
+                .andExpect(status().isBadRequest());
+
+        verify(transactionService, never()).findForEventStaff(any(), any(), any(), any(Pageable.class));
+    }
+
+    @Test
     void eventTransactionsWithoutAFilterPassNullAndStillNeedAssignment() throws Exception {
-        when(transactionService.findForEventStaff(eq(eventId), eq(null), any(Pageable.class))).thenReturn(Page.empty(PageRequest.of(0, 20)));
+        when(transactionService.findForEventStaff(eq(eventId), eq(null), eq(null), any(Pageable.class))).thenReturn(Page.empty(PageRequest.of(0, 20)));
         mvc.perform(get("/api/v1/staff/events/{id}/transactions", eventId).header("Authorization", AUTH))
                 .andExpect(status().isOk());
 

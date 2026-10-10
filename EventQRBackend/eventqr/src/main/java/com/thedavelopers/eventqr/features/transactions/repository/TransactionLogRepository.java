@@ -52,6 +52,8 @@ public interface TransactionLogRepository extends JpaRepository<TransactionLog, 
     Page<TransactionLog> findByStaffUserIdAndEventIdAndScanPurposeIdOrderByScannedAtDesc(UUID staffUserId, UUID eventId, UUID scanPurposeId, Pageable pageable);
 
     Page<TransactionLog> findByEventIdAndAttendeeUserId(UUID eventId, UUID attendeeUserId, Pageable pageable);
+    Page<TransactionLog> findByEventIdAndTransactionResult(UUID eventId, TransactionResult result, Pageable pageable);
+    Page<TransactionLog> findByEventIdAndAttendeeUserIdAndTransactionResult(UUID eventId, UUID attendeeUserId, TransactionResult result, Pageable pageable);
 
     // COUNT queries for the staff summary (caller's own scans).
     long countByStaffUserId(UUID staffUserId);

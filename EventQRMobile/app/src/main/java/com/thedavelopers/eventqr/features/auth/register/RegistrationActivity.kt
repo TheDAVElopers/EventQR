@@ -96,7 +96,7 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
             // (+63 + digits, e.g. +639171234567) is assembled only here at submit time.
             val phoneDigits = phoneInput.text.toString()
             if (phoneDigits.length != 10) {
-                phoneInput.error = getString(R.string.error_invalid_phone)
+                phoneInput.error = getString(R.string.error_invalid_phone_prefixed)
                 return@setOnClickListener
             }
             presenter.submitRegistration(
@@ -133,7 +133,7 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
                 lastNameInput.error = message
             }
             "email" -> emailInput.error = message
-            "phone" -> phoneInput.error = if (message == Validators.PHONE_ERROR) getString(R.string.error_invalid_phone) else message
+            "phone" -> phoneInput.error = if (message == Validators.PHONE_ERROR) getString(R.string.error_invalid_phone_prefixed) else message
             "password" -> passwordInput.error = if (message == Validators.PASSWORD_TOO_LONG_ERROR) getString(R.string.error_password_too_long) else message
             "confirmPassword" -> confirmPasswordInput.error = message
         }

@@ -53,8 +53,9 @@ open class StaffRepository(context: Context) {
         attendeeUserId: String? = null,
         page: Int = 0,
         size: Int = 20,
+        result: String? = null,
     ): NetworkResult<PageResponse<TransactionResponse>> =
-        safeApiCall { apiService.getStaffTransactions(eventId, attendeeUserId, page, size) }
+        safeApiCall { apiService.getStaffTransactions(eventId, attendeeUserId, page, size, result) }
 
     /** The caller's own scans, newest first, one server page at a time. */
     open suspend fun getMyTransactions(
