@@ -56,7 +56,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     private lateinit var skeletonLoading: View
     private lateinit var attendeeCard: View
     private lateinit var organizerCard: View
-    private lateinit var notificationsCard: View
+    private lateinit var requestEventCard: View
     private lateinit var notificationBell: ImageView
     private lateinit var notificationBadge: TextView
     private lateinit var upcomingEventsLayout: LinearLayout
@@ -93,7 +93,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         skeletonLoading = findViewById(R.id.skeletonLoading)
         attendeeCard = findViewById(R.id.btnAttendeeHub)
         organizerCard = findViewById(R.id.btnTransactionHistory)
-        notificationsCard = findViewById(R.id.btnNotificationsHub)
+        requestEventCard = findViewById(R.id.btnRequestEventCard)
         notificationBell = findViewById(R.id.btnDashboardNotifications)
         notificationBadge = findViewById(R.id.txtNotificationBadge)
         upcomingEventsLayout = findViewById(R.id.layoutUpcomingEvents)
@@ -431,7 +431,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         organizerCard.setOnClickListener {
             startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.AttendeeTransactionsActivity::class.java))
         }
-        notificationsCard.setOnClickListener {
+        requestEventCard.setOnClickListener {
             startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.RequestEventActivity::class.java))
         }
     }

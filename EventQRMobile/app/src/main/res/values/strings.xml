@@ -484,7 +484,6 @@
     <string name="edit_event_details_no_banner_set_tap_below_to_choose_a">No banner set. Tap below to choose a 16:9 landscape image.</string>
     <string name="edit_event_details_current_banner_tap_below_to_replace">Current banner. Tap below to replace it.</string>
     <string name="edit_event_details_capacity_must_be_greater_than_0">Capacity must be greater than 0</string>
-    <string name="edit_event_details_backend_does_not_report_this_event_s">Backend does not report this event\'s organizer; update the app server.</string>
     <string name="event_reports_end_date_must_be_after_start_date">End date must be after start date</string>
     <string name="event_reports_generating_reports">Generating reports</string>
     <string name="event_reports_please_wait_while_all_report_section">Please wait while all report sections are prepared.</string>

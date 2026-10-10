@@ -10,7 +10,6 @@ import com.thedavelopers.eventqr.features.auth.model.dto.ForgotPasswordRequest
 import com.thedavelopers.eventqr.features.auth.model.dto.ResetPasswordRequest
 import com.thedavelopers.eventqr.features.auth.model.dto.VerifyResetCodeRequest
 import com.thedavelopers.eventqr.features.auth.model.dto.ChangePasswordRequest
-import com.thedavelopers.eventqr.features.audit.model.dto.AuditLogRequest
 import com.thedavelopers.eventqr.features.audit.model.dto.AuditLogResponse
 import com.thedavelopers.eventqr.features.dashboard.model.dto.DashboardSummary
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
@@ -66,7 +65,6 @@ import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionRequ
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
 import com.thedavelopers.eventqr.features.users.model.dto.UserRequest
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
-import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import retrofit2.http.Body
@@ -145,12 +143,6 @@ interface ApiService {
 
     @DELETE("admin/users/{userId}")
     suspend fun deleteUser(@Path("userId") userId: String): ApiResponse<Unit>
-
-    @PUT("users/{userId}/role/{role}")
-    suspend fun changeUserRole(
-        @Path("userId") userId: String,
-        @Path("role") role: AccountRole,
-    ): ApiResponse<UserResponse>
 
     @POST("events")
     suspend fun createEvent(@Body request: EventRequest): ApiResponse<EventResponse>
@@ -233,12 +225,6 @@ interface ApiService {
     @GET("organizer/events/{eventId}/attendees")
     suspend fun getOrganizerAttendees(@Path("eventId") eventId: String): ApiResponse<List<OrganizerAttendeeDto>>
 
-    @GET("organizer/events/{eventId}/attendees/{attendeeId}")
-    suspend fun getOrganizerAttendee(
-        @Path("eventId") eventId: String,
-        @Path("attendeeId") attendeeId: String,
-    ): ApiResponse<OrganizerAttendeeDto>
-
     @GET("organizer/events/{eventId}/transactions")
     suspend fun getOrganizerTransactions(@Path("eventId") eventId: String): ApiResponse<List<OrganizerTransactionDto>>
 
@@ -262,8 +248,6 @@ interface ApiService {
         @Query("endDate") endDate: String? = null,
         @Query("attendeeQuery") attendeeQuery: String? = null,
         @Query("status") status: EventReportFilterStatus = EventReportFilterStatus.ALL,
-        @Query("page") page: Int = 0,
-        @Query("size") size: Int = 20,
     ): ApiResponse<EventReportDto>
 
     @GET("organizer/events/{eventId}/staff")
@@ -402,20 +386,8 @@ interface ApiService {
     suspend fun markMyQrDownloaded(@Path("qrCredentialId") qrCredentialId: String): ApiResponse<QrCredentialSnapshot>
 
     @Multipart
-    @POST("organizer/events/{eventId}/id-template/logo")
-    suspend fun uploadIdTemplateLogo(@Path("eventId") eventId: String, @Part file: MultipartBody.Part): ApiResponse<Unit>
-
-    @Multipart
     @POST("uploads/event-logo")
     suspend fun uploadEventLogo(@Part file: MultipartBody.Part): ApiResponse<StoredFileResponse>
-
-    @Multipart
-    @POST("uploads/id-template-assets")
-    suspend fun uploadIdTemplateAssets(@Part file: MultipartBody.Part): ApiResponse<Unit>
-
-    @Multipart
-    @POST("uploads/profile-photo")
-    suspend fun uploadProfilePhoto(@Part file: MultipartBody.Part): ApiResponse<Unit>
 
     @GET("admin/audit-logs")
     suspend fun getAdminAuditLogs(
@@ -423,9 +395,6 @@ interface ApiService {
         @Query("size") size: Int = 100,
         @Query("actionPrefix") actionPrefix: String? = null,
     ): ApiResponse<com.google.gson.JsonElement>
-
-    @POST("audit-logs")
-    suspend fun createAuditLog(@Body request: AuditLogRequest): ApiResponse<Unit>
 
     @POST("scan-purposes")
     suspend fun createScanPurpose(@Body request: ScanPurposeRequest): ApiResponse<ScanPurposeResponse>
@@ -525,9 +494,6 @@ interface ApiService {
 
     @POST("staff/events/{eventId}/scan/exit")
     suspend fun logExit(@Path("eventId") eventId: String, @Body request: TransactionRequest): ApiResponse<TransactionResponse>
-
-    @POST("staff/events/{eventId}/scan/reject")
-    suspend fun logReject(@Path("eventId") eventId: String, @Body request: TransactionRequest): ApiResponse<TransactionResponse>
 
     @GET("staff/events/{eventId}/scan/latest")
     suspend fun getLatestScan(@Path("eventId") eventId: String): ApiResponse<TransactionResponse>

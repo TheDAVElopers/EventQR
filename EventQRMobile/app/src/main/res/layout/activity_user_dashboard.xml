@@ -358,7 +358,7 @@
 
                         <!-- Request Event -->
                         <LinearLayout
-                            android:id="@+id/btnNotificationsHub"
+                            android:id="@+id/btnRequestEventCard"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"

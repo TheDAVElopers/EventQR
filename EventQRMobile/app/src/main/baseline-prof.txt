@@ -4075,7 +4075,6 @@ Lcom/thedavelopers/eventqr/core/util/UiStrings;
 SPLcom/thedavelopers/eventqr/core/util/UiStrings;-><clinit>()V
 SPLcom/thedavelopers/eventqr/core/util/UiStrings;-><init>(Landroid/content/Context;)V
 Lcom/thedavelopers/eventqr/features/admin/dashboard/AdminDashboardActivity;
-Lcom/thedavelopers/eventqr/features/audit/model/dto/AuditLogRequest;
 Lcom/thedavelopers/eventqr/features/auth/AuthRepository;
 SPLcom/thedavelopers/eventqr/features/auth/AuthRepository;-><clinit>()V
 SPLcom/thedavelopers/eventqr/features/auth/AuthRepository;-><init>(Landroid/content/Context;)V

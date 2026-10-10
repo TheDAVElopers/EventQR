@@ -28,7 +28,7 @@ class PortalSwitcherTest {
         // RoleMapper maps "USER" -> "ATTENDEE"; the switcher must never receive the raw form.
         assertEquals(
             listOf(PortalSwitcher.PORTAL_ATTENDEE),
-            PortalSwitcher.portalsForRole(AccountRole.USER.name),
+            PortalSwitcher.portalsForRole("USER"),
         )
     }
 
@@ -68,7 +68,7 @@ class PortalSwitcherTest {
     fun attendee_neverOfferedElevatedPortals() {
         val attendeePortals =
             PortalSwitcher.portalsForRole(AccountRole.ATTENDEE.name) +
-                PortalSwitcher.portalsForRole(AccountRole.USER.name)
+                PortalSwitcher.portalsForRole("USER")
         listOf(
             PortalSwitcher.PORTAL_STAFF,
             PortalSwitcher.PORTAL_ORGANIZER,

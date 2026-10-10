@@ -2,7 +2,6 @@ package com.thedavelopers.eventqr.core.api.dto
 
 enum class AccountRole {
     ATTENDEE,
-    USER,
     ORGANIZER,
     STAFF,
     ADMIN,

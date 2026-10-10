@@ -79,7 +79,7 @@ class RoleMapperTest {
     fun isAtLeast_admitsEveryKnownRoleAtAttendeeFloor() {
         listOf(
             AccountRole.ATTENDEE.name,
-            AccountRole.USER.name,
+            "USER",
             AccountRole.STAFF.name,
             AccountRole.ORGANIZER.name,
             AccountRole.ADMIN.name,

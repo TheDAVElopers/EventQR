@@ -593,11 +593,6 @@ class EditEventDetailsActivity : AppCompatActivity() {
             Toast.makeText(this, this.getString(R.string.edit_event_details_event_not_loaded_yet), Toast.LENGTH_SHORT).show()
             return
         }
-        val organizerId = current.organizerUserId ?: run {
-            statusView.text = getString(R.string.edit_event_details_backend_does_not_report_this_event_s)
-            statusView.setTextColor(ERROR)
-            return
-        }
 
         saveButton.isEnabled = false
         statusView.text = ""
@@ -616,7 +611,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
             }
             val bannerFileId = uploadResult ?: newBannerFileId ?: current.eventLogoUrl
 
-            val request = buildRequest(current, organizerId, bannerFileId)
+            val request = buildRequest(current, bannerFileId)
             when (val result = withContext(NonCancellable) { repository.updateOrganizerEvent(eventId, request) }.also { ensureActive() }) {
                 is NetworkResult.Success -> {
                     Toast.makeText(this@EditEventDetailsActivity, this@EditEventDetailsActivity.getString(R.string.edit_event_details_event_updated), Toast.LENGTH_SHORT).show()
@@ -632,7 +627,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
         }
     }
 
-    private fun buildRequest(current: OrganizerEventDto, organizerId: java.util.UUID, bannerFileId: String?): EventRequest = EventRequest(
+    private fun buildRequest(current: OrganizerEventDto, bannerFileId: String?): EventRequest = EventRequest(
         title = titleInput.text.toString().trim(),
         description = descriptionInput.text.toString().trim().ifBlank { null },
         location = venueInput.text.toString().trim().ifBlank { null },
@@ -643,7 +638,6 @@ class EditEventDetailsActivity : AppCompatActivity() {
         eventEndAt = current.eventEndAt,
         capacity = capacityInput.text.toString().trim().toInt(),
         rewardsEnabled = current.rewardsEnabled ?: false,
-        organizerUserId = organizerId,
     )
 
     companion object {

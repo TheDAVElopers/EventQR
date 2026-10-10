@@ -100,7 +100,7 @@ open class LoginActivity : AppCompatActivity(), LoginContract.View {
                 com.thedavelopers.eventqr.features.organizer.dashboard.OrganizerDashboardActivity::class.java
             AccountRole.ADMIN.name, AccountRole.SUPER_ADMIN.name ->
                 com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity::class.java
-            AccountRole.ATTENDEE.name, AccountRole.USER.name -> DashboardActivity::class.java
+            AccountRole.ATTENDEE.name -> DashboardActivity::class.java
             "" -> {
                 showMessage(getString(R.string.login_unable_to_determine_account_role))
                 return

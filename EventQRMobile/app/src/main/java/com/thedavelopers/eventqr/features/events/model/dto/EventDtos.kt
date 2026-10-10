@@ -16,7 +16,6 @@ data class EventRequest(
     val eventEndAt: Instant? = null,
     val capacity: Int,
     val rewardsEnabled: Boolean,
-    val organizerUserId: UUID,
 )
 
 data class EventApprovalRequest(
