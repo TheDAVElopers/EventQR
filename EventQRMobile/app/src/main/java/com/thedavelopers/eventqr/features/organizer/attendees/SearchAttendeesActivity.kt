@@ -19,6 +19,7 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.organizer.EXTRA_EVENT_ID
 import com.thedavelopers.eventqr.features.organizer.EXTRA_EVENT_TITLE
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpAttendee
+import com.thedavelopers.eventqr.features.organizer.OrganizerMvpDataSource
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpEvent
 import com.thedavelopers.eventqr.features.organizer.OrganizerRepository
 import com.thedavelopers.eventqr.features.organizer.intentEventId
@@ -26,6 +27,7 @@ import com.thedavelopers.eventqr.features.organizer.intentEventTitle
 import com.thedavelopers.eventqr.features.organizer.matchesOrganizerAttendeeQuery
 import com.thedavelopers.eventqr.features.organizer.resolveSelectedEvent
 import com.thedavelopers.eventqr.features.organizer.selectedEventId
+import com.thedavelopers.eventqr.features.organizer.showEventsLoadErrorScreen
 import com.thedavelopers.eventqr.features.organizer.showMissingEventScreen
 import kotlinx.coroutines.launch
 
@@ -59,7 +61,12 @@ open class SearchAttendeesActivity : AppCompatActivity() {
             ?: return showMissingEventScreen(getString(R.string.search_attendees_title))
 
         lifecycleScope.launch {
-            selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
+            val eventsLoad = repository.loadApprovedOrganizerEvents()
+            if (eventsLoad.source == OrganizerMvpDataSource.ERROR) {
+                showEventsLoadErrorScreen(getString(R.string.search_attendees_title), eventsLoad.message) { recreate() }
+                return@launch
+            }
+            selectedEvent = resolveSelectedEvent(eventsLoad.data, eventId)
                 ?: run {
                     showMissingEventScreen(getString(R.string.search_attendees_title))
                     return@launch

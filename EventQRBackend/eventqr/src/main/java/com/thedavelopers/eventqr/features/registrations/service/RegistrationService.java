@@ -492,6 +492,14 @@ public class RegistrationService implements RegistrationLookupPort, Registration
         return toSnapshots(registrationRepository.findByEventId(eventId));
     }
 
+    @Override
+    public boolean hasActiveRegistration(UUID eventId, UUID attendeeUserId) {
+        if (eventId == null || attendeeUserId == null) {
+            return false;
+        }
+        return registrationRepository.existsActiveByEventIdAndAttendeeUserId(eventId, attendeeUserId);
+    }
+
     /**
      * The registration is usually already in the persistence context (the scan path loaded it by QR credential),
      * and a locking query would hand back that cached, pre-lock instance. refresh(..., PESSIMISTIC_WRITE) instead

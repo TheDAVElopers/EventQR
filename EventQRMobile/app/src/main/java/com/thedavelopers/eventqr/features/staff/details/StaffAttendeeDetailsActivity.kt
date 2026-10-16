@@ -235,12 +235,21 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
                         visibleFields = visibleFields,
                         qrValue = qrValue,
                     )
+                    // Logged before the dialog opens; report what the user actually did in the print dialog.
+                    val serverMessage = result.data.message
                     AndroidIdPrinter.print(
                         this@StaffAttendeeDetailsActivity,
                         "EventQR ID — $cachedAttendeeName",
                         cardData,
-                    )
-                    Toast.makeText(this@StaffAttendeeDetailsActivity, result.data.message, Toast.LENGTH_SHORT).show()
+                    ) { outcome ->
+                        if (isFinishing || isDestroyed) return@print
+                        val message = when (outcome) {
+                            AndroidIdPrinter.PrintOutcome.SENT -> serverMessage
+                            AndroidIdPrinter.PrintOutcome.CANCELLED -> getString(R.string.staff_print_cancelled_message)
+                            AndroidIdPrinter.PrintOutcome.FAILED -> getString(R.string.staff_print_job_failed_message)
+                        }
+                        Toast.makeText(this@StaffAttendeeDetailsActivity, message, Toast.LENGTH_LONG).show()
+                    }
                 }
                 is NetworkResult.Error -> Toast.makeText(this@StaffAttendeeDetailsActivity, result.message, Toast.LENGTH_SHORT).show()
                 NetworkResult.Loading -> Unit

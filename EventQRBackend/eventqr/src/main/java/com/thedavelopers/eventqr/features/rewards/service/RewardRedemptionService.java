@@ -1,7 +1,9 @@
 package com.thedavelopers.eventqr.features.rewards.service;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -27,7 +29,12 @@ import com.thedavelopers.eventqr.shared.constants.RedemptionStatus;
 import com.thedavelopers.eventqr.shared.constants.RewardStatus;
 import com.thedavelopers.eventqr.shared.constants.TransactionResult;
 import com.thedavelopers.eventqr.shared.constants.TransactionType;
+import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
+import com.thedavelopers.eventqr.shared.exceptions.ConflictException;
+import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
+import com.thedavelopers.eventqr.shared.exceptions.GlobalExceptionHandler;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
+import com.thedavelopers.eventqr.shared.interfaces.RegistrationLookupPort;
 import com.thedavelopers.eventqr.features.notifications.service.NotificationService;
 
 @Service
@@ -35,6 +42,9 @@ import com.thedavelopers.eventqr.features.notifications.service.NotificationServ
 public class RewardRedemptionService {
 
     private static final Logger log = LoggerFactory.getLogger(RewardRedemptionService.class);
+
+    /** How long an APPROVED redemption scan can be spent after it was recorded. */
+    public static final Duration REDEMPTION_SCAN_TTL = Duration.ofMinutes(15);
 
 private final NotificationService notificationService;
 
@@ -45,6 +55,7 @@ private final NotificationService notificationService;
     private final DuplicateRewardClaimChecker duplicateRewardClaimChecker;
     private final EventRepository eventRepository;
     private final PointTransactionRepository pointTransactionRepository;
+    private final RegistrationLookupPort registrationLookupPort;
 
     public RewardRedemptionService(RewardRepository rewardRepository,
                                    RewardRedemptionRepository rewardRedemptionRepository,
@@ -53,7 +64,9 @@ private final NotificationService notificationService;
                                    DuplicateRewardClaimChecker duplicateRewardClaimChecker,
                                    EventRepository eventRepository,
                                    NotificationService notificationService,
-                                   PointTransactionRepository pointTransactionRepository) {
+                                   PointTransactionRepository pointTransactionRepository,
+                                   RegistrationLookupPort registrationLookupPort) {
+        this.registrationLookupPort = registrationLookupPort;
         this.pointTransactionRepository = pointTransactionRepository;
         this.notificationService = notificationService;
         this.rewardRepository = rewardRepository;
@@ -64,9 +77,18 @@ private final NotificationService notificationService;
         this.eventRepository = eventRepository;
     }
 
+    /**
+     * Redeems against a prior redemption scan. {@code request.staffUserId()} must already be the authenticated
+     * caller (the controller overwrites it). The scan log is row-locked and must be a fresh, APPROVED, unused
+     * redemption-purpose scan of the same attendee at the same event by the same staff member. Those checks throw
+     * (no REJECTED row is written) because they are integrity/authorization failures, not business rejections.
+     * Lock order: scan log, then reward, then balance.
+     */
     public RewardRedemptionResultResponse redeem(RewardRedemptionGrantRequest request) {
-        TransactionLog scanLog = transactionLogRepository.findById(request.redemptionScanLogId())
+        transactionLogRepository.boundLockWaits(); // bounded wait on the scan-log row lock below
+        TransactionLog scanLog = transactionLogRepository.findByIdForUpdate(request.redemptionScanLogId())
                 .orElseThrow(() -> new ResourceNotFoundException("Redemption scan log not found"));
+        requireUsableRedemptionScan(scanLog, request);
 
         rewardRepository.boundLockWaits(); // bounded wait on the reward/balance row locks below
         Reward reward = rewardRepository.findByIdForUpdate(request.rewardId())
@@ -78,6 +100,10 @@ private final NotificationService notificationService;
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
         if (!rewardEvent.isRewardsEnabled()) {
             return reject(request, reward, scanLog, "Reward redemption is disabled for this event");
+        }
+        // The registration can be cancelled between the scan and the redemption (inside the TTL window).
+        if (!registrationLookupPort.hasActiveRegistration(request.eventId(), request.attendeeUserId())) {
+            return reject(request, reward, scanLog, "Registration is not active");
         }
         if (reward.getStatus() != RewardStatus.ACTIVE) {
             return reject(request, reward, scanLog, "Reward is no longer active");
@@ -156,6 +182,34 @@ private final NotificationService notificationService;
         return new RewardRedemptionResultResponse(saved.getId(), reward.getId(), reward.getName(),
                 RedemptionStatus.REDEEMED, null, reward.getPointsRequired(), saved.getRedeemedAt(),
                 balance.getPointsBalance());
+    }
+
+    private void requireUsableRedemptionScan(TransactionLog scanLog, RewardRedemptionGrantRequest request) {
+        if (!Objects.equals(scanLog.getEventId(), request.eventId())
+                || !Objects.equals(scanLog.getAttendeeUserId(), request.attendeeUserId())
+                || request.staffUserId() == null
+                || !Objects.equals(scanLog.getStaffUserId(), request.staffUserId())) {
+            throw new ForbiddenException("Redemption scan does not match this attendee");
+        }
+        // rewardId != null marks the outcome rows writeTransactionLog writes (type REWARD_REDEMPTION); those are
+        // never replayable as scans.
+        if (scanLog.getRewardId() != null
+                || (scanLog.getTransactionType() != TransactionType.REWARD_REDEMPTION_SCAN
+                    && scanLog.getTransactionType() != TransactionType.REWARD_REDEMPTION)) {
+            throw new BadRequestException("Not a reward redemption scan");
+        }
+        if (scanLog.getTransactionResult() != TransactionResult.APPROVED) {
+            throw new BadRequestException("Redemption scan was rejected. Scan the attendee again.");
+        }
+        if (scanLog.getScannedAt() == null
+                || scanLog.getScannedAt().isBefore(Instant.now().minus(REDEMPTION_SCAN_TTL))) {
+            throw new BadRequestException("Redemption scan has expired. Scan the attendee again.");
+        }
+        // Single use counts only REDEEMED rows: a business rejection (not enough points, out of stock) does not
+        // consume the scan. The partial unique index from V41 is the DB backstop.
+        if (rewardRedemptionRepository.existsByRedemptionScanLogIdAndStatus(scanLog.getId(), RedemptionStatus.REDEEMED)) {
+            throw new ConflictException(GlobalExceptionHandler.REDEMPTION_SCAN_ALREADY_USED_MESSAGE);
+        }
     }
 
     private RewardRedemptionResultResponse reject(RewardRedemptionGrantRequest request, Reward reward,

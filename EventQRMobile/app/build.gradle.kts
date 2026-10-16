@@ -86,6 +86,9 @@ android {
     testOptions {
         unitTests.isReturnDefaultValues = true
         unitTests.isIncludeAndroidResources = true
+        // Instrumented smoke tests (app/src/androidTest): run with window/transition animations off for
+        // this run only (am instrument --no-window-animation); the device's own settings are untouched.
+        animationsDisabled = true
     }
 }
 
@@ -124,6 +127,11 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.okhttp.mockwebserver)
     androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.espresso.intents)
 
     testImplementation(libs.robolectric)
     testImplementation(platform(libs.androidx.compose.bom))

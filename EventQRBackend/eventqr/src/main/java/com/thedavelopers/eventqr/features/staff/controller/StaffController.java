@@ -262,7 +262,8 @@ public class StaffController {
                                                                         @PathVariable UUID eventId,
                                                                         @PathVariable UUID rewardId,
                                                                         @Valid @RequestBody RewardRedemptionRequest body) {
-        requireActiveAssignment(request, eventId);
+        // Scan-less redemption on the attendee's behalf: needs the rewards permission, not just an assignment.
+        requireRewardManager(request, eventId);
         if (!eventService.findOne(eventId).rewardsEnabled()) {
             throw new BadRequestException(TransactionService.REWARDS_DISABLED_MESSAGE);
         }
@@ -274,16 +275,18 @@ public class StaffController {
     public ResponseEntity<ApiResponse<PointBalanceResponse>> assignPoints(HttpServletRequest request,
                                                                           @PathVariable UUID eventId,
                                                                           @Valid @RequestBody PointAdjustmentRequest body) {
-        requireActiveAssignment(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success("Points assigned", rewardService.assignPoints(eventId, body.attendeeUserId(), body.points(), body.reason())));
+        requireRewardManager(request, eventId);
+        return ResponseEntity.ok(ApiResponse.success("Points assigned", rewardService.assignPoints(eventId, body.attendeeUserId(),
+                body.points(), body.reason(), currentUserId(request))));
     }
 
     @PostMapping("/events/{eventId}/points/deduct")
     public ResponseEntity<ApiResponse<PointBalanceResponse>> deductPoints(HttpServletRequest request,
                                                                           @PathVariable UUID eventId,
                                                                           @Valid @RequestBody PointAdjustmentRequest body) {
-        requireActiveAssignment(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success("Points deducted", rewardService.deductPoints(eventId, body.attendeeUserId(), body.points(), body.reason())));
+        requireRewardManager(request, eventId);
+        return ResponseEntity.ok(ApiResponse.success("Points deducted", rewardService.deductPoints(eventId, body.attendeeUserId(),
+                body.points(), body.reason(), currentUserId(request))));
     }
 
     /**
@@ -336,6 +339,17 @@ public class StaffController {
         }
         return eventStaffAssignmentRepository.findByEventIdAndStaffUserIdAndActiveTrue(eventId, staffUserId)
                 .orElseThrow(() -> new ForbiddenException("Staff user is not actively assigned to this event"));
+    }
+
+    /**
+     * Operations that create or move value without a scan (manual points, scan-less redeem): admins and the owning
+     * organizer pass; an assigned staff member (or assigned non-owner organizer) needs can_manage_rewards.
+     */
+    private void requireRewardManager(HttpServletRequest request, UUID eventId) {
+        EventStaffAssignment assignment = requireActiveAssignment(request, eventId);
+        if (assignment != null && !assignment.isCanManageRewards()) {
+            throw new ForbiddenException("Staff user is not allowed to manage rewards for this event");
+        }
     }
 
     private void requireScanPermission(HttpServletRequest request, UUID eventId) {

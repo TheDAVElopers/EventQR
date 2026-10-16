@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,10 +26,35 @@ import com.thedavelopers.eventqr.features.rewards.repository.RewardRedemptionRep
 import com.thedavelopers.eventqr.features.rewards.repository.RewardRepository;
 import com.thedavelopers.eventqr.features.transactions.model.entity.TransactionLog;
 import com.thedavelopers.eventqr.features.transactions.repository.TransactionLogRepository;
+import com.thedavelopers.eventqr.shared.constants.TransactionResult;
+import com.thedavelopers.eventqr.shared.constants.TransactionType;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
+import com.thedavelopers.eventqr.shared.interfaces.RegistrationLookupPort;
 
 /** A redemption whose event row is gone fails closed: nothing is granted, deducted or recorded. */
 class RewardRedemptionServiceMissingEventTest {
+
+    private static RewardRedemptionService service(RewardRepository rewards, RewardRedemptionRepository redemptions,
+                                                   AttendeePointBalanceRepository balances, TransactionLogRepository logs,
+                                                   EventRepository events, PointTransactionRepository points) {
+        RegistrationLookupPort registrations = mock(RegistrationLookupPort.class);
+        when(registrations.hasActiveRegistration(any(), any())).thenReturn(true);
+        return new RewardRedemptionService(rewards, redemptions, balances, logs,
+                mock(DuplicateRewardClaimChecker.class), events, mock(NotificationService.class), points, registrations);
+    }
+
+    /** A fresh APPROVED redemption scan that matches the request, so only the condition under test can fail. */
+    private static TransactionLog scanLog(UUID scanLogId, UUID eventId, UUID attendeeId, UUID staffId) {
+        TransactionLog log = new TransactionLog();
+        log.setId(scanLogId);
+        log.setEventId(eventId);
+        log.setAttendeeUserId(attendeeId);
+        log.setStaffUserId(staffId);
+        log.setTransactionType(TransactionType.REWARD_REDEMPTION_SCAN);
+        log.setTransactionResult(TransactionResult.APPROVED);
+        log.setScannedAt(Instant.now());
+        return log;
+    }
 
     @Test
     void aMissingEventIsNotFoundAndNothingIsRedeemed() {
@@ -37,22 +63,23 @@ class RewardRedemptionServiceMissingEventTest {
         TransactionLogRepository logs = mock(TransactionLogRepository.class);
         EventRepository events = mock(EventRepository.class);
         PointTransactionRepository points = mock(PointTransactionRepository.class);
-        RewardRedemptionService service = new RewardRedemptionService(rewards, redemptions,
-                mock(AttendeePointBalanceRepository.class), logs, mock(DuplicateRewardClaimChecker.class), events,
-                mock(NotificationService.class), points);
+        RewardRedemptionService service = service(rewards, redemptions,
+                mock(AttendeePointBalanceRepository.class), logs, events, points);
 
         UUID eventId = UUID.randomUUID();
         UUID rewardId = UUID.randomUUID();
         UUID scanLogId = UUID.randomUUID();
+        UUID attendeeId = UUID.randomUUID();
+        UUID staffId = UUID.randomUUID();
         Reward reward = new Reward();
         reward.setId(rewardId);
         reward.setEventId(eventId);
-        when(logs.findById(scanLogId)).thenReturn(Optional.of(new TransactionLog()));
+        when(logs.findByIdForUpdate(scanLogId)).thenReturn(Optional.of(scanLog(scanLogId, eventId, attendeeId, staffId)));
         when(rewards.findByIdForUpdate(rewardId)).thenReturn(Optional.of(reward));
         when(events.findById(eventId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.redeem(
-                new RewardRedemptionGrantRequest(eventId, UUID.randomUUID(), rewardId, UUID.randomUUID(), scanLogId)))
+                new RewardRedemptionGrantRequest(eventId, attendeeId, rewardId, staffId, scanLogId)))
                 .isInstanceOf(ResourceNotFoundException.class);
 
         verify(redemptions, never()).save(any(RewardRedemption.class));
@@ -66,20 +93,20 @@ class RewardRedemptionServiceMissingEventTest {
         TransactionLogRepository logs = mock(TransactionLogRepository.class);
         EventRepository events = mock(EventRepository.class);
         PointTransactionRepository points = mock(PointTransactionRepository.class);
-        RewardRedemptionService service = new RewardRedemptionService(rewards, redemptions,
-                mock(AttendeePointBalanceRepository.class), logs, mock(DuplicateRewardClaimChecker.class), events,
-                mock(NotificationService.class), points);
+        RewardRedemptionService service = service(rewards, redemptions,
+                mock(AttendeePointBalanceRepository.class), logs, events, points);
 
         UUID eventId = UUID.randomUUID();
         UUID rewardId = UUID.randomUUID();
         UUID scanLogId = UUID.randomUUID();
-        when(logs.findById(scanLogId)).thenReturn(Optional.empty());
+        when(logs.findByIdForUpdate(scanLogId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.redeem(
                 new RewardRedemptionGrantRequest(eventId, UUID.randomUUID(), rewardId, UUID.randomUUID(), scanLogId)))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Redemption scan log not found");
 
+        verify(logs, never()).findById(any());
         verify(rewards, never()).findByIdForUpdate(any());
         verify(redemptions, never()).save(any(RewardRedemption.class));
         verify(points, never()).save(any(PointTransaction.class));
@@ -92,18 +119,19 @@ class RewardRedemptionServiceMissingEventTest {
         TransactionLogRepository logs = mock(TransactionLogRepository.class);
         EventRepository events = mock(EventRepository.class);
         PointTransactionRepository points = mock(PointTransactionRepository.class);
-        RewardRedemptionService service = new RewardRedemptionService(rewards, redemptions,
-                mock(AttendeePointBalanceRepository.class), logs, mock(DuplicateRewardClaimChecker.class), events,
-                mock(NotificationService.class), points);
+        RewardRedemptionService service = service(rewards, redemptions,
+                mock(AttendeePointBalanceRepository.class), logs, events, points);
 
         UUID eventId = UUID.randomUUID();
         UUID rewardId = UUID.randomUUID();
         UUID scanLogId = UUID.randomUUID();
-        when(logs.findById(scanLogId)).thenReturn(Optional.of(new TransactionLog()));
+        UUID attendeeId = UUID.randomUUID();
+        UUID staffId = UUID.randomUUID();
+        when(logs.findByIdForUpdate(scanLogId)).thenReturn(Optional.of(scanLog(scanLogId, eventId, attendeeId, staffId)));
         when(rewards.findByIdForUpdate(rewardId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.redeem(
-                new RewardRedemptionGrantRequest(eventId, UUID.randomUUID(), rewardId, UUID.randomUUID(), scanLogId)))
+                new RewardRedemptionGrantRequest(eventId, attendeeId, rewardId, staffId, scanLogId)))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Reward not found");
 
@@ -121,23 +149,24 @@ class RewardRedemptionServiceMissingEventTest {
         PointTransactionRepository points = mock(PointTransactionRepository.class);
         AttendeePointBalanceRepository balances = mock(AttendeePointBalanceRepository.class);
         when(balances.save(any(AttendeePointBalance.class))).thenAnswer(inv -> inv.getArgument(0));
-        RewardRedemptionService service = new RewardRedemptionService(rewards, redemptions,
-                balances, logs, mock(DuplicateRewardClaimChecker.class), events,
-                mock(NotificationService.class), points);
+        RewardRedemptionService service = service(rewards, redemptions, balances, logs, events, points);
 
         UUID requestEventId = UUID.randomUUID();
         UUID rewardEventId = UUID.randomUUID();
         UUID rewardId = UUID.randomUUID();
         UUID scanLogId = UUID.randomUUID();
+        UUID attendeeId = UUID.randomUUID();
+        UUID staffId = UUID.randomUUID();
         Reward reward = new Reward();
         reward.setId(rewardId);
         reward.setEventId(rewardEventId);
-        when(logs.findById(scanLogId)).thenReturn(Optional.of(new TransactionLog()));
+        when(logs.findByIdForUpdate(scanLogId))
+                .thenReturn(Optional.of(scanLog(scanLogId, requestEventId, attendeeId, staffId)));
         when(rewards.findByIdForUpdate(rewardId)).thenReturn(Optional.of(reward));
         when(redemptions.save(any(RewardRedemption.class))).thenAnswer(inv -> inv.getArgument(0));
 
         var response = service.redeem(
-                new RewardRedemptionGrantRequest(requestEventId, UUID.randomUUID(), rewardId, UUID.randomUUID(), scanLogId));
+                new RewardRedemptionGrantRequest(requestEventId, attendeeId, rewardId, staffId, scanLogId));
 
         org.assertj.core.api.Assertions.assertThat(response.status())
                 .isEqualTo(com.thedavelopers.eventqr.shared.constants.RedemptionStatus.REJECTED);

@@ -41,6 +41,8 @@ public class GlobalExceptionHandler {
 
     static final String RETRYABLE_CONFLICT_MESSAGE = "The request collided with a concurrent update. Please try again.";
     static final long RETRYABLE_CONFLICT_RETRY_AFTER_SECONDS = 1;
+    public static final String REDEMPTION_SCAN_ALREADY_USED_MESSAGE =
+            "This redemption scan was already used. Scan the attendee again.";
 
     /**
      * Lock timeouts and deadlocks on the row/advisory locks the scan and redemption paths take. Nothing was
@@ -69,6 +71,11 @@ public class GlobalExceptionHandler {
         // the first attempt has (or is about to have) committed, and a resend with the same key returns it.
         if (detail != null && detail.contains("ux_transaction_logs_client_request_id")) {
             return retryableConflict(request);
+        }
+        // V41 backstop for single-use redemption scans. The scan-log row lock in RewardRedemptionService makes this
+        // unreachable in practice; if it fires, a concurrent redemption already spent the scan.
+        if (detail != null && detail.contains("ux_reward_redemptions_scan_log_redeemed")) {
+            return build(HttpStatus.CONFLICT, REDEMPTION_SCAN_ALREADY_USED_MESSAGE, request);
         }
         if (request.getRequestURI() != null
                 && request.getRequestURI().matches(".*/api/v1/organizer/events/.*/staff$")) {

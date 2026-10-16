@@ -52,9 +52,13 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
 
         findViewById<ImageButton>(R.id.nav_header_back).setOnClickListener { finish() }
         findViewById<View>(R.id.btnAttendeeRetry).setOnClickListener {
-            val eventId = selectedEvent.id
             val attendeeId = intent.getStringExtra(SearchAttendeesActivity.EXTRA_ATTENDEE_ID).orEmpty()
-            loadAttendee(eventId, attendeeId)
+            // If the event list itself failed there is no selected event yet: retry that load first.
+            if (::selectedEvent.isInitialized) {
+                loadAttendee(selectedEvent.id, attendeeId)
+            } else {
+                loadEventThenAttendee(intentEventId().orEmpty().ifBlank { selectedEventId() }, attendeeId)
+            }
         }
         findViewById<View>(R.id.btnViewFullLog).setOnClickListener {
             startActivity(Intent(this, TransactionLogsActivity::class.java).apply {
@@ -73,8 +77,20 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
             return
         }
 
+        loadEventThenAttendee(eventId, attendeeId)
+    }
+
+    private fun loadEventThenAttendee(eventId: String, attendeeId: String) {
+        findViewById<View>(R.id.layoutAttendeeError).visibility = View.GONE
+        skeletonLoading.visibility = View.VISIBLE
         lifecycleScope.launch {
-            selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
+            val eventsLoad = repository.loadApprovedOrganizerEvents()
+            if (eventsLoad.source == OrganizerMvpDataSource.ERROR) {
+                // A failed fetch is not "event not available": keep the screen and offer Retry.
+                showAttendeeError(eventsLoad.message?.takeIf { it.isNotBlank() } ?: getString(R.string.organizer_dashboard_events_load_failed))
+                return@launch
+            }
+            selectedEvent = resolveSelectedEvent(eventsLoad.data, eventId)
                 ?: run {
                     Toast.makeText(this@AttendeeDetailsActivity, this@AttendeeDetailsActivity.getString(R.string.attendee_details_selected_event_not_available), Toast.LENGTH_SHORT).show()
                     finish()

@@ -586,7 +586,8 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         if (purposeOptions.isEmpty()) return showMessage(getString(R.string.scanner_no_scan_purposes_enabled_for_this_ev))
         val selectedPurpose = purposeOptions.getOrNull(purposeSpinner.selectedItemPosition) ?: return showMessage(getString(R.string.scanner_no_scan_purpose_selected))
         val qrValue = qrInput.text.toString().trim()
-        if (qrValue.isBlank()) return showMessage(getString(R.string.scanner_qr_payload_format_is_invalid))
+        // Only manual entry can reach here blank (the camera path rejects empty payloads first).
+        if (qrValue.isBlank()) return showMessage(getString(R.string.scanner_manual_entry_required))
         val signature = "${selectedEvent.id}|${selectedPurpose.scanPurposeId}|$qrValue"
         val now = SystemClock.elapsedRealtime()
         if (submitInFlight || (signature == lastSubmittedSignature && now - lastSubmittedAtMs < duplicateWindowMs)) return showMessage(getString(R.string.scanner_scan_is_already_being_processed_plea))

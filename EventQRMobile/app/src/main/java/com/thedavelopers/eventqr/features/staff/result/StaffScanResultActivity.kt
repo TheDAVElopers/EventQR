@@ -9,6 +9,7 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.thedavelopers.eventqr.R
@@ -21,7 +22,6 @@ import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.idprinting.AndroidIdPrinter
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdTemplateConfigResponse
-import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
 import com.thedavelopers.eventqr.features.staff.StaffDashboardActivity
 import com.thedavelopers.eventqr.features.staff.StaffRepository
 import com.thedavelopers.eventqr.features.staff.StaffScreenExtras
@@ -86,10 +86,9 @@ open class StaffScanResultActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnScanAgain).setOnClickListener {
             finish()
         }
+        // Header back behaves like system back: the scanner that opened this screen is still underneath,
+        // so starting a new one would stack duplicate scanners.
         findViewById<View>(R.id.nav_header_back).setOnClickListener {
-            startActivity(Intent(this, ScannerActivity::class.java).apply {
-                putExtra(StaffScreenExtras.EXTRA_EVENT_ID, intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_ID))
-            })
             finish()
         }
     }
@@ -317,19 +316,19 @@ open class StaffScanResultActivity : AppCompatActivity() {
                         visibleFields = visibleFields,
                         qrValue = qrValue,
                     )
+                    // The print is logged before the dialog opens (the log call is also the server-side check),
+                    // so the result shown depends on what the user did in the system print dialog.
+                    val serverMessage = result.data.message
                     AndroidIdPrinter.print(
                         this@StaffScanResultActivity,
                         "EventQR ID — $attendeeName",
                         cardData,
-                    )
-
-                    showPrintSuccessDialog(result.data.message)
+                    ) { outcome -> onPrintOutcome(outcome, serverMessage) }
                 }
                 is NetworkResult.Error -> {
-                    val message = "Print failed: ${result.message}"
                     Log.w(tag, "printResult success=false eventId=$eventId")
-                    Toast.makeText(this@StaffScanResultActivity, message, Toast.LENGTH_SHORT).show()
-                    bindRejectedResult(message)
+                    // Verification succeeded; only the print step failed (e.g. no saved ID template).
+                    bindPrintFailed(result.message)
                 }
                 NetworkResult.Loading -> Unit
             }
@@ -340,6 +339,42 @@ open class StaffScanResultActivity : AppCompatActivity() {
         }
     }
 
+    @VisibleForTesting
+    internal fun onPrintOutcome(outcome: AndroidIdPrinter.PrintOutcome, serverMessage: String) {
+        if (isFinishing || isDestroyed) return
+        when (outcome) {
+            AndroidIdPrinter.PrintOutcome.SENT -> showPrintSuccessDialog(serverMessage)
+            AndroidIdPrinter.PrintOutcome.CANCELLED ->
+                showPrintNoticeDialog(getString(R.string.staff_print_cancelled_title), getString(R.string.staff_print_cancelled_message))
+            AndroidIdPrinter.PrintOutcome.FAILED ->
+                bindPrintFailed(getString(R.string.staff_print_job_failed_message))
+        }
+    }
+
+    /** Print-specific failure: the scan was verified, so it must not read as "Verification Rejected". */
+    @VisibleForTesting
+    internal fun bindPrintFailed(reason: String) {
+        findViewById<View>(R.id.headerApproved).visibility = View.GONE
+        findViewById<View>(R.id.headerRejected).visibility = View.VISIBLE
+        findViewById<TextView>(R.id.txtScanResultStateRejected).text = getString(R.string.staff_print_failed_title)
+        findViewById<TextView>(R.id.txtScanResultStatusHintRejected).text = getString(R.string.staff_print_failed_hint)
+        findViewById<TextView>(R.id.txtScanResultReason).text = reason.ifBlank { getString(R.string.staff_print_failed_hint) }
+        findViewById<View>(R.id.layoutApprovedDetails).visibility = View.GONE
+        findViewById<View>(R.id.layoutRejectedReason).visibility = View.VISIBLE
+        findViewById<View>(R.id.cardVerificationDetails).visibility = View.GONE
+        findViewById<Button>(R.id.btnContinueTransaction).visibility = View.GONE
+        findViewById<Button>(R.id.btnViewAttendeeDetails).visibility = View.VISIBLE
+        findViewById<Button>(R.id.btnScanAgain).visibility = View.VISIBLE
+    }
+
+    private fun showPrintNoticeDialog(title: String, message: String) {
+        AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton(getString(R.string.staff_print_ok), null)
+            .show()
+    }
+
     private fun showPrintSuccessDialog(message: String) {
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -348,20 +383,20 @@ open class StaffScanResultActivity : AppCompatActivity() {
         }
 
         container.addView(TextView(this).apply {
-            text = "ID Print Sent"
+            text = getString(R.string.staff_print_sent_title)
             textSize = 28f
             setTextColor(0xFF111827.toInt())
             textAlignment = View.TEXT_ALIGNMENT_CENTER
         })
         container.addView(TextView(this).apply {
-            text = message.ifBlank { "Print request sent to printer." }
+            text = message.ifBlank { getString(R.string.staff_print_sent_default_message) }
             textSize = 16f
             setTextColor(0xFF6B7280.toInt())
             textAlignment = View.TEXT_ALIGNMENT_CENTER
             setPadding(0, dp(12), 0, dp(20))
         })
         val doneButton = Button(this).apply {
-            text = "Done"
+            text = getString(R.string.staff_print_done)
             setBackgroundResource(R.drawable.bg_scanner_button)
             setTextColor(0xFFFFFFFF.toInt())
         }

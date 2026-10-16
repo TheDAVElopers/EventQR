@@ -18,6 +18,8 @@ import android.print.PageRange
 import android.print.PrintAttributes
 import android.print.PrintDocumentAdapter
 import android.print.PrintDocumentInfo
+import android.print.PrintJob
+import android.print.PrintJobInfo
 import android.print.PrintManager
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
@@ -73,13 +75,34 @@ object AndroidIdPrinter {
         val qrValue: String = "",
     )
 
+    /** What happened in the system print dialog. */
+    enum class PrintOutcome {
+        /** The job was handed to a print service (queued, printing, blocked or completed). */
+        SENT,
+        /** The dialog was closed without printing. */
+        CANCELLED,
+        /** The print service reported a failure. */
+        FAILED,
+    }
+
+    /**
+     * Maps the job state seen when the print dialog finishes. A job still in CREATED was never
+     * submitted (the dialog was dismissed), so it counts as cancelled.
+     */
+    fun outcomeForJobState(state: Int): PrintOutcome = when (state) {
+        PrintJobInfo.STATE_CANCELED, PrintJobInfo.STATE_CREATED -> PrintOutcome.CANCELLED
+        PrintJobInfo.STATE_FAILED -> PrintOutcome.FAILED
+        else -> PrintOutcome.SENT
+    }
+
     /**
      * Single-attendee reprint — one card at native CR80 size, centered on its
      * own page. Independent of the batch 3×3 grid.
+     *
+     * [onOutcome] runs on the main thread once the system print dialog closes.
      */
-    fun print(context: Context, jobName: String, data: CardData) {
-        val printManager = context.getSystemService(Context.PRINT_SERVICE) as PrintManager
-        printManager.print(jobName, IdCardPrintAdapter(listOf(data), 1, 1), null)
+    fun print(context: Context, jobName: String, data: CardData, onOutcome: (PrintOutcome) -> Unit = {}) {
+        startPrint(context, jobName, IdCardPrintAdapter(listOf(data), 1, 1), onOutcome)
     }
 
     /**
@@ -88,9 +111,24 @@ object AndroidIdPrinter {
      * paper), split across multiple pages as needed (last page blank-fills
      * unused cells). Each attendee appears exactly once.
      */
-    fun print(context: Context, jobName: String, cards: List<CardData>) {
+    fun print(context: Context, jobName: String, cards: List<CardData>, onOutcome: (PrintOutcome) -> Unit = {}) {
+        startPrint(context, jobName, IdCardPrintAdapter(cards, MAX_GRID_COLS, MAX_GRID_ROWS), onOutcome)
+    }
+
+    private fun startPrint(
+        context: Context,
+        jobName: String,
+        adapter: IdCardPrintAdapter,
+        onOutcome: (PrintOutcome) -> Unit,
+    ) {
         val printManager = context.getSystemService(Context.PRINT_SERVICE) as PrintManager
-        printManager.print(jobName, IdCardPrintAdapter(cards, MAX_GRID_COLS, MAX_GRID_ROWS), null)
+        var job: PrintJob? = null
+        // onFinish runs after the dialog closes, by which time the spooler has set the job's final state.
+        adapter.onFinished = {
+            val state = runCatching { job?.info?.state }.getOrNull() ?: PrintJobInfo.STATE_CANCELED
+            onOutcome(outcomeForJobState(state))
+        }
+        job = printManager.print(jobName, adapter, null)
     }
 
     /**
@@ -227,6 +265,9 @@ object AndroidIdPrinter {
 
         private val cardCount: Int get() = cards.size
 
+        /** Called once from [onFinish], when the system print dialog is done with this document. */
+        var onFinished: (() -> Unit)? = null
+
         // Page size in points, resolved from the actual media at onLayout time
         // (fallback: A4 in case onLayout isn't reached with a media size).
         private var pageW = IdCardLayoutConfig.PAGE_W_PT.toFloat()
@@ -317,6 +358,12 @@ object AndroidIdPrinter {
                 doc.close()
             }
             callback.onWriteFinished(arrayOf(PageRange.ALL_PAGES))
+        }
+
+        override fun onFinish() {
+            super.onFinish()
+            onFinished?.invoke()
+            onFinished = null
         }
 
         /** Returns the cells for page [p], blank-filling any unused trailing cells. */

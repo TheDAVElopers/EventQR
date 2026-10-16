@@ -35,8 +35,14 @@ open class TransactionRulesActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         repository = OrganizerRepository(this)
         val eventId = intentEventId() ?: return showMissingEventScreen(getString(R.string.transaction_rules_title))
+        showEventsLoadingScreen(getString(R.string.transaction_rules_title))
         lifecycleScope.launch {
-            selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
+            val eventsLoad = repository.loadApprovedOrganizerEvents()
+            if (eventsLoad.source == OrganizerMvpDataSource.ERROR) {
+                showEventsLoadErrorScreen(getString(R.string.transaction_rules_title), eventsLoad.message) { recreate() }
+                return@launch
+            }
+            selectedEvent = resolveSelectedEvent(eventsLoad.data, eventId)
                 ?: run {
                     showMissingEventScreen(getString(R.string.transaction_rules_title))
                     return@launch
@@ -53,9 +59,17 @@ open class TransactionRulesActivity : AppCompatActivity() {
         content.addView(loadingState(getString(R.string.transaction_rules_loading)))
 
         lifecycleScope.launch {
+            val purposesLoad = repository.loadScanPurposesForMvp(selectedEvent.id)
+            val rulesLoad = repository.loadTransactionRulesForMvp(selectedEvent.id)
+            // A failed load is not "no data": rendering defaults here would let Save overwrite the real rule
+            // (points reset to 0, duplicate/limit settings lost), so show the error with Retry and no form.
+            transactionRulesLoadError(purposesLoad, rulesLoad)?.let { message ->
+                renderLoadError(message.ifBlank { getString(R.string.transaction_rules_load_failed) })
+                return@launch
+            }
             // Every saved purpose can have its own rule; only persisted purposes (with an id) can be edited.
-            purposes = repository.loadScanPurposesForMvp(selectedEvent.id).data.filter { !it.id.isNullOrBlank() }
-            rules = repository.loadTransactionRulesForMvp(selectedEvent.id).data
+            purposes = purposesLoad.data.filter { !it.id.isNullOrBlank() }
+            rules = rulesLoad.data
             Log.d(TAG, "Loaded ${rules.size} transaction rules for ${purposes.size} purposes")
 
             if (selectedPurposeId == null || purposes.none { it.id == selectedPurposeId }) {
@@ -63,6 +77,21 @@ open class TransactionRulesActivity : AppCompatActivity() {
             }
             renderUI()
         }
+    }
+
+    private fun renderLoadError(message: String) {
+        currentRule = null
+        content.removeAllViews()
+        content.addView(errorState(message) { loadData() })
+        content.addView(spacer(20))
+        content.addView(disabledSaveButton())
+    }
+
+    private fun disabledSaveButton() = primaryButton(getString(R.string.transaction_rules_save)) { }.apply {
+        id = R.id.txr_save_button
+        isEnabled = false
+        alpha = 0.5f
+        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(54))
     }
 
     private fun renderUI() {
@@ -75,12 +104,7 @@ open class TransactionRulesActivity : AppCompatActivity() {
                 title = getString(R.string.transaction_rules_no_purposes_title),
                 subtext = getString(R.string.transaction_rules_no_purposes_message),
             ))
-            content.addView(primaryButton(getString(R.string.transaction_rules_save)) { }.apply {
-                id = R.id.txr_save_button
-                isEnabled = false
-                alpha = 0.5f
-                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(54))
-            })
+            content.addView(disabledSaveButton())
             return
         }
 
@@ -222,6 +246,13 @@ open class TransactionRulesActivity : AppCompatActivity() {
         setBackgroundColor(Color.parseColor("#F3F4F6"))
     }
 }
+
+/**
+ * The message to show when either load failed (blank when the server gave none), or null when both
+ * came from the backend and the form may be rendered and saved.
+ */
+internal fun transactionRulesLoadError(vararg loads: OrganizerMvpLoad<*>): String? =
+    loads.firstOrNull { it.source == OrganizerMvpDataSource.ERROR }?.let { it.message.orEmpty() }
 
 /** Keeps the saved rule's `active` and points; a purpose with no rule yet starts active. */
 internal fun buildTransactionRuleRequest(

@@ -7,6 +7,7 @@ import com.thedavelopers.eventqr.core.api.dto.ApiResponse
 import com.thedavelopers.eventqr.core.api.dto.PageResponse
 import com.thedavelopers.eventqr.core.api.safeApiCall
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
+import com.thedavelopers.eventqr.features.events.model.dto.EventAvailabilityResponse
 import com.thedavelopers.eventqr.features.events.model.dto.EventCreationRequestDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerEventDto
 import com.thedavelopers.eventqr.features.qrcredential.model.dto.QrCredentialSnapshot
@@ -33,12 +34,13 @@ open class AttendeeRepository(context: Context) {
             is NetworkResult.Error -> result
             NetworkResult.Loading -> NetworkResult.Loading
         }
-    suspend fun getBrowseEvents(): NetworkResult<List<AttendeeEventResponse>> =
+    open suspend fun getBrowseEvents(): NetworkResult<List<AttendeeEventResponse>> =
         loadAllPages(MAX_PAGES, sortKey = { it.eventStartAt }) { page -> apiService.getAttendeeBrowseEvents(page = page, size = PAGE_SIZE) }
     suspend fun getEvent(eventId: String) = safeApiCall { apiService.getEventById(eventId) }
-    suspend fun getEventAvailability(eventId: String) = safeApiCall { apiService.getEventAvailability(eventId) }
+    open suspend fun getEventAvailability(eventId: String): NetworkResult<EventAvailabilityResponse> =
+        safeApiCall { apiService.getEventAvailability(eventId) }
     suspend fun getOrganizerEvents(): NetworkResult<List<OrganizerEventDto>> = safeApiCall { apiService.getOrganizerEvents() }
-    suspend fun createEventRequest(request: EventCreationRequestDto) = safeApiCall { apiService.createEventRequest(request) }
+    open suspend fun createEventRequest(request: EventCreationRequestDto) = safeApiCall { apiService.createEventRequest(request) }
     suspend fun getMyEventRequests() = safeApiCall { apiService.getMyEventRequests() }
     suspend fun getEventRequest(requestId: String) = safeApiCall { apiService.getEventRequest(requestId) }
     suspend fun getMyProfile() = safeApiCall { apiService.getUsersMe() }

@@ -13,6 +13,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.lifecycle.lifecycleScope
@@ -25,7 +26,9 @@ import com.thedavelopers.eventqr.features.events.model.dto.EventResponse
 import com.thedavelopers.eventqr.features.organizer.BG
 import com.thedavelopers.eventqr.features.organizer.MUTED
 import com.thedavelopers.eventqr.features.organizer.NAV_REWARDS
+import com.thedavelopers.eventqr.features.organizer.OrganizerMvpDataSource
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpEvent
+import com.thedavelopers.eventqr.features.organizer.OrganizerMvpLoad
 import com.thedavelopers.eventqr.features.organizer.OrganizerRepository
 import com.thedavelopers.eventqr.features.organizer.organizerEventDateLine
 import com.thedavelopers.eventqr.features.organizer.PURPLE
@@ -35,6 +38,7 @@ import com.thedavelopers.eventqr.features.organizer.card
 import com.thedavelopers.eventqr.features.organizer.centeredEmptyState
 import com.thedavelopers.eventqr.features.organizer.dp
 import com.thedavelopers.eventqr.features.organizer.errorState
+import com.thedavelopers.eventqr.features.organizer.eventsLoadErrorState
 import com.thedavelopers.eventqr.features.organizer.formatCount
 import com.thedavelopers.eventqr.features.organizer.intentEventId
 import com.thedavelopers.eventqr.features.organizer.organizerRefreshShell
@@ -61,13 +65,18 @@ import retrofit2.http.Path
 
 open class ManageRewardsActivity : AppCompatActivity() {
     private lateinit var repository: OrganizerRepository
-    private lateinit var selectedEvent: OrganizerMvpEvent
+    @VisibleForTesting
+    internal lateinit var selectedEvent: OrganizerMvpEvent
     private lateinit var content: LinearLayout
     private lateinit var rewardsEnabledSwitch: SwitchCompat
     private lateinit var rewardHost: LinearLayout
     private lateinit var refreshLayout: androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 
-    private val rewardsService by lazy { OrganizerRewardsApiProvider.get(this) }
+    /** Tests set this before the first rewards call to replace the network service. */
+    @VisibleForTesting
+    internal var rewardsServiceOverride: OrganizerRewardsService? = null
+    private val rewardsService by lazy { rewardsServiceOverride ?: OrganizerRewardsApiProvider.get(this) }
+    private var rewardDialog: AlertDialog? = null
     private var rewards: List<RewardResponse> = emptyList()
     private var redemptions: List<RewardRedemptionResponse> = emptyList()
     private var eventOptions: List<OrganizerMvpEvent> = emptyList()
@@ -83,39 +92,64 @@ open class ManageRewardsActivity : AppCompatActivity() {
             showBack = false,
             topRightLabel = null,
             onTopRight = { showRewardDialog(null) },
-            onRefresh = { loadRewards(showInitialLoading = false) },
+            // Before an event is resolved (e.g. the event list failed to load) a pull retries that load instead.
+            onRefresh = { if (::selectedEvent.isInitialized) loadRewards(showInitialLoading = false) else loadEvents() },
         )
         content = shell.content
         refreshLayout = shell.swipeRefreshLayout
+        // Nothing to refresh until an event is resolved; re-enabled below once the event list loads.
+        refreshLayout.isEnabled = false
 
-        lifecycleScope.launch {
-            eventOptions = repository.getApprovedOrganizerEvents()
-            val requestedEventId = intentEventId() ?: selectedEventId().takeIf { it.isNotBlank() }
-            // Falls back to the saved, then the first, manageable event when nothing was requested.
-            val resolvedEvent = resolveSelectedEvent(eventOptions, requestedEventId)
+        loadEvents()
+    }
 
-            val hasEvent = resolvedEvent != null
-            refreshLayout.isEnabled = hasEvent
+    private fun loadEvents() {
+        lifecycleScope.launch { onEventsLoaded(repository.loadApprovedOrganizerEvents()) }
+    }
 
-            if (resolvedEvent != null) {
-                selectedEvent = resolvedEvent
-                rewardsEnabled = selectedEvent.rewardsStatus.equals("Enabled", ignoreCase = true)
-                buildScreen()
-                loadRewards()
-                refreshRewardsEnabledFromServer()
-            } else {
+    @VisibleForTesting
+    internal fun onEventsLoaded(eventsLoad: OrganizerMvpLoad<List<OrganizerMvpEvent>>) {
+        refreshLayout.isRefreshing = false
+        // A failed fetch is not "no events": show the error with Retry (pull-to-refresh retries too).
+        if (eventsLoad.source == OrganizerMvpDataSource.ERROR) {
+            refreshLayout.isEnabled = true
+            content.removeAllViews()
+            content.addView(eventsLoadErrorState(eventsLoad.message) {
+                if (refreshLayout.isRefreshing) return@eventsLoadErrorState
+                refreshLayout.isRefreshing = true
                 content.removeAllViews()
-                content.addView(centeredEmptyState(
-                    iconRes = R.drawable.ic_nav_gift,
-                    title = getString(R.string.manage_rewards_no_events_title),
-                    subtext = getString(R.string.manage_rewards_no_events_subtext),
-                ))
-                content.setBackgroundColor(BG)
-            }
+                loadEvents()
+            })
+            content.setBackgroundColor(BG)
+            return
+        }
+        eventOptions = eventsLoad.data
+        val requestedEventId = intentEventId() ?: selectedEventId().takeIf { it.isNotBlank() }
+        // Falls back to the saved, then the first, manageable event when nothing was requested.
+        val resolvedEvent = resolveSelectedEvent(eventOptions, requestedEventId)
+
+        val hasEvent = resolvedEvent != null
+        refreshLayout.isEnabled = hasEvent
+
+        if (resolvedEvent != null) {
+            selectedEvent = resolvedEvent
+            rewardsEnabled = selectedEvent.rewardsStatus.equals("Enabled", ignoreCase = true)
+            buildScreen()
+            loadRewards()
+            refreshRewardsEnabledFromServer()
+        } else {
+            content.removeAllViews()
+            content.addView(centeredEmptyState(
+                iconRes = R.drawable.ic_nav_gift,
+                title = getString(R.string.manage_rewards_no_events_title),
+                subtext = getString(R.string.manage_rewards_no_events_subtext),
+            ))
+            content.setBackgroundColor(BG)
         }
     }
 
-    private fun buildScreen() {
+    @VisibleForTesting
+    internal fun buildScreen() {
         content.removeAllViews()
         content.setBackgroundColor(BG)
 
@@ -333,7 +367,13 @@ open class ManageRewardsActivity : AppCompatActivity() {
         rewardsEnabledSwitch.setOnCheckedChangeListener { _, checked -> setRewardsEnabled(checked) }
     }
 
-    private fun loadRewards(showInitialLoading: Boolean = true) {
+    @VisibleForTesting
+    internal fun loadRewards(showInitialLoading: Boolean = true) {
+        // A refresh can arrive before the event list has resolved an event; there is nothing to load yet.
+        if (!::selectedEvent.isInitialized) {
+            refreshLayout.isRefreshing = false
+            return
+        }
         if (showInitialLoading && !refreshLayout.isRefreshing) {
             rewardHost.removeAllViews()
             rewardHost.addView(text(getString(R.string.manage_rewards_loading), 14, false, MUTED).apply {
@@ -613,7 +653,8 @@ open class ManageRewardsActivity : AppCompatActivity() {
         }
     }
 
-    private fun showRewardDialog(reward: RewardResponse?) {
+    @VisibleForTesting
+    internal fun showRewardDialog(reward: RewardResponse?) {
         val isEdit = reward != null
         val form = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -665,28 +706,37 @@ open class ManageRewardsActivity : AppCompatActivity() {
         form.addView(fieldLabel(getString(R.string.manage_rewards_settings)))
         form.addView(duplicateSwitch)
 
-        AlertDialog.Builder(this)
+        rewardDialog?.dismiss()
+        val dialog = AlertDialog.Builder(this)
             .setTitle(getString(if (isEdit) R.string.manage_rewards_edit_reward else R.string.manage_rewards_create_reward))
             .setView(form)
             .setNegativeButton(getString(R.string.request_event_cancel), null)
-            .setPositiveButton(getString(if (isEdit) R.string.manage_scan_purposes_save else R.string.manage_rewards_create)) { _, _ ->
-                val title = titleInput.text.toString().trim()
-                val points = pointsInput.text.toString().toIntOrNull()
-                val quantity = resolveRewardQuantity(quantityInput.text.toString(), reward?.let { it.totalQuantity?.toString().orEmpty() })
-                if (title.isBlank() || points == null || points <= 0 || quantity is RewardQuantity.Invalid) {
-                    Toast.makeText(this, this.getString(R.string.manage_rewards_enter_a_valid_reward_title_points_co), Toast.LENGTH_SHORT).show()
-                    return@setPositiveButton
-                }
-                saveReward(
-                    reward,
-                    title,
-                    points,
-                    quantity,
-                    resolveRewardDescription(descriptionInput.text.toString(), reward?.description, isEdit),
-                    duplicateSwitch.isChecked,
-                )
-            }
+            // Click handling is replaced after show() so invalid input keeps the dialog (and what was typed) open.
+            .setPositiveButton(getString(if (isEdit) R.string.manage_scan_purposes_save else R.string.manage_rewards_create), null)
             .show()
+        rewardDialog = dialog
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            val title = titleInput.text.toString().trim()
+            val points = pointsInput.text.toString().trim().toIntOrNull()
+            val quantity = resolveRewardQuantity(quantityInput.text.toString(), reward?.let { it.totalQuantity?.toString().orEmpty() })
+            titleInput.error = if (title.isBlank()) getString(R.string.manage_rewards_title_required) else null
+            pointsInput.error = if (points == null || points <= 0) getString(R.string.manage_rewards_points_invalid) else null
+            quantityInput.error = if (quantity is RewardQuantity.Invalid) getString(R.string.manage_rewards_quantity_invalid) else null
+            val firstInvalid = listOf(titleInput, pointsInput, quantityInput).firstOrNull { it.error != null }
+            if (firstInvalid != null || points == null) {
+                firstInvalid?.requestFocus()
+                return@setOnClickListener
+            }
+            saveReward(
+                reward,
+                title,
+                points,
+                quantity,
+                resolveRewardDescription(descriptionInput.text.toString(), reward?.description, isEdit),
+                duplicateSwitch.isChecked,
+                dialog,
+            )
+        }
     }
 
     private fun fieldLabel(label: String): TextView = text(label, 13, true, TEXT).apply {
@@ -700,9 +750,14 @@ open class ManageRewardsActivity : AppCompatActivity() {
         quantity: RewardQuantity,
         description: String?,
         allowDuplicateClaims: Boolean,
+        dialog: AlertDialog,
     ) {
         val eventId = selectedEvent.id
         val request = buildRewardRequest(UUID.fromString(eventId), title, points, quantity, description, allowDuplicateClaims)
+        // The dialog stays open (keeping the typed values) until the server accepts. While the request runs it
+        // cannot be saved again or dismissed (Cancel/back/outside), so input is not lost and no duplicate create
+        // can be started from a reopened dialog.
+        setRewardDialogBusy(dialog, busy = true)
         lifecycleScope.launch {
             try {
                 val response = if (existingReward == null) {
@@ -711,13 +766,29 @@ open class ManageRewardsActivity : AppCompatActivity() {
                     rewardsService.updateReward(eventId, existingReward.rewardId.toString(), request)
                 }
                 if (!response.success) throw IllegalStateException(response.message ?: getString(R.string.manage_rewards_save_failed))
+                dialog.dismiss()
                 Toast.makeText(this@ManageRewardsActivity, response.message ?: getString(R.string.manage_rewards_saved), Toast.LENGTH_SHORT).show()
                 loadRewards()
             } catch (error: Exception) {
+                if (error is kotlinx.coroutines.CancellationException) throw error
+                setRewardDialogBusy(dialog, busy = false)
                 val serverMessage = (error as? retrofit2.HttpException)?.let { com.thedavelopers.eventqr.core.api.parseHttpErrorMessage(it) }
                 Toast.makeText(this@ManageRewardsActivity, serverMessage ?: error.message ?: getString(R.string.manage_rewards_save_failed), Toast.LENGTH_LONG).show()
             }
         }
+    }
+
+    private fun setRewardDialogBusy(dialog: AlertDialog, busy: Boolean) {
+        dialog.setCancelable(!busy)
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.isEnabled = !busy
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.isEnabled = !busy
+    }
+
+    override fun onDestroy() {
+        // Avoid leaking the dialog window when the activity goes away (e.g. rotation) mid-edit or mid-save.
+        rewardDialog?.dismiss()
+        rewardDialog = null
+        super.onDestroy()
     }
 
     private fun confirmDeleteReward(reward: RewardResponse) {
@@ -789,7 +860,8 @@ open class ManageRewardsActivity : AppCompatActivity() {
     }
 }
 
-private interface OrganizerRewardsService {
+@VisibleForTesting
+internal interface OrganizerRewardsService {
     @GET("organizer/events/{eventId}/rewards")
     suspend fun getRewards(@Path("eventId") eventId: String): ApiResponse<List<RewardResponse>>
 

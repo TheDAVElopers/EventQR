@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -38,14 +40,25 @@ import com.thedavelopers.eventqr.shared.constants.ScanPurposeCode;
 import com.thedavelopers.eventqr.shared.constants.TransactionResult;
 import com.thedavelopers.eventqr.shared.constants.TransactionType;
 import com.thedavelopers.eventqr.shared.interfaces.AttendeeDirectoryPort;
+import com.thedavelopers.eventqr.shared.interfaces.RegistrationLookupPort;
 import com.thedavelopers.eventqr.shared.interfaces.TransactionRecordedEvent;
 import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
 import com.thedavelopers.eventqr.shared.exceptions.ConflictException;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
+import com.thedavelopers.eventqr.features.transactions.service.TransactionService;
 
 @Service
 @Transactional
 public class RewardService {
+
+    /** Upper bound of a single manual point assign/deduct (largest live scan award is 100, largest reward cost 29). */
+    public static final int MAX_MANUAL_POINT_ADJUSTMENT = 1000;
+    /** Ceiling on any attendee balance, so manual assigns can never overflow the int column. */
+    public static final int MAX_POINT_BALANCE = 1_000_000;
+    static final String POINTS_RANGE_MESSAGE = "Points must be between 1 and " + MAX_MANUAL_POINT_ADJUSTMENT;
+    static final String NOT_REGISTERED_MESSAGE = "Attendee is not registered for this event";
+
+    private static final Logger log = LoggerFactory.getLogger(RewardService.class);
 
     private final AttendeePointBalanceRepository attendeePointBalanceRepository;
     private final PointTransactionRepository pointTransactionRepository;
@@ -56,6 +69,7 @@ public class RewardService {
     private final ScanPurposeRepository scanPurposeRepository;
     private final AttendeeDirectoryPort attendeeDirectoryPort;
     private final DuplicateRewardClaimChecker duplicateRewardClaimChecker;
+    private final RegistrationLookupPort registrationLookupPort;
 
     public RewardService(AttendeePointBalanceRepository attendeePointBalanceRepository,
                          PointTransactionRepository pointTransactionRepository,
@@ -64,7 +78,9 @@ public class RewardService {
                          EventRepository eventRepository,
                          ScanPurposeRepository scanPurposeRepository, NotificationService notificationService,
                          AttendeeDirectoryPort attendeeDirectoryPort,
-                         DuplicateRewardClaimChecker duplicateRewardClaimChecker) {
+                         DuplicateRewardClaimChecker duplicateRewardClaimChecker,
+                         RegistrationLookupPort registrationLookupPort) {
+        this.registrationLookupPort = registrationLookupPort;
         this.attendeeDirectoryPort = attendeeDirectoryPort;
         this.duplicateRewardClaimChecker = duplicateRewardClaimChecker;
         this.notificationService = notificationService;
@@ -155,13 +171,22 @@ public class RewardService {
         return new PointBalanceResponse(balance.getEventId(), balance.getAttendeeUserId(), balance.getPointsBalance());
     }
 
-    public PointBalanceResponse assignPoints(UUID eventId, UUID attendeeUserId, int points, String reason) {
-        if (points < 0) {
-            throw new ConflictException("Points must be non-negative");
-        }
+    /**
+     * Manual (scan-less) point grant. Bounded per call and per balance, rewards must be enabled, and the attendee
+     * must hold an active registration; every guard runs before the balance row is created or locked.
+     */
+    public PointBalanceResponse assignPoints(UUID eventId, UUID attendeeUserId, int points, String reason,
+                                             UUID actorUserId) {
+        Event event = requireManualAdjustmentAllowed(eventId, attendeeUserId, points);
         AttendeePointBalance balance = balanceForUpdate(eventId, attendeeUserId);
-        balance.setPointsBalance(balance.getPointsBalance() + points);
+        long next = (long) balance.getPointsBalance() + points;
+        if (next > MAX_POINT_BALANCE) {
+            throw new ConflictException("Point balance limit reached");
+        }
+        balance.setPointsBalance((int) next);
         attendeePointBalanceRepository.save(balance);
+        log.info("Manual points assign eventId={} attendeeUserId={} points={} actorUserId={}",
+                eventId, attendeeUserId, points, actorUserId);
 
         PointTransaction transaction = new PointTransaction();
         transaction.setEventId(eventId);
@@ -171,8 +196,7 @@ public class RewardService {
         transaction.setOccurredAt(Instant.now());
         transaction.setReason(reason == null || reason.isBlank() ? "Manual point assignment" : reason);
         pointTransactionRepository.save(transaction);
-        Event event = eventRepository.findById(eventId).orElse(null);
-        if (event != null && notificationService != null) {
+        if (notificationService != null) {
             notificationService.createPointsAdjustedNotification(eventId, event.getOrganizerUserId(), event.getTitle(), attendeeDisplayName(attendeeUserId), points, reason == null ? "Points assigned" : reason, true);
             if (attendeeUserId != null) {
                 notificationService.createPointsAdjustedForAttendeeNotification(eventId, attendeeUserId, event.getTitle(), points, reason, true);
@@ -181,16 +205,18 @@ public class RewardService {
         return new PointBalanceResponse(balance.getEventId(), balance.getAttendeeUserId(), balance.getPointsBalance());
     }
 
-    public PointBalanceResponse deductPoints(UUID eventId, UUID attendeeUserId, int points, String reason) {
-        if (points < 0) {
-            throw new ConflictException("Points must be non-negative");
-        }
+    /** Manual (scan-less) point deduction; same guards as {@link #assignPoints}. */
+    public PointBalanceResponse deductPoints(UUID eventId, UUID attendeeUserId, int points, String reason,
+                                             UUID actorUserId) {
+        Event event = requireManualAdjustmentAllowed(eventId, attendeeUserId, points);
         AttendeePointBalance balance = balanceForUpdate(eventId, attendeeUserId);
         if (balance.getPointsBalance() < points) {
             throw new ConflictException("Not enough points to deduct");
         }
         balance.setPointsBalance(balance.getPointsBalance() - points);
         attendeePointBalanceRepository.save(balance);
+        log.info("Manual points deduct eventId={} attendeeUserId={} points={} actorUserId={}",
+                eventId, attendeeUserId, points, actorUserId);
 
         PointTransaction transaction = new PointTransaction();
         transaction.setEventId(eventId);
@@ -200,14 +226,33 @@ public class RewardService {
         transaction.setOccurredAt(Instant.now());
         transaction.setReason(reason == null || reason.isBlank() ? "Manual point deduction" : reason);
         pointTransactionRepository.save(transaction);
-        Event event = eventRepository.findById(eventId).orElse(null);
-        if (event != null && notificationService != null) {
+        if (notificationService != null) {
             notificationService.createPointsAdjustedNotification(eventId, event.getOrganizerUserId(), event.getTitle(), attendeeDisplayName(attendeeUserId), points, reason == null ? "Points deducted" : reason, false);
             if (attendeeUserId != null) {
                 notificationService.createPointsAdjustedForAttendeeNotification(eventId, attendeeUserId, event.getTitle(), points, reason, false);
             }
         }
         return new PointBalanceResponse(balance.getEventId(), balance.getAttendeeUserId(), balance.getPointsBalance());
+    }
+
+    private Event requireManualAdjustmentAllowed(UUID eventId, UUID attendeeUserId, int points) {
+        if (points <= 0 || points > MAX_MANUAL_POINT_ADJUSTMENT) {
+            throw new BadRequestException(POINTS_RANGE_MESSAGE);
+        }
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
+        if (!event.isRewardsEnabled()) {
+            throw new BadRequestException(TransactionService.REWARDS_DISABLED_MESSAGE);
+        }
+        requireActiveRegistration(eventId, attendeeUserId);
+        return event;
+    }
+
+    /** 404 unless the attendee holds a REGISTERED / ENTERED / EXITED registration for the event. */
+    private void requireActiveRegistration(UUID eventId, UUID attendeeUserId) {
+        if (!registrationLookupPort.hasActiveRegistration(eventId, attendeeUserId)) {
+            throw new ResourceNotFoundException(NOT_REGISTERED_MESSAGE);
+        }
     }
 
     private String attendeeDisplayName(UUID attendeeUserId) {
@@ -226,6 +271,9 @@ public class RewardService {
         if (!redeemEvent.isRewardsEnabled()) {
             throw new ConflictException("Reward redemption is disabled for this event");
         }
+        // Before any row lock: the controller only authorizes, so this is the single registration check for every
+        // caller of /rewards/redeem and the staff scan-less redeem.
+        requireActiveRegistration(request.eventId(), request.attendeeUserId());
         rewardRepository.boundLockWaits(); // bounded wait on the reward/balance row locks below
         Reward reward = rewardRepository.findByIdForUpdate(request.rewardId())
                 .orElseThrow(() -> new ResourceNotFoundException("Reward not found"));

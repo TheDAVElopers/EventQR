@@ -17,6 +17,7 @@ import android.widget.PopupWindow
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.lifecycleScope
@@ -39,9 +40,12 @@ import java.util.Locale
 
 open class EventReportsActivity : AppCompatActivity() {
     private lateinit var repository: OrganizerRepository
-    private lateinit var reportsRepository: OrganizerReportsRepository
+    @VisibleForTesting
+    internal lateinit var reportsRepository: OrganizerReportsRepository
     private lateinit var selectedEvent: OrganizerMvpEvent
     private lateinit var content: LinearLayout
+    private var requestedEventId: String? = null
+    private var loadedEvents: List<OrganizerMvpEvent> = emptyList()
     private var summary: EventReportSummaryDto = EventReportSummaryDto()
     private var skeletonLoading: View? = null
     private val dateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH)
@@ -56,25 +60,38 @@ open class EventReportsActivity : AppCompatActivity() {
             selectedNav = NAV_REPORTS,
         )
 
-        val eventId = intentEventId() ?: selectedEventId().takeIf { it.isNotBlank() }
+        requestedEventId = intentEventId() ?: selectedEventId().takeIf { it.isNotBlank() }
+        loadEvents()
+    }
+
+    private fun loadEvents() {
+        content.removeAllViews()
         skeletonLoading = reportsSkeleton()
         content.addView(skeletonLoading)
 
-        lifecycleScope.launch {
-            val events = repository.getApprovedOrganizerEvents()
-            val resolvedEvent = resolveSelectedEvent(events, eventId)
+        lifecycleScope.launch { onEventsLoaded(repository.loadApprovedOrganizerEvents()) }
+    }
 
-            if (resolvedEvent != null) {
-                selectedEvent = resolvedEvent
-                loadScreen()
-            } else {
-                content.removeAllViews()
-                content.addView(centeredEmptyState(
-                    iconRes = R.drawable.ic_organizer_reports,
-                    title = getString(R.string.event_reports_no_events_title),
-                    subtext = getString(R.string.event_reports_no_events_subtext),
-                ))
-            }
+    @VisibleForTesting
+    internal fun onEventsLoaded(eventsLoad: OrganizerMvpLoad<List<OrganizerMvpEvent>>) {
+        // A failed fetch is not "no events": show the error with Retry instead of the empty state.
+        if (eventsLoad.source == OrganizerMvpDataSource.ERROR) {
+            content.removeAllViews()
+            content.addView(eventsLoadErrorState(eventsLoad.message) { loadEvents() })
+            return
+        }
+        loadedEvents = eventsLoad.data
+        val resolvedEvent = resolveSelectedEvent(loadedEvents, requestedEventId)
+        if (resolvedEvent != null) {
+            selectedEvent = resolvedEvent
+            loadScreen()
+        } else {
+            content.removeAllViews()
+            content.addView(centeredEmptyState(
+                iconRes = R.drawable.ic_organizer_reports,
+                title = getString(R.string.event_reports_no_events_title),
+                subtext = getString(R.string.event_reports_no_events_subtext),
+            ))
         }
     }
 
@@ -108,15 +125,14 @@ open class EventReportsActivity : AppCompatActivity() {
     }
 
     private fun renderList(container: LinearLayout) {
-        lifecycleScope.launch {
-            val events = repository.getApprovedOrganizerEvents()
-            skeletonLoading?.visibility = View.GONE
-            container.removeAllViews()
-            container.addView(buildSelectEventCard(events))
-            container.addView(buildSummaryHeaderCard())
-            container.addView(sectionHeader(getString(R.string.event_reports_generate_reports)))
-            container.addView(buildReportCatalogContainer(reportCatalog()))
-        }
+        // The selector reuses the list already loaded by onEventsLoaded; a second fetch could fail on its own
+        // and leave the selector empty while the rest of the screen works.
+        skeletonLoading?.visibility = View.GONE
+        container.removeAllViews()
+        container.addView(buildSelectEventCard(loadedEvents))
+        container.addView(buildSummaryHeaderCard())
+        container.addView(sectionHeader(getString(R.string.event_reports_generate_reports)))
+        container.addView(buildReportCatalogContainer(reportCatalog()))
     }
 
     private fun buildSelectEventCard(events: List<OrganizerMvpEvent>): LinearLayout {

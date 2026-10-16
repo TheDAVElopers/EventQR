@@ -44,6 +44,20 @@ class GlobalExceptionHandlerLockFailureTest {
     }
 
     @Test
+    void redemptionScanSingleUseIndexIsAPlain409WithTheAlreadyUsedMessage() {
+        DataIntegrityViolationException collision = new DataIntegrityViolationException("insert failed",
+                new RuntimeException("duplicate key value violates unique constraint \"ux_reward_redemptions_scan_log_redeemed\""));
+
+        ResponseEntity<ErrorResponse> response = handler.handleDataIntegrity(collision,
+                new MockHttpServletRequest("POST", "/api/v1/rewards/redeem-staff"));
+
+        assertThat(response.getStatusCode().value()).isEqualTo(409);
+        assertThat(response.getHeaders().containsKey(HttpHeaders.RETRY_AFTER)).isFalse();
+        assertThat(response.getBody().message())
+                .isEqualTo("This redemption scan was already used. Scan the attendee again.");
+    }
+
+    @Test
     void otherIntegrityErrorsKeepTheirExistingMapping() {
         ResponseEntity<ErrorResponse> response = handler.handleDataIntegrity(
                 new DataIntegrityViolationException("x", new RuntimeException("null value in column \"metadata\"")),

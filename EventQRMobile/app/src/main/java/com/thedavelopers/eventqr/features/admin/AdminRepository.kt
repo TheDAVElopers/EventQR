@@ -52,7 +52,7 @@ open class AdminRepository(private val context: Context) {
     suspend fun deleteUser(userId: String): NetworkResult<Unit> =
         safeApiCall { apiService.deleteUser(userId) }
 
-    suspend fun createAdminAccount(
+    open suspend fun createAdminAccount(
         fullName: String,
         email: String,
         phoneNumber: String?,

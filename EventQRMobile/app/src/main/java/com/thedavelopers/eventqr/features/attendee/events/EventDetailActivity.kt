@@ -11,6 +11,7 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -26,7 +27,8 @@ import java.time.Instant
 import kotlinx.coroutines.launch
 
 open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
-    private lateinit var repository: AttendeeRepository
+    @VisibleForTesting
+    internal lateinit var repository: AttendeeRepository
     private lateinit var presenter: EventDetailPresenter
     private lateinit var eventId: String
     private var currentEvent: AttendeeEventResponse? = null
@@ -37,6 +39,9 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     private var cancellableRegistrationId: String? = null
     private var cancelDialog: androidx.appcompat.app.AlertDialog? = null
     private var failureDialog: androidx.appcompat.app.AlertDialog? = null
+    private var availabilityJob: kotlinx.coroutines.Job? = null
+    // Re-draws the button from the last availability outcome when the registration status changes afterwards.
+    private var reapplyAvailability: (() -> Unit)? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,6 +105,9 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         }
         if (!this::eventId.isInitialized || eventId.isBlank()) return
         presenter.refreshRegistrationStatus(eventId)
+        // Returning from registration/QR: the availability call also carries the live registered count,
+        // so the capacity line is redrawn instead of keeping the count from when the screen opened.
+        currentEvent?.takeIf { !isOwnedByCurrentOrganizer }?.let { loadEventAvailability(it) }
     }
 
     override fun renderEvent(event: AttendeeEventResponse) {
@@ -253,7 +261,9 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     }
 
     private fun loadEventAvailability(event: AttendeeEventResponse) {
-        lifecycleScope.launch {
+        // Only the newest request may draw: an older response landing last would show a stale count/state.
+        availabilityJob?.cancel()
+        availabilityJob = lifecycleScope.launch {
             when (val result = repository.getEventAvailability(event.eventId.toString())) {
                 is NetworkResult.Success -> {
                     updateRegisterButtonFromAvailability(event, result.data)
@@ -266,7 +276,11 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         }
     }
 
-    private fun updateRegisterButtonFromAvailability(event: AttendeeEventResponse, availability: EventAvailabilityResponse) {
+    @VisibleForTesting
+    internal fun updateRegisterButtonFromAvailability(event: AttendeeEventResponse, availability: EventAvailabilityResponse) {
+        reapplyAvailability = { updateRegisterButtonFromAvailability(event, availability) }
+        // The availability response is fresher than the launch snapshot or the loaded event.
+        updateRegistrationStatusUI(availability.currentAttendeeCount, availability.capacity)
         if (isOwnedByCurrentOrganizer) {
             setOwnedEventState()
             return
@@ -302,6 +316,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     }
 
     private fun updateRegisterButtonWithFallback(event: AttendeeEventResponse, message: String) {
+        reapplyAvailability = { updateRegisterButtonWithFallback(event, message) }
         if (isOwnedByCurrentOrganizer) {
             setOwnedEventState()
             return
@@ -338,6 +353,10 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         if (isRegistered) {
             val btn = findViewById<Button>(R.id.btnRegisterForEvent)
             setAlreadyRegisteredState(btn)
+        } else {
+            // No longer registered (e.g. cancelled elsewhere): an "Already Registered" label drawn from an
+            // earlier availability result must give way to what availability actually allows.
+            reapplyAvailability?.invoke()
         }
     }
 

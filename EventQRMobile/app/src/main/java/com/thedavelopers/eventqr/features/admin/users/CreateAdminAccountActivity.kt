@@ -10,6 +10,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -18,12 +19,14 @@ import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.core.util.PhoneInput
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.admin.AdminRepository
 import kotlinx.coroutines.launch
 
 class CreateAdminAccountActivity : AppCompatActivity() {
-    private lateinit var repository: AdminRepository
+    @VisibleForTesting
+    internal lateinit var repository: AdminRepository
     private lateinit var sessionManager: SessionManager
 
     private lateinit var firstNameInput: EditText
@@ -129,7 +132,9 @@ class CreateAdminAccountActivity : AppCompatActivity() {
             emailInput.error = null
         }
 
-        if (!Validators.isValidPhoneNumber(phone)) {
+        // The hint shows "+63 912 345 6789", so spaces/dashes are dropped before the shared rule runs.
+        val normalizedPhone = PhoneInput.toE164OrNull(phone)
+        if (normalizedPhone == null) {
             phoneInput.error = getString(R.string.error_invalid_phone)
             valid = false
         } else {
@@ -159,7 +164,7 @@ class CreateAdminAccountActivity : AppCompatActivity() {
 
         setLoading(true)
         lifecycleScope.launch {
-            when (val result = repository.createAdminAccount(fullName, email, phone, password)) {
+            when (val result = repository.createAdminAccount(fullName, email, normalizedPhone, password)) {
                 is NetworkResult.Success -> {
                     setLoading(false)
                     Toast.makeText(

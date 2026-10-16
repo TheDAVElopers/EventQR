@@ -5,6 +5,7 @@ import android.app.TimePickerDialog
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.Rect
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
@@ -22,12 +23,14 @@ import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.session.SessionManager
+import com.thedavelopers.eventqr.core.util.PhoneInput
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.events.model.dto.EventCreationRequestDto
 import com.yalantis.ucrop.UCrop
@@ -41,7 +44,8 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 class RequestEventActivity : AppCompatActivity() {
-    private lateinit var repository: AttendeeRepository
+    @VisibleForTesting
+    internal lateinit var repository: AttendeeRepository
     private lateinit var sessionManager: SessionManager
 
     private lateinit var eventNameInput: EditText
@@ -51,7 +55,8 @@ class RequestEventActivity : AppCompatActivity() {
     private lateinit var spinnerEventCategory: Spinner
     private lateinit var cardEventCategory: View
     private lateinit var spinnerArrow: ImageView
-    private var selectedEventCategory: String = ""
+    @VisibleForTesting
+    internal var selectedEventCategory: String = ""
     private var isCategoryDropdownOpen = false
     private var eventCategoryPopup: PopupWindow? = null
     private val categoryOptions = listOf("Academic", "Seminar", "Workshop", "Sports", "Cultural", "Organizational", "Others")
@@ -85,10 +90,11 @@ class RequestEventActivity : AppCompatActivity() {
     private val displayDateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a")
     private val zoneId: ZoneId = ZoneId.of("Asia/Manila")
 
-    private var startDateTimeValue: LocalDateTime? = null
-    private var endDateTimeValue: LocalDateTime? = null
-    private var registrationStartDateTimeValue: LocalDateTime? = null
-    private var registrationEndDateTimeValue: LocalDateTime? = null
+    // Set by the date/time pickers; internal so tests can fill the form without driving picker dialogs.
+    @VisibleForTesting internal var startDateTimeValue: LocalDateTime? = null
+    @VisibleForTesting internal var endDateTimeValue: LocalDateTime? = null
+    @VisibleForTesting internal var registrationStartDateTimeValue: LocalDateTime? = null
+    @VisibleForTesting internal var registrationEndDateTimeValue: LocalDateTime? = null
 
     private val posterPicker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let { launchPosterCrop(it) }
@@ -412,7 +418,16 @@ class RequestEventActivity : AppCompatActivity() {
             contactEmailInput.error = getString(R.string.create_admin_account_enter_a_valid_email_address)
             failures += contactEmailInput to "Enter a valid email address"
         }
-        val contactNumber = contactNumberInput.requiredValue("Contact number is required")
+        // Same rule as registration/profile (Validators.isValidPhoneNumber); the hint shows "+63 912 345 6789",
+        // so spaces/dashes are dropped first and the normalized E.164 value is what gets sent.
+        val contactNumber = contactNumberInput.requiredValue("Contact number is required")?.let { typed ->
+            PhoneInput.toE164OrNull(typed) ?: run {
+                val message = getString(R.string.request_event_invalid_contact_number)
+                contactNumberInput.error = message
+                failures += contactNumberInput to message
+                null
+            }
+        }
         val reason = reasonForRequestInput.requiredValue("Reason for request is required")
 
         if (failures.isNotEmpty()) {
@@ -443,7 +458,7 @@ class RequestEventActivity : AppCompatActivity() {
 
     private fun reportValidationFailures(failures: List<Pair<View, String>>) {
         val firstFailingView = failures.first().first
-        formScrollView.smoothScrollTo(0, firstFailingView.top.coerceAtLeast(0))
+        formScrollView.smoothScrollTo(0, scrollTargetFor(firstFailingView))
         firstFailingView.requestFocus()
 
         val maxShownMessages = 4
@@ -455,6 +470,18 @@ class RequestEventActivity : AppCompatActivity() {
             shown
         }
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    }
+
+    /**
+     * Scroll offset that brings [field] (plus a little room for its label) to the top of the form.
+     * View.top is relative to the field's own card, so it is mapped into the ScrollView's content first.
+     */
+    @VisibleForTesting
+    internal fun scrollTargetFor(field: View): Int {
+        val bounds = Rect()
+        field.getDrawingRect(bounds)
+        formScrollView.offsetDescendantRectToMyCoords(field, bounds)
+        return (bounds.top - dp(32)).coerceAtLeast(0)
     }
 
     private fun setLoading(loading: Boolean) {

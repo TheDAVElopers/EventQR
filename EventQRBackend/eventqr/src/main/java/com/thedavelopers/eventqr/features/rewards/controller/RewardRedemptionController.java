@@ -15,8 +15,6 @@ import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignm
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionGrantRequest;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResultResponse;
 import com.thedavelopers.eventqr.features.rewards.service.RewardRedemptionService;
-import com.thedavelopers.eventqr.shared.constants.AccountRole;
-import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
 import com.thedavelopers.eventqr.shared.security.JwtService;
 
@@ -42,31 +40,16 @@ public class RewardRedemptionController {
     @PostMapping("/redeem-staff")
     public ResponseEntity<ApiResponse<RewardRedemptionResultResponse>> redeem(HttpServletRequest request,
                                                                               @Valid @RequestBody RewardRedemptionGrantRequest body) {
-        requireRedemptionAccess(request, body.eventId());
-        RewardRedemptionResultResponse result = rewardRedemptionService.redeem(body);
+        UUID callerId = requireRedemptionAccess(request, body.eventId());
+        // The staff identity is always the authenticated caller; any body staffUserId is ignored.
+        RewardRedemptionResultResponse result = rewardRedemptionService.redeem(body.withStaffUserId(callerId));
         return ResponseEntity.ok(ApiResponse.success(
                 result.approved() ? "Reward redeemed" : "Reward redemption rejected", result));
     }
 
-    private void requireRedemptionAccess(HttpServletRequest request, UUID eventId) {
-        AccountRole role = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
-        if (role == AccountRole.ADMIN || role == AccountRole.SUPER_ADMIN) {
-            return;
-        }
-        UUID callerId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
-        if (role == AccountRole.ORGANIZER) {
-            if (eventService.findOne(eventId).organizerUserId().equals(callerId)
-                    || eventStaffAssignmentRepository.existsByEventIdAndStaffUserIdAndActiveTrue(eventId, callerId)) {
-                return;
-            }
-            throw new ForbiddenException("Event ownership required");
-        }
-        if (role == AccountRole.STAFF) {
-            if (eventStaffAssignmentRepository.existsByEventIdAndStaffUserIdAndActiveTrue(eventId, callerId)) {
-                return;
-            }
-            throw new ForbiddenException("Staff user is not actively assigned to this event");
-        }
-        throw new ForbiddenException("Staff access required");
+    /** Returns the caller id; see {@link RewardRedemptionAccess#requireScanAccess}. */
+    private UUID requireRedemptionAccess(HttpServletRequest request, UUID eventId) {
+        return RewardRedemptionAccess.requireScanAccess(request, eventId, jwtService, eventService,
+                eventStaffAssignmentRepository);
     }
 }

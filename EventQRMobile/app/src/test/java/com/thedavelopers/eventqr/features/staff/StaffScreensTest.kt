@@ -13,14 +13,20 @@ import com.thedavelopers.eventqr.features.ShadowEncryptedSharedPreferences
 import com.thedavelopers.eventqr.features.ShadowMasterKeys
 import com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity
 import com.thedavelopers.eventqr.features.admin.model.dto.AdminStatsResponse
+import com.thedavelopers.eventqr.features.idprinting.AndroidIdPrinter
+import com.thedavelopers.eventqr.features.organizer.allTexts
 import com.thedavelopers.eventqr.features.staff.model.dto.StaffTransactionSummary
 import com.thedavelopers.eventqr.features.staff.result.StaffScanResultActivity
 import com.thedavelopers.eventqr.features.staff.result.StaffTransactionResultActivity
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
+import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
@@ -162,6 +168,88 @@ class StaffScreensTest {
         val activity = scanResult(qrActive = true)
         val hint = activity.findViewById<TextView>(R.id.txtScanResultStatusHint).text.toString()
         assertEquals(context.getString(R.string.staff_scan_result_qr_active_hint), hint)
+    }
+
+    @Test
+    fun scanResult_headerBackReturnsToExistingScannerWithoutStartingANewOne() {
+        val activity = scanResult(qrActive = true)
+
+        activity.findViewById<View>(R.id.nav_header_back).performClick()
+
+        assertTrue(activity.isFinishing)
+        assertNull(Shadows.shadowOf(activity).nextStartedActivity)
+    }
+
+    // ---- ID print (ID_PRINT purpose)
+
+    private fun latestDialogTexts(): List<String> =
+        org.robolectric.shadows.ShadowDialog.getLatestDialog()!!.window!!.decorView.allTexts()
+
+    @Test
+    fun printRejectedByServer_showsIdPrintFailedNotVerificationRejected() {
+        val activity = scanResult(qrActive = true)
+
+        activity.bindPrintFailed("Active ID template not found for event")
+
+        assertEquals(
+            context.getString(R.string.staff_print_failed_title),
+            activity.findViewById<TextView>(R.id.txtScanResultStateRejected).text.toString(),
+        )
+        assertEquals(
+            context.getString(R.string.staff_print_failed_hint),
+            activity.findViewById<TextView>(R.id.txtScanResultStatusHintRejected).text.toString(),
+        )
+        assertEquals("Active ID template not found for event", activity.findViewById<TextView>(R.id.txtScanResultReason).text.toString())
+        assertEquals(View.VISIBLE, activity.findViewById<Button>(R.id.btnViewAttendeeDetails).visibility)
+        assertEquals(View.VISIBLE, activity.findViewById<Button>(R.id.btnScanAgain).visibility)
+        assertEquals(View.GONE, activity.findViewById<Button>(R.id.btnContinueTransaction).visibility)
+    }
+
+    @Test
+    fun printDialogCancelled_saysCancelledNotPrintSent() {
+        val activity = scanResult(qrActive = true)
+
+        activity.onPrintOutcome(AndroidIdPrinter.PrintOutcome.CANCELLED, "Print logged (no physical printer connected)")
+
+        val texts = latestDialogTexts()
+        assertTrue(texts.contains(context.getString(R.string.staff_print_cancelled_title)))
+        assertFalse(texts.contains(context.getString(R.string.staff_print_sent_title)))
+    }
+
+    @Test
+    fun printJobSent_showsPrintSent() {
+        val activity = scanResult(qrActive = true)
+
+        activity.onPrintOutcome(AndroidIdPrinter.PrintOutcome.SENT, "Print logged (no physical printer connected)")
+
+        assertTrue(latestDialogTexts().contains(context.getString(R.string.staff_print_sent_title)))
+    }
+
+    @Test
+    fun printJobFailed_showsTheIdPrintFailedState() {
+        val activity = scanResult(qrActive = true)
+
+        activity.onPrintOutcome(AndroidIdPrinter.PrintOutcome.FAILED, "Print logged (no physical printer connected)")
+
+        assertEquals(
+            context.getString(R.string.staff_print_failed_title),
+            activity.findViewById<TextView>(R.id.txtScanResultStateRejected).text.toString(),
+        )
+        assertEquals(
+            context.getString(R.string.staff_print_job_failed_message),
+            activity.findViewById<TextView>(R.id.txtScanResultReason).text.toString(),
+        )
+    }
+
+    @Test
+    fun batchPrintCancelled_summarySaysCancelledNotPrintedSuccessfully() {
+        val activity = Robolectric.buildActivity(EventRegistrationsActivity::class.java).create().get()
+
+        activity.showBatchPrintResult(3, 3, emptyList(), AndroidIdPrinter.PrintOutcome.CANCELLED)
+
+        val texts = latestDialogTexts()
+        assertTrue(texts.contains(context.getString(R.string.event_registrations_batch_print_cancelled, 3, 3)))
+        assertFalse(texts.contains("3 of 3 IDs printed successfully."))
     }
 
     // ---- transaction result copy

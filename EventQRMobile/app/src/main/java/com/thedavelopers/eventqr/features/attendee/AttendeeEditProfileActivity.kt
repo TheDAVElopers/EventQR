@@ -184,6 +184,15 @@ class AttendeeEditProfileActivity : AppCompatActivity() {
     }
 
     private fun validateForm(): Boolean {
+        // The backend silently ignores a blank name, so block it here instead of reporting a false success.
+        val nameValid = sanitizeName().isNotBlank()
+        if (!nameValid) {
+            edtFullName.error = getString(R.string.attendee_edit_profile_full_name_is_required)
+        }
+        return validatePhone() && nameValid
+    }
+
+    private fun validatePhone(): Boolean {
         val phone = sanitizePhone()
         if (phone.isBlank()) {
             edtPhone.error = getString(R.string.attendee_edit_profile_phone_number_is_required)

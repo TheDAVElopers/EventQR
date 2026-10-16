@@ -3,6 +3,7 @@ package com.thedavelopers.eventqr.features.eventrequests.model.dto;
 import java.time.Instant;
 import java.util.List;
 
+import com.thedavelopers.eventqr.shared.utils.PhilippinePhone;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -21,7 +22,7 @@ public record EventCreationRequestDto(
         Instant registrationEndDateTime,
         @NotBlank String requesterName,
         @NotBlank @Email String contactEmail,
-        @NotBlank String contactNumber,
+        @NotBlank @PhilippinePhone String contactNumber,
         List<String> requestedFeatures,
         String eventLogoUrl,
         String additionalNotes,

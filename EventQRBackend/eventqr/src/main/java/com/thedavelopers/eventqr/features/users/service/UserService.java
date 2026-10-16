@@ -25,6 +25,7 @@ import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.AccountStatus;
 import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
 import com.thedavelopers.eventqr.shared.utils.PasswordValidator;
+import com.thedavelopers.eventqr.shared.utils.PhoneNumbers;
 import com.thedavelopers.eventqr.shared.exceptions.ConflictException;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
@@ -76,7 +77,7 @@ public class UserService implements AttendeeDirectoryPort {
         UserProfile newUser = new UserProfile();
         newUser.setEmail(email);
         newUser.setFullName(request.fullName().trim());
-        newUser.setPhoneNumber(request.phoneNumber());
+        newUser.setPhoneNumber(PhoneNumbers.normalize(request.phoneNumber()));
         newUser.setRole(AccountRole.ATTENDEE);
         newUser.setStatus(AccountStatus.ACTIVE);
         newUser.setPasswordHash(passwordEncoder.encode(request.password()));
@@ -109,7 +110,7 @@ public class UserService implements AttendeeDirectoryPort {
             // User exists but doesn't have a real password (e.g., created via findOrCreateAttendee)
             // Update the existing user
             existingUser.setFullName(request.fullName().trim());
-            existingUser.setPhoneNumber(request.phoneNumber());
+            existingUser.setPhoneNumber(PhoneNumbers.normalize(request.phoneNumber()));
             existingUser.setRole(request.role());
             existingUser.setStatus(AccountStatus.ACTIVE);
             existingUser.setPasswordHash(passwordEncoder.encode(request.password()));
@@ -120,7 +121,7 @@ public class UserService implements AttendeeDirectoryPort {
         UserProfile newUser = new UserProfile();
         newUser.setEmail(email);
         newUser.setFullName(request.fullName().trim());
-        newUser.setPhoneNumber(request.phoneNumber());
+        newUser.setPhoneNumber(PhoneNumbers.normalize(request.phoneNumber()));
         newUser.setRole(request.role());
         newUser.setStatus(AccountStatus.ACTIVE);
         newUser.setPasswordHash(passwordEncoder.encode(request.password()));
@@ -180,7 +181,7 @@ public class UserService implements AttendeeDirectoryPort {
         if (fullName != null && !fullName.isBlank()) {
 userProfile.setFullName(fullName.trim());
          }
-         userProfile.setPhoneNumber(phoneNumber);
+         userProfile.setPhoneNumber(PhoneNumbers.normalize(phoneNumber));
          return toResponse(userProfileRepository.save(userProfile));
      }
 
@@ -287,7 +288,7 @@ userProfile.setFullName(fullName.trim());
                     UserProfile created = new UserProfile();
                     created.setEmail(email.trim().toLowerCase());
                     created.setFullName(fullName.trim());
-                    created.setPhoneNumber(phoneNumber);
+                    created.setPhoneNumber(PhoneNumbers.normalize(phoneNumber));
                     created.setRole(role);
                     created.setStatus(AccountStatus.ACTIVE);
                     created.setPasswordHash(createUnusablePasswordHash());

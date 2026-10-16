@@ -117,30 +117,37 @@ public class RewardController {
         if (role == AccountRole.ADMIN || role == AccountRole.SUPER_ADMIN) {
             return;
         }
-        boolean self = callerId.equals(body.attendeeUserId());
-        if (role == AccountRole.ORGANIZER) {
-            if (eventService.findOne(body.eventId()).organizerUserId().equals(callerId)
-                    && eventRegistrationRepository.existsByEventIdAndAttendeeUserId(body.eventId(), body.attendeeUserId())) {
-                return;
-            }
-            throw new ForbiddenException("Organizer can only redeem for attendees of owned events");
-        }
-        if (role == AccountRole.STAFF) {
-            if (!eventStaffAssignmentRepository.existsByEventIdAndStaffUserIdAndActiveTrue(body.eventId(), callerId)) {
-                throw new ForbiddenException("Staff user is not actively assigned to this event");
-            }
-            if (eventRegistrationRepository.existsByEventIdAndAttendeeUserId(body.eventId(), body.attendeeUserId())) {
-                return;
-            }
-            throw new ForbiddenException("Attendee is not registered for this event");
+        // Authorization only. Whether the attendee holds an active (REGISTERED / ENTERED / EXITED) registration is
+        // checked by RewardService.redeem for every caller (admins included), so the answer is always the same 404.
+        if (role == AccountRole.ORGANIZER || role == AccountRole.STAFF) {
+            requireScanlessRedeemManager(role, callerId, body.eventId());
+            return;
         }
         if (role == AccountRole.ATTENDEE) {
-            if (self && eventRegistrationRepository.existsByEventIdAndAttendeeUserId(body.eventId(), callerId)) {
+            if (callerId.equals(body.attendeeUserId())) {
                 return;
             }
             throw new ForbiddenException("Attendee can only redeem own rewards");
         }
         throw new ForbiddenException("Access denied to reward redemption");
+    }
+
+    /**
+     * Scan-less redemption on someone's behalf, same rule as StaffController.requireRewardManager: the owning
+     * organizer passes; any other organizer or staff member needs an active assignment with can_manage_rewards.
+     */
+    private void requireScanlessRedeemManager(AccountRole role, UUID callerId, UUID eventId) {
+        if (role == AccountRole.ORGANIZER && eventService.findOne(eventId).organizerUserId().equals(callerId)) {
+            return;
+        }
+        EventStaffAssignment assignment = eventStaffAssignmentRepository
+                .findByEventIdAndStaffUserIdAndActiveTrue(eventId, callerId)
+                .orElseThrow(() -> new ForbiddenException(role == AccountRole.ORGANIZER
+                        ? "Organizer can only redeem for attendees of owned events"
+                        : "Staff user is not actively assigned to this event"));
+        if (!assignment.isCanManageRewards()) {
+            throw new ForbiddenException("Staff user is not allowed to manage rewards for this event");
+        }
     }
 
     private void requireEventAccess(HttpServletRequest request, UUID eventId) {

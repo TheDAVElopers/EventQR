@@ -14,6 +14,7 @@ import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -42,6 +43,8 @@ import kotlinx.coroutines.launch
 open class AttendeeManagementActivity : AppCompatActivity() {
     private lateinit var repository: OrganizerRepository
     private var selectedEvent: OrganizerMvpEvent? = null
+    private var eventsLoadFailed = false
+    private var eventsLoadJob: kotlinx.coroutines.Job? = null
     private lateinit var adapter: AttendeeManagementAdapter
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var progressBar: ProgressBar
@@ -88,7 +91,8 @@ open class AttendeeManagementActivity : AppCompatActivity() {
         bottomNavHost.addView(bottomNav(NAV_ATTENDEES))
 
         swipeRefresh.setOnRefreshListener {
-            refreshSelectedEventAttendees()
+            // No event yet means the event list failed to load: a pull retries it.
+            if (selectedEvent == null) loadEvents() else refreshSelectedEventAttendees()
         }
 
         findViewById<ImageButton>(R.id.btnFilter).setOnClickListener {
@@ -100,8 +104,20 @@ open class AttendeeManagementActivity : AppCompatActivity() {
             )
         }
 
-        lifecycleScope.launch {
-            val events = repository.getApprovedOrganizerEvents()
+        loadEvents()
+    }
+
+    private fun loadEvents() {
+        // A pull during the first load (or a second pull) must not start a parallel events load.
+        if (eventsLoadJob?.isActive == true) return
+        eventsLoadJob = lifecycleScope.launch {
+            val eventsLoad = repository.loadApprovedOrganizerEvents()
+            if (eventsLoad.source == OrganizerMvpDataSource.ERROR) {
+                showEventsLoadFailedState(eventsLoad.message)
+                return@launch
+            }
+            val events = eventsLoad.data
+            restoreAfterEventsLoadFailure()
 
             if (events.isEmpty()) {
                 showNoEventsAvailableState()
@@ -235,7 +251,14 @@ open class AttendeeManagementActivity : AppCompatActivity() {
         val event = selectedEvent ?: return
         lifecycleScope.launch {
             val currentEventId = event.id
-            val latestSelectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), currentEventId)
+            val eventsLoad = repository.loadApprovedOrganizerEvents()
+            // A failed fetch must not run resolveSelectedEvent on an empty list: that would save "no selection"
+            // and wipe the persisted event. Keep the current event and just reload its attendees.
+            val latestSelectedEvent = if (eventsLoad.source == OrganizerMvpDataSource.ERROR) {
+                null
+            } else {
+                resolveSelectedEvent(eventsLoad.data, currentEventId)
+            }
             if (latestSelectedEvent != null) {
                 selectedEvent = latestSelectedEvent
                 repository.saveSelectedEventId(latestSelectedEvent.id)
@@ -285,6 +308,35 @@ open class AttendeeManagementActivity : AppCompatActivity() {
         emptyStateSub.text = getString(R.string.attendee_management_select_an_event_from_the_dropdown_ab)
         txtEventTitle.text = getString(R.string.attendee_management_choose_an_event)
         txtEventSelectorDate.text = "-"
+    }
+
+    /** The event list failed to load (not "no events"): say so and let a pull-to-refresh retry. */
+    @VisibleForTesting
+    internal fun showEventsLoadFailedState(message: String?) {
+        eventsLoadFailed = true
+        skeletonLoading.visibility = View.GONE
+        progressBar.visibility = View.GONE
+        swipeRefresh.isRefreshing = false
+        swipeRefresh.isEnabled = true
+        currentEventLabel.visibility = View.GONE
+        cardAttendeeStats.visibility = View.GONE
+        eventSelectorHost.visibility = View.GONE
+        emptyStateLayout.visibility = View.VISIBLE
+        emptyStateTitle.text = getString(R.string.organizer_dashboard_events_load_failed)
+        emptyStateSub.text = getString(
+            R.string.organizer_events_load_failed_pull_to_retry,
+            message?.takeIf { it.isNotBlank() } ?: getString(R.string.organizer_try_again_later),
+        )
+    }
+
+    private fun restoreAfterEventsLoadFailure() {
+        if (!eventsLoadFailed) return
+        eventsLoadFailed = false
+        swipeRefresh.isRefreshing = false
+        currentEventLabel.visibility = View.VISIBLE
+        cardAttendeeStats.visibility = View.VISIBLE
+        eventSelectorHost.visibility = View.VISIBLE
+        emptyStateLayout.visibility = View.GONE
     }
 
     private fun showNoEventsAvailableState() {

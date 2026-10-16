@@ -141,4 +141,23 @@ class AttendeeEditProfileActivityTest {
         assertNull(phoneInput(activity).error)
         assertEquals("9171234567", phoneInput(activity).text.toString())
     }
+
+    @Test
+    fun save_blankName_showsRequiredErrorAndKeepsTheSessionName() {
+        // The backend silently ignores a blank name, so the app must refuse it instead of reporting success.
+        val sessionManager = SessionManager(ApplicationProvider.getApplicationContext())
+        sessionManager.updateProfile("John Doe", "+639171234567", "user@example.com")
+        val activity = buildActivity()
+        val nameInput = activity.findViewById<EditText>(R.id.edtFullName)
+
+        nameInput.setText("   ")
+        activity.findViewById<android.widget.Button>(R.id.btnSaveChanges).performClick()
+
+        assertEquals(
+            activity.getString(R.string.attendee_edit_profile_full_name_is_required),
+            nameInput.error.toString(),
+        )
+        assertNull(phoneInput(activity).error)
+        assertEquals("John Doe", sessionManager.getFullName())
+    }
 }

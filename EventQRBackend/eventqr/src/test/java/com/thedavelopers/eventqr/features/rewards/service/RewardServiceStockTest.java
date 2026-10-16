@@ -43,6 +43,7 @@ class RewardServiceStockTest {
     private RewardService service;
     private AttendeePointBalanceRepository balances;
     private Reward reward;
+    private com.thedavelopers.eventqr.shared.interfaces.RegistrationLookupPort registrations;
 
     @BeforeEach
     void setUp() {
@@ -50,11 +51,13 @@ class RewardServiceStockTest {
         redemptions = mock(RewardRedemptionRepository.class);
         balances = mock(AttendeePointBalanceRepository.class);
         events = mock(EventRepository.class);
+        registrations = mock(com.thedavelopers.eventqr.shared.interfaces.RegistrationLookupPort.class);
+        when(registrations.hasActiveRegistration(any(), any())).thenReturn(true);
         service = new RewardService(balances, mock(PointTransactionRepository.class),
                 rewards, redemptions, events, mock(ScanPurposeRepository.class),
                 mock(NotificationService.class),
                 mock(com.thedavelopers.eventqr.shared.interfaces.AttendeeDirectoryPort.class),
-                mock(DuplicateRewardClaimChecker.class));
+                mock(DuplicateRewardClaimChecker.class), registrations);
         reward = new Reward();
         reward.setId(rewardId);
         reward.setEventId(eventId);

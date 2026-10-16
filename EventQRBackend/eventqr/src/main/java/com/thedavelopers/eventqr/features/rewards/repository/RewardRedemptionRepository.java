@@ -23,6 +23,8 @@ public interface RewardRedemptionRepository extends JpaRepository<RewardRedempti
 
     long countByRewardIdAndStatus(UUID rewardId, RedemptionStatus status);
 
+    boolean existsByRedemptionScanLogIdAndStatus(UUID redemptionScanLogId, RedemptionStatus status);
+
     /** One batched query: redemption count per reward for an event, filtered by status. */
     @Query("SELECT r.rewardId AS rewardId, COUNT(r) AS total FROM RewardRedemption r "
             + "WHERE r.eventId = :eventId AND r.status = :status GROUP BY r.rewardId")

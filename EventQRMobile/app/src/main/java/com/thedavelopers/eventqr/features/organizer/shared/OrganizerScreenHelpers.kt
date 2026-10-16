@@ -260,6 +260,24 @@ internal fun AppCompatActivity.showMissingEventScreen(screenTitle: String, messa
         ))
 }
 
+/** Header (with back) and a loading card while the event list loads, instead of a blank window. */
+internal fun AppCompatActivity.showEventsLoadingScreen(screenTitle: String) {
+    organizerShell(screenTitle, showBack = true).addView(loadingState(getString(R.string.organizer_events_loading)))
+}
+
+/** The event list failed to load: say so with Retry instead of claiming no event is selected. */
+internal fun AppCompatActivity.showEventsLoadErrorScreen(screenTitle: String, message: String?, onRetry: () -> Unit) {
+    var state: View? = null
+    state = eventsLoadErrorState(message) {
+        // Retry recreates the screen; a second tap before that happens must not queue another recreate.
+        (state as? ViewGroup)?.let { card ->
+            (0 until card.childCount).map(card::getChildAt).filterIsInstance<Button>().forEach { it.isEnabled = false }
+        }
+        onRetry()
+    }
+    organizerShell(screenTitle, showBack = true).addView(state)
+}
+
 internal fun AppCompatActivity.menuCard(
     label: String,
     iconRes: Int,

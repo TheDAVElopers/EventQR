@@ -19,6 +19,7 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -397,27 +398,40 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
                 }
             }
 
+            showLoading(false)
+            exitSelectionMode()
             if (successes.isNotEmpty()) {
+                // Each card was logged above; the summary waits for what the user did in the print dialog.
                 AndroidIdPrinter.print(
                     this@EventRegistrationsActivity,
                     "EventQR IDs — batch (${successes.size})",
                     successes,
-                )
+                ) { outcome ->
+                    if (!isFinishing && !isDestroyed) showBatchPrintResult(successes.size, selected.size, failures, outcome)
+                }
+            } else {
+                showBatchPrintResult(successes.size, selected.size, failures)
             }
-
-            showLoading(false)
-            showBatchPrintResult(successes.size, selected.size, failures)
-            exitSelectionMode()
         }
     }
 
-    private fun showBatchPrintResult(printed: Int, total: Int, failures: List<Pair<String, String>>) {
+    @VisibleForTesting
+    internal fun showBatchPrintResult(
+        printed: Int,
+        total: Int,
+        failures: List<Pair<String, String>>,
+        outcome: AndroidIdPrinter.PrintOutcome = AndroidIdPrinter.PrintOutcome.SENT,
+    ) {
         val body = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(24), dp(16), dp(24), dp(8))
         }
         body.addView(TextView(this).apply {
-            text = "$printed of $total IDs printed successfully."
+            text = when (outcome) {
+                AndroidIdPrinter.PrintOutcome.SENT -> "$printed of $total IDs printed successfully."
+                AndroidIdPrinter.PrintOutcome.CANCELLED -> getString(R.string.event_registrations_batch_print_cancelled, printed, total)
+                AndroidIdPrinter.PrintOutcome.FAILED -> getString(R.string.event_registrations_batch_print_job_failed, printed, total)
+            }
             textSize = 16f
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(0xFF111827.toInt())

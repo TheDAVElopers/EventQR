@@ -21,6 +21,14 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
 
     boolean existsByEventIdAndAttendeeUserId(UUID eventId, UUID attendeeUserId);
 
+    boolean existsByEventIdAndAttendeeUserIdAndStatusIn(UUID eventId, UUID attendeeUserId,
+                                                        java.util.Collection<RegistrationStatus> statuses);
+
+    /** True only for a REGISTERED / ENTERED / EXITED registration; CANCELLED and NO_SHOW rows do not count. */
+    default boolean existsActiveByEventIdAndAttendeeUserId(UUID eventId, UUID attendeeUserId) {
+        return existsByEventIdAndAttendeeUserIdAndStatusIn(eventId, attendeeUserId, RegistrationStatus.activeStatuses());
+    }
+
     Optional<EventRegistration> findByEventIdAndAttendeeEmailIgnoreCase(UUID eventId, String attendeeEmail);
 
     Optional<EventRegistration> findByQrCredentialId(UUID qrCredentialId);

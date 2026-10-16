@@ -118,6 +118,10 @@ internal fun AppCompatActivity.errorState(
     }
 }
 
+/** The organizer event list failed to load (not "no events"): the server's message, or a generic one, with Retry. */
+internal fun AppCompatActivity.eventsLoadErrorState(message: String?, onRetry: () -> Unit): View =
+    errorState(message?.takeIf { it.isNotBlank() } ?: getString(R.string.organizer_dashboard_events_load_failed), onRetry)
+
 internal fun <T> AppCompatActivity.dataSourceBanner(load: OrganizerMvpLoad<T>): View? {
     if (load.source == OrganizerMvpDataSource.BACKEND) return null
     val message = load.message?.takeIf { it.isNotBlank() } ?: getString(R.string.organizer_limited_local_data)

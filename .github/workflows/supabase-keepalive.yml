@@ -1,7 +1,7 @@
 name: Supabase Keep-Alive
 
 # Pings the Supabase REST API every 3 days so the free-tier project is not paused for inactivity.
-# Needs the SUPABASE_ANON_KEY repo secret (the app's public anon key).
+# Falls back to the project's public anon key if the SUPABASE_ANON_KEY repo secret is unset.
 
 on:
   schedule:
@@ -20,10 +20,15 @@ jobs:
         env:
           SUPABASE_PROJECT_REF: hmjrqfwtpinguhwgkgpw
           SUPABASE_TABLE_NAME: user_profiles
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || secrets.SUPABASE_KEY }}
         run: |
-          curl --fail --silent --show-error --max-time 30 \
-            -o /dev/null -w "OK: %{http_code}\n" \
-            -H "apikey: $SUPABASE_ANON_KEY" \
-            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
-            "https://$SUPABASE_PROJECT_REF.supabase.co/rest/v1/$SUPABASE_TABLE_NAME?limit=1"
+          KEY="${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtanJxZnd0cGluZ3Vod2drZ3B3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2ODUxMjcsImV4cCI6MjA5NTI2MTEyN30.IxQgUnLCHtdW6SlbFdxzRWJy7RK0n1RHNXIC2bkEXig}"
+          HTTP_CODE=$(curl --silent --show-error --max-time 30 \
+            -o /dev/null -w "%{http_code}" \
+            -H "apikey: $KEY" \
+            -H "Authorization: Bearer $KEY" \
+            "https://$SUPABASE_PROJECT_REF.supabase.co/rest/v1/$SUPABASE_TABLE_NAME?limit=1")
+          case "$HTTP_CODE" in
+            2*) echo "OK: $HTTP_CODE" ;;
+            *)  echo "FAIL: HTTP $HTTP_CODE"; exit 1 ;;
+          esac

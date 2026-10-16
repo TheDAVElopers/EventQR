@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -15,6 +16,7 @@ import com.thedavelopers.eventqr.shared.persistence.LockTimeoutSupport;
 import com.thedavelopers.eventqr.features.transactions.model.entity.TransactionLog;
 import com.thedavelopers.eventqr.shared.constants.TransactionResult;
 import com.thedavelopers.eventqr.shared.constants.TransactionType;
+import jakarta.persistence.LockModeType;
 
 public interface TransactionLogRepository extends JpaRepository<TransactionLog, UUID>, LockTimeoutSupport {
 
@@ -25,6 +27,14 @@ public interface TransactionLogRepository extends JpaRepository<TransactionLog, 
      */
     @Query(value = "SELECT 1 FROM (SELECT pg_advisory_xact_lock(:namespace, :key)) AS lock_taken", nativeQuery = true)
     int acquireTransactionLock(@Param("namespace") int namespace, @Param("key") int key);
+
+    /**
+     * Loads a scan log with SELECT ... FOR UPDATE. Staff redemption locks the redemption scan first so two
+     * concurrent redemptions cannot both pass the single-use check for the same scan.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT t FROM TransactionLog t WHERE t.id = :id")
+    Optional<TransactionLog> findByIdForUpdate(@Param("id") UUID id);
 
     // List variants (preserved for existing service calls)
     java.util.Optional<TransactionLog> findByClientRequestId(UUID clientRequestId);

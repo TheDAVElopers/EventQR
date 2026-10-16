@@ -55,8 +55,14 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         repository = OrganizerRepository(this)
         val eventId = intentEventId() ?: return showMissingEventScreen(getString(R.string.manage_scan_purposes_title))
+        showEventsLoadingScreen(getString(R.string.manage_scan_purposes_title))
         lifecycleScope.launch {
-            val selectableEvents = repository.getApprovedOrganizerEvents()
+            val eventsLoad = repository.loadApprovedOrganizerEvents()
+            if (eventsLoad.source == OrganizerMvpDataSource.ERROR) {
+                showEventsLoadErrorScreen(getString(R.string.manage_scan_purposes_title), eventsLoad.message) { recreate() }
+                return@launch
+            }
+            val selectableEvents = eventsLoad.data
             selectedEvent = resolveSelectedEvent(selectableEvents, eventId) ?: run {
                 showMissingEventScreen(getString(R.string.manage_scan_purposes_title))
                 return@launch

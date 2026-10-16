@@ -64,21 +64,28 @@ class OrganizerRepository(private val context: Context) {
                 it.status.equals("Completed", ignoreCase = true)
         }
 
-    suspend fun getApprovedOrganizerEvents(): List<OrganizerMvpEvent> {
+    /** Manageable events, or an empty list when the fetch fails; use [loadApprovedOrganizerEvents] to tell those apart. */
+    suspend fun getApprovedOrganizerEvents(): List<OrganizerMvpEvent> = loadApprovedOrganizerEvents().data
+
+    /**
+     * Same cache and filtering as [getApprovedOrganizerEvents], but a failed fetch comes back as
+     * [OrganizerMvpDataSource.ERROR] so screens show an error with Retry instead of "no events".
+     */
+    suspend fun loadApprovedOrganizerEvents(): OrganizerMvpLoad<List<OrganizerMvpEvent>> {
         val now = System.currentTimeMillis()
         val ttlExpired = (now - lastCacheTime) > CACHE_TTL_MS
         return if (cachedEvents.isNotEmpty() && !ttlExpired) {
-            cachedEvents.manageable()
+            OrganizerMvpLoad(cachedEvents.manageable(), OrganizerMvpDataSource.BACKEND)
         } else {
-            val result = fetchOrganizerEvents()
-            when (result) {
+            when (val result = fetchOrganizerEvents()) {
                 is NetworkResult.Success -> {
                     val mapped = result.data.map { it.toMvpEvent(context) }
                     cachedEvents = mapped
                     lastCacheTime = System.currentTimeMillis()
-                    mapped.manageable()
+                    OrganizerMvpLoad(mapped.manageable(), OrganizerMvpDataSource.BACKEND)
                 }
-                else -> emptyList()
+                is NetworkResult.Error -> OrganizerMvpLoad(emptyList(), OrganizerMvpDataSource.ERROR, result.message)
+                NetworkResult.Loading -> OrganizerMvpLoad(emptyList(), OrganizerMvpDataSource.ERROR, null)
             }
         }
     }

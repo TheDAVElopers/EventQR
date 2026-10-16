@@ -10,10 +10,10 @@ import com.thedavelopers.eventqr.features.reports.model.dto.EventReportFiltersDt
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportSummaryDto
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportType
 
-class OrganizerReportsRepository(private val context: Context) {
+open class OrganizerReportsRepository(private val context: Context) {
     private val apiService = ApiClient.getService(context)
 
-    suspend fun fetchSummary(eventId: String): NetworkResult<EventReportSummaryDto> =
+    open suspend fun fetchSummary(eventId: String): NetworkResult<EventReportSummaryDto> =
         safeApiCall { apiService.getEventReportSummary(eventId) }
 
     suspend fun generateReport(

@@ -7,6 +7,7 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -20,7 +21,8 @@ import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import java.time.Instant
 
 open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
-    private lateinit var presenter: EventsPresenter
+    @VisibleForTesting
+    internal lateinit var presenter: EventsPresenter
     private lateinit var recyclerView: RecyclerView
     private lateinit var emptyView: TextView
     private lateinit var emptySubView: TextView
@@ -35,6 +37,8 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
     private lateinit var adapter: AttendeeEventAdapter
     private var allEvents: List<AttendeeEventResponse> = emptyList()
     private var selectedFilter: EventFilter = EventFilter.ALL
+    private var isFirstResume = true
+    private var searchQuery: String = ""
 
     enum class EventFilter { ALL, UPCOMING, ACTIVE, COMPLETED }
 
@@ -73,21 +77,11 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
         findViewById<android.widget.EditText>(R.id.inputEventSearch).addTextChangedListener(object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                filterBySearch(s.toString())
+                searchQuery = s?.toString().orEmpty()
+                renderFilteredEvents()
             }
             override fun afterTextChanged(s: android.text.Editable?) {}
         })
-    }
-
-    private fun filterBySearch(query: String) {
-        val filtered = if (query.isBlank()) {
-            getFilteredByStatus()
-        } else {
-            getFilteredByStatus().filter { it.title.contains(query, ignoreCase = true) }
-        }
-        adapter.submitItems(filtered)
-        recyclerView.visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
-        showEmptyState(filtered.isEmpty())
     }
 
     private fun getFilteredByStatus(): List<AttendeeEventResponse> {
@@ -104,6 +98,17 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
         return item.eventStartAt != null &&
                 !item.eventStartAt.isAfter(now) &&
                 item.eventEndAt?.isBefore(now) != true
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // onCreate already loads; later resumes (e.g. back from an event's detail after registering or
+        // cancelling) refresh the cards so their registered counts are current.
+        if (isFirstResume) {
+            isFirstResume = false
+            return
+        }
+        presenter.loadEvents(silent = true)
     }
 
     override fun onDestroy() {
@@ -188,8 +193,14 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
         }
     }
 
+    /** Status chip and search text both apply, so neither a refresh nor a chip tap drops the typed query. */
     private fun renderFilteredEvents() {
-        val filtered = getFilteredByStatus()
+        val byStatus = getFilteredByStatus()
+        val filtered = if (searchQuery.isBlank()) {
+            byStatus
+        } else {
+            byStatus.filter { it.title.contains(searchQuery, ignoreCase = true) }
+        }
         adapter.submitItems(filtered)
         recyclerView.visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
         showEmptyState(filtered.isEmpty())

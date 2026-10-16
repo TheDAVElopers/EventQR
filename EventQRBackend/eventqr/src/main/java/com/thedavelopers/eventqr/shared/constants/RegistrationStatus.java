@@ -1,5 +1,8 @@
 package com.thedavelopers.eventqr.shared.constants;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Set;
 
 /**
@@ -25,5 +28,15 @@ public enum RegistrationStatus {
      */
     public boolean isCountedAsRegistered() {
         return !NON_REGISTERED_STATUSES.contains(this);
+    }
+
+    /** Every status for which {@link #isCountedAsRegistered()} holds (REGISTERED, ENTERED, EXITED). */
+    public static Set<RegistrationStatus> activeStatuses() {
+        return ActiveHolder.ACTIVE;
+    }
+
+    private static final class ActiveHolder {
+        private static final Set<RegistrationStatus> ACTIVE = Collections.unmodifiableSet(EnumSet.copyOf(
+                Arrays.stream(values()).filter(RegistrationStatus::isCountedAsRegistered).toList()));
     }
 }

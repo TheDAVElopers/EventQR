@@ -21,7 +21,10 @@ import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResp
 import com.thedavelopers.eventqr.features.transactions.service.TransactionService;
 import com.thedavelopers.eventqr.shared.constants.RedemptionStatus;
 import com.thedavelopers.eventqr.shared.constants.RewardStatus;
+import com.thedavelopers.eventqr.shared.constants.ScanPurposeCode;
 import com.thedavelopers.eventqr.shared.constants.TransactionResult;
+import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
+import com.thedavelopers.eventqr.shared.interfaces.ScanPurposePort;
 
 @Service
 @Transactional
@@ -31,11 +34,14 @@ public class RewardRedemptionScanService {
     private final AttendeePointBalanceRepository attendeePointBalanceRepository;
     private final RewardRepository rewardRepository;
     private final RewardRedemptionRepository rewardRedemptionRepository;
+    private final ScanPurposePort scanPurposePort;
 
     public RewardRedemptionScanService(TransactionService transactionService,
                                        AttendeePointBalanceRepository attendeePointBalanceRepository,
                                        RewardRepository rewardRepository,
-                                       RewardRedemptionRepository rewardRedemptionRepository) {
+                                       RewardRedemptionRepository rewardRedemptionRepository,
+                                       ScanPurposePort scanPurposePort) {
+        this.scanPurposePort = scanPurposePort;
         this.transactionService = transactionService;
         this.attendeePointBalanceRepository = attendeePointBalanceRepository;
         this.rewardRepository = rewardRepository;
@@ -43,6 +49,14 @@ public class RewardRedemptionScanService {
     }
 
     public RewardRedemptionScanResponse scan(RewardRedemptionScanRequest request) {
+        // Only redemption purposes may be recorded here: any other purpose (ENTRY, ATTENDANCE, ...) would award
+        // points or change registration state while bypassing its own route guard. Checked before verify() so a
+        // wrong purpose fails fast; verify() still checks that the purpose belongs to the event and is active.
+        ScanPurposeCode purposeCode = scanPurposePort.requireActive(request.scanPurposeId()).code();
+        if (purposeCode != ScanPurposeCode.REWARD_REDEMPTION_SCAN && purposeCode != ScanPurposeCode.REWARD_REDEMPTION) {
+            throw new BadRequestException("Scan purpose " + purposeCode
+                    + " cannot be recorded on the reward redemption scan route");
+        }
         TransactionRequest transactionRequest = new TransactionRequest(
                 request.eventId(), request.scanPurposeId(), request.qrValue(), request.shortId(),
                 request.staffUserId(), null);

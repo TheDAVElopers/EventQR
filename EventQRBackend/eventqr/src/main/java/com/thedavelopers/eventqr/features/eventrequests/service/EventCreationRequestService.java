@@ -24,6 +24,7 @@ import com.thedavelopers.eventqr.shared.exceptions.ConflictException;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
 import com.thedavelopers.eventqr.shared.interfaces.AttendeeDirectoryPort;
+import com.thedavelopers.eventqr.shared.utils.PhoneNumbers;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -73,7 +74,7 @@ public class EventCreationRequestService {
         entity.setRegistrationEndDateTime(request.registrationEndDateTime());
         entity.setRequesterName(request.requesterName().trim());
         entity.setContactEmail(request.contactEmail().trim().toLowerCase());
-        entity.setContactNumber(request.contactNumber().trim());
+        entity.setContactNumber(PhoneNumbers.normalize(request.contactNumber()));
         entity.setRequestedFeatures(request.requestedFeatures() == null ? List.of() : request.requestedFeatures());
         entity.setEventLogoUrl(trimToNull(request.eventLogoUrl()));
         entity.setAdditionalNotes(trimToNull(request.additionalNotes()));

@@ -491,7 +491,6 @@
     <string name="report_preview_choose_export_format">Choose export format:</string>
     <string name="report_preview_csv">CSV</string>
     <string name="report_preview_pdf">PDF</string>
-    <string name="manage_rewards_enter_a_valid_reward_title_points_co">Enter a valid reward title and points cost. Quantity must be a whole number, or leave it blank for unlimited.</string>
     <string name="manage_rewards_remove_reward">Remove reward?</string>
     <string name="manage_scan_purposes_unable_to_update_unsaved_scan_purpos">Unable to update unsaved scan purpose.</string>
     <string name="manage_scan_purposes_saved_successfully">Saved successfully</string>
@@ -904,4 +903,25 @@
     <string name="reward_details_enough_points">You have enough points</string>
     <string name="reward_details_no_points_needed">No points needed</string>
     <string name="user_reward_details_how_to_redeem">Show your QR code to event staff. They scan it to redeem this reward and deduct the points.</string>
+    <string name="attendee_edit_profile_full_name_is_required">Full name is required.</string>
+    <string name="scanner_manual_entry_required">Enter an attendee ID or scan a QR code.</string>
+    <string name="request_event_invalid_contact_number">Enter a valid mobile number, for example +63 912 345 6789.</string>
+    <string name="manage_rewards_title_required">Reward title is required.</string>
+    <string name="manage_rewards_points_invalid">Enter a points cost of at least 1.</string>
+    <string name="manage_rewards_quantity_invalid">Enter a whole number, or leave blank for unlimited.</string>
+    <string name="transaction_rules_load_failed">Could not load transaction rules. Check your connection and try again.</string>
+    <string name="organizer_events_loading">Loading events…</string>
+    <string name="organizer_events_load_failed_pull_to_retry">%1$s\nPull down to try again.</string>
+    <string name="staff_print_failed_title">ID Print Failed</string>
+    <string name="staff_print_failed_hint">The attendee was verified, but the ID could not be printed.</string>
+    <string name="staff_print_sent_title">ID Print Sent</string>
+    <string name="staff_print_sent_default_message">Print request sent to printer.</string>
+    <string name="staff_print_done">Done</string>
+    <string name="staff_print_cancelled_title">Print Cancelled</string>
+    <string name="staff_print_cancelled_message">Nothing was printed. This print is still recorded in the event\'s print log.</string>
+    <string name="staff_print_job_failed_message">The printer reported an error and the ID was not printed. This print is still recorded in the event\'s print log.</string>
+    <string name="staff_print_ok">OK</string>
+    <string name="event_registrations_batch_print_cancelled">Print cancelled: nothing was printed. %1$d of %2$d IDs are still recorded in the print log.</string>
+    <string name="event_registrations_batch_print_job_failed">The printer reported an error and nothing was printed. %1$d of %2$d IDs are still recorded in the print log.</string>
+    <string name="organizer_notifications_event_filter_load_failed">Could not load your events for the filter. Tap the event filter to try again.</string>
 </resources>

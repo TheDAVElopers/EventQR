@@ -6,6 +6,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
@@ -76,19 +77,40 @@ class RewardAuthorizationTest {
         given(jwtService.extractRoleFromBearer(any())).willReturn(role);
     }
 
+    /** Stubs both the any-status lookup (reads) and the active-status lookup (redeem). */
     private void callerRegistered(boolean registered) {
-        given(eventRegistrationRepository.existsByEventIdAndAttendeeUserId(eventId, callerId))
-                .willReturn(registered);
+        registration(callerId, registered, registered);
     }
 
     private void attendeeRegistered(boolean registered) {
-        given(eventRegistrationRepository.existsByEventIdAndAttendeeUserId(eventId, attendeeId))
-                .willReturn(registered);
+        registration(attendeeId, registered, registered);
+    }
+
+    private void registration(UUID userId, boolean anyStatus, boolean active) {
+        given(eventRegistrationRepository.existsByEventIdAndAttendeeUserId(eventId, userId)).willReturn(anyStatus);
+        given(eventRegistrationRepository.existsActiveByEventIdAndAttendeeUserId(eventId, userId)).willReturn(active);
     }
 
     private void callerAssignedToEvent(boolean assigned) {
+        callerAssignedToEvent(assigned, true);
+    }
+
+    private void callerAssignedToEvent(boolean assigned, boolean canManageRewards) {
         given(eventStaffAssignmentRepository.existsByEventIdAndStaffUserIdAndActiveTrue(eventId, callerId))
                 .willReturn(assigned);
+        EventStaffAssignment assignment = new EventStaffAssignment();
+        assignment.setEventId(eventId);
+        assignment.setStaffUserId(callerId);
+        assignment.setActive(true);
+        assignment.setCanManageRewards(canManageRewards);
+        given(eventStaffAssignmentRepository.findByEventIdAndStaffUserIdAndActiveTrue(eventId, callerId))
+                .willReturn(assigned ? Optional.of(assignment) : Optional.empty());
+    }
+
+    /** RewardService.redeem is the single registration check for /rewards/redeem (any caller). */
+    private void serviceRejectsInactiveRegistration() {
+        given(rewardService.redeem(any())).willThrow(new com.thedavelopers.eventqr.shared.exceptions
+                .ResourceNotFoundException("Attendee is not registered for this event"));
     }
 
     private EventResponse eventOwnedBy(UUID organizerUserId) {
@@ -223,15 +245,17 @@ class RewardAuthorizationTest {
     }
 
     @Test
-    void redeem_attendeeForSelfNotRegistered_isForbidden() throws Exception {
+    void redeem_attendeeForSelfNotRegistered_isNotFoundFromTheService() throws Exception {
         actingAs(attendeeId, AccountRole.ATTENDEE);
         attendeeRegistered(false);
+        serviceRejectsInactiveRegistration();
 
         mockMvc.perform(post("/api/v1/rewards/redeem")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(redeemJson(attendeeId))
                         .header("Authorization", "Bearer token"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Attendee is not registered for this event"));
     }
 
     @Test
@@ -271,6 +295,83 @@ class RewardAuthorizationTest {
                         .content(redeemJson(attendeeId))
                         .header("Authorization", "Bearer token"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void redeem_staffAssignedWithoutManageRewards_isForbidden() throws Exception {
+        actingAs(callerId, AccountRole.STAFF);
+        callerAssignedToEvent(true, false);
+        attendeeRegistered(true);
+
+        mockMvc.perform(post("/api/v1/rewards/redeem")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(redeemJson(attendeeId))
+                        .header("Authorization", "Bearer token"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Staff user is not allowed to manage rewards for this event"));
+        verify(rewardService, never()).redeem(any());
+    }
+
+    @Test
+    void redeem_attendeeWithCancelledRegistration_isNotFound() throws Exception {
+        actingAs(attendeeId, AccountRole.ATTENDEE);
+        registration(attendeeId, true, false); // a CANCELLED / NO_SHOW row exists, but no active one
+        serviceRejectsInactiveRegistration();
+
+        mockMvc.perform(post("/api/v1/rewards/redeem")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(redeemJson(attendeeId))
+                        .header("Authorization", "Bearer token"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Attendee is not registered for this event"));
+    }
+
+    @Test
+    void redeem_inactiveRegistrationIsTheSame404ForEveryAuthorizedRole() throws Exception {
+        serviceRejectsInactiveRegistration();
+        registration(attendeeId, true, false);
+        callerAssignedToEvent(true, true);
+        given(eventService.findOne(eventId)).willReturn(eventOwnedBy(callerId));
+
+        for (AccountRole role : new AccountRole[] {AccountRole.STAFF, AccountRole.ORGANIZER, AccountRole.ADMIN}) {
+            actingAs(callerId, role);
+            mockMvc.perform(post("/api/v1/rewards/redeem")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(redeemJson(attendeeId))
+                            .header("Authorization", "Bearer token"))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.message").value("Attendee is not registered for this event"));
+        }
+    }
+
+    @Test
+    void redeem_organizerNonOwnerAssignedWithManageRewards_isAllowed() throws Exception {
+        actingAs(callerId, AccountRole.ORGANIZER);
+        given(eventService.findOne(eventId)).willReturn(eventOwnedBy(otherUserId));
+        callerAssignedToEvent(true, true);
+        attendeeRegistered(true);
+
+        mockMvc.perform(post("/api/v1/rewards/redeem")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(redeemJson(attendeeId))
+                        .header("Authorization", "Bearer token"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void redeem_organizerNonOwnerAssignedWithoutManageRewards_isForbidden() throws Exception {
+        actingAs(callerId, AccountRole.ORGANIZER);
+        given(eventService.findOne(eventId)).willReturn(eventOwnedBy(otherUserId));
+        callerAssignedToEvent(true, false);
+        attendeeRegistered(true);
+
+        mockMvc.perform(post("/api/v1/rewards/redeem")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(redeemJson(attendeeId))
+                        .header("Authorization", "Bearer token"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Staff user is not allowed to manage rewards for this event"));
+        verify(rewardService, never()).redeem(any());
     }
 
     @Test

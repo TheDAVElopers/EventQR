@@ -25,6 +25,8 @@ import com.thedavelopers.eventqr.features.organizer.OrganizerMvpStaff
 import com.thedavelopers.eventqr.features.organizer.OrganizerRepository
 import com.thedavelopers.eventqr.features.organizer.intentEventId
 import com.thedavelopers.eventqr.features.organizer.resolveSelectedEvent
+import com.thedavelopers.eventqr.features.organizer.showEventsLoadErrorScreen
+import com.thedavelopers.eventqr.features.organizer.showEventsLoadingScreen
 import com.thedavelopers.eventqr.features.organizer.showMissingEventScreen
 import kotlinx.coroutines.launch
 
@@ -51,7 +53,13 @@ open class ManageUsersActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             val eventId = intentEventId() ?: return@launch showMissingEventScreen(getString(R.string.manage_users_title))
-            selectedEvent = resolveSelectedEvent(repository.getApprovedOrganizerEvents(), eventId)
+            showEventsLoadingScreen(getString(R.string.manage_users_title))
+            val eventsLoad = repository.loadApprovedOrganizerEvents()
+            if (eventsLoad.source == OrganizerMvpDataSource.ERROR) {
+                showEventsLoadErrorScreen(getString(R.string.manage_users_title), eventsLoad.message) { recreate() }
+                return@launch
+            }
+            selectedEvent = resolveSelectedEvent(eventsLoad.data, eventId)
                 ?: run {
                     showMissingEventScreen(getString(R.string.manage_users_title))
                     return@launch

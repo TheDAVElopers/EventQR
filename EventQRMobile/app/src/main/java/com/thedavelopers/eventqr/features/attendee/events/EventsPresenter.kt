@@ -18,8 +18,16 @@ class EventsPresenter(
         view = null
     }
 
-    fun loadEvents() {
-        view?.showLoading(true)
+    /**
+     * [silent] refreshes the list already on screen (e.g. on return from an event's detail): no skeleton,
+     * and a failure keeps the current cards instead of replacing them with the error state.
+     */
+    fun loadEvents(silent: Boolean = false) {
+        // A visible load already in flight has hidden the list behind the skeleton; it must finish (and show
+        // its error state on failure), so a silent refresh never replaces it.
+        if (silent && job?.isActive == true) return
+        if (!silent) view?.showLoading(true)
+        job?.cancel()
         job = scope.launch {
             when (val result = repository.getBrowseEvents()) {
                 is NetworkResult.Success -> {
@@ -28,7 +36,7 @@ class EventsPresenter(
                 }
                 is NetworkResult.Error -> {
                     view?.showLoading(false)
-                    view?.showError(result.message)
+                    if (!silent) view?.showError(result.message)
                 }
                 NetworkResult.Loading -> Unit
             }

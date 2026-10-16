@@ -33,8 +33,14 @@ open class TransactionLogsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         repository = OrganizerRepository(this)
         val eventId = intentEventId() ?: return showMissingEventScreen(getString(R.string.transaction_logs_title))
+        showEventsLoadingScreen(getString(R.string.transaction_logs_title))
         lifecycleScope.launch {
-            val selectableEvents = repository.getApprovedOrganizerEvents()
+            val eventsLoad = repository.loadApprovedOrganizerEvents()
+            if (eventsLoad.source == OrganizerMvpDataSource.ERROR) {
+                showEventsLoadErrorScreen(getString(R.string.transaction_logs_title), eventsLoad.message) { recreate() }
+                return@launch
+            }
+            val selectableEvents = eventsLoad.data
             selectedEvent = resolveSelectedEvent(selectableEvents, eventId) ?: run {
                 showMissingEventScreen(getString(R.string.transaction_logs_title))
                 return@launch

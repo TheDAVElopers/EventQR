@@ -27,6 +27,7 @@ import com.thedavelopers.eventqr.core.api.dto.NotificationStatus
 import com.thedavelopers.eventqr.core.api.dto.NotificationType
 import com.thedavelopers.eventqr.features.notifications.NotificationAdapter
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
+import com.thedavelopers.eventqr.features.organizer.OrganizerMvpDataSource
 import com.thedavelopers.eventqr.features.organizer.OrganizerRepository
 import java.util.UUID
 
@@ -45,6 +46,8 @@ class NotificationManagementActivity : AppCompatActivity() {
     private var typePopup: PopupWindow? = null
     private var isEventOpen = false
     private var isTypeOpen = false
+    private var eventFilterLoadFailed = false
+    private var eventFilterLoadJob: kotlinx.coroutines.Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,46 +81,77 @@ class NotificationManagementActivity : AppCompatActivity() {
     }
 
     private fun setupFilters(repo: OrganizerRepository) {
-        lifecycleScope.launch {
-            val events = repo.getApprovedOrganizerEvents()
+        eventOptions.clear()
+        eventOptions.add(getString(R.string.notification_mgmt_all_events))
+
+        eventSpinner = findViewById(R.id.spinnerEventFilter)
+        eventSpinner.adapter = ArrayAdapter(this@NotificationManagementActivity, android.R.layout.simple_spinner_item, eventOptions).apply {
+            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        }
+        eventSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val label = eventOptions[position]
+                findViewById<TextView>(R.id.txtEventFilter).text = label
+                viewModel.setEventFilter(eventIdsByLabel[label])
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+
+        typeSpinner = findViewById(R.id.spinnerTypeFilter)
+        typeSpinner.adapter = ArrayAdapter(this@NotificationManagementActivity, android.R.layout.simple_spinner_item, typeOptions).apply {
+            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        }
+        typeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                findViewById<TextView>(R.id.txtTypeFilter).text = typeOptions[position]
+                viewModel.setTypeFilter(if (position == 0) null else NotificationType.entries[position - 1])
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+
+        // While the event list is unavailable, tapping the event filter retries loading it.
+        findViewById<View>(R.id.cardEventFilter).setOnClickListener {
+            if (eventFilterLoadFailed) loadEventFilterOptions(repo, openWhenLoaded = true) else toggleEventDropdown()
+        }
+        findViewById<View>(R.id.cardTypeFilter).setOnClickListener { toggleTypeDropdown() }
+        loadEventFilterOptions(repo)
+    }
+
+    /**
+     * Fills the event filter. A failed fetch is reported (and retried on the next tap) instead of leaving
+     * the filter silently showing only "All events" as if the organizer had none.
+     */
+    private fun loadEventFilterOptions(repo: OrganizerRepository, openWhenLoaded: Boolean = false) {
+        // Repeated taps while a load is running must not start parallel loads (or stack failure toasts).
+        if (eventFilterLoadJob?.isActive == true) return
+        eventFilterLoadJob = lifecycleScope.launch {
+            val eventsLoad = repo.loadApprovedOrganizerEvents()
+            if (eventsLoad.source == OrganizerMvpDataSource.ERROR) {
+                eventFilterLoadFailed = true
+                android.widget.Toast.makeText(
+                    this@NotificationManagementActivity,
+                    getString(R.string.organizer_notifications_event_filter_load_failed),
+                    android.widget.Toast.LENGTH_LONG,
+                ).show()
+                return@launch
+            }
+            eventFilterLoadFailed = false
             eventOptions.clear()
+            eventIdsByLabel.clear()
             eventOptions.add(getString(R.string.notification_mgmt_all_events))
-            events.forEach { event ->
+            eventsLoad.data.forEach { event ->
                 eventOptions.add(event.title.ifBlank { event.id })
                 eventIdsByLabel[event.title.ifBlank { event.id }] = event.id.takeIf { it.isNotBlank() }?.let { runCatching { UUID.fromString(it) }.getOrNull() }
             }
-
-            eventSpinner = findViewById(R.id.spinnerEventFilter)
-            eventSpinner.adapter = ArrayAdapter(this@NotificationManagementActivity, android.R.layout.simple_spinner_item, eventOptions).apply {
-                setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            }
-            eventSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                    val label = eventOptions[position]
-                    findViewById<TextView>(R.id.txtEventFilter).text = label
-                    viewModel.setEventFilter(eventIdsByLabel[label])
-                }
-
-                override fun onNothingSelected(parent: AdapterView<*>?) {}
-            }
-
-            typeSpinner = findViewById(R.id.spinnerTypeFilter)
-            typeSpinner.adapter = ArrayAdapter(this@NotificationManagementActivity, android.R.layout.simple_spinner_item, typeOptions).apply {
-                setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            }
-            typeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                    findViewById<TextView>(R.id.txtTypeFilter).text = typeOptions[position]
-                    viewModel.setTypeFilter(if (position == 0) null else NotificationType.entries[position - 1])
-                }
-
-                override fun onNothingSelected(parent: AdapterView<*>?) {}
-            }
-
-            findViewById<View>(R.id.cardEventFilter).setOnClickListener { toggleEventDropdown() }
-            findViewById<View>(R.id.cardTypeFilter).setOnClickListener { toggleTypeDropdown() }
+            (eventSpinner.adapter as? ArrayAdapter<*>)?.notifyDataSetChanged()
+            // The dropdown is built from the option list; rebuild it on next open.
+            eventPopup?.dismiss()
+            eventPopup = null
+            if (openWhenLoaded) toggleEventDropdown()
         }
-        }
+    }
 
     private fun toggleEventDropdown() {
         if (eventPopup == null || findViewById<View>(R.id.cardEventFilter).width > 0 && eventPopup?.width != findViewById<View>(R.id.cardEventFilter).width) buildEventPopup()

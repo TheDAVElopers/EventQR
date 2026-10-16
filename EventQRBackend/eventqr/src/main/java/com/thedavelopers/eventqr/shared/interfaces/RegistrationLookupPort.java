@@ -21,6 +21,9 @@ public interface RegistrationLookupPort {
 
     List<RegistrationSnapshot> listByEventId(UUID eventId);
 
+    /** True when the attendee holds a REGISTERED / ENTERED / EXITED registration for the event. */
+    boolean hasActiveRegistration(UUID eventId, UUID attendeeUserId);
+
     record RegistrationSnapshot(UUID registrationId, UUID eventId, UUID attendeeUserId, String attendeeEmail,
                                 String attendeeName, RegistrationStatus status, UUID qrCredentialId,
                                 Instant registeredAt, Instant enteredAt, Instant exitedAt, Instant attendedAt,
