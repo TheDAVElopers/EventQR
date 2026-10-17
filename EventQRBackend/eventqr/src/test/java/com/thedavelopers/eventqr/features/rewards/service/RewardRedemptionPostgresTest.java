@@ -14,6 +14,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import javax.sql.DataSource;
 
@@ -146,7 +147,21 @@ class RewardRedemptionPostgresTest {
         assertThat(all).isNotEmpty()
                 .allSatisfy(migration -> assertThat(migration.getState()).isEqualTo(MigrationState.SUCCESS));
         assertThat(info.applied()).hasSameSizeAs(all);
-        assertThat(info.current().getVersion()).isEqualTo(all[all.length - 1].getVersion());
+        // Repeatables carry no version and sort last, so compare against the newest versioned entry instead.
+        MigrationInfo[] versioned = Stream.of(all).filter(MigrationInfo::isVersioned).toArray(MigrationInfo[]::new);
+        assertThat(info.current().getVersion()).isEqualTo(versioned[versioned.length - 1].getVersion());
+
+        // Fresh-build/production parity: the V17/V18 guards skip both objects in production, so this database must
+        // not have them either, and the repeatable migration that removes them must actually have run.
+        assertThat(jdbc.queryForObject("select count(*) from pg_constraint "
+                + "where conname = 'fk_point_transactions_source' and conrelid = 'public.point_transactions'::regclass",
+                Integer.class)).isZero();
+        assertThat(jdbc.queryForObject("select to_regclass('public.uq_txn_logs_approved_reg_purpose')", String.class))
+                .isNull();
+        assertThat(jdbc.queryForObject("select count(*) from flyway_schema_history where version is null "
+                + "and description = 'align fresh schema with production' and success", Integer.class)).isEqualTo(1);
+
+        // The single-use scan guard is the one index that legitimately exists on fresh and production databases alike.
         assertThat(jdbc.queryForObject(
                 "select count(*) from pg_indexes where indexname = 'ux_reward_redemptions_scan_log_redeemed'",
                 Integer.class)).isEqualTo(1);

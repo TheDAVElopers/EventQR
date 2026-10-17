@@ -253,6 +253,7 @@ Do not commit real secrets, production URLs, or private deployment values to ver
 - Migrations live in `EventQRBackend/eventqr/src/main/resources/db/migration` (currently V1 to V39). On a fresh database Flyway applies them in order; Hibernate's `ddl-auto=validate` only verifies the entity mapping against the migrated schema.
 - Never change `spring.jpa.hibernate.ddl-auto` back to `update` or `create` on any environment that Flyway has already migrated — the two approaches fight over schema ownership and Flyway checksums drift.
 - `spring.flyway.baseline-on-migrate=true` is only meant for pre-existing non-Flyway databases; a clean deploy does not rely on it.
+- Never edit an already-applied guarded migration (V17/V18 guards are historical). When a conditional guard makes a fresh build diverge from production, reconcile the fresh build *down* to production with a **repeatable** migration (`R__...sql`) — never a versioned one during a multi-PR window, where a new version number becomes a "resolved migration not applied to database" failure on the next deploy. Keep the must-not-exist catalogue assertions in `RewardRedemptionPostgresTest` in sync.
 
 ## Deployment & operations
 
