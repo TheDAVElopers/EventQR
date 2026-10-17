@@ -28,7 +28,8 @@ import org.springframework.core.io.ClassPathResource;
  * is present the callback does nothing, so live environments migrate exactly as before. The
  * predicate deliberately probes those core tables rather than {@code flyway_schema_history}:
  * a database whose tables were dropped while the history survived is rebuilt from the baseline
- * here, whereas a history check would leave it to fail at V2 again.
+ * here, whereas a history check would leave it to fail at V2 again. That state is logged as a
+ * warning rather than acted on.
  */
 public class FreshDatabaseBootstrapCallback implements Callback {
 
@@ -58,6 +59,7 @@ public class FreshDatabaseBootstrapCallback implements Callback {
             if (tableExists(connection, "events") || tableExists(connection, "user_profiles")) {
                 return;
             }
+            warnIfHistoryExistsWithoutTables(connection);
             log.info("Empty database detected: applying {} before migrations", BASELINE_RESOURCE);
             try (Statement statement = connection.createStatement()) {
                 statement.execute(readBaseline());
@@ -68,6 +70,31 @@ public class FreshDatabaseBootstrapCallback implements Callback {
             }
         } catch (SQLException | IOException exception) {
             throw new IllegalStateException("Unable to bootstrap the schema on an empty database", exception);
+        }
+    }
+
+    /**
+     * The core tables are gone but Flyway has run here before (dropped tables, a partial restore, or a manually
+     * cleaned database). The callback still rebuilds the baseline - that is the point of probing the tables rather
+     * than the history - but the state is worth saying out loud. Never fatal: a failed probe only logs.
+     */
+    private static void warnIfHistoryExistsWithoutTables(Connection connection) {
+        try {
+            if (!tableExists(connection, "flyway_schema_history") || !migrationHistoryHasRows(connection)) {
+                return;
+            }
+            log.warn("flyway_schema_history is not empty but the baseline tables are missing; rebuilding the "
+                    + "schema from the V16 baseline. If this database was not intentionally emptied, restore a "
+                    + "backup instead of continuing.");
+        } catch (SQLException exception) {
+            log.debug("Could not inspect flyway_schema_history before bootstrapping", exception);
+        }
+    }
+
+    private static boolean migrationHistoryHasRows(Connection connection) throws SQLException {
+        try (Statement statement = connection.createStatement();
+             ResultSet result = statement.executeQuery("select exists(select 1 from flyway_schema_history)")) {
+            return result.next() && result.getBoolean(1);
         }
     }
 
