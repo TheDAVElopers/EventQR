@@ -17,6 +17,10 @@ import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
 
+import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.MigrationInfo;
+import org.flywaydb.core.api.MigrationInfoService;
+import org.flywaydb.core.api.MigrationState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,7 +70,7 @@ import com.thedavelopers.eventqr.shared.exceptions.GlobalExceptionHandler;
 import com.thedavelopers.eventqr.shared.interfaces.RegistrationLookupPort;
 
 /**
- * Real-Postgres coverage for what mocks cannot prove: Flyway applies every migration through V41 on an empty
+ * Real-Postgres coverage for what mocks cannot prove: Flyway applies every migration on the classpath on an empty
  * database (and Hibernate validates the mapping against it), the V40 trigger issues random EVQR- credentials, and
  * the scan-log row lock plus the V41 partial unique index let exactly one of two concurrent redemptions spend a scan.
  *
@@ -119,6 +123,8 @@ class RewardRedemptionPostgresTest {
     private PlatformTransactionManager transactionManager;
     @Autowired
     private DataSource dataSource;
+    @Autowired
+    private Flyway flyway;
 
     private TransactionTemplate tx;
     private JdbcTemplate jdbc;
@@ -133,10 +139,14 @@ class RewardRedemptionPostgresTest {
     }
 
     @Test
-    void flywayReachesV41AndTheRegistrationTriggerIssuesARandomQrValue() {
-        assertThat(jdbc.queryForObject(
-                "select max(version::int) from flyway_schema_history where success", Integer.class))
-                .isGreaterThanOrEqualTo(41);
+    void flywayAppliesEveryMigrationAndTheRegistrationTriggerIssuesARandomQrValue() {
+        MigrationInfoService info = flyway.info();
+        MigrationInfo[] all = info.all();
+        // Everything Flyway resolves must be applied cleanly; a PENDING/IGNORED/FAILED/FUTURE entry fails here.
+        assertThat(all).isNotEmpty()
+                .allSatisfy(migration -> assertThat(migration.getState()).isEqualTo(MigrationState.SUCCESS));
+        assertThat(info.applied()).hasSameSizeAs(all);
+        assertThat(info.current().getVersion()).isEqualTo(all[all.length - 1].getVersion());
         assertThat(jdbc.queryForObject(
                 "select count(*) from pg_indexes where indexname = 'ux_reward_redemptions_scan_log_redeemed'",
                 Integer.class)).isEqualTo(1);

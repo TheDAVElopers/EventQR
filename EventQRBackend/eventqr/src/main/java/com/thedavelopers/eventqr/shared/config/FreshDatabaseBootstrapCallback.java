@@ -14,7 +14,6 @@ import org.flywaydb.core.api.callback.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.stereotype.Component;
 
 /**
  * Lets Flyway build the schema on a completely empty database.
@@ -28,7 +27,6 @@ import org.springframework.stereotype.Component;
  * <p>It never runs against an existing database: if {@code events} or {@code user_profiles}
  * is present the callback does nothing, so live environments migrate exactly as before.
  */
-@Component
 public class FreshDatabaseBootstrapCallback implements Callback {
 
     private static final Logger log = LoggerFactory.getLogger(FreshDatabaseBootstrapCallback.class);
