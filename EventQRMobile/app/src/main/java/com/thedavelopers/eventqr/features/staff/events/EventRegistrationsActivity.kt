@@ -32,6 +32,7 @@ import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.idprinting.AndroidIdPrinter
 import com.thedavelopers.eventqr.features.idprinting.PrintPermission
+import com.thedavelopers.eventqr.features.idprinting.PrintPermissionLoad
 import com.thedavelopers.eventqr.features.registrations.RegistrationAdapter
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.features.staff.details.StaffAttendeeDetailsActivity
@@ -64,8 +65,9 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
     private var selectedEventId: String = ""
     private var allRegistrations: List<RegistrationResponse> = emptyList()
     private var selectionMode = false
-    /** The caller's Print IDs permission for the loaded event; false hides the batch-print controls. */
-    private var canPrintAllowed: Boolean = true
+    /** The caller's Print IDs permission for the loaded event; false (also while unknown) hides the batch-print controls. */
+    private var canPrintAllowed: Boolean = false
+    private var permissionSnackbar: com.google.android.material.snackbar.Snackbar? = null
 
     // Cached data used to build each attendee's CardData for the batch preview.
     private var batchVisibleFields: List<String> = emptyList()
@@ -149,7 +151,27 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
     /** Reads the caller's Print IDs permission for [eventId] off the assigned-event list. */
     private fun loadPrintPermission(eventId: String) {
         if (eventId.isBlank()) return
-        lifecycleScope.launch { applyPrintPermission(repository.canPrintIdForEvent(eventId)) }
+        // Hidden until the permission is known, so a slow or failed read never offers batch printing.
+        applyPrintPermission(false)
+        lifecycleScope.launch {
+            when (val load = repository.printPermission(eventId)) {
+                is PrintPermissionLoad.Known -> {
+                    permissionSnackbar?.dismiss()
+                    applyPrintPermission(load.canPrintId)
+                }
+                PrintPermissionLoad.Failed -> onPrintPermissionLoadFailed(eventId)
+            }
+        }
+    }
+
+    /** Keeps batch printing hidden and offers a retry; the server still enforces the permission either way. */
+    private fun onPrintPermissionLoadFailed(eventId: String) {
+        applyPrintPermission(false)
+        permissionSnackbar?.dismiss()
+        permissionSnackbar = com.google.android.material.snackbar.Snackbar
+            .make(recycler, R.string.staff_print_permission_check_failed, com.google.android.material.snackbar.Snackbar.LENGTH_INDEFINITE)
+            .setAction(R.string.common_retry) { loadPrintPermission(eventId) }
+            .also { it.show() }
     }
 
     /**
@@ -166,6 +188,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
 
     override fun onDestroy() {
         retrySnackbar?.dismiss()
+        permissionSnackbar?.dismiss()
         presenter.detach()
         super.onDestroy()
     }
@@ -185,6 +208,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
 
         badgeSelection = findViewById(R.id.badgeSelectionCount)
         btnSelectForPrint = findViewById(R.id.btnSelectForPrint)
+        btnSelectForPrint.visibility = if (canPrintAllowed) View.VISIBLE else View.GONE
         batchPrintBar = findViewById(R.id.batchPrintBar)
         btnPrintSelectedIds = findViewById(R.id.btnPrintSelectedIds)
         btnSelectAll = findViewById(R.id.btnSelectAllRegistrations)

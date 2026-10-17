@@ -3,6 +3,14 @@ package com.thedavelopers.eventqr.features.idprinting
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import retrofit2.HttpException
 
+sealed interface PrintPermissionLoad {
+    /** The list was read; [canPrintId] is null when the caller carries no flag for the event. */
+    data class Known(val canPrintId: Boolean?) : PrintPermissionLoad
+
+    /** The assigned-event list could not be read, so the permission is unknown. */
+    data object Failed : PrintPermissionLoad
+}
+
 /**
  * The staff "Print IDs" permission (`can_print_id`) behind every ID-print affordance.
  *

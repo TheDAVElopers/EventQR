@@ -7,11 +7,13 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.features.auth.model.dto.LoginResponse
+import com.thedavelopers.eventqr.features.staff.AssignedEventsCache
 
 class SessionManager(context: Context) : TokenStore {
     private val sharedPreferences: SharedPreferences = sharedPrefsFor(context.applicationContext ?: context)
 
     fun saveLoginResponse(loginResponse: LoginResponse) {
+        AssignedEventsCache.shared.clear()
         sharedPreferences.edit()
             .putString(KEY_AUTH_TOKEN, loginResponse.accessToken)
             .apply { loginResponse.refreshToken?.let { putString(KEY_REFRESH_TOKEN, it) } }
@@ -45,6 +47,7 @@ class SessionManager(context: Context) : TokenStore {
     }
 
     fun clearSession() {
+        AssignedEventsCache.shared.clear()
         sharedPreferences.edit().clear().apply()
     }
 

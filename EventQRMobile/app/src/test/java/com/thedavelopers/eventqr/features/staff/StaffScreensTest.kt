@@ -245,6 +245,16 @@ class StaffScreensTest {
     }
 
     @Test
+    fun emptyRegistrations_showEventTitleFromLaunchIntent() {
+        val intent = Intent().putExtra(StaffScreenExtras.EXTRA_EVENT_TITLE, "QA Test Mixer")
+        val activity = Robolectric.buildActivity(EventRegistrationsActivity::class.java, intent).create().get()
+
+        activity.renderRegistrations(emptyList(), hasQuery = false)
+
+        assertEquals("QA Test Mixer", activity.findViewById<TextView>(R.id.txtEventRegistrationsEventTitle).text.toString())
+    }
+
+    @Test
     fun batchPrintCancelled_summarySaysCancelledNotPrintedSuccessfully() {
         val activity = Robolectric.buildActivity(EventRegistrationsActivity::class.java).create().get()
 

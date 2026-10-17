@@ -6,7 +6,10 @@ import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.sharedGson
 import com.thedavelopers.eventqr.features.ShadowEncryptedSharedPreferences
 import com.thedavelopers.eventqr.features.ShadowMasterKeys
+import com.thedavelopers.eventqr.features.staff.AssignedEventsCache
 import com.thedavelopers.eventqr.features.staff.StaffRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -32,6 +35,8 @@ class PrintPermissionTest {
 
     private lateinit var server: MockWebServer
     private lateinit var repository: StaffRepository
+    private lateinit var cache: AssignedEventsCache
+    private var now = 0L
 
     private val eventId = "11111111-1111-1111-1111-111111111111"
     private val otherEventId = "99999999-9999-9999-9999-999999999999"
@@ -46,7 +51,9 @@ class PrintPermissionTest {
             .addConverterFactory(GsonConverterFactory.create(sharedGson()))
             .build()
             .create(ApiService::class.java)
-        repository = StaffRepository(api, printConfirmRetryDelaysMs = listOf(0L))
+        now = 0L
+        cache = AssignedEventsCache(ttlMs = 60_000L, clock = { now })
+        repository = StaffRepository(api, printConfirmRetryDelaysMs = listOf(0L), assignedEventsCache = cache)
     }
 
     @After
@@ -117,6 +124,110 @@ class PrintPermissionTest {
         server.enqueue(error(500, "boom"))
 
         assertNull(repository.canPrintIdForEvent(eventId))
+    }
+
+    @Test
+    fun printPermission_distinguishesAFailedReadFromAnUnassignedEvent() = runBlocking {
+        server.enqueue(error(500, "boom"))
+        assertEquals(PrintPermissionLoad.Failed, repository.printPermission(eventId))
+
+        server.enqueue(ok("[${assignedEvent(otherEventId, true)}]"))
+        assertEquals(PrintPermissionLoad.Known(null), repository.printPermission(eventId))
+    }
+
+    // ---- the assigned-event cache
+
+    @Test
+    fun assignedEvents_areServedFromCacheWithinTheTtl() = runBlocking {
+        server.enqueue(ok("[${assignedEvent(eventId, true)}]"))
+
+        repository.getEvents()
+        now = 59_000L
+        assertEquals(true, repository.canPrintIdForEvent(eventId))
+
+        assertEquals(1, server.requestCount)
+    }
+
+    @Test
+    fun assignedEvents_areRefetchedAfterTheTtl() = runBlocking {
+        server.enqueue(ok("[${assignedEvent(eventId, true)}]"))
+        server.enqueue(ok("[${assignedEvent(eventId, false)}]"))
+
+        assertEquals(true, repository.canPrintIdForEvent(eventId))
+        now = 60_000L
+        assertEquals(false, repository.canPrintIdForEvent(eventId))
+
+        assertEquals(2, server.requestCount)
+    }
+
+    @Test
+    fun invalidateEvents_forcesARefetch() = runBlocking {
+        server.enqueue(ok("[${assignedEvent(eventId, true)}]"))
+        server.enqueue(ok("[${assignedEvent(eventId, false)}]"))
+
+        assertEquals(true, repository.canPrintIdForEvent(eventId))
+        repository.invalidateEvents()
+        assertEquals(false, repository.canPrintIdForEvent(eventId))
+    }
+
+    @Test
+    fun aFailedFetch_isNotCached() = runBlocking {
+        server.enqueue(error(500, "boom"))
+        server.enqueue(ok("[${assignedEvent(eventId, true)}]"))
+
+        assertEquals(PrintPermissionLoad.Failed, repository.printPermission(eventId))
+        assertEquals(PrintPermissionLoad.Known(true), repository.printPermission(eventId))
+        assertEquals(2, server.requestCount)
+    }
+
+    @Test
+    fun putFromBeforeAClear_isIgnored() {
+        val staleGeneration = cache.generation()
+        cache.clear()
+
+        cache.put(emptyList(), staleGeneration)
+
+        assertNull(cache.get())
+        cache.put(emptyList(), cache.generation())
+        assertEquals(emptyList<Any>(), cache.get())
+    }
+
+    @Test
+    fun aFetchInFlightDuringClear_doesNotRepopulateTheCache() = runBlocking {
+        server.enqueue(ok("[${assignedEvent(eventId, true)}]").setBodyDelay(500, java.util.concurrent.TimeUnit.MILLISECONDS))
+
+        val inFlight = async(kotlinx.coroutines.Dispatchers.IO) { repository.getEvents() }
+        while (server.requestCount == 0) delay(10)
+        repository.invalidateEvents()
+        inFlight.await()
+
+        assertNull(cache.get())
+    }
+
+    @Test
+    fun clearingTheSession_dropsTheSharedCache() {
+        AssignedEventsCache.shared.put(emptyList())
+
+        com.thedavelopers.eventqr.core.session.SessionManager(
+            androidx.test.core.app.ApplicationProvider.getApplicationContext(),
+        ).clearSession()
+
+        assertNull(AssignedEventsCache.shared.get())
+    }
+
+    @Test
+    fun cacheIsSharedAcrossRepositoryInstances() = runBlocking {
+        server.enqueue(ok("[${assignedEvent(eventId, true)}]"))
+        val other = StaffRepository(
+            Retrofit.Builder().baseUrl(server.url("/api/v1/"))
+                .addConverterFactory(GsonConverterFactory.create(sharedGson())).build().create(ApiService::class.java),
+            assignedEventsCache = cache,
+        )
+
+        repository.getEvents()
+        other.getEvents()
+
+        assertEquals(1, server.requestCount)
     }
 
     // ---- the server's refusal, on every print route

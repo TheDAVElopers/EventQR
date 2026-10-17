@@ -13,6 +13,7 @@ import com.thedavelopers.eventqr.features.staff.model.dto.StaffTodaySummary
 import com.thedavelopers.eventqr.features.staff.model.dto.StaffTransactionSummary
 import com.thedavelopers.eventqr.features.idprinting.AndroidIdPrinter
 import com.thedavelopers.eventqr.features.idprinting.IdCardLayoutConfig
+import com.thedavelopers.eventqr.features.idprinting.PrintPermissionLoad
 import com.thedavelopers.eventqr.features.idprinting.confirmPrintLogs
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdBatchPrintRequest
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
@@ -38,21 +39,37 @@ import java.util.UUID
 open class StaffRepository internal constructor(
     private val apiService: ApiService,
     private val printConfirmRetryDelaysMs: List<Long> = PRINT_CONFIRM_RETRY_DELAYS_MS,
+    private val assignedEventsCache: AssignedEventsCache = AssignedEventsCache.shared,
 ) {
     constructor(context: Context) : this(ApiClient.getService(context))
 
-    open suspend fun getEvents(): NetworkResult<List<StaffAssignedEventResponse>> = safeApiCall { apiService.getStaffEvents() }
+    /** The assigned events, served from a ~60 s in-memory cache; call [invalidateEvents] to force a refetch. */
+    open suspend fun getEvents(): NetworkResult<List<StaffAssignedEventResponse>> {
+        assignedEventsCache.get()?.let { return NetworkResult.Success(it) }
+        val generation = assignedEventsCache.generation()
+        val result = safeApiCall { apiService.getStaffEvents() }
+        if (result is NetworkResult.Success) assignedEventsCache.put(result.data, generation)
+        return result
+    }
+
+    /** Drops the cached assigned events (pull-to-refresh). */
+    open fun invalidateEvents() = assignedEventsCache.clear()
 
     /**
      * The caller's `canPrintId` for [eventId], read off the assigned-event list — the same source the
-     * scanner's event picker uses. Null when the event isn't in that list (organizer/ADMIN, unassigned)
-     * or the list can't be read: callers then leave the print affordance to the server's own check.
+     * scanner's event picker uses. Known(null) when the event isn't in that list (organizer/ADMIN, unassigned):
+     * callers then leave the print affordance to the server's own check. Failed when the list can't be read.
      */
-    open suspend fun canPrintIdForEvent(eventId: String): Boolean? =
+    open suspend fun printPermission(eventId: String): PrintPermissionLoad =
         when (val result = getEvents()) {
-            is NetworkResult.Success -> result.data.firstOrNull { it.eventId.toString() == eventId }?.canPrintId
-            else -> null
+            is NetworkResult.Success ->
+                PrintPermissionLoad.Known(result.data.firstOrNull { it.eventId.toString() == eventId }?.canPrintId)
+            else -> PrintPermissionLoad.Failed
         }
+
+    /** [printPermission] flattened to the flag; null for an unknown event and for a failed read. */
+    suspend fun canPrintIdForEvent(eventId: String): Boolean? =
+        (printPermission(eventId) as? PrintPermissionLoad.Known)?.canPrintId
 
     suspend fun getEventById(eventId: String) = safeApiCall { apiService.getStaffEventById(eventId) }
 

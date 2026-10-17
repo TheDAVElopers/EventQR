@@ -17,6 +17,7 @@ import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.idprinting.AndroidIdPrinter
 import com.thedavelopers.eventqr.features.idprinting.PrintPermission
+import com.thedavelopers.eventqr.features.idprinting.PrintPermissionLoad
 import com.thedavelopers.eventqr.features.idprinting.countsAsPrinted
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdPrintResponse
 import com.thedavelopers.eventqr.features.registrations.RegistrationNumberFormatter
@@ -50,7 +51,12 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
     private var cachedRole: String = ""
     private var cachedEventDate: String = ""
     /** The caller's Print IDs permission for this event; false turns the print button into a disabled hint. */
-    private var canPrintAllowed: Boolean = true
+    private var canPrintAllowed: Boolean = false
+    /** False until the permission has been read; the button stays disabled (without the "no permission" notice) meanwhile. */
+    private var printPermissionKnown: Boolean = false
+    /** True while a permission read is in flight, so a tap can say "checking" instead of "check failed". */
+    private var printPermissionLoading: Boolean = false
+    private var permissionSnackbar: com.google.android.material.snackbar.Snackbar? = null
 
     private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a", Locale.ENGLISH).withZone(ZoneId.of("Asia/Manila"))
         .withZone(ZoneId.of("Asia/Manila"))
@@ -84,6 +90,7 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
             })
         }
 
+        syncPrintAffordance()
         loadDetails()
     }
 
@@ -100,7 +107,7 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
 
         findViewById<ProgressBar>(R.id.progressAttendeeDetails).visibility = View.VISIBLE
         lifecycleScope.launch {
-            applyPrintPermission(repository.canPrintIdForEvent(eventId))
+            loadPrintPermission()
             when (val attendeeResult = repository.getAttendeeByEvent(eventId, attendeeId)) {
                 is NetworkResult.Success -> {
                     renderRegistration(attendeeResult.data)
@@ -112,6 +119,36 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
             }
             findViewById<ProgressBar>(R.id.progressAttendeeDetails).visibility = View.GONE
         }
+    }
+
+    private suspend fun loadPrintPermission() {
+        printPermissionLoading = true
+        try {
+            when (val load = repository.printPermission(eventId)) {
+                is PrintPermissionLoad.Known -> applyPrintPermission(load.canPrintId)
+                PrintPermissionLoad.Failed -> onPrintPermissionLoadFailed()
+            }
+        } finally {
+            printPermissionLoading = false
+        }
+    }
+
+    /** Keeps printing disabled and offers a retry; the server still enforces the permission either way. */
+    @VisibleForTesting
+    internal fun onPrintPermissionLoadFailed() {
+        canPrintAllowed = false
+        printPermissionKnown = false
+        syncPrintAffordance()
+        permissionSnackbar?.dismiss()
+        permissionSnackbar = com.google.android.material.snackbar.Snackbar
+            .make(findViewById(R.id.btnPrintOrReprintId), R.string.staff_print_permission_check_failed, com.google.android.material.snackbar.Snackbar.LENGTH_INDEFINITE)
+            .setAction(R.string.common_retry) { lifecycleScope.launch { loadPrintPermission() } }
+            .also { it.show() }
+    }
+
+    override fun onDestroy() {
+        permissionSnackbar?.dismiss()
+        super.onDestroy()
     }
 
     private fun renderRegistration(item: RegistrationResponse) {
@@ -151,6 +188,8 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
     @VisibleForTesting
     internal fun applyPrintPermission(canPrintId: Boolean?) {
         canPrintAllowed = PrintPermission.isPrintAllowed(canPrintId)
+        printPermissionKnown = true
+        permissionSnackbar?.dismiss()
         syncPrintAffordance()
     }
 
@@ -158,6 +197,14 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
         val button = findViewById<View>(R.id.btnPrintOrReprintId)
         val notice = findViewById<TextView>(R.id.txtPrintPermissionNotice)
         when {
+            !printPermissionKnown -> {
+                // Permission still loading (or failed to load): disabled, but not yet "you lack permission".
+                button.visibility = if (qrCredentialId.isBlank()) View.GONE else View.VISIBLE
+                button.isEnabled = false
+                button.isClickable = false
+                button.alpha = DISABLED_ALPHA
+                notice.visibility = View.GONE
+            }
             !canPrintAllowed -> {
                 button.visibility = View.VISIBLE
                 button.isEnabled = false
@@ -235,9 +282,15 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
         }
     }
 
-    private fun printId() {
+    @VisibleForTesting
+    internal fun printId() {
         if (eventId.isBlank() || attendeeId.isBlank()) {
             Toast.makeText(this, this.getString(R.string.staff_attendee_details_attendee_context_is_required_for_pri), Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (!printPermissionKnown) {
+            val message = if (printPermissionLoading) R.string.staff_print_permission_checking else R.string.staff_print_permission_check_failed
+            Toast.makeText(this, this.getString(message), Toast.LENGTH_LONG).show()
             return
         }
         if (!canPrintAllowed) {

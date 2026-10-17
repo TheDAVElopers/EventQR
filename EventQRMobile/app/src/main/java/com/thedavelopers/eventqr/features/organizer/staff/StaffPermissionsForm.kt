@@ -1,8 +1,11 @@
 package com.thedavelopers.eventqr.features.organizer.staff
 
 import android.content.Context
+import android.util.TypedValue
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.appcompat.widget.SwitchCompat
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpStaff
@@ -23,6 +26,13 @@ class StaffPermissionsForm(context: Context, initial: OrganizerMvpStaff? = null)
         setText(R.string.staff_permission_print_ids)
         isChecked = initial?.canPrintId == true
     }
+    /** Explains what the Print IDs switch grants; shown directly under it. */
+    val printIdHelperText = TextView(context).apply {
+        id = R.id.staff_perm_print_id_helper
+        setText(R.string.staff_permission_print_ids_helper)
+        setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+        setTextColor(ContextCompat.getColor(context, R.color.text_secondary))
+    }
     val viewLogsSwitch = SwitchCompat(context).apply {
         id = R.id.staff_perm_view_logs
         setText(R.string.staff_permission_view_logs)
@@ -39,6 +49,9 @@ class StaffPermissionsForm(context: Context, initial: OrganizerMvpStaff? = null)
         listOf(scanSwitch, printIdSwitch, viewLogsSwitch, manageRewardsSwitch).forEach { switch ->
             switch.minHeight = (48 * resources.displayMetrics.density).toInt()
             addView(switch, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+            if (switch === printIdSwitch) {
+                addView(printIdHelperText, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+            }
         }
     }
 

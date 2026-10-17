@@ -10,6 +10,7 @@ import com.thedavelopers.eventqr.features.events.service.EventService;
 import com.thedavelopers.eventqr.features.organizer.model.entity.EventStaffAssignment;
 import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignmentRepository;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
+import com.thedavelopers.eventqr.shared.constants.IdPrintStatus;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
 import com.thedavelopers.eventqr.shared.security.JwtService;
@@ -21,6 +22,9 @@ import com.thedavelopers.eventqr.shared.security.JwtService;
  *   <li>{@link #requireStaffOrOwner}: ADMIN / SUPER_ADMIN, the event's organizer, or STAFF with an active assignment
  *       to the event. Used by the print-log routes and GET /events/{id}/id-template, which the staff print screens
  *       read to render the card.</li>
+ *   <li>{@link #requirePrintLogConfirmer}: like {@link #requireStaffOrOwner} for the PATCH print-log route, but a
+ *       STAFF caller without an active assignment may still confirm CANCELLED or FAILED on a log they started, so a
+ *       staff member removed mid-print is not stuck. PRINTED still requires an active assignment.</li>
  *   <li>{@link #requireIdPrinter}: like {@link #requireStaffOrOwner}, but a STAFF caller must additionally hold
  *       {@code can_print_id = true} on their active assignment. Used by every route that renders or logs a card
  *       (print-id, reprint-id, print-id-batch) so the "Print IDs" permission is enforced on the server
@@ -53,6 +57,27 @@ public class IdPrintingAccess {
     }
 
     public Caller requireStaffOrOwner(HttpServletRequest request, UUID eventId) {
+        return requireStaffOrOwner(request, eventId, null);
+    }
+
+    /**
+     * Access for the PATCH print-log confirmation route only. Admins and the event's organizer behave exactly like
+     * {@link #requireStaffOrOwner}, and a STAFF caller with an active assignment passes too. A STAFF caller whose
+     * assignment was removed mid-print is still let through for CANCELLED or FAILED, so they can correct a log they
+     * started; the service then enforces that a non-manager may confirm only the log they created. PRINTED still
+     * requires an active assignment, so the grace-window rule cannot be used to mark someone PRINTED after removal.
+     * Other roles stay 403.
+     */
+    public Caller requirePrintLogConfirmer(HttpServletRequest request, UUID eventId, IdPrintStatus outcome) {
+        return requireStaffOrOwner(request, eventId, outcome);
+    }
+
+    /**
+     * @param absentAssignmentOutcome when non-null, the outcome a STAFF caller may still confirm without an active
+     *                                assignment. Only CANCELLED and FAILED qualify; {@code null} (the
+     *                                {@link #requireStaffOrOwner} default) keeps the strict rule for every route.
+     */
+    private Caller requireStaffOrOwner(HttpServletRequest request, UUID eventId, IdPrintStatus absentAssignmentOutcome) {
         String authorization = request.getHeader("Authorization");
         AccountRole role = jwtService.extractRoleFromBearer(authorization);
         if (role == AccountRole.ADMIN || role == AccountRole.SUPER_ADMIN) {
@@ -67,6 +92,11 @@ public class IdPrintingAccess {
         }
         if (role == AccountRole.STAFF) {
             if (eventStaffAssignmentRepository.existsByEventIdAndStaffUserIdAndActiveTrue(eventId, callerId)) {
+                return new Caller(callerId, role, false);
+            }
+            boolean correctionOutcome = absentAssignmentOutcome == IdPrintStatus.CANCELLED
+                    || absentAssignmentOutcome == IdPrintStatus.FAILED;
+            if (correctionOutcome) {
                 return new Caller(callerId, role, false);
             }
             throw new ForbiddenException("Staff user is not actively assigned to this event");

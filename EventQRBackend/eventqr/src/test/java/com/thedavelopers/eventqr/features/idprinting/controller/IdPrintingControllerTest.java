@@ -216,6 +216,79 @@ class IdPrintingControllerTest {
     }
 
     @Test
+    void confirm_staffRemovedMidPrint_canStillCancelTheirOwnLog() throws Exception {
+        actingAs(staffId, AccountRole.STAFF);
+        given(assignmentRepository.existsByEventIdAndStaffUserIdAndActiveTrue(eventId, staffId)).willReturn(false);
+        given(idPrintingService.confirm(eventId, logId, IdPrintStatus.CANCELLED, staffId, false))
+                .willReturn(response(IdPrintStatus.CANCELLED, false, null, Instant.now()));
+
+        mockMvc.perform(patch("/api/v1/staff/events/{eventId}/print-logs/{logId}", eventId, logId)
+                        .header("Authorization", "Bearer token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"CANCELLED\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("CANCELLED"));
+        verify(idPrintingService).confirm(eventId, logId, IdPrintStatus.CANCELLED, staffId, false);
+    }
+
+    @Test
+    void confirm_staffRemovedMidPrint_canStillReportFailed() throws Exception {
+        actingAs(staffId, AccountRole.STAFF);
+        given(assignmentRepository.existsByEventIdAndStaffUserIdAndActiveTrue(eventId, staffId)).willReturn(false);
+        given(idPrintingService.confirm(eventId, logId, IdPrintStatus.FAILED, staffId, false))
+                .willReturn(response(IdPrintStatus.FAILED, false, null, Instant.now()));
+
+        mockMvc.perform(patch("/api/v1/staff/events/{eventId}/print-logs/{logId}", eventId, logId)
+                        .header("Authorization", "Bearer token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"FAILED\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("FAILED"));
+    }
+
+    @Test
+    void confirm_staffRemovedMidPrint_confirmingSomeoneElsesLog_is403() throws Exception {
+        actingAs(staffId, AccountRole.STAFF);
+        given(assignmentRepository.existsByEventIdAndStaffUserIdAndActiveTrue(eventId, staffId)).willReturn(false);
+        given(idPrintingService.confirm(eventId, logId, IdPrintStatus.CANCELLED, staffId, false))
+                .willThrow(new ForbiddenException("Only the staff member who started this print can confirm it"));
+
+        mockMvc.perform(patch("/api/v1/staff/events/{eventId}/print-logs/{logId}", eventId, logId)
+                        .header("Authorization", "Bearer token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"CANCELLED\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void confirm_staffRemovedMidPrint_pastGrace_is409() throws Exception {
+        actingAs(staffId, AccountRole.STAFF);
+        given(assignmentRepository.existsByEventIdAndStaffUserIdAndActiveTrue(eventId, staffId)).willReturn(false);
+        given(idPrintingService.confirm(eventId, logId, IdPrintStatus.FAILED, staffId, false))
+                .willThrow(new ConflictException("Print log is already PRINTED (confirmation window expired)"));
+
+        mockMvc.perform(patch("/api/v1/staff/events/{eventId}/print-logs/{logId}", eventId, logId)
+                        .header("Authorization", "Bearer token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"FAILED\"}"))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void confirm_staffRemovedMidPrint_printed_isStill403() throws Exception {
+        actingAs(staffId, AccountRole.STAFF);
+        given(assignmentRepository.existsByEventIdAndStaffUserIdAndActiveTrue(eventId, staffId)).willReturn(false);
+
+        mockMvc.perform(patch("/api/v1/staff/events/{eventId}/print-logs/{logId}", eventId, logId)
+                        .header("Authorization", "Bearer token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"PRINTED\"}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Staff user is not actively assigned to this event"));
+        verify(idPrintingService, never()).confirm(any(), any(), any(), any(), anyBoolean());
+    }
+
+    @Test
     void confirm_alreadyFinal_is409() throws Exception {
         actingAs(staffId, AccountRole.STAFF);
         given(idPrintingService.confirm(eventId, logId, IdPrintStatus.CANCELLED, staffId, false))

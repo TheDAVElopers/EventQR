@@ -870,6 +870,9 @@
     <string name="staff_permissions_updated">Permissions updated.</string>
     <string name="staff_permissions_update_failed">Could not update permissions.</string>
     <string name="staff_print_id_permission_required">Ask the organizer for Print ID permission</string>
+    <string name="staff_print_permission_checking">Checking your Print IDs permission…</string>
+    <string name="staff_print_permission_check_failed">Could not check your Print IDs permission.</string>
+    <string name="staff_permission_print_ids_helper">Allow this staff member to print attendee ID cards</string>
     <string name="staff_print_permission_denied">You do not have permission to print IDs for this event</string>
     <string name="staff_promote_title">Assign as staff?</string>
     <string name="staff_promote_message">%1$s will become a Staff member. They keep their attendee access.</string>

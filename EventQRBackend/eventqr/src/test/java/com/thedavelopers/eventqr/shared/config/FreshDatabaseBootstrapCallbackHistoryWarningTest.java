@@ -36,7 +36,7 @@ class FreshDatabaseBootstrapCallbackHistoryWarningTest {
     @Test
     void aNonEmptyHistoryWithoutCoreTablesWarnsAndStillAppliesTheBaseline() throws Exception {
         FakeDatabase database = new FakeDatabase()
-                .withTable("flyway_schema_history")
+                .withTable("public.flyway_schema_history")
                 .withHistoryRows(true);
 
         List<ILoggingEvent> logs = bootstrap(database.connection());
@@ -58,7 +58,7 @@ class FreshDatabaseBootstrapCallbackHistoryWarningTest {
     @Test
     void aFreshDatabaseWithAnEmptyHistoryDoesNotWarn() throws Exception {
         FakeDatabase database = new FakeDatabase()
-                .withTable("flyway_schema_history")
+                .withTable("public.flyway_schema_history")
                 .withHistoryRows(false);
 
         List<ILoggingEvent> logs = bootstrap(database.connection());
@@ -70,13 +70,33 @@ class FreshDatabaseBootstrapCallbackHistoryWarningTest {
 
     @Test
     void anExistingEventsTableShortCircuitsWithoutWarningOrBaseline() throws Exception {
-        FakeDatabase database = new FakeDatabase().withTable("events");
+        FakeDatabase database = new FakeDatabase().withTable("public.events");
 
         List<ILoggingEvent> logs = bootstrap(database.connection());
 
         assertThat(logsAt(logs, Level.WARN)).isEmpty();
         assertThat(logsAt(logs, Level.INFO)).isEmpty();
         assertThat(database.executed).isEmpty();
+    }
+
+    /**
+     * The probes must be schema-qualified: the callback decides on {@code public.*} whatever the connection's
+     * {@code current_schema()} is, so no probe may build a name from it.
+     */
+    @Test
+    void probesAreQualifiedToPublicAndNeverUseCurrentSchema() throws Exception {
+        FakeDatabase database = new FakeDatabase()
+                .withTable("public.flyway_schema_history")
+                .withHistoryRows(true);
+
+        bootstrap(database.connection());
+
+        assertThat(database.queried).isNotEmpty()
+                .allSatisfy(sql -> assertThat(sql).doesNotContain("current_schema"));
+        assertThat(database.queried.stream().filter(sql -> sql.contains("to_regclass")).toList())
+                .containsExactly("select to_regclass('public.events')",
+                        "select to_regclass('public.user_profiles')",
+                        "select to_regclass('public.flyway_schema_history')");
     }
 
     /** Runs the real callback against a faked connection and returns everything it logged to its own logger. */
@@ -102,16 +122,19 @@ class FreshDatabaseBootstrapCallbackHistoryWarningTest {
     /**
      * In-memory stand-in for the handful of queries the callback issues, resolved by SQL text: a {@code to_regclass}
      * probe returns the table name when it exists (null otherwise), and the {@code exists(...)} history probe returns
-     * the configured row flag. Baseline statements executed through it are recorded for assertions.
+     * the configured row flag. Tables are registered schema-qualified (e.g. {@code public.events}) to mirror the
+     * callback's qualified probes. Baseline statements executed through it are recorded for assertions, and every
+     * query is recorded so the probe SQL itself can be asserted on.
      */
     private static final class FakeDatabase {
 
         private final List<String> existingTables = new ArrayList<>();
+        private final List<String> queried = new ArrayList<>();
         private final List<String> executed = new ArrayList<>();
         private boolean historyHasRows;
 
-        FakeDatabase withTable(String table) {
-            existingTables.add(table);
+        FakeDatabase withTable(String qualifiedTable) {
+            existingTables.add(qualifiedTable);
             return this;
         }
 
@@ -128,8 +151,10 @@ class FreshDatabaseBootstrapCallbackHistoryWarningTest {
 
         private Statement statement() throws SQLException {
             Statement statement = mock(Statement.class);
-            when(statement.executeQuery(anyString()))
-                    .thenAnswer(invocation -> resultSet(invocation.getArgument(0)));
+            when(statement.executeQuery(anyString())).thenAnswer(invocation -> {
+                queried.add(invocation.getArgument(0));
+                return resultSet(invocation.getArgument(0));
+            });
             when(statement.execute(anyString())).thenAnswer(invocation -> {
                 executed.add(invocation.getArgument(0));
                 return false;
@@ -140,7 +165,7 @@ class FreshDatabaseBootstrapCallbackHistoryWarningTest {
         private ResultSet resultSet(String sql) throws SQLException {
             ResultSet resultSet = mock(ResultSet.class);
             when(resultSet.next()).thenReturn(true);
-            if (sql.contains("exists(select 1 from flyway_schema_history)")) {
+            if (sql.contains("exists(select 1 from public.flyway_schema_history)")) {
                 when(resultSet.getBoolean(1)).thenReturn(historyHasRows);
             } else if (sql.contains("to_regclass")) {
                 when(resultSet.getString(1)).thenReturn(probedTable(sql));
@@ -150,7 +175,7 @@ class FreshDatabaseBootstrapCallbackHistoryWarningTest {
 
         private String probedTable(String sql) {
             for (String table : existingTables) {
-                if (sql.contains("'." + table + "'")) {
+                if (sql.contains("'" + table + "'")) {
                     return table;
                 }
             }

@@ -30,6 +30,10 @@ import org.springframework.core.io.ClassPathResource;
  * a database whose tables were dropped while the history survived is rebuilt from the baseline
  * here, whereas a history check would leave it to fail at V2 again. That state is logged as a
  * warning rather than acted on.
+ *
+ * <p>Every probe names the {@code public} schema explicitly instead of relying on
+ * {@code current_schema()}: the callback must decide on the same tables the migrations create,
+ * whatever the connection's search_path happens to be.
  */
 public class FreshDatabaseBootstrapCallback implements Callback {
 
@@ -56,7 +60,7 @@ public class FreshDatabaseBootstrapCallback implements Callback {
     public void handle(Event event, Context context) {
         Connection connection = context.getConnection();
         try {
-            if (tableExists(connection, "events") || tableExists(connection, "user_profiles")) {
+            if (tableExists(connection, "public.events") || tableExists(connection, "public.user_profiles")) {
                 return;
             }
             warnIfHistoryExistsWithoutTables(connection);
@@ -80,7 +84,7 @@ public class FreshDatabaseBootstrapCallback implements Callback {
      */
     private static void warnIfHistoryExistsWithoutTables(Connection connection) {
         try {
-            if (!tableExists(connection, "flyway_schema_history") || !migrationHistoryHasRows(connection)) {
+            if (!tableExists(connection, "public.flyway_schema_history") || !migrationHistoryHasRows(connection)) {
                 return;
             }
             log.warn("flyway_schema_history is not empty but the baseline tables are missing; rebuilding the "
@@ -93,14 +97,19 @@ public class FreshDatabaseBootstrapCallback implements Callback {
 
     private static boolean migrationHistoryHasRows(Connection connection) throws SQLException {
         try (Statement statement = connection.createStatement();
-             ResultSet result = statement.executeQuery("select exists(select 1 from flyway_schema_history)")) {
+             ResultSet result = statement.executeQuery("select exists(select 1 from public.flyway_schema_history)")) {
             return result.next() && result.getBoolean(1);
         }
     }
 
-    private static boolean tableExists(Connection connection, String table) throws SQLException {
+    /**
+     * True when {@code qualifiedName} (schema-qualified, e.g. {@code public.events}) resolves to a relation. The name
+     * is always qualified by the caller so the probe never depends on the connection's {@code current_schema()}, which
+     * may be a schema other than the one the migrations populate.
+     */
+    private static boolean tableExists(Connection connection, String qualifiedName) throws SQLException {
         try (Statement statement = connection.createStatement();
-             ResultSet result = statement.executeQuery("select to_regclass(current_schema() || '." + table + "')")) {
+             ResultSet result = statement.executeQuery("select to_regclass('" + qualifiedName + "')")) {
             return result.next() && result.getString(1) != null;
         }
     }

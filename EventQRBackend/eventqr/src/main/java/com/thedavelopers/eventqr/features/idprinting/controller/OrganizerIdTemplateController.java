@@ -98,14 +98,16 @@ public class OrganizerIdTemplateController {
 
     /**
      * Confirms the outcome of a PENDING print: PRINTED, CANCELLED or FAILED. Allowed for the staff member who
-     * started the print, the event organizer and admins. 404 if the log is not in this event; 409 if not PENDING.
+     * started the print, the event organizer and admins. A staff member whose assignment was removed mid-print may
+     * still confirm CANCELLED or FAILED for a log they started; PRINTED needs an active assignment. 404 if the log
+     * is not in this event; 409 if not PENDING.
      */
     @PatchMapping("/staff/events/{eventId}/print-logs/{logId}")
     public ResponseEntity<ApiResponse<IdPrintResponse>> confirmPrint(HttpServletRequest request,
                                                                      @PathVariable UUID eventId,
                                                                      @PathVariable UUID logId,
                                                                      @Valid @RequestBody IdPrintConfirmRequest body) {
-        Caller caller = access.requireStaffOrOwner(request, eventId);
+        Caller caller = access.requirePrintLogConfirmer(request, eventId, body.outcome());
         IdPrintResponse confirmed = idPrintingService.confirm(eventId, logId, body.outcome(), caller.userId(),
                 caller.eventManager());
         return ResponseEntity.ok(ApiResponse.success("Print outcome recorded", confirmed));

@@ -26,11 +26,15 @@ EXPOSE 10000
 
 # JVM sizing for a 512MB container (Render free tier, ~0.1 CPU). Without a cap the JVM
 # takes only 25% of RAM for heap (~128MB), which is too small for Spring + Hibernate.
-# 65% heap leaves ~180MB for metaspace, code cache, and thread stacks so the container is
-# not OOM-killed by the kernel. SerialGC is the cheapest collector on a fraction of a CPU;
-# ExitOnOutOfMemoryError makes a heap OOM crash the process so Render restarts it instead
-# of leaving a half-dead JVM serving errors. JAVA_TOOL_OPTIONS is read by the JVM itself,
-# so setting it in the Render environment replaces these defaults without a rebuild.
+# 55% heap is ~281MB; the non-heap side is now bounded explicitly instead of left to defaults
+# so the running total stays inside the container: metaspace capped at 128m (MaxMetaspaceSize),
+# reserved code cache 64m, direct memory capped at 32m (MaxDirectMemorySize) and the thread
+# stacks (Xss512k each). That leaves ~230MB for those plus GC structures and native overhead, so
+# the container is not OOM-killed by the kernel. SerialGC is the cheapest collector on a
+# fraction of a CPU; ExitOnOutOfMemoryError makes a heap OOM crash the process so Render
+# restarts it instead of leaving a half-dead JVM serving errors. JAVA_TOOL_OPTIONS is read by
+# the JVM itself, so setting it in the Render environment replaces these defaults without a
+# rebuild.
 #
 # -XX:ActiveProcessorCount was dropped: virtual threads are off in prod
 # (spring.threads.virtual.enabled=false), so it no longer serves its original purpose, and on a
@@ -49,7 +53,7 @@ EXPOSE 10000
 # production figures): 23 collections / 326 ms total pause during a cold start (max 80 ms, a
 # metadata-threshold full GC). -XX:TieredStopAtLevel=1 was measured and NOT added: it made the
 # cold start slower (12.9 s vs 11.9 s), because startup is class-loading bound, not JIT bound.
-ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=65 -XX:+UseSerialGC -XX:+ExitOnOutOfMemoryError -XX:ReservedCodeCacheSize=64m -Xss512k -Xlog:gc:stderr:time,uptime,level,tags"
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=55 -XX:MaxMetaspaceSize=128m -XX:MaxDirectMemorySize=32m -XX:+UseSerialGC -XX:+ExitOnOutOfMemoryError -XX:ReservedCodeCacheSize=64m -Xss512k -Xlog:gc:stderr:time,uptime,level,tags"
 
 # Container-level probe against the SAME path Render probes (/actuator/health/readiness), so a
 # local or other-host check exercises what production exercises. The readiness group is pinned

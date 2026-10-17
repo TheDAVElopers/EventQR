@@ -57,7 +57,10 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
         emptyState = findViewById(R.id.txtAssignedEventsEmpty)
         skeletonLoading = findViewById(R.id.skeletonLoading)
         swipeRefresh = findViewById(R.id.swipeRefreshAssignedEvents)
-        swipeRefresh.setOnRefreshListener { loadEvents(showLoading = false) }
+        swipeRefresh.setOnRefreshListener {
+            repository.invalidateEvents()
+            loadEvents(showLoading = false)
+        }
 
         chipAll = findViewById(R.id.chipAll)
         chipUpcoming = findViewById(R.id.chipUpcoming)
@@ -179,6 +182,7 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
     private fun openAttendees(event: StaffAssignedEventResponse) {
         startActivity(Intent(this, EventRegistrationsActivity::class.java).apply {
             putExtra(StaffScreenExtras.EXTRA_EVENT_ID, event.eventId.toString())
+            putExtra(StaffScreenExtras.EXTRA_EVENT_TITLE, event.title)
         })
     }
 

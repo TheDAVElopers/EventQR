@@ -16,6 +16,7 @@ import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.features.ShadowEncryptedSharedPreferences
 import com.thedavelopers.eventqr.features.ShadowMasterKeys
 import com.thedavelopers.eventqr.features.idprinting.AndroidIdPrinter
+import com.thedavelopers.eventqr.features.idprinting.PrintPermissionLoad
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdPrintResponse
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.features.staff.details.StaffAttendeeDetailsActivity
@@ -126,12 +127,16 @@ class StaffPrintPermissionUiTest {
     /** Every network touchpoint the two screens use, so no test reaches the live backend. */
     private inner class FakeRepository(
         private val canPrintId: Boolean? = null,
+        /** When true the assigned-event read fails, so the permission is unknown. */
+        private val permissionLoadFails: Boolean = false,
         private val printResult: NetworkResult<IdPrintResponse>? = null,
         private val batchResult: NetworkResult<List<IdPrintResponse>> = NetworkResult.Loading,
         /** Per-call batch answers; falls back to [batchResult] once exhausted. */
         private val batchResults: List<NetworkResult<List<IdPrintResponse>>> = emptyList(),
         /** A test parks the cancel here to observe that the screen waited for it; completed by default. */
         private val cancelGate: CompletableDeferred<Unit> = CompletableDeferred(Unit),
+        /** A test parks the permission read here to tap print while it is still loading. */
+        private val permissionGate: CompletableDeferred<Unit> = CompletableDeferred(Unit),
     ) : StaffRepository(context) {
         var printCalls = 0
         var batchCalls = 0
@@ -142,7 +147,10 @@ class StaffPrintPermissionUiTest {
         /** True once a confirmation finished, as opposed to merely having been scheduled. */
         var cancelCompleted = false
 
-        override suspend fun canPrintIdForEvent(eventId: String): Boolean? = canPrintId
+        override suspend fun printPermission(eventId: String): PrintPermissionLoad {
+            permissionGate.await()
+            return if (permissionLoadFails) PrintPermissionLoad.Failed else PrintPermissionLoad.Known(canPrintId)
+        }
 
         override suspend fun getEvents() = NetworkResult.Success(emptyList<com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResponse>())
 
@@ -281,7 +289,7 @@ class StaffPrintPermissionUiTest {
     @Test
     fun canPrintIdFalse_disablesThePrintControlAndExplainsHowToGetIt() {
         val activity = detailsActivity(FakeRepository(canPrintId = false))
-        awaitMain { !printButton(activity).isEnabled }
+        awaitMain { permissionNotice(activity).visibility == View.VISIBLE }
 
         assertEquals(View.VISIBLE, printButton(activity).visibility)
         assertFalse(printButton(activity).isEnabled)
@@ -296,7 +304,7 @@ class StaffPrintPermissionUiTest {
     @Test
     fun canPrintIdTrue_keepsThePrintControlEnabled() {
         val activity = detailsActivity(FakeRepository(canPrintId = true))
-        awaitMain { printButton(activity).visibility == View.VISIBLE }
+        awaitMain { printButton(activity).isEnabled }
 
         assertTrue(printButton(activity).isEnabled)
         assertEquals(1f, printButton(activity).alpha, 0.001f)
@@ -307,7 +315,7 @@ class StaffPrintPermissionUiTest {
     fun canPrintIdFalse_blocksThePrintAttemptBeforeTheServer() {
         val fake = FakeRepository(canPrintId = false, printResult = NetworkResult.Success(printResponse()))
         val activity = detailsActivity(fake)
-        awaitMain { !printButton(activity).isEnabled }
+        awaitMain { permissionNotice(activity).visibility == View.VISIBLE }
 
         printButton(activity).performClick()
         shadowOf(Looper.getMainLooper()).idle()
@@ -320,7 +328,7 @@ class StaffPrintPermissionUiTest {
     @Test
     fun canPrintIdTrue_letsAPrintThroughToTheDialog() {
         val activity = detailsActivity(FakeRepository(canPrintId = true))
-        awaitMain { printButton(activity).visibility == View.VISIBLE }
+        awaitMain { printButton(activity).isEnabled }
 
         activity.onPrintResult(NetworkResult.Success(printResponse()), emptyList(), "")
 
@@ -332,7 +340,7 @@ class StaffPrintPermissionUiTest {
     @Test
     fun printRefusedWith403_showsTheServerMessageAndNeverOpensThePrintDialog() {
         val activity = detailsActivity(FakeRepository(canPrintId = true))
-        awaitMain { printButton(activity).visibility == View.VISIBLE }
+        awaitMain { printButton(activity).isEnabled }
 
         activity.onPrintResult(httpError(403, denialMessage), emptyList(), "")
 
@@ -343,7 +351,7 @@ class StaffPrintPermissionUiTest {
     @Test
     fun printRefusedWith403WithoutABodyMessage_fallsBackToTheLocalCopy() {
         val activity = detailsActivity(FakeRepository(canPrintId = true))
-        awaitMain { printButton(activity).visibility == View.VISIBLE }
+        awaitMain { printButton(activity).isEnabled }
 
         activity.onPrintResult(NetworkResult.Error("Request failed", HttpException(Response.error<Any>(403, "".toResponseBody(null)))), emptyList(), "")
 
@@ -354,12 +362,69 @@ class StaffPrintPermissionUiTest {
     @Test
     fun aNonPermissionPrintError_showsItsOwnMessage() {
         val activity = detailsActivity(FakeRepository(canPrintId = true))
-        awaitMain { printButton(activity).visibility == View.VISIBLE }
+        awaitMain { printButton(activity).isEnabled }
 
         activity.onPrintResult(httpError(500, "Active ID template not found for event"), emptyList(), "")
 
         assertTrue(activity.openedCards.isEmpty())
         assertEquals("Active ID template not found for event", ShadowToast.getTextOfLatestToast())
+    }
+
+    @Test
+    fun printControl_isDisabledWithoutNoticeUntilThePermissionIsKnown() {
+        val activity = detailsActivity(FakeRepository(canPrintId = true, permissionLoadFails = true))
+        awaitMain { printButton(activity).visibility == View.VISIBLE }
+
+        assertFalse(printButton(activity).isEnabled)
+        assertEquals(View.GONE, permissionNotice(activity).visibility)
+    }
+
+    @Test
+    fun printTapWhilePermissionLoads_saysCheckingNotFailed() {
+        val gate = CompletableDeferred<Unit>()
+        val fake = FakeRepository(canPrintId = true, printResult = NetworkResult.Success(printResponse()), permissionGate = gate)
+        val activity = detailsActivity(fake)
+        shadowOf(Looper.getMainLooper()).idle()
+
+        activity.printId()
+
+        assertEquals(context.getString(R.string.staff_print_permission_checking), ShadowToast.getTextOfLatestToast())
+        assertEquals(0, fake.printCalls)
+    }
+
+    @Test
+    fun printTapAfterPermissionLoadFailed_saysCheckFailed() {
+        val fake = FakeRepository(permissionLoadFails = true, printResult = NetworkResult.Success(printResponse()))
+        val activity = detailsActivity(fake)
+        awaitMain { printButton(activity).visibility == View.VISIBLE }
+
+        activity.printId()
+
+        assertEquals(context.getString(R.string.staff_print_permission_check_failed), ShadowToast.getTextOfLatestToast())
+        assertEquals(0, fake.printCalls)
+    }
+
+    @Test
+    fun permissionLoadFailure_keepsPrintDisabledAndBlocksThePrintAttempt() {
+        val fake = FakeRepository(permissionLoadFails = true, printResult = NetworkResult.Success(printResponse()))
+        val activity = detailsActivity(fake)
+        awaitMain { printButton(activity).visibility == View.VISIBLE }
+
+        assertFalse(printButton(activity).isEnabled)
+        printButton(activity).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals(0, fake.printCalls)
+    }
+
+    @Test
+    fun permissionLoadFailure_hidesTheBatchPrintSelectIcon() {
+        val activity = registrationsActivity(FakeRepository(canPrintId = true, permissionLoadFails = true))
+        shadowOf(Looper.getMainLooper()).idle()
+        Thread.sleep(100)
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.btnSelectForPrint).visibility)
     }
 
     // ---- the batch screen
