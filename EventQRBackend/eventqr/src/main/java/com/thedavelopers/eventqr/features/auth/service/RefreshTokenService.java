@@ -49,6 +49,13 @@ public class RefreshTokenService {
 
     private static final long PURGE_INTERVAL_MS = 60L * 60L * 1000L;
 
+    /**
+     * Bounds one expired-token purge so a stalled delete cannot pin the single scheduler thread that every
+     * {@code @Scheduled} job shares (spring.task.scheduling.pool.size=1). The purge is a single idempotent
+     * DELETE, so a timeout that rolls it back simply retries on the next hourly run.
+     */
+    private static final int PURGE_TIMEOUT_SECONDS = 30;
+
     private final SecureRandom random = new SecureRandom();
     private final RefreshTokenRepository repository;
     private final UserTokenRevocationChecker accountAccessChecker;
@@ -199,7 +206,7 @@ public class RefreshTokenService {
     }
 
     @Scheduled(fixedDelay = PURGE_INTERVAL_MS, initialDelay = PURGE_INTERVAL_MS)
-    @Transactional
+    @Transactional(timeout = PURGE_TIMEOUT_SECONDS)
     public void purgeExpired() {
         repository.deleteExpired(Instant.now());
     }

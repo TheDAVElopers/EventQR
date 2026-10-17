@@ -262,10 +262,10 @@ The backend runs on Render (Docker, `EventQRBackend/eventqr/Dockerfile`) against
 ### Render environment
 
 - Every variable the backend reads is listed with a placeholder in `EventQRBackend/eventqr/.env.example`. Copy it to `.env` for local use; `.env` is git-ignored.
-- `SPRING_PROFILES_ACTIVE=prod` is required in production (small connection pool, graceful shutdown, virtual threads).
+- `SPRING_PROFILES_ACTIVE=prod` is required in production (small connection pool, graceful shutdown, bounded platform-thread request pool).
 - `DB_URL` must be the Supabase **session pooler** URL with SSL, e.g. `jdbc:postgresql://aws-0-<region>.pooler.supabase.com:5432/postgres?sslmode=require`, with `DB_USERNAME=postgres.<project_ref>`.
-- JVM memory flags come from `JAVA_TOOL_OPTIONS` in the Dockerfile; set the variable on Render to override them.
-- Set Render's **Health Check Path** to `/api/v1/health` (returns 503 when the database is unreachable).
+- JVM memory flags come from `JAVA_TOOL_OPTIONS` in the Dockerfile. Setting that variable on Render **replaces** the Dockerfile defaults rather than adding to them, so any override must repeat the sizing, GC-logging and `ActiveProcessorCount` flags it wants to keep.
+- Set Render's **Health Check Path** to `/actuator/health/readiness`. It is pinned to `readinessState` (in-process only) so the fixed 5 s probe timeout cannot be spent on a database round trip — a DB-backed probe burns the full Hikari connection timeout (5 s) whenever the pool is busy or Postgres is unreachable, and a missed probe restarts the instance. The database check stays on `/api/v1/health` and `/actuator/health` for humans.
 
 ### GitHub secrets
 

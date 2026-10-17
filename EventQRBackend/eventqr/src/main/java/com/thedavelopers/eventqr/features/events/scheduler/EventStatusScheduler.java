@@ -1,31 +1,29 @@
 package com.thedavelopers.eventqr.features.events.scheduler;
 
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import com.thedavelopers.eventqr.features.events.model.entity.Event;
-import com.thedavelopers.eventqr.features.events.repository.EventRepository;
+import com.thedavelopers.eventqr.features.events.scheduler.EventStatusTransitionService.SweepResult;
 import com.thedavelopers.eventqr.features.notifications.service.NotificationService;
-import com.thedavelopers.eventqr.shared.constants.EventStatus;
 
 /**
- * Scheduled sweep that transitions events between statuses based on wall-clock time.
+ * Scheduled entry point for the event status sweep.
  *
- * <p>SINGLE-INSTANCE CONSTRAINT: this scheduler (and any other @Scheduled job in the app,
- * e.g. the password-reset-token purge) assumes exactly one app instance is running.
+ * <p>SINGLE-INSTANCE CONSTRAINT: this scheduler (and any other @Scheduled job in the app, e.g. the
+ * password-reset-token purge) assumes exactly one app instance is running.
  * No distributed lock (ShedLock) is applied yet; running multiple replicas would cause
  * duplicate sweeps/updates. Introduce ShedLock before scaling to >1 instance.
+ *
+ * <p>The timed, transactional transition lives in {@link EventStatusTransitionService}. Notification fan-out is
+ * done here, after that transaction has committed, so the timeout (and any rollback) covers the transition work
+ * only: a slow notification write can no longer undo the status change on every sweep and wedge the state machine.
+ * The trade-off is that notifications for an event are no longer retried by the sweep once the event has moved;
+ * they are logged and dropped if their own transaction fails.
+ *
+ * <p>Each fan-out batch is isolated: a failure in one is logged and swallowed so it cannot suppress the other batch
+ * (both would otherwise be lost, since the transition has already committed) nor kill the scheduler task itself.
  */
 @Component
 public class EventStatusScheduler {
@@ -34,71 +32,34 @@ public class EventStatusScheduler {
 
     private static final long SWEEP_INTERVAL_MS = 60_000L;
 
-    private final EventRepository eventRepository;
+    private final EventStatusTransitionService transitionService;
     private final NotificationService notificationService;
-    private final CacheManager cacheManager;
 
-    public EventStatusScheduler(EventRepository eventRepository, NotificationService notificationService,
-                                CacheManager cacheManager) {
-        this.cacheManager = cacheManager;
-        this.eventRepository = eventRepository;
+    public EventStatusScheduler(EventStatusTransitionService transitionService,
+                                NotificationService notificationService) {
+        this.transitionService = transitionService;
         this.notificationService = notificationService;
     }
 
-    /** Evicts after the surrounding transaction commits so readers cannot re-cache pre-commit state. */
-    private void evictEventsCache() {
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    clearEventsCache();
-                }
-            });
-        } else {
-            clearEventsCache();
-        }
-    }
-
-    private void clearEventsCache() {
-        Cache cache = cacheManager.getCache("events");
-        if (cache != null) {
-            cache.clear();
-        }
-    }
-
     @Scheduled(fixedRate = SWEEP_INTERVAL_MS)
-    @Transactional
     public void transitionOverdueEvents() {
-        Instant now = Instant.now();
+        SweepResult result = transitionService.transitionOverdueEvents();
 
-        List<Event> started = eventRepository.findByStatusAndEventStartAtLessThanEqual(
-                EventStatus.APPROVED, now);
-        // Events already ACTIVE whose end has passed, plus events that start AND end within this sweep
-        // (activated below, then ended in the same sweep) so they still receive a completed notification.
-        List<Event> completing = new ArrayList<>(eventRepository.findByStatusAndEventEndAtLessThanEqual(
-                EventStatus.ACTIVE, now));
-        started.stream()
-                .filter(e -> e.getEventEndAt() != null && !e.getEventEndAt().isAfter(now))
-                .forEach(completing::add);
-
-        int activated = eventRepository.bulkUpdateStatusForStartedEvents(
-                EventStatus.APPROVED, EventStatus.ACTIVE, now);
-        int ended = eventRepository.bulkUpdateStatusForFinishedEvents(
-                EventStatus.ACTIVE, EventStatus.ENDED, now);
-
-        if (activated > 0 || ended > 0) {
-            log.info("Event status sweep: {} event(s) moved to ACTIVE, {} event(s) moved to ENDED", activated, ended);
+        if (!result.started().isEmpty()) {
+            try {
+                notificationService.createEventStartingSoonNotifications(result.started());
+            } catch (Exception exception) {
+                log.error("Event status sweep: starting-soon notifications failed for {} event(s); the events have "
+                        + "already transitioned, so they will not be retried", result.started().size(), exception);
+            }
         }
-
-        if (activated > 0 || ended > 0) {
-            evictEventsCache();
-        }
-
-        if (!started.isEmpty()) {
-            notificationService.createEventStartingSoonNotifications(started);
-        }
-        if (!completing.isEmpty()) {
-            notificationService.createEventCompletedNotifications(completing);
+        if (!result.completing().isEmpty()) {
+            try {
+                notificationService.createEventCompletedNotifications(result.completing());
+            } catch (Exception exception) {
+                log.error("Event status sweep: completed notifications failed for {} event(s); the events have "
+                        + "already transitioned, so they will not be retried", result.completing().size(), exception);
+            }
         }
     }
 }

@@ -40,6 +40,13 @@ public class PasswordResetService {
     private static final String INVALID_CODE_MESSAGE = "Reset code is invalid or expired";
     private static final long PURGE_INTERVAL_MS = 3_600_000L; // hourly
 
+    /**
+     * Bounds one purge so a stalled delete cannot pin the single scheduler thread that every {@code @Scheduled}
+     * job shares (spring.task.scheduling.pool.size=1). The purge is a single idempotent DELETE, so a timeout that
+     * rolls it back simply retries on the next hourly run.
+     */
+    private static final int PURGE_TIMEOUT_SECONDS = 30;
+
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final UserProfileRepository userProfileRepository;
     private final PasswordEncoder passwordEncoder;
@@ -232,10 +239,11 @@ public class PasswordResetService {
      * Hourly sweep that deletes expired reset tokens, consumed or not. Prevents the
      * password_reset_tokens table from growing unbounded (a per-user request can only
      * invalidate the user's own unused tokens; used + expired rows would otherwise
-     * accumulate forever). Single-instance scheduler (see {@code EventStatusScheduler}).
+     * accumulate forever). Single-instance scheduler (see {@code EventStatusScheduler});
+     * its statement timeout is bounded so a stalled delete cannot block the other jobs.
      */
     @Scheduled(fixedDelay = PURGE_INTERVAL_MS)
-    @Transactional
+    @Transactional(timeout = PURGE_TIMEOUT_SECONDS)
     public void purgeExpiredTokens() {
         int purged = passwordResetTokenRepository.deleteByExpiresAtBefore(Instant.now());
         if (purged > 0) {
