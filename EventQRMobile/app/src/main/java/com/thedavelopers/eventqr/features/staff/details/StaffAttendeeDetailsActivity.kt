@@ -16,7 +16,9 @@ import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.idprinting.AndroidIdPrinter
+import com.thedavelopers.eventqr.features.idprinting.PrintPermission
 import com.thedavelopers.eventqr.features.idprinting.countsAsPrinted
+import com.thedavelopers.eventqr.features.idprinting.model.dto.IdPrintResponse
 import com.thedavelopers.eventqr.features.registrations.RegistrationNumberFormatter
 import com.thedavelopers.eventqr.features.registrations.RegistrationStatusBadgeStyler
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
@@ -47,6 +49,8 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
     private var cachedRegistrationNumber: Int? = null
     private var cachedRole: String = ""
     private var cachedEventDate: String = ""
+    /** The caller's Print IDs permission for this event; false turns the print button into a disabled hint. */
+    private var canPrintAllowed: Boolean = true
 
     private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a", Locale.ENGLISH).withZone(ZoneId.of("Asia/Manila"))
         .withZone(ZoneId.of("Asia/Manila"))
@@ -61,7 +65,7 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
         }
 
         setContentView(R.layout.activity_staff_attendee_details)
-        repository = StaffRepository(this)
+        repository = newRepository()
         eventId = intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_ID).orEmpty()
         attendeeId = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_ID).orEmpty()
         registrationId = intent.getStringExtra(StaffScreenExtras.EXTRA_REGISTRATION_ID).orEmpty()
@@ -83,6 +87,10 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
         loadDetails()
     }
 
+    /** Overridden in tests to inject a fake repository. */
+    @VisibleForTesting
+    internal open fun newRepository(): StaffRepository = StaffRepository(this)
+
     private fun loadDetails() {
         if (eventId.isBlank() || attendeeId.isBlank()) {
             Toast.makeText(this, this.getString(R.string.staff_attendee_details_missing_attendee_context), Toast.LENGTH_SHORT).show()
@@ -92,6 +100,7 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
 
         findViewById<ProgressBar>(R.id.progressAttendeeDetails).visibility = View.VISIBLE
         lifecycleScope.launch {
+            applyPrintPermission(repository.canPrintIdForEvent(eventId))
             when (val attendeeResult = repository.getAttendeeByEvent(eventId, attendeeId)) {
                 is NetworkResult.Success -> {
                     renderRegistration(attendeeResult.data)
@@ -132,7 +141,42 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.txtDetailAttendanceStatus).text = getString(if (item.attendedAt != null || item.enteredAt != null) R.string.common_checked_in else R.string.common_registered)
         findViewById<TextView>(R.id.txtDetailExitStatus).text = getString(if (item.exitedAt != null) R.string.search_attendees_exited else R.string.staff_attendee_details_not_exited)
         findViewById<TextView>(R.id.txtDetailRegistrationDate).text = item.registeredAt?.let { "Registered: ${formatTime(it)}" } ?: "Registered: Unknown"
-        findViewById<View>(R.id.btnPrintOrReprintId).visibility = if (qrCredentialId.isBlank()) View.GONE else View.VISIBLE
+        syncPrintAffordance()
+    }
+
+    /**
+     * Applies the caller's Print IDs permission: without it the print control stays visible but
+     * disabled, with a line explaining how to get the permission.
+     */
+    @VisibleForTesting
+    internal fun applyPrintPermission(canPrintId: Boolean?) {
+        canPrintAllowed = PrintPermission.isPrintAllowed(canPrintId)
+        syncPrintAffordance()
+    }
+
+    private fun syncPrintAffordance() {
+        val button = findViewById<View>(R.id.btnPrintOrReprintId)
+        val notice = findViewById<TextView>(R.id.txtPrintPermissionNotice)
+        when {
+            !canPrintAllowed -> {
+                button.visibility = View.VISIBLE
+                button.isEnabled = false
+                button.isClickable = false
+                button.alpha = DISABLED_ALPHA
+                notice.visibility = View.VISIBLE
+            }
+            qrCredentialId.isBlank() -> {
+                button.visibility = View.GONE
+                notice.visibility = View.GONE
+            }
+            else -> {
+                button.visibility = View.VISIBLE
+                button.isEnabled = true
+                button.isClickable = true
+                button.alpha = 1f
+                notice.visibility = View.GONE
+            }
+        }
     }
 
     private fun loadTransactions() {
@@ -196,6 +240,10 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
             Toast.makeText(this, this.getString(R.string.staff_attendee_details_attendee_context_is_required_for_pri), Toast.LENGTH_SHORT).show()
             return
         }
+        if (!canPrintAllowed) {
+            Toast.makeText(this, this.getString(R.string.staff_print_id_permission_required), Toast.LENGTH_LONG).show()
+            return
+        }
 
         findViewById<ProgressBar>(R.id.progressAttendeeDetails).visibility = View.VISIBLE
         lifecycleScope.launch {
@@ -215,41 +263,58 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
                 }
             }
 
-            val result = if (hasPrintedId) {
-                repository.reprintAttendeeId(eventId, attendeeId)
-            } else {
-                repository.printAttendeeId(eventId, attendeeId)
-            }
-            when (result) {
-                is NetworkResult.Success -> {
-                    val cardData = AndroidIdPrinter.CardData(
-                        attendeeName = cachedAttendeeName,
-                        eventName = cachedEventName,
-                        registrationNumber = cachedRegistrationNumber,
-                        role = cachedRole,
-                        eventDate = cachedEventDate,
-                        visibleFields = visibleFields,
-                        qrValue = qrValue,
-                    )
-                    // Logged PENDING before the dialog opens; confirmed with what the user actually did in it.
-                    val serverMessage = result.data.message
-                    val printLogId = result.data.printLogId
-                    AndroidIdPrinter.print(
-                        this@StaffAttendeeDetailsActivity,
-                        "EventQR ID — $cachedAttendeeName",
-                        cardData,
-                    ) { outcome -> onIdPrintOutcome(outcome, printLogId, serverMessage) }
-                    // The Print/Reprint label is refreshed once the dialog's outcome is confirmed, not here:
-                    // the new log is still PENDING while the dialog is open.
-                }
-                is NetworkResult.Error -> {
-                    Toast.makeText(this@StaffAttendeeDetailsActivity, result.message, Toast.LENGTH_SHORT).show()
-                    loadPrintLogs()
-                }
-                NetworkResult.Loading -> Unit
-            }
+            onPrintResult(requestIdPrint(), visibleFields, qrValue)
             findViewById<ProgressBar>(R.id.progressAttendeeDetails).visibility = View.GONE
         }
+    }
+
+    /** One print request for the attendee: a reprint once a PRINTED log exists, otherwise a first print. */
+    private suspend fun requestIdPrint(): NetworkResult<IdPrintResponse> =
+        if (hasPrintedId) repository.reprintAttendeeId(eventId, attendeeId) else repository.printAttendeeId(eventId, attendeeId)
+
+    /**
+     * Handles the print request's outcome. A refusal — the permission can be revoked mid-session, so the
+     * server answers 403 — surfaces its message and never opens the system print dialog.
+     */
+    @VisibleForTesting
+    internal fun onPrintResult(result: NetworkResult<IdPrintResponse>, visibleFields: List<String>, qrValue: String) {
+        when (result) {
+            is NetworkResult.Success -> {
+                val cardData = AndroidIdPrinter.CardData(
+                    attendeeName = cachedAttendeeName,
+                    eventName = cachedEventName,
+                    registrationNumber = cachedRegistrationNumber,
+                    role = cachedRole,
+                    eventDate = cachedEventDate,
+                    visibleFields = visibleFields,
+                    qrValue = qrValue,
+                )
+                // Logged PENDING before the dialog opens; confirmed with what the user actually did in it.
+                // The Print/Reprint label is refreshed once the dialog's outcome is confirmed, not here:
+                // the new log is still PENDING while the dialog is open.
+                openSystemPrintDialog(cardData, result.data.printLogId, result.data.message)
+            }
+            is NetworkResult.Error -> {
+                val message = if (PrintPermission.isPermissionDenied(result)) {
+                    PrintPermission.deniedMessage(result, getString(R.string.staff_print_permission_denied))
+                } else {
+                    result.message
+                }
+                Toast.makeText(this@StaffAttendeeDetailsActivity, message, Toast.LENGTH_LONG).show()
+                loadPrintLogs()
+            }
+            NetworkResult.Loading -> Unit
+        }
+    }
+
+    /** Opens the system print dialog for a card the server already logged as PENDING. */
+    @VisibleForTesting
+    internal open fun openSystemPrintDialog(cardData: AndroidIdPrinter.CardData, printLogId: UUID, serverMessage: String) {
+        AndroidIdPrinter.print(
+            this@StaffAttendeeDetailsActivity,
+            "EventQR ID — $cachedAttendeeName",
+            cardData,
+        ) { outcome -> onIdPrintOutcome(outcome, printLogId, serverMessage) }
     }
 
     /**
@@ -287,4 +352,9 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
     }
 
     private fun shortRegistrationId(value: UUID): String = "reg-${value.toString().take(8)}"
+
+    private companion object {
+        /** Matches the app's other disabled controls (see StaffTransactionsActivity's purpose card). */
+        const val DISABLED_ALPHA = 0.5f
+    }
 }

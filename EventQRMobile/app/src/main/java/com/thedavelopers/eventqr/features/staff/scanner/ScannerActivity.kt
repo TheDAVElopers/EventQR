@@ -46,6 +46,7 @@ import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.features.idprinting.PrintPermission
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResponse
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionScanResponse
 import com.thedavelopers.eventqr.features.staff.EventSpinnerOption
@@ -249,7 +250,8 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     }
 
     override fun showPurposes(items: List<ScanPurposeResponse>) {
-        val activePurposes = items.filter { it.active }
+        // ID printing is only offered while the caller holds the Print IDs permission for the event.
+        val activePurposes = items.filter { it.active && isPurposeAllowed(it) }
         purposeOptions.clear()
         purposeOptions.addAll(activePurposes)
         setPurposeDropdownOpen(false)
@@ -257,7 +259,13 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
             purposeSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listOf(getString(R.string.scanner_no_scan_purposes_enabled_for_this_ev)))
             purposeSpinner.isEnabled = false
             selectedPurposeName.text = getString(R.string.scanner_no_scan_purposes_enabled)
-            selectedPurposePoints.text = getString(R.string.scanner_configure_scan_purposes_first)
+            selectedPurposePoints.text = getString(
+                if (items.any { it.active && it.code == ScanPurposeCode.ID_PRINT }) {
+                    R.string.staff_print_id_permission_required
+                } else {
+                    R.string.scanner_configure_scan_purposes_first
+                }
+            )
             selectedPurposePoints.visibility = View.VISIBLE
             selectedPurposePoints.setTextColor(0xFF6B7280.toInt())
         } else {
@@ -443,6 +451,14 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     private fun rotateLuma90(input: ByteArray, width: Int, height: Int): ByteArray { val output = ByteArray(width * height); var index = 0; for (x in 0 until width) { for (y in height - 1 downTo 0) { output[index++] = input[y * width + x] } }; return output }
     private fun loadSelectedPurposes() { selectedEvent()?.let { presenter.loadPurposes(it.id) } }
     private fun selectedEvent(): EventSpinnerOption? = eventOptions.getOrNull(eventSpinner.selectedItemPosition)
+
+    /**
+     * Every purpose is offered except ID printing, which needs the caller's Print IDs permission for the
+     * selected event (an event with no permission flag of its own — the unassigned caller, organizer or
+     * ADMIN — keeps it available and the server decides).
+     */
+    private fun isPurposeAllowed(purpose: ScanPurposeResponse): Boolean =
+        purpose.code != ScanPurposeCode.ID_PRINT || PrintPermission.isPrintAllowed(selectedEvent()?.canPrintId)
     private fun bindSelectedEventHeader() { val event = selectedEvent(); selectedEventTitle.text = event?.label ?: getString(R.string.scanner_no_assigned_event); selectedEventDate.text = event?.eventStartAt?.atZone(manilaZone)?.format(dateFormatter).orEmpty() }
     private fun bindSelectedPurposeHeader() {
         val purpose = purposeOptions.getOrNull(purposeSpinner.selectedItemPosition)
@@ -585,6 +601,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         val selectedEvent = selectedEvent() ?: return showMessage(getString(R.string.scanner_no_assigned_event_selected))
         if (purposeOptions.isEmpty()) return showMessage(getString(R.string.scanner_no_scan_purposes_enabled_for_this_ev))
         val selectedPurpose = purposeOptions.getOrNull(purposeSpinner.selectedItemPosition) ?: return showMessage(getString(R.string.scanner_no_scan_purpose_selected))
+        if (!isPurposeAllowed(selectedPurpose)) return showMessage(getString(R.string.staff_print_id_permission_required))
         val qrValue = qrInput.text.toString().trim()
         // Only manual entry can reach here blank (the camera path rejects empty payloads first).
         if (qrValue.isBlank()) return showMessage(getString(R.string.scanner_manual_entry_required))

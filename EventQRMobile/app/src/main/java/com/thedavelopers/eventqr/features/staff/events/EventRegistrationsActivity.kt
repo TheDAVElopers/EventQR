@@ -31,6 +31,7 @@ import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.idprinting.AndroidIdPrinter
+import com.thedavelopers.eventqr.features.idprinting.PrintPermission
 import com.thedavelopers.eventqr.features.registrations.RegistrationAdapter
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.features.staff.details.StaffAttendeeDetailsActivity
@@ -63,6 +64,8 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
     private var selectedEventId: String = ""
     private var allRegistrations: List<RegistrationResponse> = emptyList()
     private var selectionMode = false
+    /** The caller's Print IDs permission for the loaded event; false hides the batch-print controls. */
+    private var canPrintAllowed: Boolean = true
 
     // Cached data used to build each attendee's CardData for the batch preview.
     private var batchVisibleFields: List<String> = emptyList()
@@ -83,7 +86,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
 
         setContentView(R.layout.activity_event_registrations)
 
-        repository = StaffRepository(this)
+        repository = newRepository()
         presenter = EventRegistrationsPresenter(this, repository, UiStrings(this), lifecycleScope)
         adapter = RegistrationAdapter(
             onClick = { registration ->
@@ -110,9 +113,10 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         if (selectedEventId.isNotBlank()) {
             findViewById<EditText>(R.id.edtRegistrationsEventId).setText(selectedEventId)
             presenter.load(selectedEventId)
+            loadPrintPermission(selectedEventId)
         } else {
             lifecycleScope.launch {
-                when (val eventsResult = StaffRepository(this@EventRegistrationsActivity).getEvents()) {
+                when (val eventsResult = repository.getEvents()) {
                     is NetworkResult.Success -> {
                         val firstEvent = eventsResult.data.firstOrNull()
                         if (firstEvent == null) {
@@ -123,6 +127,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
                         eventTitleView.text = firstEvent.title.ifBlank { getString(R.string.event_registrations_assigned_event_fallback) }
                         findViewById<EditText>(R.id.edtRegistrationsEventId).setText(selectedEventId)
                         presenter.load(selectedEventId)
+                        applyPrintPermission(firstEvent.canPrintId)
                     }
                     is NetworkResult.Error -> showMessage(eventsResult.message)
                     NetworkResult.Loading -> Unit
@@ -133,7 +138,30 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         findViewById<Button>(R.id.btnLoadEventRegistrations).setOnClickListener {
             selectedEventId = findViewById<EditText>(R.id.edtRegistrationsEventId).text.toString()
             presenter.load(selectedEventId)
+            loadPrintPermission(selectedEventId)
         }
+    }
+
+    /** Overridden in tests to inject a fake repository. */
+    @VisibleForTesting
+    internal open fun newRepository(): StaffRepository = StaffRepository(this)
+
+    /** Reads the caller's Print IDs permission for [eventId] off the assigned-event list. */
+    private fun loadPrintPermission(eventId: String) {
+        if (eventId.isBlank()) return
+        lifecycleScope.launch { applyPrintPermission(repository.canPrintIdForEvent(eventId)) }
+    }
+
+    /**
+     * Applies the caller's Print IDs permission: without it the batch-print controls are hidden and the
+     * batch flow refuses before it can reach the server.
+     */
+    @VisibleForTesting
+    internal fun applyPrintPermission(canPrintId: Boolean?) {
+        canPrintAllowed = PrintPermission.isPrintAllowed(canPrintId)
+        if (!::btnSelectForPrint.isInitialized) return
+        btnSelectForPrint.visibility = if (canPrintAllowed) View.VISIBLE else View.GONE
+        if (!canPrintAllowed && selectionMode) exitSelectionMode()
     }
 
     override fun onDestroy() {
@@ -276,6 +304,10 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
     // ------------------------------------------------------------------
 
     private fun printSelected() {
+        if (!canPrintAllowed) {
+            showMessage(getString(R.string.staff_print_id_permission_required))
+            return
+        }
         val selected = adapter.getSelectedItems().filter { it.qrCredentialId != null }
         if (selected.isEmpty()) {
             showMessage(getString(R.string.event_registrations_select_at_least_one_attendee_with_a))
@@ -375,12 +407,14 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
             .show()
     }
 
-    private fun executeBatchPrint(cards: List<AndroidIdPrinter.CardData>, selected: List<RegistrationResponse>) {
+    @VisibleForTesting
+    internal fun executeBatchPrint(cards: List<AndroidIdPrinter.CardData>, selected: List<RegistrationResponse>) {
         showLoading(true)
         lifecycleScope.launch {
             val successes = mutableListOf<AndroidIdPrinter.CardData>()
             val printLogIds = mutableListOf<java.util.UUID>()
             val failures = mutableListOf<Pair<String, String>>()
+            var permissionDeniedMessage: String? = null
             var index = 0
             for (reg in selected) {
                 val card = cards[index]
@@ -390,29 +424,62 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
                         successes.add(card)
                         printLogIds.addAll(result.data.map { it.printLogId })
                     }
-                    is NetworkResult.Error -> failures.add(reg.attendeeName to result.message)
+                    is NetworkResult.Error -> {
+                        // The permission can be revoked mid-session: stop at the refusal instead of asking
+                        // again for every remaining attendee.
+                        if (PrintPermission.isPermissionDenied(result)) {
+                            permissionDeniedMessage = result.serverMessage?.takeIf { it.isNotBlank() }
+                                ?: getString(R.string.staff_print_permission_denied)
+                            break
+                        }
+                        failures.add(reg.attendeeName to result.message)
+                    }
                     NetworkResult.Loading -> Unit
                 }
             }
 
             showLoading(false)
             exitSelectionMode()
-            if (successes.isNotEmpty()) {
-                // Each card was logged PENDING above; every log is confirmed with, and the summary waits for,
-                // what the user did in the print dialog.
-                val printEventId = selectedEventId
-                val printRepository = repository
-                AndroidIdPrinter.print(
-                    this@EventRegistrationsActivity,
-                    "EventQR IDs — batch (${successes.size})",
-                    successes,
-                ) { outcome ->
-                    printRepository.confirmPrintLogsInBackground(printEventId, printLogIds.toList(), outcome)
-                    if (!isFinishing && !isDestroyed) showBatchPrintResult(successes.size, selected.size, failures, outcome)
+            val deniedMessage = permissionDeniedMessage
+            when {
+                deniedMessage != null -> {
+                    // The refusal aborted the batch, but every log created before it is still PENDING
+                    // server-side and would age into PRINTED after the grace period — reading as IDs the
+                    // user never printed and turning the next real print into a reprint. Cancel them and
+                    // wait for the result: a fire-and-forget cancel is lost if the retries are exhausted or
+                    // the process dies, leaving those logs to age into PRINTED anyway. Nothing to cancel when
+                    // the very first attendee was refused. The batch prints nothing either way.
+                    if (printLogIds.isNotEmpty()) {
+                        repository.confirmPrintLogs(
+                            selectedEventId,
+                            printLogIds.toList(),
+                            AndroidIdPrinter.PrintOutcome.CANCELLED,
+                        )
+                    }
+                    showMessage(deniedMessage)
                 }
-            } else {
-                showBatchPrintResult(successes.size, selected.size, failures)
+                successes.isNotEmpty() -> openSystemBatchPrintDialog(successes, printLogIds.toList(), selected, failures)
+                else -> showBatchPrintResult(successes.size, selected.size, failures)
             }
+        }
+    }
+
+    /**
+     * Opens the system print dialog for the batch the server already logged as PENDING, then confirms
+     * each log with what the user actually did in the dialog.
+     */
+    @VisibleForTesting
+    internal open fun openSystemBatchPrintDialog(
+        cards: List<AndroidIdPrinter.CardData>,
+        printLogIds: List<java.util.UUID>,
+        selected: List<RegistrationResponse>,
+        failures: List<Pair<String, String>>,
+    ) {
+        val printEventId = selectedEventId
+        val printRepository = repository
+        AndroidIdPrinter.print(this, "EventQR IDs — batch (${cards.size})", cards) { outcome ->
+            printRepository.confirmPrintLogsInBackground(printEventId, printLogIds, outcome)
+            if (!isFinishing && !isDestroyed) showBatchPrintResult(cards.size, selected.size, failures, outcome)
         }
     }
 

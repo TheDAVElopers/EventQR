@@ -21,6 +21,7 @@ import com.thedavelopers.eventqr.core.api.dto.TransactionType
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.idprinting.AndroidIdPrinter
+import com.thedavelopers.eventqr.features.idprinting.PrintPermission
 import com.thedavelopers.eventqr.features.staff.StaffDashboardActivity
 import com.thedavelopers.eventqr.features.staff.StaffRepository
 import com.thedavelopers.eventqr.features.staff.StaffScreenExtras
@@ -62,7 +63,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
         }
 
         setContentView(R.layout.activity_staff_scan_result)
-        repository = StaffRepository(this)
+        repository = newRepository()
         
         val isValid = intent.getBooleanExtra(StaffScreenExtras.EXTRA_IS_VALID, false)
         scanState = ScanResultState.from(
@@ -91,6 +92,10 @@ open class StaffScanResultActivity : AppCompatActivity() {
             finish()
         }
     }
+
+    /** Overridden in tests to inject a fake repository. */
+    @VisibleForTesting
+    internal open fun newRepository(): StaffRepository = StaffRepository(this)
 
     private fun applyActionLabels() {
         val purposeCode = intent.getStringExtra(StaffScreenExtras.EXTRA_SCAN_PURPOSE_CODE).orEmpty()
@@ -310,22 +315,11 @@ open class StaffScanResultActivity : AppCompatActivity() {
                     )
                     // The print is logged PENDING before the dialog opens (the log call is also the server-side
                     // check); it is then confirmed with, and the result shown for, what the user did in the dialog.
-                    val serverMessage = result.data.message
-                    val printLogId = result.data.printLogId
-                    val printRepository = repository
-                    AndroidIdPrinter.print(
-                        this@StaffScanResultActivity,
-                        "EventQR ID — $attendeeName",
-                        cardData,
-                    ) { outcome ->
-                        printRepository.confirmPrintLogsInBackground(eventId, listOf(printLogId), outcome)
-                        onPrintOutcome(outcome, serverMessage)
-                    }
+                    openSystemPrintDialog(eventId, cardData, result.data.printLogId, result.data.message)
                 }
                 is NetworkResult.Error -> {
                     Log.w(tag, "printResult success=false eventId=$eventId")
-                    // Verification succeeded; only the print step failed (e.g. no saved ID template).
-                    bindPrintFailed(result.message)
+                    bindPrintFailure(result)
                 }
                 NetworkResult.Loading -> Unit
             }
@@ -334,6 +328,44 @@ open class StaffScanResultActivity : AppCompatActivity() {
             findViewById<Button>(R.id.btnContinueTransaction).isEnabled = true
             applyActionLabels()
         }
+    }
+
+    /**
+     * Opens the system print dialog for a card the server already logged as PENDING; the log is confirmed
+     * with what the user actually did in the dialog.
+     */
+    @VisibleForTesting
+    internal open fun openSystemPrintDialog(
+        eventId: String,
+        cardData: AndroidIdPrinter.CardData,
+        printLogId: UUID,
+        serverMessage: String,
+    ) {
+        val printRepository = repository
+        AndroidIdPrinter.print(
+            this@StaffScanResultActivity,
+            "EventQR ID — ${cardData.attendeeName}",
+            cardData,
+        ) { outcome ->
+            printRepository.confirmPrintLogsInBackground(eventId, listOf(printLogId), outcome)
+            onPrintOutcome(outcome, serverMessage)
+        }
+    }
+
+    /**
+     * A failed ID-print request. A refusal — the permission can be revoked mid-session, so the server answers
+     * 403 — gets the permission copy instead of the generic ID-print-failed panel: this screen is reachable
+     * without the scanner's permission-filtered purpose picker, so the refusal must not look like a printer or
+     * template failure. Nothing is printed in either case.
+     */
+    @VisibleForTesting
+    internal fun bindPrintFailure(result: NetworkResult.Error) {
+        if (PrintPermission.isPermissionDenied(result)) {
+            Toast.makeText(this, getString(R.string.staff_print_id_permission_required), Toast.LENGTH_LONG).show()
+            return
+        }
+        // Verification succeeded; only the print step failed (e.g. no saved ID template).
+        bindPrintFailed(result.message)
     }
 
     @VisibleForTesting

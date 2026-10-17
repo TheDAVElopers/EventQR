@@ -111,20 +111,11 @@ public class OrganizerIdTemplateController {
         return ResponseEntity.ok(ApiResponse.success("Print outcome recorded", confirmed));
     }
 
-    @PostMapping("/staff/events/{eventId}/attendees/{attendeeId}/id-preview")
-    public ResponseEntity<ApiResponse<IdPrintResponse>> previewForAttendee(HttpServletRequest request,
-                                                                            @PathVariable UUID eventId,
-                                                                            @PathVariable UUID attendeeId) {
-        Caller caller = access.requireStaffOrOwner(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success(
-                idPrintingService.previewForAttendee(eventId, attendeeId, caller.userId())));
-    }
-
     @PostMapping("/staff/events/{eventId}/attendees/{attendeeId}/print-id")
     public ResponseEntity<ApiResponse<IdPrintResponse>> print(HttpServletRequest request,
                                                               @PathVariable UUID eventId,
                                                               @PathVariable UUID attendeeId) {
-        Caller caller = access.requireStaffOrOwner(request, eventId);
+        Caller caller = access.requireIdPrinter(request, eventId);
         return ResponseEntity.ok(ApiResponse.success(
                 idPrintingService.printForAttendee(eventId, attendeeId, caller.userId())));
     }
@@ -134,7 +125,7 @@ public class OrganizerIdTemplateController {
     public ResponseEntity<ApiResponse<IdPrintResponse>> reprint(HttpServletRequest request,
                                                                 @PathVariable UUID eventId,
                                                                 @PathVariable UUID attendeeId) {
-        Caller caller = access.requireStaffOrOwner(request, eventId);
+        Caller caller = access.requireIdPrinter(request, eventId);
         return ResponseEntity.ok(ApiResponse.success(
                 idPrintingService.printForAttendee(eventId, attendeeId, caller.userId())));
     }
@@ -143,7 +134,7 @@ public class OrganizerIdTemplateController {
     public ResponseEntity<ApiResponse<List<IdPrintResponse>>> printBatch(HttpServletRequest request,
                                                                          @PathVariable UUID eventId,
                                                                          @Valid @RequestBody IdBatchPrintRequest body) {
-        Caller caller = access.requireStaffOrOwner(request, eventId);
+        Caller caller = access.requireIdPrinter(request, eventId);
         return ResponseEntity.ok(ApiResponse.success(
                 idPrintingService.printBatch(eventId, body.attendeeUserIds(), caller.userId())));
     }

@@ -43,6 +43,17 @@ open class StaffRepository internal constructor(
 
     open suspend fun getEvents(): NetworkResult<List<StaffAssignedEventResponse>> = safeApiCall { apiService.getStaffEvents() }
 
+    /**
+     * The caller's `canPrintId` for [eventId], read off the assigned-event list — the same source the
+     * scanner's event picker uses. Null when the event isn't in that list (organizer/ADMIN, unassigned)
+     * or the list can't be read: callers then leave the print affordance to the server's own check.
+     */
+    open suspend fun canPrintIdForEvent(eventId: String): Boolean? =
+        when (val result = getEvents()) {
+            is NetworkResult.Success -> result.data.firstOrNull { it.eventId.toString() == eventId }?.canPrintId
+            else -> null
+        }
+
     suspend fun getEventById(eventId: String) = safeApiCall { apiService.getStaffEventById(eventId) }
 
     suspend fun getScanPurposesByEvent(eventId: String) = safeApiCall { apiService.getStaffScanPurposes(eventId) }
@@ -92,9 +103,9 @@ open class StaffRepository internal constructor(
 
     open suspend fun getMyTodayTransactions() = safeApiCall { apiService.getStaffMyTodayTransactions() }
 
-    suspend fun getAttendeeTransactions(eventId: String, attendeeId: String) = safeApiCall { apiService.getStaffAttendeeTransactions(eventId, attendeeId) }
+    open suspend fun getAttendeeTransactions(eventId: String, attendeeId: String) = safeApiCall { apiService.getStaffAttendeeTransactions(eventId, attendeeId) }
 
-    suspend fun getAttendeeByEvent(eventId: String, attendeeId: String) = safeApiCall {
+    open suspend fun getAttendeeByEvent(eventId: String, attendeeId: String) = safeApiCall {
         apiService.getStaffAttendee(eventId, attendeeId)
     }
 
@@ -116,14 +127,14 @@ open class StaffRepository internal constructor(
 
     suspend fun getLatestScan(eventId: String) = safeApiCall { apiService.getLatestScan(eventId) }
 
-    suspend fun printAttendeeId(eventId: String, attendeeId: String) = safeApiCall { apiService.printAttendeeId(eventId, attendeeId) }
+    open suspend fun printAttendeeId(eventId: String, attendeeId: String) = safeApiCall { apiService.printAttendeeId(eventId, attendeeId) }
 
-    suspend fun reprintAttendeeId(eventId: String, attendeeId: String) = safeApiCall { apiService.reprintAttendeeId(eventId, attendeeId) }
+    open suspend fun reprintAttendeeId(eventId: String, attendeeId: String) = safeApiCall { apiService.reprintAttendeeId(eventId, attendeeId) }
 
     open suspend fun getStaffPrintLogs(eventId: String): NetworkResult<List<IdPrintResponse>> =
         safeApiCall { apiService.getStaffPrintLogs(eventId) }
 
-    suspend fun printIdBatch(eventId: String, attendeeUserIds: List<UUID>, reprint: Boolean) =
+    open suspend fun printIdBatch(eventId: String, attendeeUserIds: List<UUID>, reprint: Boolean) =
         safeApiCall { apiService.printIdBatch(eventId, IdBatchPrintRequest(attendeeUserIds, reprint)) }
 
     /**

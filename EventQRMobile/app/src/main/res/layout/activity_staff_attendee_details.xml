@@ -230,6 +230,16 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <TextView
+                android:id="@+id/txtPrintPermissionNotice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/staff_print_id_permission_required"
+                android:textColor="#6B7280"
+                android:textSize="13sp"
+                android:visibility="gone" />
+
             <ProgressBar
                 android:id="@+id/progressAttendeeDetails"
                 android:layout_width="wrap_content"

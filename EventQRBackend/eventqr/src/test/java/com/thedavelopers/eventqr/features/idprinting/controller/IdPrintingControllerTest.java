@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +35,7 @@ import com.thedavelopers.eventqr.features.idprinting.model.dto.IdPrintResponse;
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdTemplateConfigResponse;
 import com.thedavelopers.eventqr.features.idprinting.service.IdPrintingService;
 import com.thedavelopers.eventqr.features.idprinting.service.IdTemplateConfigurationService;
+import com.thedavelopers.eventqr.features.organizer.model.entity.EventStaffAssignment;
 import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignmentRepository;
 import com.thedavelopers.eventqr.features.uploads.service.FileStorageService;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
@@ -86,6 +88,18 @@ class IdPrintingControllerTest {
         given(event.organizerUserId()).willReturn(organizerId);
         given(eventService.findOne(eventId)).willReturn(event);
         given(assignmentRepository.existsByEventIdAndStaffUserIdAndActiveTrue(eventId, staffId)).willReturn(true);
+        // Assignments default to holding the Print IDs permission here; the print-gate tests override this.
+        given(assignmentRepository.findByEventIdAndStaffUserIdAndActiveTrue(eventId, staffId))
+                .willReturn(Optional.of(assignment(true)));
+    }
+
+    private EventStaffAssignment assignment(boolean canPrintId) {
+        EventStaffAssignment assignment = new EventStaffAssignment();
+        assignment.setEventId(eventId);
+        assignment.setStaffUserId(staffId);
+        assignment.setActive(true);
+        assignment.setCanPrintId(canPrintId);
+        return assignment;
     }
 
     private void actingAs(UUID userId, AccountRole role) {
@@ -274,6 +288,130 @@ class IdPrintingControllerTest {
                         .content("{\"attendeeUserIds\":[\"" + attendeeId + "\"],\"reprint\":false}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[0].status").value("PENDING"));
+    }
+
+    // ------------------------------------------------------------ Print IDs permission gate (can_print_id)
+
+    @Test
+    void printId_staffWithTheFlag_returns200() throws Exception {
+        actingAs(staffId, AccountRole.STAFF);
+        given(idPrintingService.printForAttendee(eventId, attendeeId, staffId))
+                .willReturn(response(IdPrintStatus.PENDING, false, null, null));
+
+        mockMvc.perform(post("/api/v1/staff/events/{eventId}/attendees/{attendeeId}/print-id", eventId, attendeeId)
+                        .header("Authorization", "Bearer token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("PENDING"));
+    }
+
+    @Test
+    void reprintId_staffWithTheFlag_returns200() throws Exception {
+        actingAs(staffId, AccountRole.STAFF);
+        given(idPrintingService.printForAttendee(eventId, attendeeId, staffId))
+                .willReturn(response(IdPrintStatus.PENDING, false, null, null));
+
+        mockMvc.perform(post("/api/v1/staff/events/{eventId}/attendees/{attendeeId}/reprint-id", eventId, attendeeId)
+                        .header("Authorization", "Bearer token"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void printBatch_staffWithTheFlag_returns200() throws Exception {
+        actingAs(staffId, AccountRole.STAFF);
+        given(idPrintingService.printBatch(eq(eventId), eq(List.of(attendeeId)), eq(staffId)))
+                .willReturn(List.of(response(IdPrintStatus.PENDING, false, null, null)));
+
+        mockMvc.perform(post("/api/v1/staff/events/{eventId}/print-id-batch", eventId)
+                        .header("Authorization", "Bearer token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"attendeeUserIds\":[\"" + attendeeId + "\"],\"reprint\":false}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void everyPrintRoute_staffWithoutTheFlag_is403WithTheExactMessage() throws Exception {
+        actingAs(staffId, AccountRole.STAFF);
+        given(assignmentRepository.findByEventIdAndStaffUserIdAndActiveTrue(eventId, staffId))
+                .willReturn(Optional.of(assignment(false)));
+
+        mockMvc.perform(post("/api/v1/staff/events/{eventId}/attendees/{attendeeId}/print-id", eventId, attendeeId)
+                        .header("Authorization", "Bearer token"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.error").value("Forbidden"))
+                .andExpect(jsonPath("$.message").value("You don't have permission to print IDs for this event"))
+                .andExpect(jsonPath("$.path").value("/api/v1/staff/events/" + eventId
+                        + "/attendees/" + attendeeId + "/print-id"));
+
+        mockMvc.perform(post("/api/v1/staff/events/{eventId}/attendees/{attendeeId}/reprint-id", eventId, attendeeId)
+                        .header("Authorization", "Bearer token"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.message").value("You don't have permission to print IDs for this event"));
+
+        mockMvc.perform(post("/api/v1/staff/events/{eventId}/print-id-batch", eventId)
+                        .header("Authorization", "Bearer token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"attendeeUserIds\":[\"" + attendeeId + "\"],\"reprint\":false}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.message").value("You don't have permission to print IDs for this event"));
+
+        // The batch route is rejected as a whole: nothing was printed, not even partially.
+        verify(idPrintingService, never()).printForAttendee(any(), any(), any());
+        verify(idPrintingService, never()).printBatch(any(), any(), any());
+    }
+
+    @Test
+    void printId_inactiveAssignment_is403() throws Exception {
+        actingAs(staffId, AccountRole.STAFF);
+        given(assignmentRepository.existsByEventIdAndStaffUserIdAndActiveTrue(eventId, staffId)).willReturn(false);
+
+        mockMvc.perform(post("/api/v1/staff/events/{eventId}/attendees/{attendeeId}/print-id", eventId, attendeeId)
+                        .header("Authorization", "Bearer token"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Staff user is not actively assigned to this event"));
+        verify(idPrintingService, never()).printForAttendee(any(), any(), any());
+    }
+
+    @Test
+    void printId_organizerOwnerBypassesTheGate() throws Exception {
+        actingAs(organizerId, AccountRole.ORGANIZER);
+        given(idPrintingService.printForAttendee(eventId, attendeeId, organizerId))
+                .willReturn(response(IdPrintStatus.PENDING, false, null, null));
+        given(idPrintingService.printBatch(eq(eventId), eq(List.of(attendeeId)), eq(organizerId)))
+                .willReturn(List.of(response(IdPrintStatus.PENDING, false, null, null)));
+
+        mockMvc.perform(post("/api/v1/staff/events/{eventId}/attendees/{attendeeId}/print-id", eventId, attendeeId)
+                        .header("Authorization", "Bearer token"))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/v1/staff/events/{eventId}/print-id-batch", eventId)
+                        .header("Authorization", "Bearer token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"attendeeUserIds\":[\"" + attendeeId + "\"],\"reprint\":false}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void printId_adminBypassesTheGate() throws Exception {
+        UUID adminId = UUID.randomUUID();
+        actingAs(adminId, AccountRole.SUPER_ADMIN);
+        given(idPrintingService.printForAttendee(eventId, attendeeId, adminId))
+                .willReturn(response(IdPrintStatus.PENDING, false, null, null));
+
+        mockMvc.perform(post("/api/v1/staff/events/{eventId}/attendees/{attendeeId}/print-id", eventId, attendeeId)
+                        .header("Authorization", "Bearer token"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void printId_unassignedStaff_is403() throws Exception {
+        actingAs(UUID.randomUUID(), AccountRole.STAFF);
+
+        mockMvc.perform(post("/api/v1/staff/events/{eventId}/attendees/{attendeeId}/print-id", eventId, attendeeId)
+                        .header("Authorization", "Bearer token"))
+                .andExpect(status().isForbidden());
+        verify(idPrintingService, never()).printForAttendee(any(), any(), any());
     }
 
     @Test

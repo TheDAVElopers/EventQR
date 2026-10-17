@@ -220,10 +220,6 @@ public class IdPrintingService {
         return idTemplateRepository.save(template);
     }
 
-    public IdPrintResponse previewForAttendee(UUID eventId, UUID attendeeUserId, UUID actorUserId) {
-        return printForAttendee(eventId, attendeeUserId, actorUserId);
-    }
-
     /** print-id and reprint-id: both insert a PENDING log; the reprint flag is derived (see {@link #print}). */
     public IdPrintResponse printForAttendee(UUID eventId, UUID attendeeUserId, UUID actorUserId) {
         var registration = findRegistrationForAttendee(eventId, attendeeUserId);
