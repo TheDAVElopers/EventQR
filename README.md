@@ -54,7 +54,7 @@ EventQR/
 │   │   ├── application.properties
 │   │   ├── application-prod.properties
 │   │   ├── logback-spring.xml
-│   │   └── db/migration/        # Flyway migrations (V1 ... V39)
+│   │   └── db/migration/        # Flyway migrations (versioned + repeatable)
 │   ├── src/test/                # Backend tests
 │   ├── .env.example             # All supported environment variables
 │   ├── Dockerfile
@@ -250,7 +250,7 @@ Do not commit real secrets, production URLs, or private deployment values to ver
 
 ## Database migrations (Flyway)
 
-- Migrations live in `EventQRBackend/eventqr/src/main/resources/db/migration` (currently V1 to V39). On a fresh database Flyway applies them in order; Hibernate's `ddl-auto=validate` only verifies the entity mapping against the migrated schema.
+- Migrations live in `EventQRBackend/eventqr/src/main/resources/db/migration`: versioned `V<n>__*.sql` scripts applied in order, plus repeatable `R__*.sql` reconciliations that run after them. Do not restate the version range here — it changes with every migration. On a fresh database `FreshDatabaseBootstrapCallback` applies the V16 baseline before Flyway runs V1 onwards, because the early migrations only patch tables that baseline creates; Hibernate's `ddl-auto=validate` then only verifies the entity mapping against the migrated schema.
 - Never change `spring.jpa.hibernate.ddl-auto` back to `update` or `create` on any environment that Flyway has already migrated — the two approaches fight over schema ownership and Flyway checksums drift.
 - `spring.flyway.baseline-on-migrate=true` is only meant for pre-existing non-Flyway databases; a clean deploy does not rely on it.
 - Never edit an already-applied guarded migration (V17/V18 guards are historical). When a conditional guard makes a fresh build diverge from production, reconcile the fresh build *down* to production with a **repeatable** migration (`R__...sql`) — never a versioned one during a multi-PR window, where a new version number becomes a "resolved migration not applied to database" failure on the next deploy. Keep the must-not-exist catalogue assertions in `RewardRedemptionPostgresTest` in sync.

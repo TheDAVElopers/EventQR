@@ -25,7 +25,10 @@ import org.springframework.core.io.ClassPathResource;
  * core table exists, so V1-V15 then run against the tables they expect.
  *
  * <p>It never runs against an existing database: if {@code events} or {@code user_profiles}
- * is present the callback does nothing, so live environments migrate exactly as before.
+ * is present the callback does nothing, so live environments migrate exactly as before. The
+ * predicate deliberately probes those core tables rather than {@code flyway_schema_history}:
+ * a database whose tables were dropped while the history survived is rebuilt from the baseline
+ * here, whereas a history check would leave it to fail at V2 again.
  */
 public class FreshDatabaseBootstrapCallback implements Callback {
 
