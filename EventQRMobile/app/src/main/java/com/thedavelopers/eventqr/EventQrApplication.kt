@@ -9,9 +9,9 @@ import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
 import androidx.core.view.WindowCompat
+import com.thedavelopers.eventqr.core.navigation.AppNavigator
 import com.thedavelopers.eventqr.core.session.SessionEvents
 import com.thedavelopers.eventqr.core.session.SessionManager
-import com.thedavelopers.eventqr.core.session.SessionRefresher
 import com.thedavelopers.eventqr.features.dashboard.DashboardRouter
 import com.thedavelopers.eventqr.features.dashboard.RoleReroutePolicy
 import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
@@ -63,16 +63,19 @@ class EventQrApplication : Application() {
 
             override fun onActivityDestroyed(activity: Activity) = Unit
         })
-        SessionRefresher.onRoleChanged = { role ->
-            // The background refresh found a different role than the one the dashboard launched with. Re-route only
-            // while a dashboard is in front (never on login/registration or a sub-screen); otherwise remember it for
-            // the next dashboard visit. The persisted role already applies to the next cold launch.
-            val foreground = resumedActivity
-            when {
-                foreground != null && foreground::class.java in DashboardRouter.dashboardClasses ->
-                    rerouteIfNeeded(foreground, role)
-                foreground is LoginActivity || foreground is RegistrationActivity -> Unit
-                else -> pendingRole = role
+        SessionEvents.onRoleChanged = { role ->
+            // A token refresh (on a 401 or on launch/resume) or auth/me found a different role than the one the
+            // dashboard launched with; it can arrive on an OkHttp/IO thread. Re-route only while a dashboard is in
+            // front (never on login/registration or a sub-screen); otherwise remember it for the next dashboard
+            // visit. The persisted role already applies to the next cold launch.
+            Handler(Looper.getMainLooper()).post {
+                val foreground = resumedActivity
+                when {
+                    foreground != null && foreground::class.java in DashboardRouter.dashboardClasses ->
+                        rerouteIfNeeded(foreground, role)
+                    foreground is LoginActivity || foreground is RegistrationActivity -> Unit
+                    else -> pendingRole = role
+                }
             }
         }
         SessionEvents.onSessionExpired = {
@@ -81,10 +84,7 @@ class EventQrApplication : Application() {
                 pendingRole = null
                 RegistrationsCache.clear()
                 Toast.makeText(this, this.getString(R.string.event_qr_application_your_session_has_expired_please_sign), Toast.LENGTH_LONG).show()
-                startActivity(
-                    Intent(this, LoginActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                )
+                startActivities(AppNavigator.signedOutStack(this))
             }
         }
     }

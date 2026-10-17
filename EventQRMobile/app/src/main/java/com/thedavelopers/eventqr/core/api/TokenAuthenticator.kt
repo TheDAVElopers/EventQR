@@ -8,7 +8,8 @@ import okhttp3.Route
 
 /** What the server said when asked to exchange a refresh token. */
 sealed interface RefreshOutcome {
-    data class Success(val accessToken: String, val refreshToken: String?) : RefreshOutcome
+    /** [role] is the user's current role name from the refresh response; null from servers that omit it. */
+    data class Success(val accessToken: String, val refreshToken: String?, val role: String? = null) : RefreshOutcome
 
     /** The server understood and said no: the session is over. */
     data object Rejected : RefreshOutcome
@@ -24,15 +25,16 @@ fun interface RefreshCall {
 /**
  * On a 401, trades the refresh token for a new access token and retries the request once, so an
  * expired access token is invisible to the user. Only a definite rejection from the server ends
- * the session; being offline never logs anyone out.
+ * the session; being offline never logs anyone out. The refresh itself goes through the shared
+ * [SessionTokenRotator], so it can't race the proactive session refresh.
  */
-class TokenAuthenticator(
-    private val tokenStore: TokenStore,
-    private val refreshCall: RefreshCall,
-    private val onSessionExpired: () -> Unit,
-) : Authenticator {
+class TokenAuthenticator(private val rotator: SessionTokenRotator) : Authenticator {
 
-    private val lock = Any()
+    constructor(
+        tokenStore: TokenStore,
+        refreshCall: RefreshCall,
+        onSessionExpired: () -> Unit,
+    ) : this(SessionTokenRotator(tokenStore, refreshCall, onSessionExpired))
 
     override fun authenticate(route: Route?, response: Response): Request? {
         val failedRequest = response.request
@@ -41,28 +43,8 @@ class TokenAuthenticator(
             return null
         }
         val failedToken = failedHeader.removePrefix("Bearer ").trim()
-
-        // One refresh at a time: refresh tokens are single use, so parallel 401s must not race.
-        synchronized(lock) {
-            val current = tokenStore.getAccessToken()
-            if (!current.isNullOrBlank() && current != failedToken) {
-                // Another request already refreshed while this one waited.
-                return withToken(failedRequest, current)
-            }
-            val refreshToken = tokenStore.getRefreshToken()?.takeIf { it.isNotBlank() } ?: return null
-            return when (val outcome = refreshCall.refresh(refreshToken)) {
-                is RefreshOutcome.Success -> {
-                    tokenStore.saveTokens(outcome.accessToken, outcome.refreshToken)
-                    withToken(failedRequest, outcome.accessToken)
-                }
-                RefreshOutcome.Rejected -> {
-                    tokenStore.clear()
-                    onSessionExpired()
-                    null
-                }
-                RefreshOutcome.Unavailable -> null
-            }
-        }
+        val token = rotator.renewAfterUnauthorized(failedToken) ?: return null
+        return withToken(failedRequest, token)
     }
 
     private fun withToken(request: Request, token: String): Request =

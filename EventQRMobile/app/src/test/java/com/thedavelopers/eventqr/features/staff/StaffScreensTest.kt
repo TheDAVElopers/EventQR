@@ -213,7 +213,10 @@ class StaffScreensTest {
 
         val texts = latestDialogTexts()
         assertTrue(texts.contains(context.getString(R.string.staff_print_cancelled_title)))
+        assertTrue(texts.contains("Nothing was printed."))
         assertFalse(texts.contains(context.getString(R.string.staff_print_sent_title)))
+        // Cancelled prints are no longer counted, so the dialog must not claim they stay in the log.
+        assertFalse(texts.any { it.contains("print log") })
     }
 
     @Test
@@ -248,8 +251,34 @@ class StaffScreensTest {
         activity.showBatchPrintResult(3, 3, emptyList(), AndroidIdPrinter.PrintOutcome.CANCELLED)
 
         val texts = latestDialogTexts()
-        assertTrue(texts.contains(context.getString(R.string.event_registrations_batch_print_cancelled, 3, 3)))
+        assertTrue(texts.contains("Print cancelled. Nothing was printed."))
         assertFalse(texts.contains("3 of 3 IDs printed successfully."))
+        assertFalse(texts.any { it.contains("print log") })
+    }
+
+    @Test
+    fun batchPrintJobFailed_summarySaysNothingPrinted() {
+        val activity = Robolectric.buildActivity(EventRegistrationsActivity::class.java).create().get()
+
+        activity.showBatchPrintResult(2, 2, emptyList(), AndroidIdPrinter.PrintOutcome.FAILED)
+
+        val texts = latestDialogTexts()
+        assertTrue(texts.contains(context.getString(R.string.event_registrations_batch_print_job_failed)))
+        assertFalse(texts.contains("2 of 2 IDs printed successfully."))
+    }
+
+    @Test
+    fun printCancelAndFailCopy_isShortEnoughForATwoLineToast() {
+        listOf(
+            R.string.staff_print_cancelled_toast,
+            R.string.staff_print_job_failed_message,
+            R.string.event_registrations_batch_print_cancelled,
+            R.string.event_registrations_batch_print_job_failed,
+        ).forEach { id ->
+            val text = context.getString(id)
+            assertTrue("'$text' too long", text.length <= 45)
+            assertFalse(text.contains("print log"))
+        }
     }
 
     // ---- transaction result copy

@@ -54,6 +54,8 @@ class OrganizerServiceStaffDemotionTest {
     private UserProfile staffUser;
     private EventStaffAssignment assignment;
 
+    private com.thedavelopers.eventqr.shared.security.UserTokenRevocationChecker accessChecker;
+
     @BeforeEach
     void setUp() {
         eventRepository = mock(EventRepository.class);
@@ -61,6 +63,7 @@ class OrganizerServiceStaffDemotionTest {
         userRepo = mock(UserProfileRepository.class);
         transactionLogRepo = mock(TransactionLogRepository.class);
         notificationService = mock(NotificationService.class);
+        accessChecker = mock(com.thedavelopers.eventqr.shared.security.UserTokenRevocationChecker.class);
 
         organizerService = new OrganizerService(
                 eventRepository,
@@ -74,7 +77,8 @@ class OrganizerServiceStaffDemotionTest {
                 userRepo,
                 mock(IdTemplateRepository.class),
                 notificationService, mock(com.thedavelopers.eventqr.features.registrations.service.RegistrationService.class)
-        );
+        ,
+                accessChecker);
 
         event = new Event();
         event.setId(eventId);
@@ -128,6 +132,8 @@ class OrganizerServiceStaffDemotionTest {
         // User role demoted from STAFF to ATTENDEE
         assertThat(staffUser.getRole()).isEqualTo(AccountRole.ATTENDEE);
         verify(userRepo).save(staffUser);
+        // The cached access decision is dropped so the old STAFF access token stops working on the next request.
+        verify(accessChecker).invalidateAfterCommit(staffUserId);
 
         // Past transactions must never be modified or deleted
         verify(transactionLogRepo, never()).deleteAll(any());

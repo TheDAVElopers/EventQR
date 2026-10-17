@@ -56,7 +56,8 @@ class AuthControllerLoginRateLimitTest {
                         mock(JwtService.class), mock(PasswordResetService.class), mock(ChangePasswordService.class),
                         mock(ForgotPasswordRateLimiter.class), new LoginRateLimiter(30, 6, 50),
                         mock(com.thedavelopers.eventqr.shared.security.ResetCodeVerifyRateLimiter.class),
-                        mock(com.thedavelopers.eventqr.shared.security.ResetPasswordRateLimiter.class)))
+                        mock(com.thedavelopers.eventqr.shared.security.ResetPasswordRateLimiter.class),
+                new com.thedavelopers.eventqr.shared.security.ChangePasswordRateLimiter(10, 2, 50)))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
         when(authService.login(any())).thenThrow(new UnauthorizedException(GENERIC_401));

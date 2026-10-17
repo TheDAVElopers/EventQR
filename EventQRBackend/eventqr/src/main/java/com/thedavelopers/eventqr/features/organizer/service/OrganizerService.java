@@ -23,6 +23,7 @@ import com.thedavelopers.eventqr.features.events.model.dto.EventResponse;
 import com.thedavelopers.eventqr.features.events.model.entity.Event;
 import com.thedavelopers.eventqr.features.events.repository.EventRepository;
 import com.thedavelopers.eventqr.features.idprinting.repository.IdTemplateRepository;
+import com.thedavelopers.eventqr.shared.security.UserTokenRevocationChecker;
 import com.thedavelopers.eventqr.features.notifications.service.NotificationService;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerAttendeeResponse;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerDashboardResponse;
@@ -88,6 +89,7 @@ public class OrganizerService {
     private final IdTemplateRepository idTemplateRepository;
     private final NotificationService notificationService;
     private final RegistrationService registrationService;
+    private final UserTokenRevocationChecker userTokenRevocationChecker;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -122,7 +124,9 @@ public class OrganizerService {
                             UserProfileRepository userProfileRepository,
                             IdTemplateRepository idTemplateRepository,
                             NotificationService notificationService,
-                            RegistrationService registrationService) {
+                            RegistrationService registrationService,
+                            UserTokenRevocationChecker userTokenRevocationChecker) {
+        this.userTokenRevocationChecker = userTokenRevocationChecker;
         this.eventRepository = eventRepository;
         this.registrationRepository = registrationRepository;
         this.transactionLogRepository = transactionLogRepository;
@@ -521,6 +525,7 @@ public class OrganizerService {
             promotedToStaff = true;
             staffUser.setRole(AccountRole.STAFF);
             userProfileRepository.save(staffUser);
+            userTokenRevocationChecker.invalidateAfterCommit(staffUser.getId());
             log.debug("Organizer staff add upgraded role eventId={} staffUserId={} fromRole=ATTENDEE toRole=STAFF",
                     eventId, staffUser.getId());
         } else {
@@ -615,10 +620,12 @@ public class OrganizerService {
             if (!hasActive && user.getRole() == AccountRole.STAFF) {
                 user.setRole(AccountRole.ATTENDEE);
                 userProfileRepository.save(user);
+                userTokenRevocationChecker.invalidateAfterCommit(staffUserId);
                 log.info("Demoted user {} to ATTENDEE after last active staff assignment was removed/deactivated", staffUserId);
             } else if (hasActive && user.getRole() == AccountRole.ATTENDEE) {
                 user.setRole(AccountRole.STAFF);
                 userProfileRepository.save(user);
+                userTokenRevocationChecker.invalidateAfterCommit(staffUserId);
                 log.info("Promoted user {} to STAFF after activating staff assignment", staffUserId);
             }
         });

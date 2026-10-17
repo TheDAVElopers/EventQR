@@ -11,10 +11,10 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * DB-backed record of when a user's account was disabled/suspended for the purpose
- * of revoking pre-existing bearer tokens. A row exists only once a user has ever been
- * disabled or suspended and is retained across re-enables so tokens from before the
- * freeze do not resurrect without a fresh login.
+ * DB-backed record of the last time all of a user's bearer tokens were revoked: when the
+ * account was disabled/suspended, or when the password was changed or reset (see
+ * {@code AccessTokenRevoker}). A row exists only once one of those happened and is retained
+ * across re-enables so tokens from before the freeze do not resurrect without a fresh login.
  */
 @Getter
 @Setter
@@ -27,7 +27,7 @@ public class UserTokenRevocation {
     @Column(name = "user_id", nullable = false, updatable = false)
     private UUID userId;
 
-    /** Instant the account was disabled/suspended. Tokens with {@code iat <= revokedAt} are rejected. */
+    /** Instant of the last disable/suspend or password change/reset. Tokens issued at or before it are rejected. */
     @Column(name = "revoked_at", nullable = false)
     private Instant revokedAt;
 

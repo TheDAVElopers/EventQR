@@ -52,14 +52,13 @@ open class LandingActivity : AppCompatActivity() {
         val btnSignIn = findViewById<Button>(R.id.btnSignIn)
         val btnCreateAccount = findViewById<Button>(R.id.btnCreateAccount)
 
+        // Landing stays beneath Sign In / Create Account so system Back returns here; Back on Landing exits.
         btnSignIn.setOnClickListener {
             startActivity(Intent(this, LoginActivity::class.java))
-            finish()
         }
 
         btnCreateAccount.setOnClickListener {
             startActivity(Intent(this, RegistrationActivity::class.java))
-            finish()
         }
     }
 

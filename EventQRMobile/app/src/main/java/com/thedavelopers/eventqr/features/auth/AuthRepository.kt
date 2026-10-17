@@ -2,23 +2,36 @@ package com.thedavelopers.eventqr.features.auth
 
 import android.content.Context
 import com.thedavelopers.eventqr.core.api.ApiClient
+import com.thedavelopers.eventqr.core.api.ApiService
+import com.thedavelopers.eventqr.core.api.SessionTokenRotator
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.safeApiCall
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
+import com.thedavelopers.eventqr.core.session.SessionRefresher
 import com.thedavelopers.eventqr.features.auth.model.dto.LoginRequest
 import com.thedavelopers.eventqr.features.auth.model.dto.LoginResponse
 import com.thedavelopers.eventqr.features.auth.model.dto.RegisterRequest
 import com.thedavelopers.eventqr.features.auth.model.dto.ChangePasswordRequest
+import com.thedavelopers.eventqr.features.auth.model.dto.ChangePasswordResponse
 import com.thedavelopers.eventqr.features.auth.model.dto.ForgotPasswordRequest
 import com.thedavelopers.eventqr.features.auth.model.dto.ResetPasswordRequest
 import com.thedavelopers.eventqr.features.auth.model.dto.VerifyResetCodeRequest
 import com.thedavelopers.eventqr.features.users.model.dto.UserRequest
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
 
-open class AuthRepository(context: Context) {
-    private val apiService = ApiClient.getService(context)
-    private val sessionManager = SessionManager(context)
+open class AuthRepository internal constructor(
+    private val appContext: Context,
+    private val apiService: ApiService,
+    private val sessionManager: SessionManager,
+    private val rotator: SessionTokenRotator,
+) {
+    constructor(context: Context) : this(
+        context.applicationContext,
+        ApiClient.getService(context),
+        SessionManager(context),
+        ApiClient.sessionRotator(context),
+    )
 
     open suspend fun login(email: String, password: String): NetworkResult<LoginResponse> =
         safeApiCall { apiService.login(LoginRequest(email, password)) }
@@ -59,8 +72,28 @@ open class AuthRepository(context: Context) {
         apiService.resetPassword(ResetPasswordRequest(email, code, newPassword, confirmPassword))
     }
 
-    suspend fun changePassword(currentPassword: String, newPassword: String, confirmPassword: String) = safeApiCall {
-        apiService.changePassword(ChangePasswordRequest(currentPassword, newPassword, confirmPassword))
+    /**
+     * Changes the password. The change revokes the old refresh tokens, so a fresh session in the response is
+     * stored to keep the user signed in; an older server returns none and the stored session is left alone.
+     */
+    suspend fun changePassword(currentPassword: String, newPassword: String, confirmPassword: String): NetworkResult<Unit> =
+        // Guarded: a token refresh racing this request is rejected by the revocation, which must not log out.
+        rotator.duringExternalRotation {
+            when (val result = safeApiCall { apiService.changePassword(ChangePasswordRequest(currentPassword, newPassword, confirmPassword)) }) {
+                is NetworkResult.Success -> {
+                    // safeApiCall yields Unit (not null) for a response without data, so check the type.
+                    ((result.data as Any?) as? ChangePasswordResponse)?.let(::storeSessionAfterPasswordChange)
+                    NetworkResult.Success(Unit, result.message)
+                }
+                is NetworkResult.Error -> result
+                NetworkResult.Loading -> NetworkResult.Loading
+            }
+        }
+
+    private fun storeSessionAfterPasswordChange(session: ChangePasswordResponse) {
+        val accessToken = session.accessToken?.takeIf { it.isNotBlank() } ?: return
+        rotator.adoptTokens(accessToken, session.refreshToken?.takeIf { it.isNotBlank() })
+        session.role?.let(sessionManager::saveRole)
     }
 
     fun storeSession(loginResponse: LoginResponse) {
@@ -72,27 +105,10 @@ open class AuthRepository(context: Context) {
     }
 
     /**
-     * Re-issues the access token against the user's CURRENT role in the database
-     * and stores the refreshed token locally. Used after a role change (e.g. an
-     * event request approval upgrading an attendee to organizer) so the client
-     * reflects the new role without requiring a logout/login.
-     *
-     * The refresh response carries the fresh token + role but omits some profile
-     * fields (the backend login record has no phone), so the existing locally
-     * stored profile values are preserved.
+     * Rotates the session tokens (POST auth/refresh) so the access token carries the user's CURRENT role in the
+     * database, then stores that role and profile from auth/me. Used after a role change (e.g. an event request
+     * approval upgrading an attendee to organizer) so the client reflects it without a logout/login. Skipped when
+     * the tokens were rotated within the last minute; offline keeps the cached session.
      */
-    suspend fun refreshSessionToken(): NetworkResult<LoginResponse> =
-        safeApiCall { apiService.refreshToken() }.also { result ->
-            if (result is NetworkResult.Success) {
-                val refreshed = result.data
-                // Preserve locally stored profile fields that the refresh response omits.
-                val merged = refreshed.copy(
-                    phone = sessionManager.getPhone(),
-                    fullName = sessionManager.getFullName() ?: refreshed.fullName,
-                    email = sessionManager.getEmail() ?: refreshed.email,
-                    userId = sessionManager.getUserId()?.let { runCatching { java.util.UUID.fromString(it) }.getOrNull() } ?: refreshed.userId,
-                )
-                sessionManager.saveLoginResponse(merged)
-            }
-        }
+    suspend fun refreshSessionToken(): SessionRefresher.Result = SessionRefresher.refreshNow(appContext)
 }

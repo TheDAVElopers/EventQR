@@ -16,42 +16,35 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.thedavelopers.eventqr.features.events.service.EventService;
+import com.thedavelopers.eventqr.features.idprinting.controller.IdPrintingAccess.Caller;
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdBatchPrintRequest;
+import com.thedavelopers.eventqr.features.idprinting.model.dto.IdPrintConfirmRequest;
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdPrintResponse;
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdTemplateRequest;
 import com.thedavelopers.eventqr.features.idprinting.model.entity.IdTemplate;
 import com.thedavelopers.eventqr.features.idprinting.service.IdPrintingService;
-import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignmentRepository;
 import com.thedavelopers.eventqr.features.uploads.model.dto.StoredFileResponse;
 import com.thedavelopers.eventqr.features.uploads.service.FileStorageService;
-import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
-import com.thedavelopers.eventqr.shared.security.JwtService;
 
 @RestController
 @RequestMapping("/api/v1")
 public class OrganizerIdTemplateController {
 
     private final IdPrintingService idPrintingService;
-    private final JwtService jwtService;
     private final FileStorageService fileStorageService;
-    private final EventService eventService;
-    private final EventStaffAssignmentRepository eventStaffAssignmentRepository;
+    private final IdPrintingAccess access;
 
-    public OrganizerIdTemplateController(IdPrintingService idPrintingService, JwtService jwtService,
-                                         FileStorageService fileStorageService, EventService eventService,
-                                         EventStaffAssignmentRepository eventStaffAssignmentRepository) {
+    public OrganizerIdTemplateController(IdPrintingService idPrintingService, FileStorageService fileStorageService,
+                                         IdPrintingAccess access) {
         this.idPrintingService = idPrintingService;
-        this.jwtService = jwtService;
         this.fileStorageService = fileStorageService;
-        this.eventService = eventService;
-        this.eventStaffAssignmentRepository = eventStaffAssignmentRepository;
+        this.access = access;
     }
 
     @GetMapping("/organizer/events/{eventId}/id-templates")
     public ResponseEntity<ApiResponse<List<IdTemplate>>> list(HttpServletRequest request, @PathVariable UUID eventId) {
-        requireOrganizerOrAdmin(request, eventId);
+        access.requireOrganizerOrAdmin(request, eventId);
         return ResponseEntity.ok(ApiResponse.success(idPrintingService.listTemplates(eventId)));
     }
 
@@ -59,13 +52,14 @@ public class OrganizerIdTemplateController {
     public ResponseEntity<ApiResponse<IdTemplate>> create(HttpServletRequest request,
                                                           @PathVariable UUID eventId,
                                                           @Valid @RequestBody IdTemplateRequest body) {
-        requireOrganizerOrAdmin(request, eventId);
+        access.requireOrganizerOrAdmin(request, eventId);
         return ResponseEntity.ok(ApiResponse.success("ID template saved", idPrintingService.saveTemplate(eventId, body)));
     }
 
+    /** Returns the active template; like GET /events/{id}/id-template it creates the default one if none exists. */
     @GetMapping("/organizer/events/{eventId}/id-template")
     public ResponseEntity<ApiResponse<IdTemplate>> get(HttpServletRequest request, @PathVariable UUID eventId) {
-        requireOrganizerOrAdmin(request, eventId);
+        access.requireOrganizerOrAdmin(request, eventId);
         return ResponseEntity.ok(ApiResponse.success(idPrintingService.getTemplate(eventId)));
     }
 
@@ -73,13 +67,13 @@ public class OrganizerIdTemplateController {
     public ResponseEntity<ApiResponse<IdTemplate>> update(HttpServletRequest request,
                                                           @PathVariable UUID eventId,
                                                           @Valid @RequestBody IdTemplateRequest body) {
-        requireOrganizerOrAdmin(request, eventId);
+        access.requireOrganizerOrAdmin(request, eventId);
         return ResponseEntity.ok(ApiResponse.success("ID template updated", idPrintingService.saveTemplate(eventId, body)));
     }
 
     @GetMapping("/organizer/events/{eventId}/id-template/preview")
     public ResponseEntity<ApiResponse<IdTemplate>> preview(HttpServletRequest request, @PathVariable UUID eventId) {
-        requireOrganizerOrAdmin(request, eventId);
+        access.requireOrganizerOrAdmin(request, eventId);
         return ResponseEntity.ok(ApiResponse.success(idPrintingService.getTemplate(eventId)));
     }
 
@@ -87,88 +81,70 @@ public class OrganizerIdTemplateController {
     public ResponseEntity<ApiResponse<StoredFileResponse>> uploadLogo(HttpServletRequest request,
                                                                        @PathVariable UUID eventId,
                                                                        @RequestParam("file") MultipartFile file) {
-        requireOrganizerOrAdmin(request, eventId);
+        access.requireOrganizerOrAdmin(request, eventId);
         return ResponseEntity.ok(ApiResponse.success("Logo stored", fileStorageService.store(eventId, "id-template-logo", file)));
     }
 
+    /**
+     * Every print log of the event, including PENDING, CANCELLED and FAILED rows, each with its effective
+     * status. An attendee has a printed ID only if one of their rows has status PRINTED.
+     */
     @GetMapping("/staff/events/{eventId}/print-logs")
     public ResponseEntity<ApiResponse<List<IdPrintResponse>>> printLogs(HttpServletRequest request,
                                                                          @PathVariable UUID eventId) {
-        requireStaffOrOwner(request, eventId);
+        access.requireStaffOrOwner(request, eventId);
         return ResponseEntity.ok(ApiResponse.success(idPrintingService.findByEvent(eventId)));
+    }
+
+    /**
+     * Confirms the outcome of a PENDING print: PRINTED, CANCELLED or FAILED. Allowed for the staff member who
+     * started the print, the event organizer and admins. 404 if the log is not in this event; 409 if not PENDING.
+     */
+    @PatchMapping("/staff/events/{eventId}/print-logs/{logId}")
+    public ResponseEntity<ApiResponse<IdPrintResponse>> confirmPrint(HttpServletRequest request,
+                                                                     @PathVariable UUID eventId,
+                                                                     @PathVariable UUID logId,
+                                                                     @Valid @RequestBody IdPrintConfirmRequest body) {
+        Caller caller = access.requireStaffOrOwner(request, eventId);
+        IdPrintResponse confirmed = idPrintingService.confirm(eventId, logId, body.outcome(), caller.userId(),
+                caller.eventManager());
+        return ResponseEntity.ok(ApiResponse.success("Print outcome recorded", confirmed));
     }
 
     @PostMapping("/staff/events/{eventId}/attendees/{attendeeId}/id-preview")
     public ResponseEntity<ApiResponse<IdPrintResponse>> previewForAttendee(HttpServletRequest request,
                                                                             @PathVariable UUID eventId,
                                                                             @PathVariable UUID attendeeId) {
-        requireStaffOrOwner(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success(idPrintingService.previewForAttendee(eventId, attendeeId)));
+        Caller caller = access.requireStaffOrOwner(request, eventId);
+        return ResponseEntity.ok(ApiResponse.success(
+                idPrintingService.previewForAttendee(eventId, attendeeId, caller.userId())));
     }
 
     @PostMapping("/staff/events/{eventId}/attendees/{attendeeId}/print-id")
     public ResponseEntity<ApiResponse<IdPrintResponse>> print(HttpServletRequest request,
                                                               @PathVariable UUID eventId,
                                                               @PathVariable UUID attendeeId) {
-        requireStaffOrOwner(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success(idPrintingService.printForAttendee(eventId, attendeeId, false)));
+        Caller caller = access.requireStaffOrOwner(request, eventId);
+        return ResponseEntity.ok(ApiResponse.success(
+                idPrintingService.printForAttendee(eventId, attendeeId, caller.userId())));
     }
 
+    /** Kept for older clients; identical to print-id now that the reprint flag is derived from PRINTED history. */
     @PostMapping("/staff/events/{eventId}/attendees/{attendeeId}/reprint-id")
     public ResponseEntity<ApiResponse<IdPrintResponse>> reprint(HttpServletRequest request,
                                                                 @PathVariable UUID eventId,
                                                                 @PathVariable UUID attendeeId) {
-        requireStaffOrOwner(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success(idPrintingService.printForAttendee(eventId, attendeeId, true)));
+        Caller caller = access.requireStaffOrOwner(request, eventId);
+        return ResponseEntity.ok(ApiResponse.success(
+                idPrintingService.printForAttendee(eventId, attendeeId, caller.userId())));
     }
 
     @PostMapping("/staff/events/{eventId}/print-id-batch")
     public ResponseEntity<ApiResponse<List<IdPrintResponse>>> printBatch(HttpServletRequest request,
                                                                          @PathVariable UUID eventId,
                                                                          @Valid @RequestBody IdBatchPrintRequest body) {
-        requireStaffOrOwner(request, eventId);
-        return ResponseEntity.ok(ApiResponse.success(idPrintingService.printBatch(eventId, body.attendeeUserIds(), body.reprint())));
-    }
-
-    private void requireNonAttendee(HttpServletRequest request) {
-        if (jwtService.extractRoleFromBearer(request.getHeader("Authorization")) == AccountRole.ATTENDEE) {
-            throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Staff or organizer access required");
-        }
-    }
-
-    private void requireStaffOrOwner(HttpServletRequest request, UUID eventId) {
-        AccountRole role = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
-        if (role == AccountRole.ADMIN || role == AccountRole.SUPER_ADMIN) {
-            return;
-        }
-        UUID callerId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
-        if (role == AccountRole.ORGANIZER) {
-            if (eventService.findOne(eventId).organizerUserId().equals(callerId)) {
-                return;
-            }
-            throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Event ownership required");
-        }
-        if (role == AccountRole.STAFF) {
-            if (eventStaffAssignmentRepository.existsByEventIdAndStaffUserIdAndActiveTrue(eventId, callerId)) {
-                return;
-            }
-            throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Staff user is not actively assigned to this event");
-        }
-        throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Staff or organizer access required");
-    }
-
-    private void requireOrganizerOrAdmin(HttpServletRequest request, UUID eventId) {
-        AccountRole role = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
-        if (role == AccountRole.ADMIN || role == AccountRole.SUPER_ADMIN) {
-            return;
-        }
-        if (role == AccountRole.ORGANIZER) {
-            UUID callerId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
-            if (eventService.findOne(eventId).organizerUserId().equals(callerId)) {
-                return;
-            }
-            throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Event ownership required");
-        }
-        throw new com.thedavelopers.eventqr.shared.exceptions.ForbiddenException("Organizer or admin access required");
+        Caller caller = access.requireStaffOrOwner(request, eventId);
+        return ResponseEntity.ok(ApiResponse.success(
+                idPrintingService.printBatch(eventId, body.attendeeUserIds(), caller.userId())));
     }
 }

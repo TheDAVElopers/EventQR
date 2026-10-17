@@ -77,6 +77,13 @@ object IdCardLayoutConfig {
     val LOCKED_FIELDS: List<String> = listOf(FIELD_QR_CODE, FIELD_ATTENDEE_NAME)
     val OPTIONAL_FIELDS: List<String> = listOf(FIELD_ROLE, FIELD_EVENT_NAME, FIELD_ATTENDEE_ID, FIELD_EVENT_DATE)
 
+    /** Fields printed when an event has no saved template (or the server can't return one): QR + name. */
+    val DEFAULT_VISIBLE_FIELDS: List<String> = LOCKED_FIELDS
+
+    /** Visible fields from a fetched template, falling back to [DEFAULT_VISIBLE_FIELDS] when none were returned. */
+    fun visibleFieldsOrDefault(fetched: List<String?>?): List<String> =
+        fetched?.filterNotNull()?.takeIf { it.isNotEmpty() } ?: DEFAULT_VISIBLE_FIELDS
+
     fun displayName(field: String): String = when (field) {
         FIELD_ATTENDEE_ID -> "Attendee ID"
         FIELD_ROLE -> "Role/Type"

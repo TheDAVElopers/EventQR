@@ -98,8 +98,42 @@ public class JwtService {
         this.expiration = Duration.ofMillis(expirationMs);
     }
 
+    /**
+     * Private claim carrying the issue time in epoch milliseconds. The registered {@code iat} claim is whole
+     * seconds, which is too coarse to tell a token minted just before a password change from one minted just after
+     * it in the same second. Signed like every other claim, so clients cannot forge it.
+     */
+    static final String ISSUED_AT_MILLIS_CLAIM = "iatMs";
+
     public String createToken(UUID userId, String email, AccountRole role) {
+        return createToken(userId, email, role, Instant.now());
+    }
+
+    /**
+     * Mints a token whose issue time is strictly after {@code revokedAt}, so it survives a revocation marker written
+     * in the same request (e.g. the fresh session handed back by change-password). Never earlier than now.
+     */
+    public String createTokenIssuedAfter(UUID userId, String email, AccountRole role, Instant revokedAt) {
         Instant now = Instant.now();
+        Instant floor = revokedAt.truncatedTo(java.time.temporal.ChronoUnit.MILLIS).plusMillis(1);
+        return createToken(userId, email, role, now.isBefore(floor) ? floor : now);
+    }
+
+    /**
+     * Issue time of already-parsed claims, at millisecond precision when the token carries {@code iatMs}
+     * (every token minted since it was introduced), otherwise the whole-second {@code iat}. Null if neither exists.
+     */
+    public Instant issuedAtOf(Claims claims) {
+        Object millis = claims.get(ISSUED_AT_MILLIS_CLAIM);
+        if (millis instanceof Number number) {
+            return Instant.ofEpochMilli(number.longValue());
+        }
+        Date issuedAt = claims.getIssuedAt();
+        return issuedAt == null ? null : issuedAt.toInstant();
+    }
+
+    private String createToken(UUID userId, String email, AccountRole role, Instant issuedAt) {
+        Instant now = issuedAt.truncatedTo(java.time.temporal.ChronoUnit.MILLIS);
         Instant expiresAt = now.plus(expiration);
         return Jwts.builder()
                 // Unique per token: without it two logins in the same second yield the identical
@@ -110,6 +144,7 @@ public class JwtService {
                 .claim("email", email)
                 .claim("role", role.name())
                 .issuedAt(Date.from(now))
+                .claim(ISSUED_AT_MILLIS_CLAIM, now.toEpochMilli())
                 .expiration(Date.from(expiresAt))
                 .signWith(secretKey)
                 .compact();

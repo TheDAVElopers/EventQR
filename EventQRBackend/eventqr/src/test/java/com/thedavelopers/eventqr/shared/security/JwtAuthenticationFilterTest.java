@@ -60,7 +60,7 @@ class JwtAuthenticationFilterTest {
         filter.doFilter(request, new MockHttpServletResponse(), noOpChain());
 
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
-        verify(userTokenRevocationChecker, never()).isAccessAllowed(any(), any());
+        verify(userTokenRevocationChecker, never()).isAccessAllowed(any(), any(), any());
     }
 
     @Test
@@ -68,7 +68,7 @@ class JwtAuthenticationFilterTest {
         JwtService jwtService = new JwtService(SECRET, 86400000L);
         UUID userId = UUID.randomUUID();
         String bearer = bearerToken(jwtService, userId);
-        when(userTokenRevocationChecker.isAccessAllowed(eq(userId), any(Instant.class))).thenReturn(true);
+        when(userTokenRevocationChecker.isAccessAllowed(eq(userId), any(Instant.class), any())).thenReturn(true);
 
         JwtAuthenticationFilter filter =
                 new JwtAuthenticationFilter(jwtService, userTokenRevocationChecker);
@@ -85,7 +85,7 @@ class JwtAuthenticationFilterTest {
         JwtService jwtService = new JwtService(SECRET, 86400000L);
         UUID userId = UUID.randomUUID();
         String bearer = bearerToken(jwtService, userId);
-        when(userTokenRevocationChecker.isAccessAllowed(eq(userId), any(Instant.class))).thenReturn(false);
+        when(userTokenRevocationChecker.isAccessAllowed(eq(userId), any(Instant.class), any())).thenReturn(false);
 
         JwtAuthenticationFilter filter =
                 new JwtAuthenticationFilter(jwtService, userTokenRevocationChecker);

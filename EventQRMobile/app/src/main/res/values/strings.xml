@@ -918,10 +918,11 @@
     <string name="staff_print_sent_default_message">Print request sent to printer.</string>
     <string name="staff_print_done">Done</string>
     <string name="staff_print_cancelled_title">Print Cancelled</string>
-    <string name="staff_print_cancelled_message">Nothing was printed. This print is still recorded in the event\'s print log.</string>
-    <string name="staff_print_job_failed_message">The printer reported an error and the ID was not printed. This print is still recorded in the event\'s print log.</string>
+    <string name="staff_print_cancelled_message">Nothing was printed.</string>
+    <string name="staff_print_cancelled_toast">Print cancelled. Nothing was printed.</string>
+    <string name="staff_print_job_failed_message">Printer error. The ID was not printed.</string>
     <string name="staff_print_ok">OK</string>
-    <string name="event_registrations_batch_print_cancelled">Print cancelled: nothing was printed. %1$d of %2$d IDs are still recorded in the print log.</string>
-    <string name="event_registrations_batch_print_job_failed">The printer reported an error and nothing was printed. %1$d of %2$d IDs are still recorded in the print log.</string>
+    <string name="event_registrations_batch_print_cancelled">Print cancelled. Nothing was printed.</string>
+    <string name="event_registrations_batch_print_job_failed">Printer error. Nothing was printed.</string>
     <string name="organizer_notifications_event_filter_load_failed">Could not load your events for the filter. Tap the event filter to try again.</string>
 </resources>

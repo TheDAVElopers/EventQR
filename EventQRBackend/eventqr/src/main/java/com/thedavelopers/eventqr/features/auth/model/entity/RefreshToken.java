@@ -43,16 +43,30 @@ public class RefreshToken {
     @Column(name = "revoked_at")
     private Instant revokedAt;
 
+    /** V43. token_hash of the successor issued when this token was rotated; null if never rotated. */
+    @Column(name = "replaced_by_hash", length = 64)
+    private String replacedByHash;
+
+    /** V43. When the login that started this family happened; copied unchanged to every successor. */
+    @Column(name = "family_created_at", nullable = false, updatable = false)
+    private Instant familyCreatedAt;
+
     protected RefreshToken() {
         // JPA
     }
 
     public RefreshToken(UUID userId, UUID familyId, String tokenHash, Instant createdAt, Instant expiresAt) {
+        this(userId, familyId, tokenHash, createdAt, expiresAt, createdAt);
+    }
+
+    public RefreshToken(UUID userId, UUID familyId, String tokenHash, Instant createdAt, Instant expiresAt,
+                        Instant familyCreatedAt) {
         this.id = UUID.randomUUID();
         this.userId = userId;
         this.familyId = familyId;
         this.tokenHash = tokenHash;
         this.createdAt = createdAt;
         this.expiresAt = expiresAt;
+        this.familyCreatedAt = familyCreatedAt;
     }
 }

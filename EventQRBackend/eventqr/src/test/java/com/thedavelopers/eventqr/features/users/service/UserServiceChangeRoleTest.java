@@ -21,7 +21,7 @@ import com.thedavelopers.eventqr.features.transactions.repository.TransactionLog
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse;
 import com.thedavelopers.eventqr.features.users.model.entity.UserProfile;
 import com.thedavelopers.eventqr.features.users.repository.UserProfileRepository;
-import com.thedavelopers.eventqr.features.users.repository.UserTokenRevocationRepository;
+import com.thedavelopers.eventqr.shared.security.AccessTokenRevoker;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -44,7 +44,7 @@ class UserServiceChangeRoleTest {
     @Mock
     private PasswordEncoder passwordEncoder;
     @Mock
-    private UserTokenRevocationRepository userTokenRevocationRepository;
+    private AccessTokenRevoker accessTokenRevoker;
 
     private UserService userService;
 
@@ -54,8 +54,8 @@ class UserServiceChangeRoleTest {
     @BeforeEach
     void setUp() {
         userService = new UserService(userProfileRepository, eventRegistrationRepository,
-                transactionLogRepository, passwordEncoder, userTokenRevocationRepository,
-                org.mockito.Mockito.mock(com.thedavelopers.eventqr.features.auth.service.RefreshTokenService.class));
+                transactionLogRepository, passwordEncoder, accessTokenRevoker,
+                org.mockito.Mockito.mock(com.thedavelopers.eventqr.shared.security.UserTokenRevocationChecker.class));
         given(userProfileRepository.save(any(UserProfile.class)))
                 .willAnswer(invocation -> invocation.getArgument(0));
     }

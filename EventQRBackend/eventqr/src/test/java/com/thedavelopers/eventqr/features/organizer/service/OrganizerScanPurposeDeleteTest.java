@@ -75,7 +75,8 @@ class OrganizerScanPurposeDeleteTest {
                 mock(IdTemplateRepository.class),
                 mock(NotificationService.class),
                 mock(RegistrationService.class)
-        );
+        ,
+                org.mockito.Mockito.mock(com.thedavelopers.eventqr.shared.security.UserTokenRevocationChecker.class));
         ReflectionTestUtils.setField(service, "entityManager", mock(EntityManager.class));
 
         Event event = new Event();

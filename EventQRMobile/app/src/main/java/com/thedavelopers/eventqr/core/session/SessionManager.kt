@@ -2,6 +2,7 @@ package com.thedavelopers.eventqr.core.session
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
@@ -64,7 +65,11 @@ class SessionManager(context: Context) : TokenStore {
 
     fun getUserId(): String? = sharedPreferences.getString(KEY_USER_ID, null)
 
-    fun getUserRole(): String? = sharedPreferences.getString(KEY_ROLE, null)
+    override fun getUserRole(): String? = sharedPreferences.getString(KEY_ROLE, null)
+
+    override fun saveUserRole(role: String) {
+        sharedPreferences.edit { putString(KEY_ROLE, role) }
+    }
 
     fun getEmail(): String? = sharedPreferences.getString(KEY_EMAIL, null)
 

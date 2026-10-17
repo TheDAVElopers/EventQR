@@ -23,6 +23,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.scrollTo
@@ -104,6 +105,34 @@ class AuthSmokeTest {
         }
     }
 
+    @Test
+    fun landing_signIn_thenBack_returnsToLanding() {
+        ActivityScenario.launch(LandingActivity::class.java).use {
+            onView(withId(R.id.btnSignIn)).perform(click())
+            onView(withId(R.id.edtEmail)).check(matches(isDisplayed()))
+
+            closeSoftKeyboard()
+            pressBack()
+
+            onView(withId(R.id.btnCreateAccount)).check(matches(isDisplayed()))
+        }
+    }
+
+    @Test
+    fun landing_signIn_toSignUp_thenBack_returnsToLanding() {
+        ActivityScenario.launch(LandingActivity::class.java).use {
+            onView(withId(R.id.btnSignIn)).perform(click())
+            closeSoftKeyboard()
+            onView(withId(R.id.btnRegister)).perform(click())
+            onView(withId(R.id.edtFirstName)).check(matches(isDisplayed()))
+
+            closeSoftKeyboard()
+            pressBack()
+
+            onView(withId(R.id.btnCreateAccount)).check(matches(isDisplayed()))
+        }
+    }
+
     // ---- 2. Login client validation ---------------------------------------------------------------------------
 
     @Test
@@ -179,7 +208,8 @@ class AuthSmokeTest {
             fillValidSignUpForm(confirmPassword = "Different9#")
             onView(withId(R.id.chkTerms)).perform(scrollTo(), tapCheckBoxBox()).check(matches(isChecked()))
 
-            onView(withId(R.id.btnRegister)).perform(scrollTo(), click())
+            closeSoftKeyboard()
+            onView(withId(R.id.btnRegister)).perform(click())
 
             onView(withId(R.id.edtConfirmPassword))
                 .perform(scrollTo())

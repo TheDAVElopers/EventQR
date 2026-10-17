@@ -41,8 +41,8 @@ class UserServiceCreateRaceTest {
         PasswordEncoder encoder = mock(PasswordEncoder.class);
         when(encoder.encode(any())).thenAnswer(i -> "enc(" + i.getArgument(0) + ")");
         service = new UserService(repository, mock(EventRegistrationRepository.class),
-                mock(TransactionLogRepository.class), encoder, mock(UserTokenRevocationRepository.class),
-                mock(RefreshTokenService.class));
+                mock(TransactionLogRepository.class), encoder, mock(com.thedavelopers.eventqr.shared.security.AccessTokenRevoker.class),
+                org.mockito.Mockito.mock(com.thedavelopers.eventqr.shared.security.UserTokenRevocationChecker.class));
     }
 
     @Test

@@ -2,6 +2,7 @@ package com.thedavelopers.eventqr.features.staff
 
 import android.content.Context
 import com.thedavelopers.eventqr.core.api.ApiClient
+import com.thedavelopers.eventqr.core.api.ApiService
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode
 import com.thedavelopers.eventqr.core.api.dto.PageResponse
@@ -10,6 +11,9 @@ import com.thedavelopers.eventqr.core.api.safeApiCall
 import com.thedavelopers.eventqr.features.attendee.loadAllPages
 import com.thedavelopers.eventqr.features.staff.model.dto.StaffTodaySummary
 import com.thedavelopers.eventqr.features.staff.model.dto.StaffTransactionSummary
+import com.thedavelopers.eventqr.features.idprinting.AndroidIdPrinter
+import com.thedavelopers.eventqr.features.idprinting.IdCardLayoutConfig
+import com.thedavelopers.eventqr.features.idprinting.confirmPrintLogs
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdBatchPrintRequest
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionGrantRequest
@@ -21,9 +25,21 @@ import com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResp
 import com.thedavelopers.eventqr.features.staff.model.dto.ScanVerificationResponse
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionRequest
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
+import com.thedavelopers.eventqr.features.idprinting.PRINT_CONFIRM_RETRY_DELAYS_MS
+import com.thedavelopers.eventqr.features.idprinting.model.dto.IdPrintResponse
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.UUID
 
-open class StaffRepository(context: Context) {
-    private val apiService = ApiClient.getService(context)
+open class StaffRepository internal constructor(
+    private val apiService: ApiService,
+    private val printConfirmRetryDelaysMs: List<Long> = PRINT_CONFIRM_RETRY_DELAYS_MS,
+) {
+    constructor(context: Context) : this(ApiClient.getService(context))
 
     open suspend fun getEvents(): NetworkResult<List<StaffAssignedEventResponse>> = safeApiCall { apiService.getStaffEvents() }
 
@@ -104,10 +120,49 @@ open class StaffRepository(context: Context) {
 
     suspend fun reprintAttendeeId(eventId: String, attendeeId: String) = safeApiCall { apiService.reprintAttendeeId(eventId, attendeeId) }
 
-    suspend fun getStaffPrintLogs(eventId: String) = safeApiCall { apiService.getStaffPrintLogs(eventId) }
+    open suspend fun getStaffPrintLogs(eventId: String): NetworkResult<List<IdPrintResponse>> =
+        safeApiCall { apiService.getStaffPrintLogs(eventId) }
 
-    suspend fun printIdBatch(eventId: String, attendeeUserIds: List<java.util.UUID>, reprint: Boolean) =
+    suspend fun printIdBatch(eventId: String, attendeeUserIds: List<UUID>, reprint: Boolean) =
         safeApiCall { apiService.printIdBatch(eventId, IdBatchPrintRequest(attendeeUserIds, reprint)) }
+
+    /**
+     * Confirms each PENDING print log with the print dialog's [outcome], retrying transient failures; best effort,
+     * returns how many were confirmed.
+     */
+    open suspend fun confirmPrintLogs(eventId: String, logIds: List<UUID>, outcome: AndroidIdPrinter.PrintOutcome): Int =
+        confirmPrintLogs(apiService, eventId, logIds, outcome, printConfirmRetryDelaysMs)
+
+    /**
+     * [confirmPrintLogs] on a process-wide scope, so the confirmation still goes out if the screen that printed is
+     * closed or recreated. Never blocks or fails the UI. [onComplete] runs on the main thread afterwards with
+     * whether every log was confirmed (the screen may be gone by then; check before touching views).
+     */
+    fun confirmPrintLogsInBackground(
+        eventId: String,
+        logIds: List<UUID>,
+        outcome: AndroidIdPrinter.PrintOutcome,
+        onComplete: ((confirmedAll: Boolean) -> Unit)? = null,
+    ): Job? {
+        if (eventId.isBlank() || logIds.isEmpty()) return null
+        return printConfirmScope.launch {
+            val confirmed = confirmPrintLogs(eventId, logIds, outcome)
+            if (onComplete != null) {
+                val confirmedAll = confirmed == logIds.distinct().size
+                withContext(Dispatchers.Main) { onComplete(confirmedAll) }
+            }
+        }
+    }
+
+    /**
+     * The event's ID card visible fields. Falls back to the default (QR + name) when the server has no
+     * template for the event or can't be reached, so printing never fails over a missing template.
+     */
+    open suspend fun getIdCardVisibleFields(eventId: String): List<String> =
+        when (val result = safeApiCall { apiService.getIdTemplateConfig(eventId) }) {
+            is NetworkResult.Success -> IdCardLayoutConfig.visibleFieldsOrDefault(result.data.visibleFields)
+            else -> IdCardLayoutConfig.DEFAULT_VISIBLE_FIELDS
+        }
 
     /** One server page of an event's registrations; [query] is searched server-side (name, email, registration number). */
     open suspend fun getRegistrationsPage(
@@ -143,6 +198,9 @@ open class StaffRepository(context: Context) {
     suspend fun markAllNotificationsRead() = safeApiCall { apiService.markAllNotificationsRead() }
 
     companion object {
+        /** Outlives any one screen; print confirmations are short, independent requests. */
+        private val printConfirmScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
         const val REGISTRATIONS_PAGE_SIZE = 20
         const val ALL_PAGES_SIZE = 100
         const val MAX_REGISTRATION_PAGES = 20

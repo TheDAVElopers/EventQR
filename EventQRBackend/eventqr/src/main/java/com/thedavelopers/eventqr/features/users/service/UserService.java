@@ -1,6 +1,5 @@
 package com.thedavelopers.eventqr.features.users.service;
 
-import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -11,15 +10,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.thedavelopers.eventqr.features.auth.service.RefreshTokenService;
 import com.thedavelopers.eventqr.features.registrations.repository.EventRegistrationRepository;
 import com.thedavelopers.eventqr.features.transactions.repository.TransactionLogRepository;
 import com.thedavelopers.eventqr.features.users.model.dto.UserRequest;
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse;
 import com.thedavelopers.eventqr.features.users.model.entity.UserProfile;
-import com.thedavelopers.eventqr.features.users.model.entity.UserTokenRevocation;
 import com.thedavelopers.eventqr.features.users.repository.UserProfileRepository;
-import com.thedavelopers.eventqr.features.users.repository.UserTokenRevocationRepository;
+import com.thedavelopers.eventqr.shared.security.AccessTokenRevoker;
+import com.thedavelopers.eventqr.shared.security.UserTokenRevocationChecker;
 import org.springframework.dao.DataIntegrityViolationException;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.AccountStatus;
@@ -42,22 +40,21 @@ public class UserService implements AttendeeDirectoryPort {
     private final EventRegistrationRepository eventRegistrationRepository;
     private final TransactionLogRepository transactionLogRepository;
     private final PasswordEncoder passwordEncoder;
-    private final UserTokenRevocationRepository userTokenRevocationRepository;
-
-    private final RefreshTokenService refreshTokenService;
+    private final AccessTokenRevoker accessTokenRevoker;
+    private final UserTokenRevocationChecker userTokenRevocationChecker;
 
     public UserService(UserProfileRepository userProfileRepository,
                        EventRegistrationRepository eventRegistrationRepository,
                        TransactionLogRepository transactionLogRepository,
                        PasswordEncoder passwordEncoder,
-                       UserTokenRevocationRepository userTokenRevocationRepository,
-                       RefreshTokenService refreshTokenService) {
-        this.refreshTokenService = refreshTokenService;
+                       AccessTokenRevoker accessTokenRevoker,
+                       UserTokenRevocationChecker userTokenRevocationChecker) {
+        this.userTokenRevocationChecker = userTokenRevocationChecker;
         this.userProfileRepository = userProfileRepository;
         this.eventRegistrationRepository = eventRegistrationRepository;
         this.transactionLogRepository = transactionLogRepository;
         this.passwordEncoder = passwordEncoder;
-        this.userTokenRevocationRepository = userTokenRevocationRepository;
+        this.accessTokenRevoker = accessTokenRevoker;
     }
 
     /**
@@ -114,7 +111,9 @@ public class UserService implements AttendeeDirectoryPort {
             existingUser.setRole(request.role());
             existingUser.setStatus(AccountStatus.ACTIVE);
             existingUser.setPasswordHash(passwordEncoder.encode(request.password()));
-            return toResponse(userProfileRepository.save(existingUser));
+            UserProfile claimed = userProfileRepository.save(existingUser);
+            userTokenRevocationChecker.invalidateAfterCommit(existingUser.getId());
+            return toResponse(claimed);
         }
         
         // No existing user found, try to create new one
@@ -193,44 +192,27 @@ userProfile.setFullName(fullName.trim());
             // Kill existing sessions immediately: no 24h grace for a disabled/suspended
             // account. The marker is DB-backed and intentionally retained, so tokens
             // issued before this disable stay dead even after a later re-enable.
-            upsertTokenRevocation(userId, Instant.now());
+            upsertTokenRevocation(userId);
         }
         // ACTIVE is deliberately a no-op for the revocation table — enabling must never
         // resurrect pre-disable tokens.
         return toResponse(saved);
     }
 
-    public UserResponse changePassword(UUID userId, String currentPassword, String newPassword) {
-        if (newPassword == null || newPassword.isBlank()) {
-            throw new BadRequestException("New password is required");
-        }
-        requireStrongPassword(newPassword);
-        UserProfile userProfile = requireUser(userId);
-        if (!passwordEncoder.matches(currentPassword, userProfile.getPasswordHash())) {
-            throw new BadRequestException("Current password is incorrect");
-        }
-        userProfile.setPasswordHash(passwordEncoder.encode(newPassword));
-        // A changed password ends every other login: refresh tokens cannot outlive it.
-        refreshTokenService.revokeAllForUser(userId);
-        return toResponse(userProfileRepository.save(userProfile));
-    }
-
     public void softDelete(UUID userId) {
         UserProfile userProfile = requireUser(userId);
         userProfile.setStatus(AccountStatus.SUSPENDED);
         userProfileRepository.save(userProfile);
-        upsertTokenRevocation(userId, Instant.now());
+        upsertTokenRevocation(userId);
     }
 
     /**
-     * Records (or refreshes) the revocation marker for a user. The row survives
-     * re-enable on purpose: {@code iat <= revoked_at} tokens must never come back.
+     * Moves the user's revocation marker to now through {@link AccessTokenRevoker}: a race-safe upsert that never
+     * moves it backwards, millisecond precision like the {@code iatMs} claim, and the cached access decision dropped
+     * after commit. The row survives re-enable on purpose: tokens issued before it must never come back.
      */
-    private void upsertTokenRevocation(UUID userId, Instant revokedAt) {
-        UserTokenRevocation revocation = userTokenRevocationRepository.findByUserId(userId)
-                .orElseGet(() -> new UserTokenRevocation(userId, revokedAt));
-        revocation.setRevokedAt(revokedAt);
-        userTokenRevocationRepository.save(revocation);
+    private void upsertTokenRevocation(UUID userId) {
+        accessTokenRevoker.revokeAllIssuedUntilNow(userId);
     }
 
     @Transactional(readOnly = true)
@@ -276,9 +258,16 @@ userProfile.setFullName(fullName.trim());
         return toResponse(saveRole(target, role));
     }
 
+    /**
+     * Role changes never write the revocation marker (that would also kill refresh tokens). The JWT filter rejects an
+     * access token whose role claim differs from the stored role, so dropping the cached decision after commit makes
+     * the change effective on the next request; the client's refresh then mints a token with the new role.
+     */
     private UserProfile saveRole(UserProfile target, AccountRole role) {
         target.setRole(role);
-        return userProfileRepository.save(target);
+        UserProfile saved = userProfileRepository.save(target);
+        userTokenRevocationChecker.invalidateAfterCommit(target.getId());
+        return saved;
     }
 
     @Override
@@ -320,8 +309,7 @@ userProfile.setFullName(fullName.trim());
     public AttendeeSnapshot changeRole(UUID userId, AccountRole role) {
         UserProfile userProfile = userProfileRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
-        userProfile.setRole(role);
-        return userProfileRepository.save(userProfile).toSnapshot();
+        return saveRole(userProfile, role).toSnapshot();
     }
 
     private UserResponse toResponse(UserProfile userProfile) {

@@ -25,6 +25,10 @@ import com.thedavelopers.eventqr.shared.security.JwtService;
  * serves all mobile-facing routes under /api/v1 (see EventReportController), so the version
  * prefix is added for consistency.
  *
+ * Access: PUT is the event's organizer only (enforced in the service). GET is the organizer, admins, or staff
+ * actively assigned to the event, because the staff print screens read it to render the card; when the event has
+ * no template yet, GET creates and returns the default one (QR code + attendee name only).
+ *
  * No logo upload, color editing, or template style selection exists here per SDD 3.7 scope
  * (see IdTemplateConfigurationService deviation note).
  */
@@ -34,11 +38,13 @@ public class IdTemplateConfigurationController {
 
     private final IdTemplateConfigurationService configurationService;
     private final JwtService jwtService;
+    private final IdPrintingAccess access;
 
     public IdTemplateConfigurationController(IdTemplateConfigurationService configurationService,
-                                             JwtService jwtService) {
+                                             JwtService jwtService, IdPrintingAccess access) {
         this.configurationService = configurationService;
         this.jwtService = jwtService;
+        this.access = access;
     }
 
     @PutMapping
@@ -52,7 +58,9 @@ public class IdTemplateConfigurationController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<IdTemplateConfigResponse>> get(@PathVariable UUID eventId) {
+    public ResponseEntity<ApiResponse<IdTemplateConfigResponse>> get(HttpServletRequest request,
+                                                                     @PathVariable UUID eventId) {
+        access.requireStaffOrOwner(request, eventId);
         return ResponseEntity.ok(ApiResponse.success(configurationService.getConfig(eventId)));
     }
 

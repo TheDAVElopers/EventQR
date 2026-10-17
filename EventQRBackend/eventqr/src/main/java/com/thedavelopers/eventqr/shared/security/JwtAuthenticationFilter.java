@@ -50,7 +50,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     Claims claims = jwtService.extractClaimsFromBearer(header);
                     UUID userId = userIdFrom(claims);
                     AccountRole role = jwtService.extractRoleFrom(claims);
-                    if (userTokenRevocationChecker.isAccessAllowed(userId, claims.getIssuedAt().toInstant())) {
+                    if (userTokenRevocationChecker.isAccessAllowed(userId, jwtService.issuedAtOf(claims), role)) {
                         UsernamePasswordAuthenticationToken authentication =
                                 new UsernamePasswordAuthenticationToken(
                                         userId,
@@ -59,7 +59,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     } else {
-                        // Account not ACTIVE, or token predates the disable/suspend marker.
+                        // Account not ACTIVE, token predates the revocation marker, or its role claim is stale.
                         SecurityContextHolder.clearContext();
                     }
                 }

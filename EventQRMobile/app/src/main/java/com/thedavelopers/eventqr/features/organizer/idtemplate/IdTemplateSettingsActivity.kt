@@ -515,7 +515,15 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
                     renderPreview()
                 }
 
-                is NetworkResult.Error -> showStatus(result.message, isError = true)
+                is NetworkResult.Error -> {
+                    // Older servers 404 when no template was saved yet: show the default (QR + name) card.
+                    if ((result.throwable as? retrofit2.HttpException)?.code() == 404) {
+                        refreshCheckboxes()
+                        renderPreview()
+                    } else {
+                        showStatus(result.message, isError = true)
+                    }
+                }
                 NetworkResult.Loading -> Unit
             }
         }

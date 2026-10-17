@@ -79,7 +79,8 @@ class OrganizerServiceAuthorizationTest {
         organizerService = new OrganizerService(eventRepository, registrationRepository,
                 transactionLogRepository, scanPurposeRepository, transactionRuleRepository,
                 rewardRedemptionRepository, pointTransactionRepository, staffAssignmentRepository,
-                userProfileRepository, idTemplateRepository, notificationService, mock(com.thedavelopers.eventqr.features.registrations.service.RegistrationService.class));
+                userProfileRepository, idTemplateRepository, notificationService, mock(com.thedavelopers.eventqr.features.registrations.service.RegistrationService.class),
+                org.mockito.Mockito.mock(com.thedavelopers.eventqr.shared.security.UserTokenRevocationChecker.class));
     }
 
     // --- helpers -----------------------------------------------------------

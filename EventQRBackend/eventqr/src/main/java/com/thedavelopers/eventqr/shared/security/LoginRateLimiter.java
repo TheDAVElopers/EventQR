@@ -93,6 +93,7 @@ public class LoginRateLimiter {
     private final int maxPerEmail;
     private final int maxPerPair;
     private final int maxPerIp;
+    private final String blockedMessage;
 
     @Autowired
     public LoginRateLimiter(@Value("${app.login-rate-limit.max-per-email:30}") int maxPerEmail,
@@ -107,10 +108,20 @@ public class LoginRateLimiter {
     }
 
     LoginRateLimiter(LongSupplier monotonicMillis, int maxPerEmail, int maxPerPair, int maxPerIp) {
+        this(monotonicMillis, maxPerEmail, maxPerPair, maxPerIp, BLOCKED_MESSAGE);
+    }
+
+    /**
+     * For limiters that reuse this algorithm with another subject key and 429 text (see
+     * {@link ChangePasswordRateLimiter}). Not a Spring bean in that role.
+     */
+    LoginRateLimiter(LongSupplier monotonicMillis, int maxPerEmail, int maxPerPair, int maxPerIp,
+                     String blockedMessage) {
         this.monotonicMillis = monotonicMillis;
         this.maxPerEmail = maxPerEmail;
         this.maxPerPair = maxPerPair;
         this.maxPerIp = maxPerIp;
+        this.blockedMessage = blockedMessage;
     }
 
     /**
@@ -144,7 +155,7 @@ public class LoginRateLimiter {
                 dropIfEmpty(byEmail, emailKey, emailWindow);
                 dropIfEmpty(byPair, pairKey, pairWindow);
                 dropIfEmpty(byIp, ipKey, ipWindow);
-                throw new TooManyRequestsException(BLOCKED_MESSAGE, Math.max(1, retryAfter));
+                throw new TooManyRequestsException(blockedMessage, Math.max(1, retryAfter));
             }
             long seq = sequence.incrementAndGet();
             Slot slot = new Slot(now, seq);

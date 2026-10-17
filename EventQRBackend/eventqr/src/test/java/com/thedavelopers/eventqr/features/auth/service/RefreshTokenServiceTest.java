@@ -3,6 +3,7 @@ package com.thedavelopers.eventqr.features.auth.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -30,6 +31,7 @@ class RefreshTokenServiceTest {
     private RefreshTokenRepository repository;
     private UserTokenRevocationChecker checker;
     private RefreshTokenService service;
+    private com.thedavelopers.eventqr.shared.security.AccessTokenRevoker revoker;
     private final UUID userId = UUID.randomUUID();
 
     @BeforeEach
@@ -44,7 +46,8 @@ class RefreshTokenServiceTest {
         });
         when(repository.findByTokenHash(any())).thenAnswer(invocation ->
                 Optional.ofNullable(byHash.get(invocation.<String>getArgument(0))));
-        service = new RefreshTokenService(repository, checker, 30);
+        revoker = mock(com.thedavelopers.eventqr.shared.security.AccessTokenRevoker.class);
+        service = new RefreshTokenService(repository, checker, revoker, 30);
     }
 
     private RefreshToken stored(String raw) {
@@ -88,7 +91,7 @@ class RefreshTokenServiceTest {
         String first = service.issueForLogin(userId);
         service.rotate(first);
         RefreshToken old = stored(first);
-        old.setUsedAt(Instant.now().minus(RefreshTokenService.RETRY_WINDOW).minusSeconds(5));
+        old.setUsedAt(Instant.now().minus(service.retryWindow()).minusSeconds(5));
 
         assertThatThrownBy(() -> service.rotate(first)).isInstanceOf(UnauthorizedException.class);
 
@@ -147,5 +150,146 @@ class RefreshTokenServiceTest {
         service.revokeFamilyOf("unknown");
 
         verify(repository, never()).revokeFamily(any(), any());
+    }
+
+    @Test
+    void revokingAllForAUserAlsoMovesTheAccessTokenMarker() {
+        Instant marker = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MILLIS);
+        when(revoker.revokeAllIssuedUntilNow(userId)).thenReturn(marker);
+
+        assertThat(service.revokeAllForUser(userId)).isEqualTo(marker);
+
+        org.mockito.Mockito.verify(revoker).revokeAllIssuedUntilNow(userId);
+        org.mockito.Mockito.verify(repository).revokeAllForUser(org.mockito.ArgumentMatchers.eq(userId), any());
+    }
+
+    @Test
+    void aTokenIssuedAfterAMarkerIsCreatedStrictlyAfterIt() {
+        Instant futureMarker = Instant.now().plusSeconds(5).truncatedTo(java.time.temporal.ChronoUnit.MILLIS);
+
+        String raw = service.issueForLoginAfter(userId, futureMarker);
+
+        assertThat(stored(raw).getCreatedAt()).isEqualTo(futureMarker.plusMillis(1));
+    }
+
+    // ----- grace retry keeps a single live branch (V43 replaced_by_hash) -----
+
+    @Test
+    void theRetryWindowDefaultsToSixtySeconds_longerThanTheAppsNetworkTimeouts() {
+        assertThat(RefreshTokenService.DEFAULT_RETRY_WINDOW).isEqualTo(Duration.ofSeconds(60));
+        assertThat(service.retryWindow()).isEqualTo(Duration.ofSeconds(60));
+    }
+
+    @Test
+    void aSlowRetryInsideTheWindow_forExampleAfterA45SecondTimeout_isStillARetry() {
+        String first = service.issueForLogin(userId);
+        String lostChild = service.rotate(first).refreshToken();
+        stored(first).setUsedAt(Instant.now().minusSeconds(50));
+
+        String retryChild = service.rotate(first).refreshToken();
+
+        assertThat(retryChild).isNotBlank();
+        assertThat(stored(lostChild).getRevokedAt()).isNotNull();
+        verify(repository, never()).revokeFamily(any(), any());
+    }
+
+    @Test
+    void theRetryWindowIsConfigurable() {
+        RefreshTokenService strict = new RefreshTokenService(repository, checker, revoker, 30, 90, Duration.ofSeconds(5));
+        String first = strict.issueForLogin(userId);
+        strict.rotate(first);
+        stored(first).setUsedAt(Instant.now().minusSeconds(10));
+
+        assertThatThrownBy(() -> strict.rotate(first)).isInstanceOf(UnauthorizedException.class);
+        verify(repository).revokeFamily(any(UUID.class), any(Instant.class));
+    }
+
+    @Test
+    void rotationRecordsTheSuccessorHash() {
+        String first = service.issueForLogin(userId);
+
+        RefreshTokenService.Rotated rotated = service.rotate(first);
+
+        assertThat(stored(first).getReplacedByHash()).isEqualTo(RefreshTokenService.sha256(rotated.refreshToken()));
+    }
+
+    @Test
+    void aGraceRetryRevokesTheEarlierSuccessorSoOnlyOneChildIsAlive() {
+        String first = service.issueForLogin(userId);
+        String lostChild = service.rotate(first).refreshToken();
+
+        String retryChild = service.rotate(first).refreshToken();
+
+        assertThat(stored(lostChild).getRevokedAt()).as("earlier successor").isNotNull();
+        assertThat(stored(retryChild).getRevokedAt()).isNull();
+        assertThat(stored(first).getReplacedByHash()).isEqualTo(RefreshTokenService.sha256(retryChild));
+        assertThatThrownBy(() -> service.rotate(lostChild)).isInstanceOf(UnauthorizedException.class);
+        assertThat(service.rotate(retryChild).refreshToken()).isNotBlank();
+        verify(repository, never()).revokeFamily(any(), any());
+    }
+
+    @Test
+    void aRetryAfterTheEarlierSuccessorWasUsedIsReuse_andRevokesTheFamily() {
+        String first = service.issueForLogin(userId);
+        String child = service.rotate(first).refreshToken();
+        service.rotate(child); // the "lost" child was actually used, so the parent cannot be a lost-response retry
+
+        assertThatThrownBy(() -> service.rotate(first)).isInstanceOf(UnauthorizedException.class);
+
+        verify(repository).revokeFamily(eq(stored(first).getFamilyId()), any(Instant.class));
+    }
+
+    @Test
+    void aGraceRetryOfAPreV43RowWithoutASuccessorLinkStillWorks() {
+        String first = service.issueForLogin(userId);
+        service.rotate(first);
+        stored(first).setReplacedByHash(null); // rotated before V43
+
+        assertThat(service.rotate(first).refreshToken()).isNotBlank();
+        verify(repository, never()).revokeFamily(any(), any());
+    }
+
+    // ----- absolute session lifetime (V43 family_created_at) -----
+
+    @Test
+    void familyStartIsSetOnLoginAndCarriedOverOnRotation() {
+        String first = service.issueForLogin(userId);
+        Instant familyStart = stored(first).getFamilyCreatedAt();
+        assertThat(familyStart).isEqualTo(stored(first).getCreatedAt());
+
+        String second = service.rotate(first).refreshToken();
+        String third = service.rotate(second).refreshToken();
+
+        assertThat(stored(second).getFamilyCreatedAt()).isEqualTo(familyStart);
+        assertThat(stored(third).getFamilyCreatedAt()).isEqualTo(familyStart);
+    }
+
+    @Test
+    void rotationIsRefusedOnceTheFamilyIsOlderThanTheAbsoluteLifetime() {
+        String first = service.issueForLogin(userId);
+        stored(first).setFamilyCreatedAt(Instant.now().minus(Duration.ofDays(90)).minusSeconds(1));
+
+        assertThatThrownBy(() -> service.rotate(first)).isInstanceOf(UnauthorizedException.class);
+        assertThat(stored(first).getUsedAt()).isNull();
+    }
+
+    @Test
+    void aSuccessorNeverOutlivesTheFamilysAbsoluteLifetime() {
+        String first = service.issueForLogin(userId);
+        Instant familyStart = Instant.now().minus(Duration.ofDays(80));
+        stored(first).setFamilyCreatedAt(familyStart);
+
+        String next = service.rotate(first).refreshToken();
+
+        assertThat(stored(next).getExpiresAt()).isEqualTo(familyStart.plus(Duration.ofDays(90)));
+    }
+
+    @Test
+    void theAbsoluteLifetimeIsConfigurable() {
+        RefreshTokenService shortLived = new RefreshTokenService(repository, checker, revoker, 30, 1);
+        String first = shortLived.issueForLogin(userId);
+        stored(first).setFamilyCreatedAt(Instant.now().minus(Duration.ofDays(1)).minusSeconds(1));
+
+        assertThatThrownBy(() -> shortLived.rotate(first)).isInstanceOf(UnauthorizedException.class);
     }
 }

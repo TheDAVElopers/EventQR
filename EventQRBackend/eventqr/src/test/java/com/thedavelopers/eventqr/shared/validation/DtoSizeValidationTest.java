@@ -12,7 +12,6 @@ import com.thedavelopers.eventqr.features.auth.model.dto.ChangePasswordRequest;
 import com.thedavelopers.eventqr.features.auth.model.dto.LoginRequest;
 import com.thedavelopers.eventqr.features.auth.model.dto.ResetPasswordRequest;
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionRequest;
-import com.thedavelopers.eventqr.features.users.model.dto.PasswordChangeRequest;
 
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -81,16 +80,6 @@ class DtoSizeValidationTest {
             var invalid = new com.thedavelopers.eventqr.features.auth.model.dto.VerifyResetCodeRequest("a@b.com", bad);
             assertThat(validator.validate(invalid)).anyMatch(v -> v.getPropertyPath().toString().equals("code"));
         }
-    }
-
-    @Test
-    void passwordChangeRequestCurrentPasswordSizeLimit() {
-        var valid = new PasswordChangeRequest("a".repeat(128), "ValidPass123!");
-        assertThat(validator.validate(valid)).isEmpty();
-
-        var invalid = new PasswordChangeRequest("a".repeat(129), "ValidPass123!");
-        assertThat(validator.validate(invalid))
-                .anyMatch(v -> v.getPropertyPath().toString().equals("currentPassword"));
     }
 
     @Test

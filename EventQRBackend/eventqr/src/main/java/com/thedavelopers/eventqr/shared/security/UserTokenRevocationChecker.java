@@ -12,6 +12,10 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.thedavelopers.eventqr.features.users.model.entity.UserTokenRevocation;
 import com.thedavelopers.eventqr.features.users.repository.UserProfileRepository;
 import com.thedavelopers.eventqr.features.users.repository.UserTokenRevocationRepository;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.AccountStatus;
 
 /**
@@ -19,7 +23,9 @@ import com.thedavelopers.eventqr.shared.constants.AccountStatus;
  *
  * <p>Decision inputs — all sourced from the database, never from per-JVM memory:
  * <ul>
- *   <li>the user's current {@code status} (only ACTIVE may authenticate), and</li>
+ *   <li>the user's current {@code status} (only ACTIVE may authenticate),</li>
+ *   <li>the user's current {@code role} (an access token whose role claim differs is rejected, so a demotion
+ *       takes effect on the next request; the client's refresh then mints a token with the new role), and</li>
  *   <li>the {@code revoked_at} marker from {@code user_token_revocation} if the
  *       account was ever disabled/suspended.</li>
  * </ul>
@@ -44,7 +50,7 @@ public class UserTokenRevocationChecker {
 
     private static final int MAX_CACHE_ENTRIES = 100_000;
 
-    private record AccountAccess(AccountStatus status, Instant revokedAt) {
+    private record AccountAccess(AccountStatus status, AccountRole role, Instant revokedAt) {
     }
 
     private final UserProfileRepository userProfileRepository;
@@ -66,6 +72,15 @@ public class UserTokenRevocationChecker {
      * ACTIVE and the token was issued strictly after the last disable/suspend.
      */
     public boolean isAccessAllowed(UUID userId, Instant tokenIssuedAt) {
+        return isAccessAllowed(userId, tokenIssuedAt, null);
+    }
+
+    /**
+     * Access-token gate: {@link #isAccessAllowed(UUID, Instant)} plus, when {@code tokenRole} is given, the token's
+     * role claim must equal the user's current role. Role changes do not write the revocation marker (that would
+     * also kill refresh tokens); a stale-role access token is simply refused and refresh issues a current one.
+     */
+    public boolean isAccessAllowed(UUID userId, Instant tokenIssuedAt, AccountRole tokenRole) {
         if (tokenIssuedAt == null) {
             // Tokens minted by this application always carry 'iat'; a missing one is
             // treated as revoked rather than risk resurrecting a pre-disable session.
@@ -75,21 +90,51 @@ public class UserTokenRevocationChecker {
         if (access == null || access.status() != AccountStatus.ACTIVE) {
             return false;
         }
+        if (tokenRole != null && tokenRole != access.role()) {
+            return false;
+        }
         Instant revokedAt = access.revokedAt();
-        // JWT 'iat' is epoch seconds; a token minted in the same second as the
-        // revocation is treated as pre-revocation and rejected.
+        // Strictly after: a token minted at the marker instant counts as pre-revocation. Tokens carry a
+        // millisecond issue time (JwtService.issuedAtOf); legacy tokens with only whole-second 'iat' minted in the
+        // same second as the marker are therefore rejected, which is the safe direction.
         return revokedAt == null || tokenIssuedAt.isAfter(revokedAt);
     }
 
+    /**
+     * Drops this instance's cached decision for the user so a just-written revocation marker or status change takes
+     * effect on the next request instead of after {@link #CACHE_TTL}. Call after the change has committed; other
+     * instances still converge within the TTL.
+     */
+    public void invalidate(UUID userId) {
+        accessCache.invalidate(userId);
+    }
+
+    /**
+     * {@link #invalidate} once the surrounding transaction commits (right away when there is none), so a concurrent
+     * request cannot re-cache the pre-change row for another {@link #CACHE_TTL}. Call after any status, role or
+     * revocation-marker change.
+     */
+    public void invalidateAfterCommit(UUID userId) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    invalidate(userId);
+                }
+            });
+        } else {
+            invalidate(userId);
+        }
+    }
+
     private AccountAccess loadAccountAccess(UUID userId) {
-        AccountStatus status = userProfileRepository.findById(userId)
-                .map(profile -> profile.getStatus())
-                .orElse(null);
-        if (status == null) {
+        var profile = userProfileRepository.findById(userId).orElse(null);
+        if (profile == null || profile.getStatus() == null) {
             // Unknown user: deny access (token subject references a deleted account).
-            return new AccountAccess(null, null);
+            return new AccountAccess(null, null, null);
         }
         Optional<UserTokenRevocation> revocation = userTokenRevocationRepository.findByUserId(userId);
-        return new AccountAccess(status, revocation.map(UserTokenRevocation::getRevokedAt).orElse(null));
+        return new AccountAccess(profile.getStatus(), profile.getRole(),
+                revocation.map(UserTokenRevocation::getRevokedAt).orElse(null));
     }
 }

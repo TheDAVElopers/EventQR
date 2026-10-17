@@ -286,15 +286,8 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         lifecycleScope.launch {
             val apiService = com.thedavelopers.eventqr.core.api.ApiClient.getService(this@EventRegistrationsActivity)
 
-            var visibleFields = emptyList<String>()
-            val configResult = com.thedavelopers.eventqr.core.api.safeApiCall {
-                apiService.getIdTemplateConfig(selectedEventId)
-            }
-            if (configResult is NetworkResult.Success) {
-                visibleFields = configResult.data.visibleFields.filterNotNull()
-            }
-
-            batchVisibleFields = visibleFields
+            // Default QR + name when the event has no saved template.
+            batchVisibleFields = repository.getIdCardVisibleFields(selectedEventId)
             batchQrValues.clear()
             for (reg in selected) {
                 val credentialId = reg.qrCredentialId ?: continue
@@ -386,13 +379,17 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         showLoading(true)
         lifecycleScope.launch {
             val successes = mutableListOf<AndroidIdPrinter.CardData>()
+            val printLogIds = mutableListOf<java.util.UUID>()
             val failures = mutableListOf<Pair<String, String>>()
             var index = 0
             for (reg in selected) {
                 val card = cards[index]
                 index++
                 when (val result = repository.printIdBatch(selectedEventId, listOf(reg.attendeeUserId), false)) {
-                    is NetworkResult.Success -> successes.add(card)
+                    is NetworkResult.Success -> {
+                        successes.add(card)
+                        printLogIds.addAll(result.data.map { it.printLogId })
+                    }
                     is NetworkResult.Error -> failures.add(reg.attendeeName to result.message)
                     NetworkResult.Loading -> Unit
                 }
@@ -401,12 +398,16 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
             showLoading(false)
             exitSelectionMode()
             if (successes.isNotEmpty()) {
-                // Each card was logged above; the summary waits for what the user did in the print dialog.
+                // Each card was logged PENDING above; every log is confirmed with, and the summary waits for,
+                // what the user did in the print dialog.
+                val printEventId = selectedEventId
+                val printRepository = repository
                 AndroidIdPrinter.print(
                     this@EventRegistrationsActivity,
                     "EventQR IDs — batch (${successes.size})",
                     successes,
                 ) { outcome ->
+                    printRepository.confirmPrintLogsInBackground(printEventId, printLogIds.toList(), outcome)
                     if (!isFinishing && !isDestroyed) showBatchPrintResult(successes.size, selected.size, failures, outcome)
                 }
             } else {
@@ -429,8 +430,8 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         body.addView(TextView(this).apply {
             text = when (outcome) {
                 AndroidIdPrinter.PrintOutcome.SENT -> "$printed of $total IDs printed successfully."
-                AndroidIdPrinter.PrintOutcome.CANCELLED -> getString(R.string.event_registrations_batch_print_cancelled, printed, total)
-                AndroidIdPrinter.PrintOutcome.FAILED -> getString(R.string.event_registrations_batch_print_job_failed, printed, total)
+                AndroidIdPrinter.PrintOutcome.CANCELLED -> getString(R.string.event_registrations_batch_print_cancelled)
+                AndroidIdPrinter.PrintOutcome.FAILED -> getString(R.string.event_registrations_batch_print_job_failed)
             }
             textSize = 16f
             typeface = Typeface.DEFAULT_BOLD

@@ -12,4 +12,15 @@ object SessionEvents {
     fun notifySessionExpired() {
         onSessionExpired?.invoke()
     }
+
+    /**
+     * The signed-in user's role changed mid-session (seen in a token refresh or auth/me). The Application reroutes
+     * to the right dashboard, or remembers it for the next dashboard visit. May be called from any thread.
+     */
+    @Volatile
+    var onRoleChanged: ((String) -> Unit)? = null
+
+    fun notifyRoleChanged(role: String) {
+        onRoleChanged?.invoke(role)
+    }
 }

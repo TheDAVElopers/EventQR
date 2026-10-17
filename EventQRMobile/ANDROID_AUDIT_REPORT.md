@@ -222,6 +222,28 @@ Test data created on the live backend: attendee registration on "ZZ C-test (safe
 | Backend tests | `mvn -o test`: 867 passed, 0 failures, 2 skipped (Testcontainers Postgres, Docker not installed) |
 | Device (fixed build) | 11 regression checks: 10 PASS; the 1 FAIL (OBS-N4) was then fixed and the touched organizer screens smoke-tested PASS with no FATAL in logcat |
 
+## J2. Round 3 (2026-10-17): decisions applied
+
+- **Status of earlier fixes:** PR #332 is pushed and deployed. V40/V41 were applied by the deploy (2026-10-16 20:37 UTC). Live QR values are all random `EVQR-`, the single-use index exists, and the server rejects bad phone numbers.
+- **ID printing, backend:** a default template (QR + name) is used when none is saved; GET id-template is now authorized (admin, owner, assigned staff). Print logs are created PENDING and confirmed via `PATCH /staff/events/{eventId}/print-logs/{logId}`. Only PRINTED logs count; a PENDING log older than 10 minutes counts as PRINTED for old builds. Migration V42 (`status`, `confirmed_at`, `printed_by_user_id`, check, index).
+- **ID printing, app:** confirms each print outcome (with retry), refreshes the Print/Reprint label, shows short cancel/failed copy, and falls back to the default template.
+- **Token self-renewal (H1), backend:**
+  - `/auth/refresh-token` and `PATCH /auth/me/password` removed.
+  - Password change/reset revokes every access token at once (ms marker, `iatMs` claim, race-safe upsert); change-password returns a fresh session.
+  - Rotation retry window is 60 s (configurable) and keeps a single live branch per family; a 90-day absolute session lifetime (V43).
+  - Change-password is rate-limited.
+  - Role changes return 401 on the next call (M1), and the app refreshes and reroutes.
+- **Token self-renewal (H1), app:** a single shared refresh rotator, a guard while a password change is in flight, and the role picked up on every refresh.
+- **Back navigation (D13):** Back from Sign In or Sign Up returns to Landing; Sign In and Sign Up replace each other; login clears the history; sign-out returns to Sign In with Landing beneath. Verified on the emulator (BS-1..6).
+- **Reviews:** code + security review, two follow-up rounds, final verification: PUSH.
+- **Tests:** backend 946 pass (4 Postgres tests skipped, no Docker); app 604 pass; the upsert SQL was EXPLAIN-checked on live Postgres 17.
+- **Release notes:** ship app and backend together. Old builds can't pick up role changes or survive a password change without re-login. V42 and V43 run on deploy.
+- **After deploy, verify:**
+  - One password change, then old token → 401.
+  - One account suspend.
+  - One print + cancel, then check `id_print_logs.status`.
+- **Open:** `can_print_id` not enforced (product decision); offline not tested; live backend was failing to wake on Render at the end of the session (`hibernate-wake-error`).
+
 ## J. Remaining Work
 
 - **Needs your decision:**

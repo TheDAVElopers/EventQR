@@ -71,7 +71,8 @@ class OrganizerServiceAuditFixesTest {
         service = new OrganizerService(events, registrations, mock(TransactionLogRepository.class),
                 mock(ScanPurposeRepository.class), mock(TransactionRuleRepository.class), redemptions,
                 mock(PointTransactionRepository.class), staffRepo, users, mock(IdTemplateRepository.class),
-                notificationService, registrationService);
+                notificationService, registrationService,
+                org.mockito.Mockito.mock(com.thedavelopers.eventqr.shared.security.UserTokenRevocationChecker.class));
         org.springframework.test.util.ReflectionTestUtils.setField(service, "entityManager", mock(jakarta.persistence.EntityManager.class));
         event = new Event();
         event.setId(eventId);

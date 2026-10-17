@@ -21,7 +21,6 @@ import com.thedavelopers.eventqr.core.api.dto.TransactionType
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.idprinting.AndroidIdPrinter
-import com.thedavelopers.eventqr.features.idprinting.model.dto.IdTemplateConfigResponse
 import com.thedavelopers.eventqr.features.staff.StaffDashboardActivity
 import com.thedavelopers.eventqr.features.staff.StaffRepository
 import com.thedavelopers.eventqr.features.staff.StaffScreenExtras
@@ -273,23 +272,16 @@ open class StaffScanResultActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnContinueTransaction).text = getString(R.string.staff_scan_result_printing)
 
         lifecycleScope.launch {
-            val apiService = com.thedavelopers.eventqr.core.api.ApiClient.getService(this@StaffScanResultActivity)
             val eventName = intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_TITLE).orEmpty()
             val attendeeName = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_NAME).orEmpty()
             val qrValue = intent.getStringExtra(StaffScreenExtras.EXTRA_QR_VALUE).orEmpty()
 
-            // Fetch template config (visible fields) and attendee details in parallel
-            var visibleFields = emptyList<String>()
+            // Template visible fields (default QR + name when the event has none saved) and attendee details
             var registrationNumber: Int? = null
             var role = ""
             var eventDate = ""
 
-            val configResult = com.thedavelopers.eventqr.core.api.safeApiCall {
-                apiService.getIdTemplateConfig(eventId)
-            }
-            if (configResult is NetworkResult.Success) {
-                visibleFields = configResult.data.visibleFields.filterNotNull()
-            }
+            val visibleFields = repository.getIdCardVisibleFields(eventId)
 
             val attendeeResult = repository.getAttendeeByEvent(eventId, attendeeId)
             if (attendeeResult is NetworkResult.Success) {
@@ -316,14 +308,19 @@ open class StaffScanResultActivity : AppCompatActivity() {
                         visibleFields = visibleFields,
                         qrValue = qrValue,
                     )
-                    // The print is logged before the dialog opens (the log call is also the server-side check),
-                    // so the result shown depends on what the user did in the system print dialog.
+                    // The print is logged PENDING before the dialog opens (the log call is also the server-side
+                    // check); it is then confirmed with, and the result shown for, what the user did in the dialog.
                     val serverMessage = result.data.message
+                    val printLogId = result.data.printLogId
+                    val printRepository = repository
                     AndroidIdPrinter.print(
                         this@StaffScanResultActivity,
                         "EventQR ID — $attendeeName",
                         cardData,
-                    ) { outcome -> onPrintOutcome(outcome, serverMessage) }
+                    ) { outcome ->
+                        printRepository.confirmPrintLogsInBackground(eventId, listOf(printLogId), outcome)
+                        onPrintOutcome(outcome, serverMessage)
+                    }
                 }
                 is NetworkResult.Error -> {
                     Log.w(tag, "printResult success=false eventId=$eventId")

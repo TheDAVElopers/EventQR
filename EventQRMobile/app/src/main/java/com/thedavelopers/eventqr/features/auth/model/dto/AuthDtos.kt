@@ -52,3 +52,16 @@ data class ChangePasswordRequest(
     val newPassword: String,
     val confirmPassword: String
 )
+
+/**
+ * auth/change-password `data`: a fresh session, since the change revokes the old refresh tokens.
+ * Every field is nullable: older servers return no data at all.
+ */
+data class ChangePasswordResponse(
+    val accessToken: String? = null,
+    val refreshToken: String? = null,
+    val userId: UUID? = null,
+    val email: String? = null,
+    val fullName: String? = null,
+    val role: AccountRole? = null,
+)

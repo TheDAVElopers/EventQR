@@ -54,7 +54,8 @@ class OrganizerAttendeePointsTest {
         service = new OrganizerService(events, registrations, mock(TransactionLogRepository.class),
                 mock(ScanPurposeRepository.class), mock(TransactionRuleRepository.class), mock(RewardRedemptionRepository.class),
                 points, mock(EventStaffAssignmentRepository.class), users,
-                mock(IdTemplateRepository.class), mock(NotificationService.class), mock(com.thedavelopers.eventqr.features.registrations.service.RegistrationService.class));
+                mock(IdTemplateRepository.class), mock(NotificationService.class), mock(com.thedavelopers.eventqr.features.registrations.service.RegistrationService.class),
+                org.mockito.Mockito.mock(com.thedavelopers.eventqr.shared.security.UserTokenRevocationChecker.class));
         Event event = new Event();
         event.setId(eventId);
         event.setOrganizerUserId(organizerId);

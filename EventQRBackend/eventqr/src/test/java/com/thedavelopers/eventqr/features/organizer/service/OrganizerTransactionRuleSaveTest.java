@@ -56,7 +56,8 @@ class OrganizerTransactionRuleSaveTest {
         service = new OrganizerService(events, mock(EventRegistrationRepository.class),
                 mock(TransactionLogRepository.class), purposes, rules, mock(RewardRedemptionRepository.class),
                 mock(PointTransactionRepository.class), mock(EventStaffAssignmentRepository.class), users,
-                mock(IdTemplateRepository.class), mock(NotificationService.class), mock(RegistrationService.class));
+                mock(IdTemplateRepository.class), mock(NotificationService.class), mock(RegistrationService.class),
+                org.mockito.Mockito.mock(com.thedavelopers.eventqr.shared.security.UserTokenRevocationChecker.class));
         ReflectionTestUtils.setField(service, "entityManager", entityManager);
 
         Event event = new Event();

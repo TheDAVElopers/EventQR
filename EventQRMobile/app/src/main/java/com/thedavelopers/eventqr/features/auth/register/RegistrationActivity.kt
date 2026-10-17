@@ -143,6 +143,7 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
+    /** Replaces Sign Up with Sign In so the two never stack; Back from Sign In returns to Landing. */
     override fun navigateToSignIn() {
         startActivity(Intent(this, LoginActivity::class.java))
         finish()

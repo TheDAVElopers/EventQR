@@ -187,25 +187,6 @@ class AuthServiceTest {
         assertThatThrownBy(() -> service.refresh("refresh-1")).isInstanceOf(UnauthorizedException.class);
     }
 
-    // ----- the older access-token based re-issue, still used by the app on resume -----
-
-    @Test
-    void reissuingASessionPicksUpTheCurrentRoleWithoutANewRefreshToken() {
-        user.setRole(AccountRole.STAFF);
-
-        LoginResponse response = service.refreshToken(user.getId());
-
-        assertThat(response.role()).isEqualTo(AccountRole.STAFF);
-        assertThat(response.refreshToken()).isNull();
-    }
-
-    @Test
-    void reissuingForADisabledAccountIsRefused() {
-        user.setStatus(AccountStatus.INACTIVE);
-
-        assertThatThrownBy(() -> service.refreshToken(user.getId())).isInstanceOf(UnauthorizedException.class);
-    }
-
     @Test
     void endingASessionRevokesItsRefreshFamily() {
         service.endSession("refresh-1");

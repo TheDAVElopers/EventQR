@@ -57,7 +57,11 @@ open class ForgotPasswordActivity : AppCompatActivity(), ForgotPasswordContract.
     }
 
     override fun navigateBackToSignIn() {
-        startActivity(Intent(this, LoginActivity::class.java))
+        // Return to the Sign In beneath (opened from it) instead of stacking a second one.
+        startActivity(
+            Intent(this, LoginActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        )
         finish()
     }
 }

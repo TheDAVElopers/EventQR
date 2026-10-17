@@ -62,7 +62,8 @@ class AuthControllerTest {
         mvc = MockMvcBuilders.standaloneSetup(new AuthController(authService, userService, jwtService,
                         passwordResetService, changePasswordService, forgotPasswordRateLimiter,
                         new com.thedavelopers.eventqr.shared.security.LoginRateLimiter(30, 6, 50),
-                        verifyLimiter, resetLimiter))
+                        verifyLimiter, resetLimiter,
+                new com.thedavelopers.eventqr.shared.security.ChangePasswordRateLimiter(10, 2, 50)))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
@@ -341,5 +342,86 @@ class AuthControllerTest {
 
         verify(userService).register(any());
         verify(userService, never()).create(any());
+    }
+
+    // ----- removed access-token re-issue and change-password session -----
+
+    @Test
+    void theRemovedRefreshTokenEndpointIs404() throws Exception {
+        mvc.perform(post("/api/v1/auth/refresh-token").header("Authorization", "Bearer token"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void changePasswordReturnsAFreshSessionForTheCallingDevice() throws Exception {
+        when(jwtService.extractUserIdFromBearer("Bearer old")).thenReturn(userId);
+        when(changePasswordService.changePassword(userId, "OldPassw0rd!", "N3wPassw0rd!x", "N3wPassw0rd!x"))
+                .thenReturn(new LoginResponse("new-access", userId, "jane@example.com", "Jane Doe",
+                        AccountRole.ATTENDEE, "Password has been changed", "new-refresh"));
+
+        mvc.perform(post("/api/v1/auth/change-password").header("Authorization", "Bearer old")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'currentPassword':'OldPassw0rd!','newPassword':'N3wPassw0rd!x',"
+                                + "'confirmPassword':'N3wPassw0rd!x'}")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("Password has been changed"))
+                .andExpect(jsonPath("$.data.accessToken").value("new-access"))
+                .andExpect(jsonPath("$.data.refreshToken").value("new-refresh"))
+                .andExpect(jsonPath("$.data.userId").value(userId.toString()))
+                .andExpect(jsonPath("$.data.email").value("jane@example.com"))
+                .andExpect(jsonPath("$.data.fullName").value("Jane Doe"))
+                .andExpect(jsonPath("$.data.role").value("ATTENDEE"));
+    }
+
+    // ----- change-password rate limit (pair limit 2 in this fixture) -----
+
+    private org.springframework.test.web.servlet.ResultActions changePassword(String current) throws Exception {
+        return mvc.perform(post("/api/v1/auth/change-password").header("Authorization", "Bearer old")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json("{'currentPassword':'" + current + "','newPassword':'N3wPassw0rd!x',"
+                        + "'confirmPassword':'N3wPassw0rd!x'}")));
+    }
+
+    @Test
+    void repeatedWrongCurrentPasswordsAreThrottledWith429AndRetryAfter() throws Exception {
+        when(jwtService.extractUserIdFromBearer("Bearer old")).thenReturn(userId);
+        when(changePasswordService.changePassword(eq(userId), eq("wrong"), any(), any()))
+                .thenThrow(new com.thedavelopers.eventqr.features.auth.service.IncorrectCurrentPasswordException());
+
+        changePassword("wrong").andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Current password is incorrect"));
+        changePassword("wrong").andExpect(status().isBadRequest());
+        changePassword("wrong").andExpect(status().isTooManyRequests())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().exists("Retry-After"))
+                .andExpect(jsonPath("$.message").value("Too many password change attempts. Please try again later."));
+
+        verify(changePasswordService, org.mockito.Mockito.times(2)).changePassword(eq(userId), eq("wrong"), any(), any());
+    }
+
+    @Test
+    void failuresThatAreNotWrongCurrentPasswordsAreNotCounted() throws Exception {
+        when(jwtService.extractUserIdFromBearer("Bearer old")).thenReturn(userId);
+        when(changePasswordService.changePassword(eq(userId), eq("OldPassw0rd!"), any(), any()))
+                .thenThrow(new BadRequestException("Passwords do not match"));
+
+        for (int i = 0; i < 4; i++) {
+            changePassword("OldPassw0rd!").andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").value("Passwords do not match"));
+        }
+    }
+
+    @Test
+    void aSuccessfulChangeClearsTheWrongPasswordCount() throws Exception {
+        when(jwtService.extractUserIdFromBearer("Bearer old")).thenReturn(userId);
+        when(changePasswordService.changePassword(eq(userId), eq("wrong"), any(), any()))
+                .thenThrow(new com.thedavelopers.eventqr.features.auth.service.IncorrectCurrentPasswordException());
+        when(changePasswordService.changePassword(eq(userId), eq("OldPassw0rd!"), any(), any()))
+                .thenReturn(session("new-refresh"));
+
+        changePassword("wrong").andExpect(status().isBadRequest());
+        changePassword("OldPassw0rd!").andExpect(status().isOk());
+        changePassword("wrong").andExpect(status().isBadRequest());
+        changePassword("wrong").andExpect(status().isBadRequest());
     }
 }

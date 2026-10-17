@@ -37,8 +37,23 @@ object ApiClient {
         return OkHttpClient.Builder()
             .withStandardTimeouts()
             .addInterceptor(AuthInterceptor(sessionManager))
-            .authenticator(TokenAuthenticator(sessionManager, HttpRefreshCall(), SessionEvents::notifySessionExpired))
+            .authenticator(TokenAuthenticator(sessionRotator(context)))
             .build()
+    }
+
+    @Volatile
+    private var rotator: SessionTokenRotator? = null
+
+    /** The one refresh-token rotator for the process; every HTTP client and the session refresher share its lock. */
+    fun sessionRotator(context: Context): SessionTokenRotator {
+        return rotator ?: synchronized(this) {
+            rotator ?: SessionTokenRotator(
+                SessionManager(context.applicationContext),
+                HttpRefreshCall(),
+                SessionEvents::notifySessionExpired,
+                onRoleChanged = SessionEvents::notifyRoleChanged,
+            ).also { rotator = it }
+        }
     }
 
     private fun buildService(context: Context): ApiService {
@@ -68,16 +83,16 @@ internal fun sharedGson() = GsonBuilder()
     .setLenient()
     .create()
 
-private interface RefreshApi {
+internal interface RefreshApi {
     @POST("auth/refresh")
     fun refresh(@Body request: RefreshRequest): Call<ApiResponse<LoginResponse>>
 }
 
-/** Talks to the refresh endpoint on a bare client, so it can never trigger itself. */
-private class HttpRefreshCall : RefreshCall {
+/** Talks to the refresh endpoint (POST auth/refresh) on a bare client, so it can never trigger itself. */
+internal class HttpRefreshCall(private val baseUrl: String = ApiConfig.BASE_URL) : RefreshCall {
     private val api: RefreshApi by lazy {
         Retrofit.Builder()
-            .baseUrl(ApiConfig.BASE_URL)
+            .baseUrl(baseUrl)
             .client(OkHttpClient.Builder().withStandardTimeouts().build())
             .addConverterFactory(GsonConverterFactory.create(sharedGson()))
             .build()
@@ -88,7 +103,7 @@ private class HttpRefreshCall : RefreshCall {
         val response = api.refresh(RefreshRequest(refreshToken)).execute()
         val data = response.body()?.takeIf { it.success }?.data
         when {
-            response.isSuccessful && data != null -> RefreshOutcome.Success(data.accessToken, data.refreshToken)
+            response.isSuccessful && data != null -> RefreshOutcome.Success(data.accessToken, data.refreshToken, data.role?.name)
             // Only a definite "no" ends the session. 429 (rate limited) and 5xx are transient.
             response.code() == 400 || response.code() == 401 || response.code() == 403 -> RefreshOutcome.Rejected
             else -> RefreshOutcome.Unavailable

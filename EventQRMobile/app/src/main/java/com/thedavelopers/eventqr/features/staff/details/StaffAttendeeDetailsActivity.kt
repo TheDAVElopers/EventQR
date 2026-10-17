@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -15,6 +16,7 @@ import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.idprinting.AndroidIdPrinter
+import com.thedavelopers.eventqr.features.idprinting.countsAsPrinted
 import com.thedavelopers.eventqr.features.registrations.RegistrationNumberFormatter
 import com.thedavelopers.eventqr.features.registrations.RegistrationStatusBadgeStyler
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
@@ -180,8 +182,8 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
         lifecycleScope.launch {
             when (val result = repository.getStaffPrintLogs(eventId)) {
                 is NetworkResult.Success -> {
-                    hasPrintedId = result.data.any { it.attendeeUserId.toString() == attendeeId }
-                    findViewById<TextView>(R.id.txtPrintOrReprintIdLabel).text = getString(if (hasPrintedId) R.string.staff_attendee_details_reprint_id else R.string.staff_attendee_details_print_id)
+                    // Cancelled, failed and still-pending prints don't count; only a confirmed PRINTED log does.
+                    showPrintedState(result.data.any { it.attendeeUserId.toString() == attendeeId && it.countsAsPrinted() })
                 }
                 is NetworkResult.Error -> Unit
                 NetworkResult.Loading -> Unit
@@ -199,14 +201,8 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val apiService = com.thedavelopers.eventqr.core.api.ApiClient.getService(this@StaffAttendeeDetailsActivity)
 
-            // Fetch template config for visible fields
-            var visibleFields = emptyList<String>()
-            val configResult = com.thedavelopers.eventqr.core.api.safeApiCall {
-                apiService.getIdTemplateConfig(eventId)
-            }
-            if (configResult is NetworkResult.Success) {
-                visibleFields = configResult.data.visibleFields.filterNotNull()
-            }
+            // Template visible fields (default QR + name when the event has none saved)
+            val visibleFields = repository.getIdCardVisibleFields(eventId)
 
             // Fetch QR credential value for the printed QR code
             var qrValue = ""
@@ -235,28 +231,51 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
                         visibleFields = visibleFields,
                         qrValue = qrValue,
                     )
-                    // Logged before the dialog opens; report what the user actually did in the print dialog.
+                    // Logged PENDING before the dialog opens; confirmed with what the user actually did in it.
                     val serverMessage = result.data.message
+                    val printLogId = result.data.printLogId
                     AndroidIdPrinter.print(
                         this@StaffAttendeeDetailsActivity,
                         "EventQR ID — $cachedAttendeeName",
                         cardData,
-                    ) { outcome ->
-                        if (isFinishing || isDestroyed) return@print
-                        val message = when (outcome) {
-                            AndroidIdPrinter.PrintOutcome.SENT -> serverMessage
-                            AndroidIdPrinter.PrintOutcome.CANCELLED -> getString(R.string.staff_print_cancelled_message)
-                            AndroidIdPrinter.PrintOutcome.FAILED -> getString(R.string.staff_print_job_failed_message)
-                        }
-                        Toast.makeText(this@StaffAttendeeDetailsActivity, message, Toast.LENGTH_LONG).show()
-                    }
+                    ) { outcome -> onIdPrintOutcome(outcome, printLogId, serverMessage) }
+                    // The Print/Reprint label is refreshed once the dialog's outcome is confirmed, not here:
+                    // the new log is still PENDING while the dialog is open.
                 }
-                is NetworkResult.Error -> Toast.makeText(this@StaffAttendeeDetailsActivity, result.message, Toast.LENGTH_SHORT).show()
+                is NetworkResult.Error -> {
+                    Toast.makeText(this@StaffAttendeeDetailsActivity, result.message, Toast.LENGTH_SHORT).show()
+                    loadPrintLogs()
+                }
                 NetworkResult.Loading -> Unit
             }
             findViewById<ProgressBar>(R.id.progressAttendeeDetails).visibility = View.GONE
-            loadPrintLogs()
         }
+    }
+
+    /**
+     * Confirms the PENDING log with what happened in the print dialog. A sent print flips the label to Reprint
+     * right away; once the server has the final status the label is re-read from it. If the confirmation never
+     * got through, the local state is kept rather than replaced by the server's still-PENDING view.
+     */
+    @VisibleForTesting
+    internal fun onIdPrintOutcome(outcome: AndroidIdPrinter.PrintOutcome, printLogId: UUID, serverMessage: String) {
+        repository.confirmPrintLogsInBackground(eventId, listOf(printLogId), outcome) { confirmedAll ->
+            if (confirmedAll && !isFinishing && !isDestroyed) loadPrintLogs()
+        }
+        if (isFinishing || isDestroyed) return
+        if (outcome == AndroidIdPrinter.PrintOutcome.SENT) showPrintedState(true)
+        val message = when (outcome) {
+            AndroidIdPrinter.PrintOutcome.SENT -> serverMessage
+            AndroidIdPrinter.PrintOutcome.CANCELLED -> getString(R.string.staff_print_cancelled_toast)
+            AndroidIdPrinter.PrintOutcome.FAILED -> getString(R.string.staff_print_job_failed_message)
+        }
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    }
+
+    private fun showPrintedState(printed: Boolean) {
+        hasPrintedId = printed
+        findViewById<TextView>(R.id.txtPrintOrReprintIdLabel).text =
+            getString(if (printed) R.string.staff_attendee_details_reprint_id else R.string.staff_attendee_details_print_id)
     }
 
     private fun formatTime(value: Instant?): String = value?.let { timeFormatter.format(it) } ?: "--"

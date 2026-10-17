@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,13 +28,14 @@ import com.thedavelopers.eventqr.features.auth.model.dto.ResetPasswordRequest;
 import com.thedavelopers.eventqr.features.auth.model.dto.VerifyResetCodeRequest;
 import com.thedavelopers.eventqr.features.auth.service.AuthService;
 import com.thedavelopers.eventqr.features.auth.service.ChangePasswordService;
+import com.thedavelopers.eventqr.features.auth.service.IncorrectCurrentPasswordException;
 import com.thedavelopers.eventqr.features.auth.service.PasswordResetService;
-import com.thedavelopers.eventqr.features.users.model.dto.PasswordChangeRequest;
 import com.thedavelopers.eventqr.features.users.model.dto.UserRequest;
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse;
 import com.thedavelopers.eventqr.features.users.service.UserService;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
+import com.thedavelopers.eventqr.shared.security.ChangePasswordRateLimiter;
 import com.thedavelopers.eventqr.shared.security.ForgotPasswordRateLimiter;
 import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
 import com.thedavelopers.eventqr.shared.exceptions.ConflictException;
@@ -63,13 +63,16 @@ public class AuthController {
     private final LoginRateLimiter loginRateLimiter;
     private final ResetCodeVerifyRateLimiter resetCodeVerifyRateLimiter;
     private final ResetPasswordRateLimiter resetPasswordRateLimiter;
+    private final ChangePasswordRateLimiter changePasswordRateLimiter;
 
     public AuthController(AuthService authService, UserService userService, JwtService jwtService,
                           PasswordResetService passwordResetService, ChangePasswordService changePasswordService,
                           ForgotPasswordRateLimiter forgotPasswordRateLimiter,
                           LoginRateLimiter loginRateLimiter,
                           ResetCodeVerifyRateLimiter resetCodeVerifyRateLimiter,
-                          ResetPasswordRateLimiter resetPasswordRateLimiter) {
+                          ResetPasswordRateLimiter resetPasswordRateLimiter,
+                          ChangePasswordRateLimiter changePasswordRateLimiter) {
+        this.changePasswordRateLimiter = changePasswordRateLimiter;
         this.resetCodeVerifyRateLimiter = resetCodeVerifyRateLimiter;
         this.resetPasswordRateLimiter = resetPasswordRateLimiter;
         this.authService = authService;
@@ -138,25 +141,34 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(userService.findOne(userId)));
     }
 
-    @PostMapping("/refresh-token")
-    public ResponseEntity<ApiResponse<LoginResponse>> refreshToken(HttpServletRequest request) {
-        UUID userId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
-        return ResponseEntity.ok(ApiResponse.success("Session refreshed", authService.refreshToken(userId)));
-    }
-
-    @PatchMapping("/me/password")
-    public ResponseEntity<ApiResponse<UserResponse>> changePassword(HttpServletRequest request,
-                                                                    @Valid @RequestBody PasswordChangeRequest body) {
-        UUID userId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
-        return ResponseEntity.ok(ApiResponse.success("Password updated", userService.changePassword(userId, body.currentPassword(), body.newPassword())));
-    }
-
+    /**
+     * Changes the password and signs out every session, including the access token used for this call. {@code data}
+     * is a fresh session for the calling device (same shape as login: accessToken, refreshToken, userId, email,
+     * fullName, role, message); clients must store it to stay signed in. App builds that ignore {@code data} are
+     * signed out immediately: their next request carries the revoked access token and gets 401, and their old
+     * refresh token was revoked too.
+     *
+     * <p>Rate limited per (user, IP), per user and per IP ({@link ChangePasswordRateLimiter}): only wrong current
+     * passwords count; a full window answers 429 with Retry-After.
+     */
     @PostMapping("/change-password")
-    public ResponseEntity<ApiResponse<Void>> changePasswordWithConfirm(HttpServletRequest request,
-                                                                       @Valid @RequestBody ChangePasswordRequest body) {
+    public ResponseEntity<ApiResponse<LoginResponse>> changePasswordWithConfirm(HttpServletRequest request,
+                                                                                @Valid @RequestBody ChangePasswordRequest body) {
         UUID userId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
-        changePasswordService.changePassword(userId, body.currentPassword(), body.newPassword(), body.confirmPassword());
-        return ResponseEntity.ok(ApiResponse.success("Password has been changed", null));
+        LoginRateLimiter.Permit permit = changePasswordRateLimiter.acquire(request, userId);
+        LoginResponse session;
+        try {
+            session = changePasswordService.changePassword(userId, body.currentPassword(),
+                    body.newPassword(), body.confirmPassword());
+        } catch (IncorrectCurrentPasswordException e) {
+            // A real guess at the current password: the attempt stays counted.
+            throw e;
+        } catch (RuntimeException e) {
+            changePasswordRateLimiter.refund(permit);
+            throw e;
+        }
+        changePasswordRateLimiter.onSuccess(permit);
+        return ResponseEntity.ok(ApiResponse.success("Password has been changed", session));
     }
 
     /** Public: the access token has typically expired, the refresh token is the credential. */

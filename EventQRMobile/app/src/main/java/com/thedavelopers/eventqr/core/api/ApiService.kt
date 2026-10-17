@@ -10,6 +10,7 @@ import com.thedavelopers.eventqr.features.auth.model.dto.ForgotPasswordRequest
 import com.thedavelopers.eventqr.features.auth.model.dto.ResetPasswordRequest
 import com.thedavelopers.eventqr.features.auth.model.dto.VerifyResetCodeRequest
 import com.thedavelopers.eventqr.features.auth.model.dto.ChangePasswordRequest
+import com.thedavelopers.eventqr.features.auth.model.dto.ChangePasswordResponse
 import com.thedavelopers.eventqr.features.audit.model.dto.AuditLogResponse
 import com.thedavelopers.eventqr.features.dashboard.model.dto.DashboardSummary
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
@@ -21,6 +22,7 @@ import com.thedavelopers.eventqr.features.events.model.dto.EventRequestDecisionR
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse
 import com.thedavelopers.eventqr.features.events.model.dto.EventResponse
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdBatchPrintRequest
+import com.thedavelopers.eventqr.features.idprinting.model.dto.IdPrintConfirmRequest
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdPrintResponse
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdTemplateConfigRequest
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdTemplateConfigResponse
@@ -98,11 +100,9 @@ interface ApiService {
     @POST("auth/logout")
     suspend fun logout(@Body request: LogoutRequest): ApiResponse<Unit>
 
-    @POST("auth/refresh-token")
-    suspend fun refreshToken(): ApiResponse<LoginResponse>
-
+    /** Newer servers return a fresh session (the password change revokes the old refresh tokens); older ones no data. */
     @POST("auth/change-password")
-    suspend fun changePassword(@Body request: ChangePasswordRequest): ApiResponse<Unit>
+    suspend fun changePassword(@Body request: ChangePasswordRequest): ApiResponse<ChangePasswordResponse>
 
     @GET("auth/me")
     suspend fun getAuthMe(): ApiResponse<UserResponse>
@@ -428,6 +428,14 @@ interface ApiService {
         @Path("eventId") eventId: String,
         @Body request: IdBatchPrintRequest,
     ): ApiResponse<List<IdPrintResponse>>
+
+    /** Records what happened in the print dialog for a PENDING print log. 409 once the log is final. */
+    @PATCH("staff/events/{eventId}/print-logs/{logId}")
+    suspend fun confirmPrintLog(
+        @Path("eventId") eventId: String,
+        @Path("logId") logId: String,
+        @Body request: IdPrintConfirmRequest,
+    ): ApiResponse<IdPrintResponse>
 
     @GET("dashboard")
     suspend fun getDashboard(): ApiResponse<DashboardSummary>

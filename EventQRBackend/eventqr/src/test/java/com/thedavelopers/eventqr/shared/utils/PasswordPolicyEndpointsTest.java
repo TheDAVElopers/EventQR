@@ -8,7 +8,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -76,7 +75,8 @@ class PasswordPolicyEndpointsTest {
         mvc = MockMvcBuilders.standaloneSetup(
                         new AuthController(mock(AuthService.class), userService, jwtService, resetService, changeService,
                                 mock(ForgotPasswordRateLimiter.class), new LoginRateLimiter(30, 6, 50),
-verifyLimiter, resetLimiter),
+verifyLimiter, resetLimiter,
+                new com.thedavelopers.eventqr.shared.security.ChangePasswordRateLimiter(10, 2, 50)),
                         new UserController(userService, jwtService, mock(FileStorageService.class)),
                         new AdminUserController(userService, jwtService))
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
@@ -100,7 +100,6 @@ verifyLimiter, resetLimiter),
                 .andExpect(jsonPath("$.path").exists());
         verify(userService, never()).register(any());
         verify(userService, never()).create(any());
-        verify(userService, never()).changePassword(any(), any(), any());
         verify(resetService, never()).resetPassword(any(), any(), any(), any());
         verify(changeService, never()).changePassword(any(), any(), any(), any());
     }
@@ -121,12 +120,6 @@ verifyLimiter, resetLimiter),
     void userCreateRejectsLowercaseLessPassword() throws Exception {
         rejected(json(post("/api/v1/users"),
                 "{'email':'a@b.com','fullName':'A','password':'" + WEAK + "','role':'ATTENDEE'}"), "password");
-    }
-
-    @Test
-    void passwordChangeRejectsLowercaseLessNewPasswordButNotCurrent() throws Exception {
-        rejected(json(patch("/api/v1/auth/me/password"),
-                "{'currentPassword':'weak','newPassword':'" + WEAK + "'}"), "newPassword");
     }
 
     @Test
@@ -166,19 +159,18 @@ verifyLimiter, resetLimiter),
 
     private UserService realUserService(UserProfileRepository repo) {
         return new UserService(repo, mock(EventRegistrationRepository.class), mock(TransactionLogRepository.class),
-                new BCryptPasswordEncoder(4), mock(UserTokenRevocationRepository.class), mock(RefreshTokenService.class));
+                new BCryptPasswordEncoder(4), mock(com.thedavelopers.eventqr.shared.security.AccessTokenRevoker.class),
+                org.mockito.Mockito.mock(com.thedavelopers.eventqr.shared.security.UserTokenRevocationChecker.class));
     }
 
     @Test
-    void userServiceRegisterCreateAndChangePasswordRejectWeakPasswordsWithoutTouchingTheRepository() {
+    void userServiceRegisterAndCreateRejectWeakPasswordsWithoutTouchingTheRepository() {
         UserProfileRepository repo = mock(UserProfileRepository.class);
         UserService service = realUserService(repo);
         UserRequest weak = new UserRequest("a@b.com", "A", null, WEAK, AccountRole.ATTENDEE);
 
         assertThatThrownBy(() -> service.register(weak)).isInstanceOf(BadRequestException.class).hasMessage(MSG);
         assertThatThrownBy(() -> service.create(weak)).isInstanceOf(BadRequestException.class).hasMessage(MSG);
-        assertThatThrownBy(() -> service.changePassword(UUID.randomUUID(), "x", WEAK))
-                .isInstanceOf(BadRequestException.class).hasMessage(MSG);
         verifyNoInteractions(repo);
     }
 
@@ -187,15 +179,13 @@ verifyLimiter, resetLimiter),
         PasswordEncoder encoder = mock(PasswordEncoder.class);
         UserProfileRepository repo = mock(UserProfileRepository.class);
         UserService service = new UserService(repo, mock(EventRegistrationRepository.class),
-                mock(TransactionLogRepository.class), encoder, mock(UserTokenRevocationRepository.class),
-                mock(RefreshTokenService.class));
+                mock(TransactionLogRepository.class), encoder, mock(com.thedavelopers.eventqr.shared.security.AccessTokenRevoker.class),
+                org.mockito.Mockito.mock(com.thedavelopers.eventqr.shared.security.UserTokenRevocationChecker.class));
         String tooLong = "Aa1!" + "é".repeat(40);
         UserRequest req = new UserRequest("a@b.com", "A", null, tooLong, AccountRole.ATTENDEE);
 
         assertThatThrownBy(() -> service.register(req)).hasMessage(PasswordValidator.TOO_LONG_MESSAGE);
         assertThatThrownBy(() -> service.create(req)).hasMessage(PasswordValidator.TOO_LONG_MESSAGE);
-        assertThatThrownBy(() -> service.changePassword(UUID.randomUUID(), "x", tooLong))
-                .hasMessage(PasswordValidator.TOO_LONG_MESSAGE);
         com.thedavelopers.eventqr.features.auth.service.PasswordResetService reset = new com.thedavelopers.eventqr.features.auth.service.PasswordResetService(mock(
                 com.thedavelopers.eventqr.features.auth.repository.PasswordResetTokenRepository.class), repo, encoder,
                 mock(com.thedavelopers.eventqr.features.qremail.service.EmailGatewayService.class),
@@ -204,7 +194,7 @@ verifyLimiter, resetLimiter),
                 .hasMessage(PasswordValidator.TOO_LONG_MESSAGE);
         com.thedavelopers.eventqr.features.auth.service.ChangePasswordService change =
                 new com.thedavelopers.eventqr.features.auth.service.ChangePasswordService(repo, encoder,
-                        mock(RefreshTokenService.class));
+                        mock(RefreshTokenService.class), mock(com.thedavelopers.eventqr.shared.security.JwtService.class));
         UserProfile existing = new UserProfile();
         existing.setPasswordHash("h");
         UUID id = UUID.randomUUID();

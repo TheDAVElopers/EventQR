@@ -110,13 +110,16 @@ open class LoginActivity : AppCompatActivity(), LoginContract.View {
                 return
             }
         }
+        // A fresh task: Back from the dashboard must not return to Landing or Sign In.
         startActivity(
             Intent(this, destination)
                 .putExtra("extra_role", normalizedRole)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         )
         finish()
     }
 
+    /** Replaces Sign In with Sign Up so the two never stack; Back from Sign Up returns to Landing. */
     override fun navigateToRegistration() {
         startActivity(Intent(this, RegistrationActivity::class.java))
         finish()

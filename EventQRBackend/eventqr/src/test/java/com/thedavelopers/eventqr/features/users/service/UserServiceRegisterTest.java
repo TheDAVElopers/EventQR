@@ -51,8 +51,8 @@ class UserServiceRegisterTest {
         when(repository.save(any(UserProfile.class))).thenAnswer(i -> i.getArgument(0));
         when(repository.saveAndFlush(any(UserProfile.class))).thenAnswer(i -> i.getArgument(0));
         service = new UserService(repository, mock(EventRegistrationRepository.class),
-                mock(TransactionLogRepository.class), encoder, mock(UserTokenRevocationRepository.class),
-                mock(RefreshTokenService.class));
+                mock(TransactionLogRepository.class), encoder, mock(com.thedavelopers.eventqr.shared.security.AccessTokenRevoker.class),
+                org.mockito.Mockito.mock(com.thedavelopers.eventqr.shared.security.UserTokenRevocationChecker.class));
     }
 
     private UserProfile ghost(AccountRole role, AccountStatus status) {

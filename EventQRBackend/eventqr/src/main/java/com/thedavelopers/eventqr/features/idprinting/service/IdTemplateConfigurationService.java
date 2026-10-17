@@ -2,6 +2,7 @@ package com.thedavelopers.eventqr.features.idprinting.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -51,6 +52,15 @@ public class IdTemplateConfigurationService {
 
     private static final String DEFAULT_TEMPLATE_NAME = "ID Display Configuration";
 
+    /**
+     * Visible optional fields of the default template created when an event has none: nothing beyond the locked
+     * QR code and attendee name. Matches the ID Display Settings screen, whose toggles all start off.
+     */
+    public static final List<String> DEFAULT_VISIBLE_FIELDS = List.of();
+
+    /** Advisory-lock namespace ("EQIT") for find-or-create of an event's active ID template. */
+    static final int TEMPLATE_LOCK_NAMESPACE = 0x45514954;
+
     private final IdTemplateRepository idTemplateRepository;
     private final EventRepository eventRepository;
     private final ObjectMapper objectMapper;
@@ -78,6 +88,7 @@ public class IdTemplateConfigurationService {
         }
         List<String> normalized = visibleFields.stream().distinct().toList();
 
+        lockTemplates(eventId);
         IdTemplate template = idTemplateRepository.findFirstByEventIdAndActiveTrue(eventId)
                 .orElseGet(IdTemplate::new);
         boolean isNewRow = template.getId() == null;
@@ -94,12 +105,47 @@ public class IdTemplateConfigurationService {
         return new IdTemplateConfigResponse(eventId, normalized, LOCKED_FIELDS);
     }
 
-    @Transactional(readOnly = true)
+    /**
+     * Returns the event's active configuration, creating the default template first when the event has none, so
+     * the app renders the same card the print endpoints will log against. Note: this GET can therefore write (one
+     * id_templates row per event, at most once).
+     */
+    @Transactional
     public IdTemplateConfigResponse getConfig(UUID eventId) {
-        return idTemplateRepository.findFirstByEventIdAndActiveTrue(eventId)
-                .map(template -> parseVisibleFields(template.getTemplateJson()))
-                .map(visible -> new IdTemplateConfigResponse(eventId, visible, LOCKED_FIELDS))
-                .orElseGet(() -> new IdTemplateConfigResponse(eventId, List.of(), LOCKED_FIELDS));
+        IdTemplate template = getOrCreateActiveTemplate(eventId);
+        return new IdTemplateConfigResponse(eventId, parseVisibleFields(template.getTemplateJson()), LOCKED_FIELDS);
+    }
+
+    /**
+     * The event's active ID template, or a newly created default one (QR code + attendee name only) when none
+     * exists. Idempotent and safe under concurrency: a fast path reads without locking; otherwise a
+     * transaction-scoped advisory lock per event serializes creators and the active row is re-checked under it,
+     * so concurrent first prints for one event create exactly one template. Must run inside a transaction.
+     */
+    @Transactional
+    public IdTemplate getOrCreateActiveTemplate(UUID eventId) {
+        Optional<IdTemplate> existing = idTemplateRepository.findFirstByEventIdAndActiveTrue(eventId);
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+        if (!eventRepository.existsById(eventId)) {
+            throw new ResourceNotFoundException("Event not found");
+        }
+        lockTemplates(eventId);
+        return idTemplateRepository.findFirstByEventIdAndActiveTrue(eventId).orElseGet(() -> {
+            IdTemplate template = new IdTemplate();
+            template.setEventId(eventId);
+            template.setName(DEFAULT_TEMPLATE_NAME);
+            template.setActive(true);
+            template.setTemplateJson(writeJson(DEFAULT_VISIBLE_FIELDS));
+            log.info("Created default ID template eventId={}", eventId);
+            return idTemplateRepository.save(template);
+        });
+    }
+
+    private void lockTemplates(UUID eventId) {
+        idTemplateRepository.boundLockWaits();
+        idTemplateRepository.acquireTemplateLock(TEMPLATE_LOCK_NAMESPACE, eventId.hashCode());
     }
 
     private String writeJson(List<String> visibleFields) {
@@ -139,10 +185,10 @@ public class IdTemplateConfigurationService {
         }
     }
 
+    /** A missing event answers 403 like someone else's event, so the route cannot be used to probe event ids. */
     private void requireOwnedEvent(UUID eventId, UUID organizerUserId) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
-        if (event.getOrganizerUserId() == null || !event.getOrganizerUserId().equals(organizerUserId)) {
+        Event event = eventRepository.findById(eventId).orElse(null);
+        if (event == null || event.getOrganizerUserId() == null || !event.getOrganizerUserId().equals(organizerUserId)) {
             throw new ForbiddenException("Organizer does not have access to this event");
         }
     }

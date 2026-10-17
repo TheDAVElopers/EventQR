@@ -80,7 +80,8 @@ class PhoneValidationEndpointsTest {
     private AuthController authController() {
         return new AuthController(mock(AuthService.class), userService, jwtService, mock(PasswordResetService.class),
                 mock(ChangePasswordService.class), mock(ForgotPasswordRateLimiter.class), mock(LoginRateLimiter.class),
-                mock(ResetCodeVerifyRateLimiter.class), mock(ResetPasswordRateLimiter.class));
+                mock(ResetCodeVerifyRateLimiter.class), mock(ResetPasswordRateLimiter.class),
+                new com.thedavelopers.eventqr.shared.security.ChangePasswordRateLimiter(10, 2, 50));
     }
 
     private static String quoted(String value) {

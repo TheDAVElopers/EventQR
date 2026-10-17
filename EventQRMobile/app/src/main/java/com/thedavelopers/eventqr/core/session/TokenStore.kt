@@ -9,4 +9,10 @@ interface TokenStore {
     fun saveTokens(accessToken: String, refreshToken: String?)
 
     fun clear()
+
+    /** The stored role name; null when unknown. */
+    fun getUserRole(): String? = null
+
+    /** Stores the role name a refresh response carried. */
+    fun saveUserRole(role: String) = Unit
 }

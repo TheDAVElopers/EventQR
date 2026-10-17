@@ -1,19 +1,16 @@
 package com.thedavelopers.eventqr.features.users.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,11 +18,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.thedavelopers.eventqr.features.registrations.repository.EventRegistrationRepository;
 import com.thedavelopers.eventqr.features.transactions.repository.TransactionLogRepository;
 import com.thedavelopers.eventqr.features.users.model.entity.UserProfile;
-import com.thedavelopers.eventqr.features.users.model.entity.UserTokenRevocation;
 import com.thedavelopers.eventqr.features.users.repository.UserProfileRepository;
-import com.thedavelopers.eventqr.features.users.repository.UserTokenRevocationRepository;
 import com.thedavelopers.eventqr.shared.constants.AccountStatus;
+import com.thedavelopers.eventqr.shared.security.AccessTokenRevoker;
+import com.thedavelopers.eventqr.shared.security.UserTokenRevocationChecker;
 
+/**
+ * Disable/suspend/soft-delete move the revocation marker through {@link AccessTokenRevoker} (race-safe, never
+ * backwards, millisecond precision, cache dropped after commit). Re-enabling never touches it.
+ */
 @ExtendWith(MockitoExtension.class)
 class UserServiceTokenRevocationTest {
 
@@ -38,15 +39,16 @@ class UserServiceTokenRevocationTest {
     @Mock
     private PasswordEncoder passwordEncoder;
     @Mock
-    private UserTokenRevocationRepository userTokenRevocationRepository;
+    private AccessTokenRevoker accessTokenRevoker;
+    @Mock
+    private UserTokenRevocationChecker userTokenRevocationChecker;
 
     private UserService userService;
 
     @BeforeEach
     void setUp() {
         userService = new UserService(userProfileRepository, eventRegistrationRepository,
-                transactionLogRepository, passwordEncoder, userTokenRevocationRepository,
-                org.mockito.Mockito.mock(com.thedavelopers.eventqr.features.auth.service.RefreshTokenService.class));
+                transactionLogRepository, passwordEncoder, accessTokenRevoker, userTokenRevocationChecker);
     }
 
     private UserProfile activeUser(UUID userId) {
@@ -63,31 +65,21 @@ class UserServiceTokenRevocationTest {
         UUID userId = UUID.randomUUID();
         when(userProfileRepository.findById(userId)).thenReturn(Optional.of(activeUser(userId)));
         when(userProfileRepository.save(any(UserProfile.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(userTokenRevocationRepository.findByUserId(userId)).thenReturn(Optional.empty());
 
         userService.updateStatus(userId, AccountStatus.INACTIVE);
 
-        ArgumentCaptor<UserTokenRevocation> captor = ArgumentCaptor.forClass(UserTokenRevocation.class);
-        verify(userTokenRevocationRepository).save(captor.capture());
-        assertThat(captor.getValue().getUserId()).isEqualTo(userId);
-        assertThat(captor.getValue().getRevokedAt()).isNotNull();
+        verify(accessTokenRevoker).revokeAllIssuedUntilNow(userId);
     }
 
     @Test
-    void suspendingRefreshesExistingRevocationMarker() {
+    void suspendingRecordsRevocationMarker() {
         UUID userId = UUID.randomUUID();
-        Instant previousRevocation = Instant.now().minusSeconds(3600);
         when(userProfileRepository.findById(userId)).thenReturn(Optional.of(activeUser(userId)));
         when(userProfileRepository.save(any(UserProfile.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(userTokenRevocationRepository.findByUserId(userId))
-                .thenReturn(Optional.of(new UserTokenRevocation(userId, previousRevocation)));
 
         userService.updateStatus(userId, AccountStatus.SUSPENDED);
 
-        ArgumentCaptor<UserTokenRevocation> captor = ArgumentCaptor.forClass(UserTokenRevocation.class);
-        verify(userTokenRevocationRepository).save(captor.capture());
-        assertThat(captor.getValue().getUserId()).isEqualTo(userId);
-        assertThat(captor.getValue().getRevokedAt()).isAfter(previousRevocation);
+        verify(accessTokenRevoker).revokeAllIssuedUntilNow(userId);
     }
 
     @Test
@@ -98,8 +90,7 @@ class UserServiceTokenRevocationTest {
 
         userService.updateStatus(userId, AccountStatus.ACTIVE);
 
-        verify(userTokenRevocationRepository, never()).save(any());
-        verify(userTokenRevocationRepository, never()).findByUserId(any());
+        verify(accessTokenRevoker, never()).revokeAllIssuedUntilNow(any());
     }
 
     @Test
@@ -107,13 +98,9 @@ class UserServiceTokenRevocationTest {
         UUID userId = UUID.randomUUID();
         when(userProfileRepository.findById(userId)).thenReturn(Optional.of(activeUser(userId)));
         when(userProfileRepository.save(any(UserProfile.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(userTokenRevocationRepository.findByUserId(userId)).thenReturn(Optional.empty());
 
         userService.softDelete(userId);
 
-        ArgumentCaptor<UserTokenRevocation> captor = ArgumentCaptor.forClass(UserTokenRevocation.class);
-        verify(userTokenRevocationRepository).save(captor.capture());
-        assertThat(captor.getValue().getUserId()).isEqualTo(userId);
-        assertThat(captor.getValue().getRevokedAt()).isNotNull();
+        verify(accessTokenRevoker).revokeAllIssuedUntilNow(userId);
     }
 }

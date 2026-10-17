@@ -96,10 +96,7 @@ class AttendeeProfileActivity : AppCompatActivity() {
         lifecycleScope.launch {
             // Revokes the token on the server first, then clears local session state.
             SessionLogout.signOut(this@AttendeeProfileActivity)
-            startActivity(
-                Intent(this@AttendeeProfileActivity, com.thedavelopers.eventqr.features.auth.login.LoginActivity::class.java)
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK),
-            )
+            startActivities(com.thedavelopers.eventqr.core.navigation.AppNavigator.signedOutStack(this@AttendeeProfileActivity))
             finish()
         }
     }
