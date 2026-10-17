@@ -151,11 +151,11 @@ Statuses: PASS / FAIL / BLOCKED / NOT RUN / NEEDS REVIEW. All PASS results were 
 | D10 | Low | Create Admin hint format rejected | Type "+63 912 345 6789" | Spaces not stripped | `admin/users/CreateAdminAccountActivity.kt` | `PhoneInput` normalization | Unit tests |
 | D11 | Low | Misleading blank manual-scan message | Verify with empty ID | Blank treated as invalid payload | `staff/scanner/ScannerActivity.kt` | New message | Device PASS |
 | D12 | Low | Filter chips ignore search text (pre-existing) | Search, then tap chip | Chip rendered unfiltered list | `AttendeeEventsActivity.kt` | Chip + search combined | Unit test |
-| D13 | Low | Back on Sign Up exits app | Landing → Sign In → Create Account → Back | Login finishes when opening Sign Up | `auth/login/LoginActivity.kt` | **Not fixed** (product decision on auth back stack) | — |
+| D13 | Low | Back on Sign Up exits app | Landing → Sign In → Create Account → Back | Login finishes when opening Sign Up | `auth/login/LoginActivity.kt` | **Fixed in Round 3** — Back returns to Landing, Sign In and Sign Up replace each other, login clears history | Emulator BS-1..BS-6 |
 | D15 | Low | Print failure shown as "Verification Rejected" | Print ID on an event with no saved ID template | Scan-result screen reused the verification-failure state | `staff/result/StaffScanResultActivity.kt` | "ID Print Failed" state with server reason | Unit tests |
 | D16 | Low | Cancelled print reported as sent | Cancel the system print dialog | Success shown when the dialog opened; server log written before printing | `idprinting/AndroidIdPrinter.kt`, `StaffScanResultActivity.kt`, `StaffAttendeeDetailsActivity.kt`, `EventRegistrationsActivity.kt` | Outcome read from the print job (sent/cancelled/failed) and copy follows it. **Server still logs a cancelled print**; backend confirm call proposed | Unit tests; device: cancel shows "Nothing was printed..." (toast truncated), Save-as-PDF saved id_card.pdf with no cancel message |
-| D17 | Medium (backend) | Staff points/redeem and redemption binding gaps; guessable QR; no server phone validation | see G | see G | `EventQRBackend` rewards/staff controllers and services, V40/V41 migrations, `@PhilippinePhone` | Fixed in code, 867 tests pass; **not deployed, migrations not applied** | Unit tests; Postgres test skipped (no Docker) |
-| D14 | High (backend) | Access token self-renewal | `POST auth/refresh-token` with only an access token | Endpoint mints tokens from the access token; password change doesn't revoke access tokens | Backend `AuthController.java:141-145`, `AuthService.java:96-103` | **Not fixed** — needs approval (auth contract + redeploy) | — |
+| D17 | Medium (backend) | Staff points/redeem and redemption binding gaps; guessable QR; no server phone validation | see G | see G | `EventQRBackend` rewards/staff controllers and services, V40/V41 migrations, `@PhilippinePhone` | Fixed in code, 948 tests pass, **merged and deployed (#332, V40/V41 applied 2026-10-16)** | CI `Backend verify` green, Postgres suite runs |
+| D14 | High (backend) | Access token self-renewal | `POST auth/refresh-token` with only an access token | Endpoint mints tokens from the access token; password change doesn't revoke access tokens | Backend `AuthController.java:141-145`, `AuthService.java:96-103` | **Fixed in Round 3 (#333)** — refresh-token self-renewal route removed, password change/reset revokes every access token | CI: 948 backend tests pass (Postgres suite included) |
 
 ## F. Potential Issues (not confirmed on device)
 
@@ -174,22 +174,22 @@ Statuses: PASS / FAIL / BLOCKED / NOT RUN / NEEDS REVIEW. All PASS results were 
 
 Full list: `MyFiles/audit/security_summary.md`. No secrets were found in the mobile tree.
 
-- **High (backend, confirmed live):** access-token self-renewal via `POST auth/refresh-token`; password change/reset doesn't revoke access tokens.
-- **Medium (backend):** role demotion keeps the old role in the JWT for up to 1 h (open).
-- **Fixed in code, not deployed:**
+- **High (backend):** access-token self-renewal via `POST auth/refresh-token`; password change/reset doesn't revoke access tokens — **fixed in Round 3 (#333)**: the refresh-token self-renewal route is gone and password change/reset revokes all access tokens.
+- **Medium (backend):** role demotion keeps the old role in the JWT for up to 1 h — **fixed in Round 3**: role changes return 401 on the next call and the app refreshes and reroutes.
+- **Fixed and deployed (#332 on 2026-10-16, #333 on 2026-10-17):**
   - Staff points/redeem now need `can_manage_rewards`; redemptions are bound to a fresh, approved, unused redemption scan by the same staff member (staff id from the token, not the body); points are bounded; an active registration is required.
   - V40 replaces the guessable `EVTQR-<ids>` QR values with random `EVQR-` values and reissues existing ones. **Every existing QR, downloaded image or printed badge stops working.**
   - V41 adds a single-use index for redemption scans.
   - Phone numbers are validated and normalized server-side to `+63XXXXXXXXXX`.
   - Design: `MyFiles/audit/backend_security_design.md`. Code review approved; follow-ups applied.
 - **Medium (mobile):** QR PNG (named with the registration ID) and report exports containing attendee PII are written to public storage.
-- **Low:** no certificate pinning / network security config; FileProvider shares the whole cache folder; no `FLAG_SECURE` on QR screens; `GET /events/{id}/id-template` has no authorization; the selected-event preference isn't cleared on logout; duplicate sign-up reveals that an email is registered.
+- **Low:** no certificate pinning / network security config; FileProvider shares the whole cache folder; no `FLAG_SECURE` on QR screens; the selected-event preference isn't cleared on logout; duplicate sign-up reveals that an email is registered. (`GET /events/{id}/id-template` was on this list; it is authorized since Round 3.)
 - **OK:** encrypted token storage; server-side logout; refused refresh → login; offline doesn't log out; backup and device transfer excluded; only the launcher is exported; no HTTP logging in release; server authorization enforced per endpoint; report generation is not cached (old cache finding resolved).
 - **Reliability:** no crash telemetry, no offline mode or retry; one crash found and fixed (D1).
 
 ## H. Changes Made
 
-All under `EventQRMobile/app/src/`, uncommitted. Implemented by mobile-developer; reviewed three times by code-reviewer (final: approve, with follow-ups applied).
+All under `EventQRMobile/app/src/`; committed and merged in #332/#333. Implemented by mobile-developer; reviewed three times by code-reviewer (final: approve, with follow-ups applied).
 
 | File | Reason | Effect |
 |---|---|---|
@@ -219,7 +219,7 @@ Test data created on the live backend: attendee registration on "ZZ C-test (safe
 | Unit tests (JVM + Robolectric) | 555 passed, 0 failures (baseline 498) |
 | Lint | 0 errors; 1032 warnings (was 1037) |
 | Instrumented UI tests | New `smoke/AuthSmokeTest` (10) + template test: **11/11 PASS** on the Xiaomi |
-| Backend tests | `mvn -o test`: 867 passed, 0 failures, 2 skipped (Testcontainers Postgres, Docker not installed) |
+| Backend tests | CI `Backend verify`: 948 passed, 0 failures, 0 skipped (the Testcontainers Postgres suite runs in CI; locally it skips without Docker) |
 | Device (fixed build) | 11 regression checks: 10 PASS; the 1 FAIL (OBS-N4) was then fixed and the touched organizer screens smoke-tested PASS with no FATAL in logcat |
 
 ## J2. Round 3 (2026-10-17): decisions applied
@@ -236,21 +236,28 @@ Test data created on the live backend: attendee registration on "ZZ C-test (safe
 - **Token self-renewal (H1), app:** a single shared refresh rotator, a guard while a password change is in flight, and the role picked up on every refresh.
 - **Back navigation (D13):** Back from Sign In or Sign Up returns to Landing; Sign In and Sign Up replace each other; login clears the history; sign-out returns to Sign In with Landing beneath. Verified on the emulator (BS-1..6).
 - **Reviews:** code + security review, two follow-up rounds, final verification: PUSH.
-- **Tests:** backend 946 pass (4 Postgres tests skipped, no Docker); app 604 pass; the upsert SQL was EXPLAIN-checked on live Postgres 17.
+- **Tests:** backend 948 pass in CI (Postgres suite included, 0 skipped); app 604 pass; the upsert SQL was EXPLAIN-checked on live Postgres 17.
 - **Release notes:** ship app and backend together. Old builds can't pick up role changes or survive a password change without re-login. V42 and V43 run on deploy.
 - **After deploy, verify:**
   - One password change, then old token → 401.
   - One account suspend.
   - One print + cancel, then check `id_print_logs.status`.
-- **Open:** `can_print_id` not enforced (product decision); offline not tested; live backend was failing to wake on Render at the end of the session (`hibernate-wake-error`).
+- **Open:** `can_print_id` is still not enforced — the print and template routes require an active assignment (or owner/admin) via `IdPrintingAccess`, not that flag (product decision); offline not tested; live backend was failing to wake on Render at the end of the session (`hibernate-wake-error`).
+
+## J2b. Round 4 (2026-10-17): fresh-database and CI repair
+
+Prompted by PR #333's backend job, which was red on `main` since #332. Two defects, both fixed and merged:
+
+- **Fresh empty database could not migrate at all:** Flyway died at `V2` (`42P01 relation "events" does not exist`) because `V2`..`V15` patch tables that only `V16__baseline_schema.sql` creates. `FreshDatabaseBootstrapCallback` already builds that baseline first, but it was a `@Component` and `@DataJpaTest` slices do not component-scan, so the Postgres tests — the only place a fresh database is built — never ran it. It is now registered with `@Import` on `EventqrApplication` (#334).
+- **A fresh database was stricter than production:** the V17/V18 guards skip `fk_point_transactions_source` and `uq_txn_logs_approved_reg_purpose` in production (legacy drift), but an empty database satisfies them and got both, so reward redemption failed with `23503`/`23505` on any fresh install or DR restore. `R__align_fresh_schema_with_production.sql` (repeatable, not versioned — a new version number before V42/V43 landed would have broken the next deploy under `out-of-order=false`) drops both, and `RewardRedemptionPostgresTest` now asserts the fresh-vs-production parity catalogue.
+- **Consequence for verification:** the backend Postgres suite now actually runs in CI instead of being skipped locally, so "fixed in code, Postgres unverified" is no longer the ceiling for migration work.
 
 ## J. Remaining Work
 
 - **Needs your decision:**
-  - Deploy the backend fixes and run V40/V41. V40 invalidates every existing QR code, so re-send QRs and reprint badges afterwards. Run the Postgres test somewhere with Docker (or on a Supabase branch) first.
-  - H1 token self-renewal.
-  - D13 auth back-stack behavior.
-  - ID print: should a missing ID template fall back to a default (QR + name)? Should cancelled prints be logged (proposed confirm endpoint)?
+  - ~~Deploy the backend fixes and run V40/V41~~ **Done.** V40/V41 were applied by the #332 deploy (2026-10-16); #333 deployed V42/V43 plus the repeatable reconciliation (2026-10-17). Existing printed badges still carry the old QR format only if they predate 2026-10-16 — re-send QRs and reprint as originally planned.
+  - ID print: should a missing ID template fall back to a default (QR + name)? Should cancelled prints be logged? (Both shipped in Round 3 — a default template is used and print logs are confirmed via `PATCH /staff/events/{eventId}/print-logs/{logId}`; keep only if you want different behaviour.)
+  - H1 token self-renewal and D13 auth back-stack: fixed in Round 3 — nothing left to decide unless you disagree with the shipped contract.
 - **Device-checked 2026-10-17 03:51:** D16 cancel and Save-as-PDF on MIUI print service behave correctly; the cancel toast is truncated (Low, shorten copy or use a dialog). The backend was briefly down (503, 03:45-03:49) and recovered by itself.
 - **Not run:** offline/network loss (wireless adb would drop); banner upload; batch ID print; PDF report export; organizer notifications screen.
 - **Device setup note:** MIUI blocks instrumentation from launching activities until EventQR is allowed to "display pop-up windows while running in the background".
@@ -258,4 +265,4 @@ Test data created on the live backend: attendee registration on "ZZ C-test (safe
 
 ## K. Final Assessment
 
-The app builds, launches and its core attendee, staff, organizer and admin flows work correctly against the live backend on the Xiaomi M2101K6G (Android 13). The audit found one crash, one data-loss path and several correctness/UX defects; all in-app ones except D13 are fixed, covered by new unit tests, reviewed, and re-verified on the device where reproducible. Round 2 then covered event-day flows, the release build, password flows and admin actions; all work except two ID-print issues, now fixed in the app. A new UI test suite passes 11/11 on the device. Backend security fixes are written and tested but not deployed. Unverified: offline behavior and the backend fixes against a real Postgres. A High backend auth issue (token self-renewal) remains open. Not production-ready until H1 is fixed and the backend fixes are deployed and verified.
+The app builds, launches and its core attendee, staff, organizer and admin flows work correctly against the live backend on the Xiaomi M2101K6G (Android 13). The audit found one crash, one data-loss path and several correctness/UX defects; all in-app ones are fixed, covered by new unit tests, reviewed, and re-verified on the device where reproducible. Round 2 then covered event-day flows, the release build, password flows and admin actions; all work except two ID-print issues, now fixed in the app. A new UI test suite passes 11/11 on the device. Round 3 closed the backend security findings (H1 token self-renewal, M1 role changes) and D13, and Round 4 repaired the fresh-database migration path; the backend is deployed through #333 with V40-V43 and the `R__` reconciliation applied, and CI `Backend verify` is green again. Unverified: offline behaviour, and the Round 3/4 backend behaviour against production beyond the CI Postgres suite. Remaining known gap: `can_print_id` is not enforced (product decision).
