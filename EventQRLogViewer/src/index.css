@@ -1,0 +1,13 @@
+:root {
+  color-scheme: dark;
+  --bg: #0b0f14;
+  --fg: #d6deeb;
+  --muted: #7a8699;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
