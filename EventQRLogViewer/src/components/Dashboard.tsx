@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { DEFAULT_FILTERS, applyFilters, type LogFilters } from '../filters'
 import { formatClock } from '../format'
-import { useMonitorStream } from '../hooks/useMonitorStream'
+import { useMonitorStream, type UnauthorizedInfo } from '../hooks/useMonitorStream'
 import { ConnectionBadge } from './ConnectionBadge'
 import { Filters } from './Filters'
 import { LogView } from './LogView'
@@ -9,13 +9,15 @@ import { LogView } from './LogView'
 interface Props {
   baseUrl: string
   host: string
+  /** Empty string means anonymous (public mode). */
   token: string
   onDisconnect: () => void
-  onUnauthorized: () => void
+  onUnauthorized: (info: UnauthorizedInfo) => void
 }
 
 export function Dashboard({ baseUrl, host, token, onDisconnect, onUnauthorized }: Props) {
   const stream = useMonitorStream({ baseUrl, token, onUnauthorized })
+  const anonymous = token === ''
   const [filters, setFilters] = useState<LogFilters>(DEFAULT_FILTERS)
 
   // Stable reference between polls that add nothing, so the log does not re-render.
@@ -45,6 +47,7 @@ export function Dashboard({ baseUrl, host, token, onDisconnect, onUnauthorized }
         <div className="topbar-main">
           <h1>EventQR Live CRUD Log</h1>
           <ConnectionBadge status={stream.status} retry={stream.retry} />
+          {anonymous ? <span className="public-note">Public read-only feed</span> : null}
         </div>
         <dl className="meta">
           <div>
@@ -60,9 +63,11 @@ export function Dashboard({ baseUrl, host, token, onDisconnect, onUnauthorized }
             <dd>{stream.eventCount}</dd>
           </div>
         </dl>
-        <button type="button" className="btn" onClick={onDisconnect}>
-          Disconnect
-        </button>
+        {anonymous ? null : (
+          <button type="button" className="btn" onClick={onDisconnect}>
+            Disconnect
+          </button>
+        )}
       </header>
 
       <Filters
@@ -90,7 +95,7 @@ export function Dashboard({ baseUrl, host, token, onDisconnect, onUnauthorized }
 
       <footer className="foot">
         <p>
-          Read-only monitor. The server keeps only the most recent
+          Read-only monitor{anonymous ? ' (public feed, no token needed)' : ''}. The server keeps only the most recent
           {stream.bufferSize !== null ? ` ${stream.bufferSize}` : ''} events in memory; history is
           lost when the backend restarts. This page keeps at most 1000 lines.
         </p>

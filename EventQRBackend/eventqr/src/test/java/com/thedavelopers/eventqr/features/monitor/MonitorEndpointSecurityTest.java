@@ -51,7 +51,8 @@ import com.thedavelopers.eventqr.shared.security.UserTokenRevocationChecker;
                 "brevo.api.key=test-api-key-not-real",
                 "brevo.sender.email=noreply@example.test",
                 "app.monitor.token=correct-horse-battery-staple-0123456789-abcdef",
-                "app.monitor.allowed-origin=https://viewer.example.test"
+                "app.monitor.allowed-origin=https://viewer.example.test",
+                "app.monitor.rate-limit.burst=100000"
         })
 @AutoConfigureMockMvc
 class MonitorEndpointSecurityTest {

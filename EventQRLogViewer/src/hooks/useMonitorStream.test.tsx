@@ -7,6 +7,7 @@ import {
   MAX_LINES,
   PAGE_LIMIT,
   POLL_INTERVAL_MS,
+  RETRY_AFTER_CAP_MS,
   SLOW_START_MS,
   useMonitorStream,
 } from './useMonitorStream'
@@ -29,8 +30,8 @@ const setHidden = (hidden: boolean) => {
 
 const tick = (ms: number) => act(async () => { await vi.advanceTimersByTimeAsync(ms) })
 
-const mount = (onUnauthorized?: () => void) =>
-  renderHook(() => useMonitorStream({ baseUrl: 'https://api.example.com', token: 't', onUnauthorized }))
+const mount = (onUnauthorized?: (info: { everConnected: boolean }) => void, token = 't') =>
+  renderHook(() => useMonitorStream({ baseUrl: 'https://api.example.com', token, onUnauthorized }))
 
 beforeEach(() => {
   vi.useFakeTimers()
@@ -50,7 +51,7 @@ afterEach(() => {
 })
 
 describe('useMonitorStream', () => {
-  it('first poll uses after=0&limit=200 and goes live', async () => {
+  it('first poll uses after=0&limit=100 and goes live', async () => {
     queue.push(() => jsonResponse(body('b1', [makeEvent(1)])))
     const { result } = mount()
     expect(result.current.status).toBe('connecting')
@@ -161,13 +162,14 @@ describe('useMonitorStream', () => {
   it('keeps at most MAX_LINES lines, dropping the oldest', async () => {
     const batch = (from: number) =>
       jsonResponse(body('b1', Array.from({ length: PAGE_LIMIT }, (_, i) => makeEvent(from + i))))
-    for (let i = 0; i < 6; i++) queue.push(() => batch(1 + i * PAGE_LIMIT))
-    queue.push(() => jsonResponse(body('b1', [], 6 * PAGE_LIMIT)))
+    const BATCHES = 11
+    for (let i = 0; i < BATCHES; i++) queue.push(() => batch(1 + i * PAGE_LIMIT))
+    queue.push(() => jsonResponse(body('b1', [], BATCHES * PAGE_LIMIT)))
     const { result } = mount()
-    for (let i = 0; i < 7; i++) await tick(1)
+    for (let i = 0; i < BATCHES + 1; i++) await tick(1)
     expect(result.current.entries).toHaveLength(MAX_LINES)
     const first = result.current.entries[0]
-    expect(first.kind === 'event' && first.event.seq).toBe(6 * PAGE_LIMIT - MAX_LINES + 1)
+    expect(first.kind === 'event' && first.event.seq).toBe(BATCHES * PAGE_LIMIT - MAX_LINES + 1)
   })
 
   it('pauses polling while the tab is hidden and resumes on visible', async () => {
@@ -285,5 +287,78 @@ describe('useMonitorStream', () => {
     expect(result.current.status).toBe('unauthorized')
     expect(JSON.stringify(result.current)).not.toContain('"t"')
     expect(onUnauthorized).toHaveBeenCalledOnce()
+  })
+
+  it('polls anonymously without an Authorization header when the token is empty', async () => {
+    queue.push(() => jsonResponse(body('b1', [makeEvent(1)])))
+    const { result } = mount(undefined, '')
+    await tick(0)
+    expect(result.current.status).toBe('live')
+    const init = fetchMock.mock.calls[0][1] as RequestInit
+    expect(Object.keys(init.headers as object).map((k) => k.toLowerCase())).not.toContain('authorization')
+  })
+
+  it('reports everConnected=false for a 401 on the first anonymous probe', async () => {
+    queue.push(() => jsonResponse({}, 401))
+    const onUnauthorized = vi.fn()
+    mount(onUnauthorized, '')
+    await tick(0)
+    expect(onUnauthorized).toHaveBeenCalledWith({ everConnected: false })
+  })
+
+  it('reports everConnected=true for a 401 after a successful response', async () => {
+    queue.push(() => jsonResponse(body('b1', [makeEvent(1)])))
+    queue.push(() => jsonResponse({}, 401))
+    const onUnauthorized = vi.fn()
+    mount(onUnauthorized, '')
+    await tick(0)
+    await tick(POLL_INTERVAL_MS)
+    expect(onUnauthorized).toHaveBeenCalledWith({ everConnected: true })
+  })
+
+  const rateLimited = (retryAfter?: string): Handler => () =>
+    new Response('{}', { status: 429, headers: retryAfter ? { 'Retry-After': retryAfter } : {} })
+
+  it('429 with Retry-After: Reconnecting, waits the advertised seconds, then recovers', async () => {
+    queue.push(rateLimited('7'))
+    queue.push(() => jsonResponse(body('b1', [makeEvent(1)])))
+    const onUnauthorized = vi.fn()
+    const { result } = mount(onUnauthorized)
+    await tick(0)
+    expect(result.current.status).toBe('reconnecting')
+    expect(result.current.retry).toEqual({ attempt: 1, delayMs: 7000 })
+    expect(result.current.wakeHint).toBe(false)
+    await tick(6999)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    await tick(1)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(result.current.status).toBe('live')
+    expect(onUnauthorized).not.toHaveBeenCalled()
+  })
+
+  it('caps an excessive Retry-After at 30s', async () => {
+    queue.push(rateLimited('120'))
+    const { result } = mount()
+    await tick(0)
+    expect(result.current.retry?.delayMs).toBe(RETRY_AFTER_CAP_MS)
+  })
+
+  it('429 without Retry-After uses the normal backoff', async () => {
+    queue.push(rateLimited())
+    queue.push(rateLimited())
+    const { result } = mount()
+    await tick(0)
+    expect(result.current.status).toBe('reconnecting')
+    expect(result.current.retry).toEqual({ attempt: 1, delayMs: 3000 })
+    await tick(3000)
+    expect(result.current.retry).toEqual({ attempt: 2, delayMs: 6000 })
+  })
+
+  it('never shows Disconnected for repeated 429s', async () => {
+    for (let i = 0; i < DISCONNECTED_AFTER_FAILURES + 2; i++) queue.push(rateLimited('1'))
+    const { result } = mount()
+    for (let i = 0; i < DISCONNECTED_AFTER_FAILURES + 1; i++) await tick(POLL_INTERVAL_MS)
+    expect(fetchMock.mock.calls.length).toBeGreaterThan(DISCONNECTED_AFTER_FAILURES)
+    expect(result.current.status).toBe('reconnecting')
   })
 })

@@ -5,7 +5,10 @@ import type { ConnectionStatus, LogEntry, RetryInfo } from '../types'
 export const POLL_INTERVAL_MS = 1500
 export const BACKOFF_CAP_MS = 10_000
 export const MAX_LINES = 1000
-export const PAGE_LIMIT = 200
+/** Backend clamps `limit` to 100 in public mode. */
+export const PAGE_LIMIT = 100
+/** Upper bound for an honoured Retry-After. */
+export const RETRY_AFTER_CAP_MS = 30_000
 /** Consecutive failures before the badge flips from Reconnecting to Disconnected. */
 export const DISCONNECTED_AFTER_FAILURES = 5
 /** First-connection duration after which the cold-start hint is shown. */
@@ -42,10 +45,16 @@ const INITIAL: MonitorStreamState = {
 const countEvents = (entries: LogEntry[]) =>
   entries.reduce((n, e) => (e.kind === 'event' ? n + 1 : n), 0)
 
+export interface UnauthorizedInfo {
+  /** True when at least one request had already succeeded before the 401. */
+  everConnected: boolean
+}
+
 export interface UseMonitorStreamOptions {
   baseUrl: string
+  /** Empty string polls anonymously (public mode); no Authorization header is sent. */
   token: string
-  onUnauthorized?: () => void
+  onUnauthorized?: (info: UnauthorizedInfo) => void
 }
 
 /**
@@ -111,7 +120,7 @@ export function useMonitorStream({
         case 'unauthorized':
           terminal = true
           patch({ status: 'unauthorized', retry: null })
-          unauthorizedRef.current?.()
+          unauthorizedRef.current?.({ everConnected })
           return
         case 'disabled':
           terminal = true
@@ -119,11 +128,18 @@ export function useMonitorStream({
           return
         case 'error': {
           failures += 1
-          const delayMs = backoffDelay(failures)
+          const rateLimited = result.status === 429
+          // Honour Retry-After for 429 (capped); otherwise the normal exponential backoff.
+          const delayMs =
+            rateLimited && result.retryAfterMs !== undefined
+              ? Math.min(Math.max(result.retryAfterMs, POLL_INTERVAL_MS), RETRY_AFTER_CAP_MS)
+              : backoffDelay(failures)
           const coldStartLike = result.status === null || [502, 503, 504].includes(result.status)
           setState((s) => ({
             ...s,
-            status: failures >= DISCONNECTED_AFTER_FAILURES ? 'disconnected' : 'reconnecting',
+            // A rate limit means the server is reachable: never flip to Disconnected for it.
+            status:
+              failures >= DISCONNECTED_AFTER_FAILURES && !rateLimited ? 'disconnected' : 'reconnecting',
             retry: { attempt: failures, delayMs },
             lastError: result.message,
             wakeHint: s.wakeHint || (!everConnected && coldStartLike),

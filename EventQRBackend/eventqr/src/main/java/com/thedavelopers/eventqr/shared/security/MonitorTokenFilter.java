@@ -33,6 +33,8 @@ import jakarta.servlet.http.HttpServletResponse;
  *   <li>Matching token: an authenticated principal with the single authority {@code ROLE_MONITOR} is installed.
  *       Real user JWTs never match, so they are not accepted here.</li>
  *   <li>Anything else: no authentication is set and the chain's entry point answers 401.</li>
+ *   <li>Public mode ({@code app.monitor.public}): never 404; a missing or wrong header is simply ignored and the
+ *       request continues unauthenticated, where the chain allows anonymous access to the single read endpoint only.</li>
  * </ul>
  *
  * <p>Comparison is constant time: both sides are SHA-256 hashed (fixed length) and compared with
@@ -44,21 +46,32 @@ public class MonitorTokenFilter extends OncePerRequestFilter {
     private static final String BEARER = "Bearer ";
 
     private final byte[] expectedDigest;
+    private final boolean publicMode;
 
     public MonitorTokenFilter(String configuredToken) {
+        this(configuredToken, false);
+    }
+
+    /**
+     * @param publicMode when true the feed is readable anonymously: the filter never answers 404/401 itself and
+     *                   ignores a missing or wrong Authorization header (the chain's authorization rules decide
+     *                   which requests may be anonymous). A matching token still authenticates as usual.
+     */
+    public MonitorTokenFilter(String configuredToken, boolean publicMode) {
         this.expectedDigest = MonitorSettings.isUsableToken(configuredToken) ? sha256(configuredToken.trim()) : null;
+        this.publicMode = publicMode;
     }
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
-        if (expectedDigest == null) {
+        if (expectedDigest == null && !publicMode) {
             writeError(request, response, HttpStatus.NOT_FOUND, "Not found");
             return;
         }
         String header = request.getHeader("Authorization");
-        if (header != null && header.regionMatches(true, 0, BEARER, 0, BEARER.length())) {
+        if (expectedDigest != null && header != null && header.regionMatches(true, 0, BEARER, 0, BEARER.length())) {
             String presented = header.substring(BEARER.length()).trim();
             if (MessageDigest.isEqual(expectedDigest, sha256(presented))) {
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(

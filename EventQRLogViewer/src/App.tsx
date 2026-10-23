@@ -7,7 +7,8 @@ const config = resolveApiConfig(import.meta.env.VITE_API_BASE_URL as string | un
 
 export default function App() {
   // The token lives only in this component's state (memory).
-  const [token, setToken] = useState<string | null>(null)
+  // '' = anonymous probe (public mode, no Authorization header); null = show the token gate.
+  const [token, setToken] = useState<string | null>('')
   const [authError, setAuthError] = useState<string | null>(null)
 
   if (!config.ok) {
@@ -50,8 +51,13 @@ export default function App() {
           setAuthError(null)
           setToken(null)
         }}
-        onUnauthorized={() => {
-          setAuthError('The backend rejected this token (401 Unauthorized). Check it and try again.')
+        onUnauthorized={({ everConnected }) => {
+          if (token === '') {
+            // Anonymous probe rejected: ask for a token (with a notice if public mode was switched off).
+            setAuthError(everConnected ? 'Access now requires a token' : null)
+          } else {
+            setAuthError('The backend rejected this token (401 Unauthorized). Check it and try again.')
+          }
           setToken(null)
         }}
       />

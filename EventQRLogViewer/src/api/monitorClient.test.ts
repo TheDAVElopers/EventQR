@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { body, jsonResponse, makeEvent } from '../test/helpers'
-import { fetchMonitorEvents } from './monitorClient'
+import { fetchMonitorEvents, parseRetryAfter } from './monitorClient'
 
-const base = { baseUrl: 'https://api.example.com', token: 'secret-token', after: 7, limit: 200 }
+const base = { baseUrl: 'https://api.example.com', token: 'secret-token', after: 7, limit: 100 }
 
 afterEach(() => {
   vi.useRealTimers()
@@ -14,7 +14,7 @@ describe('fetchMonitorEvents', () => {
     const out = await fetchMonitorEvents({ ...base, fetchImpl })
     expect(out.kind).toBe('ok')
     const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit]
-    expect(url).toBe('https://api.example.com/api/v1/monitor/events?after=7&limit=200')
+    expect(url).toBe('https://api.example.com/api/v1/monitor/events?after=7&limit=100')
     expect(init.method).toBe('GET')
     expect((init.headers as Record<string, string>).Authorization).toBe('Bearer secret-token')
     expect(init.body).toBeUndefined()
@@ -101,5 +101,36 @@ describe('fetchMonitorEvents', () => {
     const pending = fetchMonitorEvents({ ...base, fetchImpl: fetchImpl as unknown as typeof fetch, timeoutMs: 1000 })
     await vi.advanceTimersByTimeAsync(1000)
     expect(await pending).toMatchObject({ kind: 'error', message: 'Request timed out' })
+  })
+
+  it('sends no Authorization header at all when the token is empty (anonymous)', async () => {
+    const fetchImpl = vi.fn(async () => jsonResponse(body('b1', [makeEvent(1)])))
+    const out = await fetchMonitorEvents({ ...base, token: '', fetchImpl })
+    expect(out.kind).toBe('ok')
+    const init = (fetchImpl.mock.calls[0] as unknown as [string, RequestInit])[1]
+    const headers = init.headers as Record<string, string>
+    expect(Object.keys(headers).map((k) => k.toLowerCase())).not.toContain('authorization')
+    expect(init.method).toBe('GET')
+  })
+
+  it('429 with Retry-After surfaces a transient error carrying the delay', async () => {
+    const out = await fetchMonitorEvents({
+      ...base,
+      fetchImpl: async () => new Response('{}', { status: 429, headers: { 'Retry-After': '7' } }),
+    })
+    expect(out).toMatchObject({ kind: 'error', status: 429, retryAfterMs: 7000 })
+  })
+
+  it('429 without Retry-After has no delay hint', async () => {
+    const out = await fetchMonitorEvents({ ...base, fetchImpl: async () => jsonResponse({}, 429) })
+    expect(out).toMatchObject({ kind: 'error', status: 429 })
+    expect(out).not.toHaveProperty('retryAfterMs')
+  })
+
+  it('parseRetryAfter accepts delta-seconds only', () => {
+    expect(parseRetryAfter('3')).toBe(3000)
+    expect(parseRetryAfter('1.5')).toBe(1500)
+    expect(parseRetryAfter(null)).toBeUndefined()
+    expect(parseRetryAfter('Wed, 21 Oct 2026 07:28:00 GMT')).toBeUndefined()
   })
 })

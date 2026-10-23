@@ -5,11 +5,12 @@ export type FetchOutcome =
   | { kind: 'ok'; data: MonitorResponse }
   | { kind: 'unauthorized' }
   | { kind: 'disabled' }
-  | { kind: 'error'; status: number | null; message: string }
+  | { kind: 'error'; status: number | null; message: string; retryAfterMs?: number }
   | { kind: 'aborted' }
 
 export interface FetchEventsArgs {
   baseUrl: string
+  /** Empty string means anonymous: no Authorization header is sent at all. */
   token: string
   after: number
   limit: number
@@ -17,6 +18,12 @@ export interface FetchEventsArgs {
   /** Abort a hanging request (e.g. Render cold start) after this many ms. */
   timeoutMs?: number
   fetchImpl?: typeof fetch
+}
+
+/** Retry-After in delta-seconds -> ms; undefined when absent or not a plain number. */
+export function parseRetryAfter(value: string | null): number | undefined {
+  if (value === null || !/^\s*\d+(\.\d+)?\s*$/.test(value)) return undefined
+  return Math.round(Number(value) * 1000)
 }
 
 /**
@@ -42,7 +49,9 @@ export async function fetchMonitorEvents(args: FetchEventsArgs): Promise<FetchOu
   try {
     const res = await doFetch(url, {
       method: 'GET',
-      headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+      headers: token
+        ? { Authorization: `Bearer ${token}`, Accept: 'application/json' }
+        : { Accept: 'application/json' },
       signal: controller.signal,
       cache: 'no-store',
       credentials: 'omit',
@@ -51,7 +60,19 @@ export async function fetchMonitorEvents(args: FetchEventsArgs): Promise<FetchOu
     if (res.status === 401) return { kind: 'unauthorized' }
     if (res.status === 404) return { kind: 'disabled' }
     if (!res.ok) {
-      return { kind: 'error', status: res.status, message: `Server responded with HTTP ${res.status}` }
+      const error: FetchOutcome = {
+        kind: 'error',
+        status: res.status,
+        message:
+          res.status === 429
+            ? 'Rate limited by the server (HTTP 429)'
+            : `Server responded with HTTP ${res.status}`,
+      }
+      if (res.status === 429) {
+        const retryAfterMs = parseRetryAfter(res.headers.get('Retry-After'))
+        if (retryAfterMs !== undefined) error.retryAfterMs = retryAfterMs
+      }
+      return error
     }
     let body: unknown
     try {

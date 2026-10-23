@@ -26,6 +26,9 @@ public class CrudEventRecorder {
     public static final int MAX_BUFFER_SIZE = 5000;
     public static final int MAX_LIMIT = 500;
     public static final int DEFAULT_LIMIT = 200;
+    /** Page-size bounds applied by the controller while the feed is public. */
+    public static final int PUBLIC_MAX_LIMIT = 100;
+    public static final int PUBLIC_DEFAULT_LIMIT = 100;
 
     private final String bootId = UUID.randomUUID().toString();
     private final CrudEvent[] ring;

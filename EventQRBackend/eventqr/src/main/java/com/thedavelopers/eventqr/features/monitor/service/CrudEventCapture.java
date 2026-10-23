@@ -57,7 +57,7 @@ import jakarta.servlet.http.HttpServletRequest;
  * </ul>
  *
  * <p><b>Privacy.</b> Identifiers of {@link #REDACTED_ID_TABLES} are never emitted, and reads of
- * {@code user_profiles} carry no row count, so the feed cannot answer "does this person exist". No field values,
+ * {@link #NO_ROW_COUNT_TABLES} carry no row count, so the feed cannot answer "does this person exist". No field values,
  * parameters, SQL text, bodies, headers or tokens are accepted or stored.
  *
  * <p><b>Safety.</b> Every public method swallows {@link Exception} (logged at debug) so monitoring can never
@@ -83,8 +83,11 @@ public class CrudEventCapture {
             "event_registrations",
             "qr_credentials");
 
-    /** Reads on this table carry no row count (no registered-or-not oracle). */
-    private static final String NO_ROW_COUNT_TABLE = "user_profiles";
+    /** Reads on these tables carry no row count (no registered-or-not or "does this person hold X" oracle). */
+    public static final Set<String> NO_ROW_COUNT_TABLES = Set.of(
+            "user_profiles",
+            "event_registrations",
+            "qr_credentials");
 
     public static final String MULTIPLE_TABLES = "(multiple)";
 
@@ -118,7 +121,7 @@ public class CrudEventCapture {
             if (info == null || excluded(table)) {
                 return;
             }
-            Integer rows = NO_ROW_COUNT_TABLE.equals(table) ? null : rowCount;
+            Integer rows = NO_ROW_COUNT_TABLES.contains(table) ? null : rowCount;
             emit(new Pending(Instant.now(), CrudOperation.READ, table, null, description, info, rows),
                     success ? CrudResult.SUCCESS : CrudResult.FAILURE);
         } catch (Exception e) {

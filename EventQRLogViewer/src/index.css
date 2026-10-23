@@ -513,3 +513,11 @@ input[type='password'] {
     min-height: 40px;
   }
 }
+
+.public-note {
+  font-size: clamp(12px, 0.6vw + 6px, 16px);
+  color: var(--muted);
+  border: 1px dashed var(--control-border);
+  border-radius: 6px;
+  padding: 1px 8px;
+}

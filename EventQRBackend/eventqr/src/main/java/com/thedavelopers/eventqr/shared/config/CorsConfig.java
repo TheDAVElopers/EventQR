@@ -47,6 +47,7 @@ public class CorsConfig {
             monitor.setAllowedOrigins(List.of(monitorAllowedOrigin.trim()));
             monitor.setAllowedMethods(List.of("GET", "OPTIONS"));
             monitor.setAllowedHeaders(List.of("Authorization", "Accept", "Content-Type"));
+            monitor.setExposedHeaders(List.of("Retry-After"));
             monitor.setAllowCredentials(false);
             monitor.setMaxAge(3600L);
             source.registerCorsConfiguration("/api/v1/monitor/**", monitor);

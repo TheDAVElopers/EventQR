@@ -12,7 +12,8 @@ import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 
 /**
- * Activates a monitor bean only when {@code app.monitor.token} is at least {@value MonitorSettings#MIN_TOKEN_LENGTH} characters. With no token the whole monitor
+ * Activates a monitor bean only when {@code app.monitor.public} is true or {@code app.monitor.token} is at least
+ * {@value MonitorSettings#MIN_TOKEN_LENGTH} characters. Otherwise the whole monitor
  * (recorder, Hibernate listeners, repository aspect, endpoint) is absent, so it costs no memory or per-call work.
  */
 @Documented
@@ -24,7 +25,8 @@ public @interface MonitorEnabled {
     class TokenConfigured implements Condition {
         @Override
         public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-            return MonitorSettings.isUsableToken(context.getEnvironment().getProperty("app.monitor.token"));
+            return MonitorSettings.isEnabled(context.getEnvironment().getProperty("app.monitor.token"),
+                    MonitorSettings.isPublic(context.getEnvironment()));
         }
     }
 }
