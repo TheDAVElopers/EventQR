@@ -51,6 +51,9 @@ public class SecurityConfig {
                         "/actuator/health/readiness")
                 .permitAll()
                 .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                // Defence in depth: the monitor feed is served by MonitorSecurityConfig's own chain (shared token).
+                // If that chain ever stopped matching, no user JWT, whatever its role, may reach the controller.
+                .requestMatchers("/api/v1/monitor/**").denyAll()
                 .anyRequest().authenticated());
 
         http.exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedEntryPoint()));
