@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F9FAFB">
+    android:background="@color/background">
 
     <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
         android:id="@+id/layoutTopBar"
@@ -18,7 +18,7 @@
         android:layout_below="@id/layoutTopBar"
         android:clipToPadding="false"
         android:fillViewport="true"
-        android:paddingBottom="24dp">
+        android:paddingBottom="@dimen/space_xl">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -28,7 +28,7 @@
             <FrameLayout
                 android:id="@+id/layoutEventHero"
                 android:layout_width="match_parent"
-                android:layout_height="220dp"
+                android:layout_height="@dimen/hero_height_220"
                 android:background="@drawable/bg_eventqr_gradient">
 
                 <ImageView
@@ -43,7 +43,7 @@
                     android:id="@+id/viewEventPosterOverlay"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="#66000000"
+                    android:background="@color/scrim"
                     android:visibility="gone" />
 
                 <LinearLayout
@@ -51,7 +51,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom"
                     android:orientation="vertical"
-                    android:padding="24dp">
+                    android:padding="@dimen/space_xl">
 
                     <FrameLayout
                     android:layout_width="match_parent"
@@ -63,10 +63,8 @@
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
                         android:maxLines="2"
-                        android:text=""
-                        android:textColor="#FFFFFF"
-                        android:textSize="28sp"
-                        android:textStyle="bold" />
+                        android:textColor="@color/on_primary"
+                        android:textAppearance="@style/TextAppearance.EventQR.HeadlineL" />
 
                     <View
                         android:id="@+id/skeletonDetailTitle"
@@ -83,27 +81,26 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingHorizontal="24dp"
-                android:paddingTop="20dp">
+                android:paddingHorizontal="@dimen/space_xl"
+                android:paddingTop="@dimen/space_20">
 
                 <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content">
-                    <TextView android:id="@+id/txtDetailStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_event_description" android:textColor="@color/text_disabled" android:textSize="12sp" android:textStyle="bold" />
-                    <TextView android:id="@+id/txtOrganizer" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:text="@string/event_detail_by_organizer" android:textColor="#6B7280" android:textSize="14sp" android:visibility="gone" />
+                    <TextView android:id="@+id/txtDetailStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_event_description" android:textColor="@color/text_disabled" android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
+                    <TextView android:id="@+id/txtOrganizer" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:text="@string/event_detail_by_organizer" android:textColor="@color/text_secondary" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" android:visibility="gone" />
                 </RelativeLayout>
 
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp">
+                    android:layout_marginTop="@dimen/space_lg">
 
                     <TextView
                         android:id="@+id/txtDetailDescription"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:lineSpacingExtra="4dp"
-                        android:text=""
                         android:textColor="@color/text_secondary"
-                        android:textSize="14sp" />
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
 
                     <View
                         android:id="@+id/skeletonDetailDescription"
@@ -114,94 +111,94 @@
                         android:visibility="gone" />
                 </FrameLayout>
 
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:background="@drawable/bg_info_card" android:orientation="vertical" android:padding="20dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_xl" android:background="@drawable/bg_info_card" android:orientation="vertical" android:padding="@dimen/space_20">
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_calendar" app:tint="#4F46E5" />
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="16dp" android:orientation="vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_date" android:textColor="@color/text_disabled" android:textSize="12sp" android:textStyle="bold" />
-                            <FrameLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp">
-                                <TextView android:id="@+id/txtDetailDate" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+                        <ImageView android:layout_width="@dimen/icon_lg" android:layout_height="@dimen/icon_lg" android:src="@drawable/ic_calendar" app:tint="@color/primary" />
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/space_lg" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_date" android:textColor="@color/text_disabled" android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
+                            <FrameLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_xxs">
+                                <TextView android:id="@+id/txtDetailDate" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
                                 <View android:id="@+id/skeletonDetailDate" android:layout_width="130dp" android:layout_height="16dp" android:background="@drawable/bg_staff_skeleton_bar" android:visibility="gone" />
                             </FrameLayout>
                         </LinearLayout>
                     </LinearLayout>
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="40dp" android:layout_marginVertical="16dp" android:background="#F3F4F6" />
+                    <View style="@style/Widget.EventQR.Divider.Muted" android:layout_marginStart="@dimen/space_40" android:layout_marginVertical="@dimen/space_lg" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_row_clock" app:tint="#4F46E5" />
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="16dp" android:orientation="vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_time" android:textColor="@color/text_disabled" android:textSize="12sp" android:textStyle="bold" />
-                            <FrameLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp">
-                                <TextView android:id="@+id/txtDetailTime" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+                        <ImageView android:layout_width="@dimen/icon_lg" android:layout_height="@dimen/icon_lg" android:src="@drawable/ic_row_clock" app:tint="@color/primary" />
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/space_lg" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_time" android:textColor="@color/text_disabled" android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
+                            <FrameLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_xxs">
+                                <TextView android:id="@+id/txtDetailTime" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
                                 <View android:id="@+id/skeletonDetailTime" android:layout_width="90dp" android:layout_height="16dp" android:background="@drawable/bg_staff_skeleton_bar" android:visibility="gone" />
                             </FrameLayout>
                         </LinearLayout>
                     </LinearLayout>
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="40dp" android:layout_marginVertical="16dp" android:background="#F3F4F6" />
+                    <View style="@style/Widget.EventQR.Divider.Muted" android:layout_marginStart="@dimen/space_40" android:layout_marginVertical="@dimen/space_lg" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_location" app:tint="#4F46E5" />
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="16dp" android:orientation="vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_location" android:textColor="@color/text_disabled" android:textSize="12sp" android:textStyle="bold" />
-                            <FrameLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp">
-                                <TextView android:id="@+id/txtDetailVenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+                        <ImageView android:layout_width="@dimen/icon_lg" android:layout_height="@dimen/icon_lg" android:src="@drawable/ic_location" app:tint="@color/primary" />
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/space_lg" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_location" android:textColor="@color/text_disabled" android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
+                            <FrameLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_xxs">
+                                <TextView android:id="@+id/txtDetailVenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
                                 <View android:id="@+id/skeletonDetailVenue" android:layout_width="160dp" android:layout_height="16dp" android:background="@drawable/bg_staff_skeleton_bar" android:visibility="gone" />
                             </FrameLayout>
                         </LinearLayout>
                     </LinearLayout>
-                    <View android:id="@+id/viewCategoryDivider" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="40dp" android:layout_marginVertical="16dp" android:background="#F3F4F6" android:visibility="gone" />
+                    <View android:id="@+id/viewCategoryDivider" style="@style/Widget.EventQR.Divider.Muted" android:layout_marginStart="@dimen/space_40" android:layout_marginVertical="@dimen/space_lg" android:visibility="gone" />
                     <LinearLayout android:id="@+id/layoutCategoryRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:visibility="gone">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_row_tag" app:tint="#4F46E5" />
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="16dp" android:orientation="vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_category" android:textColor="@color/text_disabled" android:textSize="12sp" android:textStyle="bold" />
-                            <TextView android:id="@+id/txtDetailCategory" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+                        <ImageView android:layout_width="@dimen/icon_lg" android:layout_height="@dimen/icon_lg" android:src="@drawable/ic_row_tag" app:tint="@color/primary" />
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/space_lg" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_category" android:textColor="@color/text_disabled" android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
+                            <TextView android:id="@+id/txtDetailCategory" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_xxs" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
                         </LinearLayout>
                     </LinearLayout>
-                    <View android:id="@+id/viewAudienceDivider" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="40dp" android:layout_marginVertical="16dp" android:background="#F3F4F6" android:visibility="gone" />
+                    <View android:id="@+id/viewAudienceDivider" style="@style/Widget.EventQR.Divider.Muted" android:layout_marginStart="@dimen/space_40" android:layout_marginVertical="@dimen/space_lg" android:visibility="gone" />
                     <LinearLayout android:id="@+id/layoutAudienceRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:visibility="gone">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_nav_profile" app:tint="#4F46E5" />
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="16dp" android:orientation="vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_target_audience" android:textColor="@color/text_disabled" android:textSize="12sp" android:textStyle="bold" />
-                            <TextView android:id="@+id/txtDetailAudience" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+                        <ImageView android:layout_width="@dimen/icon_lg" android:layout_height="@dimen/icon_lg" android:src="@drawable/ic_nav_profile" app:tint="@color/primary" />
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/space_lg" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_target_audience" android:textColor="@color/text_disabled" android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
+                            <TextView android:id="@+id/txtDetailAudience" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_xxs" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
                         </LinearLayout>
                     </LinearLayout>
-                    <View android:id="@+id/viewRegWindowDivider" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="40dp" android:layout_marginVertical="16dp" android:background="#F3F4F6" android:visibility="gone" />
+                    <View android:id="@+id/viewRegWindowDivider" style="@style/Widget.EventQR.Divider.Muted" android:layout_marginStart="@dimen/space_40" android:layout_marginVertical="@dimen/space_lg" android:visibility="gone" />
                     <LinearLayout android:id="@+id/layoutRegWindowRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:visibility="gone">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_calendar" app:tint="#4F46E5" />
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="16dp" android:orientation="vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_registration_window" android:textColor="@color/text_disabled" android:textSize="12sp" android:textStyle="bold" />
-                            <TextView android:id="@+id/txtDetailRegWindow" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:maxLines="1" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="10sp" android:autoSizeMaxTextSize="14sp" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+                        <ImageView android:layout_width="@dimen/icon_lg" android:layout_height="@dimen/icon_lg" android:src="@drawable/ic_calendar" app:tint="@color/primary" />
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/space_lg" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_registration_window" android:textColor="@color/text_disabled" android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
+                            <TextView android:id="@+id/txtDetailRegWindow" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_xxs" android:maxLines="1" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="@dimen/type_micro" android:autoSizeMaxTextSize="@dimen/type_body_medium" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
                         </LinearLayout>
                     </LinearLayout>
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="40dp" android:layout_marginVertical="16dp" android:background="#F3F4F6" />
+                    <View style="@style/Widget.EventQR.Divider.Muted" android:layout_marginStart="@dimen/space_40" android:layout_marginVertical="@dimen/space_lg" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_nav_profile" app:tint="#4F46E5" />
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="16dp" android:orientation="vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_capacity" android:textColor="@color/text_disabled" android:textSize="12sp" android:textStyle="bold" />
-                            <FrameLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp">
-                                <TextView android:id="@+id/txtDetailCapacity" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+                        <ImageView android:layout_width="@dimen/icon_lg" android:layout_height="@dimen/icon_lg" android:src="@drawable/ic_nav_profile" app:tint="@color/primary" />
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/space_lg" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_capacity" android:textColor="@color/text_disabled" android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
+                            <FrameLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_xxs">
+                                <TextView android:id="@+id/txtDetailCapacity" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
                                 <View android:id="@+id/skeletonDetailCapacity" android:layout_width="140dp" android:layout_height="16dp" android:background="@drawable/bg_staff_skeleton_bar" android:visibility="gone" />
                             </FrameLayout>
                         </LinearLayout>
                     </LinearLayout>
-                    <View android:id="@+id/viewRewardsDivider" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="40dp" android:layout_marginVertical="16dp" android:background="#F3F4F6" android:visibility="gone" />
+                    <View android:id="@+id/viewRewardsDivider" style="@style/Widget.EventQR.Divider.Muted" android:layout_marginStart="@dimen/space_40" android:layout_marginVertical="@dimen/space_lg" android:visibility="gone" />
                     <LinearLayout android:id="@+id/layoutRewardsRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:visibility="gone">
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_nav_gift" app:tint="#4F46E5" />
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="16dp" android:orientation="vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_rewards" android:textColor="@color/text_disabled" android:textSize="12sp" android:textStyle="bold" />
-                            <FrameLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp">
-                                <TextView android:id="@+id/txtRewardsAvailable" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_rewards_available" android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+                        <ImageView android:layout_width="@dimen/icon_lg" android:layout_height="@dimen/icon_lg" android:src="@drawable/ic_nav_gift" app:tint="@color/primary" />
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/space_lg" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_rewards" android:textColor="@color/text_disabled" android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
+                            <FrameLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_xxs">
+                                <TextView android:id="@+id/txtRewardsAvailable" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_rewards_available" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
                                 <View android:id="@+id/skeletonDetailRewards" android:layout_width="140dp" android:layout_height="16dp" android:background="@drawable/bg_staff_skeleton_bar" android:visibility="gone" />
                             </FrameLayout>
                         </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/layoutRegistrationStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:background="@drawable/bg_info_card" android:orientation="vertical" android:padding="20dp">
+                <LinearLayout android:id="@+id/layoutRegistrationStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_20" android:background="@drawable/bg_info_card" android:orientation="vertical" android:padding="@dimen/space_20">
                     <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_registration_status" android:textColor="@color/text_primary" android:textSize="16sp" android:textStyle="bold" />
-                        <TextView android:id="@+id/txtRegPercent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:text="" android:textColor="#4F46E5" android:textSize="14sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_registration_status" android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong" />
+                        <TextView android:id="@+id/txtRegPercent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:textColor="@color/primary" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
                     </RelativeLayout>
-                    <ProgressBar android:id="@+id/pbRegistrationDetail" style="@android:style/Widget.ProgressBar.Horizontal" android:layout_width="match_parent" android:layout_height="8dp" android:layout_marginTop="12dp" android:max="100" android:progress="0" android:progressDrawable="@drawable/pb_event_upcoming" />
-                    <TextView android:id="@+id/txtRemainingSpots" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="" android:textColor="#6B7280" android:textSize="14sp" />
+                    <ProgressBar android:id="@+id/pbRegistrationDetail" style="@android:style/Widget.ProgressBar.Horizontal" android:layout_width="match_parent" android:layout_height="@dimen/space_sm" android:layout_marginTop="@dimen/space_md" android:max="100" android:progress="0" android:progressDrawable="@drawable/pb_event_upcoming" />
+                    <TextView android:id="@+id/txtRemainingSpots" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_md" android:textColor="@color/text_secondary" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
                 </LinearLayout>
 
 
@@ -214,33 +211,32 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:background="#F9FAFB"
+        android:background="@color/background"
         android:orientation="vertical"
-        android:paddingHorizontal="16dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="16dp">
+        android:paddingHorizontal="@dimen/space_lg"
+        android:paddingTop="@dimen/space_md"
+        android:paddingBottom="@dimen/space_lg">
 
         <Button
             android:id="@+id/btnRegisterForEvent"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="@dimen/button_primary_height"
             android:background="@drawable/bg_detail_register_button"
             android:text="@string/event_detail_register"
             android:textAllCaps="false"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textColor="@color/on_primary"
+            android:textAppearance="@style/TextAppearance.EventQR.ButtonPlatformBodyLarge.Strong" />
 
         <Button
             android:id="@+id/btnCancelRegistration"
             style="?android:attr/borderlessButtonStyle"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="4dp"
+            android:layout_height="@dimen/touch_target_min"
+            android:layout_marginTop="@dimen/space_xs"
             android:text="@string/event_detail_cancel_registration"
             android:textAllCaps="false"
             android:textColor="@color/error"
-            android:textSize="14sp"
+            android:textAppearance="@style/TextAppearance.EventQR.ButtonPlatformBodyMedium"
             android:visibility="gone" />
     </LinearLayout>
 </RelativeLayout>

@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.staff
 
+import com.thedavelopers.eventqr.ui.theme.dimenOffset
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import android.app.AlertDialog
 import android.content.Intent
@@ -172,7 +173,7 @@ open class ManageUsersActivity : AppCompatActivity() {
     private fun showEditPermissions(staff: OrganizerMvpStaff) {
         val form = StaffPermissionsForm(this, staff)
         val container = android.widget.FrameLayout(this).apply {
-            val pad = (20 * resources.displayMetrics.density).toInt()
+            val pad = dimenOffset(R.dimen.space_20)
             setPadding(pad, pad / 2, pad, 0)
             addView(form.view)
         }

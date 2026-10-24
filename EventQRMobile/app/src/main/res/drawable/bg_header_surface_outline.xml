@@ -7,7 +7,7 @@
     </item>
     <item android:gravity="bottom">
         <shape android:shape="rectangle">
-            <size android:height="1dp" />
+            <size android:height="@dimen/stroke_hairline" />
             <solid android:color="@color/outline" />
         </shape>
     </item>

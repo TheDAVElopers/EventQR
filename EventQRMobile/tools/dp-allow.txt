@@ -1,0 +1,64 @@
+# Reviewed single-use dp/sp literals that intentionally stay literal (rule: a value used < 3 times, or a one-off art size).
+# Read by tools/check-tokens.ps1 for the dp-layout, dp-spacing and drawable categories.
+#
+# Format (one entry per line, '|' separated, '#' starts a comment):
+#   file|attr|value|reason
+#     file   file name only (activity_foo.xml, bg_bar.xml), not a path
+#     attr   attribute name without the android:/app: prefix (layout_width, minHeight, paddingTop, radius, ...)
+#     value  exactly as written in the file (28dp)
+#     reason why it is not a token
+# One entry exempts EVERY occurrence of that attr+value in that file. An entry that matches nothing is STALE and fails the check.
+
+activity_admin_dashboard.xml|layout_width|30dp|loading spinner size, single use
+activity_admin_dashboard.xml|layout_height|30dp|loading spinner size, single use
+activity_admin_event_requests.xml|minWidth|46dp|filter chip min width tuned to its label (All)
+activity_admin_event_requests.xml|minWidth|82dp|filter chip min width tuned to its label (Pending)
+activity_admin_event_requests.xml|minWidth|88dp|filter chip min width tuned to its label (Approved)
+activity_admin_event_requests.xml|minWidth|86dp|filter chip min width tuned to its label (Rejected)
+activity_attendee_management.xml|layout_width|12dp|calendar glyph, one-off art size
+activity_attendee_management.xml|layout_height|12dp|calendar glyph, one-off art size
+activity_attendee_management.xml|layout_height|36dp|vertical divider between the two stat blocks, single use
+activity_attendee_profile.xml|layout_width|88dp|profile avatar, one-off art size
+activity_attendee_profile.xml|layout_height|88dp|profile avatar, one-off art size
+activity_edit_profile.xml|minWidth|64dp|retry button min width, single use
+activity_event_detail.xml|lineSpacingExtra|4dp|description line spacing, single use
+activity_event_registrations.xml|layout_height|62dp|filter card height, single use
+activity_event_registrations.xml|layout_height|74dp|filter card height, single use
+activity_forgot_password.xml|paddingStart|15dp|input inner padding tuned to the sign-in field, single use
+activity_forgot_password.xml|paddingEnd|15dp|input inner padding tuned to the sign-in field, single use
+activity_my_event_requests.xml|layout_height|36dp|compact header action height, single use
+activity_my_event_requests.xml|minWidth|78dp|compact header action min width, single use
+activity_new_password.xml|layout_width|50dp|brand logo, one-off art size
+activity_new_password.xml|layout_height|50dp|brand logo, one-off art size
+activity_organizer_dashboard.xml|maxWidth|160dp|header subtitle wrap width, single use
+activity_organizer_dashboard.xml|minHeight|40dp|see-all text button touch height, single use
+activity_qr_credential.xml|minHeight|760dp|content min height so the QR card fills the screen, single use
+activity_qr_credential.xml|layout_marginTop|36dp|QR card top offset, single use
+activity_qr_credential.xml|layout_width|74dp|QR download button frame, one-off art size
+activity_qr_credential.xml|layout_height|74dp|QR download button frame, one-off art size
+activity_qr_display.xml|minHeight|760dp|content min height so the QR card fills the screen, single use
+activity_qr_display.xml|layout_width|74dp|QR download button frame, one-off art size
+activity_qr_display.xml|layout_height|74dp|QR download button frame, one-off art size
+activity_reset_password.xml|layout_width|50dp|brand logo, one-off art size
+activity_reset_password.xml|layout_height|50dp|brand logo, one-off art size
+activity_signin.xml|paddingTop|34dp|header top inset tuned to the logo, single use
+activity_staff_assignment.xml|minWidth|80dp|add button min width, single use
+activity_staff_dashboard.xml|maxWidth|190dp|staff name wrap width, single use
+activity_staff_scan_result.xml|layout_width|56dp|attendee avatar, one-off art size
+activity_staff_scan_result.xml|layout_height|56dp|attendee avatar, one-off art size
+activity_staff_scan_result.xml|iconSize|30dp|scan-again icon, one-off art size
+activity_staff_scanner.xml|layout_width|236dp|scanner viewfinder frame, one-off art size
+activity_staff_scanner.xml|layout_height|236dp|scanner viewfinder frame, one-off art size
+activity_staff_scanner.xml|layout_width|192dp|scanner camera well, one-off art size
+activity_staff_scanner.xml|layout_height|192dp|scanner camera well, one-off art size
+activity_staff_scanner.xml|layout_width|96dp|manual submit button width, single use
+activity_staff_transaction_logs.xml|layout_height|60dp|filter card height, single use
+activity_staff_transaction_result.xml|iconSize|35dp|scan-next icon, one-off art size
+activity_user_dashboard.xml|maxWidth|190dp|user name wrap width, single use
+activity_user_reward_details.xml|layout_height|10dp|affordability progress bar thickness, single use
+bottom_sheet_portal_switcher.xml|layout_width|40dp|sheet drag handle width, single use
+dialog_staff_assigned.xml|layout_width|30dp|success glyph, one-off art size
+dialog_staff_assigned.xml|layout_height|30dp|success glyph, one-off art size
+item_registration.xml|minHeight|24dp|status pill min height, single use
+item_terms_section.xml|minWidth|28dp|numbered badge size, single use
+item_terms_section.xml|minHeight|28dp|numbered badge size, single use

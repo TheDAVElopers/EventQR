@@ -139,7 +139,7 @@ open class NewPasswordActivity : AppCompatActivity(), NewPasswordContract.View {
 
     private fun updateRequirement(view: TextView, label: String, isMet: Boolean) {
         view.text = "${if (isMet) "✓" else "○"} $label"
-        view.setTextColor(getColor(if (isMet) R.color.eventqr_success else R.color.eventqr_muted))
+        view.setTextColor(getColor(if (isMet) R.color.success_dark else R.color.text_secondary))
     }
 
     private fun configurePasswordToggle(input: EditText) {

@@ -16,12 +16,11 @@
             android:id="@+id/txtMyClaims"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-medium"
-            android:paddingHorizontal="4dp"
-            android:paddingVertical="8dp"
+            android:paddingHorizontal="@dimen/space_xs"
+            android:paddingVertical="@dimen/space_sm"
             android:text="@string/user_rewards_my_claims"
-            android:textColor="@color/purple"
-            android:textSize="16sp" />
+            android:textColor="@color/secondary_light"
+            android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Medium" />
     </com.thedavelopers.eventqr.ui.components.EventQrTabHeader>
 
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
@@ -35,15 +34,15 @@
             android:layout_height="match_parent"
             android:clipToPadding="false"
             android:fillViewport="true"
-            android:paddingBottom="12dp">
+            android:paddingBottom="@dimen/space_md">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
-                android:paddingHorizontal="16dp"
-                android:paddingTop="16dp"
-                android:paddingBottom="24dp">
+                android:paddingHorizontal="@dimen/space_lg"
+                android:paddingTop="@dimen/space_lg"
+                android:paddingBottom="@dimen/space_xl">
 
                 <!-- Error state -->
                 <LinearLayout
@@ -52,28 +51,25 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:orientation="vertical"
-                    android:paddingTop="16dp"
-                    android:paddingBottom="12dp">
+                    android:paddingTop="@dimen/space_lg"
+                    android:paddingBottom="@dimen/space_md">
 
                     <TextView
                         android:id="@+id/txtRewardsError"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:textColor="@color/eventqr_error"
-                        android:textSize="14sp"
+                        android:textColor="@color/danger"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
                         android:visibility="gone" />
 
                     <Button
                         android:id="@+id/btnRewardsRetry"
-                        android:layout_width="140dp"
-                        android:layout_height="44dp"
-                        android:layout_marginTop="12dp"
-                        android:background="@drawable/bg_primary_button"
+                        style="@style/Widget.EventQR.Button.Primary.Retry"
+                        android:layout_width="@dimen/button_width_retry"
+                        android:layout_height="@dimen/control_height_44"
+                        android:layout_marginTop="@dimen/space_md"
                         android:text="@string/common_retry"
-                        android:textAllCaps="false"
-                        android:textColor="@android:color/white"
-                        android:textStyle="bold"
                         android:visibility="gone" />
                 </LinearLayout>
 
@@ -100,18 +96,17 @@
                         android:id="@+id/txtSelectEventLabel"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:fontFamily="sans-serif-medium"
+                        android:layout_marginTop="@dimen/space_md"
                         android:text="@string/user_rewards_select_registered_event"
                         android:textColor="@color/text_secondary"
-                        android:textSize="15sp" />
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBody.Medium" />
 
                     <!-- Dropdown card (always visible, contains text + skeleton bar) -->
                     <FrameLayout
                         android:id="@+id/cardSelectedEvent"
                         android:layout_width="match_parent"
-                        android:layout_height="52dp"
-                        android:layout_marginTop="10dp"
+                        android:layout_height="@dimen/input_height"
+                        android:layout_marginTop="@dimen/space_10"
                         android:background="@drawable/bg_rewards_dropdown"
                         android:clickable="true"
                         android:focusable="true">
@@ -123,7 +118,7 @@
                             android:layout_height="match_parent"
                             android:gravity="center_vertical"
                             android:orientation="horizontal"
-                            android:paddingHorizontal="16dp">
+                            android:paddingHorizontal="@dimen/space_lg">
 
                             <TextView
                                 android:id="@+id/txtSelectedEventTitle"
@@ -133,17 +128,16 @@
                                 android:ellipsize="end"
                                 android:maxLines="1"
                                 android:text="@string/common_select_event"
-                                android:textColor="@color/eventqr_text"
-                                android:textSize="15sp" />
+                                android:textAppearance="@style/TextAppearance.EventQR.TextBody" />
 
                             <ImageView
                                 android:id="@+id/spinnerArrow"
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
-                                android:layout_marginStart="8dp"
+                                android:layout_width="@dimen/icon_md"
+                                android:layout_height="@dimen/icon_md"
+                                android:layout_marginStart="@dimen/space_sm"
                                 android:contentDescription="@string/common_dropdown"
                                 android:src="@drawable/ic_arrow_drop_down"
-                                android:tint="#6B7280" />
+                                android:tint="@color/text_secondary" />
                         </LinearLayout>
 
                         <!-- Dropdown skeleton bar -->
@@ -173,13 +167,13 @@
                         android:id="@+id/cardRewardsBalance"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="24dp"
+                        android:layout_marginTop="@dimen/space_xl"
                         android:background="@drawable/bg_reward_points"
-                        android:elevation="5dp"
+                        android:elevation="@dimen/elevation_5"
                         android:orientation="vertical"
-                        android:paddingHorizontal="24dp"
-                        android:paddingTop="22dp"
-                        android:paddingBottom="20dp">
+                        android:paddingHorizontal="@dimen/space_xl"
+                        android:paddingTop="@dimen/space_22"
+                        android:paddingBottom="@dimen/space_20">
 
                         <!-- Event name (toggle between text and skeleton) -->
                         <FrameLayout
@@ -192,9 +186,8 @@
                                 android:layout_height="wrap_content"
                                 android:ellipsize="end"
                                 android:maxLines="2"
-                                android:textColor="#DDD6FE"
-                                android:textSize="13sp"
-                                android:textStyle="bold" />
+                                android:textColor="@color/deco_on_hero_subtitle"
+                                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
 
                             <View
                                 android:id="@+id/skeletonEventName"
@@ -208,36 +201,34 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:fontFamily="sans-serif-bold"
+                            android:layout_marginTop="@dimen/space_xs"
                             android:text="@string/user_rewards_event_points_balance"
-                            android:textColor="#FFFFFF"
-                            android:textSize="16sp" />
+                            android:textColor="@color/on_primary"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.LegacyBold" />
 
                         <!-- Points value (toggle between text and skeleton) -->
                         <FrameLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp">
+                            android:layout_marginTop="@dimen/space_sm">
 
                             <TextView
                                 android:id="@+id/txtRewardsBalance"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:fontFamily="sans-serif-bold"
-                                android:text="0"
-                                android:textColor="#FFFFFF"
-                                android:textSize="46sp" />
+                                android:text="@string/placeholder_zero"
+                                android:textColor="@color/on_primary"
+                                android:textAppearance="@style/TextAppearance.EventQR.DisplayXL" />
                         </FrameLayout>
 
                         <!-- "points available" subtitle (always visible) -->
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
+                            android:layout_marginTop="@dimen/space_xxs"
                             android:text="@string/user_rewards_points_available_for_this_event"
-                            android:textColor="#EDE9FE"
-                            android:textSize="15sp" />
+                            android:textColor="@color/secondary_container"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextBody" />
                     </LinearLayout>
 
                     <!-- "Available Rewards" section header (always visible) -->
@@ -245,18 +236,16 @@
                         android:id="@+id/txtRewardsSectionTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="22dp"
-                        android:fontFamily="sans-serif-bold"
+                        android:layout_marginTop="@dimen/space_22"
                         android:text="@string/user_rewards_available_rewards"
-                        android:textColor="@color/text_primary"
-                        android:textSize="20sp" />
+                        android:textAppearance="@style/TextAppearance.EventQR.TitleLarge.LegacyBold" />
 
                     <!-- Rewards empty state -->
                     <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
                         android:id="@+id/layoutRewardsEmpty"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="@dimen/space_sm"
                         android:visibility="gone"
                         app:icon="@drawable/ic_nav_gift"
                         app:title="@string/user_rewards_no_rewards_available_yet"
@@ -267,7 +256,7 @@
                         android:id="@+id/layoutRewardsSkeleton"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginTop="@dimen/space_md"
                         android:orientation="vertical"
                         android:visibility="gone">
 
@@ -275,10 +264,10 @@
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp"
+                            android:layout_marginBottom="@dimen/space_md"
                             android:background="@drawable/bg_staff_skeleton_card"
                             android:orientation="vertical"
-                            android:padding="16dp">
+                            android:padding="@dimen/space_lg">
 
                             <View
                                 android:layout_width="match_parent"
@@ -288,7 +277,7 @@
                             <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="12dp"
+                                android:layout_marginTop="@dimen/space_md"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal">
 
@@ -300,7 +289,7 @@
                                 <View
                                     android:layout_width="60dp"
                                     android:layout_height="10dp"
-                                    android:layout_marginStart="12dp"
+                                    android:layout_marginStart="@dimen/space_md"
                                     android:background="@drawable/bg_staff_skeleton_bar" />
                             </LinearLayout>
                         </LinearLayout>
@@ -311,7 +300,7 @@
                             android:layout_height="wrap_content"
                             android:background="@drawable/bg_staff_skeleton_card"
                             android:orientation="vertical"
-                            android:padding="16dp">
+                            android:padding="@dimen/space_lg">
 
                             <View
                                 android:layout_width="match_parent"
@@ -321,7 +310,7 @@
                             <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="12dp"
+                                android:layout_marginTop="@dimen/space_md"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal">
 
@@ -333,7 +322,7 @@
                                 <View
                                     android:layout_width="60dp"
                                     android:layout_height="10dp"
-                                    android:layout_marginStart="12dp"
+                                    android:layout_marginStart="@dimen/space_md"
                                     android:background="@drawable/bg_staff_skeleton_bar" />
                             </LinearLayout>
                         </LinearLayout>
@@ -344,7 +333,7 @@
                         android:id="@+id/recyclerRewards"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginTop="@dimen/space_md"
                         android:clipToPadding="false"
                         android:nestedScrollingEnabled="false"
                         android:visibility="gone" />

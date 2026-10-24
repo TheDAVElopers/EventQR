@@ -41,7 +41,9 @@ import kotlinx.coroutines.launch
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlin.math.roundToInt
+import com.thedavelopers.eventqr.ui.theme.color
+import com.thedavelopers.eventqr.ui.theme.dimenPx
+import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
 
 open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsContract.View {
     private lateinit var presenter: EventRegistrationsPresenter
@@ -300,8 +302,8 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         adapter.setSelectionMode(true)
         badgeSelection.visibility = View.VISIBLE
         batchPrintBar.visibility = View.VISIBLE
-        btnSelectForPrint.setBackgroundResource(R.drawable.bg_circle_indigo)
-        btnSelectForPrint.imageTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.WHITE)
+        btnSelectForPrint.setBackgroundResource(R.drawable.bg_circle_primary)
+        btnSelectForPrint.imageTintList = android.content.res.ColorStateList.valueOf(color(R.color.on_primary))
         syncSelectionUi(adapter.getSelectedItems().size)
     }
 
@@ -310,8 +312,8 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         adapter.setSelectionMode(false)
         badgeSelection.visibility = View.GONE
         batchPrintBar.visibility = View.GONE
-        btnSelectForPrint.setBackgroundResource(R.drawable.bg_circle_light)
-        btnSelectForPrint.imageTintList = android.content.res.ColorStateList.valueOf(0xFF111827.toInt())
+        btnSelectForPrint.setBackgroundResource(R.drawable.bg_circle_muted)
+        btnSelectForPrint.imageTintList = android.content.res.ColorStateList.valueOf(color(R.color.text_primary))
         syncSelectionUi(0)
     }
 
@@ -378,23 +380,23 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         val scroll = ScrollView(this)
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(16), dp(20), dp(8))
+            setPadding(dimenPx(R.dimen.space_20), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_20), dimenPx(R.dimen.space_sm))
         }
         scroll.addView(container)
 
         container.addView(TextView(this).apply {
             text = "Print Selected IDs"
-            textSize = 22f
+            setTextSizeRes(R.dimen.type_headline)
             typeface = Typeface.DEFAULT_BOLD
-            setTextColor(0xFF111827.toInt())
+            setTextColor(color(R.color.text_primary))
             textAlignment = View.TEXT_ALIGNMENT_CENTER
         })
         container.addView(TextView(this).apply {
             text = "${cards.size} attendees selected · $pages sheet${if (pages == 1) "" else "s"} (9 per page) · cut along dashed guides"
-            textSize = 13f
-            setTextColor(0xFF6B7280.toInt())
+            setTextSizeRes(R.dimen.type_body_compact)
+            setTextColor(color(R.color.text_secondary))
             textAlignment = View.TEXT_ALIGNMENT_CENTER
-            setPadding(0, dp(2), 0, dp(8))
+            setPadding(0, dimenPx(R.dimen.space_xxs), 0, dimenPx(R.dimen.space_sm))
         }.also { it.id = View.generateViewId() })
 
         val previewHost = LinearLayout(this).apply {
@@ -407,12 +409,12 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
             val pageBlock = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER_HORIZONTAL
-                setPadding(0, 0, 0, dp(8))
+                setPadding(0, 0, 0, dimenPx(R.dimen.space_sm))
             }
             pageBlock.addView(TextView(this).apply {
                 text = "Page ${p + 1} of $pages"
-                textSize = 12f
-                setTextColor(0xFF6B7280.toInt())
+                setTextSizeRes(R.dimen.type_caption)
+                setTextColor(color(R.color.text_secondary))
                 textAlignment = View.TEXT_ALIGNMENT_CENTER
             })
             pageBlock.addView(ImageView(this).apply {
@@ -516,7 +518,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
     ) {
         val body = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(24), dp(16), dp(24), dp(8))
+            setPadding(dimenPx(R.dimen.space_xl), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_xl), dimenPx(R.dimen.space_sm))
         }
         body.addView(TextView(this).apply {
             text = when (outcome) {
@@ -524,32 +526,32 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
                 AndroidIdPrinter.PrintOutcome.CANCELLED -> getString(R.string.event_registrations_batch_print_cancelled)
                 AndroidIdPrinter.PrintOutcome.FAILED -> getString(R.string.event_registrations_batch_print_job_failed)
             }
-            textSize = 16f
+            setTextSizeRes(R.dimen.type_body_large)
             typeface = Typeface.DEFAULT_BOLD
-            setTextColor(0xFF111827.toInt())
+            setTextColor(color(R.color.text_primary))
         })
         if (failures.isNotEmpty()) {
             body.addView(TextView(this).apply {
                 text = "The following could not be printed:"
-                textSize = 14f
+                setTextSizeRes(R.dimen.type_body_medium)
                 typeface = Typeface.DEFAULT_BOLD
-                setTextColor(0xFF111827.toInt())
-                setPadding(0, dp(14), 0, dp(4))
+                setTextColor(color(R.color.text_primary))
+                setPadding(0, dimenPx(R.dimen.space_14), 0, dimenPx(R.dimen.space_xs))
             })
             for ((name, reason) in failures) {
                 body.addView(TextView(this).apply {
                     text = "• $name — ${reason.ifBlank { "unknown error" }}"
-                    textSize = 13f
-                    setTextColor(0xFFDC2626.toInt())
-                    setPadding(dp(8), dp(2), 0, 0)
+                    setTextSizeRes(R.dimen.type_body_compact)
+                    setTextColor(color(R.color.error))
+                    setPadding(dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_xxs), 0, 0)
                 })
             }
         } else if (printed == 0) {
             body.addView(TextView(this).apply {
                 text = "No IDs were printed."
-                textSize = 13f
-                setTextColor(0xFFDC2626.toInt())
-                setPadding(0, dp(6), 0, 0)
+                setTextSizeRes(R.dimen.type_body_compact)
+                setTextColor(color(R.color.error))
+                setPadding(0, dimenPx(R.dimen.space_6), 0, 0)
             })
         }
 
@@ -560,5 +562,4 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
             .show()
     }
 
-    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).roundToInt()
 }

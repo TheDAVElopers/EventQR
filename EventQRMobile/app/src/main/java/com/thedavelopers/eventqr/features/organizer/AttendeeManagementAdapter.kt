@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer
 
+import com.thedavelopers.eventqr.ui.theme.dimen
 import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.View
@@ -54,7 +55,7 @@ class AttendeeManagementAdapter(
             statusText.text = item.statusLabel(itemView.context)
             statusText.background = GradientDrawable().apply {
                 setColor(backgroundColor)
-                cornerRadius = 999f
+                cornerRadius = itemView.dimen(R.dimen.radius_pill)
             }
             statusText.setTextColor(textColor)
 

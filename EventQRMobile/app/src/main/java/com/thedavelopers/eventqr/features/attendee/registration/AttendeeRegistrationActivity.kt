@@ -15,6 +15,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.theme.dimenFloat
 import com.thedavelopers.eventqr.features.terms.TermsLink
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.session.SessionManager
@@ -249,7 +250,7 @@ open class AttendeeRegistrationActivity : AppCompatActivity(), RegistrationContr
             Validators.isValidEmail(emailInput.text.toString()) &&
             Validators.isValidPhoneNumber(phoneInput.text.toString())
         submitButton.isEnabled = !isLoading && inputsValid && termsCheckbox.isChecked
-        submitButton.alpha = if (submitButton.isEnabled) 1f else 0.6f
+        submitButton.alpha = if (submitButton.isEnabled) 1f else dimenFloat(R.dimen.alpha_busy)
     }
 
     companion object {

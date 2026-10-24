@@ -14,8 +14,8 @@ import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationRe
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import com.thedavelopers.eventqr.ui.theme.EventQrTheme
-import com.thedavelopers.eventqr.ui.theme.StatusActiveGreen
-import com.thedavelopers.eventqr.ui.theme.StatusActiveGreenBg
+import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.roleColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.Color
 import java.time.Instant
@@ -101,12 +101,12 @@ class NotificationsScreenComposeTest {
         }
 
         assertEquals(Icons.Default.CheckCircle, eventApprovedVisuals.first)
-        assertEquals(StatusActiveGreen, eventApprovedVisuals.second)
-        assertEquals(StatusActiveGreenBg, eventApprovedVisuals.third)
+        assertEquals(roleColor(R.color.success), eventApprovedVisuals.second)
+        assertEquals(roleColor(R.color.success_container), eventApprovedVisuals.third)
 
         assertEquals(Icons.Default.CheckCircle, scanApprovedVisuals.first)
-        assertEquals(StatusActiveGreen, scanApprovedVisuals.second)
-        assertEquals(StatusActiveGreenBg, scanApprovedVisuals.third)
+        assertEquals(roleColor(R.color.success), scanApprovedVisuals.second)
+        assertEquals(roleColor(R.color.success_container), scanApprovedVisuals.third)
     }
 
     private fun notification(

@@ -43,6 +43,8 @@ import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.ui.components.EventCardHolder
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
+import com.thedavelopers.eventqr.ui.theme.dimenOffset
+import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
 import kotlinx.coroutines.launch
 
 open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
@@ -282,7 +284,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
             capacity = if (event.capacityUnknown) null else EventCardPresenter.capacity(event.capacity),
             onClick = { openEventDetail(event) },
         )
-        val topMargin = if (isFirst) dp(12) else 0
+        val topMargin = if (isFirst) dimenOffset(R.dimen.space_md) else 0
         val params = holder.view.layoutParams as LinearLayout.LayoutParams
         if (params.topMargin != topMargin) {
             params.topMargin = topMargin
@@ -292,27 +294,27 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
 
     private fun createEmptyStateView(message: String): View {
         val textSecondary = ContextCompat.getColor(this, R.color.text_secondary)
-        val textDisabled = ContextCompat.getColor(this, R.color.text_disabled)
+        val iconNeutral = ContextCompat.getColor(this, R.color.neutral)
 
         val container = LinearLayout(this).apply {
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
             ).apply {
-                topMargin = dp(12)
+                topMargin = dimenOffset(R.dimen.space_md)
             }
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setPadding(dp(16), dp(24), dp(16), dp(24))
+            setPadding(dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_xl), dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_xl))
         }
 
         container.addView(FrameLayout(this).apply {
-            layoutParams = LinearLayout.LayoutParams(dp(48), dp(48))
-            setBackgroundResource(R.drawable.bg_dashboard_empty_icon)
+            layoutParams = LinearLayout.LayoutParams(dimenOffset(R.dimen.icon_tile_lg), dimenOffset(R.dimen.icon_tile_lg))
+            setBackgroundResource(R.drawable.bg_circle_muted)
             addView(ImageView(context).apply {
-                layoutParams = FrameLayout.LayoutParams(dp(24), dp(24), Gravity.CENTER)
+                layoutParams = FrameLayout.LayoutParams(dimenOffset(R.dimen.icon_lg), dimenOffset(R.dimen.icon_lg), Gravity.CENTER)
                 setImageResource(R.drawable.ic_calendar)
-                setColorFilter(textDisabled)
+                setColorFilter(iconNeutral)
             })
         })
 
@@ -321,11 +323,11 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
             ).apply {
-                topMargin = dp(12)
+                topMargin = dimenOffset(R.dimen.space_md)
             }
             text = message
             setTextColor(textSecondary)
-            textSize = 13f
+            setTextSizeRes(R.dimen.type_body_compact)
             gravity = Gravity.CENTER
         })
 
@@ -418,10 +420,6 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
                 finish()
             }
         }
-    }
-
-    private fun dp(value: Int): Int {
-        return (value * resources.displayMetrics.density).toInt()
     }
 
     private fun configureActions() {

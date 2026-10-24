@@ -19,7 +19,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp"
+        android:padding="@dimen/space_lg"
         app:layout_constraintTop_toBottomOf="@id/layoutTopBar">
 
         <HorizontalScrollView
@@ -41,73 +41,73 @@
                     android:layout_height="wrap_content"
                     android:checked="true"
                     android:text="@string/common_all"
-                    android:textColor="@color/brand_on_primary"
-                    app:chipBackgroundColor="@color/eventqr_indigo"
-                    app:chipCornerRadius="24dp"
-                    app:chipMinHeight="40dp"
+                    android:textColor="@color/on_primary"
+                    app:chipBackgroundColor="@color/primary"
+                    app:chipCornerRadius="@dimen/radius_xl"
+                    app:chipMinHeight="@dimen/chip_min_height_lg"
                     app:chipStrokeColor="@color/outline"
-                    app:chipStrokeWidth="0dp"
-                    app:textStartPadding="12dp"
-                    app:textEndPadding="12dp" />
+                    app:chipStrokeWidth="@dimen/stroke_none"
+                    app:textStartPadding="@dimen/space_md"
+                    app:textEndPadding="@dimen/space_md" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipUpcoming"
                     style="@style/Widget.MaterialComponents.Chip.Choice"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="@dimen/space_sm"
                     android:text="@string/common_upcoming"
                     android:textColor="@color/text_secondary"
                     app:chipBackgroundColor="@color/surface"
-                    app:chipCornerRadius="24dp"
-                    app:chipMinHeight="40dp"
+                    app:chipCornerRadius="@dimen/radius_xl"
+                    app:chipMinHeight="@dimen/chip_min_height_lg"
                     app:chipStrokeColor="@color/outline"
-                    app:chipStrokeWidth="1dp"
-                    app:textStartPadding="12dp"
-                    app:textEndPadding="12dp" />
+                    app:chipStrokeWidth="@dimen/stroke_hairline"
+                    app:textStartPadding="@dimen/space_md"
+                    app:textEndPadding="@dimen/space_md" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipActive"
                     style="@style/Widget.MaterialComponents.Chip.Choice"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="@dimen/space_sm"
                     android:text="@string/common_active"
                     android:textColor="@color/text_secondary"
                     app:chipBackgroundColor="@color/surface"
-                    app:chipCornerRadius="24dp"
-                    app:chipMinHeight="40dp"
+                    app:chipCornerRadius="@dimen/radius_xl"
+                    app:chipMinHeight="@dimen/chip_min_height_lg"
                     app:chipStrokeColor="@color/outline"
-                    app:chipStrokeWidth="1dp"
-                    app:textStartPadding="12dp"
-                    app:textEndPadding="12dp" />
+                    app:chipStrokeWidth="@dimen/stroke_hairline"
+                    app:textStartPadding="@dimen/space_md"
+                    app:textEndPadding="@dimen/space_md" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipCompleted"
                     style="@style/Widget.MaterialComponents.Chip.Choice"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="@dimen/space_sm"
                     android:text="@string/common_completed"
                     android:textColor="@color/text_secondary"
                     app:chipBackgroundColor="@color/surface"
-                    app:chipCornerRadius="24dp"
-                    app:chipMinHeight="40dp"
+                    app:chipCornerRadius="@dimen/radius_xl"
+                    app:chipMinHeight="@dimen/chip_min_height_lg"
                     app:chipStrokeColor="@color/outline"
-                    app:chipStrokeWidth="1dp"
-                    app:textStartPadding="12dp"
-                    app:textEndPadding="12dp" />
+                    app:chipStrokeWidth="@dimen/stroke_hairline"
+                    app:textStartPadding="@dimen/space_md"
+                    app:textEndPadding="@dimen/space_md" />
             </com.google.android.material.chip.ChipGroup>
         </HorizontalScrollView>
     </LinearLayout>
 
     <View
         android:id="@+id/filterDivider"
+        style="@style/Widget.EventQR.Divider"
+        android:alpha="@dimen/alpha_wash_30"
+        app:layout_constraintTop_toBottomOf="@id/layoutFilter"
         android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:alpha="0.3"
-        android:background="@color/eventqr_border"
-        app:layout_constraintTop_toBottomOf="@id/layoutFilter" />
+        android:layout_height="@dimen/stroke_hairline" />
 
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshRegisteredEvents"
@@ -127,7 +127,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
-                android:padding="16dp" />
+                android:padding="@dimen/space_lg" />
 
             <include layout="@layout/include_skeleton_cards" />
 

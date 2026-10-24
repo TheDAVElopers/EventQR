@@ -1,8 +1,9 @@
 package com.thedavelopers.eventqr.features.organizer.attendees
 
+import com.thedavelopers.eventqr.ui.theme.dimenOffset
+import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
+import com.thedavelopers.eventqr.ui.theme.strong
 import android.content.Intent
-import android.graphics.Color
-import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
@@ -21,6 +22,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.features.organizer.AttendeeManagementAdapter
 import com.thedavelopers.eventqr.features.organizer.EXTRA_EVENT_ID
 import com.thedavelopers.eventqr.features.organizer.EXTRA_EVENT_TITLE
@@ -172,26 +174,23 @@ open class AttendeeManagementActivity : AppCompatActivity() {
     }
 
     private fun showEventDropdownPopup(anchor: View, events: List<OrganizerMvpEvent>) {
-        val density = resources.displayMetrics.density
-        val dp = { px: Int -> (px * density).toInt() }
-
         var popup: PopupWindow? = null
         val dropdownView = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             background = GradientDrawable().apply {
-                setColor(Color.WHITE)
-                cornerRadius = dp(14).toFloat()
-                setStroke(dp(1), Color.parseColor("#EAEBF0"))
+                setColor(color(R.color.surface))
+                cornerRadius = dimenOffset(R.dimen.radius_14).toFloat()
+                setStroke(dimenOffset(R.dimen.stroke_hairline), color(R.color.outline))
             }
-            elevation = dp(8).toFloat()
+            elevation = dimenOffset(R.dimen.elevation_overlay).toFloat()
 
             events.forEach { event ->
                 val isSelected = event.id == selectedEvent?.id
                 val itemLayout = LinearLayout(this@AttendeeManagementActivity).apply {
                     orientation = LinearLayout.HORIZONTAL
                     gravity = Gravity.CENTER_VERTICAL
-                    setPadding(dp(16), dp(12), dp(16), dp(12))
-                    setBackgroundColor(if (isSelected) Color.parseColor("#EEF2FF") else Color.WHITE)
+                    setPadding(dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_md), dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_md))
+                    setBackgroundColor(if (isSelected) color(R.color.accent_container) else color(R.color.surface))
                     isClickable = true
                     isFocusable = true
                     setOnClickListener {
@@ -212,9 +211,9 @@ open class AttendeeManagementActivity : AppCompatActivity() {
 
                 val titleTv = TextView(this@AttendeeManagementActivity).apply {
                     text = event.title.ifBlank { getString(R.string.organizer_untitled_event) }
-                    setTextColor(if (isSelected) Color.parseColor("#5B25C9") else Color.parseColor("#121735"))
-                    textSize = 14f
-                    setTypeface(null, if (isSelected) Typeface.BOLD else Typeface.NORMAL)
+                    setTextColor(if (isSelected) color(R.color.primary) else color(R.color.text_primary))
+                    setTextSizeRes(R.dimen.type_body_medium)
+                    if (isSelected) strong()
                 }
                 textLayout.addView(titleTv)
 
@@ -222,8 +221,8 @@ open class AttendeeManagementActivity : AppCompatActivity() {
                 if (dateFormatted.isNotBlank()) {
                     val dateTv = TextView(this@AttendeeManagementActivity).apply {
                         text = dateFormatted
-                        setTextColor(Color.parseColor("#7E84A3"))
-                        textSize = 12f
+                        setTextColor(color(R.color.text_label))
+                        setTextSizeRes(R.dimen.type_caption)
                     }
                     textLayout.addView(dateTv)
                 }
@@ -240,11 +239,11 @@ open class AttendeeManagementActivity : AppCompatActivity() {
             true
         ).apply {
             isOutsideTouchable = true
-            elevation = dp(8).toFloat()
-            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            elevation = dimenOffset(R.dimen.elevation_overlay).toFloat()
+            setBackgroundDrawable(ColorDrawable(color(R.color.transparent)))
         }
 
-        popup.showAsDropDown(anchor, 0, dp(4))
+        popup.showAsDropDown(anchor, 0, dimenOffset(R.dimen.space_xs))
     }
 
     private fun refreshSelectedEventAttendees() {

@@ -1,5 +1,8 @@
 package com.thedavelopers.eventqr.features.organizer.attendees
 
+import com.thedavelopers.eventqr.ui.theme.dimenOffset
+import com.thedavelopers.eventqr.ui.theme.dimen
+import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
 import android.content.Intent
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
@@ -10,6 +13,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.theme.defaultBold
+import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.features.organizer.EXTRA_EVENT_ID
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpAttendee
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpDataSource
@@ -146,7 +151,7 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
             val (bgColor, textColor) = attendee.statusPalette(this@AttendeeDetailsActivity)
             background = GradientDrawable().apply {
                 setColor(bgColor)
-                cornerRadius = 999f
+                cornerRadius = dimen(R.dimen.radius_pill)
             }
             setTextColor(textColor)
         }
@@ -154,10 +159,10 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
             val issued = attendee.qrCredentialStatus.equals("Issued", ignoreCase = true)
             text = getString(if (issued) R.string.attendee_details_id_issued else R.string.attendee_details_no_id)
             background = GradientDrawable().apply {
-                setColor(getColor(if (issued) R.color.eventqr_badge_entered_bg else R.color.eventqr_badge_default_bg))
-                cornerRadius = 999f
+                setColor(getColor(if (issued) R.color.badge_entered_bg else R.color.badge_default_bg))
+                cornerRadius = dimen(R.dimen.radius_pill)
             }
-            setTextColor(getColor(if (issued) R.color.eventqr_badge_entered_text else R.color.eventqr_badge_default_text))
+            setTextColor(getColor(if (issued) R.color.badge_entered_text else R.color.badge_default_text))
         }
         findViewById<TextView>(R.id.txtDetailRegisteredValue).text = formatRegisteredDate(attendee.registeredDate)
         findViewById<TextView>(R.id.txtDetailLastActivityValue).text = formatLastActivity(attendee.lastTransactionTime)
@@ -180,38 +185,38 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
                     val itemBox = LinearLayout(this).apply {
                         orientation = LinearLayout.HORIZONTAL
                         gravity = android.view.Gravity.CENTER_VERTICAL
-                        setPadding(dp(12), dp(12), dp(12), dp(12))
+                        setPadding(dimenOffset(R.dimen.space_md), dimenOffset(R.dimen.space_md), dimenOffset(R.dimen.space_md), dimenOffset(R.dimen.space_md))
                         background = GradientDrawable().apply {
-                            setColor(0xFFF8FAFC.toInt())
-                            cornerRadius = dp(12).toFloat()
+                            setColor(color(R.color.background))
+                            cornerRadius = dimenOffset(R.dimen.radius_md).toFloat()
                         }
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
                             LinearLayout.LayoutParams.WRAP_CONTENT
                         ).apply {
-                            setMargins(0, dp(4), 0, dp(4))
+                            setMargins(0, dimenOffset(R.dimen.space_xs), 0, dimenOffset(R.dimen.space_xs))
                         }
 
                         // Timeline Dot + Line
                         val timelineLayout = LinearLayout(this@AttendeeDetailsActivity).apply {
                             orientation = LinearLayout.VERTICAL
                             gravity = android.view.Gravity.CENTER_HORIZONTAL
-                            layoutParams = LinearLayout.LayoutParams(dp(12), dp(36)).apply {
-                                marginEnd = dp(12)
+                            layoutParams = LinearLayout.LayoutParams(dimenOffset(R.dimen.space_md), dimenOffset(R.dimen.icon_tile_sm)).apply {
+                                marginEnd = dimenOffset(R.dimen.space_md)
                             }
                             addView(View(this@AttendeeDetailsActivity).apply {
-                                layoutParams = LinearLayout.LayoutParams(dp(8), dp(8))
+                                layoutParams = LinearLayout.LayoutParams(dimenOffset(R.dimen.dot_sm), dimenOffset(R.dimen.dot_sm))
                                 background = GradientDrawable().apply {
                                     shape = GradientDrawable.OVAL
-                                    setColor(0xFF635BFF.toInt())
+                                    setColor(color(R.color.deco_indigo_vivid))
                                 }
                             })
                             addView(View(this@AttendeeDetailsActivity).apply {
-                                layoutParams = LinearLayout.LayoutParams(dp(2), 0, 1f).apply {
-                                    topMargin = dp(2)
+                                layoutParams = LinearLayout.LayoutParams(dimenOffset(R.dimen.space_xxs), 0, 1f).apply {
+                                    topMargin = dimenOffset(R.dimen.space_xxs)
                                 }
                                 background = GradientDrawable().apply {
-                                    setColor(0xFFCBD5E1.toInt())
+                                    setColor(color(R.color.outline_strong))
                                 }
                             })
                         }
@@ -219,17 +224,17 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
 
                         // Icon Box
                         val iconBox = android.widget.FrameLayout(this@AttendeeDetailsActivity).apply {
-                            layoutParams = LinearLayout.LayoutParams(dp(40), dp(40)).apply {
-                                marginEnd = dp(12)
+                            layoutParams = LinearLayout.LayoutParams(dimenOffset(R.dimen.icon_tile_md), dimenOffset(R.dimen.icon_tile_md)).apply {
+                                marginEnd = dimenOffset(R.dimen.space_md)
                             }
                             background = GradientDrawable().apply {
-                                setColor(0xFFEEF2FF.toInt())
-                                cornerRadius = dp(10).toFloat()
+                                setColor(color(R.color.accent_container))
+                                cornerRadius = dimenOffset(R.dimen.radius_10).toFloat()
                             }
                             addView(android.widget.ImageView(this@AttendeeDetailsActivity).apply {
-                                layoutParams = android.widget.FrameLayout.LayoutParams(dp(20), dp(20), android.view.Gravity.CENTER)
+                                layoutParams = android.widget.FrameLayout.LayoutParams(dimenOffset(R.dimen.icon_md), dimenOffset(R.dimen.icon_md), android.view.Gravity.CENTER)
                                 setImageResource(R.drawable.ic_calendar)
-                                imageTintList = android.content.res.ColorStateList.valueOf(0xFF635BFF.toInt())
+                                imageTintList = android.content.res.ColorStateList.valueOf(color(R.color.deco_indigo_vivid))
                             })
                         }
                         addView(iconBox)
@@ -243,18 +248,18 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
                             addView(TextView(this@AttendeeDetailsActivity).apply {
                                 text = label
                                 setTextColor(getColor(R.color.text_primary))
-                                textSize = 14f
-                                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                                setTextSizeRes(R.dimen.type_body_medium)
+                                defaultBold()
                             })
                             addView(TextView(this@AttendeeDetailsActivity).apply {
                                 text = time ?: "-"
                                 setTextColor(getColor(R.color.text_secondary))
-                                textSize = 12f
+                                setTextSizeRes(R.dimen.type_caption)
                                 layoutParams = LinearLayout.LayoutParams(
                                     LinearLayout.LayoutParams.WRAP_CONTENT,
                                     LinearLayout.LayoutParams.WRAP_CONTENT
                                 ).apply {
-                                    topMargin = dp(2)
+                                    topMargin = dimenOffset(R.dimen.space_xxs)
                                 }
                             })
                         }
@@ -271,8 +276,6 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
         if (cleaned.isBlank() || cleaned == "-") return null
         return parseToLocalDateTime(cleaned)?.format(lastActivityFormatter)?.uppercase(Locale.ENGLISH) ?: cleaned
     }
-
-    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
     private fun formatRegistrationId(value: String): String {
         val cleaned = value.trim()

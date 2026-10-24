@@ -210,24 +210,26 @@ class CreateAdminAccountActivity : AppCompatActivity() {
 
     private fun updateRequirement(view: TextView, label: String, isMet: Boolean) {
         view.text = "${if (isMet) "✓" else "○"} $label"
-        view.setTextColor(getColor(if (isMet) R.color.eventqr_success else R.color.eventqr_muted))
+        view.setTextColor(getColor(if (isMet) R.color.success_dark else R.color.text_secondary))
     }
 
     private fun updateStrengthUI(metCount: Int) {
         val (colorRes, label) = when (metCount) {
-            0 -> R.color.eventqr_muted to ""
-            1 -> R.color.eventqr_error to getString(R.string.password_strength_weak)
-            2 -> R.color.eventqr_warning to getString(R.string.password_strength_fair)
-            3 -> R.color.eventqr_info to getString(R.string.password_strength_good)
-            4 -> R.color.eventqr_success to getString(R.string.password_strength_strong)
-            else -> R.color.eventqr_muted to ""
+            0 -> R.color.text_secondary to ""
+            1 -> R.color.danger to getString(R.string.password_strength_weak)
+            2 -> R.color.warning to getString(R.string.password_strength_fair)
+            3 -> R.color.info to getString(R.string.password_strength_good)
+            4 -> R.color.success_dark to getString(R.string.password_strength_strong)
+            else -> R.color.text_secondary to ""
         }
 
         passwordStrengthText.text = label
-        passwordStrengthText.setTextColor(if (metCount > 0) getColor(colorRes) else getColor(R.color.eventqr_muted))
+        // Amber is only 2.1:1 as text: the label uses warning_dark, the bars keep the warning fill.
+        val labelColorRes = if (colorRes == R.color.warning) R.color.warning_dark else colorRes
+        passwordStrengthText.setTextColor(if (metCount > 0) getColor(labelColorRes) else getColor(R.color.text_secondary))
         strengthBars.forEachIndexed { index, view ->
             view.background.mutate().setTint(
-                if (index < metCount) getColor(colorRes) else getColor(R.color.eventqr_border),
+                if (index < metCount) getColor(colorRes) else getColor(R.color.outline),
             )
         }
     }

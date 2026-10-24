@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Shared component styles (Widget.EventQR.*).
+
+    Layouts opt in with style="@style/Widget.EventQR.<Name>". Only Card and TextInputLayout are also wired
+    globally in Theme.EventQR; buttons, chips, inputs, badges and tiles are always opt-in.
+    Colours are roles (colors.xml), sizes are tokens (dimens.xml), text is TextAppearance.EventQR.* - no literals.
+-->
+<resources>
+
+    <!-- ═════════════════════════ Buttons ═════════════════════════ -->
+
+    <!-- Button styles deliberately have NO parent. Layouts used to rely on the theme's default button style (AppCompatButton /
+         MaterialButton defaults: no padding, no maxWidth, the platform elevation StateListAnimator, 6dp MaterialButton insets) and
+         only overrode background / colour / size / weight on the view. A Widget.MaterialComponents.Button parent would add padding,
+         a 320dp maxWidth, tracking and zero insets, and would flip the animator. The view's defStyleAttr (buttonStyle /
+         materialButtonStyle) still fills every attribute these styles leave out, so a styled button renders exactly like the old
+         loose-attribute one.
+         Text appearance: plain <Button> (AppCompatButton) sites use TextAppearance.EventQR.ButtonPlatform* (sans-serif-medium, no
+         tracking, + .Strong = bold); com.google.android.material.button.MaterialButton sites use TextAppearance.EventQR.Button*
+         (sans-serif-medium, tracking 0.0892857). Sites that need a different size/weight set android:textAppearance on the view.
+         Elevation stays on the view. -->
+
+    <!-- Primary CTA: brand -> secondary gradient (bg_btn_primary), white text. Text appearance is set per site (see above). -->
+    <style name="Widget.EventQR.Button.Primary" parent="">
+        <item name="android:background">@drawable/bg_btn_primary</item>
+        <item name="backgroundTint">@null</item>
+        <item name="android:textColor">@color/on_primary</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="cornerRadius">@dimen/radius_button</item>
+    </style>
+
+    <!-- Plain <Button> primary variants by text size/weight: Retry = 14sp bold (retry buttons), Regular = 14sp regular
+         (attendee_details / organizer_dashboard), Compact = 13sp bold (staff assignment "add"). -->
+    <style name="Widget.EventQR.Button.Primary.Retry">
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.ButtonPlatformBodyMedium.Strong</item>
+    </style>
+    <style name="Widget.EventQR.Button.Primary.Regular">
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.ButtonPlatformBodyMedium</item>
+    </style>
+    <style name="Widget.EventQR.Button.Primary.Compact">
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.ButtonPlatformBodyCompact.Strong</item>
+    </style>
+
+    <!-- Auth screens CTA (sign in / sign up / forgot): brand gradient press background, 16sp bold (forgot overrides the text
+         appearance with ButtonPlatformBody.Strong). No animator; elevation stays on the view (5 / 4 / 4). -->
+    <style name="Widget.EventQR.Button.Auth" parent="">
+        <item name="android:background">@drawable/bg_auth_button_press</item>
+        <item name="backgroundTint">@null</item>
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.ButtonPlatformBodyLarge.Strong</item>
+        <item name="android:textColor">@color/on_primary</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <!-- White surface + primary hairline outline, radius 8 (bg_outline_button), 15sp bold, primary text. Plain <Button> sites. -->
+    <style name="Widget.EventQR.Button.Outline" parent="">
+        <item name="android:background">@drawable/bg_outline_button</item>
+        <item name="backgroundTint">@null</item>
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.ButtonPlatformBody.Strong</item>
+        <item name="android:textColor">@color/primary</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!-- Staff result screens: white surface + primary outline, radius 10 (bg_staff_outline_button), 16sp bold, primary text.
+         MaterialButton sites (icon attributes stay on the view). -->
+    <style name="Widget.EventQR.Button.Outline.Large" parent="">
+        <item name="android:background">@drawable/bg_staff_outline_button</item>
+        <item name="backgroundTint">@null</item>
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.ButtonBodyLarge.Strong</item>
+        <item name="android:textColor">@color/primary</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!-- QR download button: dark brand gradient (bg_qr_download_button), 12sp bold sans-serif, white text. Plain <Button> sites. -->
+    <style name="Widget.EventQR.Button.Download" parent="">
+        <item name="android:background">@drawable/bg_qr_download_button</item>
+        <item name="backgroundTint">@null</item>
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.ButtonPlatformCaption.StrongSans</item>
+        <item name="android:textColor">@color/on_primary</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!-- Landing screen buttons (plain <Button>): white pill filled (primary text) and transparent outline (white text). Size comes
+         from landing_btn_text_size so the tablet override keeps working. Elevation stays on the view. -->
+    <style name="Widget.EventQR.Button.Landing.Filled" parent="">
+        <item name="android:background">@drawable/bg_white_pill_button</item>
+        <item name="backgroundTint">@null</item>
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.ButtonPlatformLanding.Strong</item>
+        <item name="android:textColor">@color/primary</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+    <style name="Widget.EventQR.Button.Landing.Outline" parent="Widget.EventQR.Button.Landing.Filled">
+        <item name="android:background">@drawable/bg_dark_outline_button</item>
+        <item name="android:textColor">@color/on_primary</item>
+    </style>
+
+    <!-- Borderless text button, brand text on a transparent background. Plain <Button> sites set the weight/size via
+         android:textAppearance; .Material is the MaterialButton TextButton flavour (keeps the TextButton ripple/insets). -->
+    <style name="Widget.EventQR.Button.Text" parent="">
+        <item name="android:background">@color/transparent</item>
+        <item name="android:textColor">@color/primary</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+    <style name="Widget.EventQR.Button.Text.Material" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">@color/primary</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!-- ═════════════════════════ Inputs ═════════════════════════ -->
+
+    <!-- Material outlined TextInputLayout (also the theme default via textInputStyle) -->
+    <style name="Widget.EventQR.TextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/input_box_stroke</item>
+        <item name="boxStrokeErrorColor">@color/error</item>
+        <item name="hintTextColor">@color/primary</item>
+        <item name="errorTextColor">@color/error</item>
+        <item name="android:textColorHint">@color/text_hint</item>
+        <item name="boxCornerRadiusTopStart">@dimen/radius_input</item>
+        <item name="boxCornerRadiusTopEnd">@dimen/radius_input</item>
+        <item name="boxCornerRadiusBottomStart">@dimen/radius_input</item>
+        <item name="boxCornerRadiusBottomEnd">@dimen/radius_input</item>
+    </style>
+
+    <!-- Plain EditText with the standard outlined background (bg_input: focus stroke + error via isActivated) -->
+    <style name="Widget.EventQR.EditText" parent="Widget.AppCompat.EditText">
+        <item name="android:background">@drawable/bg_input</item>
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.TextBodyMedium</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColorHint">@color/text_hint</item>
+        <item name="android:paddingHorizontal">@dimen/space_14</item>
+    </style>
+
+    <!-- Request-event forms: filled (no stroke) variant of the EditText, 54dp tall -->
+    <style name="RequestEventLabel" parent="TextAppearance.EventQR.TextBodyMedium.Strong">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">@dimen/space_lg</item>
+    </style>
+
+    <style name="RequestEventInput" parent="Widget.EventQR.EditText">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/control_height_54</item>
+        <item name="android:layout_marginTop">@dimen/space_sm</item>
+        <item name="android:background">@drawable/bg_input_filled</item>
+        <!-- keeps the 15sp the request forms always used (EditText default is 14sp) -->
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.TextBody</item>
+        <item name="android:singleLine">true</item>
+    </style>
+
+    <style name="RequestEventInput.Multi" parent="RequestEventInput">
+        <item name="android:layout_height">@dimen/request_textarea_height</item>
+        <item name="android:gravity">top</item>
+        <item name="android:padding">@dimen/space_14</item>
+        <item name="android:singleLine">false</item>
+        <item name="android:minLines">3</item>
+    </style>
+
+    <style name="RequestEventCheckbox" parent="TextAppearance.EventQR.TextBodyMedium">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingVertical">@dimen/space_xxs</item>
+        <!-- the old style set #111827 explicitly; the TextAppearance parent carries no colour -->
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <!-- ═════════════════════════ Cards ═════════════════════════ -->
+
+    <!-- Default (also the theme default via materialCardViewStyle): radius_card 16, elevation_card 1, hairline outline, surface.
+         Naming: <Size>.<Elevation>. Size: (none)=16dp, Compact=12dp, Item=14dp, Large=18dp. Elevation: (none)=1dp, Raised=2dp, Flat=0dp.
+         Per-site stroke / colour / background overrides stay on the view as tokens. -->
+    <style name="Widget.EventQR.Card" parent="Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">@dimen/radius_card</item>
+        <item name="cardElevation">@dimen/elevation_card</item>
+        <item name="strokeWidth">@dimen/stroke_hairline</item>
+        <item name="strokeColor">@color/outline</item>
+        <item name="cardBackgroundColor">@color/surface</item>
+    </style>
+    <style name="Widget.EventQR.Card.Raised">
+        <item name="cardElevation">@dimen/elevation_raised</item>
+    </style>
+    <style name="Widget.EventQR.Card.Flat">
+        <item name="cardElevation">@dimen/elevation_none</item>
+    </style>
+
+    <style name="Widget.EventQR.Card.Compact">
+        <item name="cardCornerRadius">@dimen/radius_card_sm</item>
+    </style>
+    <style name="Widget.EventQR.Card.Compact.Raised">
+        <item name="cardElevation">@dimen/elevation_raised</item>
+    </style>
+    <style name="Widget.EventQR.Card.Compact.Flat">
+        <item name="cardElevation">@dimen/elevation_none</item>
+    </style>
+
+    <style name="Widget.EventQR.Card.Item">
+        <item name="cardCornerRadius">@dimen/radius_14</item>
+    </style>
+    <style name="Widget.EventQR.Card.Item.Raised">
+        <item name="cardElevation">@dimen/elevation_raised</item>
+    </style>
+    <style name="Widget.EventQR.Card.Item.Flat">
+        <item name="cardElevation">@dimen/elevation_none</item>
+    </style>
+
+    <style name="Widget.EventQR.Card.Large">
+        <item name="cardCornerRadius">@dimen/radius_18</item>
+    </style>
+    <style name="Widget.EventQR.Card.Large.Flat">
+        <item name="cardElevation">@dimen/elevation_none</item>
+    </style>
+
+    <!-- ═════════════════════════ Chips ═════════════════════════ -->
+
+    <style name="Widget.EventQR.Chip.Filter" parent="Widget.MaterialComponents.Chip.Choice">
+        <item name="chipBackgroundColor">@color/chip_bg</item>
+        <item name="android:textColor">@color/chip_text</item>
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.ChipLabel</item>
+        <item name="chipStrokeColor">@color/outline</item>
+        <item name="chipStrokeWidth">@dimen/stroke_hairline</item>
+        <item name="chipCornerRadius">@dimen/radius_chip</item>
+        <item name="chipMinHeight">@dimen/chip_min_height</item>
+        <item name="rippleColor">@color/primary_ripple</item>
+    </style>
+
+    <!-- Bigger pill chip: radius_xl, 40dp min height, 12dp text padding. Does NOT set textAppearance (inherits Chip.Filter's).
+         Initially-checked chips keep chipStrokeWidth stroke_none on the view. -->
+    <style name="Widget.EventQR.Chip.Filter.Large">
+        <item name="chipCornerRadius">@dimen/radius_xl</item>
+        <item name="chipMinHeight">@dimen/chip_min_height_lg</item>
+        <item name="textStartPadding">@dimen/space_md</item>
+        <item name="textEndPadding">@dimen/space_md</item>
+    </style>
+
+    <!-- ═════════════════════════ Icon tiles ═════════════════════════ -->
+
+    <!-- Background + backgroundTint ONLY (size, padding and glyph tint stay on the view). Shape variants: IconTile (radius_tile
+         rounded rect, bg_tile), .R10 (radius_10, bg_tile_r10), .Round (oval, bg_tile_circle). Tone variants <Shape>.<Tone> set
+         backgroundTint to the matching *_container role (AccentStrong = accent_container_strong). Plain IconTile = Primary tone. -->
+    <style name="Widget.EventQR.IconTile" parent="">
+        <item name="android:background">@drawable/bg_tile</item>
+        <item name="android:backgroundTint">@color/primary_container</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.R10">
+        <item name="android:background">@drawable/bg_tile_r10</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.Round">
+        <item name="android:background">@drawable/bg_tile_circle</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.Primary">
+        <item name="android:backgroundTint">@color/primary_container</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.Secondary">
+        <item name="android:backgroundTint">@color/secondary_container</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.Accent">
+        <item name="android:backgroundTint">@color/accent_container</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.AccentStrong">
+        <item name="android:backgroundTint">@color/accent_container_strong</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.Success">
+        <item name="android:backgroundTint">@color/success_container</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.Warning">
+        <item name="android:backgroundTint">@color/warning_container</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.Error">
+        <item name="android:backgroundTint">@color/error_container</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.Info">
+        <item name="android:backgroundTint">@color/info_container</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.Muted">
+        <item name="android:backgroundTint">@color/surface_muted</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.R10.Primary">
+        <item name="android:backgroundTint">@color/primary_container</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.R10.Secondary">
+        <item name="android:backgroundTint">@color/secondary_container</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.R10.Accent">
+        <item name="android:backgroundTint">@color/accent_container</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.R10.AccentStrong">
+        <item name="android:backgroundTint">@color/accent_container_strong</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.R10.Success">
+        <item name="android:backgroundTint">@color/success_container</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.R10.Warning">
+        <item name="android:backgroundTint">@color/warning_container</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.R10.Error">
+        <item name="android:backgroundTint">@color/error_container</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.R10.Info">
+        <item name="android:backgroundTint">@color/info_container</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.R10.Muted">
+        <item name="android:backgroundTint">@color/surface_muted</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.Round.Primary">
+        <item name="android:backgroundTint">@color/primary_container</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.Round.Secondary">
+        <item name="android:backgroundTint">@color/secondary_container</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.Round.Accent">
+        <item name="android:backgroundTint">@color/accent_container</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.Round.AccentStrong">
+        <item name="android:backgroundTint">@color/accent_container_strong</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.Round.Success">
+        <item name="android:backgroundTint">@color/success_container</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.Round.Warning">
+        <item name="android:backgroundTint">@color/warning_container</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.Round.Error">
+        <item name="android:backgroundTint">@color/error_container</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.Round.Info">
+        <item name="android:backgroundTint">@color/info_container</item>
+    </style>
+    <style name="Widget.EventQR.IconTile.Round.Muted">
+        <item name="android:backgroundTint">@color/surface_muted</item>
+    </style>
+
+    <!-- ═════════════════════════ Dividers ═════════════════════════ -->
+
+    <!-- Horizontal 1dp rule (outline colour); .Muted = surface_muted fill; .Vertical = 1dp wide, full-height rule. -->
+    <style name="Widget.EventQR.Divider" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/stroke_hairline</item>
+        <item name="android:background">@color/outline</item>
+    </style>
+    <style name="Widget.EventQR.Divider.Muted">
+        <item name="android:background">@color/surface_muted</item>
+    </style>
+    <style name="Widget.EventQR.Divider.Vertical">
+        <item name="android:layout_width">@dimen/stroke_hairline</item>
+        <item name="android:layout_height">match_parent</item>
+    </style>
+
+</resources>

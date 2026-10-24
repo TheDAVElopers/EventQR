@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import java.util.UUID
+import com.thedavelopers.eventqr.ui.theme.color
 
 class RegistrationAdapter(
     private val onClick: ((RegistrationResponse) -> Unit)? = null,
@@ -123,7 +124,7 @@ class RegistrationAdapter(
             checkView.isEnabled = item.qrCredentialId != null
 
             (itemView as? androidx.cardview.widget.CardView)?.setCardBackgroundColor(
-                if (selectionMode && isSelected(item)) 0xFFE0E7FF.toInt() else android.graphics.Color.WHITE
+                itemView.context.color(if (selectionMode && isSelected(item)) R.color.accent_container_strong else R.color.surface)
             )
 
             itemView.setOnClickListener {
@@ -136,7 +137,7 @@ class RegistrationAdapter(
             checkView.setOnClickListener {
                 select(item, checkView.isChecked)
                 (itemView as? androidx.cardview.widget.CardView)?.setCardBackgroundColor(
-                    if (isSelected(item)) 0xFFE0E7FF.toInt() else android.graphics.Color.WHITE
+                    itemView.context.color(if (isSelected(item)) R.color.accent_container_strong else R.color.surface)
                 )
                 onSelectionChanged?.invoke(selectedIds.size)
             }

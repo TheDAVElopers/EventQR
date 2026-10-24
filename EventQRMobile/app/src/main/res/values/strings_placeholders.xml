@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Non-translatable placeholder / glyph / separator strings that used to be literals in layouts.
+    Layouts must reference these (android:text="@string/placeholder_zero") instead of hard-coding the value.
+    Whitespace that is part of the value is protected with quotes.
+-->
+<resources>
+    <!-- Initial numeric / empty-value placeholders shown before data loads -->
+    <string name="placeholder_zero" translatable="false">0</string>
+    <string name="placeholder_dash" translatable="false">-</string>
+    <string name="counter_zero_of_ten" translatable="false">0/10</string>
+
+    <!-- Glyphs and separators -->
+    <string name="glyph_dropdown_arrow" translatable="false">▾</string>
+    <string name="glyph_bullet" translatable="false">•</string>
+    <string name="separator_chevron" translatable="false">" › "</string>
+    <string name="separator_dot" translatable="false">" · "</string>
+
+    <!-- Phone / capacity input examples -->
+    <string name="phone_prefix" translatable="false">+63</string>
+    <string name="phone_hint_digits" translatable="false">9123456789</string>
+    <string name="phone_hint_example" translatable="false">+63 912 345 6789</string>
+    <string name="capacity_hint" translatable="false">100</string>
+
+    <!-- Avatar initials shown before the row is bound (RecyclerView items overwrite them in code) -->
+    <string name="placeholder_initial_a" translatable="false">A</string>
+    <string name="placeholder_initial_j" translatable="false">J</string>
+    <string name="placeholder_initial_r" translatable="false">R</string>
+</resources>

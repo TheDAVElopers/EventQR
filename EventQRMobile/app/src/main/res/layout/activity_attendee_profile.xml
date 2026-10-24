@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface_alt"
+    android:background="@color/background"
     android:orientation="vertical">
 
     <LinearLayout
@@ -14,9 +14,9 @@
         android:background="@drawable/bg_dashboard_gradient"
         android:gravity="center"
         android:orientation="vertical"
-        android:paddingHorizontal="24dp"
-        android:paddingTop="32dp"
-        android:paddingBottom="28dp">
+        android:paddingHorizontal="@dimen/space_xl"
+        android:paddingTop="@dimen/space_xxl"
+        android:paddingBottom="@dimen/space_28">
 
         <FrameLayout
             android:layout_width="88dp"
@@ -28,10 +28,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:textColor="@color/brand_on_primary"
-                android:textSize="36sp"
-                android:textStyle="bold"
-                android:fontFamily="sans-serif-medium"
+                android:textColor="@color/on_primary"
+                android:textAppearance="@style/TextAppearance.EventQR.Display.Medium"
                 tools:text="J" />
         </FrameLayout>
 
@@ -39,24 +37,22 @@
             android:id="@+id/txtProfileName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
+            android:layout_marginTop="@dimen/space_14"
             android:gravity="center"
-            android:textColor="@color/brand_on_primary"
-            android:textSize="18sp"
-            android:textStyle="bold"
+            android:textColor="@color/on_primary"
+            android:textAppearance="@style/TextAppearance.EventQR.TitleMedium"
             tools:text="Juan Dela Cruz" />
 
         <TextView
             android:id="@+id/txtProfileRole"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="@dimen/space_6"
             android:background="@drawable/bg_profile_role_badge"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="4dp"
-            android:textColor="@color/brand_on_primary"
-            android:textSize="12sp"
-            android:textStyle="bold"
+            android:paddingHorizontal="@dimen/space_lg"
+            android:paddingVertical="@dimen/space_xs"
+            android:textColor="@color/on_primary"
+            android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong"
             tools:text="Attendee" />
     </LinearLayout>
 
@@ -86,16 +82,16 @@
                     android:layout_height="wrap_content"
                     android:gravity="center_horizontal"
                     android:orientation="vertical"
-                    android:paddingHorizontal="16dp">
+                    android:paddingHorizontal="@dimen/space_lg">
 
                     <TextView
                         android:id="@+id/txtProfileError"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
+                        android:layout_marginTop="@dimen/space_lg"
                         android:gravity="center"
                         android:textColor="@color/error"
-                        android:textSize="14sp"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
                         android:visibility="gone"
                         tools:text="Unable to load profile. Please check your connection." />
 
@@ -103,14 +99,14 @@
                         android:id="@+id/btnProfileRetry"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="48dp"
-                        android:layout_marginTop="8dp"
-                        android:layout_marginBottom="8dp"
+                        android:layout_height="@dimen/touch_target_min"
+                        android:layout_marginTop="@dimen/space_sm"
+                        android:layout_marginBottom="@dimen/space_sm"
                         android:text="@string/common_retry"
                         android:textAllCaps="false"
-                        android:textColor="@color/brand_primary"
-                        app:cornerRadius="8dp"
-                        app:strokeColor="@color/brand_primary"
+                        android:textColor="@color/primary"
+                        app:cornerRadius="@dimen/radius_sm"
+                        app:strokeColor="@color/primary"
                         android:visibility="gone" />
                 </LinearLayout>
 
@@ -125,9 +121,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingHorizontal="16dp"
-                    android:paddingTop="16dp"
-                    android:paddingBottom="24dp">
+                    android:paddingHorizontal="@dimen/space_lg"
+                    android:paddingTop="@dimen/space_lg"
+                    android:paddingBottom="@dimen/space_xl">
 
                     <Button
                         android:id="@+id/btnEditProfile"
@@ -139,24 +135,18 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:paddingHorizontal="4dp"
-                        android:paddingBottom="6dp"
+                        android:paddingHorizontal="@dimen/space_xs"
+                        android:paddingBottom="@dimen/space_6"
                         android:text="@string/attendee_profile_profile_information"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.05" />
+                        android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong"
+                        android:letterSpacing="@dimen/tracking_label_05" />
 
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/cardProfileDetails"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        app:cardBackgroundColor="@color/surface"
-                        app:cardCornerRadius="12dp"
-                        app:cardElevation="1dp"
-                        app:strokeColor="@color/outline"
-                        app:strokeWidth="1dp">
+                        android:layout_marginTop="@dimen/space_xxs"
+                        style="@style/Widget.EventQR.Card.Compact">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -166,18 +156,18 @@
                             <!-- Name row -->
                             <LinearLayout
                                 android:layout_width="match_parent"
-                                android:layout_height="56dp"
+                                android:layout_height="@dimen/button_primary_height"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal"
-                                android:paddingHorizontal="16dp">
+                                android:paddingHorizontal="@dimen/space_lg">
 
                                 <FrameLayout
-                                    android:layout_width="36dp"
-                                    android:layout_height="36dp">
+                                    android:layout_width="@dimen/icon_tile_sm"
+                                    android:layout_height="@dimen/icon_tile_sm">
 
                                     <ImageView
-                                        android:layout_width="20dp"
-                                        android:layout_height="20dp"
+                                        android:layout_width="@dimen/icon_md"
+                                        android:layout_height="@dimen/icon_md"
                                         android:layout_gravity="center"
                                         android:importantForAccessibility="no"
                                         android:src="@drawable/ic_profile_person"
@@ -187,48 +177,44 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="12dp"
+                                    android:layout_marginStart="@dimen/space_md"
                                     android:text="@string/attendee_profile_name"
                                     android:textColor="@color/text_secondary"
-                                    android:textSize="14sp" />
+                                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
 
                                 <TextView
                                     android:id="@+id/txtProfileDetailName"
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="12dp"
+                                    android:layout_marginStart="@dimen/space_md"
                                     android:layout_weight="1"
                                     android:gravity="end"
                                     android:ellipsize="end"
                                     android:maxLines="1"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="14sp"
-                                    android:textStyle="bold"
+                                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong"
                                     tools:text="Juan Dela Cruz" />
                             </LinearLayout>
 
                             <View
-                                android:layout_width="match_parent"
-                                android:layout_height="1dp"
-                                android:layout_marginStart="52dp"
-                                android:layout_marginEnd="16dp"
-                                android:background="@color/outline" />
+                                style="@style/Widget.EventQR.Divider"
+                                android:layout_marginStart="@dimen/row_text_inset"
+                                android:layout_marginEnd="@dimen/space_lg" />
 
                             <!-- Email row -->
                             <LinearLayout
                                 android:layout_width="match_parent"
-                                android:layout_height="56dp"
+                                android:layout_height="@dimen/button_primary_height"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal"
-                                android:paddingHorizontal="16dp">
+                                android:paddingHorizontal="@dimen/space_lg">
 
                                 <FrameLayout
-                                    android:layout_width="36dp"
-                                    android:layout_height="36dp">
+                                    android:layout_width="@dimen/icon_tile_sm"
+                                    android:layout_height="@dimen/icon_tile_sm">
 
                                     <ImageView
-                                        android:layout_width="20dp"
-                                        android:layout_height="20dp"
+                                        android:layout_width="@dimen/icon_md"
+                                        android:layout_height="@dimen/icon_md"
                                         android:layout_gravity="center"
                                         android:importantForAccessibility="no"
                                         android:src="@drawable/ic_profile_mail"
@@ -238,47 +224,44 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="12dp"
+                                    android:layout_marginStart="@dimen/space_md"
                                     android:text="@string/common_email"
                                     android:textColor="@color/text_secondary"
-                                    android:textSize="14sp" />
+                                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
 
                                 <TextView
                                     android:id="@+id/txtProfileDetailEmail"
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="12dp"
+                                    android:layout_marginStart="@dimen/space_md"
                                     android:layout_weight="1"
                                     android:gravity="end"
                                     android:ellipsize="end"
                                     android:maxLines="1"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="14sp"
+                                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
                                     tools:text="juan.delacruz@example.com" />
                             </LinearLayout>
 
                             <View
-                                android:layout_width="match_parent"
-                                android:layout_height="1dp"
-                                android:layout_marginStart="52dp"
-                                android:layout_marginEnd="16dp"
-                                android:background="@color/outline" />
+                                style="@style/Widget.EventQR.Divider"
+                                android:layout_marginStart="@dimen/row_text_inset"
+                                android:layout_marginEnd="@dimen/space_lg" />
 
                             <!-- Phone row -->
                             <LinearLayout
                                 android:layout_width="match_parent"
-                                android:layout_height="56dp"
+                                android:layout_height="@dimen/button_primary_height"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal"
-                                android:paddingHorizontal="16dp">
+                                android:paddingHorizontal="@dimen/space_lg">
 
                                 <FrameLayout
-                                    android:layout_width="36dp"
-                                    android:layout_height="36dp">
+                                    android:layout_width="@dimen/icon_tile_sm"
+                                    android:layout_height="@dimen/icon_tile_sm">
 
                                     <ImageView
-                                        android:layout_width="20dp"
-                                        android:layout_height="20dp"
+                                        android:layout_width="@dimen/icon_md"
+                                        android:layout_height="@dimen/icon_md"
                                         android:layout_gravity="center"
                                         android:importantForAccessibility="no"
                                         android:src="@drawable/ic_profile_phone"
@@ -288,22 +271,21 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="12dp"
+                                    android:layout_marginStart="@dimen/space_md"
                                     android:text="@string/attendee_profile_phone"
                                     android:textColor="@color/text_secondary"
-                                    android:textSize="14sp" />
+                                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
 
                                 <TextView
                                     android:id="@+id/txtProfileDetailPhone"
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="12dp"
+                                    android:layout_marginStart="@dimen/space_md"
                                     android:layout_weight="1"
                                     android:gravity="end"
                                     android:ellipsize="end"
                                     android:maxLines="1"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="14sp"
+                                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
                                     tools:text="+63 912 345 6789" />
                             </LinearLayout>
                         </LinearLayout>
@@ -313,26 +295,20 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="20dp"
-                        android:paddingHorizontal="4dp"
-                        android:paddingBottom="6dp"
+                        android:layout_marginTop="@dimen/space_20"
+                        android:paddingHorizontal="@dimen/space_xs"
+                        android:paddingBottom="@dimen/space_6"
                         android:text="@string/attendee_profile_account_activity"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.05" />
+                        android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong"
+                        android:letterSpacing="@dimen/tracking_label_05" />
 
                     <!-- Unified Navigation Container -->
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/cardAccountMenu"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        app:cardBackgroundColor="@color/surface"
-                        app:cardCornerRadius="12dp"
-                        app:cardElevation="1dp"
-                        app:strokeColor="@color/outline"
-                        app:strokeWidth="1dp">
+                        android:layout_marginTop="@dimen/space_xxs"
+                        style="@style/Widget.EventQR.Card.Compact">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -343,21 +319,21 @@
                             <LinearLayout
                                 android:id="@+id/cardEditProfile"
                                 android:layout_width="match_parent"
-                                android:layout_height="56dp"
+                                android:layout_height="@dimen/button_primary_height"
                                 android:background="?attr/selectableItemBackground"
                                 android:clickable="true"
                                 android:focusable="true"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal"
-                                android:paddingHorizontal="16dp">
+                                android:paddingHorizontal="@dimen/space_lg">
 
                                 <FrameLayout
-                                    android:layout_width="36dp"
-                                    android:layout_height="36dp">
+                                    android:layout_width="@dimen/icon_tile_sm"
+                                    android:layout_height="@dimen/icon_tile_sm">
 
                                     <ImageView
-                                        android:layout_width="20dp"
-                                        android:layout_height="20dp"
+                                        android:layout_width="@dimen/icon_md"
+                                        android:layout_height="@dimen/icon_md"
                                         android:layout_gravity="center"
                                         android:importantForAccessibility="no"
                                         android:src="@drawable/ic_edit_pencil"
@@ -367,47 +343,43 @@
                                 <TextView
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="12dp"
+                                    android:layout_marginStart="@dimen/space_md"
                                     android:layout_weight="1"
                                     android:text="@string/attendee_profile_edit_profile"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="15sp"
-                                    android:textStyle="bold" />
+                                    android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
 
                                 <ImageView
-                                    android:layout_width="16dp"
-                                    android:layout_height="16dp"
+                                    android:layout_width="@dimen/icon_sm"
+                                    android:layout_height="@dimen/icon_sm"
                                     android:importantForAccessibility="no"
                                     android:src="@drawable/ic_chevron_right"
-                                    app:tint="@color/text_disabled" />
+                                    app:tint="@color/neutral" />
                             </LinearLayout>
 
                             <View
-                                android:layout_width="match_parent"
-                                android:layout_height="1dp"
-                                android:layout_marginStart="52dp"
-                                android:layout_marginEnd="16dp"
-                                android:background="@color/outline" />
+                                style="@style/Widget.EventQR.Divider"
+                                android:layout_marginStart="@dimen/row_text_inset"
+                                android:layout_marginEnd="@dimen/space_lg" />
 
                             <!-- 2. Transaction History Row -->
                             <LinearLayout
                                 android:id="@+id/cardTransactionHistory"
                                 android:layout_width="match_parent"
-                                android:layout_height="56dp"
+                                android:layout_height="@dimen/button_primary_height"
                                 android:background="?attr/selectableItemBackground"
                                 android:clickable="true"
                                 android:focusable="true"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal"
-                                android:paddingHorizontal="16dp">
+                                android:paddingHorizontal="@dimen/space_lg">
 
                                 <FrameLayout
-                                    android:layout_width="36dp"
-                                    android:layout_height="36dp">
+                                    android:layout_width="@dimen/icon_tile_sm"
+                                    android:layout_height="@dimen/icon_tile_sm">
 
                                     <ImageView
-                                        android:layout_width="20dp"
-                                        android:layout_height="20dp"
+                                        android:layout_width="@dimen/icon_md"
+                                        android:layout_height="@dimen/icon_md"
                                         android:layout_gravity="center"
                                         android:importantForAccessibility="no"
                                         android:src="@drawable/ic_history"
@@ -417,47 +389,43 @@
                                 <TextView
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="12dp"
+                                    android:layout_marginStart="@dimen/space_md"
                                     android:layout_weight="1"
                                     android:text="@string/common_transaction_history"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="15sp"
-                                    android:textStyle="bold" />
+                                    android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
 
                                 <ImageView
-                                    android:layout_width="16dp"
-                                    android:layout_height="16dp"
+                                    android:layout_width="@dimen/icon_sm"
+                                    android:layout_height="@dimen/icon_sm"
                                     android:importantForAccessibility="no"
                                     android:src="@drawable/ic_chevron_right"
-                                    app:tint="@color/text_disabled" />
+                                    app:tint="@color/neutral" />
                             </LinearLayout>
 
                             <View
-                                android:layout_width="match_parent"
-                                android:layout_height="1dp"
-                                android:layout_marginStart="52dp"
-                                android:layout_marginEnd="16dp"
-                                android:background="@color/outline" />
+                                style="@style/Widget.EventQR.Divider"
+                                android:layout_marginStart="@dimen/row_text_inset"
+                                android:layout_marginEnd="@dimen/space_lg" />
 
                             <!-- 3. Claimed Rewards Row -->
                             <LinearLayout
                                 android:id="@+id/cardClaimedRewards"
                                 android:layout_width="match_parent"
-                                android:layout_height="56dp"
+                                android:layout_height="@dimen/button_primary_height"
                                 android:background="?attr/selectableItemBackground"
                                 android:clickable="true"
                                 android:focusable="true"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal"
-                                android:paddingHorizontal="16dp">
+                                android:paddingHorizontal="@dimen/space_lg">
 
                                 <FrameLayout
-                                    android:layout_width="36dp"
-                                    android:layout_height="36dp">
+                                    android:layout_width="@dimen/icon_tile_sm"
+                                    android:layout_height="@dimen/icon_tile_sm">
 
                                     <ImageView
-                                        android:layout_width="20dp"
-                                        android:layout_height="20dp"
+                                        android:layout_width="@dimen/icon_md"
+                                        android:layout_height="@dimen/icon_md"
                                         android:layout_gravity="center"
                                         android:importantForAccessibility="no"
                                         android:src="@drawable/ic_nav_gift"
@@ -467,47 +435,43 @@
                                 <TextView
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="12dp"
+                                    android:layout_marginStart="@dimen/space_md"
                                     android:layout_weight="1"
                                     android:text="@string/attendee_profile_claimed_rewards"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="15sp"
-                                    android:textStyle="bold" />
+                                    android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
 
                                 <ImageView
-                                    android:layout_width="16dp"
-                                    android:layout_height="16dp"
+                                    android:layout_width="@dimen/icon_sm"
+                                    android:layout_height="@dimen/icon_sm"
                                     android:importantForAccessibility="no"
                                     android:src="@drawable/ic_chevron_right"
-                                    app:tint="@color/text_disabled" />
+                                    app:tint="@color/neutral" />
                             </LinearLayout>
 
                             <View
-                                android:layout_width="match_parent"
-                                android:layout_height="1dp"
-                                android:layout_marginStart="52dp"
-                                android:layout_marginEnd="16dp"
-                                android:background="@color/outline" />
+                                style="@style/Widget.EventQR.Divider"
+                                android:layout_marginStart="@dimen/row_text_inset"
+                                android:layout_marginEnd="@dimen/space_lg" />
 
                             <!-- 4. My Event Requests Row -->
                             <LinearLayout
                                 android:id="@+id/cardMyEventRequests"
                                 android:layout_width="match_parent"
-                                android:layout_height="56dp"
+                                android:layout_height="@dimen/button_primary_height"
                                 android:background="?attr/selectableItemBackground"
                                 android:clickable="true"
                                 android:focusable="true"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal"
-                                android:paddingHorizontal="16dp">
+                                android:paddingHorizontal="@dimen/space_lg">
 
                                 <FrameLayout
-                                    android:layout_width="36dp"
-                                    android:layout_height="36dp">
+                                    android:layout_width="@dimen/icon_tile_sm"
+                                    android:layout_height="@dimen/icon_tile_sm">
 
                                     <ImageView
-                                        android:layout_width="20dp"
-                                        android:layout_height="20dp"
+                                        android:layout_width="@dimen/icon_md"
+                                        android:layout_height="@dimen/icon_md"
                                         android:layout_gravity="center"
                                         android:importantForAccessibility="no"
                                         android:src="@drawable/ic_event_request"
@@ -517,19 +481,17 @@
                                 <TextView
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="12dp"
+                                    android:layout_marginStart="@dimen/space_md"
                                     android:layout_weight="1"
                                     android:text="@string/attendee_profile_my_event_requests"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="15sp"
-                                    android:textStyle="bold" />
+                                    android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
 
                                 <ImageView
-                                    android:layout_width="16dp"
-                                    android:layout_height="16dp"
+                                    android:layout_width="@dimen/icon_sm"
+                                    android:layout_height="@dimen/icon_sm"
                                     android:importantForAccessibility="no"
                                     android:src="@drawable/ic_chevron_right"
-                                    app:tint="@color/text_disabled" />
+                                    app:tint="@color/neutral" />
                             </LinearLayout>
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
@@ -538,22 +500,22 @@
                     <LinearLayout
                         android:id="@+id/cardSignOut"
                         android:layout_width="match_parent"
-                        android:layout_height="52dp"
-                        android:layout_marginTop="20dp"
+                        android:layout_height="@dimen/input_height"
+                        android:layout_marginTop="@dimen/space_20"
                         android:background="@drawable/bg_sign_out_button"
                         android:clickable="true"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        android:paddingHorizontal="16dp">
+                        android:paddingHorizontal="@dimen/space_lg">
 
                         <FrameLayout
-                            android:layout_width="36dp"
-                            android:layout_height="36dp">
+                            android:layout_width="@dimen/icon_tile_sm"
+                            android:layout_height="@dimen/icon_tile_sm">
 
                             <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
+                                android:layout_width="@dimen/icon_md"
+                                android:layout_height="@dimen/icon_md"
                                 android:layout_gravity="center"
                                 android:contentDescription="@null"
                                 android:src="@drawable/ic_logout"
@@ -563,12 +525,11 @@
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="12dp"
+                            android:layout_marginStart="@dimen/space_md"
                             android:layout_weight="1"
-                            android:fontFamily="sans-serif-medium"
                             android:text="@string/common_sign_out"
                             android:textColor="@color/error"
-                            android:textSize="15sp" />
+                            android:textAppearance="@style/TextAppearance.EventQR.TextBody.Medium" />
                     </LinearLayout>
 
                 </LinearLayout>

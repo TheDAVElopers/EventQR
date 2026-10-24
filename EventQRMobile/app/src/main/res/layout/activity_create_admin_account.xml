@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eventqr_bg"
+    android:background="@color/background"
     android:fillViewport="true">
 
     <LinearLayout
@@ -21,14 +21,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="@dimen/space_lg">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_admin_surface_card"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="@dimen/space_lg">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -37,23 +37,23 @@
                     android:orientation="horizontal">
 
                     <FrameLayout
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:background="@drawable/bg_admin_icon_tile_purple">
+                        style="@style/Widget.EventQR.IconTile.R10.Secondary"
+                        android:layout_width="@dimen/icon_tile_md"
+                        android:layout_height="@dimen/icon_tile_md">
 
                         <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
+                            android:layout_width="@dimen/icon_md"
+                            android:layout_height="@dimen/icon_md"
                             android:layout_gravity="center"
                             android:contentDescription="@string/create_admin_account_admin_account"
                             android:src="@drawable/ic_nav_profile"
-                            android:tint="@color/eventqr_purple" />
+                            android:tint="@color/primary" />
                     </FrameLayout>
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
+                        android:layout_marginStart="@dimen/space_md"
                         android:layout_weight="1"
                         android:orientation="vertical">
 
@@ -61,24 +61,21 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/create_admin_account_admin_details"
-                            android:textColor="#111827"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
+                            android:textAppearance="@style/TextAppearance.EventQR.TitleMedium" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
+                            android:layout_marginTop="@dimen/space_xs"
                             android:text="@string/create_admin_account_the_new_account_will_receive_the_adm"
-                            android:textColor="#6B7280"
-                            android:textSize="13sp" />
+                            android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
                     </LinearLayout>
                 </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="18dp"
+                    android:layout_marginTop="@dimen/space_18"
                     android:orientation="horizontal">
 
                     <LinearLayout
@@ -91,28 +88,26 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/common_first_name"
-                            android:textColor="#111827"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
+                            android:textColor="@color/text_primary"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
 
                         <EditText
                             android:id="@+id/inputAdminFirstName"
                             android:layout_width="match_parent"
-                            android:layout_height="52dp"
-                            android:layout_marginTop="6dp"
+                            android:layout_height="@dimen/input_height"
+                            android:layout_marginTop="@dimen/space_6"
                             android:background="@drawable/bg_auth_field"
                             android:hint="@string/common_john"
                             android:inputType="textPersonName"
-                            android:paddingHorizontal="14dp"
-                            android:textColor="@color/eventqr_text"
-                            android:textColorHint="#71717A"
-                            android:textSize="14sp" />
+                            android:paddingHorizontal="@dimen/space_14"
+                            android:textColorHint="@color/text_secondary"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
+                        android:layout_marginStart="@dimen/space_10"
                         android:layout_weight="1"
                         android:orientation="vertical">
 
@@ -120,112 +115,102 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/common_last_name"
-                            android:textColor="#111827"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
+                            android:textColor="@color/text_primary"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
 
                         <EditText
                             android:id="@+id/inputAdminLastName"
                             android:layout_width="match_parent"
-                            android:layout_height="52dp"
-                            android:layout_marginTop="6dp"
+                            android:layout_height="@dimen/input_height"
+                            android:layout_marginTop="@dimen/space_6"
                             android:background="@drawable/bg_auth_field"
                             android:hint="@string/common_doe"
                             android:inputType="textPersonName"
-                            android:paddingHorizontal="14dp"
-                            android:textColor="@color/eventqr_text"
-                            android:textColorHint="#71717A"
-                            android:textSize="14sp" />
+                            android:paddingHorizontal="@dimen/space_14"
+                            android:textColorHint="@color/text_secondary"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
                     </LinearLayout>
                 </LinearLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
+                    android:layout_marginTop="@dimen/space_14"
                     android:text="@string/common_email_address"
-                    android:textColor="#111827"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
+                    android:textColor="@color/text_primary"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
 
                 <EditText
                     android:id="@+id/inputAdminEmail"
                     android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:layout_marginTop="6dp"
+                    android:layout_height="@dimen/input_height"
+                    android:layout_marginTop="@dimen/space_6"
                     android:background="@drawable/bg_auth_field"
                     android:drawableStart="@drawable/email_icon"
-                    android:drawablePadding="10dp"
+                    android:drawablePadding="@dimen/space_10"
                     android:hint="@string/common_johndoe_gmail_com"
                     android:inputType="textEmailAddress"
-                    android:paddingHorizontal="14dp"
-                    android:textColor="@color/eventqr_text"
-                    android:textColorHint="#71717A"
-                    android:textSize="14sp" />
+                    android:paddingHorizontal="@dimen/space_14"
+                    android:textColorHint="@color/text_secondary"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
+                    android:layout_marginTop="@dimen/space_14"
                     android:text="@string/common_phone_number"
-                    android:textColor="#111827"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
+                    android:textColor="@color/text_primary"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
 
                 <EditText
                     android:id="@+id/inputAdminPhone"
                     android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:layout_marginTop="6dp"
+                    android:layout_height="@dimen/input_height"
+                    android:layout_marginTop="@dimen/space_6"
                     android:background="@drawable/bg_auth_field"
                     android:drawableStart="@drawable/phone_icon"
-                    android:drawablePadding="10dp"
-                    android:hint="+63 912 345 6789"
+                    android:drawablePadding="@dimen/space_10"
+                    android:hint="@string/phone_hint_example"
                     android:inputType="phone"
-                    android:paddingHorizontal="14dp"
-                    android:textColor="@color/eventqr_text"
-                    android:textColorHint="#71717A"
-                    android:textSize="14sp" />
+                    android:paddingHorizontal="@dimen/space_14"
+                    android:textColorHint="@color/text_secondary"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
 
                 <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="20dp"
-                    android:background="#F3F4F6" />
+                    style="@style/Widget.EventQR.Divider.Muted"
+                    android:layout_marginTop="@dimen/space_20" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="18dp"
+                    android:layout_marginTop="@dimen/space_18"
                     android:text="@string/create_admin_account_temporary_password"
-                    android:textColor="#111827"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
+                    android:textColor="@color/text_primary"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
 
                 <EditText
                     android:id="@+id/inputAdminPassword"
                     android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:layout_marginTop="6dp"
+                    android:layout_height="@dimen/input_height"
+                    android:layout_marginTop="@dimen/space_6"
                     android:background="@drawable/bg_auth_field"
                     android:drawableStart="@drawable/password_icon"
                     android:drawableEnd="@drawable/ic_visibility_on"
-                    android:drawablePadding="10dp"
+                    android:drawablePadding="@dimen/space_10"
                     android:hint="@string/common_enter_password"
                     android:inputType="textPassword"
-                    android:paddingHorizontal="14dp"
-                    android:textColor="@color/eventqr_text"
-                    android:textColorHint="#71717A"
-                    android:textSize="14sp" />
+                    android:paddingHorizontal="@dimen/space_14"
+                    android:textColorHint="@color/text_secondary"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
 
                 <LinearLayout
                     android:id="@+id/layoutPasswordRequirements"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="@dimen/space_10"
                     android:background="@drawable/bg_password_requirements"
                     android:orientation="vertical"
-                    android:padding="12dp"
+                    android:padding="@dimen/space_md"
                     android:visibility="gone">
 
                     <LinearLayout
@@ -236,39 +221,39 @@
                         <View
                             android:id="@+id/viewStrength1"
                             android:layout_width="0dp"
-                            android:layout_height="4dp"
+                            android:layout_height="@dimen/bar_thin"
                             android:layout_weight="1"
-                            android:background="@color/eventqr_border" />
+                            android:background="@color/outline" />
 
                         <View
                             android:id="@+id/viewStrength2"
                             android:layout_width="0dp"
-                            android:layout_height="4dp"
-                            android:layout_marginStart="8dp"
+                            android:layout_height="@dimen/bar_thin"
+                            android:layout_marginStart="@dimen/space_sm"
                             android:layout_weight="1"
-                            android:background="@color/eventqr_border" />
+                            android:background="@color/outline" />
 
                         <View
                             android:id="@+id/viewStrength3"
                             android:layout_width="0dp"
-                            android:layout_height="4dp"
-                            android:layout_marginStart="8dp"
+                            android:layout_height="@dimen/bar_thin"
+                            android:layout_marginStart="@dimen/space_sm"
                             android:layout_weight="1"
-                            android:background="@color/eventqr_border" />
+                            android:background="@color/outline" />
 
                         <View
                             android:id="@+id/viewStrength4"
                             android:layout_width="0dp"
-                            android:layout_height="4dp"
-                            android:layout_marginStart="8dp"
+                            android:layout_height="@dimen/bar_thin"
+                            android:layout_marginStart="@dimen/space_sm"
                             android:layout_weight="1"
-                            android:background="@color/eventqr_border" />
+                            android:background="@color/outline" />
                     </LinearLayout>
 
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp">
+                        android:layout_marginTop="@dimen/space_md">
 
                         <LinearLayout
                             android:layout_width="wrap_content"
@@ -279,45 +264,40 @@
                                 android:id="@+id/txtPasswordLengthRequirement"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-android:text="@string/password_req_length"
-                                    android:textColor="@color/eventqr_muted"
-                                    android:textSize="12sp" />
+                                android:text="@string/password_req_length"
+                                android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
 
                             <TextView
                                 android:id="@+id/txtPasswordCapitalRequirement"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
-android:text="@string/password_req_uppercase"
-                                    android:textColor="@color/eventqr_muted"
-                                    android:textSize="12sp" />
+                                android:layout_marginTop="@dimen/space_xxs"
+                                android:text="@string/password_req_uppercase"
+                                android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
 
                             <TextView
                                 android:id="@+id/txtPasswordLowercaseRequirement"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
-android:text="@string/password_req_lowercase"
-                                    android:textColor="@color/eventqr_muted"
-                                    android:textSize="12sp" />
+                                android:layout_marginTop="@dimen/space_xxs"
+                                android:text="@string/password_req_lowercase"
+                                android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
 
                             <TextView
                                 android:id="@+id/txtPasswordNumberRequirement"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
-android:text="@string/password_req_number"
-                                    android:textColor="@color/eventqr_muted"
-                                    android:textSize="12sp" />
+                                android:layout_marginTop="@dimen/space_xxs"
+                                android:text="@string/password_req_number"
+                                android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
 
                             <TextView
                                 android:id="@+id/txtPasswordSpecialRequirement"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
-android:text="@string/password_req_special"
-                                    android:textColor="@color/eventqr_muted"
-                                    android:textSize="12sp" />
+                                android:layout_marginTop="@dimen/space_xxs"
+                                android:text="@string/password_req_special"
+                                android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
                         </LinearLayout>
 
                         <TextView
@@ -326,47 +306,41 @@ android:text="@string/password_req_special"
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
                             android:layout_centerVertical="true"
-                            android:textColor="@color/eventqr_muted"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
+                            android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
                     </RelativeLayout>
                 </LinearLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
+                    android:layout_marginTop="@dimen/space_14"
                     android:text="@string/common_confirm_password"
-                    android:textColor="#111827"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
+                    android:textColor="@color/text_primary"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
 
                 <EditText
                     android:id="@+id/inputAdminConfirmPassword"
                     android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:layout_marginTop="6dp"
+                    android:layout_height="@dimen/input_height"
+                    android:layout_marginTop="@dimen/space_6"
                     android:background="@drawable/bg_auth_field"
                     android:drawableStart="@drawable/password_icon"
                     android:drawableEnd="@drawable/ic_visibility_on"
-                    android:drawablePadding="10dp"
+                    android:drawablePadding="@dimen/space_10"
                     android:hint="@string/common_confirm_password_2"
                     android:inputType="textPassword"
-                    android:paddingHorizontal="14dp"
-                    android:textColor="@color/eventqr_text"
-                    android:textColorHint="#71717A"
-                    android:textSize="14sp" />
+                    android:paddingHorizontal="@dimen/space_14"
+                    android:textColorHint="@color/text_secondary"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
 
                 <Button
+                    style="@style/Widget.EventQR.Button.Primary"
                     android:id="@+id/btnCreateAdminAccount"
                     android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:layout_marginTop="20dp"
-                    android:background="@drawable/bg_primary_button"
+                    android:layout_height="@dimen/input_height"
+                    android:layout_marginTop="@dimen/space_20"
                     android:text="@string/common_create_admin_account"
-                    android:textAllCaps="false"
-                    android:textColor="@android:color/white"
-                    android:textStyle="bold" />
+                    android:textAppearance="@style/TextAppearance.EventQR.ButtonPlatformBodyMedium.Strong" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

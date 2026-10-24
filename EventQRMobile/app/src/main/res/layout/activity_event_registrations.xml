@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F3F4F6"
+    android:background="@color/background"
     android:orientation="vertical">
 
     <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
@@ -15,28 +15,27 @@
             android:id="@+id/badgeSelectionCount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="6dp"
+            android:layout_marginEnd="@dimen/space_6"
             android:background="@drawable/bg_badge_selection"
             android:gravity="center"
             android:includeFontPadding="false"
-            android:minWidth="22dp"
-            android:minHeight="22dp"
-            android:paddingStart="6dp"
-            android:paddingEnd="6dp"
-            android:text="0"
-            android:textColor="#FFFFFF"
-            android:textSize="12sp"
-            android:textStyle="bold"
+            android:minWidth="@dimen/icon_22"
+            android:minHeight="@dimen/icon_22"
+            android:paddingStart="@dimen/space_6"
+            android:paddingEnd="@dimen/space_6"
+            android:text="@string/placeholder_zero"
+            android:textColor="@color/on_primary"
+            android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong"
             android:visibility="gone" />
         <ImageButton
             android:id="@+id/btnSelectForPrint"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:background="@drawable/bg_circle_light"
+            android:layout_width="@dimen/icon_tile_sm"
+            android:layout_height="@dimen/icon_tile_sm"
+            android:background="@drawable/bg_circle_muted"
             android:contentDescription="@string/event_registrations_select_attendees_for_batch_printing"
-            android:padding="8dp"
+            android:padding="@dimen/space_sm"
             android:src="@drawable/ic_select_multiple"
-            app:tint="#111827" />
+            app:tint="@color/text_primary" />
     </com.thedavelopers.eventqr.ui.components.EventQrDetailHeader>
 
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
@@ -53,10 +52,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
-                android:paddingStart="16dp"
-                android:paddingTop="18dp"
-                android:paddingEnd="16dp"
-                android:paddingBottom="16dp">
+                android:paddingStart="@dimen/space_lg"
+                android:paddingTop="@dimen/space_18"
+                android:paddingEnd="@dimen/space_lg"
+                android:paddingBottom="@dimen/space_lg">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -64,19 +63,19 @@
                     android:background="@drawable/bg_staff_event_header_card"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp">
+                    android:paddingStart="@dimen/space_lg"
+                    android:paddingEnd="@dimen/space_lg">
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="@dimen/icon_md"
+                        android:layout_height="@dimen/icon_md"
                         android:src="@drawable/ic_calendar"
-                        app:tint="#FFFFFF" />
+                        app:tint="@color/on_primary" />
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
+                        android:layout_marginStart="@dimen/space_md"
                         android:layout_weight="1"
                         android:orientation="vertical">
 
@@ -84,9 +83,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/common_event"
-                            android:textColor="#DAD7FF"
-                            android:textSize="11sp"
-                            android:textStyle="bold" />
+                            android:textColor="@color/primary_container"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextOverline.Strong" />
 
                         <TextView
                             android:id="@+id/txtEventRegistrationsEventTitle"
@@ -95,47 +93,45 @@
                             android:ellipsize="end"
                             android:maxLines="1"
                             android:text="@string/common_assigned_event"
-                            android:textColor="#FFFFFF"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
+                            android:textColor="@color/on_primary"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong" />
                     </LinearLayout>
                 </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="50dp"
-                    android:layout_marginTop="16dp"
+                    android:layout_height="@dimen/control_height_50"
+                    android:layout_marginTop="@dimen/space_lg"
                     android:background="@drawable/bg_staff_search_box"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="14dp">
+                    android:paddingStart="@dimen/space_lg"
+                    android:paddingEnd="@dimen/space_14">
 
                     <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
+                        android:layout_width="@dimen/icon_18"
+                        android:layout_height="@dimen/icon_18"
                         android:src="@android:drawable/ic_menu_search"
-                        app:tint="#9CA3AF" />
+                        app:tint="@color/neutral" />
 
                     <EditText
                         android:id="@+id/edtRegistrationSearch"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:background="@android:color/transparent"
+                        android:background="@color/transparent"
                         android:hint="@string/event_registrations_search_attendees"
                         android:imeOptions="actionSearch"
                         android:inputType="text"
                         android:singleLine="true"
-                        android:textColor="#111827"
-                        android:textColorHint="#9CA3AF"
-                        android:textSize="15sp" />
+                        android:textColorHint="@color/text_hint"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBody" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="74dp"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="@dimen/space_lg"
                     android:orientation="horizontal">
 
                     <LinearLayout
@@ -144,36 +140,36 @@
                         android:layout_weight="1"
                         android:background="@drawable/bg_staff_stat_card"
                         android:orientation="vertical"
-                        android:padding="12dp">
+                        android:padding="@dimen/space_md">
 
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_registrations_all_registrations" android:textColor="#6B7280" android:textSize="12sp" />
-                        <TextView android:id="@+id/txtAttendeeTotal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="0" android:textColor="#111827" android:textSize="22sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_registrations_all_registrations" android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
+                        <TextView android:id="@+id/txtAttendeeTotal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_6" android:text="@string/placeholder_zero" android:textAppearance="@style/TextAppearance.EventQR.TextHeadline" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
-                        android:layout_marginStart="10dp"
+                        android:layout_marginStart="@dimen/space_10"
                         android:layout_weight="1"
                         android:background="@drawable/bg_staff_stat_card"
                         android:orientation="vertical"
-                        android:padding="12dp">
+                        android:padding="@dimen/space_md">
 
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/common_checked_in" android:textColor="#6B7280" android:textSize="12sp" />
-                        <TextView android:id="@+id/txtAttendeeCheckedIn" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="0" android:textColor="#10B981" android:textSize="22sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/common_checked_in" android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
+                        <TextView android:id="@+id/txtAttendeeCheckedIn" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_6" android:text="@string/placeholder_zero" android:textColor="@color/success_dark" android:textAppearance="@style/TextAppearance.EventQR.TextHeadline" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
-                        android:layout_marginStart="10dp"
+                        android:layout_marginStart="@dimen/space_10"
                         android:layout_weight="1"
                         android:background="@drawable/bg_staff_stat_card"
                         android:orientation="vertical"
-                        android:padding="12dp">
+                        android:padding="@dimen/space_md">
 
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/common_registered" android:textColor="#6B7280" android:textSize="12sp" />
-                        <TextView android:id="@+id/txtAttendeeRegistered" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="0" android:textColor="#4F46E5" android:textSize="22sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/common_registered" android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
+                        <TextView android:id="@+id/txtAttendeeRegistered" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_6" android:text="@string/placeholder_zero" android:textColor="@color/primary" android:textAppearance="@style/TextAppearance.EventQR.TextHeadline" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -183,10 +179,10 @@
                     android:id="@+id/recyclerEventRegistrations"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="@dimen/space_lg"
                     android:layout_weight="1"
                     android:clipToPadding="false"
-                    android:paddingBottom="8dp" />
+                    android:paddingBottom="@dimen/space_sm" />
             </LinearLayout>
 
             <include
@@ -220,14 +216,14 @@
         android:id="@+id/batchPrintBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#FFFFFF"
-        android:elevation="8dp"
+        android:background="@color/surface"
+        android:elevation="@dimen/elevation_overlay"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:paddingTop="10dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="10dp"
+        android:paddingStart="@dimen/space_lg"
+        android:paddingTop="@dimen/space_10"
+        android:paddingEnd="@dimen/space_lg"
+        android:paddingBottom="@dimen/space_10"
         android:visibility="gone">
 
         <Button
@@ -235,21 +231,21 @@
             style="?attr/buttonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:backgroundTint="#F3F4F6"
+            android:backgroundTint="@color/surface_muted"
             android:text="@string/event_registrations_select_all"
-            android:textColor="#4F46E5"
+            android:textColor="@color/primary"
             android:textStyle="bold" />
 
         <Button
             android:id="@+id/btnPrintSelectedIds"
             android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="12dp"
+            android:layout_height="@dimen/touch_target_min"
+            android:layout_marginStart="@dimen/space_md"
             android:layout_weight="1"
-            android:backgroundTint="#4F46E5"
+            android:backgroundTint="@color/primary"
             android:enabled="false"
             android:text="@string/event_registrations_print_selected"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/on_primary"
             android:textStyle="bold" />
     </LinearLayout>
 </LinearLayout>

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/surface"
@@ -36,43 +35,35 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/landing_tagline_margin_top"
                 android:gravity="center"
-                android:lineSpacingExtra="3dp"
+                android:lineSpacingExtra="@dimen/line_spacing_3"
                 android:text="@string/landing_one_qr_code_every_event_instant_acce"
-                android:textColor="@color/brand_on_primary"
-                android:textSize="@dimen/landing_tagline_size" />
+                android:textColor="@color/on_primary"
+                android:textAppearance="@style/TextAppearance.EventQR.LandingTagline" />
 
             <Button
+                style="@style/Widget.EventQR.Button.Landing.Filled"
                 android:id="@+id/btnSignIn"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/landing_btn_height"
                 android:layout_marginTop="@dimen/landing_btn_margin_top"
-                android:background="@drawable/bg_white_pill_button"
-                android:elevation="3dp"
-                android:text="@string/common_sign_in"
-                android:textAllCaps="false"
-                android:textColor="@color/brand_primary"
-                android:textSize="@dimen/landing_btn_text_size"
-                android:textStyle="bold" />
+                android:elevation="@dimen/elevation_lifted"
+                android:text="@string/common_sign_in" />
 
             <Button
+                style="@style/Widget.EventQR.Button.Landing.Outline"
                 android:id="@+id/btnCreateAccount"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/landing_btn_height"
                 android:layout_marginTop="@dimen/landing_btn_margin_top"
                 android:layout_marginBottom="@dimen/landing_btn_margin_bottom"
-                android:background="@drawable/bg_dark_outline_button"
-                android:text="@string/common_create_account"
-                android:textAllCaps="false"
-                android:textColor="@color/brand_on_primary"
-                android:textSize="@dimen/landing_btn_text_size"
-                android:textStyle="bold" />
+                android:text="@string/common_create_account" />
 
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/surface_alt"
+            android:background="@color/background"
             android:orientation="vertical"
             android:paddingHorizontal="@dimen/landing_feature_padding_h"
             android:paddingTop="@dimen/landing_feature_padding_top"
@@ -83,20 +74,15 @@
                 android:layout_height="wrap_content"
                 android:text="@string/landing_why_choose_eventqr"
                 android:textAppearance="@style/TextAppearance.EventQR.SectionTitle"
-                android:textColor="@color/text_primary"
                 android:textStyle="bold" />
 
             <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.EventQR.Card.Compact.Raised"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/landing_card_margin_top"
                 android:clickable="true"
-                android:focusable="true"
-                app:cardElevation="2dp"
-                app:cardCornerRadius="12dp"
-                app:cardBackgroundColor="@color/surface"
-                app:strokeWidth="1dp"
-                app:strokeColor="@color/outline">
+                android:focusable="true">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -127,16 +113,14 @@
                             android:layout_height="wrap_content"
                             android:text="@string/landing_one_qr_all_access"
                             android:textColor="@color/text_primary"
-                            android:textSize="@dimen/landing_card_title_size"
-                            android:textStyle="bold" />
+                            android:textAppearance="@style/TextAppearance.EventQR.LandingCardTitle" />
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
+                            android:layout_marginTop="@dimen/space_xs"
                             android:text="@string/landing_register_once_and_use_your_unique_qr"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="@dimen/landing_card_desc_size" />
+                            android:textAppearance="@style/TextAppearance.EventQR.LandingCardDesc" />
                     </LinearLayout>
 
                 </LinearLayout>
@@ -144,16 +128,12 @@
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.EventQR.Card.Compact.Raised"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/landing_card_margin_top"
                 android:clickable="true"
-                android:focusable="true"
-                app:cardElevation="2dp"
-                app:cardCornerRadius="12dp"
-                app:cardBackgroundColor="@color/surface"
-                app:strokeWidth="1dp"
-                app:strokeColor="@color/outline">
+                android:focusable="true">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -184,16 +164,14 @@
                             android:layout_height="wrap_content"
                             android:text="@string/landing_instant_verification"
                             android:textColor="@color/text_primary"
-                            android:textSize="@dimen/landing_card_title_size"
-                            android:textStyle="bold" />
+                            android:textAppearance="@style/TextAppearance.EventQR.LandingCardTitle" />
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
+                            android:layout_marginTop="@dimen/space_xs"
                             android:text="@string/landing_quick_identity_verification_and_seam"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="@dimen/landing_card_desc_size" />
+                            android:textAppearance="@style/TextAppearance.EventQR.LandingCardDesc" />
                     </LinearLayout>
 
                 </LinearLayout>
@@ -201,16 +179,12 @@
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.EventQR.Card.Compact.Raised"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/landing_card_margin_top"
                 android:clickable="true"
-                android:focusable="true"
-                app:cardElevation="2dp"
-                app:cardCornerRadius="12dp"
-                app:cardBackgroundColor="@color/surface"
-                app:strokeWidth="1dp"
-                app:strokeColor="@color/outline">
+                android:focusable="true">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -241,16 +215,14 @@
                             android:layout_height="wrap_content"
                             android:text="@string/landing_rewards_benefits"
                             android:textColor="@color/text_primary"
-                            android:textSize="@dimen/landing_card_title_size"
-                            android:textStyle="bold" />
+                            android:textAppearance="@style/TextAppearance.EventQR.LandingCardTitle" />
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
+                            android:layout_marginTop="@dimen/space_xs"
                             android:text="@string/landing_earn_points_claim_benefits_and_redee"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="@dimen/landing_card_desc_size" />
+                            android:textAppearance="@style/TextAppearance.EventQR.LandingCardDesc" />
                     </LinearLayout>
 
                 </LinearLayout>

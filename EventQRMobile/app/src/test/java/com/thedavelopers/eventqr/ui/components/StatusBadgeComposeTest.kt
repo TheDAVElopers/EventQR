@@ -9,9 +9,9 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.roleColor
 import com.thedavelopers.eventqr.ui.theme.EventQrTheme
-import com.thedavelopers.eventqr.ui.theme.StatusApprovedGreenBg
-import com.thedavelopers.eventqr.ui.theme.StatusApprovedGreenText
 import kotlin.math.pow
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -150,8 +150,8 @@ class StatusBadgeComposeTest {
     fun usesLightBadgeContainers() {
         val style = resolveStyles().getValue(EventBadgeStatus.APPROVED)
 
-        assertEquals(StatusApprovedGreenBg, style.backgroundColor)
-        assertEquals(StatusApprovedGreenText, style.textColor)
+        assertEquals(roleColor(R.color.success_container), style.backgroundColor)
+        assertEquals(roleColor(R.color.on_success_container), style.textColor)
     }
 
     @Test

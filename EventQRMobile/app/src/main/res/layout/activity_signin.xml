@@ -2,21 +2,21 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
+    android:background="@color/surface"
     android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="238dp"
+        android:layout_height="@dimen/auth_header_height_238"
         android:background="@drawable/bg_signin_header"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:paddingHorizontal="24dp"
-        android:paddingTop="42dp">
+        android:paddingHorizontal="@dimen/space_xl"
+        android:paddingTop="@dimen/space_42">
 
         <ImageView
-            android:layout_width="96dp"
-            android:layout_height="96dp"
+            android:layout_width="@dimen/tile_96"
+            android:layout_height="@dimen/tile_96"
             android:contentDescription="@string/common_eventqr_logo"
             android:src="@drawable/white_logo"
             android:scaleType="fitCenter" />
@@ -24,21 +24,20 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="@dimen/space_10"
             android:text="@string/common_sign_in"
-            android:textColor="#FFFFFF"
-            android:textSize="30sp"
-            android:textStyle="bold" />
+            android:textColor="@color/on_primary"
+            android:textAppearance="@style/TextAppearance.EventQR.HeadlineXL" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="@dimen/space_sm"
             android:gravity="center"
-            android:lineSpacingExtra="3dp"
+            android:lineSpacingExtra="@dimen/line_spacing_3"
             android:text="@string/signin_sign_in_to_start_scanning_and_stream"
-            android:textColor="#F4F3FF"
-            android:textSize="13sp" />
+            android:textColor="@color/accent_container"
+            android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
 
     </LinearLayout>
 
@@ -46,69 +45,59 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="#FFFFFF"
+        android:background="@color/surface"
         android:orientation="vertical"
-        android:paddingHorizontal="32dp"
+        android:paddingHorizontal="@dimen/space_xxl"
         android:paddingTop="34dp"
-        android:paddingBottom="24dp">
+        android:paddingBottom="@dimen/space_xl">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/common_email_address"
-            android:textColor="#111827"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
 
         <EditText
+            style="@style/Widget.EventQR.EditText"
             android:id="@+id/edtEmail"
             android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:layout_marginTop="8dp"
+            android:layout_height="@dimen/control_height_54"
+            android:layout_marginTop="@dimen/space_sm"
             android:autoText="false"
-            android:background="@drawable/bg_signin_field"
             android:drawableStart="@drawable/email_icon"
-            android:drawablePadding="12dp"
+            android:drawablePadding="@dimen/space_md"
             android:hint="@string/common_enter_email_address"
             android:inputType="textEmailAddress"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:textColor="@color/eventqr_text"
-            android:textColorHint="#8A8A8A"
-            android:textSize="14sp" />
+            android:paddingStart="@dimen/space_lg"
+            android:paddingEnd="@dimen/space_lg" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="@dimen/space_18"
             android:text="@string/common_password"
-            android:textColor="#111827"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
 
         <EditText
+            style="@style/Widget.EventQR.EditText"
             android:id="@+id/edtPassword"
             android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:layout_marginTop="8dp"
+            android:layout_height="@dimen/control_height_54"
+            android:layout_marginTop="@dimen/space_sm"
             android:autoText="false"
-            android:background="@drawable/bg_signin_field"
             android:drawableStart="@drawable/password_icon"
             android:drawableEnd="@drawable/ic_visibility_on"
-            android:drawablePadding="12dp"
+            android:drawablePadding="@dimen/space_md"
             android:hint="@string/common_enter_password"
             android:inputType="textPassword"
             android:maxLength="128"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:textColor="@color/eventqr_text"
-            android:textColorHint="#8A8A8A"
-            android:textSize="14sp" />
+            android:paddingStart="@dimen/space_lg"
+            android:paddingEnd="@dimen/space_lg" />
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="42dp"
-            android:layout_marginTop="12dp"
+            android:layout_height="@dimen/control_height_42"
+            android:layout_marginTop="@dimen/space_md"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
@@ -117,43 +106,36 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:buttonTint="@color/eventqr_indigo"
+                android:buttonTint="@color/primary"
                 android:minWidth="0dp"
                 android:minHeight="0dp"
                 android:text="@string/signin_remember_email"
-                android:textColor="#111827"
-                android:textSize="13sp"
-                android:textStyle="bold" />
+                android:textColor="@color/text_primary"
+                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
 
             <TextView
                 android:id="@+id/txtForgotPassword"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/signin_forgot_password"
-                android:textColor="@color/eventqr_indigo"
-                android:textSize="13sp"
-                android:textStyle="bold" />
+                android:textColor="@color/primary"
+                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
         </LinearLayout>
 
         <Button
             android:id="@+id/btnSignIn"
+            style="@style/Widget.EventQR.Button.Auth"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="24dp"
-            android:background="@drawable/bg_signin_button"
-            android:elevation="5dp"
-            android:stateListAnimator="@null"
-            android:text="@string/common_sign_in"
-            android:textAllCaps="false"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:layout_height="@dimen/button_primary_height"
+            android:layout_marginTop="@dimen/space_xl"
+            android:elevation="@dimen/elevation_5"
+            android:text="@string/common_sign_in" />
 
         <LinearLayout
             android:id="@+id/btnRegister"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/space_lg"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
@@ -163,16 +145,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/signin_don_t_have_an_account"
-                android:textColor="#6B7280"
-                android:textSize="13sp" />
+                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/common_create_account"
-                android:textColor="@color/eventqr_indigo"
-                android:textSize="13sp"
-                android:textStyle="bold" />
+                android:textColor="@color/primary"
+                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
         </LinearLayout>
     </LinearLayout>
 

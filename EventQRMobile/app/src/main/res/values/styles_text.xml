@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    EventQR type scale.
+
+    Use as  android:textAppearance="@style/TextAppearance.EventQR.<Name>"  (or style=) instead of loose
+    textSize / textStyle / fontFamily attributes.  Every style inherits TextAppearance.EventQR (system
+    `sans-serif`, text_primary); `.Strong` = bold, `.Medium` = sans-serif-medium.  Colour is only set where
+    the role default is not text_primary.  No hex, no line spacing (leave lineSpacingExtra on the view).
+-->
+<resources>
+
+    <!-- Base: system font, primary text colour. parent="" keeps Material's letter-spacing out of the scale. -->
+    <style name="TextAppearance.EventQR" parent="">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <!-- ═════════════ Display / headlines (bold) ═════════════ -->
+    <style name="TextAppearance.EventQR.Display">
+        <item name="android:textSize">@dimen/type_display</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.EventQR.HeadlineXL">
+        <item name="android:textSize">@dimen/type_headline_xl</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.EventQR.HeadlineL">
+        <item name="android:textSize">@dimen/type_headline_l</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.EventQR.PageTitle">
+        <item name="android:textSize">@dimen/type_page_title</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- 22sp bold (was Archivo semibold; now system bold per D3) -->
+    <style name="TextAppearance.EventQR.TextHeadline">
+        <item name="android:textSize">@dimen/type_headline</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.EventQR.TitleLarge">
+        <item name="android:textSize">@dimen/type_title_large</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- 18sp regular (was loose textSize="18sp" x3) -->
+    <style name="TextAppearance.EventQR.TitleRegular">
+        <item name="android:textSize">@dimen/type_title</item>
+    </style>
+
+    <!-- 18sp bold, plain system font (no Material parent / letter-spacing). Same render as the old loose
+         textSize="18sp" + textStyle="bold"; ToolbarTitle keeps its Material parent for the toolbar. -->
+    <style name="TextAppearance.EventQR.TitleMedium">
+        <item name="android:textSize">@dimen/type_title</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- 36sp bold + sans-serif-medium (profile initial). Bold is inherited from Display on purpose: it matches
+         the old textStyle=bold + fontFamily=sans-serif-medium combination. -->
+    <style name="TextAppearance.EventQR.Display.Medium">
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <!-- 22sp sans-serif-medium, NOT bold (dashboard greeting names) -->
+    <style name="TextAppearance.EventQR.TextHeadline.Medium">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+
+    <!-- Existing: keep (Material parents retained so toolbar/section look is unchanged) -->
+    <style name="TextAppearance.EventQR.ToolbarTitle" parent="TextAppearance.MaterialComponents.Headline6">
+        <item name="android:textSize">@dimen/type_title</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <style name="TextAppearance.EventQR.SectionTitle" parent="TextAppearance.MaterialComponents.Subtitle1">
+        <item name="android:textSize">@dimen/type_title</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <!-- ═════════════ Body ═════════════ -->
+    <style name="TextAppearance.EventQR.TextBodyLarge">
+        <item name="android:textSize">@dimen/type_body_large</item>
+    </style>
+    <style name="TextAppearance.EventQR.TextBodyLarge.Strong">
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.EventQR.TextBodyLarge.Medium">
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="TextAppearance.EventQR.TextBody">
+        <item name="android:textSize">@dimen/type_body</item>
+    </style>
+    <style name="TextAppearance.EventQR.TextBody.Strong">
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.EventQR.TextBody.Medium">
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="TextAppearance.EventQR.TextBodyMedium">
+        <item name="android:textSize">@dimen/type_body_medium</item>
+    </style>
+    <style name="TextAppearance.EventQR.TextBodyMedium.Strong">
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.EventQR.TextBodyMedium.Medium">
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <!-- Compact / caption default to secondary text -->
+    <style name="TextAppearance.EventQR.TextBodyCompact">
+        <item name="android:textSize">@dimen/type_body_compact</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
+    <style name="TextAppearance.EventQR.TextBodyCompact.Strong">
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.EventQR.TextBodyCompact.Medium">
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="TextAppearance.EventQR.TextCaption">
+        <item name="android:textSize">@dimen/type_caption</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
+    <style name="TextAppearance.EventQR.TextCaption.Strong">
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.EventQR.TextCaption.Medium">
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="TextAppearance.EventQR.TextOverline">
+        <item name="android:textSize">@dimen/type_overline</item>
+    </style>
+    <style name="TextAppearance.EventQR.TextOverline.Strong">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- 10sp bold (below the lint SmallSp floor on purpose: dense count badges only) -->
+    <style name="TextAppearance.EventQR.TextMicro">
+        <item name="android:textSize">@dimen/type_micro</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- ═════════════ Special purpose ═════════════ -->
+    <style name="TextAppearance.EventQR.InputError" parent="TextAppearance.EventQR.TextBodyCompact">
+        <item name="android:textColor">@color/error</item>
+    </style>
+
+    <!-- Terms screen: aliases of the shared scale (Archivo is no longer used anywhere in the type scale) -->
+    <style name="TextAppearance.EventQR.TermsSectionTitle" parent="TextAppearance.EventQR.TextBodyLarge.Strong" />
+
+    <style name="TextAppearance.EventQR.TermsBadge" parent="TextAppearance.EventQR.TextBodyCompact.Strong">
+        <item name="android:textColor">@color/accent_dark</item>
+    </style>
+
+
+    <!-- ═════════════ Phase 2 additions ═════════════ -->
+
+    <!-- 9sp bold (dense count badges; below the lint SmallSp floor on purpose) -->
+    <style name="TextAppearance.EventQR.TextNano">
+        <item name="android:textSize">@dimen/type_nano</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- 10sp NOT bold (dropdown arrows); TextMicro itself is bold -->
+    <style name="TextAppearance.EventQR.TextMicro.Regular">
+        <item name="android:textStyle">normal</item>
+    </style>
+
+    <style name="TextAppearance.EventQR.TextOverline.Medium">
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="TextAppearance.EventQR.TextBody.Light">
+        <item name="android:fontFamily">sans-serif-light</item>
+    </style>
+
+    <!-- 19sp bold -->
+    <style name="TextAppearance.EventQR.TitleCompact">
+        <item name="android:textSize">@dimen/type_title_compact</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- 46sp sans-serif-bold, no textStyle (reward points balance) -->
+    <style name="TextAppearance.EventQR.DisplayXL">
+        <item name="android:textSize">@dimen/type_display_xl</item>
+        <item name="android:fontFamily">sans-serif-bold</item>
+    </style>
+
+    <!-- Landing screen. Sizes come from landing_* dimens so the values-sw600dp overrides (tablet 17/17/18/14sp) keep working. -->
+    <style name="TextAppearance.EventQR.LandingTagline">
+        <item name="android:textSize">@dimen/landing_tagline_size</item>
+    </style>
+    <style name="TextAppearance.EventQR.LandingCardTitle">
+        <item name="android:textSize">@dimen/landing_card_title_size</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.EventQR.LandingCardDesc">
+        <item name="android:textSize">@dimen/landing_card_desc_size</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
+
+    <!-- ═════════════ Button text ═════════════
+         Step 0 result (verified with a Robolectric inflate of activity_landing under Theme.EventQR): an un-styled
+         <Button> inflates as androidx.appcompat.widget.AppCompatButton, NOT MaterialButton, and its text appearance is
+         android:textAppearanceButton = TextAppearance.AppCompat.Widget.Button (14sp, caps, default typeface, NO letter spacing,
+         NO medium font). Two families, pick by the VIEW CLASS of the site:
+
+         * ButtonPlatform*  - plain <Button> / AppCompatButton (parent TextAppearance.AppCompat.Widget.Button). Renders exactly
+                              like the old loose textSize + textStyle attributes. Sites keep textAllCaps="false" on the view.
+         * Button*          - com.google.android.material.button.MaterialButton (parent TextAppearance.MaterialComponents.Button:
+                              sans-serif-medium, letterSpacing 0.0892857, caps). Same render as a MaterialButton with
+                              loose textSize / textStyle. Sites keep textAllCaps="false" on the view.
+
+         .Strong = bold. ButtonCaption.StrongSans = sans-serif + bold (the qr download buttons' old invalid fontFamily="sans"
+         fell back to the default typeface). Colours are NOT set here: keep android:textColor on the view / component style. -->
+    <style name="TextAppearance.EventQR.ButtonBase" parent="TextAppearance.MaterialComponents.Button" />
+    <style name="TextAppearance.EventQR.ButtonPlatformBase" parent="TextAppearance.AppCompat.Widget.Button" />
+
+    <style name="TextAppearance.EventQR.ButtonCaption" parent="TextAppearance.EventQR.ButtonBase">
+        <item name="android:textSize">@dimen/type_caption</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonCaption.Strong">
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonCaption.StrongSans">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonBodyCompact" parent="TextAppearance.EventQR.ButtonBase">
+        <item name="android:textSize">@dimen/type_body_compact</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonBodyCompact.Strong">
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonBodyMedium" parent="TextAppearance.EventQR.ButtonBase">
+        <item name="android:textSize">@dimen/type_body_medium</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonBodyMedium.Strong">
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonBody" parent="TextAppearance.EventQR.ButtonBase">
+        <item name="android:textSize">@dimen/type_body</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonBody.Strong">
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonBodyLarge" parent="TextAppearance.EventQR.ButtonBase">
+        <item name="android:textSize">@dimen/type_body_large</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonBodyLarge.Strong">
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonTitle" parent="TextAppearance.EventQR.ButtonBase">
+        <item name="android:textSize">@dimen/type_title</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonTitle.Strong">
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonLanding" parent="TextAppearance.EventQR.ButtonBase">
+        <item name="android:textSize">@dimen/landing_btn_text_size</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonLanding.Strong">
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonPlatformCaption" parent="TextAppearance.EventQR.ButtonPlatformBase">
+        <item name="android:textSize">@dimen/type_caption</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonPlatformCaption.Strong">
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonPlatformCaption.StrongSans">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonPlatformBodyCompact" parent="TextAppearance.EventQR.ButtonPlatformBase">
+        <item name="android:textSize">@dimen/type_body_compact</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonPlatformBodyCompact.Strong">
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonPlatformBodyMedium" parent="TextAppearance.EventQR.ButtonPlatformBase">
+        <item name="android:textSize">@dimen/type_body_medium</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonPlatformBodyMedium.Strong">
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonPlatformBody" parent="TextAppearance.EventQR.ButtonPlatformBase">
+        <item name="android:textSize">@dimen/type_body</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonPlatformBody.Strong">
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonPlatformBodyLarge" parent="TextAppearance.EventQR.ButtonPlatformBase">
+        <item name="android:textSize">@dimen/type_body_large</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonPlatformBodyLarge.Strong">
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonPlatformTitle" parent="TextAppearance.EventQR.ButtonPlatformBase">
+        <item name="android:textSize">@dimen/type_title</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonPlatformTitle.Strong">
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonPlatformLanding" parent="TextAppearance.EventQR.ButtonPlatformBase">
+        <item name="android:textSize">@dimen/landing_btn_text_size</item>
+    </style>
+    <style name="TextAppearance.EventQR.ButtonPlatformLanding.Strong">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- Text typed into stock Material inputs: keeps the Material default appearance (Subtitle1: tracking 0.009375) that an
+         EditText / TextInputEditText got before it carried a loose textSize, at the body-medium size. -->
+    <style name="TextAppearance.EventQR.InputBodyMedium" parent="TextAppearance.MaterialComponents.Subtitle1">
+        <item name="android:textSize">@dimen/type_body_medium</item>
+    </style>
+
+    <!-- Chip label: keeps the Material default chip appearance (Body2: tracking 0.0178571) at the body-compact size. -->
+    <style name="TextAppearance.EventQR.ChipLabel" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textSize">@dimen/type_body_compact</item>
+    </style>
+
+    <!-- 18sp sans-serif-medium, regular style (portal switcher sheet title) -->
+    <style name="TextAppearance.EventQR.TitleRegular.Medium">
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <!-- 31sp bold (reset / new password header) -->
+    <style name="TextAppearance.EventQR.AuthTitle">
+        <item name="android:textSize">@dimen/type_auth_title</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- Legacy: "sans-serif-bold" is not a platform font family, so these labels always rendered in the default REGULAR weight.
+         These styles keep that exact rendering (same as DisplayXL). To make them really bold, switch the site to the .Strong
+         style of the same size - an intentional visual change, not part of the token migration. -->
+    <style name="TextAppearance.EventQR.TextHeadline.LegacyBold">
+        <item name="android:fontFamily">sans-serif-bold</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+    <style name="TextAppearance.EventQR.TitleLarge.LegacyBold">
+        <item name="android:fontFamily">sans-serif-bold</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+    <style name="TextAppearance.EventQR.TextBodyLarge.LegacyBold">
+        <item name="android:fontFamily">sans-serif-bold</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+</resources>

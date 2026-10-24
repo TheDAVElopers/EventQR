@@ -3,7 +3,6 @@ package com.thedavelopers.eventqr.features.notifications
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import android.graphics.Typeface
 import android.view.View
 import android.widget.TextView
 import androidx.lifecycle.Lifecycle
@@ -16,6 +15,9 @@ import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.NotificationStatus
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 import com.thedavelopers.eventqr.ui.theme.EventQrTheme
+import com.thedavelopers.eventqr.ui.theme.dimenOffset
+import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
+import com.thedavelopers.eventqr.ui.theme.strong
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -53,9 +55,9 @@ open class UnifiedNotificationsActivity : AppCompatActivity() {
 
         val markAllRead = TextView(this).apply {
             text = getString(R.string.organizer_notifications_mark_all_read)
-            textSize = 13f
-            setTypeface(typeface, Typeface.BOLD)
-            setPadding(dp(8), dp(8), dp(8), dp(8))
+            setTextSizeRes(R.dimen.type_body_compact)
+            strong()
+            setPadding(dimenOffset(R.dimen.space_sm), dimenOffset(R.dimen.space_sm), dimenOffset(R.dimen.space_sm), dimenOffset(R.dimen.space_sm))
             setOnClickListener { markAllRead() }
         }
         header.endSlot.addView(markAllRead)
@@ -65,15 +67,13 @@ open class UnifiedNotificationsActivity : AppCompatActivity() {
                     val hasUnread = list.any { it.status != NotificationStatus.READ && it.readAt == null }
                     markAllRead.visibility = if (list.isEmpty()) View.GONE else View.VISIBLE
                     markAllRead.isEnabled = hasUnread
-                    markAllRead.setTextColor(getColor(if (hasUnread) R.color.eventqr_purple else R.color.text_disabled))
+                    markAllRead.setTextColor(getColor(if (hasUnread) R.color.primary else R.color.text_disabled))
                 }
             }
         }
 
         loadNotifications()
     }
-
-    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
     protected fun loadNotifications() {
         _isLoading.value = true

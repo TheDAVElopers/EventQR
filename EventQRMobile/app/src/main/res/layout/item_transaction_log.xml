@@ -3,34 +3,34 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
+    android:layout_marginBottom="@dimen/space_md"
     android:clipToOutline="true"
     app:cardBackgroundColor="@color/surface"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="2dp">
+    app:cardCornerRadius="@dimen/radius_md"
+    app:cardElevation="@dimen/elevation_raised">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="14dp">
+        android:padding="@dimen/space_14">
 
         <!-- Transaction type icon (brand color) -->
         <FrameLayout
             android:id="@+id/iconContainer"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="@dimen/icon_tile_md"
+            android:layout_height="@dimen/icon_tile_md"
             android:background="@drawable/bg_transaction_icon_container"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
             <ImageView
                 android:id="@+id/imgTypeIcon"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="@dimen/icon_md"
+                android:layout_height="@dimen/icon_md"
                 android:layout_gravity="center"
                 android:contentDescription="@string/item_transaction_log_transaction_type"
                 android:src="@drawable/ic_qr_scan"
-                app:tint="@color/brand_primary" />
+                app:tint="@color/primary" />
         </FrameLayout>
 
         <!-- Right column: chip on top, badge on bottom -->
@@ -40,7 +40,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:gravity="end"
-            android:layout_marginEnd="12dp"
+            android:layout_marginEnd="@dimen/space_md"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent">
@@ -51,26 +51,24 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_transaction_type_chip"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="3dp"
+                android:paddingHorizontal="@dimen/space_10"
+                android:paddingVertical="@dimen/space_3"
                 android:text="@string/item_transaction_log_entry"
-                android:textColor="@color/brand_primary"
-                android:textSize="11sp"
-                android:textStyle="bold" />
+                android:textColor="@color/primary"
+                android:textAppearance="@style/TextAppearance.EventQR.TextOverline.Strong" />
 
             <!-- Points badge -->
             <TextView
                 android:id="@+id/txtPointsBadge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="@dimen/space_6"
                 android:background="@drawable/bg_points_chip_green"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="4dp"
+                android:paddingHorizontal="@dimen/space_10"
+                android:paddingVertical="@dimen/space_xs"
                 android:text="@string/item_transaction_log_50_pts"
-                android:textColor="@color/icon_tint_green"
-                android:textSize="12sp"
-                android:textStyle="bold"
+                android:textColor="@color/success_dark"
+                android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong"
                 android:visibility="gone" />
         </LinearLayout>
 
@@ -79,14 +77,12 @@
             android:id="@+id/txtAttendeeName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="8dp"
+            android:layout_marginStart="@dimen/space_md"
+            android:layout_marginEnd="@dimen/space_sm"
             android:ellipsize="end"
             android:maxLines="1"
             android:text="@string/common_attendee"
-            android:textColor="@color/text_primary"
-            android:textSize="15sp"
-            android:textStyle="bold"
+            android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong"
             app:layout_constraintEnd_toStartOf="@id/rightColumn"
             app:layout_constraintStart_toEndOf="@id/iconContainer"
             app:layout_constraintTop_toTopOf="parent" />
@@ -96,14 +92,13 @@
             android:id="@+id/txtRelativeTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginTop="6dp"
+            android:layout_marginStart="@dimen/space_md"
+            android:layout_marginTop="@dimen/space_6"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:drawablePadding="4dp"
-            android:paddingVertical="2dp"
+            android:drawablePadding="@dimen/space_xs"
+            android:paddingVertical="@dimen/space_xxs"
             android:text="@string/item_transaction_log_5m_ago"
-            android:textColor="@color/text_secondary"
-            android:textSize="12sp"
+            android:textAppearance="@style/TextAppearance.EventQR.TextCaption"
             app:layout_constraintStart_toEndOf="@id/iconContainer"
             app:layout_constraintTop_toBottomOf="@id/txtAttendeeName" />
 
@@ -112,11 +107,11 @@
             android:id="@+id/txtExactTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginTop="2dp"
+            android:layout_marginStart="@dimen/space_md"
+            android:layout_marginTop="@dimen/space_xxs"
             android:text="@string/item_transaction_log_sep_10_2026_2_30_pm"
             android:textColor="@color/text_disabled"
-            android:textSize="12sp"
+            android:textAppearance="@style/TextAppearance.EventQR.TextCaption"
             android:visibility="gone"
             app:layout_constraintStart_toEndOf="@id/iconContainer"
             app:layout_constraintTop_toBottomOf="@id/txtRelativeTime" />
@@ -126,13 +121,13 @@
             android:id="@+id/txtReason"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginTop="6dp"
+            android:layout_marginStart="@dimen/space_md"
+            android:layout_marginTop="@dimen/space_6"
             android:ellipsize="end"
             android:maxLines="2"
             android:text="@string/common_reason"
             android:textColor="@color/error"
-            android:textSize="13sp"
+            android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/iconContainer"

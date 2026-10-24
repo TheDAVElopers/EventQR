@@ -3,36 +3,36 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="10dp"
+    android:layout_marginBottom="@dimen/space_10"
     android:background="@drawable/bg_admin_surface_card"
-    android:elevation="2dp"
+    android:elevation="@dimen/elevation_raised"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingStart="16dp"
-    android:paddingTop="14dp"
-    android:paddingEnd="16dp"
-    android:paddingBottom="14dp">
+    android:paddingStart="@dimen/space_lg"
+    android:paddingTop="@dimen/space_14"
+    android:paddingEnd="@dimen/space_lg"
+    android:paddingBottom="@dimen/space_14">
 
     <FrameLayout
         android:id="@+id/auditIconTile"
-        android:layout_width="38dp"
-        android:layout_height="38dp"
+        android:layout_width="@dimen/tile_38"
+        android:layout_height="@dimen/tile_38"
         android:background="@drawable/bg_admin_role_badge_green">
 
         <ImageView
             android:id="@+id/imgAuditIcon"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="@dimen/icon_md"
+            android:layout_height="@dimen/icon_md"
             android:layout_gravity="center"
             android:contentDescription="@string/item_admin_audit_log_audit_log_type"
             android:src="@drawable/ic_audit_shield"
-            app:tint="#10B981" />
+            app:tint="@color/success" />
     </FrameLayout>
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="14dp"
+        android:layout_marginStart="@dimen/space_14"
         android:layout_weight="1"
         android:orientation="vertical">
 
@@ -42,26 +42,24 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textColor="#111827"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong" />
 
         <TextView
             android:id="@+id/textAuditActorTarget"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="@dimen/space_5"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textColor="#4B5563"
-            android:textSize="13sp" />
+            android:textColor="@color/text_body"
+            android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
 
         <TextView
             android:id="@+id/textAuditTimestamp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:textColor="#94A3B8"
-            android:textSize="12sp" />
+            android:layout_marginTop="@dimen/space_5"
+            android:textColor="@color/text_hint"
+            android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
     </LinearLayout>
 </LinearLayout>

@@ -1,7 +1,9 @@
 package com.thedavelopers.eventqr.features.organizer.events
 
+import com.thedavelopers.eventqr.ui.theme.dimenPx
+import com.thedavelopers.eventqr.ui.theme.roundedRect
+import com.thedavelopers.eventqr.features.organizer.styledText
 import androidx.lifecycle.lifecycleScope
-import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
@@ -10,7 +12,9 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.graphics.ColorUtils
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.features.organizer.*
 import com.thedavelopers.eventqr.features.organizer.scanpurposes.ManageScanPurposesActivity
 import com.thedavelopers.eventqr.features.organizer.staff.ManageUsersActivity
@@ -60,7 +64,7 @@ open class EventManagementHubActivity : AppCompatActivity() {
                 return@launch
             }
 
-            content.setPadding(dp(16), dp(12), dp(16), dp(24))
+            content.setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_xl))
 
             val registeredCount = event.currentAttendeeCount.coerceAtLeast(0)
             val capacity = event.capacity.coerceAtLeast(0)
@@ -75,19 +79,19 @@ open class EventManagementHubActivity : AppCompatActivity() {
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                 ).apply {
-                    setMargins(0, 0, 0, dp(16))
+                    setMargins(0, 0, 0, dimenPx(R.dimen.space_lg))
                 }
                 background = GradientDrawable(
                     GradientDrawable.Orientation.TL_BR,
                     intArrayOf(
-                        Color.parseColor("#0F172A"),
-                        Color.parseColor("#1E1B4B"),
-                        Color.parseColor("#312E81"),
+                        color(R.color.deco_hub_hero_start),
+                        color(R.color.primary_dark),
+                        color(R.color.primary),
                     ),
                 ).apply {
-                    cornerRadius = dp(16).toFloat()
+                    cornerRadius = dimenPx(R.dimen.radius_lg).toFloat()
                 }
-                setPadding(dp(20), dp(20), dp(20), dp(20))
+                setPadding(dimenPx(R.dimen.space_20), dimenPx(R.dimen.space_20), dimenPx(R.dimen.space_20), dimenPx(R.dimen.space_20))
 
                 val leftColumn = LinearLayout(this@EventManagementHubActivity).apply {
                     orientation = LinearLayout.VERTICAL
@@ -99,14 +103,14 @@ open class EventManagementHubActivity : AppCompatActivity() {
 
                     // Badge Pill
                     val statusText = event.lifecycleStatus()
-                    val badgeColor = Color.parseColor("#ffffff")
-                    val badgeBackground = Color.parseColor("#33FFFFFF")
+                    val badgeColor = color(R.color.on_primary)
+                    val badgeBackground = color(R.color.on_dark_20)
                     val badgeLayout = LinearLayout(this@EventManagementHubActivity).apply {
                         id = R.id.emh_status_badge
                         orientation = LinearLayout.HORIZONTAL
                         gravity = Gravity.CENTER_VERTICAL
-                        background = rounded(badgeBackground, 16, null, density = resources.displayMetrics.density)
-                        setPadding(dp(10), dp(4), dp(12), dp(4))
+                        background = roundedRect(badgeBackground, R.dimen.radius_lg)
+                        setPadding(dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_xs), dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_xs))
                         layoutParams = LinearLayout.LayoutParams(
                             ViewGroup.LayoutParams.WRAP_CONTENT,
                             ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -115,27 +119,27 @@ open class EventManagementHubActivity : AppCompatActivity() {
                         addView(ImageView(this@EventManagementHubActivity).apply {
                             setImageResource(R.drawable.ic_calendar)
                             setColorFilter(badgeColor)
-                            layoutParams = LinearLayout.LayoutParams(dp(14), dp(14)).apply {
-                                marginEnd = dp(6)
+                            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_14), dimenPx(R.dimen.icon_14)).apply {
+                                marginEnd = dimenPx(R.dimen.space_6)
                             }
                         })
 
-                        addView(text(statusText, 11, true, badgeColor))
+                        addView(styledText(statusText, R.dimen.type_overline, true, badgeColor))
                     }
                     addView(badgeLayout)
 
                     // Event Title
-                    addView(text(event.title, 20, true, Color.WHITE).apply {
+                    addView(styledText(event.title, R.dimen.type_title_large, true, color(R.color.on_primary)).apply {
                         id = R.id.emh_event_title
-                        setPadding(0, dp(10), 0, 0)
+                        setPadding(0, dimenPx(R.dimen.space_10), 0, 0)
                     })
 
                     // Subtitle / Description
                     val descText = event.description.ifBlank {
                         getString(R.string.event_management_hub_default_description)
                     }
-                    addView(text(descText, 12, false, Color.argb(220, 255, 255, 255)).apply {
-                        setPadding(0, dp(4), 0, 0)
+                    addView(styledText(descText, R.dimen.type_caption, false, ColorUtils.setAlphaComponent(color(R.color.surface), 220)).apply {
+                        setPadding(0, dimenPx(R.dimen.space_xs), 0, 0)
                         maxLines = 2
                         ellipsize = android.text.TextUtils.TruncateAt.END
                     })
@@ -145,9 +149,9 @@ open class EventManagementHubActivity : AppCompatActivity() {
                 // Large White Icon on Right
                 addView(ImageView(this@EventManagementHubActivity).apply {
                     setImageResource(R.drawable.ic_calendar)
-                    setColorFilter(Color.WHITE)
-                    layoutParams = LinearLayout.LayoutParams(dp(64), dp(64)).apply {
-                        marginStart = dp(12)
+                    setColorFilter(color(R.color.on_primary))
+                    layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.tile_64), dimenPx(R.dimen.tile_64)).apply {
+                        marginStart = dimenPx(R.dimen.space_md)
                         gravity = Gravity.CENTER_VERTICAL
                     }
                 })
@@ -164,20 +168,20 @@ open class EventManagementHubActivity : AppCompatActivity() {
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                 ).apply {
-                    setMargins(0, 0, 0, dp(16))
+                    setMargins(0, 0, 0, dimenPx(R.dimen.space_lg))
                 }
 
                 val stat1 = createStatCard(getString(R.string.event_management_hub_stat_registered), formatCount(registeredCount), R.drawable.ic_profile_person).apply {
                     id = R.id.emh_stat_registered
-                    layoutParams = (layoutParams as LinearLayout.LayoutParams).apply { marginEnd = dp(4) }
+                    layoutParams = (layoutParams as LinearLayout.LayoutParams).apply { marginEnd = dimenPx(R.dimen.space_xs) }
                 }
                 val stat2 = createStatCard(getString(R.string.event_management_hub_stat_capacity), formatCount(capacity), R.drawable.ic_group).apply {
                     id = R.id.emh_stat_capacity
-                    layoutParams = (layoutParams as LinearLayout.LayoutParams).apply { marginStart = dp(4); marginEnd = dp(4) }
+                    layoutParams = (layoutParams as LinearLayout.LayoutParams).apply { marginStart = dimenPx(R.dimen.space_xs); marginEnd = dimenPx(R.dimen.space_xs) }
                 }
                 val stat3 = createStatCard(getString(R.string.event_management_hub_stat_available), formatCount(available), R.drawable.ic_row_star).apply {
                     id = R.id.emh_stat_available
-                    layoutParams = (layoutParams as LinearLayout.LayoutParams).apply { marginStart = dp(4) }
+                    layoutParams = (layoutParams as LinearLayout.LayoutParams).apply { marginStart = dimenPx(R.dimen.space_xs) }
                 }
 
                 addView(stat1)
@@ -187,9 +191,9 @@ open class EventManagementHubActivity : AppCompatActivity() {
             content.addView(statsRow)
 
             // Section Title
-            content.addView(text(getString(R.string.event_management_hub_section_title), 16, true, Color.parseColor("#111827")).apply {
+            content.addView(styledText(getString(R.string.event_management_hub_section_title), R.dimen.type_body_large, true, color(R.color.text_primary)).apply {
                 id = R.id.emh_section_title
-                setPadding(dp(2), dp(4), dp(2), dp(12))
+                setPadding(dimenPx(R.dimen.space_xxs), dimenPx(R.dimen.space_xs), dimenPx(R.dimen.space_xxs), dimenPx(R.dimen.space_md))
             })
 
             // Menu Items List
@@ -236,13 +240,13 @@ open class EventManagementHubActivity : AppCompatActivity() {
             // Menu Items Container (Single card with dividers)
             val menuCardGroup = LinearLayout(this@EventManagementHubActivity).apply {
                 orientation = LinearLayout.VERTICAL
-                background = rounded(Color.WHITE, 12, Color.parseColor("#E2E8F0"), density = resources.displayMetrics.density)
-                elevation = dp(1).toFloat()
+                background = roundedRect(color(R.color.surface), R.dimen.radius_md, color(R.color.outline))
+                elevation = dimenPx(R.dimen.elevation_card).toFloat()
                 layoutParams = LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                 ).apply {
-                    setMargins(0, 0, 0, dp(16))
+                    setMargins(0, 0, 0, dimenPx(R.dimen.space_lg))
                 }
             }
 
@@ -261,9 +265,9 @@ open class EventManagementHubActivity : AppCompatActivity() {
                     menuCardGroup.addView(View(this@EventManagementHubActivity).apply {
                         layoutParams = LinearLayout.LayoutParams(
                             ViewGroup.LayoutParams.MATCH_PARENT,
-                            dp(1),
+                            dimenPx(R.dimen.stroke_hairline),
                         )
-                        setBackgroundColor(Color.parseColor("#F1F5F9"))
+                        setBackgroundColor(color(R.color.surface_muted))
                     })
                 }
             }
@@ -283,28 +287,28 @@ open class EventManagementHubActivity : AppCompatActivity() {
         LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(10), dp(12), dp(10), dp(12))
-            background = rounded(Color.WHITE, 12, Color.parseColor("#E2E8F0"), density = resources.displayMetrics.density)
-            elevation = dp(1).toFloat()
+            setPadding(dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_md))
+            background = roundedRect(color(R.color.surface), R.dimen.radius_md, color(R.color.outline))
+            elevation = dimenPx(R.dimen.elevation_card).toFloat()
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
 
             // Left icon container
             addView(ImageView(this@EventManagementHubActivity).apply {
                 setImageResource(iconRes)
-                setColorFilter(Color.parseColor("#5A45F2"))
-                background = rounded(Color.parseColor("#EEF0FF"), 20, null, density = resources.displayMetrics.density)
-                setPadding(dp(8), dp(8), dp(8), dp(8))
-                layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
+                setColorFilter(color(R.color.deco_icon_on_accent))
+                background = roundedRect(color(R.color.accent_container), R.dimen.radius_20)
+                setPadding(dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_sm))
+                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_tile_sm), dimenPx(R.dimen.icon_tile_sm))
             })
 
             // Right text container
             addView(LinearLayout(this@EventManagementHubActivity).apply {
                 orientation = LinearLayout.VERTICAL
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-                    marginStart = dp(8)
+                    marginStart = dimenPx(R.dimen.space_sm)
                 }
-                addView(text(value, 18, true, Color.parseColor("#111827")))
-                addView(text(title, 11, false, Color.parseColor("#6B7280")))
+                addView(styledText(value, R.dimen.type_title, true, color(R.color.text_primary)))
+                addView(styledText(title, R.dimen.type_overline, false, color(R.color.text_secondary)))
             })
         }
 
@@ -317,7 +321,7 @@ open class EventManagementHubActivity : AppCompatActivity() {
         orientation = LinearLayout.HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
         setOnClickListener { onClick() }
-        setPadding(dp(16), dp(16), dp(16), dp(16))
+        setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg))
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -326,29 +330,29 @@ open class EventManagementHubActivity : AppCompatActivity() {
         // Left Icon Container
         addView(ImageView(this@EventManagementHubActivity).apply {
             setImageResource(iconRes)
-            setColorFilter(Color.parseColor("#5A45F2"))
-            background = rounded(Color.parseColor("#EEF0FF"), 12, null, density = resources.displayMetrics.density)
-            setPadding(dp(10), dp(10), dp(10), dp(10))
-            layoutParams = LinearLayout.LayoutParams(dp(44), dp(44))
+            setColorFilter(color(R.color.deco_icon_on_accent))
+            background = roundedRect(color(R.color.accent_container), R.dimen.radius_md)
+            setPadding(dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_10))
+            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.tile_44), dimenPx(R.dimen.tile_44))
         })
 
         // Middle Text Container
         addView(LinearLayout(this@EventManagementHubActivity).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-                setMargins(dp(14), 0, dp(8), 0)
+                setMargins(dimenPx(R.dimen.space_14), 0, dimenPx(R.dimen.space_sm), 0)
             }
-            addView(text(label, 15, true, Color.parseColor("#111827")))
-            addView(text(subtitle, 12, false, Color.parseColor("#64748B")).apply {
-                setPadding(0, dp(2), 0, 0)
+            addView(styledText(label, R.dimen.type_body, true, color(R.color.text_primary)))
+            addView(styledText(subtitle, R.dimen.type_caption, false, color(R.color.text_secondary)).apply {
+                setPadding(0, dimenPx(R.dimen.space_xxs), 0, 0)
             })
         })
 
         // Right Chevron
         addView(ImageView(this@EventManagementHubActivity).apply {
             setImageResource(R.drawable.ic_chevron_right)
-            setColorFilter(Color.parseColor("#94A3B8"))
-            layoutParams = LinearLayout.LayoutParams(dp(20), dp(20))
+            setColorFilter(color(R.color.neutral))
+            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md))
         })
     }
 }

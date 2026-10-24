@@ -22,6 +22,7 @@ import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import java.time.Instant
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import com.thedavelopers.eventqr.ui.theme.dimen
 
 open class StaffAssignedEventsActivity : AppCompatActivity() {
     private lateinit var repository: StaffRepository
@@ -115,9 +116,9 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
         for ((filter, chip) in chips) {
             val isSelected = filter == selectedFilter
             chip.isChecked = isSelected
-            chip.setTextColor(if (isSelected) ContextCompat.getColor(this, R.color.brand_on_primary) else textSecondary)
-            chip.setChipBackgroundColorResource(if (isSelected) R.color.eventqr_indigo else R.color.surface)
-            chip.chipStrokeWidth = if (isSelected) 0f else resources.displayMetrics.density
+            chip.setTextColor(if (isSelected) ContextCompat.getColor(this, R.color.on_primary) else textSecondary)
+            chip.setChipBackgroundColorResource(if (isSelected) R.color.primary else R.color.surface)
+            chip.chipStrokeWidth = if (isSelected) 0f else dimen(R.dimen.stroke_hairline)
             chip.chipStrokeColor = ContextCompat.getColorStateList(this, R.color.outline)
         }
     }

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eventqr_bg">
+    android:background="@color/background">
 
     <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
         android:id="@+id/layoutTopBar"
@@ -18,7 +18,7 @@
         android:layout_height="0dp"
         android:fillViewport="true"
         android:clipToPadding="false"
-        android:paddingBottom="120dp"
+        android:paddingBottom="@dimen/size_120"
         app:layout_constraintBottom_toTopOf="@+id/layoutBottomBar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -28,12 +28,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="@dimen/space_lg">
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="18dp"
+                app:cardCornerRadius="@dimen/radius_18"
                 app:cardElevation="0dp"
                 app:cardUseCompatPadding="false">
 
@@ -42,43 +42,41 @@
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_event_banner_gradient"
                     android:orientation="vertical"
-                    android:padding="18dp">
+                    android:padding="@dimen/space_18">
 
                     <TextView
                         android:id="@+id/txtEventCategory"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/event_registration_development"
-                        android:textColor="#EDE9FE"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                        android:textColor="@color/secondary_container"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
 
                     <TextView
                         android:id="@+id/txtEventTitle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
+                        android:layout_marginTop="@dimen/space_xs"
                         android:text="@string/event_registration_devfest_manila_2026"
-                        android:textColor="@color/white"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
+                        android:textColor="@color/on_primary_soft"
+                        android:textAppearance="@style/TextAppearance.EventQR.TitleLarge" />
 
                     <TextView
                         android:id="@+id/txtEventDateTimeVenue"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="@dimen/space_sm"
                         android:text="@string/event_registration_jul_20_2026_picc_pasay_city"
-                        android:textColor="#F5F3FF"
-                        android:textSize="13sp" />
+                        android:textColor="@color/secondary_container"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                app:cardCornerRadius="18dp"
+                android:layout_marginTop="@dimen/space_20"
+                app:cardCornerRadius="@dimen/radius_18"
                 app:cardElevation="0dp"
                 app:cardUseCompatPadding="false">
 
@@ -86,15 +84,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="18dp">
+                    android:padding="@dimen/space_18">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/event_registration_registrant_information"
-                        android:textColor="@color/eventqr_text"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
+                        android:textAppearance="@style/TextAppearance.EventQR.TitleMedium" />
 
                     <TextView
                         style="@style/RequestEventLabel"
@@ -121,7 +117,7 @@
                         android:id="@+id/edtRegistrationEmail"
                         style="@style/RequestEventInput"
                         android:drawableStart="@drawable/email_icon"
-                        android:drawablePadding="8dp"
+                        android:drawablePadding="@dimen/space_sm"
                         android:clickable="false"
                         android:longClickable="false"
                         android:enabled="false"
@@ -141,11 +137,11 @@
                         android:id="@+id/edtRegistrationPhone"
                         style="@style/RequestEventInput"
                         android:drawableStart="@drawable/phone_icon"
-                        android:drawablePadding="8dp"
+                        android:drawablePadding="@dimen/space_sm"
                         android:enabled="false"
                         android:focusable="false"
                         android:focusableInTouchMode="false"
-                        android:hint="+63 912 345 6789"
+                        android:hint="@string/phone_hint_example"
                         android:imeOptions="actionDone"
                         android:inputType="phone"
                         android:maxLines="1"
@@ -156,8 +152,8 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:cardCornerRadius="18dp"
+                android:layout_marginTop="@dimen/space_lg"
+                app:cardCornerRadius="@dimen/radius_18"
                 app:cardElevation="0dp"
                 app:cardUseCompatPadding="false">
 
@@ -166,14 +162,14 @@
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:padding="18dp">
+                    android:padding="@dimen/space_18">
 
                     <CheckBox
                         android:id="@+id/chkRegistrationTerms"
                         style="@style/RequestEventCheckbox"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:buttonTint="@color/eventqr_indigo"
+                        android:layout_width="@dimen/icon_32"
+                        android:layout_height="@dimen/icon_32"
+                        android:buttonTint="@color/primary"
                         android:minHeight="0dp"
                         android:minWidth="0dp" />
 
@@ -181,12 +177,11 @@
                         android:id="@+id/txtRegistrationTerms"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
+                        android:layout_marginStart="@dimen/space_10"
                         android:layout_weight="1"
                         android:text="@string/event_registration_i_agree_to_the_event_terms_and_condi"
-                        android:textColor="@color/eventqr_text"
-                        android:textSize="14sp"
-                        android:lineSpacingExtra="2dp" />
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
+                        android:lineSpacingExtra="@dimen/line_spacing_2" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
         </LinearLayout>
@@ -196,9 +191,9 @@
         android:id="@+id/layoutBottomBar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@color/white"
-        android:elevation="8dp"
-        android:padding="16dp"
+        android:background="@color/on_primary_soft"
+        android:elevation="@dimen/elevation_overlay"
+        android:padding="@dimen/space_lg"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
@@ -206,13 +201,12 @@
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnSubmitRegistration"
             android:layout_width="match_parent"
-            android:layout_height="46dp"
-            android:background="@drawable/bg_primary_button"
+            android:layout_height="@dimen/control_height_46"
+            android:background="@drawable/bg_btn_primary"
             android:text="@string/event_registration_confirm_registration"
             android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            android:textColor="@color/on_primary_soft"
+            android:textAppearance="@style/TextAppearance.EventQR.ButtonPlatformBody.Strong" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

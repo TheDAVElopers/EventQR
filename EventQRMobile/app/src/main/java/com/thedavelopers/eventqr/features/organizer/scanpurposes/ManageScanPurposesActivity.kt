@@ -1,7 +1,10 @@
 package com.thedavelopers.eventqr.features.organizer.scanpurposes
 
+import com.thedavelopers.eventqr.ui.theme.dimenPx
+import com.thedavelopers.eventqr.ui.theme.dimenFloat
+import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
+import com.thedavelopers.eventqr.features.organizer.styledText
 import android.app.AlertDialog
-import android.graphics.Color
 import android.os.Bundle
 import android.text.InputType
 import android.util.Log
@@ -20,6 +23,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.features.organizer.*
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerScanPurposeRequestDto
 import androidx.lifecycle.lifecycleScope
@@ -208,7 +212,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         val isEdit = purpose != null
         val dialogView = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(20), dp(20), dp(20))
+            setPadding(dimenPx(R.dimen.space_20), dimenPx(R.dimen.space_20), dimenPx(R.dimen.space_20), dimenPx(R.dimen.space_20))
         }
 
         var selectedType = purposeTypes.firstOrNull { it.code == purpose?.code }
@@ -218,9 +222,9 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         val duplicateHelper = TextView(this).apply {
             id = com.thedavelopers.eventqr.R.id.msp_duplicate_helper
             text = getString(R.string.manage_scan_purposes_reward_duplicate_helper)
-            textSize = 12f
-            setTextColor(Color.parseColor("#6B7280"))
-            setPadding(dp(4), dp(2), dp(4), 0)
+            setTextSizeRes(R.dimen.type_caption)
+            setTextColor(color(R.color.text_secondary))
+            setPadding(dimenPx(R.dimen.space_xs), dimenPx(R.dimen.space_xxs), dimenPx(R.dimen.space_xs), 0)
             visibility = View.GONE
         }
         val duplicateCheck = CheckBox(this).apply {
@@ -231,7 +235,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         val applyDuplicateLock: (ScanPurposeType) -> Unit = { type ->
             val isReward = type.code == ScanPurposeCode.REWARD_REDEMPTION_SCAN
             duplicateCheck.isEnabled = !isReward
-            duplicateCheck.alpha = if (isReward) 0.5f else 1f
+            duplicateCheck.alpha = if (isReward) dimenFloat(R.dimen.alpha_disabled) else 1f
             if (isReward) {
                 duplicateCheck.isChecked = false
             }
@@ -246,7 +250,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
                 purposeTypes.map { it.label }
             ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
             setSelection(purposeTypes.indexOf(selectedType).coerceAtLeast(0), false)
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(48))
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dimenPx(R.dimen.touch_target_min))
         }
         typeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
@@ -287,13 +291,13 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         }
         pointsInput.isEnabled = !trackingOnlyCheck.isChecked
 
-        dialogView.addView(text(getString(R.string.manage_scan_purposes_label_scan_type), 14, true))
+        dialogView.addView(styledText(getString(R.string.manage_scan_purposes_label_scan_type), R.dimen.type_body_medium, true))
         dialogView.addView(typeSpinner)
-        dialogView.addView(text(getString(R.string.manage_scan_purposes_label_custom_name), 14, true).apply { setPadding(0, dp(12), 0, 0) })
+        dialogView.addView(styledText(getString(R.string.manage_scan_purposes_label_custom_name), R.dimen.type_body_medium, true).apply { setPadding(0, dimenPx(R.dimen.space_md), 0, 0) })
         dialogView.addView(nameInput)
-        dialogView.addView(text(getString(R.string.common_description), 14, true).apply { setPadding(0, dp(12), 0, 0) })
+        dialogView.addView(styledText(getString(R.string.common_description), R.dimen.type_body_medium, true).apply { setPadding(0, dimenPx(R.dimen.space_md), 0, 0) })
         dialogView.addView(descInput)
-        dialogView.addView(text(getString(R.string.manage_scan_purposes_label_points), 14, true).apply { setPadding(0, dp(12), 0, 0) })
+        dialogView.addView(styledText(getString(R.string.manage_scan_purposes_label_points), R.dimen.type_body_medium, true).apply { setPadding(0, dimenPx(R.dimen.space_md), 0, 0) })
         dialogView.addView(pointsInput)
         dialogView.addView(duplicateCheck)
         dialogView.addView(duplicateHelper)
@@ -346,7 +350,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
 
             if (isEdit && purpose != null) {
                 dialog.getButton(AlertDialog.BUTTON_NEUTRAL).apply {
-                    setTextColor(Color.parseColor("#DC2626"))
+                    setTextColor(color(R.color.error))
                     setOnClickListener {
                         dialog.dismiss()
                         confirmDeletePurpose(purpose)

@@ -2,7 +2,6 @@ package com.thedavelopers.eventqr.features.organizer.staff
 
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import android.app.AlertDialog
-import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.View
@@ -18,6 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpDataSource
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpEvent
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpStaff
@@ -208,7 +208,7 @@ class SearchUserAccountActivity : AppCompatActivity() {
             .setView(dialogView)
             .create()
         dialog.setCancelable(false)
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setBackgroundDrawable(ColorDrawable(color(R.color.transparent)))
         dialogView.findViewById<Button>(R.id.btnDoneAssigned).setOnClickListener {
             dialog.dismiss()
             setResult(RESULT_OK)

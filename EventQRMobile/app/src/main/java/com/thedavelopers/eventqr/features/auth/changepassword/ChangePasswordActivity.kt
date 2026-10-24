@@ -152,6 +152,6 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
 
     private fun updateRequirement(view: TextView, label: String, isMet: Boolean) {
         view.text = "${if (isMet) "\u2713" else "\u25CB"} $label"
-        view.setTextColor(getColor(if (isMet) R.color.success else R.color.text_disabled))
+        view.setTextColor(getColor(if (isMet) R.color.success_dark else R.color.text_disabled))
     }
 }

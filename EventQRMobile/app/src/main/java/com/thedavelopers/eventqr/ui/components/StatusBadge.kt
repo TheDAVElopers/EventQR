@@ -66,6 +66,7 @@ private data class BadgePalette(
     val textColor: Color,
 )
 
+@Composable
 private fun lightBadgePalette(status: EventBadgeStatus): BadgePalette = when (status) {
     EventBadgeStatus.PENDING, EventBadgeStatus.UPCOMING ->
         BadgePalette(StatusPendingAmberBg, StatusPendingAmberText)

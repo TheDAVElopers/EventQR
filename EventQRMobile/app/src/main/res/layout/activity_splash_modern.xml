@@ -3,12 +3,12 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eventqr_indigo">
+    android:background="@color/primary">
 
     <ImageView
         android:id="@+id/splashLogo"
-        android:layout_width="128dp"
-        android:layout_height="128dp"
+        android:layout_width="@dimen/tile_128"
+        android:layout_height="@dimen/tile_128"
         android:layout_gravity="center"
         android:contentDescription="@string/common_eventqr_logo"
         android:scaleType="fitCenter"

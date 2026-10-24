@@ -1,7 +1,6 @@
 package com.thedavelopers.eventqr.features.staff
 
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
-import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.Gravity
@@ -34,6 +33,11 @@ import kotlinx.coroutines.launch
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import com.thedavelopers.eventqr.ui.theme.color
+import com.thedavelopers.eventqr.ui.theme.dimenOffset
+import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
+import com.thedavelopers.eventqr.ui.theme.strong
+import com.thedavelopers.eventqr.ui.theme.dimenFloat
 
 open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsContract.View {
 
@@ -200,7 +204,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
     private fun setPurposeCardEnabled(enabled: Boolean) {
         purposeCard.isClickable = enabled
         purposeCard.isEnabled = enabled
-        purposeCard.alpha = if (enabled) 1f else 0.5f
+        purposeCard.alpha = if (enabled) 1f else dimenFloat(R.dimen.alpha_disabled)
     }
 
     private fun loadPage() {
@@ -310,25 +314,25 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         eventCard.setBackgroundResource(
             if (eventSelected) R.drawable.bg_staff_filter_card_selected else R.drawable.bg_staff_filter_card_neutral
         )
-        eventTitleView.setTextColor(getColor(if (eventSelected) R.color.surface else R.color.text_primary))
-        eventDateView.setTextColor(getColor(if (eventSelected) R.color.brand_on_primary_muted else R.color.filter_label))
-        eventChevron.setTextColor(getColor(if (eventSelected) R.color.brand_on_primary else R.color.text_secondary))
+        eventTitleView.setTextColor(getColor(if (eventSelected) R.color.on_primary else R.color.text_primary))
+        eventDateView.setTextColor(getColor(if (eventSelected) R.color.on_primary_muted else R.color.filter_label))
+        eventChevron.setTextColor(getColor(if (eventSelected) R.color.on_primary else R.color.text_secondary))
         findViewById<View>(R.id.viewEventDot).setBackgroundResource(
             if (eventSelected) R.drawable.bg_staff_scanner_status_dot else R.drawable.bg_staff_filter_status_dot_neutral
         )
         findViewById<TextView>(R.id.txtStaffTransactionsEventLabel)
-            .setTextColor(getColor(if (eventSelected) R.color.brand_on_primary_muted else R.color.filter_label))
+            .setTextColor(getColor(if (eventSelected) R.color.on_primary_muted else R.color.filter_label))
 
         purposeCard.setBackgroundResource(
             if (purposeSelected) R.drawable.bg_staff_filter_card_selected else R.drawable.bg_staff_filter_card_neutral
         )
-        purposeTitleView.setTextColor(getColor(if (purposeSelected) R.color.surface else R.color.text_primary))
-        purposeChevron.setTextColor(getColor(if (purposeSelected) R.color.brand_on_primary else R.color.text_secondary))
+        purposeTitleView.setTextColor(getColor(if (purposeSelected) R.color.on_primary else R.color.text_primary))
+        purposeChevron.setTextColor(getColor(if (purposeSelected) R.color.on_primary else R.color.text_secondary))
         findViewById<View>(R.id.viewPurposeDot).setBackgroundResource(
             if (purposeSelected) R.drawable.bg_staff_scanner_status_dot else R.drawable.bg_staff_filter_status_dot_neutral
         )
         findViewById<TextView>(R.id.txtStaffTransactionsPurposeLabel)
-            .setTextColor(getColor(if (purposeSelected) R.color.brand_on_primary_muted else R.color.filter_label))
+            .setTextColor(getColor(if (purposeSelected) R.color.on_primary_muted else R.color.filter_label))
     }
 
     private fun toggleEventPopup() {
@@ -345,8 +349,8 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
             true,
         ).apply {
             isOutsideTouchable = true
-            elevation = dp(8).toFloat()
-            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            elevation = dimenOffset(R.dimen.elevation_overlay).toFloat()
+            setBackgroundDrawable(ColorDrawable(color(R.color.transparent)))
             setOnDismissListener {
                 isEventPopupOpen = false
                 setChevron(eventChevron, false)
@@ -380,8 +384,8 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
             true,
         ).apply {
             isOutsideTouchable = true
-            elevation = dp(8).toFloat()
-            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            elevation = dimenOffset(R.dimen.elevation_overlay).toFloat()
+            setBackgroundDrawable(ColorDrawable(color(R.color.transparent)))
             setOnDismissListener {
                 isPurposePopupOpen = false
                 setChevron(purposeChevron, false)
@@ -409,7 +413,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
             bindPurposeHeader()
             closeEventPopup()
             showPromptState()
-        }.apply { if (allSelected) setBackgroundColor(Color.parseColor("#EEF2FF")) })
+        }.apply { if (allSelected) setBackgroundColor(color(R.color.accent_container)) })
 
         assignedEvents.forEach { event ->
             val isSelected = selectedEventId == event.eventId.toString()
@@ -420,7 +424,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
                 bindPurposeHeader()
                 closeEventPopup()
                 refreshTransactions()
-            }.apply { if (isSelected) setBackgroundColor(Color.parseColor("#EEF2FF")) })
+            }.apply { if (isSelected) setBackgroundColor(color(R.color.accent_container)) })
         }
     }
 
@@ -433,7 +437,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
             bindPurposeHeader()
             closePurposePopup()
             refreshTransactions()
-        }.apply { if (allSelected) setBackgroundColor(Color.parseColor("#EEF2FF")) })
+        }.apply { if (allSelected) setBackgroundColor(color(R.color.accent_container)) })
 
         purposeOptions.forEach { purpose ->
             val isSelected = selectedPurposeId == purpose.id
@@ -442,7 +446,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
                 bindPurposeHeader()
                 closePurposePopup()
                 refreshTransactions()
-            }.apply { if (isSelected) setBackgroundColor(Color.parseColor("#EEF2FF")) })
+            }.apply { if (isSelected) setBackgroundColor(color(R.color.accent_container)) })
         }
     }
 
@@ -450,24 +454,23 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(16), dp(12), dp(16), dp(12))
-            if (!isSelected) setBackgroundColor(Color.WHITE)
+            setPadding(dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_md), dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_md))
+            if (!isSelected) setBackgroundColor(color(R.color.surface))
             setOnClickListener { onClick() }
             addView(TextView(this@StaffTransactionsActivity).apply {
                 text = label
-                setTextColor(if (isSelected) 0xFF4F46E5.toInt() else 0xFF111827.toInt())
-                textSize = 14f
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                setTextColor(if (isSelected) color(R.color.primary) else color(R.color.text_primary))
+                setTextSizeRes(R.dimen.type_body_medium)
+                strong()
             })
         }
 
     private fun setChevron(view: TextView, open: Boolean) {
         view.includeFontPadding = false
-        view.translationY = -dp(1).toFloat()
+        view.translationY = dimenOffset(R.dimen.glyph_nudge_y).toFloat()
         view.text = if (open) "\u25B4" else "\u25BE"
     }
 
-    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
     private fun setupBottomNav() {
         configureStaffBottomNav(StaffBottomNavItem.LOGS, intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_ID)

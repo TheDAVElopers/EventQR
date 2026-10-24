@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="staff_selected_stroke">2dp</dimen>
+    <dimen name="staff_selected_stroke">@dimen/stroke_focus</dimen>
     <dimen name="organizer_search_icon_padding">12dp</dimen>
 
-    <!-- Landing page -->
+    <!-- Landing page.
+         TODO(token sweep): remove landing_*_size once activity_landing uses TextAppearance.EventQR.* styles
+         (values-sw600dp overrides 17/24/18/14sp need a manual decision). The non-size landing_* dimens
+         migrate to space_*/icon_* tokens in WP1. -->
     <dimen name="landing_logo_width">270dp</dimen>
     <dimen name="landing_logo_height">100dp</dimen>
     <dimen name="landing_header_padding_h">24dp</dimen>
@@ -19,7 +22,6 @@
     <dimen name="landing_feature_padding_h">24dp</dimen>
     <dimen name="landing_feature_padding_top">32dp</dimen>
     <dimen name="landing_feature_padding_bottom">24dp</dimen>
-    <dimen name="landing_section_title_size">18sp</dimen>
     <dimen name="landing_card_horizontal_padding">16dp</dimen>
     <dimen name="landing_card_top_padding">16dp</dimen>
     <dimen name="landing_card_bottom_padding">16dp</dimen>
@@ -31,43 +33,233 @@
     <dimen name="landing_card_margin_top">12dp</dimen>
 
     <!-- ═══════════════════════════════════════════════ -->
-    <!-- Spacing Scale (DESIGN.md §4.1)                -->
+    <!-- Spacing scale (padding / margin / gaps)       -->
     <!-- ═══════════════════════════════════════════════ -->
-    <dimen name="space_xs">8dp</dimen>
-    <dimen name="space_sm">16dp</dimen>
-    <dimen name="space_md">24dp</dimen>
-    <dimen name="space_lg">32dp</dimen>
-    <dimen name="space_xl">40dp</dimen>
-    <dimen name="space_xxl">56dp</dimen>
-    <dimen name="space_xxxl">72dp</dimen>
+    <dimen name="space_xxs">2dp</dimen>
+    <dimen name="space_xs">4dp</dimen>
+    <dimen name="space_sm">8dp</dimen>
+    <dimen name="space_md">12dp</dimen>
+    <dimen name="space_lg">16dp</dimen>
+    <dimen name="space_xl">24dp</dimen>
+    <dimen name="space_xxl">32dp</dimen>
+    <dimen name="space_xxxl">48dp</dimen>
+    <!-- Off-scale steps already used all over the app (value-for-value tokens) -->
+    <dimen name="space_6">6dp</dimen>
+    <dimen name="space_10">10dp</dimen>
+    <dimen name="space_14">14dp</dimen>
+    <dimen name="space_20">20dp</dimen>
+    <dimen name="space_40">40dp</dimen>
+
+    <!-- Layout semantics -->
+    <dimen name="screen_gutter">@dimen/space_lg</dimen>
+    <dimen name="card_padding">@dimen/space_lg</dimen>
 
     <!-- ═══════════════════════════════════════════════ -->
-    <!-- Border Radius (§5.1)                          -->
+    <!-- Corner radii                                  -->
     <!-- ═══════════════════════════════════════════════ -->
-    <dimen name="radius_flat">0dp</dimen>
-    <dimen name="radius_sharp">4dp</dimen>
-    <dimen name="radius_soft">8dp</dimen>
+    <dimen name="radius_none">0dp</dimen>
+    <dimen name="radius_xs">4dp</dimen>
+    <dimen name="radius_sm">8dp</dimen>
+    <dimen name="radius_md">12dp</dimen>
+    <dimen name="radius_lg">16dp</dimen>
+    <dimen name="radius_xl">24dp</dimen>
+    <dimen name="radius_pill">999dp</dimen>
+    <!-- Off-scale radii already used in the app (value-for-value tokens) -->
+    <dimen name="radius_2">2dp</dimen>
+    <dimen name="radius_6">6dp</dimen>
+    <dimen name="radius_10">10dp</dimen>
+    <dimen name="radius_14">14dp</dimen>
+    <dimen name="radius_18">18dp</dimen>
+    <dimen name="radius_20">20dp</dimen>
+    <!-- Existing names, now aliases of the scale -->
+    <dimen name="radius_flat">@dimen/radius_none</dimen>
+    <dimen name="radius_sharp">@dimen/radius_xs</dimen>
+    <dimen name="radius_soft">@dimen/radius_sm</dimen>
+    <!-- Semantic radii: use these in components -->
+    <dimen name="radius_button">@dimen/radius_14</dimen>
+    <dimen name="radius_input">@dimen/radius_md</dimen>
+    <dimen name="radius_card">@dimen/radius_lg</dimen>
+    <dimen name="radius_card_sm">@dimen/radius_md</dimen>
+    <dimen name="radius_chip">@dimen/radius_20</dimen>
+    <dimen name="radius_badge">@dimen/radius_pill</dimen>
+    <dimen name="radius_tile">@dimen/radius_md</dimen>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- Strokes / elevation                           -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <dimen name="stroke_hairline">1dp</dimen>
+    <dimen name="stroke_focus">2dp</dimen>
+    <dimen name="elevation_card">1dp</dimen>
+    <dimen name="elevation_raised">2dp</dimen>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- Icon / tile / touch sizes                     -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <dimen name="icon_sm">16dp</dimen>
+    <dimen name="icon_md">20dp</dimen>
+    <dimen name="icon_lg">24dp</dimen>
+    <dimen name="icon_xl">36dp</dimen>
+    <dimen name="icon_tile_sm">36dp</dimen>
+    <dimen name="icon_tile_md">40dp</dimen>
+    <dimen name="icon_tile_lg">48dp</dimen>
+    <dimen name="touch_target_min">48dp</dimen>
 
     <!-- ═══════════════════════════════════════════════ -->
     <!-- Component Dimensions                          -->
     <!-- ═══════════════════════════════════════════════ -->
     <dimen name="input_height">52dp</dimen>
     <dimen name="button_primary_height">56dp</dimen>
-    <dimen name="topbar_height">56dp</dimen>
-    <dimen name="back_control_size">44dp</dimen>
-    <dimen name="progress_circular_size">28dp</dimen>
 
     <!-- ═══════════════════════════════════════════════ -->
-    <!-- Type Scale sizes (§3.2)                       -->
+    <!-- Type scale sizes: now consumed by styles_text.xml (TextHeadline/TextBody/TextBodyCompact/TextCaption). Do not use in layouts; use TextAppearance.EventQR.*. -->
     <!-- ═══════════════════════════════════════════════ -->
-    <dimen name="type_jumbo">40sp</dimen>
-    <dimen name="type_display">30sp</dimen>
     <dimen name="type_headline">22sp</dimen>
-    <dimen name="type_title">17sp</dimen>
-    <dimen name="type_label">13sp</dimen>
     <dimen name="type_body">15sp</dimen>
     <dimen name="type_body_compact">13sp</dimen>
-    <dimen name="type_status">11sp</dimen>
-    <dimen name="type_code">15sp</dimen>
     <dimen name="type_caption">12sp</dimen>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- Phase 2 tokens: value-for-value names for every literal still in layouts / drawables / styles / Kotlin.
+         Use via @dimen/* (XML) or Context.dimen*/dimenPx/dimenOffset/dimenFloat/integer (Tokens.kt). -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- spacing -->
+    <dimen name="space_3">3dp</dimen>
+    <dimen name="space_5">5dp</dimen>
+    <dimen name="space_7">7dp</dimen>
+    <dimen name="space_9">9dp</dimen>
+    <dimen name="space_11">11dp</dimen>
+    <dimen name="space_18">18dp</dimen>
+    <dimen name="space_21">21dp</dimen>
+    <dimen name="space_22">22dp</dimen>
+    <dimen name="space_28">28dp</dimen>
+    <dimen name="space_30">30dp</dimen>
+    <dimen name="space_33">33dp</dimen>
+    <dimen name="space_42">42dp</dimen>
+    <dimen name="space_49">49dp</dimen>
+    <dimen name="row_text_inset">52dp</dimen>
+    <dimen name="header_action_clearance">56dp</dimen>
+
+    <!-- shape -->
+    <dimen name="radius_3">3dp</dimen>
+    <dimen name="radius_5">5dp</dimen>
+    <dimen name="radius_15">15dp</dimen>
+    <dimen name="radius_22">22dp</dimen>
+    <dimen name="stroke_none">0dp</dimen>
+    <dimen name="elevation_none">0dp</dimen>
+    <dimen name="elevation_lifted">3dp</dimen>
+    <dimen name="elevation_4">4dp</dimen>
+    <dimen name="elevation_5">5dp</dimen>
+    <dimen name="elevation_6">6dp</dimen>
+    <dimen name="elevation_overlay">8dp</dimen>
+    <dimen name="elevation_chip_idle">1px</dimen>
+    <dimen name="elevation_chip_selected">2px</dimen>
+
+    <!-- icons/tiles/controls -->
+    <dimen name="icon_14">14dp</dimen>
+    <dimen name="icon_18">18dp</dimen>
+    <dimen name="icon_22">22dp</dimen>
+    <dimen name="icon_32">32dp</dimen>
+    <dimen name="tile_34">34dp</dimen>
+    <dimen name="tile_38">38dp</dimen>
+    <dimen name="tile_42">42dp</dimen>
+    <dimen name="tile_44">44dp</dimen>
+
+    <dimen name="tile_60">60dp</dimen>
+    <dimen name="tile_64">64dp</dimen>
+    <dimen name="tile_72">72dp</dimen>
+    <dimen name="tile_80">80dp</dimen>
+    <dimen name="tile_96">96dp</dimen>
+    <dimen name="tile_100">100dp</dimen>
+    <dimen name="tile_128">128dp</dimen>
+    <dimen name="dot_sm">8dp</dimen>
+    <dimen name="bar_thin">4dp</dimen>
+    <dimen name="scan_corner_length">@dimen/icon_xl</dimen>
+    <dimen name="scan_corner_thickness">@dimen/bar_thin</dimen>
+    <dimen name="control_height_32">32dp</dimen>
+    <dimen name="control_height_38">38dp</dimen>
+    <dimen name="control_height_42">42dp</dimen>
+    <dimen name="control_height_44">44dp</dimen>
+    <dimen name="control_height_46">46dp</dimen>
+    <dimen name="control_height_50">50dp</dimen>
+    <dimen name="control_height_54">54dp</dimen>
+    <dimen name="hero_height_220">220dp</dimen>
+    <dimen name="auth_header_height_238">238dp</dimen>
+    <dimen name="qr_box_164">164dp</dimen>
+    <dimen name="button_width_retry">140dp</dimen>
+    <dimen name="list_item_min_height">72dp</dimen>
+    <dimen name="list_item_tall_min_height">82dp</dimen>
+    <dimen name="badge_count_min_width">16dp</dimen>
+    <dimen name="chip_min_height">38dp</dimen>
+    <dimen name="chip_min_height_lg">40dp</dimen>
+    <dimen name="request_textarea_height">96dp</dimen>
+    <dimen name="card_min_height">96dp</dimen>
+    <dimen name="progress_bar_height">6dp</dimen>
+    <dimen name="glyph_nudge_y">-1dp</dimen>
+    <dimen name="line_spacing_2">2dp</dimen>
+    <dimen name="line_spacing_3">3dp</dimen>
+    <dimen name="glow_diameter">280dp</dimen>
+    <dimen name="glow_offset">-60dp</dimen>
+    <dimen name="glow_radius">200dp</dimen>
+    <dimen name="splash_canvas">288dp</dimen>
+    <dimen name="size_26">26dp</dimen>
+    <dimen name="size_68">68dp</dimen>
+    <dimen name="size_76">76dp</dimen>
+    <dimen name="size_120">120dp</dimen>
+    <dimen name="size_140">140dp</dimen>
+    <dimen name="size_150">150dp</dimen>
+    <dimen name="size_180">180dp</dimen>
+    <dimen name="size_200">200dp</dimen>
+
+    <!-- text sizes (sp). type_headline 22, type_body 15, type_body_compact 13, type_caption 12 are defined above -->
+    <dimen name="type_nano">9sp</dimen>
+    <dimen name="type_micro">10sp</dimen>
+    <dimen name="type_overline">11sp</dimen>
+    <dimen name="type_body_medium">14sp</dimen>
+    <dimen name="type_body_large">16sp</dimen>
+    <dimen name="type_subtitle">17sp</dimen>
+    <dimen name="type_title">18sp</dimen>
+    <dimen name="type_title_compact">19sp</dimen>
+    <dimen name="type_title_large">20sp</dimen>
+    <dimen name="type_24">24sp</dimen>
+    <dimen name="type_page_title">26sp</dimen>
+    <dimen name="type_headline_l">28sp</dimen>
+    <dimen name="type_headline_xl">30sp</dimen>
+    <dimen name="type_auth_title">31sp</dimen>
+    <dimen name="type_amount_32">32sp</dimen>
+    <dimen name="type_amount_34">34sp</dimen>
+    <dimen name="type_display">36sp</dimen>
+    <dimen name="type_display_xl">46sp</dimen>
+
+    <!-- Compose line heights (sp) -->
+    <dimen name="line_height_14">14sp</dimen>
+    <dimen name="line_height_16">16sp</dimen>
+    <dimen name="line_height_20">20sp</dimen>
+    <dimen name="line_height_24">24sp</dimen>
+    <dimen name="line_height_26">26sp</dimen>
+    <dimen name="line_height_28">28sp</dimen>
+    <dimen name="line_height_32">32sp</dimen>
+    <dimen name="line_height_36">36sp</dimen>
+
+    <!-- floats -->
+    <item name="alpha_disabled" format="float" type="dimen">0.5</item>
+    <item name="alpha_busy" format="float" type="dimen">0.6</item>
+    <item name="alpha_saving" format="float" type="dimen">0.7</item>
+    <item name="alpha_inactive" format="float" type="dimen">0.82</item>
+    <item name="alpha_ripple" format="float" type="dimen">0.12</item>
+    <item name="alpha_wash_10" format="float" type="dimen">0.1</item>
+    <item name="alpha_wash_20" format="float" type="dimen">0.2</item>
+    <item name="alpha_wash_30" format="float" type="dimen">0.3</item>
+    <item name="scale_check_start" format="float" type="dimen">0.4</item>
+    <item name="tracking_button" format="float" type="dimen">0.0892857</item>
+    <item name="tracking_button_tight" format="float" type="dimen">0.02</item>
+    <item name="tracking_label_05" format="float" type="dimen">0.05</item>
+    <item name="tracking_label" format="float" type="dimen">0.06</item>
+    <item name="tracking_compose_tight" format="float" type="dimen">-0.5</item>
+    <item name="tracking_compose_tight_sm" format="float" type="dimen">-0.3</item>
+    <item name="tracking_compose_label_sm" format="float" type="dimen">0.1</item>
+    <item name="tracking_compose_label_md" format="float" type="dimen">0.2</item>
+    <item name="tracking_compose_label_lg" format="float" type="dimen">0.3</item>
+    <item name="line_multiplier_11" format="float" type="dimen">1.1</item>
+    <item name="line_multiplier_12" format="float" type="dimen">1.2</item>
+    <item name="line_multiplier_13" format="float" type="dimen">1.3</item>
 </resources>

@@ -1,0 +1,331 @@
+path,kind,owner,hex_or_color_literals,legacy_color_refs,dp_layout,dp_spacing,drawable_dp,float_lit,fontfamily,styles,textsize,strings,kotlin_dp,kotlin_shape,compose,note
+res/color/chip_bg.xml,res-color,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,shared res/color
+res/color/chip_text.xml,res-color,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,shared res/color
+res/color/display_text_color.xml,res-color,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,shared res/color
+res/color/input_box_stroke.xml,res-color,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,shared res/color
+res/color/primary_ripple.xml,res-color,WP6,0,0,0,0,0,1,0,0,0,0,0,0,0,shared res/color
+res/drawable/bg_admin_alert_banner.xml,drawable,WP1,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_admin_request_filter_active.xml,drawable,WP1,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_admin_request_filter_inactive.xml,drawable,WP1,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_admin_role_badge_blue.xml,drawable,WP1,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_admin_role_badge_green.xml,drawable,WP1,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_admin_role_badge_pink.xml,drawable,WP1,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_admin_role_badge_purple.xml,drawable,WP1,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_admin_search_field.xml,drawable,WP1,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_admin_status_active_badge.xml,drawable,WP1,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_admin_status_inactive_badge.xml,drawable,WP1,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_admin_status_pending_badge.xml,drawable,WP1,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_admin_surface_card.xml,drawable,WP1,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_auth_button_press.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP1+WP6
+res/drawable/bg_auth_field.xml,drawable,WP1,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_badge_cancelled.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_badge_default.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_badge_entered.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_badge_exited.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_badge_registered.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_badge_selection.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_btn_primary.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP4a+WP6
+res/drawable/bg_card.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP3+WP4b+WP6
+res/drawable/bg_check_circle.xml,drawable,WP2,0,0,0,0,2,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_circle_error_container.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,phase 2 target drawable (packages repoint their static refs to it; Kotlin refs: WP owner repoints)
+res/drawable/bg_circle_green.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_circle_muted.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,phase 2 target drawable (packages repoint their static refs to it; Kotlin refs: WP owner repoints)
+res/drawable/bg_circle_primary.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,phase 2 target drawable (packages repoint their static refs to it; Kotlin refs: WP owner repoints)
+res/drawable/bg_circle_success_container.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,phase 2 target drawable (packages repoint their static refs to it; Kotlin refs: WP owner repoints)
+res/drawable/bg_claimed_status_pending.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_dark_outline_button.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP1+WP6
+res/drawable/bg_dashboard_event_date_active.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_dashboard_event_date_cancelled.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_dashboard_event_date_completed.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_dashboard_event_date_draft.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_dashboard_event_date_pending_review.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_dashboard_event_date_rejected.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_dashboard_event_date_unknown.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_dashboard_event_date_upcoming.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_dashboard_gradient.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP1+WP2+WP3+WP4a+WP5a
+res/drawable/bg_dashboard_notification.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_dashboard_portal_chip.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_dashboard_quick_action.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_dashboard_stat_card.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP3+WP5a
+res/drawable/bg_detail_register_button.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_disabled_button.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_error_box.xml,drawable,WP1,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_event_badge_active.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_event_badge_cancelled.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_event_badge_completed.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_event_badge_draft.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_event_badge_pending_review.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_event_badge_rejected.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_event_badge_unknown.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_event_badge_upcoming.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_event_banner_gradient.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_event_filter_chip_selected.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP3+WP4a+WP4b
+res/drawable/bg_event_filter_chip_unselected.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP4a+WP4b
+res/drawable/bg_event_poster_picker.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_eventqr_gradient.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP1+WP2
+res/drawable/bg_green_pill.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP3+WP6
+res/drawable/bg_header_icon_circle.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP3+WP4a
+res/drawable/bg_header_surface_outline.xml,drawable,WP6,0,0,0,0,1,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_history_summary_card.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_icon_tile_red.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP3+WP6
+res/drawable/bg_info_card.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_input.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP1+WP6
+res/drawable/bg_input_filled.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP3+WP6
+res/drawable/bg_logout_button.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_notification_badge_count.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP3+WP4a
+res/drawable/bg_notification_card_read.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_notification_card_unread.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_notification_unread_dot.xml,drawable,WP6,0,0,0,0,2,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_organizer_events_screen.xml,drawable,WP6,0,0,0,0,5,0,0,0,0,0,0,0,0,cross-feature: WP1+WP2+WP3+WP4a+WP4b
+res/drawable/bg_outline_button.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP1+WP2+WP6
+res/drawable/bg_password_requirements.xml,drawable,WP1,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_points_chip_green.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP3+WP6
+res/drawable/bg_points_chip_red.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_portal_chip.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP1+WP3+WP4a
+res/drawable/bg_profile_button.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_profile_initial_avatar.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_profile_role_badge.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_purple_pill.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_qr_download_button.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP6
+res/drawable/bg_red_warning.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP3+WP4a+WP6
+res/drawable/bg_reward_cta.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_reward_dark_card.xml,drawable,WP3,0,0,0,0,1,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_reward_hint.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_reward_icon_circle.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_reward_list_card.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_reward_notice_amber.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_reward_points.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP3
+res/drawable/bg_reward_reject_hero.xml,drawable,WP3,0,0,0,0,1,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_reward_result_screen.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_reward_status_available.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_reward_status_blocked.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_reward_success_hero.xml,drawable,WP3,0,0,0,0,1,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_rewards_dropdown.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_rounded_purple_soft.xml,drawable,WP1,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_scan_again_button.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_scan_camera_well.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_scan_card.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_scan_corner_bl.xml,drawable,WP3,0,0,0,0,4,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_scan_corner_br.xml,drawable,WP3,0,0,0,0,4,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_scan_corner_tl.xml,drawable,WP3,0,0,0,0,4,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_scan_corner_tr.xml,drawable,WP3,0,0,0,0,4,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_scan_icon_tile.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_scan_status_pill.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_scan_viewport.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_scanner_button.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_sign_out_button.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP6
+res/drawable/bg_signin_header.xml,drawable,WP1,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_soft_gray_pill.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_splash_legacy.xml,drawable,WP1,0,0,0,0,2,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_staff_avatar_square.xml,drawable,WP4a,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_staff_event_header_card.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_staff_filter_card_neutral.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_staff_filter_card_selected.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_staff_filter_status_dot_neutral.xml,drawable,WP3,0,0,0,0,2,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_staff_outline_button.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP3+WP6
+res/drawable/bg_staff_rejected_circle.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_staff_scanner_status_dot.xml,drawable,WP3,0,0,0,0,2,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_staff_search_box.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP3+WP4a
+res/drawable/bg_staff_skeleton_bar.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP3+WP4a+WP5a
+res/drawable/bg_staff_skeleton_bar_light.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_staff_skeleton_card.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP3+WP4a
+res/drawable/bg_staff_skeleton_date_block.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP3+WP4a+WP5a
+res/drawable/bg_staff_stat_card.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_staff_success_circle.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_stat_circle_green.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_stat_circle_purple.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_success_chip.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP3+WP6
+res/drawable/bg_terms_number.xml,drawable,WP1,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_tile.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_tile_circle.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,phase 2 target drawable (packages repoint their static refs to it; Kotlin refs: WP owner repoints)
+res/drawable/bg_tile_r10.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,phase 2 target drawable (packages repoint their static refs to it; Kotlin refs: WP owner repoints)
+res/drawable/bg_transaction_earned_icon.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP6
+res/drawable/bg_transaction_icon_container.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP3+WP6
+res/drawable/bg_transaction_redeemed_icon.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_transaction_type_chip.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/bg_white_pill_button.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP1+WP6
+res/drawable/bg_yellow_notice.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/button_rounded.xml,drawable,WP2,0,0,0,0,5,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_action_search.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP1+WP2+WP4a
+res/drawable/ic_admin_bell.xml,drawable,WP1,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_admin_notification.xml,drawable,WP4a,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_admin_shield.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP1+WP4a+WP4b+WP6
+res/drawable/ic_admin_users.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP1+WP4b+WP6
+res/drawable/ic_arrow_drop_down.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP3+WP4a+WP4b+WP5a+WP5b
+res/drawable/ic_audit_shield.xml,drawable,WP1,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_back_chevron.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_calendar.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP1+WP2+WP3+WP4a+WP4b+WP5a+WP5b+WP6
+res/drawable/ic_camera.xml,drawable,WP4b,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_check_circle_green.xml,drawable,WP4a,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_check_circle_purple.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP4a+WP6
+res/drawable/ic_check_white.xml,drawable,WP5b,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_chevron_right.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP1+WP2+WP4a+WP4b+WP5a+WP5b+WP6
+res/drawable/ic_credit_card.xml,drawable,WP4a,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_edit_note.xml,drawable,WP4b,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_edit_pencil.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP4b+WP5b
+res/drawable/ic_error.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_error_circle.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP4a+WP6
+res/drawable/ic_event_request.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP1+WP2+WP4b
+res/drawable/ic_file.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP3+WP4b
+res/drawable/ic_fileedit.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_filter_list.xml,drawable,WP1,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_gift.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP5b+WP6
+res/drawable/ic_group.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP3+WP4a+WP4b+WP5a+WP5b+WP6
+res/drawable/ic_hashtag.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_header_back.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_history.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP3
+res/drawable/ic_id.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP4a+WP4b
+res/drawable/ic_id_badge_green.xml,drawable,WP4a,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_launcher_background.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_launcher_foreground.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_launcher_foreground_eventqr.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_location.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP4b+WP6
+res/drawable/ic_lock.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP5b
+res/drawable/ic_logout.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP6
+res/drawable/ic_nav_gift.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP5a+WP5b+WP6
+res/drawable/ic_nav_home.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_nav_profile.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP1+WP2+WP5a+WP6
+res/drawable/ic_nav_registered.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP6
+res/drawable/ic_organizer_bar_chart.xml,drawable,WP5a,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_organizer_reports.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP4b+WP5a+WP5b
+res/drawable/ic_print.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP3+WP6
+res/drawable/ic_profile_mail.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_profile_person.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP4a+WP4b+WP5b
+res/drawable/ic_profile_phone.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_qr_attendee.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_qr_email.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_qr_scan.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP3+WP4b+WP6
+res/drawable/ic_qr_success_check.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP3
+res/drawable/ic_qr_warning.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_reward_status_available.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_reward_status_blocked.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_row_alert.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP3+WP5b
+res/drawable/ic_row_clock.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP3+WP4a+WP4b+WP5b+WP6
+res/drawable/ic_row_star.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP3+WP4a+WP4b
+res/drawable/ic_row_tag.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP3+WP4a
+res/drawable/ic_row_user.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_scan.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP3+WP4b+WP5a+WP5b+WP6
+res/drawable/ic_search.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP4a+WP4b
+res/drawable/ic_select_multiple.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_signal_live.xml,drawable,WP4a,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_staff_check.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP3+WP5b+WP6
+res/drawable/ic_staff_check_white.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_staff_close.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_staff_scan.xml,drawable,WP3,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_star_filled.xml,drawable,WP4a,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_trash.xml,drawable,WP5b,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_trend_down.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_trend_up.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP2+WP6
+res/drawable/ic_visibility_off.xml,drawable,WP1,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/ic_visibility_on.xml,drawable,WP6,0,0,0,0,0,0,0,0,0,0,0,0,0,cross-feature: WP1+WP3
+res/drawable/outline_block_24.xml,drawable,WP4a,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/pb_event_upcoming.xml,drawable,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,single-package
+res/drawable/pb_reward_affordability.xml,drawable,WP2,0,0,0,0,2,0,0,0,0,0,0,0,0,single-package
+res/drawable/pb_reward_affordability_ok.xml,drawable,WP2,0,0,0,0,2,0,0,0,0,0,0,0,0,single-package
+res/drawable/splash_icon_logo.xml,drawable,WP1,0,0,0,0,4,0,0,0,0,0,0,0,0,single-package
+res/layout/activity_admin_account_management.xml,layout,WP1,0,0,10,0,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/activity_admin_audit_logs.xml,layout,WP1,0,0,2,1,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/activity_admin_dashboard.xml,layout,WP1,0,0,24,3,0,0,0,0,0,5,0,0,0,listed in spec I
+res/layout/activity_admin_event_requests.xml,layout,WP1,0,0,11,1,0,0,0,0,1,0,0,0,0,listed in spec I
+res/layout/activity_attendee_details.xml,layout,WP4a,0,0,23,0,0,0,0,0,1,0,0,0,0,listed in spec I
+res/layout/activity_attendee_management.xml,layout,WP4a,0,0,26,0,0,0,0,0,0,4,0,0,0,listed in spec I
+res/layout/activity_attendee_profile.xml,layout,WP2,0,0,51,6,0,2,0,0,0,0,0,0,0,listed in spec I
+res/layout/activity_change_password.xml,layout,WP2,0,0,4,0,0,1,0,0,1,0,0,0,0,listed in spec I
+res/layout/activity_claimed_rewards.xml,layout,WP2,0,0,2,0,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/activity_create_admin_account.xml,layout,WP1,0,0,19,2,0,0,0,0,0,1,0,0,0,listed in spec I
+res/layout/activity_edit_profile.xml,layout,WP2,0,0,13,0,0,1,0,0,2,0,0,0,0,listed in spec I
+res/layout/activity_event_detail.xml,layout,WP2,0,0,23,0,0,0,0,0,2,8,0,0,0,listed in spec I
+res/layout/activity_event_registration.xml,layout,WP2,0,0,7,4,0,0,0,0,1,1,0,0,0,listed in spec I
+res/layout/activity_event_registrations.xml,layout,WP3,0,0,13,1,0,0,0,0,0,4,0,0,0,listed in spec I
+res/layout/activity_forgot_password.xml,layout,WP1,0,0,8,7,0,0,0,0,1,0,0,0,0,listed in spec I
+res/layout/activity_landing.xml,layout,WP1,0,0,2,0,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/activity_my_event_requests.xml,layout,WP2,0,0,4,0,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/activity_new_password.xml,layout,WP1,0,0,10,5,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/activity_organizer_dashboard.xml,layout,WP4a,0,0,28,1,0,0,0,0,3,7,0,0,0,listed in spec I
+res/layout/activity_organizer_events.xml,layout,WP4a,0,0,14,0,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/activity_organizer_notifications.xml,layout,WP4a,0,0,12,0,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/activity_qr_credential.xml,layout,WP2,0,0,30,3,0,0,1,0,1,4,0,0,0,listed in spec I
+res/layout/activity_qr_display.xml,layout,WP2,0,0,28,2,0,0,1,0,1,4,0,0,0,listed in spec I
+res/layout/activity_request_event.xml,layout,WP2,0,0,8,3,0,0,0,0,2,2,0,0,0,listed in spec I
+res/layout/activity_reset_password.xml,layout,WP1,0,0,8,5,0,0,0,0,1,0,0,0,0,listed in spec I
+res/layout/activity_search_attendees.xml,layout,WP4a,0,0,10,0,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/activity_search_user_account.xml,layout,WP4a,0,0,6,0,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/activity_signin.xml,layout,WP1,0,0,11,3,0,0,0,0,1,0,0,0,0,listed in spec I
+res/layout/activity_signup.xml,layout,WP1,0,0,19,4,0,0,0,0,1,3,0,0,0,listed in spec I
+res/layout/activity_splash_modern.xml,layout,WP1,0,0,2,0,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/activity_staff_assigned_events.xml,layout,WP3,0,0,12,1,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/activity_staff_assignment.xml,layout,WP4a,0,0,4,0,0,0,0,0,1,0,0,0,0,listed in spec I
+res/layout/activity_staff_attendee_details.xml,layout,WP3,0,0,14,4,0,0,0,0,1,1,0,0,0,listed in spec I
+res/layout/activity_staff_dashboard.xml,layout,WP3,0,0,6,3,0,0,1,0,2,5,0,0,0,listed in spec I
+res/layout/activity_staff_scan_result.xml,layout,WP3,0,0,33,1,0,3,0,0,3,0,0,0,0,listed in spec I
+res/layout/activity_staff_scanner.xml,layout,WP3,0,0,34,0,0,2,0,0,1,2,0,0,0,listed in spec I
+res/layout/activity_staff_transaction_logs.xml,layout,WP3,0,0,21,1,0,0,0,0,0,5,0,0,0,listed in spec I
+res/layout/activity_staff_transaction_result.xml,layout,WP3,0,0,43,0,0,3,0,0,1,0,0,0,0,listed in spec I
+res/layout/activity_terms.xml,layout,WP1,0,0,0,0,0,1,0,0,0,0,0,0,0,listed in spec I
+res/layout/activity_user_dashboard.xml,layout,WP2,0,0,19,1,0,0,5,0,2,6,0,0,0,listed in spec I
+res/layout/activity_user_events.xml,layout,WP2,0,0,16,0,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/activity_user_registered_events.xml,layout,WP2,0,0,12,0,0,1,0,0,0,0,0,0,0,listed in spec I
+res/layout/activity_user_reward_details.xml,layout,WP2,0,0,11,0,0,1,0,0,0,0,0,0,0,listed in spec I
+res/layout/activity_user_rewards.xml,layout,WP2,0,0,6,2,0,0,1,0,1,1,0,0,0,listed in spec I
+res/layout/activity_user_transaction_history.xml,layout,WP2,0,0,5,0,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/bottom_sheet_portal_switcher.xml,layout,WP6,0,0,6,0,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/dialog_event_request_submitted.xml,layout,WP2,0,0,2,0,0,0,0,0,2,0,0,0,0,listed in spec I
+res/layout/dialog_staff_assigned.xml,layout,WP3,0,0,5,1,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/include_skeleton_cards.xml,layout,WP2,0,0,0,1,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/include_skeleton_edit_profile.xml,layout,WP2,0,0,0,0,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/include_skeleton_profile.xml,layout,WP2,0,0,0,5,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/item_admin_account.xml,layout,WP1,0,0,4,2,0,0,0,0,0,1,0,0,0,listed in spec I
+res/layout/item_admin_audit_log.xml,layout,WP1,0,0,5,2,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/item_claimed_reward.xml,layout,WP2,0,0,5,0,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/item_notification.xml,layout,WP6,0,0,10,1,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/item_organizer_attendee.xml,layout,WP4a,0,0,5,0,0,0,0,0,0,1,0,0,0,listed in spec I
+res/layout/item_portal_option.xml,layout,WP6,0,0,6,0,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/item_registration.xml,layout,WP3,0,0,3,1,0,0,0,0,0,1,0,0,0,listed in spec I
+res/layout/item_reward.xml,layout,WP2,0,0,1,0,0,0,0,0,0,2,0,0,0,listed in spec I
+res/layout/item_search_attendee.xml,layout,WP4a,0,0,7,0,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/item_search_user_account.xml,layout,WP4a,0,0,5,0,0,0,0,0,0,1,0,0,0,listed in spec I
+res/layout/item_staff_assignment.xml,layout,WP4a,0,0,4,0,0,0,0,0,0,1,0,0,0,listed in spec I
+res/layout/item_terms_section.xml,layout,WP1,0,0,2,0,0,2,0,0,0,0,0,0,0,listed in spec I
+res/layout/item_transaction.xml,layout,WP2,0,0,4,0,0,0,0,0,0,0,0,0,0,listed in spec I
+res/layout/item_transaction_log.xml,layout,WP3,0,0,5,1,0,0,0,0,0,0,0,0,0,listed in spec I
+java/com/thedavelopers/eventqr/features/admin/logs/AdminAuditLogAdapter.kt,kotlin,WP1,0,0,0,0,0,0,0,0,0,0,0,0,0,deco refs only
+java/com/thedavelopers/eventqr/features/admin/users/AdminAccountManagementActivity.kt,kotlin,WP1,0,0,0,0,0,0,0,0,0,0,1,0,0,
+java/com/thedavelopers/eventqr/features/attendee/RequestEventActivity.kt,kotlin,WP2,0,0,0,0,0,0,0,0,0,0,7,2,0,
+java/com/thedavelopers/eventqr/features/attendee/events/AttendeeEventsActivity.kt,kotlin,WP2,0,0,0,0,0,0,0,0,0,0,1,0,0,
+java/com/thedavelopers/eventqr/features/attendee/events/RegisteredEventsActivity.kt,kotlin,WP2,0,0,0,0,0,0,0,0,0,0,1,0,0,
+java/com/thedavelopers/eventqr/features/attendee/rewards/AttendeeRewardsActivity.kt,kotlin,WP2,0,0,0,0,0,0,0,0,0,0,6,2,0,
+java/com/thedavelopers/eventqr/features/attendee/transactions/AttendeeTransactionsActivity.kt,kotlin,WP2,0,0,0,0,0,0,0,0,0,0,6,2,0,
+java/com/thedavelopers/eventqr/features/dashboard/DashboardActivity.kt,kotlin,WP6,0,0,0,0,0,0,0,0,0,0,12,1,0,
+java/com/thedavelopers/eventqr/features/notifications/UnifiedNotificationsActivity.kt,kotlin,WP6,0,0,0,0,0,0,0,0,0,0,5,2,0,
+java/com/thedavelopers/eventqr/features/organizer/AttendeeManagementAdapter.kt,kotlin,WP4b,0,0,0,0,0,0,0,0,0,0,0,1,0,
+java/com/thedavelopers/eventqr/features/organizer/attendees/AttendeeDetailsActivity.kt,kotlin,WP4b,0,0,0,0,0,0,0,0,0,0,22,4,0,
+java/com/thedavelopers/eventqr/features/organizer/attendees/AttendeeManagementActivity.kt,kotlin,WP4b,0,0,0,0,0,0,0,0,0,0,10,4,0,
+java/com/thedavelopers/eventqr/features/organizer/attendees/SearchAttendeesAdapter.kt,kotlin,WP4b,0,0,0,0,0,0,0,0,0,0,0,1,0,
+java/com/thedavelopers/eventqr/features/organizer/events/EditEventDetailsActivity.kt,kotlin,WP4b,0,0,0,0,0,0,0,0,0,0,77,1,0,
+java/com/thedavelopers/eventqr/features/organizer/events/EventManagementHubActivity.kt,kotlin,WP4b,0,0,0,0,0,0,0,0,0,0,66,0,0,
+java/com/thedavelopers/eventqr/features/organizer/events/ManageEventsActivity.kt,kotlin,WP4b,0,0,0,0,0,0,0,0,0,0,1,0,0,
+java/com/thedavelopers/eventqr/features/organizer/idtemplate/IdTemplateSettingsActivity.kt,kotlin,WP5b,0,0,0,0,0,0,0,0,0,0,102,2,0,
+java/com/thedavelopers/eventqr/features/organizer/notifications/NotificationManagementActivity.kt,kotlin,WP4b,0,0,0,0,0,0,0,0,0,0,7,2,0,
+java/com/thedavelopers/eventqr/features/organizer/reports/EventReportsActivity.kt,kotlin,WP5a,0,0,0,0,0,0,0,0,0,0,142,15,0,
+java/com/thedavelopers/eventqr/features/organizer/reports/ReportPreviewActivity.kt,kotlin,WP5a,0,0,0,0,0,0,0,0,0,0,93,30,0,
+java/com/thedavelopers/eventqr/features/organizer/rewards/ManageRewardsActivity.kt,kotlin,WP5b,0,0,0,0,0,0,0,0,0,0,98,0,0,
+java/com/thedavelopers/eventqr/features/organizer/scanpurposes/ManageScanPurposesActivity.kt,kotlin,WP4b,0,0,0,0,0,0,0,0,0,0,11,1,0,
+java/com/thedavelopers/eventqr/features/organizer/shared/OrganizerScreenHelpers.kt,kotlin,WP4b,0,0,0,0,0,0,0,0,0,0,66,3,0,
+java/com/thedavelopers/eventqr/features/organizer/shared/OrganizerUiStateHelpers.kt,kotlin,WP4b,0,0,0,0,0,0,0,0,0,0,30,3,0,
+java/com/thedavelopers/eventqr/features/organizer/staff/ManageUsersActivity.kt,kotlin,WP4b,0,0,0,0,0,0,0,0,0,0,1,0,0,
+java/com/thedavelopers/eventqr/features/organizer/staff/StaffPermissionsForm.kt,kotlin,WP4b,0,0,0,0,0,0,0,0,0,0,2,1,0,
+java/com/thedavelopers/eventqr/features/organizer/transactions/TransactionLogsActivity.kt,kotlin,WP5b,0,0,0,0,0,0,0,0,0,0,63,15,0,
+java/com/thedavelopers/eventqr/features/organizer/transactions/TransactionRulesActivity.kt,kotlin,WP4b,0,0,0,0,0,0,0,0,0,0,11,0,0,
+java/com/thedavelopers/eventqr/features/rewards/ClaimedRewardAdapter.kt,kotlin,WP2,0,0,0,0,0,0,0,0,0,0,1,1,0,
+java/com/thedavelopers/eventqr/features/staff/events/EventRegistrationsActivity.kt,kotlin,WP3,0,0,0,0,0,0,0,0,0,0,17,7,0,
+java/com/thedavelopers/eventqr/features/staff/events/StaffAssignedEventsActivity.kt,kotlin,WP3,0,0,0,0,0,0,0,0,0,0,1,0,0,
+java/com/thedavelopers/eventqr/features/staff/result/StaffScanResultActivity.kt,kotlin,WP3,0,0,0,0,0,0,0,0,0,0,7,2,0,
+java/com/thedavelopers/eventqr/features/staff/reward/RedemptionResultActivity.kt,kotlin,WP3,0,0,0,0,0,0,0,0,0,0,29,12,0,
+java/com/thedavelopers/eventqr/features/staff/reward/RewardRedemptionScanResultActivity.kt,kotlin,WP3,0,0,0,0,0,0,0,0,0,0,44,23,0,
+java/com/thedavelopers/eventqr/features/staff/scanner/ScannerActivity.kt,kotlin,WP3,0,0,0,0,0,0,0,0,0,0,12,6,0,
+java/com/thedavelopers/eventqr/features/staff/transactions/StaffTransactionsActivity.kt,kotlin,WP3,0,0,0,0,0,0,0,0,0,0,8,2,0,
+java/com/thedavelopers/eventqr/ui/components/EventQrEmptyState.kt,kotlin,WP6,0,0,0,0,0,0,0,0,0,0,14,3,0,
+java/com/thedavelopers/eventqr/ui/components/EventQrHeaders.kt,kotlin,WP6,0,0,0,0,0,0,0,0,0,0,22,3,0,
+java/com/thedavelopers/eventqr/ui/theme/Spacing.kt,kotlin,WP6,0,0,0,0,0,0,0,0,0,0,0,0,39,
+java/com/thedavelopers/eventqr/ui/theme/Theme.kt,kotlin,WP6,0,0,0,0,0,0,0,0,0,0,0,1,0,
+java/com/thedavelopers/eventqr/ui/theme/Type.kt,kotlin,WP6,0,0,0,0,0,0,0,0,0,0,0,0,27,

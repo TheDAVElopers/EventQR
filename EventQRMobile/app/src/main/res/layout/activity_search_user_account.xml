@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F3F4F6"
+    android:background="@color/background"
     android:orientation="vertical">
 
     <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
@@ -17,17 +17,17 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:paddingHorizontal="16dp"
-        android:paddingTop="12dp">
+        android:paddingHorizontal="@dimen/space_lg"
+        android:paddingTop="@dimen/space_md">
 
         <LinearLayout
             android:id="@+id/layoutSearchInput"
             android:layout_width="match_parent"
-            android:layout_height="52dp"
+            android:layout_height="@dimen/input_height"
             android:background="@drawable/bg_staff_search_box"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingHorizontal="14dp">
+            android:paddingHorizontal="@dimen/space_14">
 
             <EditText
                 android:id="@+id/edtSearchUser"
@@ -40,34 +40,33 @@
                 android:inputType="text"
                 android:maxLines="1"
                 android:singleLine="true"
-                android:textColor="#111827"
-                android:textColorHint="#9CA3AF"
-                android:textSize="14sp" />
+                android:textColorHint="@color/text_hint"
+                android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
 
             <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="@dimen/icon_md"
+                android:layout_height="@dimen/icon_md"
                 android:src="@drawable/ic_search"
-                android:tint="#9CA3AF" />
+                android:tint="@color/neutral" />
         </LinearLayout>
 
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:layout_marginTop="10dp">
+            android:layout_marginTop="@dimen/space_10">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerSearchUsers"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
-                android:paddingBottom="12dp" />
+                android:paddingBottom="@dimen/space_md" />
 
             <ProgressBar
                 android:id="@+id/progressSearchUsers"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="@dimen/icon_tile_md"
+                android:layout_height="@dimen/icon_tile_md"
                 android:layout_gravity="center" />
 
             <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
@@ -83,24 +82,21 @@
             android:id="@+id/layoutPermissionsHost"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@android:color/white"
+            android:layout_marginTop="@dimen/space_sm"
+            android:background="@color/surface"
             android:orientation="vertical"
-            android:padding="12dp"
+            android:padding="@dimen/space_md"
             android:visibility="gone" />
 
         <Button
             android:id="@+id/btnAssignStaff"
+            style="@style/Widget.EventQR.Button.Primary"
             android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="16dp"
-            android:background="@drawable/bg_staff_assign_button"
+            android:layout_height="@dimen/input_height"
+            android:layout_marginTop="@dimen/space_sm"
+            android:layout_marginBottom="@dimen/space_lg"
             android:enabled="false"
             android:text="@string/staff_assign_button"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.EventQR.ButtonPlatformBodyMedium.Strong" />
     </LinearLayout>
 </LinearLayout>

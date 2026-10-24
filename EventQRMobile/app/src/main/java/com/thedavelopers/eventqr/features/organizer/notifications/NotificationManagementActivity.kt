@@ -1,7 +1,9 @@
 package com.thedavelopers.eventqr.features.organizer.notifications
 
+import com.thedavelopers.eventqr.ui.theme.dimenOffset
+import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
+import com.thedavelopers.eventqr.ui.theme.strong
 import com.thedavelopers.eventqr.core.util.UiStrings
-import android.graphics.Color
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.Gravity
@@ -23,6 +25,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.core.api.dto.NotificationStatus
 import com.thedavelopers.eventqr.core.api.dto.NotificationType
 import com.thedavelopers.eventqr.features.notifications.NotificationAdapter
@@ -183,8 +186,8 @@ class NotificationManagementActivity : AppCompatActivity() {
             eventPopup?.dismiss()
         }, findViewById<View>(R.id.cardEventFilter).width.takeIf { it > 0 } ?: ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true).apply {
             isOutsideTouchable = true
-            elevation = dp(8).toFloat()
-            setBackgroundDrawable(android.graphics.drawable.ColorDrawable(Color.TRANSPARENT))
+            elevation = dimenOffset(R.dimen.elevation_overlay).toFloat()
+            setBackgroundDrawable(android.graphics.drawable.ColorDrawable(color(R.color.transparent)))
             setOnDismissListener { isEventOpen = false; rotateChevron(findViewById(R.id.arrowEventFilter), false) }
         }
     }
@@ -197,8 +200,8 @@ class NotificationManagementActivity : AppCompatActivity() {
             typePopup?.dismiss()
         }, findViewById<View>(R.id.cardTypeFilter).width.takeIf { it > 0 } ?: ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true).apply {
             isOutsideTouchable = true
-            elevation = dp(8).toFloat()
-            setBackgroundDrawable(android.graphics.drawable.ColorDrawable(Color.TRANSPARENT))
+            elevation = dimenOffset(R.dimen.elevation_overlay).toFloat()
+            setBackgroundDrawable(android.graphics.drawable.ColorDrawable(color(R.color.transparent)))
             setOnDismissListener { isTypeOpen = false; rotateChevron(findViewById(R.id.arrowTypeFilter), false) }
         }
     }
@@ -214,15 +217,15 @@ class NotificationManagementActivity : AppCompatActivity() {
             addView(LinearLayout(this@NotificationManagementActivity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(16), dp(14), dp(16), dp(14))
-                setBackgroundColor(if (index == spinner.selectedItemPosition) Color.parseColor("#EEF2FF") else Color.WHITE)
+                setPadding(dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_14), dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_14))
+                setBackgroundColor(if (index == spinner.selectedItemPosition) color(R.color.accent_container) else color(R.color.surface))
                 isClickable = true
                 setOnClickListener { onSelect(index) }
                 addView(TextView(this@NotificationManagementActivity).apply {
                     text = label
-                    setTextColor(if (index == spinner.selectedItemPosition) 0xFF4F46E5.toInt() else 0xFF111827.toInt())
-                    textSize = 15f
-                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                    setTextColor(if (index == spinner.selectedItemPosition) color(R.color.primary) else color(R.color.text_primary))
+                    setTextSizeRes(R.dimen.type_body)
+                    strong()
                     maxLines = 1
                     ellipsize = TextUtils.TruncateAt.END
                     layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
@@ -234,8 +237,6 @@ class NotificationManagementActivity : AppCompatActivity() {
     private fun rotateChevron(view: View, open: Boolean) {
         if (view is ImageView) view.rotation = if (open) 180f else 0f
     }
-
-    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
     private fun setupRecycler(repo: OrganizerRepository) {
         val recycler = findViewById<RecyclerView>(R.id.recyclerNotifications)

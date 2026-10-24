@@ -2,7 +2,6 @@ package com.thedavelopers.eventqr.features.attendee
 
 import com.thedavelopers.eventqr.core.util.UiStrings
 import android.content.Intent
-import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.Gravity
@@ -22,6 +21,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.theme.color
+import com.thedavelopers.eventqr.ui.theme.dimenOffset
+import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
+import com.thedavelopers.eventqr.ui.theme.strong
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.RegistrationStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
@@ -348,8 +351,8 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         eventPopup?.dismiss()
         eventPopup = PopupWindow(buildEventDropdownView(), cardSelectedEvent.width.takeIf { it > 0 } ?: ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true).apply {
             isOutsideTouchable = true
-            elevation = dp(8).toFloat()
-            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            elevation = dimenOffset(R.dimen.elevation_overlay).toFloat()
+            setBackgroundDrawable(ColorDrawable(color(R.color.transparent)))
             setOnDismissListener { isEventDropdownOpen = false; normalizeChevron(spinnerArrow, false) }
         }
     }
@@ -361,8 +364,11 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
             addView(LinearLayout(this@AttendeeRewardsActivity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(16), dp(14), dp(16), dp(14))
-                setBackgroundColor(if (index == eventSpinner.selectedItemPosition) Color.parseColor("#EEF2FF") else Color.WHITE)
+                setPadding(
+                    dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_14),
+                    dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_14),
+                )
+                setBackgroundColor(if (index == eventSpinner.selectedItemPosition) color(R.color.accent_container) else color(R.color.surface))
                 setOnClickListener {
                     eventSpinner.setSelection(index, false)
                     bindSelectedEventHeader()
@@ -372,9 +378,9 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
                 }
                 addView(TextView(this@AttendeeRewardsActivity).apply {
                     text = option.title
-                    setTextColor(if (index == eventSpinner.selectedItemPosition) 0xFF4F46E5.toInt() else 0xFF111827.toInt())
-                    textSize = 15f
-                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                    setTextColor(if (index == eventSpinner.selectedItemPosition) color(R.color.primary) else color(R.color.text_primary))
+                    setTextSizeRes(R.dimen.type_body)
+                    strong()
                     layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
                 })
             })
@@ -410,5 +416,4 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         presenter.load(option.eventId, attendeeUserId)
     }
 
-    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 }

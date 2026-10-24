@@ -10,30 +10,30 @@
     <View
         android:layout_width="160dp"
         android:layout_height="16dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="@dimen/space_sm"
         android:background="@drawable/bg_staff_skeleton_bar" />
 
     <!-- Personal Information Card Skeleton (1:1 with Real Form Card) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"
+        android:layout_marginBottom="@dimen/space_xl"
         android:background="@drawable/bg_staff_skeleton_card"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/space_lg">
 
         <!-- Input 1 Placeholder (Full Name: 56dp Outlined Box) -->
         <View
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="@dimen/space_lg"
             android:background="@drawable/bg_staff_skeleton_bar" />
 
         <!-- Input 2 Placeholder (Email: 56dp Outlined Box) -->
         <View
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="@dimen/space_lg"
             android:background="@drawable/bg_staff_skeleton_bar" />
 
         <!-- Input 3 Placeholder (Phone: 56dp Outlined Box) -->
@@ -46,7 +46,7 @@
         <View
             android:layout_width="180dp"
             android:layout_height="12dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="@dimen/space_sm"
             android:background="@drawable/bg_staff_skeleton_bar" />
     </LinearLayout>
 
@@ -54,18 +54,18 @@
     <View
         android:layout_width="80dp"
         android:layout_height="16dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="@dimen/space_sm"
         android:background="@drawable/bg_staff_skeleton_bar" />
 
     <!-- Security Navigation Card Skeleton (56dp Row) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:layout_marginBottom="24dp"
+        android:layout_marginBottom="@dimen/space_xl"
         android:background="@drawable/bg_staff_skeleton_card"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="16dp">
+        android:paddingHorizontal="@dimen/space_lg">
 
         <!-- Icon Block Placeholder (36dp x 36dp) -->
         <View
@@ -77,7 +77,7 @@
         <View
             android:layout_width="130dp"
             android:layout_height="14dp"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="@dimen/space_md"
             android:background="@drawable/bg_staff_skeleton_bar" />
 
         <View

@@ -2,7 +2,6 @@ package com.thedavelopers.eventqr.features.organizer.attendees
 
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -16,6 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.features.organizer.EXTRA_EVENT_ID
 import com.thedavelopers.eventqr.features.organizer.EXTRA_EVENT_TITLE
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpAttendee
@@ -136,7 +136,7 @@ open class SearchAttendeesActivity : AppCompatActivity() {
         filterChips.forEach { (label, chip) ->
             val selected = label == currentFilter
             chip.setBackgroundResource(if (selected) R.drawable.bg_event_filter_chip_selected else R.drawable.bg_event_filter_chip_unselected)
-            chip.setTextColor(if (selected) Color.WHITE else Color.parseColor("#4B5563"))
+            chip.setTextColor(if (selected) color(R.color.on_primary) else color(R.color.text_body))
         }
     }
 

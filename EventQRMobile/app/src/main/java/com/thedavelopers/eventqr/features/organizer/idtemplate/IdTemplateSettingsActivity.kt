@@ -1,7 +1,13 @@
 package com.thedavelopers.eventqr.features.organizer.idtemplate
 
+import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.theme.color
+import com.thedavelopers.eventqr.ui.theme.configDpToPx
+import com.thedavelopers.eventqr.ui.theme.dimenPx
+import com.thedavelopers.eventqr.ui.theme.roundedRect
+import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
+import com.thedavelopers.eventqr.ui.theme.strong
 import androidx.lifecycle.lifecycleScope
-import android.graphics.Color
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
@@ -90,9 +96,9 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
         content.addView(previewContainer)
         renderPreview()
 
-        statusView = text("", 13, false).apply {
+        statusView = styledText("", R.dimen.type_body_compact, false).apply {
             id = com.thedavelopers.eventqr.R.id.idt_status
-            setPadding(dp(4), dp(8), dp(4), 0)
+            setPadding(dimenPx(R.dimen.space_xs), dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_xs), 0)
         }
         content.addView(statusView)
 
@@ -100,8 +106,8 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
             id = com.thedavelopers.eventqr.R.id.idt_save_button
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(50),
-            ).apply { setMargins(0, dp(12), 0, dp(24)) }
+                dimenPx(R.dimen.control_height_50),
+            ).apply { setMargins(0, dimenPx(R.dimen.space_md), 0, dimenPx(R.dimen.space_xl)) }
         }
         content.addView(saveButton)
 
@@ -120,35 +126,30 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
         LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            background = rounded(
-                color = Color.parseColor("#EEF2FF"),
-                radiusDp = 16,
-                strokeColor = Color.parseColor("#C7D2FE"),
-                density = resources.displayMetrics.density,
-            )
-            setPadding(dp(12), dp(6), dp(16), dp(6))
+            background = roundedRect(color(R.color.accent_container), R.dimen.radius_lg, color(R.color.accent_outline))
+            setPadding(dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_6), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_6))
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
             ).apply {
-                bottomMargin = dp(12)
+                bottomMargin = dimenPx(R.dimen.space_md)
             }
 
             // Calendar / Event Icon
             addView(ImageView(this@IdTemplateSettingsActivity).apply {
                 setImageResource(com.thedavelopers.eventqr.R.drawable.ic_calendar)
-                setColorFilter(Color.parseColor("#4F46E5"))
-                layoutParams = LinearLayout.LayoutParams(dp(16), dp(16)).apply {
-                    marginEnd = dp(8)
+                setColorFilter(color(R.color.primary))
+                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_sm), dimenPx(R.dimen.icon_sm)).apply {
+                    marginEnd = dimenPx(R.dimen.space_sm)
                 }
             })
 
             // Event Title Text
             addView(TextView(this@IdTemplateSettingsActivity).apply {
                 text = titleText
-                textSize = 15f
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-                setTextColor(Color.parseColor("#312E81"))
+                setTextSizeRes(R.dimen.type_body)
+                strong()
+                setTextColor(color(R.color.primary))
                 maxLines = 1
                 ellipsize = android.text.TextUtils.TruncateAt.END
             })
@@ -156,16 +157,16 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
 
     private fun lockedFieldsCard(): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-        setPadding(dp(16), dp(16), dp(16), dp(16))
-        background = rounded(Color.WHITE, 16, Color.parseColor("#E2E8F0"), density = resources.displayMetrics.density)
-        elevation = dp(1).toFloat()
+        setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg))
+        background = roundedRect(color(R.color.surface), R.dimen.radius_lg, color(R.color.outline))
+        elevation = dimenPx(R.dimen.elevation_card).toFloat()
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
-        ).apply { setMargins(0, dp(8), 0, dp(16)) }
+        ).apply { setMargins(0, dimenPx(R.dimen.space_sm), 0, dimenPx(R.dimen.space_lg)) }
 
-        addView(text("Always included", 15, true, Color.parseColor("#0F172A")).apply {
-            setPadding(0, 0, 0, dp(12))
+        addView(styledText("Always included", R.dimen.type_body, true, color(R.color.text_primary)).apply {
+            setPadding(0, 0, 0, dimenPx(R.dimen.space_md))
         })
 
         addView(createLockedRow(
@@ -187,7 +188,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
         LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, dp(8), 0, dp(8))
+            setPadding(0, dimenPx(R.dimen.space_sm), 0, dimenPx(R.dimen.space_sm))
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -196,21 +197,21 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
             // Left Icon Container
             addView(ImageView(this@IdTemplateSettingsActivity).apply {
                 setImageResource(iconRes)
-                setColorFilter(Color.parseColor("#475569"))
-                background = rounded(Color.parseColor("#F1F5F9"), 10, null, density = resources.displayMetrics.density)
-                setPadding(dp(9), dp(9), dp(9), dp(9))
-                layoutParams = LinearLayout.LayoutParams(dp(38), dp(38))
+                setColorFilter(color(R.color.text_body))
+                background = roundedRect(color(R.color.surface_muted), R.dimen.radius_10)
+                setPadding(dimenPx(R.dimen.space_9), dimenPx(R.dimen.space_9), dimenPx(R.dimen.space_9), dimenPx(R.dimen.space_9))
+                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.tile_38), dimenPx(R.dimen.tile_38))
             })
 
             // Middle Text
             addView(LinearLayout(this@IdTemplateSettingsActivity).apply {
                 orientation = LinearLayout.VERTICAL
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-                    setMargins(dp(12), 0, dp(8), 0)
+                    setMargins(dimenPx(R.dimen.space_md), 0, dimenPx(R.dimen.space_sm), 0)
                 }
-                addView(text(title, 15, true, Color.parseColor("#0F172A")))
-                addView(text(subtitle, 12, false, Color.parseColor("#64748B")).apply {
-                    setPadding(0, dp(2), 0, 0)
+                addView(styledText(title, R.dimen.type_body, true, color(R.color.text_primary)))
+                addView(styledText(subtitle, R.dimen.type_caption, false, color(R.color.text_secondary)).apply {
+                    setPadding(0, dimenPx(R.dimen.space_xxs), 0, 0)
                 })
             })
 
@@ -218,38 +219,38 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
             addView(LinearLayout(this@IdTemplateSettingsActivity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
-                background = rounded(Color.parseColor("#F1F5F9"), 12, null, density = resources.displayMetrics.density)
-                setPadding(dp(8), dp(4), dp(10), dp(4))
+                background = roundedRect(color(R.color.surface_muted), R.dimen.radius_md)
+                setPadding(dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_xs), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_xs))
 
                 addView(ImageView(this@IdTemplateSettingsActivity).apply {
                     setImageResource(com.thedavelopers.eventqr.R.drawable.ic_lock)
-                    setColorFilter(Color.parseColor("#64748B"))
-                    layoutParams = LinearLayout.LayoutParams(dp(12), dp(12)).apply {
-                        marginEnd = dp(4)
+                    setColorFilter(color(R.color.text_secondary))
+                    layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_md)).apply {
+                        marginEnd = dimenPx(R.dimen.space_xs)
                     }
                 })
-                addView(text("Locked", 11, true, Color.parseColor("#64748B")))
+                addView(styledText("Locked", R.dimen.type_overline, true, color(R.color.text_secondary)))
             })
         }
 
     private fun toggleCard(): LinearLayout = LinearLayout(this).apply {
         tag = TOGGLES_TAG
         orientation = LinearLayout.VERTICAL
-        setPadding(dp(16), dp(16), dp(16), dp(16))
-        background = rounded(Color.WHITE, 16, Color.parseColor("#E2E8F0"), density = resources.displayMetrics.density)
-        elevation = dp(1).toFloat()
+        setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg))
+        background = roundedRect(color(R.color.surface), R.dimen.radius_lg, color(R.color.outline))
+        elevation = dimenPx(R.dimen.elevation_card).toFloat()
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
-        ).apply { setMargins(0, 0, 0, dp(16)) }
+        ).apply { setMargins(0, 0, 0, dimenPx(R.dimen.space_lg)) }
 
         buildToggleCardContent(this)
     }
 
     private fun buildToggleCardContent(container: LinearLayout) {
         container.removeAllViews()
-        container.addView(text("Show on printed ID", 15, true, Color.parseColor("#0F172A")).apply {
-            setPadding(0, 0, 0, dp(12))
+        container.addView(styledText("Show on printed ID", R.dimen.type_body, true, color(R.color.text_primary)).apply {
+            setPadding(0, 0, 0, dimenPx(R.dimen.space_md))
         })
 
         IdCardLayoutConfig.OPTIONAL_FIELDS.forEachIndexed { index, field ->
@@ -274,7 +275,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
     ): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
-        setPadding(0, dp(12), 0, dp(12))
+        setPadding(0, dimenPx(R.dimen.space_md), 0, dimenPx(R.dimen.space_md))
         isClickable = true
         isFocusable = true
         setOnClickListener {
@@ -289,37 +290,37 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
         val checkBoxView = ImageView(this@IdTemplateSettingsActivity).apply {
             if (isChecked) {
                 setImageResource(com.thedavelopers.eventqr.R.drawable.ic_check_white)
-                background = rounded(Color.parseColor("#0D9488"), 6, null, density = resources.displayMetrics.density)
-                setPadding(dp(3), dp(3), dp(3), dp(3))
-                setColorFilter(Color.WHITE)
+                background = roundedRect(color(R.color.deco_check_teal), R.dimen.radius_6)
+                setPadding(dimenPx(R.dimen.space_3), dimenPx(R.dimen.space_3), dimenPx(R.dimen.space_3), dimenPx(R.dimen.space_3))
+                setColorFilter(color(R.color.on_primary))
             } else {
                 setImageDrawable(null)
-                background = rounded(Color.WHITE, 6, Color.parseColor("#CBD5E1"), density = resources.displayMetrics.density)
+                background = roundedRect(color(R.color.surface), R.dimen.radius_6, color(R.color.outline_strong))
             }
-            layoutParams = LinearLayout.LayoutParams(dp(22), dp(22))
+            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_22), dimenPx(R.dimen.icon_22))
         }
         addView(checkBoxView)
 
         // Title Text
-        addView(text(IdCardLayoutConfig.displayName(field), 15, false, Color.parseColor("#0F172A")).apply {
+        addView(styledText(IdCardLayoutConfig.displayName(field), R.dimen.type_body, false, color(R.color.text_primary)).apply {
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-                setMargins(dp(12), 0, dp(8), 0)
+                setMargins(dimenPx(R.dimen.space_md), 0, dimenPx(R.dimen.space_sm), 0)
             }
         })
 
         // Chevron Icon
         addView(ImageView(this@IdTemplateSettingsActivity).apply {
             setImageResource(com.thedavelopers.eventqr.R.drawable.ic_chevron_right)
-            setColorFilter(Color.parseColor("#94A3B8"))
-            layoutParams = LinearLayout.LayoutParams(dp(18), dp(18))
+            setColorFilter(color(R.color.neutral))
+            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_18), dimenPx(R.dimen.icon_18))
         })
     }
 
     private fun createDivider(): View = View(this).apply {
-        setBackgroundColor(Color.parseColor("#F1F5F9"))
+        setBackgroundColor(color(R.color.surface_muted))
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
-            dp(1),
+            dimenPx(R.dimen.stroke_hairline),
         )
     }
 
@@ -328,24 +329,24 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
 
         val outerCard = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(16), dp(16), dp(16), dp(20))
-            background = rounded(Color.WHITE, 16, Color.parseColor("#E2E8F0"), density = resources.displayMetrics.density)
-            elevation = dp(1).toFloat()
+            setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_20))
+            background = roundedRect(color(R.color.surface), R.dimen.radius_lg, color(R.color.outline))
+            elevation = dimenPx(R.dimen.elevation_card).toFloat()
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply { setMargins(0, 0, 0, dp(16)) }
+            ).apply { setMargins(0, 0, 0, dimenPx(R.dimen.space_lg)) }
 
-            addView(text("ID Preview", 15, true, Color.parseColor("#0F172A")).apply {
-                setPadding(0, 0, 0, dp(12))
+            addView(styledText("ID Preview", R.dimen.type_body, true, color(R.color.text_primary)).apply {
+                setPadding(0, 0, 0, dimenPx(R.dimen.space_md))
             })
         }
 
         val previewBox = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(dp(20), dp(20), dp(20), dp(20))
-            background = rounded(Color.parseColor("#F8FAFC"), 12, Color.parseColor("#F1F5F9"), density = resources.displayMetrics.density)
+            setPadding(dimenPx(R.dimen.space_20), dimenPx(R.dimen.space_20), dimenPx(R.dimen.space_20), dimenPx(R.dimen.space_20))
+            background = roundedRect(color(R.color.background), R.dimen.radius_md, color(R.color.surface_muted))
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -355,11 +356,11 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
         val cardView = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(dp(16), dp(16), dp(16), dp(16))
-            background = rounded(Color.WHITE, 16, Color.parseColor("#E2E8F0"), density = resources.displayMetrics.density)
-            elevation = dp(2).toFloat()
+            setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg))
+            background = roundedRect(color(R.color.surface), R.dimen.radius_lg, color(R.color.outline))
+            elevation = dimenPx(R.dimen.elevation_raised).toFloat()
             layoutParams = LinearLayout.LayoutParams(
-                dp(IdCardLayoutConfig.PREVIEW_WIDTH_DP),
+                configDp(IdCardLayoutConfig.PREVIEW_WIDTH_DP),
                 ViewGroup.LayoutParams.WRAP_CONTENT,
             ).apply {
                 gravity = Gravity.CENTER_HORIZONTAL
@@ -373,22 +374,22 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply { setMargins(0, 0, 0, dp(10)) }
+            ).apply { setMargins(0, 0, 0, dimenPx(R.dimen.space_10)) }
 
-            addView(text("QR CODE", 10, true, Color.parseColor("#6366F1"), align = Gravity.CENTER_HORIZONTAL).apply {
+            addView(styledText("QR CODE", R.dimen.type_micro, true, color(R.color.chart_5), align = Gravity.CENTER_HORIZONTAL).apply {
                 includeFontPadding = false
-                setPadding(0, 0, 0, dp(6))
+                setPadding(0, 0, 0, dimenPx(R.dimen.space_6))
             })
 
             val qrBox = LinearLayout(this@IdTemplateSettingsActivity).apply {
                 gravity = Gravity.CENTER
-                background = rounded(Color.parseColor("#EEF2FF"), 12, null, density = resources.displayMetrics.density)
-                layoutParams = LinearLayout.LayoutParams(dp(previewQrSizeDp), dp(previewQrSizeDp)).apply {
+                background = roundedRect(color(R.color.accent_container), R.dimen.radius_md)
+                layoutParams = LinearLayout.LayoutParams(configDp(previewQrSizeDp), configDp(previewQrSizeDp)).apply {
                     gravity = Gravity.CENTER_HORIZONTAL
                 }
                 addView(ImageView(this@IdTemplateSettingsActivity).apply {
                     setImageResource(com.thedavelopers.eventqr.R.drawable.dark_ic_qr_code)
-                    layoutParams = LinearLayout.LayoutParams(dp(previewQrSizeDp - 20), dp(previewQrSizeDp - 20))
+                    layoutParams = LinearLayout.LayoutParams(configDp(previewQrSizeDp - 20), configDp(previewQrSizeDp - 20))
                 })
             }
             addView(qrBox)
@@ -453,10 +454,10 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
 
         // Bottom pill handle bar
         cardView.addView(View(this).apply {
-            background = rounded(Color.parseColor("#CBD5E1"), 2, null, density = resources.displayMetrics.density)
-            layoutParams = LinearLayout.LayoutParams(dp(40), dp(4)).apply {
+            background = roundedRect(color(R.color.outline_strong), R.dimen.radius_2)
+            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_tile_md), dimenPx(R.dimen.bar_thin)).apply {
                 gravity = Gravity.CENTER_HORIZONTAL
-                setMargins(0, dp(12), 0, dp(4))
+                setMargins(0, dimenPx(R.dimen.space_md), 0, dimenPx(R.dimen.space_xs))
             }
         })
 
@@ -473,27 +474,27 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
     ): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
         gravity = Gravity.CENTER_HORIZONTAL
-        setPadding(0, dp(3), 0, dp(3))
+        setPadding(0, dimenPx(R.dimen.space_3), 0, dimenPx(R.dimen.space_3))
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
         )
-        addView(text(label, previewLabelFontSp, true, Color.parseColor("#6366F1"), align = Gravity.CENTER_HORIZONTAL).apply {
+        addView(configText(label, previewLabelFontSp, true, color(R.color.chart_5), align = Gravity.CENTER_HORIZONTAL).apply {
             includeFontPadding = false
         })
-        addView(text(value, valueSizeSp, isBoldValue, Color.parseColor("#0F172A"), align = Gravity.CENTER_HORIZONTAL).apply {
+        addView(configText(value, valueSizeSp, isBoldValue, color(R.color.text_primary), align = Gravity.CENTER_HORIZONTAL).apply {
             includeFontPadding = false
-            setPadding(0, dp(2), 0, 0)
+            setPadding(0, dimenPx(R.dimen.space_xxs), 0, 0)
         })
     }
 
     private fun createPreviewDivider(): View = View(this).apply {
-        setBackgroundColor(Color.parseColor("#F1F5F9"))
+        setBackgroundColor(color(R.color.surface_muted))
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
-            dp(1),
+            dimenPx(R.dimen.stroke_hairline),
         ).apply {
-            setMargins(dp(12), dp(4), dp(12), dp(4))
+            setMargins(dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_xs), dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_xs))
         }
     }
 
@@ -550,8 +551,25 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
 
     private fun showStatus(message: String, isError: Boolean) {
         statusView.text = message
-        statusView.setTextColor(if (isError) ERROR else SUCCESS)
+        statusView.setTextColor(if (isError) orgColors.error else orgColors.success)
     }
+
+    /**
+     * Config-derived dp -> px for the ID preview geometry ([IdCardLayoutConfig] widths, ratios). These numbers mirror the printed
+     * card, they are not design tokens, so they intentionally bypass the `R.dimen` scale.
+     */
+    private fun configDp(value: Int): Int = configDpToPx(value)
+
+    /** Same as [configDp] for the preview font sizes (sp) derived from [IdCardLayoutConfig] ratios. */
+    private fun configText(value: String, sizeSp: Int, bold: Boolean, color: Int, align: Int? = null): TextView =
+        TextView(this).apply {
+            text = value
+            textSize = sizeSp.toFloat()
+            setTextColor(color)
+            if (bold) strong()
+            includeFontPadding = true
+            align?.let { gravity = it }
+        }
 
     companion object {
         private const val TOGGLES_TAG = "id_display_toggles"

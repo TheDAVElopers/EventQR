@@ -26,9 +26,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="16dp"
-            android:paddingTop="8dp"
-            android:paddingBottom="24dp">
+            android:paddingHorizontal="@dimen/space_lg"
+            android:paddingTop="@dimen/space_sm"
+            android:paddingBottom="@dimen/space_xl">
 
             <!-- Event being scanned -->
             <LinearLayout
@@ -39,29 +39,29 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center_vertical"
-                android:minHeight="68dp"
+                android:minHeight="@dimen/size_68"
                 android:orientation="horizontal"
-                android:paddingHorizontal="16dp"
-                android:paddingVertical="12dp">
+                android:paddingHorizontal="@dimen/space_lg"
+                android:paddingVertical="@dimen/space_md">
 
                 <FrameLayout
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
+                    android:layout_width="@dimen/icon_tile_md"
+                    android:layout_height="@dimen/icon_tile_md"
                     android:background="@drawable/bg_scan_icon_tile">
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="@dimen/icon_md"
+                        android:layout_height="@dimen/icon_md"
                         android:layout_gravity="center"
                         android:contentDescription="@null"
                         android:src="@drawable/ic_calendar"
-                        app:tint="#5B25C9" />
+                        app:tint="@color/primary" />
                 </FrameLayout>
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
+                    android:layout_marginStart="@dimen/space_md"
                     android:layout_weight="1"
                     android:orientation="vertical">
 
@@ -72,55 +72,52 @@
                         android:orientation="horizontal">
 
                         <View
-                            android:layout_width="8dp"
-                            android:layout_height="8dp"
+                            android:layout_width="@dimen/dot_sm"
+                            android:layout_height="@dimen/dot_sm"
                             android:background="@drawable/bg_staff_scanner_status_dot" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="6dp"
-                            android:letterSpacing="0.06"
+                            android:layout_marginStart="@dimen/space_6"
+                            android:letterSpacing="@dimen/tracking_label"
                             android:text="@string/staff_scanner_scanning_for"
-                            android:textColor="#8E8EA9"
-                            android:textSize="11sp"
-                            android:textStyle="bold" />
+                            android:textColor="@color/text_label"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextOverline.Strong" />
                     </LinearLayout>
 
                     <TextView
                         android:id="@+id/txtScannerEventTitle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
+                        android:layout_marginTop="@dimen/space_xxs"
                         android:ellipsize="end"
                         android:maxLines="1"
                         android:text="@string/common_assigned_event"
-                        android:textColor="#121735"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong" />
                 </LinearLayout>
 
                 <TextView
                     android:id="@+id/txtScannerEventDate"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="@dimen/space_sm"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:textColor="#8E8EA9"
-                    android:textSize="12sp" />
+                    android:textColor="@color/text_label"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
 
                 <TextView
                     android:id="@+id/txtEventChevron"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginStart="4dp"
+                    android:layout_width="@dimen/icon_32"
+                    android:layout_height="@dimen/icon_32"
+                    android:layout_marginStart="@dimen/space_xs"
                     android:gravity="center"
                     android:includeFontPadding="false"
-                    android:text="▾"
-                    android:textColor="#8E8EA9"
-                    android:textSize="18sp"
-                    android:translationY="-1dp" />
+                    android:text="@string/glyph_dropdown_arrow"
+                    android:textColor="@color/text_label"
+                    android:textAppearance="@style/TextAppearance.EventQR.TitleRegular"
+                    android:translationY="@dimen/glyph_nudge_y" />
             </LinearLayout>
 
             <Spinner
@@ -133,57 +130,56 @@
                 android:id="@+id/txtScannerEmptyState"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="@dimen/space_md"
                 android:background="@drawable/bg_scan_card"
-                android:padding="16dp"
+                android:padding="@dimen/space_lg"
                 android:text="@string/staff_scanner_no_assigned_events_are_available_for"
                 android:textColor="@color/text_secondary"
-                android:textSize="14sp"
+                android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
                 android:visibility="gone" />
 
             <!-- Scan purpose -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:letterSpacing="0.06"
+                android:layout_marginTop="@dimen/space_20"
+                android:letterSpacing="@dimen/tracking_label"
                 android:text="@string/common_scan_purpose"
-                android:textColor="#8E8EA9"
-                android:textSize="12sp"
-                android:textStyle="bold" />
+                android:textColor="@color/text_label"
+                android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
 
             <LinearLayout
                 android:id="@+id/cardSelectedPurpose"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="@dimen/space_sm"
                 android:background="@drawable/bg_scan_card"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center_vertical"
-                android:minHeight="68dp"
+                android:minHeight="@dimen/size_68"
                 android:orientation="horizontal"
-                android:paddingHorizontal="16dp"
-                android:paddingVertical="12dp">
+                android:paddingHorizontal="@dimen/space_lg"
+                android:paddingVertical="@dimen/space_md">
 
                 <FrameLayout
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
+                    android:layout_width="@dimen/icon_tile_md"
+                    android:layout_height="@dimen/icon_tile_md"
                     android:background="@drawable/bg_scan_icon_tile">
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="@dimen/icon_md"
+                        android:layout_height="@dimen/icon_md"
                         android:layout_gravity="center"
                         android:contentDescription="@null"
                         android:src="@drawable/ic_qr_scan"
-                        app:tint="#5B25C9" />
+                        app:tint="@color/primary" />
                 </FrameLayout>
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
+                    android:layout_marginStart="@dimen/space_md"
                     android:layout_weight="1"
                     android:orientation="vertical">
 
@@ -194,32 +190,28 @@
                         android:ellipsize="end"
                         android:maxLines="1"
                         android:text="@string/staff_scanner_select_purpose"
-                        android:textColor="#121735"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong" />
 
                     <TextView
                         android:id="@+id/txtSelectedPurposePoints"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
+                        android:layout_marginTop="@dimen/space_xxs"
                         android:ellipsize="end"
                         android:maxLines="1"
-                        android:text=""
-                        android:textColor="#5B25C9"
+                        android:textColor="@color/primary"
                         android:visibility="gone"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
                 </LinearLayout>
 
                 <ImageView
                     android:id="@+id/txtPurposeChevron"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginStart="8dp"
+                    android:layout_width="@dimen/icon_lg"
+                    android:layout_height="@dimen/icon_lg"
+                    android:layout_marginStart="@dimen/space_sm"
                     android:contentDescription="@string/common_dropdown"
                     android:src="@drawable/ic_arrow_drop_down"
-                    android:tint="#8E8EA9" />
+                    android:tint="@color/neutral_label" />
             </LinearLayout>
 
             <Spinner
@@ -241,14 +233,14 @@
                 android:id="@+id/layoutScannerPlaceholder"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="@dimen/space_20"
                 android:background="@drawable/bg_scan_viewport"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
-                android:paddingHorizontal="20dp"
-                android:paddingVertical="20dp">
+                android:paddingHorizontal="@dimen/space_20"
+                android:paddingVertical="@dimen/space_20">
 
                 <FrameLayout
                     android:layout_width="236dp"
@@ -269,34 +261,34 @@
 
                         <ImageView
                             android:id="@+id/imgScannerIcon"
-                            android:layout_width="76dp"
-                            android:layout_height="76dp"
+                            android:layout_width="@dimen/size_76"
+                            android:layout_height="@dimen/size_76"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_qr_scan"
-                            app:tint="#8B87C4" />
+                            app:tint="@color/deco_scan_placeholder" />
                     </FrameLayout>
 
                     <View
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
+                        android:layout_width="@dimen/scan_corner_length"
+                        android:layout_height="@dimen/scan_corner_length"
                         android:layout_gravity="top|start"
                         android:background="@drawable/bg_scan_corner_tl" />
 
                     <View
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
+                        android:layout_width="@dimen/scan_corner_length"
+                        android:layout_height="@dimen/scan_corner_length"
                         android:layout_gravity="top|end"
                         android:background="@drawable/bg_scan_corner_tr" />
 
                     <View
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
+                        android:layout_width="@dimen/scan_corner_length"
+                        android:layout_height="@dimen/scan_corner_length"
                         android:layout_gravity="bottom|start"
                         android:background="@drawable/bg_scan_corner_bl" />
 
                     <View
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
+                        android:layout_width="@dimen/scan_corner_length"
+                        android:layout_height="@dimen/scan_corner_length"
                         android:layout_gravity="bottom|end"
                         android:background="@drawable/bg_scan_corner_br" />
                 </FrameLayout>
@@ -305,71 +297,68 @@
                     android:id="@+id/txtInlineCameraStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/space_md"
                     android:background="@drawable/bg_scan_status_pill"
                     android:gravity="center"
-                    android:paddingHorizontal="16dp"
-                    android:paddingVertical="8dp"
+                    android:paddingHorizontal="@dimen/space_lg"
+                    android:paddingVertical="@dimen/space_sm"
                     android:text="@string/staff_scanner_point_camera_at_attendee_qr_code"
-                    android:textColor="#FFFFFF"
-                    android:textSize="13sp" />
+                    android:textColor="@color/on_primary"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
             </LinearLayout>
 
             <!-- Manual entry -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="@dimen/space_20"
                 android:background="@drawable/bg_scan_card"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="@dimen/space_lg">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/staff_scanner_enter_manually"
-                    android:textColor="#121735"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
+                    android:layout_marginTop="@dimen/space_xxs"
                     android:text="@string/staff_scanner_camera_not_working_type_the_attendee"
-                    android:textColor="#8E8EA9"
-                    android:textSize="13sp" />
+                    android:textColor="@color/text_label"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
+                    android:layout_marginTop="@dimen/space_14"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <EditText
                         android:id="@+id/edtScannerQr"
                         android:layout_width="0dp"
-                        android:layout_height="48dp"
+                        android:layout_height="@dimen/touch_target_min"
                         android:layout_weight="1"
-                        android:background="@drawable/bg_soft_input_no_stroke"
+                        android:background="@drawable/bg_input_filled"
                         android:hint="@string/staff_scanner_attendee_id_e_g_001"
                         android:inputType="text"
-                        android:paddingHorizontal="16dp"
+                        android:paddingHorizontal="@dimen/space_lg"
                         android:singleLine="true"
-                        android:textSize="14sp" />
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
 
                     <Button
                         android:id="@+id/btnSubmitScan"
                         android:layout_width="96dp"
-                        android:layout_height="48dp"
-                        android:layout_marginStart="10dp"
+                        android:layout_height="@dimen/touch_target_min"
+                        android:layout_marginStart="@dimen/space_10"
                         android:background="@drawable/bg_scanner_button"
                         android:text="@string/staff_scanner_verify"
                         android:textAllCaps="false"
-                        android:textColor="#FFFFFF"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
+                        android:textColor="@color/on_primary"
+                        android:textAppearance="@style/TextAppearance.EventQR.ButtonPlatformBody.Strong" />
                 </LinearLayout>
             </LinearLayout>
 

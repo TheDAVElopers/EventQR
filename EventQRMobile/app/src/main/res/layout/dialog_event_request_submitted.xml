@@ -2,56 +2,52 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="20dp"
+    android:layout_marginHorizontal="@dimen/space_20"
     android:background="@drawable/bg_card"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="@dimen/space_lg">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/dialog_event_request_submitted_event_request_submitted"
-        android:textColor="#111827"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:textAppearance="@style/TextAppearance.EventQR.TitleMedium" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="@dimen/space_sm"
         android:text="@string/dialog_event_request_submitted_your_event_request_has_been_submitte"
-        android:textColor="#4B5563"
-        android:textSize="14sp" />
+        android:textColor="@color/text_body"
+        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="@dimen/space_sm"
         android:text="@string/dialog_event_request_submitted_status_pending"
-        android:textColor="#25215F"
-        android:textSize="14sp"
-        android:textStyle="bold" />
+        android:textColor="@color/primary"
+        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
 
     <Button
         android:id="@+id/successViewRequestsButton"
         android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:layout_marginTop="14dp"
+        android:layout_height="@dimen/input_height"
+        android:layout_marginTop="@dimen/space_14"
         android:background="@drawable/button_rounded"
         android:text="@string/dialog_event_request_submitted_view_my_event_request"
         android:textAllCaps="false"
-        android:textColor="#FFFFFF"
-        android:textSize="15sp"
-        android:textStyle="bold" />
+        android:textColor="@color/on_primary"
+        android:textAppearance="@style/TextAppearance.EventQR.ButtonPlatformBody.Strong" />
 
     <Button
         android:id="@+id/successDashboardButton"
         android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:layout_marginTop="10dp"
+        android:layout_height="@dimen/input_height"
+        android:layout_marginTop="@dimen/space_10"
         android:background="@drawable/bg_outline_button"
         android:text="@string/common_back_to_dashboard"
         android:textAllCaps="false"
-        android:textColor="#25215F"
-        android:textSize="15sp" />
+        android:textColor="@color/primary"
+        android:textAppearance="@style/TextAppearance.EventQR.ButtonPlatformBody" />
 </LinearLayout>

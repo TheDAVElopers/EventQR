@@ -18,37 +18,37 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:paddingHorizontal="16dp"
-        android:paddingTop="14dp">
+        android:paddingHorizontal="@dimen/space_lg"
+        android:paddingTop="@dimen/space_14">
 
         <LinearLayout
             android:id="@+id/buttonCreateAdminAccount"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
+            android:layout_marginBottom="@dimen/space_md"
             android:background="@drawable/bg_admin_surface_card"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:padding="14dp"
+            android:padding="@dimen/space_14"
             android:visibility="gone">
 
             <FrameLayout
-                android:layout_width="38dp"
-                android:layout_height="38dp"
-                android:background="@drawable/bg_admin_icon_tile_blue">
+                style="@style/Widget.EventQR.IconTile.R10.AccentStrong"
+                android:layout_width="@dimen/tile_38"
+                android:layout_height="@dimen/tile_38">
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="@dimen/icon_md"
+                    android:layout_height="@dimen/icon_md"
                     android:layout_gravity="center"
                     android:src="@drawable/ic_admin_users"
-                    android:tint="#4F46E5" />
+                    android:tint="@color/primary" />
             </FrameLayout>
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="14dp"
+                android:layout_marginStart="@dimen/space_14"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
@@ -56,61 +56,58 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/common_create_admin_account"
-                    android:textColor="#111827"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/admin_account_management_super_admin_only_action"
-                    android:textColor="#6B7280"
-                    android:textSize="13sp" />
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
             </LinearLayout>
 
             <ImageView
-                android:layout_width="18dp"
-                android:layout_height="18dp"
+                android:layout_width="@dimen/icon_18"
+                android:layout_height="@dimen/icon_18"
                 android:src="@drawable/ic_chevron_right"
-                android:tint="#9CA3AF" />
+                android:tint="@color/neutral" />
         </LinearLayout>
 
         <EditText
             android:id="@+id/inputAccountSearch"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="@dimen/touch_target_min"
             android:background="@drawable/bg_admin_search_field"
             android:drawableEnd="@drawable/ic_action_search"
-            android:drawablePadding="8dp"
+            android:drawablePadding="@dimen/space_sm"
             android:hint="@string/admin_account_management_search_accounts"
-            android:paddingHorizontal="14dp"
-            android:textColor="#111827"
-            android:textColorHint="#9CA3AF"/>
+            android:paddingHorizontal="@dimen/space_14"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_hint"/>
 
         <HorizontalScrollView
             android:id="@+id/filterChipsContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:paddingHorizontal="4dp"
-            android:paddingBottom="4dp">
+            android:layout_marginTop="@dimen/space_md"
+            android:paddingHorizontal="@dimen/space_xs"
+            android:paddingBottom="@dimen/space_xs">
 
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/filterChipsLayout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="4dp"
+                android:paddingHorizontal="@dimen/space_md"
+                android:paddingVertical="@dimen/space_xs"
                 app:singleSelection="true" />
         </HorizontalScrollView>
 
         <ProgressBar
             android:id="@+id/progressAccountsLoading"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="@dimen/icon_32"
+            android:layout_height="@dimen/icon_32"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/space_lg"
             android:visibility="gone" />
 
         <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
@@ -127,10 +124,10 @@
             android:id="@+id/recyclerAdminAccounts"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_marginTop="14dp"
+            android:layout_marginTop="@dimen/space_14"
             android:layout_weight="1"
             android:clipToPadding="false"
-            android:paddingBottom="12dp" />
+            android:paddingBottom="@dimen/space_md" />
     </LinearLayout>
 
     <androidx.compose.ui.platform.ComposeView

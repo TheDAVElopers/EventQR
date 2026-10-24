@@ -3,35 +3,35 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
-    app:cardCornerRadius="14dp"
-    app:cardElevation="2dp">
+    android:layout_marginBottom="@dimen/space_md"
+    app:cardCornerRadius="@dimen/radius_14"
+    app:cardElevation="@dimen/elevation_raised">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="14dp">
+        android:padding="@dimen/space_14">
 
         <FrameLayout
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:background="@drawable/bg_claimed_reward_icon_box">
+            android:layout_width="@dimen/tile_44"
+            android:layout_height="@dimen/tile_44"
+            style="@style/Widget.EventQR.IconTile.Success">
 
             <ImageView
                 android:id="@+id/imgClaimedGift"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="@dimen/icon_22"
+                android:layout_height="@dimen/icon_22"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_gift"
-                android:tint="#12B981" />
+                android:tint="@color/success" />
         </FrameLayout>
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="@dimen/space_md"
             android:layout_weight="1"
             android:orientation="vertical">
 
@@ -39,25 +39,23 @@
                 android:id="@+id/txtClaimedTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/eventqr_text"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
 
             <TextView
                 android:id="@+id/txtClaimedEvent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:textColor="#98A2B3"
-                android:textSize="13sp" />
+                android:layout_marginTop="@dimen/space_xxs"
+                android:textColor="@color/text_hint"
+                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
 
             <TextView
                 android:id="@+id/txtClaimedDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:textColor="#98A2B3"
-                android:textSize="13sp" />
+                android:layout_marginTop="@dimen/space_xxs"
+                android:textColor="@color/text_hint"
+                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
         </LinearLayout>
 
         <LinearLayout
@@ -71,22 +69,20 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_green_pill"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="4dp"
+                android:paddingHorizontal="@dimen/space_10"
+                android:paddingVertical="@dimen/space_xs"
                 android:text="@string/common_approved"
-                android:textColor="#047857"
-                android:textSize="12sp"
-                android:textStyle="bold" />
+                android:textColor="@color/on_success_container"
+                android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
 
             <TextView
                 android:id="@+id/txtClaimedPoints"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="@dimen/space_sm"
                 android:text="@string/item_claimed_reward_100_pts"
-                android:textColor="@color/eventqr_error"
-                android:textSize="22sp"
-                android:textStyle="bold" />
+                android:textColor="@color/danger"
+                android:textAppearance="@style/TextAppearance.EventQR.TextHeadline" />
         </LinearLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>

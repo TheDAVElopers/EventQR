@@ -4,7 +4,6 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.graphics.Rect
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
@@ -28,6 +27,10 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.theme.color
+import com.thedavelopers.eventqr.ui.theme.dimenOffset
+import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
+import com.thedavelopers.eventqr.ui.theme.strong
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.PhoneInput
@@ -282,7 +285,7 @@ class RequestEventActivity : AppCompatActivity() {
             eventPosterPreview.visibility = View.VISIBLE
             eventPosterPlaceholder.visibility = View.GONE
             eventPosterStatusText.text = getString(R.string.request_event_poster_ready_16_9_tap_it_to_replace)
-            eventPosterStatusText.setTextColor(0xFF4F46E5.toInt())
+            eventPosterStatusText.setTextColor(color(R.color.primary))
         }.onFailure {
             showMessage(getString(R.string.request_event_unable_to_attach_cropped_poster_plea))
         }
@@ -481,7 +484,7 @@ class RequestEventActivity : AppCompatActivity() {
         val bounds = Rect()
         field.getDrawingRect(bounds)
         formScrollView.offsetDescendantRectToMyCoords(field, bounds)
-        return (bounds.top - dp(32)).coerceAtLeast(0)
+        return (bounds.top - dimenOffset(R.dimen.space_xxl)).coerceAtLeast(0)
     }
 
     private fun setLoading(loading: Boolean) {
@@ -502,7 +505,7 @@ class RequestEventActivity : AppCompatActivity() {
 
         dialog.setCancelable(false)
         dialog.setCanceledOnTouchOutside(false)
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setBackgroundDrawable(ColorDrawable(color(R.color.transparent)))
 
         dialogView.findViewById<Button>(R.id.successViewRequestsButton).setOnClickListener {
             dialog.dismiss()
@@ -559,8 +562,8 @@ class RequestEventActivity : AppCompatActivity() {
             true,
         ).apply {
             isOutsideTouchable = true
-            elevation = dp(8).toFloat()
-            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            elevation = dimenOffset(R.dimen.elevation_overlay).toFloat()
+            setBackgroundDrawable(ColorDrawable(color(R.color.transparent)))
             setOnDismissListener { isCategoryDropdownOpen = false; normalizeChevron(spinnerArrow, false) }
         }
     }
@@ -572,8 +575,11 @@ class RequestEventActivity : AppCompatActivity() {
             addView(LinearLayout(this@RequestEventActivity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(16), dp(14), dp(16), dp(14))
-                setBackgroundColor(if (index == spinnerEventCategory.selectedItemPosition) Color.parseColor("#EEF2FF") else Color.WHITE)
+                setPadding(
+                    dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_14),
+                    dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_14),
+                )
+                setBackgroundColor(if (index == spinnerEventCategory.selectedItemPosition) color(R.color.accent_container) else color(R.color.surface))
                 setOnClickListener {
                     spinnerEventCategory.setSelection(index, false)
                     txtSelectedEventCategory.text = option
@@ -583,9 +589,9 @@ class RequestEventActivity : AppCompatActivity() {
                 }
                 addView(TextView(this@RequestEventActivity).apply {
                     text = option
-                    setTextColor(if (index == spinnerEventCategory.selectedItemPosition) 0xFF4F46E5.toInt() else 0xFF111827.toInt())
-                    textSize = 15f
-                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                    setTextColor(if (index == spinnerEventCategory.selectedItemPosition) color(R.color.primary) else color(R.color.text_primary))
+                    setTextSizeRes(R.dimen.type_body)
+                    strong()
                     layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
                 })
             })
@@ -614,7 +620,6 @@ class RequestEventActivity : AppCompatActivity() {
         }
     }
 
-    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
     private fun configureDateTimeField(
         field: EditText,

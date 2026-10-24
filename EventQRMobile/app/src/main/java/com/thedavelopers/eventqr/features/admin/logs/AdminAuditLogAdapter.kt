@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.admin.auditTargetText
 import com.thedavelopers.eventqr.features.audit.model.dto.AuditLogResponse
+import com.thedavelopers.eventqr.ui.theme.color
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -58,19 +59,19 @@ class AdminAuditLogAdapter : RecyclerView.Adapter<AdminAuditLogAdapter.AdminAudi
             when {
                 normalized.contains("approve") || normalized.contains("reject") || normalized.contains("request") -> {
                     background = R.drawable.bg_admin_role_badge_green
-                    tint = 0xFF10B981.toInt()
+                    tint = itemView.context.color(R.color.success)
                 }
                 normalized.contains("disable") || normalized.contains("delete") -> {
                     background = R.drawable.bg_admin_role_badge_pink
-                    tint = 0xFFEF4444.toInt()
+                    tint = itemView.context.color(R.color.danger)
                 }
                 normalized.contains("account") || normalized.contains("role") || normalized.contains("user") -> {
                     background = R.drawable.bg_admin_role_badge_blue
-                    tint = 0xFF4F46E5.toInt()
+                    tint = itemView.context.color(R.color.primary)
                 }
                 else -> {
                     background = R.drawable.bg_admin_role_badge_purple
-                    tint = 0xFF6D3FF2.toInt()
+                    tint = itemView.context.color(R.color.deco_violet_accent)
                 }
             }
             iconTile.setBackgroundResource(background)

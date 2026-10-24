@@ -33,6 +33,9 @@ import com.thedavelopers.eventqr.features.staff.model.dto.ScanVerificationRespon
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import java.util.UUID
+import com.thedavelopers.eventqr.ui.theme.color
+import com.thedavelopers.eventqr.ui.theme.dimenOffset
+import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
 
 open class StaffScanResultActivity : AppCompatActivity() {
     private val tag = "StaffQrTransaction"
@@ -407,27 +410,27 @@ open class StaffScanResultActivity : AppCompatActivity() {
     private fun showPrintSuccessDialog(message: String) {
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(24), dp(24), dp(24), dp(24))
+            setPadding(dimenOffset(R.dimen.space_xl), dimenOffset(R.dimen.space_xl), dimenOffset(R.dimen.space_xl), dimenOffset(R.dimen.space_xl))
             setBackgroundResource(R.drawable.bg_card)
         }
 
         container.addView(TextView(this).apply {
             text = getString(R.string.staff_print_sent_title)
-            textSize = 28f
-            setTextColor(0xFF111827.toInt())
+            setTextSizeRes(R.dimen.type_headline_l)
+            setTextColor(color(R.color.text_primary))
             textAlignment = View.TEXT_ALIGNMENT_CENTER
         })
         container.addView(TextView(this).apply {
             text = message.ifBlank { getString(R.string.staff_print_sent_default_message) }
-            textSize = 16f
-            setTextColor(0xFF6B7280.toInt())
+            setTextSizeRes(R.dimen.type_body_large)
+            setTextColor(color(R.color.text_secondary))
             textAlignment = View.TEXT_ALIGNMENT_CENTER
-            setPadding(0, dp(12), 0, dp(20))
+            setPadding(0, dimenOffset(R.dimen.space_md), 0, dimenOffset(R.dimen.space_20))
         })
         val doneButton = Button(this).apply {
             text = getString(R.string.staff_print_done)
             setBackgroundResource(R.drawable.bg_scanner_button)
-            setTextColor(0xFFFFFFFF.toInt())
+            setTextColor(color(R.color.on_primary))
         }
         container.addView(doneButton)
 
@@ -442,7 +445,6 @@ open class StaffScanResultActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
     private fun formatVerifiedAt(raw: String?): String {
         if (raw.isNullOrBlank()) return "Just now"

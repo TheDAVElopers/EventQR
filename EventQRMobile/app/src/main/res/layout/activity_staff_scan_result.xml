@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eventqr_bg"
+    android:background="@color/background"
     android:orientation="vertical">
 
     <!-- Top Bar -->
@@ -23,7 +23,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:padding="@dimen/space_xl">
 
             <!-- Approved Header -->
             <LinearLayout
@@ -32,32 +32,32 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
-                android:paddingVertical="16dp">
+                android:paddingVertical="@dimen/space_lg">
 
                 <FrameLayout
-                    android:layout_width="100dp"
-                    android:layout_height="100dp">
+                    android:layout_width="@dimen/tile_100"
+                    android:layout_height="@dimen/tile_100">
 
                     <View
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
+                        android:layout_width="@dimen/tile_80"
+                        android:layout_height="@dimen/tile_80"
                         android:layout_gravity="center"
                         android:background="@drawable/bg_circle_green"
-                        android:alpha="0.1" />
+                        android:alpha="@dimen/alpha_wash_10" />
 
                     <View
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
+                        android:layout_width="@dimen/tile_60"
+                        android:layout_height="@dimen/tile_60"
                         android:layout_gravity="center"
                         android:background="@drawable/bg_circle_green" />
 
                     <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
+                        android:layout_width="@dimen/icon_32"
+                        android:layout_height="@dimen/icon_32"
                         android:layout_gravity="center"
                         android:contentDescription="@string/common_valid"
                         android:src="@drawable/ic_qr_success_check"
-                        app:tint="@android:color/white" />
+                        app:tint="@color/on_primary" />
 
                     <!-- Decorative burst lines placeholder (approximate design) -->
                     <ImageView
@@ -65,7 +65,7 @@
                         android:layout_height="match_parent"
                         android:contentDescription="@null"
                         android:src="@android:drawable/ic_menu_add"
-                        android:alpha="0.2"
+                        android:alpha="@dimen/alpha_wash_20"
                         android:visibility="gone" />
                 </FrameLayout>
 
@@ -73,19 +73,17 @@
                     android:id="@+id/txtScanResultState"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:textColor="#111827"
-                    android:textSize="22sp"
-                    android:textStyle="bold"
+                    android:layout_marginTop="@dimen/space_lg"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextHeadline"
                     android:text="@string/staff_scan_result_qr_code_valid"/>
 
                 <TextView
                     android:id="@+id/txtScanResultStatusHint"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:textColor="#6B7280"
-                    android:textSize="14sp"
+                    android:layout_marginTop="@dimen/space_sm"
+                    android:textColor="@color/text_secondary"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
                     android:text="@string/staff_scan_result_attendee_verified_successfully"/>
 
             </LinearLayout>
@@ -97,52 +95,51 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
-                android:paddingVertical="16dp"
+                android:paddingVertical="@dimen/space_lg"
                 android:visibility="gone">
 
                 <FrameLayout
-                    android:layout_width="100dp"
-                    android:layout_height="100dp">
+                    android:layout_width="@dimen/tile_100"
+                    android:layout_height="@dimen/tile_100">
 
                     <View
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
+                        android:layout_width="@dimen/tile_80"
+                        android:layout_height="@dimen/tile_80"
                         android:layout_gravity="center"
                         android:background="@drawable/bg_staff_rejected_circle"
-                        android:alpha="0.1" />
+                        android:alpha="@dimen/alpha_wash_10" />
 
                     <View
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
+                        android:layout_width="@dimen/tile_60"
+                        android:layout_height="@dimen/tile_60"
                         android:layout_gravity="center"
                         android:background="@drawable/bg_staff_rejected_circle" />
 
                     <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
+                        android:layout_width="@dimen/icon_32"
+                        android:layout_height="@dimen/icon_32"
                         android:layout_gravity="center"
                         android:src="@drawable/ic_staff_close"
-                        app:tint="@android:color/white" />
+                        app:tint="@color/on_primary" />
                 </FrameLayout>
 
                 <TextView
                     android:id="@+id/txtScanResultStateRejected"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="@dimen/space_lg"
                     android:text="@string/staff_scan_result_qr_code_invalid"
-                    android:textColor="#DC2626"
-                    android:textSize="28sp"
-                    android:textStyle="bold" />
+                    android:textColor="@color/error"
+                    android:textAppearance="@style/TextAppearance.EventQR.HeadlineL" />
 
                 <TextView
                     android:id="@+id/txtScanResultStatusHintRejected"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/staff_scan_result_this_scan_could_not_be_completed"
-                    android:layout_marginTop="8dp"
-                    android:textColor="#6B7280"
-                    android:textSize="16sp" />
+                    android:layout_marginTop="@dimen/space_sm"
+                    android:textColor="@color/text_secondary"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge" />
 
             </LinearLayout>
 
@@ -151,17 +148,15 @@
                 android:id="@+id/layoutApprovedDetails"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                app:cardBackgroundColor="@android:color/white"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
-                app:strokeWidth="0dp">
+                android:layout_marginTop="@dimen/space_xl"
+                app:strokeWidth="@dimen/stroke_none"
+                style="@style/Widget.EventQR.Card.Raised">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="20dp">
+                    android:padding="@dimen/space_20">
 
                     <!-- Attendee Row -->
                     <androidx.constraintlayout.widget.ConstraintLayout
@@ -172,22 +167,20 @@
                             android:id="@+id/imgAvatar"
                             android:layout_width="56dp"
                             android:layout_height="56dp"
-                            android:background="@drawable/bg_circle_indigo"
-                            android:backgroundTint="#F0F0FF"
-                            android:padding="12dp"
+                            android:padding="@dimen/space_md"
                             android:src="@drawable/ic_row_user"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent"
-                            app:tint="#4F46E5" />
+                            app:tint="@color/primary"
+                            style="@style/Widget.EventQR.IconTile.Round.Accent" />
 
                         <TextView
                             android:id="@+id/txtScanResultAttendeeName"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="16dp"
-                            android:textColor="#111827"
-                            android:textSize="18sp"
-                            android:textStyle="bold"
+                            android:layout_marginStart="@dimen/space_lg"
+                            android:textColor="@color/text_primary"
+                            android:textAppearance="@style/TextAppearance.EventQR.TitleMedium"
                             app:layout_constraintEnd_toStartOf="@id/txtScanResultRegistrationStatus"
                             app:layout_constraintStart_toEndOf="@id/imgAvatar"
                             app:layout_constraintTop_toTopOf="@id/imgAvatar" />
@@ -196,8 +189,8 @@
                             android:id="@+id/txtScanResultAttendeeEmail"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:textColor="#6B7280"
-                            android:textSize="14sp"
+                            android:textColor="@color/text_secondary"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
                             app:layout_constraintEnd_toStartOf="@id/txtScanResultRegistrationStatus"
                             app:layout_constraintStart_toStartOf="@id/txtScanResultAttendeeName"
                             app:layout_constraintTop_toBottomOf="@id/txtScanResultAttendeeName" />
@@ -207,12 +200,11 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:background="@drawable/bg_success_chip"
-                            android:backgroundTint="#D1FAE5"
-                            android:paddingHorizontal="10dp"
-                            android:paddingVertical="4dp"
-                            android:textColor="#059669"
-                            android:textSize="10sp"
-                            android:textStyle="bold"
+                            android:backgroundTint="@color/success_container"
+                            android:paddingHorizontal="@dimen/space_10"
+                            android:paddingVertical="@dimen/space_xs"
+                            android:textColor="@color/success_dark"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextMicro"
                             app:layout_constraintBottom_toBottomOf="@id/imgAvatar"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toTopOf="@id/imgAvatar" />
@@ -220,10 +212,8 @@
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
                     <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginVertical="16dp"
-                        android:background="#F3F4F6" />
+                        android:layout_marginVertical="@dimen/space_lg"
+                        style="@style/Widget.EventQR.Divider.Muted" />
 
                     <!-- Event Row -->
                     <LinearLayout
@@ -233,18 +223,17 @@
                         android:orientation="horizontal">
 
                         <ImageView
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:background="@drawable/bg_circle_indigo"
-                            android:backgroundTint="#F0F0FF"
-                            android:padding="10dp"
+                            android:layout_width="@dimen/icon_tile_md"
+                            android:layout_height="@dimen/icon_tile_md"
+                            android:padding="@dimen/space_10"
                             android:src="@drawable/ic_calendar"
-                            app:tint="#4F46E5" />
+                            app:tint="@color/primary"
+                            style="@style/Widget.EventQR.IconTile.Round.Accent" />
 
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="16dp"
+                            android:layout_marginStart="@dimen/space_lg"
                             android:layout_weight="1"
                             android:orientation="vertical">
 
@@ -252,26 +241,21 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/staff_scan_result_event"
-                                android:textColor="#9CA3AF"
-                                android:textSize="10sp"
-                                android:textStyle="bold" />
+                                android:textColor="@color/text_hint"
+                                android:textAppearance="@style/TextAppearance.EventQR.TextMicro" />
 
                             <TextView
                                 android:id="@+id/txtScanResultEvent"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
-                                android:textColor="#111827"
-                                android:textSize="16sp"
-                                android:textStyle="bold" />
+                                android:layout_marginTop="@dimen/space_xxs"
+                                android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong" />
                         </LinearLayout>
                     </LinearLayout>
 
                     <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginVertical="16dp"
-                        android:background="#F3F4F6" />
+                        android:layout_marginVertical="@dimen/space_lg"
+                        style="@style/Widget.EventQR.Divider.Muted" />
 
                     <!-- Purpose Row -->
                     <LinearLayout
@@ -281,18 +265,17 @@
                         android:orientation="horizontal">
 
                         <ImageView
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:background="@drawable/bg_circle_indigo"
-                            android:backgroundTint="#F0F0FF"
-                            android:padding="10dp"
+                            android:layout_width="@dimen/icon_tile_md"
+                            android:layout_height="@dimen/icon_tile_md"
+                            android:padding="@dimen/space_10"
                             android:src="@drawable/ic_row_tag"
-                            app:tint="#4F46E5" />
+                            app:tint="@color/primary"
+                            style="@style/Widget.EventQR.IconTile.Round.Accent" />
 
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="16dp"
+                            android:layout_marginStart="@dimen/space_lg"
                             android:layout_weight="1"
                             android:orientation="vertical">
 
@@ -300,18 +283,15 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/common_scan_purpose"
-                                android:textColor="#9CA3AF"
-                                android:textSize="10sp"
-                                android:textStyle="bold" />
+                                android:textColor="@color/text_hint"
+                                android:textAppearance="@style/TextAppearance.EventQR.TextMicro" />
 
                             <TextView
                                 android:id="@+id/txtScanResultPurpose"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
-                                android:textColor="#111827"
-                                android:textSize="16sp"
-                                android:textStyle="bold" />
+                                android:layout_marginTop="@dimen/space_xxs"
+                                android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong" />
                         </LinearLayout>
                     </LinearLayout>
 
@@ -322,33 +302,29 @@
                 android:id="@+id/cardVerificationDetails"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:cardBackgroundColor="@android:color/white"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="1dp"
-                app:strokeColor="#F3F4F6"
-                app:strokeWidth="1dp">
+                android:layout_marginTop="@dimen/space_lg"
+                app:strokeColor="@color/surface_muted"
+                style="@style/Widget.EventQR.Card.Compact">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:padding="16dp">
+                    android:padding="@dimen/space_lg">
 
                     <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:background="@drawable/bg_circle_indigo"
-                        android:backgroundTint="#F0F0FF"
-                        android:padding="7dp"
+                        android:layout_width="@dimen/icon_32"
+                        android:layout_height="@dimen/icon_32"
+                        android:padding="@dimen/space_7"
                         android:src="@drawable/ic_row_clock"
-                        app:tint="#4F46E5" />
+                        app:tint="@color/primary"
+                        style="@style/Widget.EventQR.IconTile.Round.Accent" />
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
+                        android:layout_marginStart="@dimen/space_md"
                         android:layout_weight="1"
                         android:orientation="vertical">
 
@@ -356,16 +332,15 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/staff_scan_result_verified_at"
-                            android:textColor="#9CA3AF"
-                            android:textSize="9sp"
-                            android:textStyle="bold" />
+                            android:textColor="@color/text_hint"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextNano" />
 
                         <TextView
                             android:id="@+id/txtScanResultVerifiedAt"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textColor="#111827"
-                            android:textSize="13sp" />
+                            android:textColor="@color/text_primary"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
                     </LinearLayout>
 
                 </LinearLayout>
@@ -377,33 +352,31 @@
                 android:id="@+id/layoutRejectedReason"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/space_lg"
                 android:visibility="gone"
-                app:cardBackgroundColor="#FEF2F2"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
-                app:strokeColor="#FEE2E2"
-                app:strokeWidth="1dp">
+                app:cardBackgroundColor="@color/error_container"
+                style="@style/Widget.EventQR.Card.Flat"
+                app:strokeColor="@color/error_container">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:padding="16dp">
+                    android:padding="@dimen/space_lg">
 
                     <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:background="@drawable/bg_icon_tile_red"
-                        android:padding="10dp"
+                        android:layout_width="@dimen/icon_tile_md"
+                        android:layout_height="@dimen/icon_tile_md"
+                        android:padding="@dimen/space_10"
                         android:src="@drawable/ic_row_alert"
-                        app:tint="#DC2626" />
+                        app:tint="@color/error"
+                        style="@style/Widget.EventQR.IconTile.Round.Error" />
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
+                        android:layout_marginStart="@dimen/space_lg"
                         android:layout_weight="1"
                         android:orientation="vertical">
 
@@ -411,17 +384,16 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/common_rejection_reason"
-                            android:textColor="#EF4444"
-                            android:textSize="10sp"
-                            android:textStyle="bold" />
+                            android:textColor="@color/danger"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextMicro" />
 
                         <TextView
                             android:id="@+id/txtScanResultReason"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:textColor="#991B1B"
-                            android:textSize="14sp" />
+                            android:layout_marginTop="@dimen/space_xxs"
+                            android:textColor="@color/on_error_container"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -434,52 +406,43 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingHorizontal="24dp"
-        android:paddingBottom="24dp"
-        android:paddingTop="16dp"
-        android:elevation="8dp">
+        android:paddingHorizontal="@dimen/space_xl"
+        android:paddingBottom="@dimen/space_xl"
+        android:paddingTop="@dimen/space_lg"
+        android:elevation="@dimen/elevation_overlay">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnContinueTransaction"
+            style="@style/Widget.EventQR.Button.Primary"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            app:backgroundTint="@null"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            android:background="@drawable/bg_primary_button"
-            android:textSize="16sp"
-            android:textStyle="bold"
+            android:layout_height="@dimen/touch_target_min"
             app:icon="@drawable/ic_file"
             app:iconGravity="textStart"
             android:text="@string/staff_scan_result_log_transaction"
-            app:iconSize="24dp"
-            app:iconTint="@android:color/white" />
+            app:iconSize="@dimen/icon_lg"
+            app:iconTint="@color/on_primary"
+            android:textAppearance="@style/TextAppearance.EventQR.ButtonBodyLarge.Strong" />
 
         <com.google.android.material.progressindicator.LinearProgressIndicator
             android:id="@+id/progressTransactionInline"
             android:layout_width="match_parent"
-            android:layout_height="4dp"
-            android:layout_marginTop="8dp"
+            android:layout_height="@dimen/bar_thin"
+            android:layout_marginTop="@dimen/space_sm"
             android:indeterminate="true"
             android:visibility="gone"
-            app:indicatorColor="#4F46E5"
-            app:trackColor="#E5E7EB" />
+            app:indicatorColor="@color/primary"
+            app:trackColor="@color/outline" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnViewAttendeeDetails"
             app:icon="@drawable/ic_visibility_on"
             app:iconGravity="textStart"
-            app:iconTint="@color/eventqr_indigo"
+            app:iconTint="@color/primary"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/bg_staff_outline_button"
+            android:layout_height="@dimen/touch_target_min"
+            android:layout_marginTop="@dimen/space_md"
             android:text="@string/common_view_attendee_details"
-            android:textAllCaps="false"
-            android:textColor="@color/eventqr_indigo"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            app:backgroundTint="@null"/>
+            style="@style/Widget.EventQR.Button.Outline.Large"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnScanAgain"
@@ -487,16 +450,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="@dimen/space_md"
             android:textAllCaps="false"
-            android:textColor="#34343C"
-            android:textSize="18sp"
-            android:textStyle="bold"
+            android:textColor="@color/deco_charcoal_action"
             android:text="@string/staff_scan_result_scan_another"
             app:icon="@drawable/ic_staff_scan"
-            app:iconPadding="8dp"
+            app:iconPadding="@dimen/space_sm"
             app:iconSize="30dp"
-            app:iconTint="#34343C" />
+            app:iconTint="@color/deco_charcoal_action"
+            android:textAppearance="@style/TextAppearance.EventQR.ButtonTitle.Strong" />
 
     </LinearLayout>
 

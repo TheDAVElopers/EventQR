@@ -30,6 +30,7 @@ import com.thedavelopers.eventqr.features.admin.configureAdminBottomNav
 import com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity
 import com.thedavelopers.eventqr.features.admin.logs.AdminAuditLogsActivity
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
+import com.thedavelopers.eventqr.ui.theme.dimenOffset
 import com.google.android.material.snackbar.Snackbar
 import com.thedavelopers.eventqr.core.util.PagedAccumulator
 import com.thedavelopers.eventqr.core.util.addNearEndListener
@@ -108,8 +109,8 @@ class AdminAccountManagementActivity : AppCompatActivity() {
             roles.add(1, AccountRole.ADMIN to "Admin")
         }
 
-        val chipBg = ContextCompat.getColorStateList(this, R.color.chip_background_selector)
-        val chipText = ContextCompat.getColorStateList(this, R.color.chip_text_selector)
+        val chipBg = ContextCompat.getColorStateList(this, R.color.chip_bg)
+        val chipText = ContextCompat.getColorStateList(this, R.color.chip_text)
 
         roles.forEach { (role, label) ->
             val chip = Chip(this).apply {
@@ -119,6 +120,8 @@ class AdminAccountManagementActivity : AppCompatActivity() {
                 setChipIconVisible(false)
                 setCheckedIconVisible(false)
                 setChipBackgroundColor(chipBg)
+                setChipStrokeColorResource(R.color.outline)
+                setChipStrokeWidthResource(R.dimen.stroke_hairline)
                 setTextColor(chipText)
                 setOnCheckedChangeListener { _, isChecked ->
                     if (isChecked) {
@@ -130,7 +133,7 @@ class AdminAccountManagementActivity : AppCompatActivity() {
                 layoutParams = ChipGroup.LayoutParams(
                     ChipGroup.LayoutParams.WRAP_CONTENT,
                     ChipGroup.LayoutParams.WRAP_CONTENT
-                ).apply { setMargins(0, 0, (8 * resources.displayMetrics.density).toInt(), 0) }
+                ).apply { setMargins(0, 0, dimenOffset(R.dimen.space_sm), 0) }
             }
             filterChipsLayout.addView(chip)
         }

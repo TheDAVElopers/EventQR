@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp">
+    android:layout_marginBottom="@dimen/space_md">
 
     <LinearLayout
         android:id="@+id/layoutNotificationCard"
@@ -11,34 +11,34 @@
         android:layout_height="wrap_content"
         android:background="@drawable/bg_notification_card_read"
         android:baselineAligned="false"
-        android:elevation="0dp"
+        android:elevation="@dimen/elevation_none"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="16dp">
+        android:padding="@dimen/space_lg">
 
         <LinearLayout
             android:id="@+id/layoutNotificationIcon"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
+            android:layout_width="@dimen/tile_42"
+            android:layout_height="@dimen/tile_42"
             android:layout_gravity="top"
-            android:background="@drawable/bg_stat_circle_green"
+            android:background="@drawable/bg_circle_success_container"
             android:gravity="center"
             android:orientation="vertical">
 
             <ImageView
                 android:id="@+id/imgNotificationIcon"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="@dimen/icon_22"
+                android:layout_height="@dimen/icon_22"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_check_circle_purple"
-                app:tint="#10B981" />
+                app:tint="@color/success" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="14dp"
-            android:layout_marginEnd="8dp"
+            android:layout_marginStart="@dimen/space_14"
+            android:layout_marginEnd="@dimen/space_sm"
             android:layout_weight="1"
             android:orientation="vertical">
 
@@ -46,39 +46,37 @@
                 android:id="@+id/txtNotificationTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="#121735"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
 
             <TextView
                 android:id="@+id/txtNotificationMessage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:textColor="#4B5563"
-                android:textSize="13sp" />
+                android:layout_marginTop="@dimen/space_3"
+                android:textColor="@color/text_body"
+                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="@dimen/space_sm"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
                 <ImageView
-                    android:layout_width="14dp"
-                    android:layout_height="14dp"
-                    android:layout_marginEnd="4dp"
+                    android:layout_width="@dimen/icon_14"
+                    android:layout_height="@dimen/icon_14"
+                    android:layout_marginEnd="@dimen/space_xs"
                     android:contentDescription="@null"
                     android:src="@drawable/ic_calendar"
-                    app:tint="#8E8EA9" />
+                    app:tint="@color/neutral_label" />
 
                 <TextView
                     android:id="@+id/txtNotificationDateTime"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="#8E8EA9"
-                    android:textSize="12sp" />
+                    android:textColor="@color/text_label"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
             </LinearLayout>
         </LinearLayout>
 
@@ -90,19 +88,19 @@
 
             <View
                 android:id="@+id/viewUnreadDot"
-                android:layout_width="8dp"
-                android:layout_height="8dp"
-                android:layout_marginTop="2dp"
-                android:layout_marginBottom="16dp"
+                android:layout_width="@dimen/dot_sm"
+                android:layout_height="@dimen/dot_sm"
+                android:layout_marginTop="@dimen/space_xxs"
+                android:layout_marginBottom="@dimen/space_lg"
                 android:background="@drawable/bg_notification_unread_dot"
                 android:visibility="gone" />
 
             <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
+                android:layout_width="@dimen/icon_sm"
+                android:layout_height="@dimen/icon_sm"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_chevron_right"
-                app:tint="#8E8EA9" />
+                app:tint="@color/neutral_label" />
         </LinearLayout>
     </LinearLayout>
 </FrameLayout>

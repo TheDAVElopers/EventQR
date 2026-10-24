@@ -4,24 +4,24 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingHorizontal="16dp"
-    android:paddingTop="16dp"
-    android:paddingBottom="24dp"
+    android:paddingHorizontal="@dimen/space_lg"
+    android:paddingTop="@dimen/space_lg"
+    android:paddingBottom="@dimen/space_xl"
     android:visibility="gone">
 
     <!-- "Profile Information" section label placeholder -->
     <View
         android:layout_width="120dp"
         android:layout_height="12dp"
-        android:layout_marginStart="4dp"
-        android:layout_marginBottom="6dp"
+        android:layout_marginStart="@dimen/space_xs"
+        android:layout_marginBottom="@dimen/space_6"
         android:background="@drawable/bg_staff_skeleton_bar" />
 
     <!-- Profile details card skeleton (56dp rows with indented dividers) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
+        android:layout_marginTop="@dimen/space_xxs"
         android:background="@drawable/bg_staff_skeleton_card"
         android:orientation="vertical"
         android:padding="0dp">
@@ -32,7 +32,7 @@
             android:layout_height="56dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingHorizontal="16dp">
+            android:paddingHorizontal="@dimen/space_lg">
 
             <View
                 android:layout_width="36dp"
@@ -42,7 +42,7 @@
             <View
                 android:layout_width="60dp"
                 android:layout_height="12dp"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="@dimen/space_md"
                 android:background="@drawable/bg_staff_skeleton_bar" />
 
             <View
@@ -59,8 +59,8 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginStart="52dp"
-            android:layout_marginEnd="16dp"
+            android:layout_marginStart="@dimen/row_text_inset"
+            android:layout_marginEnd="@dimen/space_lg"
             android:background="@color/outline" />
 
         <!-- Email row placeholder -->
@@ -69,7 +69,7 @@
             android:layout_height="56dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingHorizontal="16dp">
+            android:paddingHorizontal="@dimen/space_lg">
 
             <View
                 android:layout_width="36dp"
@@ -79,7 +79,7 @@
             <View
                 android:layout_width="50dp"
                 android:layout_height="12dp"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="@dimen/space_md"
                 android:background="@drawable/bg_staff_skeleton_bar" />
 
             <View
@@ -96,8 +96,8 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginStart="52dp"
-            android:layout_marginEnd="16dp"
+            android:layout_marginStart="@dimen/row_text_inset"
+            android:layout_marginEnd="@dimen/space_lg"
             android:background="@color/outline" />
 
         <!-- Phone row placeholder -->
@@ -106,7 +106,7 @@
             android:layout_height="56dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingHorizontal="16dp">
+            android:paddingHorizontal="@dimen/space_lg">
 
             <View
                 android:layout_width="36dp"
@@ -116,7 +116,7 @@
             <View
                 android:layout_width="55dp"
                 android:layout_height="12dp"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="@dimen/space_md"
                 android:background="@drawable/bg_staff_skeleton_bar" />
 
             <View
@@ -135,16 +135,16 @@
     <View
         android:layout_width="130dp"
         android:layout_height="12dp"
-        android:layout_marginStart="4dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginBottom="6dp"
+        android:layout_marginStart="@dimen/space_xs"
+        android:layout_marginTop="@dimen/space_20"
+        android:layout_marginBottom="@dimen/space_6"
         android:background="@drawable/bg_staff_skeleton_bar" />
 
     <!-- Unified Account Menu skeleton card (56dp rows with indented dividers) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
+        android:layout_marginTop="@dimen/space_xxs"
         android:background="@drawable/bg_staff_skeleton_card"
         android:orientation="vertical"
         android:padding="0dp">
@@ -155,7 +155,7 @@
             android:layout_height="56dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingHorizontal="16dp">
+            android:paddingHorizontal="@dimen/space_lg">
 
             <View
                 android:layout_width="36dp"
@@ -165,7 +165,7 @@
             <View
                 android:layout_width="110dp"
                 android:layout_height="14dp"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="@dimen/space_md"
                 android:background="@drawable/bg_staff_skeleton_bar" />
 
             <View
@@ -182,8 +182,8 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginStart="52dp"
-            android:layout_marginEnd="16dp"
+            android:layout_marginStart="@dimen/row_text_inset"
+            android:layout_marginEnd="@dimen/space_lg"
             android:background="@color/outline" />
 
         <!-- Menu item 2 placeholder (Transaction History) -->
@@ -192,7 +192,7 @@
             android:layout_height="56dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingHorizontal="16dp">
+            android:paddingHorizontal="@dimen/space_lg">
 
             <View
                 android:layout_width="36dp"
@@ -202,7 +202,7 @@
             <View
                 android:layout_width="140dp"
                 android:layout_height="14dp"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="@dimen/space_md"
                 android:background="@drawable/bg_staff_skeleton_bar" />
 
             <View
@@ -219,8 +219,8 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginStart="52dp"
-            android:layout_marginEnd="16dp"
+            android:layout_marginStart="@dimen/row_text_inset"
+            android:layout_marginEnd="@dimen/space_lg"
             android:background="@color/outline" />
 
         <!-- Menu item 3 placeholder (Claimed Rewards) -->
@@ -229,7 +229,7 @@
             android:layout_height="56dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingHorizontal="16dp">
+            android:paddingHorizontal="@dimen/space_lg">
 
             <View
                 android:layout_width="36dp"
@@ -239,7 +239,7 @@
             <View
                 android:layout_width="125dp"
                 android:layout_height="14dp"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="@dimen/space_md"
                 android:background="@drawable/bg_staff_skeleton_bar" />
 
             <View
@@ -256,8 +256,8 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginStart="52dp"
-            android:layout_marginEnd="16dp"
+            android:layout_marginStart="@dimen/row_text_inset"
+            android:layout_marginEnd="@dimen/space_lg"
             android:background="@color/outline" />
 
         <!-- Menu item 4 placeholder (My Event Requests) -->
@@ -266,7 +266,7 @@
             android:layout_height="56dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingHorizontal="16dp">
+            android:paddingHorizontal="@dimen/space_lg">
 
             <View
                 android:layout_width="36dp"
@@ -276,7 +276,7 @@
             <View
                 android:layout_width="135dp"
                 android:layout_height="14dp"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="@dimen/space_md"
                 android:background="@drawable/bg_staff_skeleton_bar" />
 
             <View
@@ -295,11 +295,11 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="52dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="@dimen/space_20"
         android:background="@drawable/bg_staff_skeleton_card"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="16dp">
+        android:paddingHorizontal="@dimen/space_lg">
 
         <View
             android:layout_width="36dp"
@@ -309,7 +309,7 @@
         <View
             android:layout_width="80dp"
             android:layout_height="14dp"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="@dimen/space_md"
             android:background="@drawable/bg_staff_skeleton_bar" />
     </LinearLayout>
 </LinearLayout>

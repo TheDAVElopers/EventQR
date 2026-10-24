@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F3F4F6"
+    android:background="@color/background"
     android:orientation="vertical">
 
     <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
@@ -23,37 +23,36 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="@dimen/space_lg">
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="#FFFFFF"
-                app:cardCornerRadius="14dp"
-                app:cardElevation="2dp">
+                app:cardBackgroundColor="@color/surface"
+                app:cardCornerRadius="@dimen/radius_14"
+                app:cardElevation="@dimen/elevation_raised">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:padding="20dp">
+                    android:padding="@dimen/space_20">
 
                     <TextView
                         android:id="@+id/txtDetailAvatar"
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
+                        android:layout_width="@dimen/tile_64"
+                        android:layout_height="@dimen/tile_64"
                         android:background="@drawable/bg_profile_button"
                         android:gravity="center"
-                        android:text="A"
-                        android:textColor="#FFFFFF"
-                        android:textSize="28sp"
-                        android:textStyle="bold" />
+                        android:text="@string/placeholder_initial_a"
+                        android:textColor="@color/on_primary"
+                        android:textAppearance="@style/TextAppearance.EventQR.HeadlineL" />
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
+                        android:layout_marginStart="@dimen/space_lg"
                         android:layout_weight="1"
                         android:orientation="vertical">
 
@@ -64,29 +63,28 @@
                             android:ellipsize="end"
                             android:maxLines="2"
                             android:text="@string/common_attendee"
-                            android:textColor="#111827"
-                            android:textSize="19sp"
-                            android:textStyle="bold" />
+                            android:textColor="@color/text_primary"
+                            android:textAppearance="@style/TextAppearance.EventQR.TitleCompact" />
 
                         <TextView
                             android:id="@+id/txtDetailAttendeeEmail"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
+                            android:layout_marginTop="@dimen/space_xs"
                             android:ellipsize="end"
                             android:maxLines="1"
-                            android:textColor="#4B5563"
-                            android:textSize="14sp" />
+                            android:textColor="@color/text_body"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
 
                         <TextView
                             android:id="@+id/txtDetailAttendeePhone"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="3dp"
+                            android:layout_marginTop="@dimen/space_3"
                             android:ellipsize="end"
                             android:maxLines="1"
-                            android:textColor="#4B5563"
-                            android:textSize="14sp" />
+                            android:textColor="@color/text_body"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
                     </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -94,87 +92,87 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/space_lg"
                 android:background="@drawable/bg_card"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="@dimen/space_lg">
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="42dp"
+                    android:layout_height="@dimen/control_height_42"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/common_event" android:textColor="#6B7280" android:textSize="14sp" />
-                    <TextView android:id="@+id/txtDetailEventName" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:ellipsize="end" android:gravity="end" android:maxLines="1" android:textColor="#111827" android:textSize="14sp" android:textStyle="bold" />
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/common_event" android:textColor="@color/text_secondary" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
+                    <TextView android:id="@+id/txtDetailEventName" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:ellipsize="end" android:gravity="end" android:maxLines="1" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
                 </LinearLayout>
 
-                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E7EB" />
+                <View style="@style/Widget.EventQR.Divider" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="42dp"
+                    android:layout_height="@dimen/control_height_42"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/common_registration_id" android:textColor="#6B7280" android:textSize="14sp" />
-                    <TextView android:id="@+id/txtDetailRegistrationId" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:ellipsize="end" android:gravity="end" android:maxLines="1" android:textColor="#111827" android:textSize="14sp" android:textStyle="bold" />
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/common_registration_id" android:textColor="@color/text_secondary" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
+                    <TextView android:id="@+id/txtDetailRegistrationId" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:ellipsize="end" android:gravity="end" android:maxLines="1" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
                 </LinearLayout>
 
-                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E7EB" />
+                <View style="@style/Widget.EventQR.Divider" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="42dp"
+                    android:layout_height="@dimen/control_height_42"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/common_status" android:textColor="#6B7280" android:textSize="14sp" />
-                    <TextView android:id="@+id/txtDetailRegistrationStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/bg_badge_default" android:includeFontPadding="false" android:paddingHorizontal="12dp" android:paddingVertical="5dp" android:textColor="@color/eventqr_badge_default_text" android:textSize="12sp" android:textStyle="bold" />
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/common_status" android:textColor="@color/text_secondary" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
+                    <TextView android:id="@+id/txtDetailRegistrationStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/bg_badge_default" android:includeFontPadding="false" android:paddingHorizontal="@dimen/space_md" android:paddingVertical="@dimen/space_5" android:textColor="@color/badge_default_text" android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
                 </LinearLayout>
 
-                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E7EB" />
+                <View style="@style/Widget.EventQR.Divider" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="42dp"
+                    android:layout_height="@dimen/control_height_42"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/staff_attendee_details_check_in_time" android:textColor="#6B7280" android:textSize="14sp" />
-                    <TextView android:id="@+id/txtDetailCheckInTime" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:textColor="#111827" android:textSize="14sp" android:textStyle="bold" />
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/staff_attendee_details_check_in_time" android:textColor="@color/text_secondary" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
+                    <TextView android:id="@+id/txtDetailCheckInTime" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
                 </LinearLayout>
 
-                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E7EB" />
+                <View style="@style/Widget.EventQR.Divider" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="42dp"
+                    android:layout_height="@dimen/control_height_42"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/common_points_earned" android:textColor="#6B7280" android:textSize="14sp" />
-                    <TextView android:id="@+id/txtDetailPointsBalance" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:textColor="#111827" android:textSize="14sp" android:textStyle="bold" />
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/common_points_earned" android:textColor="@color/text_secondary" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
+                    <TextView android:id="@+id/txtDetailPointsBalance" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
                 </LinearLayout>
 
-                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E7EB" />
+                <View style="@style/Widget.EventQR.Divider" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="42dp"
+                    android:layout_height="@dimen/control_height_42"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/staff_attendee_details_scans" android:textColor="#6B7280" android:textSize="14sp" />
-                    <TextView android:id="@+id/txtDetailTransactionCount" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:textColor="#111827" android:textSize="14sp" android:textStyle="bold" />
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/staff_attendee_details_scans" android:textColor="@color/text_secondary" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
+                    <TextView android:id="@+id/txtDetailTransactionCount" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
                 </LinearLayout>
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
+                android:layout_marginTop="@dimen/space_18"
                 android:orientation="horizontal">
 
                 <LinearLayout
                     android:id="@+id/btnPrintOrReprintId"
                     android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_marginEnd="6dp"
+                    android:layout_height="@dimen/touch_target_min"
+                    android:layout_marginEnd="@dimen/space_6"
                     android:layout_weight="1"
                     android:background="@drawable/bg_event_filter_chip_selected"
                     android:clickable="true"
@@ -184,27 +182,26 @@
                     android:orientation="horizontal">
 
                     <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
+                        android:layout_width="@dimen/icon_18"
+                        android:layout_height="@dimen/icon_18"
                         android:src="@drawable/ic_print"
-                        app:tint="@android:color/white" />
+                        app:tint="@color/on_primary" />
 
                     <TextView
                         android:id="@+id/txtPrintOrReprintIdLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
+                        android:layout_marginStart="@dimen/space_sm"
                         android:text="@string/staff_attendee_details_print_id"
-                        android:textColor="@android:color/white"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
+                        android:textColor="@color/on_primary"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/btnScanAgain"
                     android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_marginStart="6dp"
+                    android:layout_height="@dimen/touch_target_min"
+                    android:layout_marginStart="@dimen/space_6"
                     android:layout_weight="1"
                     android:background="@drawable/bg_scan_again_button"
                     android:clickable="true"
@@ -214,19 +211,18 @@
                     android:orientation="horizontal">
 
                     <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
+                        android:layout_width="@dimen/icon_18"
+                        android:layout_height="@dimen/icon_18"
                         android:src="@drawable/ic_scan"
-                        app:tint="@color/eventqr_purple" />
+                        app:tint="@color/primary" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
+                        android:layout_marginStart="@dimen/space_sm"
                         android:text="@string/staff_attendee_details_scan_again"
-                        android:textColor="@color/eventqr_purple"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
+                        android:textColor="@color/primary"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -234,10 +230,9 @@
                 android:id="@+id/txtPrintPermissionNotice"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="@dimen/space_sm"
                 android:text="@string/staff_print_id_permission_required"
-                android:textColor="#6B7280"
-                android:textSize="13sp"
+                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact"
                 android:visibility="gone" />
 
             <ProgressBar
@@ -245,7 +240,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/space_lg"
                 android:visibility="gone" />
 
             <TextView android:id="@+id/txtDetailQrStatus" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
@@ -257,7 +252,7 @@
                 android:id="@+id/layoutRecentTransactions"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
+                android:layout_marginTop="@dimen/space_18"
                 android:orientation="vertical"
                 android:visibility="gone">
 
@@ -265,28 +260,26 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/staff_attendee_details_recent_transactions"
-                    android:textColor="#111827"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong" />
 
                 <TextView
                     android:id="@+id/txtDetailRecentTransactionsEmpty"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/space_md"
                     android:background="@drawable/bg_card"
                     android:gravity="center"
-                    android:padding="24dp"
+                    android:padding="@dimen/space_xl"
                     android:text="@string/staff_attendee_details_no_transactions_recorded_yet"
-                    android:textColor="#9CA3AF"
-                    android:textSize="14sp"
+                    android:textColor="@color/text_hint"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
                     android:visibility="gone" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recyclerDetailTransactions"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="@dimen/space_10"
                     android:overScrollMode="never" />
             </LinearLayout>
         </LinearLayout>

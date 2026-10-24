@@ -18,6 +18,7 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
+import com.thedavelopers.eventqr.ui.theme.dimen
 import java.time.Instant
 
 open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
@@ -186,9 +187,9 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
         for ((filter, chip) in chips) {
             val isSelected = filter == selectedFilter
             chip.isChecked = isSelected
-            chip.setTextColor(if (isSelected) ContextCompat.getColor(this, R.color.brand_on_primary) else textSecondary)
-            chip.setChipBackgroundColorResource(if (isSelected) R.color.eventqr_indigo else R.color.surface)
-            chip.chipStrokeWidth = if (isSelected) 0f else resources.displayMetrics.density
+            chip.setTextColor(if (isSelected) ContextCompat.getColor(this, R.color.on_primary) else textSecondary)
+            chip.setChipBackgroundColorResource(if (isSelected) R.color.primary else R.color.surface)
+            chip.chipStrokeWidth = if (isSelected) 0f else dimen(R.dimen.stroke_hairline)
             chip.chipStrokeColor = ContextCompat.getColorStateList(this, R.color.outline)
         }
     }

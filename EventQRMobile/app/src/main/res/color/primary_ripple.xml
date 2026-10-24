@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Brand ripple / highlight: p_brand at 12% (colorControlHighlight, chip ripples). Follows p_brand automatically. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:alpha="@dimen/alpha_ripple" android:color="@color/p_brand" />
+</selector>

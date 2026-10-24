@@ -20,7 +20,7 @@ class EventQrSwipeRefreshLayout @JvmOverloads constructor(
 ) : SwipeRefreshLayout(context, attrs) {
 
     init {
-        setColorSchemeColors(ContextCompat.getColor(context, R.color.eventqr_purple))
+        setColorSchemeColors(ContextCompat.getColor(context, R.color.primary))
         setProgressBackgroundColorSchemeColor(ContextCompat.getColor(context, R.color.surface))
     }
 }

@@ -7,6 +7,9 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.theme.regular
+import com.thedavelopers.eventqr.ui.theme.color
+import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
 import com.thedavelopers.eventqr.core.api.dto.RedemptionStatus
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResponse
 import java.time.ZoneId
@@ -75,9 +78,9 @@ class ClaimedRewardAdapter : RecyclerView.Adapter<ClaimedRewardAdapter.ViewHolde
             if (item.status == RedemptionStatus.REJECTED) {
                 // A note, not an amount: small and muted instead of the big red "-N pts" style.
                 pointsText.text = itemView.context.getString(R.string.claimed_reward_no_points_deducted)
-                pointsText.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 12f)
-                pointsText.setTextColor(android.graphics.Color.parseColor("#6B7280"))
-                pointsText.setTypeface(amountTypeface, android.graphics.Typeface.NORMAL)
+                pointsText.setTextSizeRes(R.dimen.type_caption)
+                pointsText.setTextColor(itemView.context.color(R.color.text_secondary))
+                pointsText.regular(amountTypeface)
             } else {
                 pointsText.text = "-${kotlin.math.abs(item.pointsSpent)} pts"
                 pointsText.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, amountSizePx)
@@ -86,7 +89,7 @@ class ClaimedRewardAdapter : RecyclerView.Adapter<ClaimedRewardAdapter.ViewHolde
             }
 
             iconView.setImageResource(R.drawable.ic_gift)
-            iconView.setColorFilter(android.graphics.Color.parseColor("#12B981"))
+            iconView.setColorFilter(itemView.context.color(R.color.success))
 
             val (statusLabel, statusBackground, statusColor) = mapStatusStyle(item.status)
             statusText.text = statusLabel
@@ -99,19 +102,19 @@ class ClaimedRewardAdapter : RecyclerView.Adapter<ClaimedRewardAdapter.ViewHolde
                 RedemptionStatus.REDEEMED -> Triple(
                     "Approved",
                     R.drawable.bg_green_pill,
-                    android.graphics.Color.parseColor("#047857")
+                    itemView.context.color(R.color.on_success_container)
                 )
 
                 RedemptionStatus.PENDING -> Triple(
                     "Pending",
                     R.drawable.bg_claimed_status_pending,
-                    android.graphics.Color.parseColor("#92400E")
+                    itemView.context.color(R.color.on_warning_container)
                 )
 
                 RedemptionStatus.REJECTED -> Triple(
                     "Rejected",
                     R.drawable.bg_red_warning,
-                    android.graphics.Color.parseColor("#B91C1C")
+                    itemView.context.color(R.color.error)
                 )
             }
         }

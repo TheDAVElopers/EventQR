@@ -1,7 +1,8 @@
 package com.thedavelopers.eventqr.features.organizer.staff
 
+import com.thedavelopers.eventqr.ui.theme.dimenOffset
+import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
 import android.content.Context
-import android.util.TypedValue
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -30,7 +31,7 @@ class StaffPermissionsForm(context: Context, initial: OrganizerMvpStaff? = null)
     val printIdHelperText = TextView(context).apply {
         id = R.id.staff_perm_print_id_helper
         setText(R.string.staff_permission_print_ids_helper)
-        setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+        setTextSizeRes(R.dimen.type_caption)
         setTextColor(ContextCompat.getColor(context, R.color.text_secondary))
     }
     val viewLogsSwitch = SwitchCompat(context).apply {
@@ -47,7 +48,7 @@ class StaffPermissionsForm(context: Context, initial: OrganizerMvpStaff? = null)
     val view: LinearLayout = LinearLayout(context).apply {
         orientation = LinearLayout.VERTICAL
         listOf(scanSwitch, printIdSwitch, viewLogsSwitch, manageRewardsSwitch).forEach { switch ->
-            switch.minHeight = (48 * resources.displayMetrics.density).toInt()
+            switch.minHeight = dimenOffset(R.dimen.touch_target_min)
             addView(switch, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
             if (switch === printIdSwitch) {
                 addView(printIdHelperText, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))

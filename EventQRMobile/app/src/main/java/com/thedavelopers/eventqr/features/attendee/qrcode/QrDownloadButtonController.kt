@@ -5,6 +5,9 @@ import android.view.animation.OvershootInterpolator
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.ProgressBar
+import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.theme.dimenFloat
+import com.thedavelopers.eventqr.ui.theme.integer
 
 /**
  * Drives the "Download QR" button through idle -> saving -> saved states.
@@ -29,7 +32,7 @@ class QrDownloadButtonController(
     fun showSaving() {
         isSaving = true
         button.isEnabled = false
-        button.alpha = SAVING_ALPHA
+        button.alpha = button.dimenFloat(R.dimen.alpha_saving)
         button.text = ""
         button.contentDescription = "Saving QR to gallery"
         checkmark.animate().cancel()
@@ -49,8 +52,9 @@ class QrDownloadButtonController(
         spinner.visibility = View.GONE
 
         checkmark.visibility = View.VISIBLE
-        checkmark.scaleX = CHECK_START_SCALE
-        checkmark.scaleY = CHECK_START_SCALE
+        val checkStartScale = checkmark.dimenFloat(R.dimen.scale_check_start)
+        checkmark.scaleX = checkStartScale
+        checkmark.scaleY = checkStartScale
         checkmark.alpha = 0f
         button.post {
             checkmark.animate()
@@ -58,10 +62,10 @@ class QrDownloadButtonController(
                 .scaleX(1f)
                 .scaleY(1f)
                 .setInterpolator(OvershootInterpolator(OVERSHOOT_TENSION))
-                .setDuration(PULSE_DURATION_MS)
+                .setDuration(button.integer(R.integer.motion_pulse_ms).toLong())
                 .withEndAction {
                     onFinished()
-                    button.postDelayed({ resetToIdle() }, RESTORE_DELAY_MS)
+                    button.postDelayed({ resetToIdle() }, button.integer(R.integer.motion_restore_ms).toLong())
                 }
                 .start()
         }
@@ -84,10 +88,6 @@ class QrDownloadButtonController(
 
     private companion object {
         const val BUTTON_LABEL = "Download QR"
-        const val SAVING_ALPHA = 0.7f
-        const val CHECK_START_SCALE = 0.4f
         const val OVERSHOOT_TENSION = 2.0f
-        const val PULSE_DURATION_MS = 280L
-        const val RESTORE_DELAY_MS = 400L
     }
 }

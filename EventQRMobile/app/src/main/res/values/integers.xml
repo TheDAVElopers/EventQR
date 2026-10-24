@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Motion durations (ms) used by Kotlin animations / postDelayed. Read with Context.integer(R.integer.motion_*). -->
+    <integer name="motion_pulse_ms">280</integer>
+    <integer name="motion_restore_ms">400</integer>
+    <integer name="motion_settle_ms">80</integer>
+</resources>

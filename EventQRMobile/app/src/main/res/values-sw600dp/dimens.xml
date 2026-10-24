@@ -13,7 +13,6 @@
     <dimen name="landing_feature_padding_h">48dp</dimen>
     <dimen name="landing_feature_padding_top">32dp</dimen>
     <dimen name="landing_feature_padding_bottom">32dp</dimen>
-    <dimen name="landing_section_title_size">24sp</dimen>
     <dimen name="landing_card_horizontal_padding">24dp</dimen>
     <dimen name="landing_card_top_padding">20dp</dimen>
     <dimen name="landing_card_bottom_padding">20dp</dimen>

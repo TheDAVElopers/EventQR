@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eventqr_bg"
+    android:background="@color/background"
     android:orientation="vertical">
 
     <LinearLayout
@@ -11,23 +11,23 @@
         android:layout_height="wrap_content"
         android:background="@drawable/bg_dashboard_gradient"
         android:orientation="vertical"
-        android:paddingStart="18dp"
-        android:paddingTop="22dp"
-        android:paddingEnd="18dp"
-        android:paddingBottom="20dp">
+        android:paddingStart="@dimen/space_18"
+        android:paddingTop="@dimen/space_22"
+        android:paddingEnd="@dimen/space_18"
+        android:paddingBottom="@dimen/space_20">
 
         <TextView
             android:id="@+id/textAdminPortalTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/admin_dashboard_admin_portal"
-            android:textColor="#E6E9FF"
-            android:textSize="16sp" />
+            android:textColor="@color/accent_container_strong"
+            android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge" />
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="@dimen/space_xs"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
@@ -36,66 +36,63 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/admin_dashboard_admin_user"
-                android:textColor="@android:color/white"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textColor="@color/on_primary"
+                android:textAppearance="@style/TextAppearance.EventQR.TitleMedium" />
 
             <TextView
                 android:id="@+id/textAdminPortalDot"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="•"
-                android:textColor="#CBD5E1"
-                android:textSize="16sp" />
+                android:layout_marginStart="@dimen/space_sm"
+                android:text="@string/glyph_bullet"
+                android:textColor="@color/outline_strong"
+                android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge" />
 
             <TextView
                 android:id="@+id/portalSwitcherChip"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="@dimen/space_sm"
                 android:background="@drawable/bg_portal_chip"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="4dp"
+                android:paddingHorizontal="@dimen/space_10"
+                android:paddingVertical="@dimen/space_xs"
                 android:text="@string/admin_dashboard_admin"
-                android:textColor="@android:color/white"
-                android:textSize="11sp"
-                android:textStyle="bold" />
+                android:textColor="@color/on_primary"
+                android:textAppearance="@style/TextAppearance.EventQR.TextOverline.Strong" />
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/cardPendingAlert"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/space_lg"
             android:background="@drawable/bg_admin_alert_banner"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingHorizontal="14dp"
-            android:paddingVertical="12dp">
+            android:paddingHorizontal="@dimen/space_14"
+            android:paddingVertical="@dimen/space_md">
 
             <ImageView
-                android:layout_width="18dp"
-                android:layout_height="18dp"
+                android:layout_width="@dimen/icon_18"
+                android:layout_height="@dimen/icon_18"
                 android:src="@drawable/notification_bell"
-                android:tint="#FDE2E4" />
+                android:tint="@color/error_container" />
 
             <TextView
                 android:id="@+id/textPendingAlert"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="@dimen/space_10"
                 android:layout_weight="1"
                 android:text="@string/admin_dashboard_1_event_request_pending_review"
-                android:textColor="#FFE4E6"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:textColor="@color/error_container"
+                android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
 
             <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
+                android:layout_width="@dimen/icon_sm"
+                android:layout_height="@dimen/icon_sm"
                 android:src="@drawable/ic_chevron_right"
-                android:tint="#FBCFE8" />
+                android:tint="@color/deco_pink_light" />
         </LinearLayout>
     </LinearLayout>
 
@@ -109,15 +106,15 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:paddingBottom="12dp">
+            android:paddingBottom="@dimen/space_md">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingStart="14dp"
-            android:paddingTop="14dp"
-            android:paddingEnd="14dp">
+            android:paddingStart="@dimen/space_14"
+            android:paddingTop="@dimen/space_14"
+            android:paddingEnd="@dimen/space_14">
 
             <ProgressBar
                 android:id="@+id/progressDashboardLoading"
@@ -130,16 +127,15 @@
                 android:id="@+id/textDashboardLoadHint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="@dimen/space_sm"
                 android:gravity="center"
-                android:textColor="#6B7280"
-                android:textSize="13sp"
+                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact"
                 android:visibility="gone" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="@dimen/space_10"
                 android:orientation="horizontal">
 
                 <LinearLayout
@@ -148,41 +144,39 @@
                     android:layout_weight="1"
                     android:background="@drawable/bg_admin_surface_card"
                     android:orientation="vertical"
-                    android:padding="14dp">
+                    android:padding="@dimen/space_14">
 
                     <FrameLayout
-                        android:layout_width="34dp"
-                        android:layout_height="34dp"
-                        android:background="@drawable/bg_admin_icon_tile_yellow">
+                        style="@style/Widget.EventQR.IconTile.R10.Warning"
+                        android:layout_width="@dimen/tile_34"
+                        android:layout_height="@dimen/tile_34">
 
                         <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
+                            android:layout_width="@dimen/icon_18"
+                            android:layout_height="@dimen/icon_18"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_admin_bell"
-                            android:tint="#F59E0B" />
+                            android:tint="@color/warning" />
                     </FrameLayout>
 
                     <TextView
                         android:id="@+id/textPendingRequestsValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:text="0"
-                        android:textColor="#0F172A"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
+                        android:layout_marginTop="@dimen/space_md"
+                        android:text="@string/placeholder_zero"
+                        android:textAppearance="@style/TextAppearance.EventQR.TitleLarge" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/admin_dashboard_pending_requests"
-                        android:textColor="#6B7280"
-                        android:textSize="14sp" />
+                        android:textColor="@color/text_secondary"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
                 </LinearLayout>
 
                 <Space
-                    android:layout_width="10dp"
+                    android:layout_width="@dimen/space_10"
                     android:layout_height="1dp" />
 
                 <LinearLayout
@@ -191,44 +185,42 @@
                     android:layout_weight="1"
                     android:background="@drawable/bg_admin_surface_card"
                     android:orientation="vertical"
-                    android:padding="14dp">
+                    android:padding="@dimen/space_14">
 
                     <FrameLayout
-                        android:layout_width="34dp"
-                        android:layout_height="34dp"
-                        android:background="@drawable/bg_admin_icon_tile_blue">
+                        style="@style/Widget.EventQR.IconTile.R10.AccentStrong"
+                        android:layout_width="@dimen/tile_34"
+                        android:layout_height="@dimen/tile_34">
 
                         <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
+                            android:layout_width="@dimen/icon_18"
+                            android:layout_height="@dimen/icon_18"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_admin_users"
-                            android:tint="#4F46E5" />
+                            android:tint="@color/primary" />
                     </FrameLayout>
 
                     <TextView
                         android:id="@+id/textTotalAccountsValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:text="0"
-                        android:textColor="#0F172A"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
+                        android:layout_marginTop="@dimen/space_md"
+                        android:text="@string/placeholder_zero"
+                        android:textAppearance="@style/TextAppearance.EventQR.TitleLarge" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/admin_dashboard_total_accounts"
-                        android:textColor="#6B7280"
-                        android:textSize="14sp" />
+                        android:textColor="@color/text_secondary"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
                 </LinearLayout>
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="@dimen/space_10"
                 android:orientation="horizontal">
 
                 <LinearLayout
@@ -237,41 +229,39 @@
                     android:layout_weight="1"
                     android:background="@drawable/bg_admin_surface_card"
                     android:orientation="vertical"
-                    android:padding="14dp">
+                    android:padding="@dimen/space_14">
 
                     <FrameLayout
-                        android:layout_width="34dp"
-                        android:layout_height="34dp"
-                        android:background="@drawable/bg_admin_icon_tile_green">
+                        style="@style/Widget.EventQR.IconTile.R10.Success"
+                        android:layout_width="@dimen/tile_34"
+                        android:layout_height="@dimen/tile_34">
 
                         <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
+                            android:layout_width="@dimen/icon_18"
+                            android:layout_height="@dimen/icon_18"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_calendar"
-                            android:tint="#10B981" />
+                            android:tint="@color/success" />
                     </FrameLayout>
 
                     <TextView
                         android:id="@+id/textActiveEventsValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:text="0"
-                        android:textColor="#0F172A"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
+                        android:layout_marginTop="@dimen/space_md"
+                        android:text="@string/placeholder_zero"
+                        android:textAppearance="@style/TextAppearance.EventQR.TitleLarge" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/common_active_events"
-                        android:textColor="#6B7280"
-                        android:textSize="14sp" />
+                        android:textColor="@color/text_secondary"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
                 </LinearLayout>
 
                 <Space
-                    android:layout_width="10dp"
+                    android:layout_width="@dimen/space_10"
                     android:layout_height="1dp" />
 
                 <LinearLayout
@@ -280,37 +270,36 @@
                     android:layout_weight="1"
                     android:background="@drawable/bg_admin_surface_card"
                     android:orientation="vertical"
-                    android:padding="14dp">
+                    android:padding="@dimen/space_14">
 
                     <FrameLayout
-                        android:layout_width="34dp"
-                        android:layout_height="34dp"
-                        android:background="@drawable/bg_admin_icon_tile_pink">
+                        style="@style/Widget.EventQR.IconTile.R10"
+                        android:layout_width="@dimen/tile_34"
+                        android:layout_height="@dimen/tile_34"
+                        android:backgroundTint="@color/tile_pink">
 
                         <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
+                            android:layout_width="@dimen/icon_18"
+                            android:layout_height="@dimen/icon_18"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_admin_shield"
-                            android:tint="#EF4444" />
+                            android:tint="@color/danger" />
                     </FrameLayout>
 
                     <TextView
                         android:id="@+id/textAuditLogsValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:text="0"
-                        android:textColor="#0F172A"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
+                        android:layout_marginTop="@dimen/space_md"
+                        android:text="@string/placeholder_zero"
+                        android:textAppearance="@style/TextAppearance.EventQR.TitleLarge" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/admin_dashboard_audit_logs"
-                        android:textColor="#6B7280"
-                        android:textSize="14sp" />
+                        android:textColor="@color/text_secondary"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
                 </LinearLayout>
             </LinearLayout>
 

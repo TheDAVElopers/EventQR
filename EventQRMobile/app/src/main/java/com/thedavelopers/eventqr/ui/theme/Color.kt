@@ -1,62 +1,117 @@
 package com.thedavelopers.eventqr.ui.theme
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
+import com.thedavelopers.eventqr.R
+
+/*
+ * Compose view of the colour ROLES in res/values/colors.xml (the single source of truth).
+ *
+ * Each name below resolves its Android colour resource at composition time, so a rebrand in
+ * colors_palette.xml reaches Compose screens too. Because resolution needs a Context, these are
+ * composable-only properties: read them inside a @Composable (or capture them there). Never copy the
+ * resolved value into a top-level val.
+ */
 
 // Brand Core Colors
-val BrandPrimary = Color(0xFF2D2A7C)
-val BrandPrimaryDark = Color(0xFF1E1B5E)
-val BrandPrimaryLight = Color(0xFF4A46A8)
-val BrandPurple = Color(0xFF5B25C9)
-val BrandTertiary = Color(0xFFB45309)
+val BrandPrimary: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.primary)
+val BrandPrimaryDark: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.primary_dark)
+val BrandPrimaryLight: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.primary_light)
+val BrandPurple: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.secondary)
+val BrandTertiary: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.warning_dark)
 
 // Neutrals
-val PaperWhite = Color(0xFFFFFFFF)
-val SurfaceAlt = Color(0xFFF4F6FB)
-val BackgroundLight = Color(0xFFF7F7FA)
-val BorderLight = Color(0xFFE5E7EB)
-val OutlineVariant = Color(0xFFE1E4EA)
+val PaperWhite: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.surface)
+val SurfaceAlt: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.background)
+val BackgroundLight: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.background)
+val BorderLight: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.outline)
+val OutlineVariant: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.outline)
 
 // Text Colors
-val TextPrimary = Color(0xFF111827)
-val TextSecondary = Color(0xFF5B5F6B)
-val TextMuted = Color(0xFF94A3B8)
-val TextOnPrimary = Color(0xFFFFFFFF)
-val TextOnPrimaryMuted = Color(0xFFD7D4F8)
+val TextPrimary: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.text_primary)
+val TextSecondary: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.text_secondary)
+val TextMuted: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.text_hint)
+val TextOnPrimary: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.on_primary)
+val TextOnPrimaryMuted: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.on_primary_muted)
 
 // Semantic & Status Colors
-val StatusActiveGreen = Color(0xFF10B981)
-val StatusActiveGreenBg = Color(0xFFD1FAE5)
-val StatusActiveGreenText = Color(0xFF065F46)
+val StatusActiveGreen: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.success)
+val StatusActiveGreenBg: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.success_container)
+val StatusActiveGreenText: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.on_success_container)
 
-val StatusPendingAmberBg = Color(0xFFFEF3C7)
-val StatusPendingAmberText = Color(0xFF92400E)
+val StatusPendingAmberBg: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.warning_container)
+val StatusPendingAmberText: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.on_warning_container)
 
-val StatusRejectedRed = Color(0xFFB91C1C)
-val StatusRejectedRedBg = Color(0xFFFEE2E2)
-val StatusRejectedRedText = Color(0xFF991B1B)
+val StatusRejectedRed: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.error)
+val StatusRejectedRedBg: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.error_container)
+val StatusRejectedRedText: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.on_error_container)
 
-val StatusApprovedGreenBg = Color(0xFFD1FAE5)
-val StatusApprovedGreenText = Color(0xFF047857)
+val StatusApprovedGreenBg: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.success_container)
+val StatusApprovedGreenText: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.on_success_container)
 
-val StatusCompletedGrayBg = Color(0xFFE5E7EB)
-val StatusCompletedGrayText = Color(0xFF374151)
+val StatusCompletedGrayBg: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.badge_default_bg)
+val StatusCompletedGrayText: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.badge_default_text)
 
-val StatusRegisteredPurpleBg = Color(0xFFEDE9FE)
-val StatusRegisteredPurpleText = Color(0xFF4C1D95)
+val StatusRegisteredPurpleBg: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.secondary_container)
+val StatusRegisteredPurpleText: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.on_secondary_container)
 
 // Event Card Status Accents
-val EventAccentUpcoming = Color(0xFF92400E)
-val EventAccentUpcomingFill = Color(0xFFB45309)
-val EventAccentActive = Color(0xFF065F46)
-val EventAccentActiveFill = Color(0xFF059669)
-val EventAccentCompleted = Color(0xFF374151)
-val EventAccentCompletedFill = Color(0xFF6B7280)
-val EventAccentPending = Color(0xFF92400E)
-val EventAccentPendingFill = Color(0xFFB45309)
-val EventAccentApproved = Color(0xFF047857)
-val EventAccentApprovedFill = Color(0xFF047857)
-val EventAccentRegistered = Color(0xFF4C1D95)
-val EventAccentRegisteredFill = Color(0xFF6366F1)
-val EventAccentRejected = Color(0xFF991B1B)
-val EventAccentRejectedFill = Color(0xFFB91C1C)
-
+val EventAccentUpcoming: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.on_warning_container)
+val EventAccentUpcomingFill: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.warning_dark)
+val EventAccentActive: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.on_success_container)
+val EventAccentActiveFill: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.success_dark)
+val EventAccentCompleted: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.badge_default_text)
+val EventAccentCompletedFill: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.text_secondary)
+val EventAccentPending: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.on_warning_container)
+val EventAccentPendingFill: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.warning_dark)
+val EventAccentApproved: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.on_success_container)
+val EventAccentApprovedFill: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.on_success_container)
+val EventAccentRegistered: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.on_secondary_container)
+val EventAccentRegisteredFill: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.accent)
+val EventAccentRejected: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.on_error_container)
+val EventAccentRejectedFill: Color
+    @Composable @ReadOnlyComposable get() = colorResource(R.color.error)

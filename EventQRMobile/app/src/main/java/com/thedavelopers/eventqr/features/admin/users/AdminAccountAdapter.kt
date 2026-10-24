@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.dto.AccountStatus
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
+import com.thedavelopers.eventqr.ui.theme.color
 
 enum class AccountAction {
     ENABLE, DISABLE, DELETE
@@ -129,15 +130,15 @@ class AdminAccountAdapter(
             when (status) {
                 AccountStatus.ACTIVE -> {
                     textStatus.setBackgroundResource(R.drawable.bg_admin_status_active_badge)
-                    textStatus.setTextColor(0xFF065F46.toInt())
+                    textStatus.setTextColor(itemView.context.color(R.color.on_success_container))
                 }
                 AccountStatus.PENDING -> {
                     textStatus.setBackgroundResource(R.drawable.bg_admin_status_pending_badge)
-                    textStatus.setTextColor(0xFF92400E.toInt())
+                    textStatus.setTextColor(itemView.context.color(R.color.on_warning_container))
                 }
                 else -> {
                     textStatus.setBackgroundResource(R.drawable.bg_admin_status_inactive_badge)
-                    textStatus.setTextColor(0xFF991B1B.toInt())
+                    textStatus.setTextColor(itemView.context.color(R.color.on_error_container))
                 }
             }
         }

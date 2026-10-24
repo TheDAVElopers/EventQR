@@ -2,7 +2,6 @@ package com.thedavelopers.eventqr.features.attendee
 
 import com.thedavelopers.eventqr.core.util.UiStrings
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -17,6 +16,7 @@ import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.core.util.BitmapSaver
 import com.thedavelopers.eventqr.features.qrcredential.model.dto.QrCredentialSnapshot
 import com.thedavelopers.eventqr.features.registrations.RegistrationNumberFormatter
@@ -153,9 +153,11 @@ class QrDisplayActivity : AppCompatActivity(), QrCredentialContract.View {
         val hints = mapOf(EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.Q)
         val matrix = QRCodeWriter().encode(value, BarcodeFormat.QR_CODE, 512, 512, hints)
         val bitmap = Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888)
+        val dark = color(R.color.qr_dark)
+        val light = color(R.color.qr_light)
         for (x in 0 until matrix.width) {
             for (y in 0 until matrix.height) {
-                bitmap.setPixel(x, y, if (matrix[x, y]) Color.BLACK else Color.WHITE)
+                bitmap.setPixel(x, y, if (matrix[x, y]) dark else light)
             }
         }
         return bitmap

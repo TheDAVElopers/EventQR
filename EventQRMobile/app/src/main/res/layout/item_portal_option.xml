@@ -3,33 +3,33 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp"
+    android:layout_marginBottom="@dimen/space_sm"
     android:background="@drawable/bg_dashboard_quick_action"
     android:clickable="true"
     android:focusable="true"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:padding="14dp">
+    android:padding="@dimen/space_14">
 
     <FrameLayout
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:background="@drawable/bg_dashboard_icon_circle">
+        android:layout_width="@dimen/icon_tile_md"
+        android:layout_height="@dimen/icon_tile_md"
+        android:background="@drawable/bg_circle_muted">
 
         <ImageView
             android:id="@+id/imgPortalIcon"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="@dimen/icon_md"
+            android:layout_height="@dimen/icon_md"
             android:layout_gravity="center"
             android:contentDescription="@string/item_portal_option_portal_icon"
             android:src="@drawable/ic_nav_home"
-            app:tint="@color/brand_primary" />
+            app:tint="@color/primary" />
     </FrameLayout>
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="14dp"
+        android:layout_marginStart="@dimen/space_14"
         android:layout_weight="1"
         android:orientation="vertical">
 
@@ -37,38 +37,35 @@
             android:id="@+id/txtPortalName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-medium"
             android:text="@string/item_portal_option_attendee_portal"
-            android:textColor="@color/text_primary"
-            android:textSize="15sp" />
+            android:textAppearance="@style/TextAppearance.EventQR.TextBody.Medium" />
 
         <TextView
             android:id="@+id/txtPortalSubtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
+            android:layout_marginTop="@dimen/space_xxs"
             android:text="@string/item_portal_option_events_rewards_and_your_profile"
-            android:textColor="@color/text_secondary"
-            android:textSize="12sp" />
+            android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
     </LinearLayout>
 
     <TextView
         android:id="@+id/currentPortalBadge"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
+        android:layout_marginEnd="@dimen/space_sm"
         android:background="@drawable/bg_success_chip"
-        android:paddingHorizontal="8dp"
-        android:paddingVertical="2dp"
+        android:paddingHorizontal="@dimen/space_sm"
+        android:paddingVertical="@dimen/space_xxs"
         android:text="@string/item_portal_option_current"
-        android:textColor="@color/success"
-        android:textSize="11sp"
+        android:textColor="@color/success_dark"
+        android:textAppearance="@style/TextAppearance.EventQR.TextOverline"
         android:visibility="gone" />
 
     <ImageView
-        android:layout_width="18dp"
-        android:layout_height="18dp"
+        android:layout_width="@dimen/icon_18"
+        android:layout_height="@dimen/icon_18"
         android:contentDescription="@string/item_portal_option_navigate"
         android:src="@drawable/ic_chevron_right"
-        app:tint="@color/text_disabled" />
+        app:tint="@color/neutral" />
 </LinearLayout>

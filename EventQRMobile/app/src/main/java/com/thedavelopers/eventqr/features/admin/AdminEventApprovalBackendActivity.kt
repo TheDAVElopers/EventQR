@@ -23,6 +23,8 @@ import com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity
 import com.thedavelopers.eventqr.features.admin.logs.AdminAuditLogsActivity
 import com.thedavelopers.eventqr.features.admin.users.AdminAccountManagementActivity
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
+import com.thedavelopers.eventqr.ui.theme.color
+import com.thedavelopers.eventqr.ui.theme.dimen
 import kotlinx.coroutines.launch
 
 class AdminEventApprovalBackendActivity : AppCompatActivity() {
@@ -168,8 +170,8 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
 
     private fun setChipState(chip: TextView, selected: Boolean) {
         chip.setBackgroundResource(if (selected) R.drawable.bg_admin_request_filter_active else R.drawable.bg_admin_request_filter_inactive)
-        chip.setTextColor(if (selected) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
-        chip.elevation = if (selected) 2f else 1f
+        chip.setTextColor(color(if (selected) R.color.on_primary else R.color.text_secondary))
+        chip.elevation = dimen(if (selected) R.dimen.elevation_chip_selected else R.dimen.elevation_chip_idle)
     }
 
     private fun setLoadingState(loading: Boolean) {

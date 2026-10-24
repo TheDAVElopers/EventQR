@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface_alt"
+    android:background="@color/background"
     android:orientation="vertical">
 
     <!-- Top Action Bar / Header (56dp, 48dp Accessible Back Touch Target) -->
@@ -29,9 +29,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingHorizontal="16dp"
-                android:paddingTop="24dp"
-                android:paddingBottom="32dp">
+                android:paddingHorizontal="@dimen/space_lg"
+                android:paddingTop="@dimen/space_xl"
+                android:paddingBottom="@dimen/space_xxl">
 
                 <!-- Skeleton Loading State (Zero Layout Shift) -->
                 <include
@@ -43,19 +43,16 @@
                     android:id="@+id/cardError"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
+                    android:layout_marginBottom="@dimen/space_lg"
                     android:visibility="gone"
-                    app:cardBackgroundColor="@color/surface"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="0dp"
-                    app:strokeColor="@color/error"
-                    app:strokeWidth="1dp">
+                    style="@style/Widget.EventQR.Card.Compact.Flat"
+                    app:strokeColor="@color/error">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:padding="@dimen/space_lg">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -64,8 +61,8 @@
                             android:orientation="horizontal">
 
                             <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
+                                android:layout_width="@dimen/icon_md"
+                                android:layout_height="@dimen/icon_md"
                                 android:importantForAccessibility="no"
                                 android:src="@drawable/ic_error"
                                 app:tint="@color/error" />
@@ -74,25 +71,25 @@
                                 android:id="@+id/txtApiError"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:layout_marginStart="8dp"
+                                android:layout_marginStart="@dimen/space_sm"
                                 android:layout_weight="1"
                                 android:textColor="@color/error"
-                                android:textSize="14sp" />
+                                android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
                         </LinearLayout>
 
                         <Button
                             android:id="@+id/btnRetryProfileLoad"
                             style="@style/Widget.MaterialComponents.Button.TextButton"
                             android:layout_width="wrap_content"
-                            android:layout_height="48dp"
+                            android:layout_height="@dimen/touch_target_min"
                             android:layout_gravity="end"
-                            android:layout_marginTop="4dp"
+                            android:layout_marginTop="@dimen/space_xs"
                             android:minWidth="64dp"
-                            android:minHeight="48dp"
+                            android:minHeight="@dimen/touch_target_min"
                             android:text="@string/common_retry"
                             android:textAllCaps="false"
                             android:textColor="@color/error"
-                            android:textSize="13sp" />
+                            android:textAppearance="@style/TextAppearance.EventQR.ButtonBodyCompact" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -101,10 +98,10 @@
                     android:id="@+id/txtEmptyHint"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
+                    android:layout_marginBottom="@dimen/space_lg"
                     android:text="@string/edit_profile_complete_your_profile_to_help_organi"
                     android:textColor="@color/text_secondary"
-                    android:textSize="14sp"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
                     android:visibility="gone" />
 
                 <!-- Main Form Content -->
@@ -118,25 +115,21 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="8dp"
+                        android:layout_marginBottom="@dimen/space_sm"
                         android:text="@string/edit_profile_personal_information"
                         android:textAppearance="@style/TextAppearance.EventQR.SectionTitle" />
 
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="24dp"
-                        app:cardBackgroundColor="@color/surface"
-                        app:cardCornerRadius="12dp"
-                        app:cardElevation="1dp"
-                        app:strokeColor="@color/outline"
-                        app:strokeWidth="1dp">
+                        android:layout_marginBottom="@dimen/space_xl"
+                        style="@style/Widget.EventQR.Card.Compact">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:padding="16dp">
+                            android:padding="@dimen/space_lg">
 
                             <!-- Full Name -->
                             <com.google.android.material.textfield.TextInputLayout
@@ -145,10 +138,10 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:hint="@string/edit_profile_full_name"
-                                app:boxCornerRadiusBottomEnd="8dp"
-                                app:boxCornerRadiusBottomStart="8dp"
-                                app:boxCornerRadiusTopEnd="8dp"
-                                app:boxCornerRadiusTopStart="8dp"
+                                app:boxCornerRadiusBottomEnd="@dimen/radius_sm"
+                                app:boxCornerRadiusBottomStart="@dimen/radius_sm"
+                                app:boxCornerRadiusTopEnd="@dimen/radius_sm"
+                                app:boxCornerRadiusTopStart="@dimen/radius_sm"
                                 app:boxStrokeColor="@color/outline"
                                 app:helperText="Name on your EventQR account"
                                 app:hintTextColor="@color/text_secondary">
@@ -159,8 +152,7 @@
                                     android:layout_height="wrap_content"
                                     android:inputType="textPersonName|textCapWords"
                                     android:maxLength="60"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="14sp" />
+                                    android:textAppearance="@style/TextAppearance.EventQR.InputBodyMedium" />
                             </com.google.android.material.textfield.TextInputLayout>
 
                             <!-- Email Address (Locked / Display-Only) -->
@@ -169,18 +161,18 @@
                                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="16dp"
+                                android:layout_marginTop="@dimen/space_lg"
                                 android:enabled="false"
                                 android:hint="@string/common_email_address"
-                                app:boxCornerRadiusBottomEnd="8dp"
-                                app:boxCornerRadiusBottomStart="8dp"
-                                app:boxCornerRadiusTopEnd="8dp"
-                                app:boxCornerRadiusTopStart="8dp"
+                                app:boxCornerRadiusBottomEnd="@dimen/radius_sm"
+                                app:boxCornerRadiusBottomStart="@dimen/radius_sm"
+                                app:boxCornerRadiusTopEnd="@dimen/radius_sm"
+                                app:boxCornerRadiusTopStart="@dimen/radius_sm"
                                 app:boxStrokeColor="@color/outline"
                                 app:endIconContentDescription="Field is locked"
                                 app:endIconDrawable="@drawable/ic_lock"
                                 app:endIconMode="custom"
-                                app:endIconTint="@color/text_disabled"
+                                app:endIconTint="@color/neutral"
                                 app:hintTextColor="@color/text_secondary">
 
                                 <com.google.android.material.textfield.TextInputEditText
@@ -191,8 +183,7 @@
                                     android:focusable="false"
                                     android:focusableInTouchMode="false"
                                     android:inputType="textEmailAddress"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="14sp" />
+                                    android:textAppearance="@style/TextAppearance.EventQR.InputBodyMedium" />
                             </com.google.android.material.textfield.TextInputLayout>
 
                             <!-- Phone Number (Sole Editable Field) -->
@@ -201,12 +192,12 @@
                                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="16dp"
+                                android:layout_marginTop="@dimen/space_lg"
                                 android:hint="@string/common_phone_number"
-                                app:boxCornerRadiusBottomEnd="8dp"
-                                app:boxCornerRadiusBottomStart="8dp"
-                                app:boxCornerRadiusTopEnd="8dp"
-                                app:boxCornerRadiusTopStart="8dp"
+                                app:boxCornerRadiusBottomEnd="@dimen/radius_sm"
+                                app:boxCornerRadiusBottomStart="@dimen/radius_sm"
+                                app:boxCornerRadiusTopEnd="@dimen/radius_sm"
+                                app:boxCornerRadiusTopStart="@dimen/radius_sm"
                                 app:boxStrokeColor="@color/outline"
                                 app:counterEnabled="true"
                                 app:counterMaxLength="10"
@@ -220,8 +211,7 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:inputType="number"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="14sp" />
+                                    android:textAppearance="@style/TextAppearance.EventQR.InputBodyMedium" />
                             </com.google.android.material.textfield.TextInputLayout>
 
                         </LinearLayout>
@@ -231,38 +221,34 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="8dp"
+                        android:layout_marginBottom="@dimen/space_sm"
                         android:text="@string/common_security"
                         android:textAppearance="@style/TextAppearance.EventQR.SectionTitle" />
 
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="24dp"
-                        app:cardBackgroundColor="@color/surface"
-                        app:cardCornerRadius="12dp"
-                        app:cardElevation="1dp"
-                        app:strokeColor="@color/outline"
-                        app:strokeWidth="1dp">
+                        android:layout_marginBottom="@dimen/space_xl"
+                        style="@style/Widget.EventQR.Card.Compact">
 
                         <LinearLayout
                             android:id="@+id/btnChangePassword"
                             android:layout_width="match_parent"
-                            android:layout_height="56dp"
+                            android:layout_height="@dimen/button_primary_height"
                             android:background="?attr/selectableItemBackground"
                             android:clickable="true"
                             android:focusable="true"
                             android:gravity="center_vertical"
                             android:orientation="horizontal"
-                            android:paddingHorizontal="16dp">
+                            android:paddingHorizontal="@dimen/space_lg">
 
                             <FrameLayout
-                                android:layout_width="36dp"
-                                android:layout_height="36dp">
+                                android:layout_width="@dimen/icon_tile_sm"
+                                android:layout_height="@dimen/icon_tile_sm">
 
                                 <ImageView
-                                    android:layout_width="20dp"
-                                    android:layout_height="20dp"
+                                    android:layout_width="@dimen/icon_md"
+                                    android:layout_height="@dimen/icon_md"
                                     android:layout_gravity="center"
                                     android:importantForAccessibility="no"
                                     android:src="@drawable/ic_lock"
@@ -272,19 +258,17 @@
                             <TextView
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:layout_marginStart="12dp"
+                                android:layout_marginStart="@dimen/space_md"
                                 android:layout_weight="1"
                                 android:text="@string/common_change_password"
-                                android:textColor="@color/text_primary"
-                                android:textSize="15sp"
-                                android:textStyle="bold" />
+                                android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
 
                             <ImageView
-                                android:layout_width="16dp"
-                                android:layout_height="16dp"
+                                android:layout_width="@dimen/icon_sm"
+                                android:layout_height="@dimen/icon_sm"
                                 android:importantForAccessibility="no"
                                 android:src="@drawable/ic_chevron_right"
-                                app:tint="@color/text_disabled" />
+                                app:tint="@color/neutral" />
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
 
@@ -292,15 +276,15 @@
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnSaveChanges"
                         android:layout_width="match_parent"
-                        android:layout_height="48dp"
-                        android:letterSpacing="0.02"
+                        android:layout_height="@dimen/touch_target_min"
+                        android:letterSpacing="@dimen/tracking_button_tight"
                         android:text="@string/edit_profile_save_changes"
                         android:textAllCaps="false"
-                        android:textColor="@color/brand_on_primary"
-                        android:textSize="14sp"
-                        app:backgroundTint="@color/brand_primary"
-                        app:cornerRadius="8dp"
-                        app:rippleColor="@color/brand_primary_dark" />
+                        android:textColor="@color/on_primary"
+                        android:textAppearance="@style/TextAppearance.EventQR.ButtonBodyMedium"
+                        app:backgroundTint="@color/primary"
+                        app:cornerRadius="@dimen/radius_sm"
+                        app:rippleColor="@color/primary_dark" />
                 </LinearLayout>
 
             </LinearLayout>

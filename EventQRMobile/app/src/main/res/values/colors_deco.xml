@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    EventQR DECORATIVE colours (layer 3 of 3).
+
+    Gradient stops, illustration tints and Kotlin tile colours that have NO semantic role. Named deco_<where/what>, grouped by
+    screen/job. This file is DESIGN DEBT: every entry is a candidate for either promotion to a role (colors.xml) or removal.
+    Do not add entries without a reason; reference deco_* only from the place that already used that exact value.
+-->
+<resources>
+
+    <!-- Landing / splash hero gradient -->
+    <color name="deco_hero_start">#1E1442</color>
+    <color name="deco_hero_mid">#2A1B60</color>
+    <color name="deco_hero_end">#39247A</color>
+
+    <!-- Event management hub hero gradient start -->
+    <color name="deco_hub_hero_start">#0F172A</color>
+
+    <!-- Event banner / staff event header gradient start (5A45F2 and 5B45F1 merged) -->
+    <color name="deco_event_gradient_start">#5A45F2</color>
+    <color name="deco_event_gradient_end">#9B8CF5</color>
+
+    <!-- Kotlin icon tint on the hub screen (same value as the gradient start, different job) -->
+    <color name="deco_icon_on_accent">#5A45F2</color>
+    <color name="deco_cta_pressed_end">#5B21B6</color>
+    <color name="deco_reject_hero_edge">#7F1D1D</color>
+    <color name="deco_glow_secondary">#1F5B25C9</color>
+
+    <!-- Scanner -->
+    <color name="deco_scan_well">#0D1030</color>
+    <color name="deco_scan_viewport_end">#2E2475</color>
+    <color name="deco_scan_corner">#C4B5FD</color>
+    <color name="deco_scan_placeholder">#8B87C4</color>
+
+    <!-- Text / icon tints on dark headers -->
+    <color name="deco_on_header_subtitle">#C3C0E5</color>
+    <color name="deco_on_hero_subtitle">#DDD6FE</color>
+    <color name="deco_on_primary_greeting">#B0BEC5</color>
+
+    <!-- Pinks -->
+    <color name="deco_pink_light">#FBCFE8</color>
+    <color name="deco_pink_banner">#33EC4899</color>
+
+    <!-- Misc -->
+    <color name="deco_empty_icon">#A8A3D0</color>
+    <color name="deco_charcoal_action">#34343C</color>
+    <color name="deco_check_teal">#0D9488</color>
+    <color name="deco_status_ok_teal">#009688</color>
+    <color name="deco_violet_accent">#6D3FF2</color>
+    <color name="deco_indigo_vivid">#635BFF</color>
+    <color name="deco_destructive_deep">#8B1D2C</color>
+    <color name="deco_success_hero_start">#047857</color>
+</resources>

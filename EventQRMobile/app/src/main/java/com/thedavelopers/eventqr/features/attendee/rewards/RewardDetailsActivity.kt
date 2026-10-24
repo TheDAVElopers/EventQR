@@ -123,7 +123,7 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
         status?.setTextColor(
             ContextCompat.getColor(
                 this,
-                if (blocked) R.color.eventqr_badge_cancelled_text else R.color.eventqr_badge_entered_text,
+                if (blocked) R.color.badge_cancelled_text else R.color.badge_entered_text,
             ),
         )
         status?.setCompoundDrawablesRelativeWithIntrinsicBounds(
@@ -193,7 +193,7 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
         gapText.setTextColor(
             ContextCompat.getColor(
                 this,
-                if (!free && currentBalance < pointsRequired) R.color.status_rejected else R.color.status_live,
+                if (!free && currentBalance < pointsRequired) R.color.error else R.color.success_dark,
             ),
         )
 

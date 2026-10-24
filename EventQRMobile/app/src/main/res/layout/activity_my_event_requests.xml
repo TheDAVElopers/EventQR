@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eventqr_bg"
+    android:background="@color/background"
     android:orientation="vertical">
 
     <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
@@ -15,14 +15,13 @@
             android:id="@+id/btnNewRequest"
             android:layout_width="wrap_content"
             android:layout_height="36dp"
-            android:background="@drawable/bg_primary_button"
+            android:background="@drawable/bg_btn_primary"
             android:gravity="center"
             android:minWidth="78dp"
-            android:paddingHorizontal="14dp"
+            android:paddingHorizontal="@dimen/space_14"
             android:text="@string/my_event_requests_new"
-            android:textColor="@color/brand_on_primary"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:textColor="@color/on_primary"
+            android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
     </com.thedavelopers.eventqr.ui.components.EventQrDetailHeader>
 
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
@@ -41,9 +40,9 @@
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
                 android:nestedScrollingEnabled="true"
-                android:paddingHorizontal="16dp"
-                android:paddingTop="16dp"
-                android:paddingBottom="24dp" />
+                android:paddingHorizontal="@dimen/space_lg"
+                android:paddingTop="@dimen/space_lg"
+                android:paddingBottom="@dimen/space_xl" />
 
             <include layout="@layout/include_skeleton_cards" />
 
@@ -53,7 +52,7 @@
                 android:layout_gravity="center"
                 android:gravity="center"
                 android:orientation="vertical"
-                android:paddingHorizontal="16dp">
+                android:paddingHorizontal="@dimen/space_lg">
 
                 
 
@@ -63,20 +62,17 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:text="@string/my_event_requests_unable_to_load_event_requests"
-                    android:textColor="@color/eventqr_error"
-                    android:textSize="14sp"
+                    android:textColor="@color/danger"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
                     android:visibility="gone" />
 
                 <Button
                     android:id="@+id/btnMyRequestsRetry"
-                    android:layout_width="140dp"
-                    android:layout_height="44dp"
-                    android:layout_marginTop="12dp"
-                    android:background="@drawable/bg_primary_button"
+                    style="@style/Widget.EventQR.Button.Primary.Retry"
+                    android:layout_width="@dimen/button_width_retry"
+                    android:layout_height="@dimen/control_height_44"
+                    android:layout_marginTop="@dimen/space_md"
                     android:text="@string/common_retry"
-                    android:textAllCaps="false"
-                    android:textColor="@android:color/white"
-                    android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
             <com.thedavelopers.eventqr.ui.components.EventQrEmptyState

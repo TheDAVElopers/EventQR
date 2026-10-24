@@ -2,8 +2,8 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
     <gradient
-        android:startColor="#5B25C9"
-        android:endColor="#2D2A7C"
+        android:startColor="@color/secondary"
+        android:endColor="@color/primary"
         android:angle="45"/>
-    <size android:width="80dp" android:height="80dp"/>
+    <size android:width="@dimen/tile_80" android:height="@dimen/tile_80"/>
 </shape>

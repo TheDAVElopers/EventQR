@@ -2,21 +2,21 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
+    android:background="@color/surface"
     android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="238dp"
-        android:background="@drawable/bg_rounded_header"
+        android:layout_height="@dimen/auth_header_height_238"
+        android:background="@drawable/bg_signin_header"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:paddingHorizontal="24dp"
-        android:paddingTop="42dp">
+        android:paddingHorizontal="@dimen/space_xl"
+        android:paddingTop="@dimen/space_42">
 
         <ImageView
-            android:layout_width="96dp"
-            android:layout_height="96dp"
+            android:layout_width="@dimen/tile_96"
+            android:layout_height="@dimen/tile_96"
             android:contentDescription="@string/common_eventqr_logo"
             android:scaleType="fitCenter"
             android:src="@drawable/white_logo" />
@@ -24,20 +24,19 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="@dimen/space_10"
             android:text="@string/signup_sign_up"
-            android:textColor="#FFFFFF"
-            android:textSize="30sp"
-            android:textStyle="bold" />
+            android:textColor="@color/on_primary"
+            android:textAppearance="@style/TextAppearance.EventQR.HeadlineXL" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="@dimen/space_sm"
             android:gravity="center"
             android:text="@string/signup_create_your_account_and_simplify_eve"
-            android:textColor="#F4F3FF"
-            android:textSize="13sp" />
+            android:textColor="@color/accent_container"
+            android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
     </LinearLayout>
 
     <ScrollView
@@ -51,9 +50,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="28dp"
-            android:paddingTop="28dp"
-            android:paddingBottom="28dp">
+            android:paddingHorizontal="@dimen/space_28"
+            android:paddingTop="@dimen/space_28"
+            android:paddingBottom="@dimen/space_28">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -70,28 +69,25 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/common_first_name"
-                        android:textColor="#111827"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                        android:textColor="@color/text_primary"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
 
                     <EditText
+                        style="@style/Widget.EventQR.EditText"
                         android:id="@+id/edtFirstName"
                         android:layout_width="match_parent"
-                        android:layout_height="52dp"
-                        android:layout_marginTop="6dp"
-                        android:background="@drawable/bg_auth_field_focus"
+                        android:layout_height="@dimen/input_height"
+                        android:layout_marginTop="@dimen/space_6"
                         android:hint="@string/common_john"
                         android:inputType="textPersonName"
-                        android:paddingHorizontal="14dp"
-                        android:textColor="@color/eventqr_text"
-                        android:textColorHint="#71717A"
-                        android:textSize="14sp" />
+                        android:paddingHorizontal="@dimen/space_14"
+                        android:textColorHint="@color/text_secondary" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
+                    android:layout_marginStart="@dimen/space_10"
                     android:layout_weight="1"
                     android:orientation="vertical">
 
@@ -99,64 +95,57 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/common_last_name"
-                        android:textColor="#111827"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                        android:textColor="@color/text_primary"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
 
                     <EditText
+                        style="@style/Widget.EventQR.EditText"
                         android:id="@+id/edtLastName"
                         android:layout_width="match_parent"
-                        android:layout_height="52dp"
-                        android:layout_marginTop="6dp"
-                        android:background="@drawable/bg_auth_field_focus"
+                        android:layout_height="@dimen/input_height"
+                        android:layout_marginTop="@dimen/space_6"
                         android:hint="@string/common_doe"
                         android:inputType="textPersonName"
-                        android:paddingHorizontal="14dp"
-                        android:textColor="@color/eventqr_text"
-                        android:textColorHint="#71717A"
-                        android:textSize="14sp" />
+                        android:paddingHorizontal="@dimen/space_14"
+                        android:textColorHint="@color/text_secondary" />
                 </LinearLayout>
             </LinearLayout>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_marginTop="@dimen/space_14"
                 android:text="@string/common_email_address"
-                android:textColor="#111827"
-                android:textSize="13sp"
-                android:textStyle="bold" />
+                android:textColor="@color/text_primary"
+                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
 
             <EditText
+                style="@style/Widget.EventQR.EditText"
                 android:id="@+id/edtEmail"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginTop="6dp"
-                android:background="@drawable/bg_auth_field_focus"
+                android:layout_height="@dimen/input_height"
+                android:layout_marginTop="@dimen/space_6"
                 android:drawableStart="@drawable/email_icon"
-                android:drawablePadding="10dp"
+                android:drawablePadding="@dimen/space_10"
                 android:hint="@string/common_johndoe_gmail_com"
                 android:inputType="textEmailAddress"
-                android:paddingHorizontal="14dp"
-                android:textColor="@color/eventqr_text"
-                android:textColorHint="#71717A"
-                android:textSize="14sp" />
+                android:paddingHorizontal="@dimen/space_14"
+                android:textColorHint="@color/text_secondary" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_marginTop="@dimen/space_14"
                 android:text="@string/common_phone_number"
-                android:textColor="#111827"
-                android:textSize="13sp"
-                android:textStyle="bold" />
+                android:textColor="@color/text_primary"
+                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
 
             <LinearLayout
                 android:id="@+id/layoutPhoneField"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginTop="6dp"
-                android:background="@drawable/bg_auth_field_focus"
+                android:layout_height="@dimen/input_height"
+                android:layout_marginTop="@dimen/space_6"
+                android:background="@drawable/bg_input"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -164,14 +153,12 @@
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:drawableStart="@drawable/phone_icon"
-                    android:drawablePadding="10dp"
+                    android:drawablePadding="@dimen/space_10"
                     android:gravity="center_vertical"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="6dp"
-                    android:text="+63"
-                    android:textColor="@color/eventqr_text"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:paddingStart="@dimen/space_14"
+                    android:paddingEnd="@dimen/space_6"
+                    android:text="@string/phone_prefix"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
 
                 <EditText
                     android:id="@+id/edtPhoneNumber"
@@ -179,57 +166,53 @@
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@null"
-                    android:hint="9123456789"
+                    android:hint="@string/phone_hint_digits"
                     android:inputType="number"
-                    android:paddingEnd="14dp"
-                    android:textColor="@color/eventqr_text"
-                    android:textColorHint="#71717A"
-                    android:textSize="14sp" />
+                    android:paddingEnd="@dimen/space_14"
+                    android:textColorHint="@color/text_secondary"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
             </LinearLayout>
 
             <TextView
                 android:id="@+id/txtPhoneCounter"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="0/10"
+                android:layout_marginTop="@dimen/space_xxs"
+                android:text="@string/counter_zero_of_ten"
                 android:textAlignment="viewEnd"
-                android:textColor="#71717A"
-                android:textSize="11sp" />
+                android:textColor="@color/text_secondary"
+                android:textAppearance="@style/TextAppearance.EventQR.TextOverline" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_marginTop="@dimen/space_14"
                 android:text="@string/common_password"
-                android:textColor="#111827"
-                android:textSize="13sp"
-                android:textStyle="bold" />
+                android:textColor="@color/text_primary"
+                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
 
             <EditText
+                style="@style/Widget.EventQR.EditText"
                 android:id="@+id/edtPassword"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginTop="6dp"
-                android:background="@drawable/bg_auth_field_focus"
+                android:layout_height="@dimen/input_height"
+                android:layout_marginTop="@dimen/space_6"
                 android:drawableStart="@drawable/password_icon"
                 android:drawableEnd="@drawable/ic_visibility_on"
-                android:drawablePadding="10dp"
+                android:drawablePadding="@dimen/space_10"
                 android:hint="@string/common_enter_password"
                 android:inputType="textPassword"
-                android:paddingHorizontal="14dp"
-                android:textColor="@color/eventqr_text"
-                android:textColorHint="#71717A"
-                android:textSize="14sp" />
+                android:paddingHorizontal="@dimen/space_14"
+                android:textColorHint="@color/text_secondary" />
 
             <LinearLayout
                 android:id="@+id/layoutPasswordRequirements"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="@dimen/space_10"
                 android:background="@drawable/bg_password_requirements"
                 android:orientation="vertical"
-                android:padding="12dp"
+                android:padding="@dimen/space_md"
                 android:visibility="gone">
 
                 <LinearLayout
@@ -240,39 +223,39 @@
                     <View
                         android:id="@+id/viewStrength1"
                         android:layout_width="0dp"
-                        android:layout_height="4dp"
+                        android:layout_height="@dimen/bar_thin"
                         android:layout_weight="1"
-                        android:background="@color/eventqr_border" />
+                        android:background="@color/outline" />
 
                     <View
                         android:id="@+id/viewStrength2"
                         android:layout_width="0dp"
-                        android:layout_height="4dp"
-                        android:layout_marginStart="8dp"
+                        android:layout_height="@dimen/bar_thin"
+                        android:layout_marginStart="@dimen/space_sm"
                         android:layout_weight="1"
-                        android:background="@color/eventqr_border" />
+                        android:background="@color/outline" />
 
                     <View
                         android:id="@+id/viewStrength3"
                         android:layout_width="0dp"
-                        android:layout_height="4dp"
-                        android:layout_marginStart="8dp"
+                        android:layout_height="@dimen/bar_thin"
+                        android:layout_marginStart="@dimen/space_sm"
                         android:layout_weight="1"
-                        android:background="@color/eventqr_border" />
+                        android:background="@color/outline" />
 
                     <View
                         android:id="@+id/viewStrength4"
                         android:layout_width="0dp"
-                        android:layout_height="4dp"
-                        android:layout_marginStart="8dp"
+                        android:layout_height="@dimen/bar_thin"
+                        android:layout_marginStart="@dimen/space_sm"
                         android:layout_weight="1"
-                        android:background="@color/eventqr_border" />
+                        android:background="@color/outline" />
                 </LinearLayout>
 
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp">
+                    android:layout_marginTop="@dimen/space_md">
 
                     <LinearLayout
                         android:layout_width="wrap_content"
@@ -284,44 +267,44 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/password_req_length"
-                            android:textColor="@color/eventqr_muted"
-                            android:textSize="11sp" />
+                            android:textColor="@color/text_secondary"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextOverline" />
 
                         <TextView
                             android:id="@+id/txtPasswordCapitalRequirement"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
+                            android:layout_marginTop="@dimen/space_xxs"
                             android:text="@string/password_req_uppercase"
-                            android:textColor="@color/eventqr_muted"
-                            android:textSize="11sp" />
+                            android:textColor="@color/text_secondary"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextOverline" />
 
                         <TextView
                             android:id="@+id/txtPasswordLowercaseRequirement"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
+                            android:layout_marginTop="@dimen/space_xxs"
                             android:text="@string/password_req_lowercase"
-                            android:textColor="@color/eventqr_muted"
-                            android:textSize="11sp" />
+                            android:textColor="@color/text_secondary"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextOverline" />
 
                         <TextView
                             android:id="@+id/txtPasswordNumberRequirement"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
+                            android:layout_marginTop="@dimen/space_xxs"
                             android:text="@string/password_req_number"
-                            android:textColor="@color/eventqr_muted"
-                            android:textSize="11sp" />
+                            android:textColor="@color/text_secondary"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextOverline" />
 
                         <TextView
                             android:id="@+id/txtPasswordSpecialRequirement"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
+                            android:layout_marginTop="@dimen/space_xxs"
                             android:text="@string/password_req_special"
-                            android:textColor="@color/eventqr_muted"
-                            android:textSize="11sp" />
+                            android:textColor="@color/text_secondary"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextOverline" />
                     </LinearLayout>
 
                     <TextView
@@ -330,66 +313,56 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:layout_centerVertical="true"
-                        android:textColor="@color/eventqr_muted"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
+                        android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
                 </RelativeLayout>
             </LinearLayout>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_marginTop="@dimen/space_14"
                 android:text="@string/common_confirm_password"
-                android:textColor="#111827"
-                android:textSize="13sp"
-                android:textStyle="bold" />
+                android:textColor="@color/text_primary"
+                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
 
             <EditText
+                style="@style/Widget.EventQR.EditText"
                 android:id="@+id/edtConfirmPassword"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginTop="6dp"
-                android:background="@drawable/bg_auth_field_focus"
+                android:layout_height="@dimen/input_height"
+                android:layout_marginTop="@dimen/space_6"
                 android:drawableStart="@drawable/password_icon"
                 android:drawableEnd="@drawable/ic_visibility_on"
-                android:drawablePadding="10dp"
+                android:drawablePadding="@dimen/space_10"
                 android:hint="@string/common_confirm_password_2"
                 android:inputType="textPassword"
-                android:paddingHorizontal="14dp"
-                android:textColor="@color/eventqr_text"
-                android:textColorHint="#71717A"
-                android:textSize="14sp" />
+                android:paddingHorizontal="@dimen/space_14"
+                android:textColorHint="@color/text_secondary" />
 
             <CheckBox
                 android:id="@+id/chkTerms"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:buttonTint="@color/eventqr_indigo"
+                android:layout_marginTop="@dimen/space_14"
+                android:buttonTint="@color/primary"
                 android:text="@string/signup_i_agree_to_the_terms_conditions"
-                android:textColor="#111827"
-                android:textSize="14sp" />
+                android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
+                android:textColor="@color/text_primary" />
 
             <Button
                 android:id="@+id/btnRegister"
+                style="@style/Widget.EventQR.Button.Auth"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="24dp"
-                android:background="@drawable/bg_auth_button_press"
-                android:elevation="4dp"
-                android:stateListAnimator="@null"
-                android:text="@string/common_create_account"
-                android:textAllCaps="false"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:layout_height="@dimen/button_primary_height"
+                android:layout_marginTop="@dimen/space_xl"
+                android:elevation="@dimen/elevation_4"
+                android:text="@string/common_create_account" />
 
             <LinearLayout
                 android:id="@+id/btnSignIn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/space_lg"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"
@@ -399,16 +372,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/signup_already_have_an_account"
-                    android:textColor="#6B7280"
-                    android:textSize="13sp" />
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/common_sign_in"
-                    android:textColor="@color/eventqr_indigo"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
+                    android:textColor="@color/primary"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

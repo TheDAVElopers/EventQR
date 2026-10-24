@@ -9,7 +9,7 @@
     <style name="Theme.App.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_logo</item>
         <item name="windowSplashScreenAnimationDuration">0</item>
-        <item name="windowSplashScreenBackground">@color/eventqr_indigo</item>
+        <item name="windowSplashScreenBackground">@color/primary</item>
         <item name="postSplashScreenTheme">@style/Theme.EventQR</item>
     </style>
 

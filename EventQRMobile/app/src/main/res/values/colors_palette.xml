@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    EventQR colour PRIMITIVES (layer 1 of 3).
+
+    Raw values only. Referenced ONLY by values/colors.xml, values/colors_deco.xml and res/color/*.
+    Layouts, drawables, styles and Kotlin must use the semantic ROLES in colors.xml (primary, surface,
+    text_secondary, ...), never @color/p_*.  (tools/check-tokens.ps1 enforces this.)
+-->
+<resources>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <!--  BRAND BLOCK  -  edit here to rebrand.                                       -->
+    <!--  XML cannot compute tints, so a rebrand = change p_brand and the 3 paired    -->
+    <!--  lines under it (darker = pressed / gradient stop, lighter = gradient stop,  -->
+    <!--  tint = icon-tile background).                                               -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <color name="p_brand">#2D2A7C</color>        <!-- THE variable -->
+    <color name="p_brand_dark">#1E1B5E</color>   <!-- pressed, dark gradient stop -->
+    <color name="p_brand_light">#4A46A8</color>  <!-- light gradient stop -->
+    <color name="p_brand_tint">#D6D9FF</color>   <!-- icon-tile bg -->
+    <!-- Optional brand-derived tints (used by the roles primary_disabled / on_primary_muted) -->
+    <color name="p_brand_disabled">#A6A9C8</color>
+    <color name="p_brand_on_muted">#D7D4F8</color>
+
+    <!-- Accent (indigo). D1: the role `accent` points at p_brand; these stay for tints / pressed shades. -->
+    <color name="p_accent_dark">#4338CA</color>
+    <color name="p_accent_tint">#EEF2FF</color>
+    <color name="p_accent_tint_strong">#E0E7FF</color>
+    <color name="p_accent_outline">#C7D2FE</color>
+
+    <!-- Secondary (violet): only the CTA gradient end after D1 -->
+    <color name="p_secondary">#5B25C9</color>
+    <color name="p_secondary_light">#7C3AED</color>
+    <color name="p_secondary_tint">#EDE9FE</color>
+    <color name="p_secondary_dark">#4C1D95</color>
+
+    <!-- Neutrals -->
+    <color name="p_white">#FFFFFF</color>
+    <color name="p_black">#000000</color>
+    <color name="p_n50">#F7F7FA</color>
+    <color name="p_n100">#F3F4F6</color>
+    <color name="p_n150">#E6E7EC</color>
+    <color name="p_n200">#E5E7EB</color>
+    <color name="p_n300">#D1D5DB</color>
+    <color name="p_n400">#9CA3AF</color>
+    <color name="p_n600">#4B5563</color>
+    <color name="p_n700">#374151</color>
+    <color name="p_n900">#111827</color>
+    <color name="p_navy">#121735</color>
+    <color name="p_label">#8E8EA9</color>
+
+    <!-- Text-only darker shades (a11y, WCAG AA 4.5:1). Same hue/saturation as p_n400 / p_label, lightest shade that passes
+         on white, background (F7F7FA), surface_muted (F3F4F6) and, for the label, accent_container (EEF2FF).
+         p_text_secondary is the ONE grey for secondary text AND hints (D4: replaces the old 6B7280 + 67707F pair; 6B7280 fails
+         4.5:1 on surface_muted). p_n400 / p_label stay for NON-text uses (icon tints, dots, disabled fills) via the roles
+         neutral / neutral_label. -->
+    <color name="p_text_secondary">#67707F</color>
+    <color name="p_text_label">#6C6C8E</color>
+
+    <!-- Status -->
+    <color name="p_green_100">#D1FAE5</color>
+    <color name="p_green_300">#86EFAC</color>
+    <color name="p_green_500">#10B981</color>
+    <color name="p_green_600">#059669</color>
+    <color name="p_green_800">#065F46</color>
+
+    <color name="p_amber_100">#FEF3C7</color>
+    <color name="p_amber_200">#FDE68A</color>
+    <color name="p_amber_500">#F59E0B</color>
+    <color name="p_amber_700">#B45309</color>
+    <color name="p_amber_800">#92400E</color>
+
+    <color name="p_red_50">#FEF2F2</color>
+    <color name="p_red_100">#FEE2E2</color>
+    <color name="p_red_300">#FCA5A5</color>
+    <color name="p_red_500">#EF4444</color>
+    <color name="p_red_700">#C62828</color>
+    <color name="p_red_800">#991B1B</color>
+
+    <color name="p_blue_100">#DBEAFE</color>
+    <color name="p_blue_500">#3B82F6</color>
+    <color name="p_blue_600">#2563EB</color>
+    <color name="p_blue_900">#1E3A8A</color>
+
+    <!-- Icon-tile tints that have no status meaning -->
+    <color name="p_pink_100">#FCE7F3</color>
+    <color name="p_violet_100">#F3E8FF</color>
+    <color name="p_cyan_100">#CFFAFE</color>
+
+    <!-- Chart series (reports) -->
+    <color name="p_chart_cyan">#06B6D4</color>
+    <color name="p_chart_violet">#8B5CF6</color>
+    <color name="p_chart_sky">#0EA5E9</color>
+    <color name="p_chart_indigo">#6366F1</color>
+    <color name="p_chart_periwinkle">#A5B4FC</color>
+
+</resources>

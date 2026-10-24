@@ -3,41 +3,36 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
-    app:cardBackgroundColor="@color/surface"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="2dp"
-    app:cardUseCompatPadding="false"
-    app:strokeColor="@color/outline"
-    app:strokeWidth="1dp">
+    android:layout_marginBottom="@dimen/space_md"
+    style="@style/Widget.EventQR.Card.Raised"
+    app:cardUseCompatPadding="false">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
-        android:minHeight="82dp"
+        android:minHeight="@dimen/list_item_tall_min_height"
         android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:paddingTop="14dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="14dp">
+        android:paddingStart="@dimen/space_lg"
+        android:paddingTop="@dimen/space_14"
+        android:paddingEnd="@dimen/space_lg"
+        android:paddingBottom="@dimen/space_14">
 
         <TextView
             android:id="@+id/txtAttendeeInitial"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="@drawable/bg_organizer_avatar_purple"
+            android:layout_width="@dimen/icon_tile_lg"
+            android:layout_height="@dimen/icon_tile_lg"
+            android:background="@drawable/bg_circle_primary"
             android:gravity="center"
-            android:text="J"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:text="@string/placeholder_initial_j"
+            android:textColor="@color/on_primary"
+            android:textAppearance="@style/TextAppearance.EventQR.TitleMedium" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="14dp"
-            android:layout_marginEnd="10dp"
+            android:layout_marginStart="@dimen/space_14"
+            android:layout_marginEnd="@dimen/space_10"
             android:layout_weight="1"
             android:orientation="vertical">
 
@@ -47,28 +42,24 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:textColor="@color/text_primary"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
 
             <TextView
                 android:id="@+id/txtAttendeeEmail"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="@dimen/space_xxs"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
+                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
 
             <TextView
                 android:id="@+id/txtAttendeePoints"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textColor="@color/brand_primary"
-                android:textSize="12sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="@dimen/space_xs"
+                android:textColor="@color/primary"
+                android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
         </LinearLayout>
 
         <TextView
@@ -77,20 +68,19 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:minWidth="0dp"
-            android:paddingHorizontal="12dp"
-            android:paddingVertical="6dp"
+            android:paddingHorizontal="@dimen/space_md"
+            android:paddingVertical="@dimen/space_6"
             android:text="@string/common_registered"
-            android:textColor="@color/brand_primary"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+            android:textColor="@color/primary"
+            android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
 
         <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_marginStart="8dp"
+            android:layout_width="@dimen/icon_md"
+            android:layout_height="@dimen/icon_md"
+            android:layout_marginStart="@dimen/space_sm"
             android:contentDescription="@null"
             android:src="@drawable/ic_chevron_right"
-            app:tint="#9CA3AF" />
+            app:tint="@color/neutral" />
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>

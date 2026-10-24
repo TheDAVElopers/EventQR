@@ -16,12 +16,11 @@
             android:id="@+id/txtMarkAllRead"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingStart="8dp"
-            android:paddingVertical="4dp"
+            android:paddingStart="@dimen/space_sm"
+            android:paddingVertical="@dimen/space_xs"
             android:text="@string/organizer_notifications_mark_all_read"
-            android:textColor="#5B25C9"
-            android:textSize="13sp"
-            android:textStyle="bold" />
+            android:textColor="@color/primary"
+            android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
     </com.thedavelopers.eventqr.ui.components.EventQrDetailHeader>
 
     <!-- Filter row -->
@@ -30,38 +29,34 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="20dp"
-        android:paddingTop="4dp"
-        android:paddingBottom="12dp">
+        android:paddingHorizontal="@dimen/space_20"
+        android:paddingTop="@dimen/space_xs"
+        android:paddingBottom="@dimen/space_md">
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardEventFilter"
             android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginEnd="6dp"
+            android:layout_height="@dimen/touch_target_min"
+            android:layout_marginEnd="@dimen/space_6"
             android:layout_weight="1"
             android:clickable="true"
             android:focusable="true"
-            app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="14dp"
-            app:cardElevation="0dp"
-            app:strokeColor="#EAEBF0"
-            app:strokeWidth="1dp">
+            style="@style/Widget.EventQR.Card.Item.Flat">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingHorizontal="12dp">
+                android:paddingHorizontal="@dimen/space_md">
 
                 <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:layout_marginEnd="8dp"
+                    android:layout_width="@dimen/icon_18"
+                    android:layout_height="@dimen/icon_18"
+                    android:layout_marginEnd="@dimen/space_sm"
                     android:contentDescription="@string/organizer_notifications_calendar"
                     android:src="@drawable/ic_calendar"
-                    app:tint="#5B25C9" />
+                    app:tint="@color/primary" />
 
                 <TextView
                     android:id="@+id/txtEventFilter"
@@ -71,48 +66,43 @@
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:text="@string/organizer_notifications_all_events"
-                    android:textColor="#121735"
-                    android:textSize="14sp" />
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
 
                 <ImageView
                     android:id="@+id/arrowEventFilter"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginStart="4dp"
+                    android:layout_width="@dimen/icon_md"
+                    android:layout_height="@dimen/icon_md"
+                    android:layout_marginStart="@dimen/space_xs"
                     android:contentDescription="@string/common_dropdown"
                     android:src="@drawable/ic_arrow_drop_down"
-                    app:tint="#8E8EA9" />
+                    app:tint="@color/neutral_label" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardTypeFilter"
             android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="6dp"
+            android:layout_height="@dimen/touch_target_min"
+            android:layout_marginStart="@dimen/space_6"
             android:layout_weight="1"
             android:clickable="true"
             android:focusable="true"
-            app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="14dp"
-            app:cardElevation="0dp"
-            app:strokeColor="#EAEBF0"
-            app:strokeWidth="1dp">
+            style="@style/Widget.EventQR.Card.Item.Flat">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingHorizontal="12dp">
+                android:paddingHorizontal="@dimen/space_md">
 
                 <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:layout_marginEnd="8dp"
+                    android:layout_width="@dimen/icon_18"
+                    android:layout_height="@dimen/icon_18"
+                    android:layout_marginEnd="@dimen/space_sm"
                     android:contentDescription="@string/organizer_notifications_type_tag"
                     android:src="@drawable/ic_row_tag"
-                    app:tint="#5B25C9" />
+                    app:tint="@color/primary" />
 
                 <TextView
                     android:id="@+id/txtTypeFilter"
@@ -122,17 +112,16 @@
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:text="@string/organizer_notifications_all_types"
-                    android:textColor="#121735"
-                    android:textSize="14sp" />
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
 
                 <ImageView
                     android:id="@+id/arrowTypeFilter"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginStart="4dp"
+                    android:layout_width="@dimen/icon_md"
+                    android:layout_height="@dimen/icon_md"
+                    android:layout_marginStart="@dimen/space_xs"
                     android:contentDescription="@string/common_dropdown"
                     android:src="@drawable/ic_arrow_drop_down"
-                    app:tint="#8E8EA9" />
+                    app:tint="@color/neutral_label" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -165,9 +154,9 @@
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
                 android:nestedScrollingEnabled="true"
-                android:paddingHorizontal="20dp"
-                android:paddingTop="4dp"
-                android:paddingBottom="24dp" />
+                android:paddingHorizontal="@dimen/space_20"
+                android:paddingTop="@dimen/space_xs"
+                android:paddingBottom="@dimen/space_xl" />
 
             <!-- Skeleton -->
             <include layout="@layout/include_skeleton_cards" />
@@ -190,12 +179,12 @@
                 android:layout_gravity="center"
                 android:gravity="center"
                 android:orientation="vertical"
-                android:paddingHorizontal="32dp"
+                android:paddingHorizontal="@dimen/space_xxl"
                 android:visibility="gone">
 
                 <ImageView
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
+                    android:layout_width="@dimen/tile_64"
+                    android:layout_height="@dimen/tile_64"
                     android:contentDescription="@string/organizer_notifications_error_loading_notifications"
                     android:src="@drawable/ic_error_circle"
                     app:tint="@color/error" />
@@ -203,21 +192,19 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/space_md"
                     android:gravity="center"
                     android:text="@string/organizer_notifications_failed_to_load_notifications"
-                    android:textColor="#121735"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="@dimen/space_xs"
                     android:gravity="center"
                     android:text="@string/organizer_notifications_please_check_your_connection_and_try"
-                    android:textColor="#8E8EA9"
-                    android:textSize="14sp" />
+                    android:textColor="@color/text_label"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
             </LinearLayout>
         </FrameLayout>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>

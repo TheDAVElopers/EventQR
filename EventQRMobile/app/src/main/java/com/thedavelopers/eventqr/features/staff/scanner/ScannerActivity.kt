@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
-import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.hardware.Camera
 import android.os.Bundle
@@ -69,6 +68,10 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
+import com.thedavelopers.eventqr.ui.theme.color
+import com.thedavelopers.eventqr.ui.theme.dimenOffset
+import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
+import com.thedavelopers.eventqr.ui.theme.strong
 
 @Suppress("DEPRECATION")
 open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceHolder.Callback, Camera.PreviewCallback {
@@ -267,7 +270,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
                 }
             )
             selectedPurposePoints.visibility = View.VISIBLE
-            selectedPurposePoints.setTextColor(0xFF6B7280.toInt())
+            selectedPurposePoints.setTextColor(color(R.color.text_secondary))
         } else {
             purposeSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, activePurposes.map { it.name })
             purposeSpinner.isEnabled = true
@@ -472,7 +475,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
             selectedPurposePoints.visibility = View.GONE
         } else {
             selectedPurposePoints.text = purpose.defaultDescription()
-            selectedPurposePoints.setTextColor(0xFF6B7280.toInt())
+            selectedPurposePoints.setTextColor(color(R.color.text_secondary))
             selectedPurposePoints.visibility = View.VISIBLE
         }
     }
@@ -481,8 +484,8 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         eventPopup?.dismiss()
         eventPopup = PopupWindow(buildEventDropdownView(), selectedEventCard.width.takeIf { it > 0 } ?: ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true).apply {
             isOutsideTouchable = true
-            elevation = dp(8).toFloat()
-            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            elevation = dimenOffset(R.dimen.elevation_overlay).toFloat()
+            setBackgroundDrawable(ColorDrawable(color(R.color.transparent)))
             setOnDismissListener { isEventDropdownOpen = false; normalizeChevron(eventChevron, false) }
         }
     }
@@ -494,8 +497,8 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
             addView(LinearLayout(this@ScannerActivity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(16), dp(12), dp(16), dp(12))
-                setBackgroundColor(if (index == eventSpinner.selectedItemPosition) Color.parseColor("#EEF2FF") else Color.WHITE)
+                setPadding(dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_md), dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_md))
+                setBackgroundColor(if (index == eventSpinner.selectedItemPosition) color(R.color.accent_container) else color(R.color.surface))
                 setOnClickListener {
                     eventSpinner.setSelection(index, false)
                     qrInput.setText("")
@@ -512,14 +515,14 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
                     layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
                     addView(TextView(this@ScannerActivity).apply {
                         text = event.label
-                        setTextColor(if (index == eventSpinner.selectedItemPosition) 0xFF4F46E5.toInt() else 0xFF111827.toInt())
-                        textSize = 14f
-                        setTypeface(typeface, android.graphics.Typeface.BOLD)
+                        setTextColor(if (index == eventSpinner.selectedItemPosition) color(R.color.primary) else color(R.color.text_primary))
+                        setTextSizeRes(R.dimen.type_body_medium)
+                        strong()
                     })
                     addView(TextView(this@ScannerActivity).apply {
                         text = event.eventStartAt?.atZone(manilaZone)?.format(dateFormatter).orEmpty().ifBlank { getString(R.string.scanner_assigned_event_fallback) }
-                        setTextColor(0xFF6B7280.toInt())
-                        textSize = 13f
+                        setTextColor(color(R.color.text_secondary))
+                        setTextSizeRes(R.dimen.type_body_compact)
                     })
                 })
             })
@@ -546,8 +549,8 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         purposePopup?.dismiss()
         purposePopup = PopupWindow(buildPurposeDropdownView(), selectedPurposeCard.width.takeIf { it > 0 } ?: ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true).apply {
             isOutsideTouchable = true
-            elevation = dp(8).toFloat()
-            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            elevation = dimenOffset(R.dimen.elevation_overlay).toFloat()
+            setBackgroundDrawable(ColorDrawable(color(R.color.transparent)))
             setOnDismissListener { isPurposeDropdownOpen = false; normalizeChevron(purposeChevron, false) }
         }
     }
@@ -559,14 +562,14 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
             addView(LinearLayout(this@ScannerActivity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(16), dp(12), dp(16), dp(12))
-                setBackgroundColor(if (index == purposeSpinner.selectedItemPosition) Color.parseColor("#EEF2FF") else Color.WHITE)
+                setPadding(dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_md), dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_md))
+                setBackgroundColor(if (index == purposeSpinner.selectedItemPosition) color(R.color.accent_container) else color(R.color.surface))
                 setOnClickListener { purposeSpinner.setSelection(index, false); bindSelectedPurposeHeader(); renderPurposeDropdown(); setPurposeDropdownOpen(false) }
                 addView(LinearLayout(this@ScannerActivity).apply {
                     orientation = LinearLayout.VERTICAL
                     layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-                    addView(TextView(this@ScannerActivity).apply { text = purpose.displayName(); setTextColor(if (index == purposeSpinner.selectedItemPosition) 0xFF4F46E5.toInt() else 0xFF111827.toInt()); textSize = 14f; setTypeface(typeface, android.graphics.Typeface.BOLD) })
-                    addView(TextView(this@ScannerActivity).apply { text = purpose.description?.takeIf { it.isNotBlank() } ?: purpose.defaultDescription(); setTextColor(0xFF6B7280.toInt()); textSize = 13f })
+                    addView(TextView(this@ScannerActivity).apply { text = purpose.displayName(); setTextColor(if (index == purposeSpinner.selectedItemPosition) color(R.color.primary) else color(R.color.text_primary)); setTextSizeRes(R.dimen.type_body_medium); strong() })
+                    addView(TextView(this@ScannerActivity).apply { text = purpose.description?.takeIf { it.isNotBlank() } ?: purpose.defaultDescription(); setTextColor(color(R.color.text_secondary)); setTextSizeRes(R.dimen.type_body_compact) })
                 })
             })
         }
@@ -679,7 +682,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         when (view) {
             is TextView -> {
                 view.includeFontPadding = false
-                view.translationY = -dp(1).toFloat()
+                view.translationY = dimenOffset(R.dimen.glyph_nudge_y).toFloat()
                 view.text = if (open) "\u25B4" else "\u25BE"
             }
             is ImageView -> {
@@ -700,7 +703,6 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         }.getOrNull()
     }
     private fun firstNonBlank(vararg values: String?): String? = values.firstOrNull { !it.isNullOrBlank() }?.trim()
-    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
     private data class ParsedQrPayload(val qrValue: String, val qrCredentialId: String?)
 
     private companion object {

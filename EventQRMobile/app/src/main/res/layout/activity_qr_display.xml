@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
+    android:background="@color/surface"
     android:orientation="vertical">
 
     <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
@@ -22,10 +22,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:minHeight="760dp"
-            android:paddingStart="20dp"
-            android:paddingTop="18dp"
-            android:paddingEnd="20dp"
-            android:paddingBottom="20dp">
+            android:paddingStart="@dimen/space_20"
+            android:paddingTop="@dimen/space_18"
+            android:paddingEnd="@dimen/space_20"
+            android:paddingBottom="@dimen/space_20">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -39,8 +39,8 @@
                     android:background="@drawable/bg_check_circle">
 
                     <ImageView
-                        android:layout_width="42dp"
-                        android:layout_height="42dp"
+                        android:layout_width="@dimen/tile_42"
+                        android:layout_height="@dimen/tile_42"
                         android:layout_gravity="center"
                         android:contentDescription="@string/qr_display_qr_credential_ready"
                         android:src="@drawable/ic_qr_success_check" />
@@ -49,35 +49,31 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="18dp"
-                    android:fontFamily="sans"
+                    android:layout_marginTop="@dimen/space_18"
                     android:text="@string/qr_display_event_access_qr"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
+                    android:textAppearance="@style/TextAppearance.EventQR.TitleLarge" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:fontFamily="sans"
+                    android:layout_marginTop="@dimen/space_6"
                     android:gravity="center"
-                    android:lineSpacingExtra="2dp"
+                    android:lineSpacingExtra="@dimen/line_spacing_2"
                     android:text="@string/qr_display_show_this_qr_at_the_entrance_for_eve"
-                    android:textColor="#6B7280"
-                    android:textSize="14sp" />
+                    android:textColor="@color/text_secondary"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/space_md"
                     android:background="@drawable/bg_info_card"
-                    android:elevation="2dp"
+                    android:elevation="@dimen/elevation_raised"
                     android:orientation="vertical"
-                    android:paddingStart="14dp"
-                    android:paddingTop="14dp"
-                    android:paddingEnd="14dp"
-                    android:paddingBottom="14dp">
+                    android:paddingStart="@dimen/space_14"
+                    android:paddingTop="@dimen/space_14"
+                    android:paddingEnd="@dimen/space_14"
+                    android:paddingBottom="@dimen/space_14">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -86,13 +82,13 @@
                         android:orientation="horizontal">
 
                         <FrameLayout
-                            android:layout_width="34dp"
-                            android:layout_height="34dp"
+                            android:layout_width="@dimen/tile_34"
+                            android:layout_height="@dimen/tile_34"
                             android:background="@drawable/bg_soft_gray_pill">
 
                             <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
+                                android:layout_width="@dimen/icon_md"
+                                android:layout_height="@dimen/icon_md"
                                 android:layout_gravity="center"
                                 android:contentDescription="@string/common_attendee"
                                 android:src="@drawable/ic_qr_attendee" />
@@ -101,7 +97,7 @@
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="12dp"
+                            android:layout_marginStart="@dimen/space_md"
                             android:layout_weight="1"
                             android:orientation="vertical">
 
@@ -109,36 +105,35 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/common_attendee"
-                                android:textColor="#111111"
-                                android:textSize="12sp"
-                                android:textStyle="bold" />
+                                android:textColor="@color/text_primary"
+                                android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
 
                             <TextView
                                 android:id="@+id/txtQrAttendeeName"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
-                                android:text="-"
-                                android:textColor="#6B7280"
-                                android:textSize="14sp" />
+                                android:layout_marginTop="@dimen/space_xxs"
+                                android:text="@string/placeholder_dash"
+                                android:textColor="@color/text_secondary"
+                                android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
                         </LinearLayout>
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="14dp"
+                        android:layout_marginTop="@dimen/space_14"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
                         <FrameLayout
-                            android:layout_width="34dp"
-                            android:layout_height="34dp"
+                            android:layout_width="@dimen/tile_34"
+                            android:layout_height="@dimen/tile_34"
                             android:background="@drawable/bg_soft_gray_pill">
 
                             <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
+                                android:layout_width="@dimen/icon_md"
+                                android:layout_height="@dimen/icon_md"
                                 android:layout_gravity="center"
                                 android:contentDescription="@string/common_email"
                                 android:src="@drawable/ic_qr_email" />
@@ -147,7 +142,7 @@
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="12dp"
+                            android:layout_marginStart="@dimen/space_md"
                             android:layout_weight="1"
                             android:orientation="vertical">
 
@@ -155,38 +150,37 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/common_email"
-                                android:textColor="#111111"
-                                android:textSize="12sp"
-                                android:textStyle="bold" />
+                                android:textColor="@color/text_primary"
+                                android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
 
                             <TextView
                                 android:id="@+id/txtQrAttendeeEmail"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
+                                android:layout_marginTop="@dimen/space_xxs"
                                 android:ellipsize="end"
                                 android:maxLines="1"
-                                android:text="-"
-                                android:textColor="#6B7280"
-                                android:textSize="14sp" />
+                                android:text="@string/placeholder_dash"
+                                android:textColor="@color/text_secondary"
+                                android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
                         </LinearLayout>
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="14dp"
+                        android:layout_marginTop="@dimen/space_14"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
                         <FrameLayout
-                            android:layout_width="34dp"
-                            android:layout_height="34dp"
+                            android:layout_width="@dimen/tile_34"
+                            android:layout_height="@dimen/tile_34"
                             android:background="@drawable/bg_soft_gray_pill">
 
                             <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
+                                android:layout_width="@dimen/icon_md"
+                                android:layout_height="@dimen/icon_md"
                                 android:layout_gravity="center"
                                 android:contentDescription="@string/common_attendee_id"
                                 android:src="@drawable/ic_hashtag" />
@@ -195,7 +189,7 @@
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="12dp"
+                            android:layout_marginStart="@dimen/space_md"
                             android:layout_weight="1"
                             android:orientation="vertical">
 
@@ -203,78 +197,69 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/common_attendee_id"
-                                android:textColor="#111111"
-                                android:textSize="12sp"
-                                android:textStyle="bold" />
+                                android:textColor="@color/text_primary"
+                                android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
 
                             <TextView
                                 android:id="@+id/txtQrCredentialValue"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
-                                android:text="-"
-                                android:textColor="#6B7280"
-                                android:textSize="14sp" />
+                                android:layout_marginTop="@dimen/space_xxs"
+                                android:text="@string/placeholder_dash"
+                                android:textColor="@color/text_secondary"
+                                android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
                         </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
 
                 <ImageView
                     android:id="@+id/imgQrCode"
-                    android:layout_width="164dp"
-                    android:layout_height="164dp"
-                    android:layout_marginTop="14dp"
+                    android:layout_width="@dimen/qr_box_164"
+                    android:layout_height="@dimen/qr_box_164"
+                    android:layout_marginTop="@dimen/space_14"
                     android:adjustViewBounds="true"
-                    android:background="#FFFFFF"
+                    android:background="@color/surface"
                     android:contentDescription="@string/common_qr_code"
-                    android:elevation="2dp"
-                    android:padding="6dp"
+                    android:elevation="@dimen/elevation_raised"
+                    android:padding="@dimen/space_6"
                     android:scaleType="fitCenter" />
 
                 <TextView
                     android:id="@+id/txtQrEventName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:fontFamily="sans"
+                    android:layout_marginTop="@dimen/space_md"
                     android:gravity="center"
-                    android:text="-"
-                    android:textColor="#111111"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:text="@string/placeholder_dash"
+                    android:textAppearance="@style/TextAppearance.EventQR.TitleMedium" />
 
                 <FrameLayout
-                    android:layout_width="128dp"
-                    android:layout_height="52dp"
-                    android:layout_marginTop="14dp">
+                    android:layout_width="@dimen/tile_128"
+                    android:layout_height="@dimen/input_height"
+                    android:layout_marginTop="@dimen/space_14">
 
                     <Button
                         android:id="@+id/btnMarkQrDownloaded"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:background="@drawable/bg_qr_download_button"
-                        android:fontFamily="sans"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
-                        android:text="@string/common_download_qr"
-                        android:textAllCaps="false"
-                        android:textColor="#FFFFFF"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
+                        style="@style/Widget.EventQR.Button.Download"
+                        android:paddingStart="@dimen/space_md"
+                        android:paddingEnd="@dimen/space_md"
+                        android:text="@string/common_download_qr" />
 
                     <ProgressBar
                         android:id="@+id/progressQrDownload"
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
+                        android:layout_width="@dimen/icon_22"
+                        android:layout_height="@dimen/icon_22"
                         android:layout_gravity="center"
                         android:importantForAccessibility="no"
-                        android:indeterminateTint="@color/brand_on_primary"
+                        android:indeterminateTint="@color/on_primary"
                         android:visibility="gone" />
 
                     <ImageView
                         android:id="@+id/imgQrDownloadCheck"
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
+                        android:layout_width="@dimen/icon_22"
+                        android:layout_height="@dimen/icon_22"
                         android:layout_gravity="center"
                         android:importantForAccessibility="no"
                         android:src="@drawable/ic_qr_success_check"
@@ -285,10 +270,9 @@
                     android:id="@+id/txtQrLoading"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/space_md"
                     android:text="@string/common_loading_credential"
-                    android:textColor="#6B7280"
-                    android:textSize="12sp"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextCaption"
                     android:visibility="gone" />
 
                 <EditText

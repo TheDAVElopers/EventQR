@@ -35,11 +35,11 @@ internal fun List<OrganizerMvpAttendee>.checkedInTotal(): Int = count { it.statu
 
 internal fun OrganizerMvpAttendee.statusPalette(context: Context): Pair<Int, Int> {
     val (bgRes, textRes) = when (statusBucket()) {
-        "Checked In" -> R.color.eventqr_badge_entered_bg to R.color.eventqr_badge_entered_text
-        "Exited" -> R.color.eventqr_badge_default_bg to R.color.eventqr_badge_default_text
-        "No Show" -> R.color.eventqr_badge_pending_bg to R.color.eventqr_badge_pending_text
-        "Cancelled" -> R.color.eventqr_badge_cancelled_bg to R.color.eventqr_badge_cancelled_text
-        else -> R.color.eventqr_badge_registered_bg to R.color.eventqr_badge_registered_text
+        "Checked In" -> R.color.badge_entered_bg to R.color.badge_entered_text
+        "Exited" -> R.color.badge_default_bg to R.color.badge_default_text
+        "No Show" -> R.color.badge_pending_bg to R.color.badge_pending_text
+        "Cancelled" -> R.color.badge_cancelled_bg to R.color.badge_cancelled_text
+        else -> R.color.badge_registered_bg to R.color.badge_registered_text
     }
     return context.getColor(bgRes) to context.getColor(textRes)
 }

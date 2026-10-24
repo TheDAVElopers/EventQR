@@ -1,142 +1,167 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    EventQR semantic colour ROLES (layer 2 of 3).
+
+    The ONLY colour names layouts, drawables, styles and Kotlin may reference.
+    Roles point at primitives in colors_palette.xml (p_*) or, for decorative one-offs, colors_deco.xml (deco_*).
+    The brand colour is one variable: edit p_brand (and its 3 paired lines) in colors_palette.xml.
+
+    Light theme only (no values-night).
+-->
 <resources>
-    <!-- ═══════════════════════════════════════════════ -->
-    <!-- EventQR — Core Palette (DESIGN.md §2.1)      -->
-    <!-- ═══════════════════════════════════════════════ -->
-    <color name="ink">#111111</color>
-    <color name="paper">#FAF9F6</color>
-    <color name="surface">#FFFFFF</color>
-    <color name="line">#1F111111</color>
-    <color name="accent_signal">#2D2A7C</color>
-    <color name="ink_muted">#6B6B6B</color>
 
-    <!-- ═══════════════════════════════════════════════ -->
-    <!-- Accent family (§2.1)                          -->
-    <!-- ═══════════════════════════════════════════════ -->
-    <color name="accent_signal_dark">#1E1B5E</color>
-    <color name="accent_signal_light">#4A46A8</color>
+    <!-- ═════════════════════════ Brand ═════════════════════════ -->
+    <color name="primary">@color/p_brand</color>
+    <color name="primary_dark">@color/p_brand_dark</color>
+    <color name="primary_light">@color/p_brand_light</color>
+    <color name="primary_container">@color/p_brand_tint</color>
+    <color name="primary_disabled">@color/p_brand_disabled</color>
+    <color name="on_primary">@color/p_white</color>
+    <color name="on_primary_muted">@color/p_brand_on_muted</color>
+    <color name="on_primary_soft">@color/p_n100</color>
 
-    <!-- ═══════════════════════════════════════════════ -->
-    <!-- Status (§2.2)                                 -->
-    <!-- ═══════════════════════════════════════════════ -->
-    <color name="status_live">#1C7C3E</color>
-    <color name="status_rejected">#C62828</color>
+    <!-- Secondary: after D1 only the CTA gradient end (primary -> secondary) -->
+    <color name="secondary">@color/p_secondary</color>
+    <color name="secondary_light">@color/p_secondary_light</color>
+    <color name="secondary_container">@color/p_secondary_tint</color>
+    <color name="on_secondary_container">@color/p_secondary_dark</color>
 
-    <!-- ═══════════════════════════════════════════════ -->
-    <!-- Text Tokens (§2.3)                            -->
-    <!-- ═══════════════════════════════════════════════ -->
-    <color name="text_on_paper">#111111</color>
-    <color name="text_on_paper_muted">#6B6B6B</color>
-    <color name="text_on_ink">#FAF9F6</color>
-    <color name="text_on_ink_muted">#A8A8A8</color>
-    <color name="text_on_accent">#FFFFFF</color>
-    <color name="text_on_accent_muted">#D7D4F8</color>
+    <!-- Accent: D1 collapsed the indigo accent into the brand colour; tints stay distinct -->
+    <color name="accent">@color/primary</color>
+    <color name="accent_dark">@color/p_accent_dark</color>
+    <color name="accent_container">@color/p_accent_tint</color>
+    <color name="accent_container_strong">@color/p_accent_tint_strong</color>
+    <color name="accent_outline">@color/p_accent_outline</color>
 
-    <!-- ═══════════════════════════════════════════════ -->
-    <!-- Button States (§7.1)                          -->
-    <!-- ═══════════════════════════════════════════════ -->
-    <color name="accent_signal_pressed">#1E1B5E</color>
-    <color name="accent_signal_disabled">#26111111</color>
-    <color name="text_on_accent_disabled">#4D111111</color>
+    <!-- ═════════════════════════ Surfaces ═════════════════════════ -->
+    <color name="background">@color/p_n50</color>
+    <color name="surface">@color/p_white</color>
+    <color name="surface_muted">@color/p_n100</color>
+    <color name="surface_dim">@color/p_n150</color>
+    <color name="navy">@color/p_navy</color>
+    <color name="scrim">#66000000</color>
+    <color name="transparent">#00000000</color>
+    <color name="on_dark_10">#1AFFFFFF</color>
+    <color name="on_dark_15">#26FFFFFF</color>
+    <color name="on_dark_20">#33FFFFFF</color>
+    <color name="on_dark_30">#4DFFFFFF</color>
+    <color name="on_dark_50">#80FFFFFF</color>
+    <color name="on_dark_80">#CCFFFFFF</color>
+    <!-- Fully transparent page background (gradient fade-out end); alpha 0 with the background hue so the fade does not go grey -->
+    <color name="background_clear">#00F7F7FA</color>
 
-    <!-- ═══════════════════════════════════════════════ -->
-    <!-- Legacy Tokens (other screens still use)      -->
-    <!-- ═══════════════════════════════════════════════ -->
-    <!-- Design System Tokens -->
-    <color name="brand_primary">#2D2A7C</color>
-    <color name="brand_primary_dark">#1E1B5E</color>
-    <color name="brand_primary_light">#4A46A8</color>
-    <color name="brand_on_primary">#FFFFFF</color>
-    <color name="brand_on_primary_muted">#D7D4F8</color>
+    <!-- ═════════════════════════ Text ═════════════════════════ -->
+    <color name="text_primary">@color/p_n900</color>
+    <color name="text_secondary">@color/p_text_secondary</color>
+    <color name="text_body">@color/p_n600</color>
+    <color name="text_hint">@color/text_secondary</color>
+    <color name="text_disabled">@color/text_hint</color>
+    <color name="text_label">@color/p_text_label</color>
+    <!-- NON-text counterparts (icon tints, status dots, disabled fills): the lighter pre-a11y shades, below 4.5:1 on purpose -->
+    <color name="neutral">@color/p_n400</color>
+    <color name="neutral_label">@color/p_label</color>
+    <color name="text_link">@color/accent</color>
 
-    <color name="surface_alt">#F4F6FB</color>
-    <color name="outline">#E1E4EA</color>
-    <color name="text_primary">#14151A</color>
-    <color name="text_secondary">#5B5F6B</color>
-    <color name="text_disabled">#A0A4AD</color>
-    <color name="filter_label">#4B5563</color>
+    <!-- QR code modules: fixed black on white regardless of brand / text roles (scanner contrast, pre-migration pixels) -->
+    <color name="qr_dark">@color/p_black</color>
+    <color name="qr_light">@color/p_white</color>
 
-    <!-- Semantic -->
-    <color name="success">#1E8E5A</color>
-    <color name="warning">#B8860B</color>
-    <color name="error">#C62828</color>
+    <!-- ═════════════════════════ Borders ═════════════════════════ -->
+    <color name="outline">@color/p_n200</color>
+    <color name="outline_strong">@color/p_n300</color>
+    <color name="divider">#1F111111</color>
 
-    <!-- Icon tile backgrounds (12% opacity of icon color) -->
-    <color name="tile_blue">#E0E7FF</color>
-    <color name="tile_purple">#EDE9FE</color>
-    <color name="tile_green">#D1FAE5</color>
-    <color name="tile_yellow">#FEF3C7</color>
-    <color name="tile_pink">#FCE7F3</color>
-    <color name="tile_cyan">#CFFAFE</color>
-    <color name="tile_indigo">#D6D9FF</color>
+    <!-- ═════════════════════════ Status ═════════════════════════ -->
+    <color name="success">@color/p_green_500</color>
+    <color name="success_dark">@color/p_green_600</color>
+    <color name="success_container">@color/p_green_100</color>
+    <!-- visible border of success chips (the old 86EFAC stroke) -->
+    <color name="success_outline">@color/p_green_300</color>
+    <color name="on_success_container">@color/p_green_800</color>
 
-    <!-- Icon tint colors (darker shades for legibility on pale tiles) -->
-    <color name="icon_tint_indigo">#4338CA</color>
-    <color name="icon_tint_blue">#2563EB</color>
-    <color name="icon_tint_green">#059669</color>
-    <color name="icon_tint_amber">#D97706</color>
-    <color name="icon_tint_pink">#BE185D</color>
+    <color name="warning">@color/p_amber_500</color>
+    <color name="warning_dark">@color/p_amber_700</color>
+    <color name="warning_container">@color/p_amber_100</color>
+    <!-- visible border of warning boxes (the old FDE68A stroke) -->
+    <color name="warning_outline">@color/p_amber_200</color>
+    <color name="on_warning_container">@color/p_amber_800</color>
 
-    <color name="avatar_gradient_start">#1E1B5E</color>
-    <color name="avatar_gradient_end">#4A46A8</color>
+    <color name="error">@color/p_red_700</color>
+    <color name="danger">@color/p_red_500</color>
+    <color name="error_container">@color/p_red_100</color>
+    <!-- softer tint than error_container (sign-out row resting state) -->
+    <color name="error_container_soft">@color/p_red_50</color>
+    <color name="on_error_container">@color/p_red_800</color>
+    <!-- visible border of error boxes / destructive rows (the old FCA5A5 stroke) -->
+    <color name="error_outline">@color/p_red_300</color>
 
-    <color name="button">#4F46E5</color>
-    <color name="purple">#7C3AED</color>
-    <color name="cyan">#06B6D4</color>
-    <color name="green">#10B981</color>
-    <color name="white">#F3F4F6</color>
-    <color name="black">#1F2937</color>
+    <color name="info">@color/p_blue_500</color>
+    <color name="info_dark">@color/p_blue_600</color>
+    <color name="info_container">@color/p_blue_100</color>
+    <color name="on_info_container">@color/p_blue_900</color>
 
-    <color name="splash_gradient_start">#5B21B6</color>
-    <color name="splash_gradient_center">#312E81</color>
-    <color name="splash_gradient_end">#0F172A</color>
+    <!-- ═════════════════════════ Icon tints ═════════════════════════ -->
+    <color name="icon_tint_green">@color/success_dark</color>
 
-    <color name="eventqr_navy">#121735</color>
-    <color name="eventqr_indigo">#2D2A7C</color>
-    <color name="eventqr_purple">#5B25C9</color>
-    <color name="eventqr_bg">#F7F7FA</color>
-    <color name="eventqr_card">#FFFFFF</color>
-    <color name="eventqr_text">#111111</color>
-    <color name="eventqr_muted">#6B7280</color>
-    <color name="eventqr_border">#E5E7EB</color>
-    <color name="eventqr_input">#F1F2F6</color>
-    <color name="eventqr_success">#16A34A</color>
-    <color name="eventqr_warning">#F59E0B</color>
-    <color name="eventqr_error">#EF4444</color>
-    <color name="eventqr_info">#3B82F6</color>
+    <!-- ═════════════════════════ Charts (reports) ═════════════════════════ -->
+    <color name="chart_1">@color/accent</color>
+    <color name="chart_2">@color/p_chart_cyan</color>
+    <color name="chart_3">@color/p_chart_violet</color>
+    <color name="chart_4">@color/p_chart_sky</color>
+    <color name="chart_5">@color/p_chart_indigo</color>
+    <color name="chart_6">@color/success</color>
+    <color name="chart_7">@color/warning</color>
+    <color name="chart_8">@color/p_chart_periwinkle</color>
 
-    <color name="eventqr_badge_default_bg">#E5E7EB</color>
-    <color name="eventqr_badge_default_text">#374151</color>
-    <color name="eventqr_badge_registered_bg">#EDE9FE</color>
-    <color name="eventqr_badge_registered_text">#4C1D95</color>
-    <color name="eventqr_badge_entered_bg">#D1FAE5</color>
-    <color name="eventqr_badge_entered_text">#065F46</color>
-    <color name="eventqr_badge_exited_bg">#DBEAFE</color>
-    <color name="eventqr_badge_exited_text">#1E3A8A</color>
-    <color name="eventqr_badge_cancelled_bg">#FEE2E2</color>
-    <color name="eventqr_badge_cancelled_text">#991B1B</color>
-    <color name="eventqr_badge_pending_bg">#FEF3C7</color>
-    <color name="eventqr_badge_pending_text">#92400E</color>
+    <!-- ═════════════════════════ Domain roles (kept; values come from roles above) ═════════════════════════ -->
+    <!-- Registration / attendance badges -->
+    <color name="badge_default_bg">@color/outline</color>
+    <color name="badge_default_text">@color/p_n700</color>
+    <color name="badge_registered_bg">@color/secondary_container</color>
+    <color name="badge_registered_text">@color/on_secondary_container</color>
+    <color name="badge_entered_bg">@color/success_container</color>
+    <color name="badge_entered_text">@color/on_success_container</color>
+    <color name="badge_exited_bg">@color/info_container</color>
+    <color name="badge_exited_text">@color/on_info_container</color>
+    <color name="badge_cancelled_bg">@color/error_container</color>
+    <color name="badge_cancelled_text">@color/on_error_container</color>
+    <color name="badge_pending_bg">@color/warning_container</color>
+    <color name="badge_pending_text">@color/on_warning_container</color>
 
-    <color name="eventqr_event_status_upcoming">#F5A623</color>
-    <color name="eventqr_event_status_active">#10B981</color>
-    <color name="eventqr_event_status_completed">#6B7280</color>
-    <color name="eventqr_event_status_draft">#9CA3AF</color>
-    <color name="eventqr_event_status_pending_review">#F59E0B</color>
-    <color name="eventqr_event_status_rejected">#DC2626</color>
-    <color name="eventqr_event_status_cancelled">#991B1B</color>
-    <color name="eventqr_event_status_unknown">#475569</color>
+    <!-- Event status TEXT colours (EventStatusBadgeStyler): amber/green use the dark shades so small text reaches AA-ish contrast;
+         use warning / success directly for dots and fills -->
+    <color name="event_status_upcoming">@color/warning_dark</color>
+    <color name="event_status_active">@color/success_dark</color>
+    <color name="event_status_completed">@color/text_secondary</color>
+    <color name="event_status_draft">@color/text_hint</color>
+    <color name="event_status_pending_review">@color/warning_dark</color>
+    <color name="event_status_rejected">@color/error</color>
+    <color name="event_status_cancelled">@color/on_error_container</color>
+    <color name="event_status_unknown">@color/text_body</color>
 
-    <color name="eventqr_event_badge_upcoming_bg">#FEF3C7</color>
-    <color name="eventqr_event_badge_active_bg">#D1FAE5</color>
-    <color name="eventqr_event_badge_completed_bg">#E5E7EB</color>
-    <color name="eventqr_event_badge_draft_bg">#F3F4F6</color>
-    <color name="eventqr_event_badge_pending_review_bg">#FDF3D0</color>
-    <color name="eventqr_event_badge_rejected_bg">#FEE2E2</color>
-    <color name="eventqr_event_badge_cancelled_bg">#FBE3E3</color>
-    <color name="eventqr_event_badge_unknown_bg">#CBD5E1</color>
-    <color name="eventqr_event_badge_registered_bg">#EEF2FF</color>
+    <!-- Event status badge backgrounds -->
+    <color name="event_badge_upcoming_bg">@color/warning_container</color>
+    <color name="event_badge_active_bg">@color/success_container</color>
+    <color name="event_badge_completed_bg">@color/outline</color>
+    <color name="event_badge_draft_bg">@color/surface_muted</color>
+    <color name="event_badge_pending_review_bg">@color/warning_container</color>
+    <color name="event_badge_rejected_bg">@color/error_container</color>
+    <color name="event_badge_cancelled_bg">@color/error_container</color>
+    <color name="event_badge_unknown_bg">@color/outline_strong</color>
+    <color name="event_badge_registered_bg">@color/accent_container</color>
+
+    <!-- Icon tile backgrounds -->
+    <color name="tile_pink">@color/p_pink_100</color>
+    <color name="tile_violet">@color/p_violet_100</color>
+    <color name="tile_cyan">@color/p_cyan_100</color>
+    <color name="tile_indigo">@color/primary_container</color>
+
+    <color name="avatar_gradient_start">@color/primary_dark</color>
+    <color name="avatar_gradient_end">@color/primary_light</color>
+
     <!-- Screen headers (EventQrHeaders.kt) -->
-    <color name="header_title">#121735</color>
-    <color name="header_subtitle">#8E8EA9</color>
+    <color name="header_title">@color/text_primary</color>
+    <color name="header_subtitle">@color/text_label</color>
+    <color name="filter_label">@color/text_body</color>
+
 </resources>

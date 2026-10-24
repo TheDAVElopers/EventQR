@@ -44,6 +44,7 @@ import com.thedavelopers.eventqr.ui.theme.EventAccentRegisteredFill
 import com.thedavelopers.eventqr.ui.theme.EventAccentUpcoming
 import com.thedavelopers.eventqr.ui.theme.EventAccentUpcomingFill
 import com.thedavelopers.eventqr.ui.theme.LocalSpacing
+import com.thedavelopers.eventqr.ui.theme.TextOnPrimary
 import java.util.Locale
 import androidx.compose.ui.res.stringResource
 import com.thedavelopers.eventqr.R
@@ -53,6 +54,7 @@ data class EventCardAccent(
     val fill: Color,
 )
 
+@Composable
 fun eventCardAccent(status: EventBadgeStatus): EventCardAccent = when (status) {
     EventBadgeStatus.ACTIVE -> EventCardAccent(EventAccentActive, EventAccentActiveFill)
     EventBadgeStatus.COMPLETED -> EventCardAccent(EventAccentCompleted, EventAccentCompletedFill)
@@ -119,12 +121,12 @@ fun EventCard(
                     ) {
                         Text(
                             text = day.ifBlank { "--" },
-                            color = Color.White,
+                            color = TextOnPrimary,
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                         )
                         Text(
                             text = month.uppercase(Locale.ENGLISH).ifBlank { "---" },
-                            color = Color.White,
+                            color = TextOnPrimary,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                         )
                     }

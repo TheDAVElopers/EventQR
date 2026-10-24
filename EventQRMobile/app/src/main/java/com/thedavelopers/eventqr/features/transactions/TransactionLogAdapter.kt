@@ -49,7 +49,7 @@ class TransactionLogAdapter : RecyclerView.Adapter<TransactionLogAdapter.ViewHol
 
         fun bind(item: TransactionResponse) {
             val isApproved = item.transactionResult == TransactionResult.APPROVED
-            val brandPrimary = ContextCompat.getColor(itemView.context, R.color.brand_primary)
+            val brandPrimary = ContextCompat.getColor(itemView.context, R.color.primary)
 
             // Line 1: attendee name + transaction type label
             attendeeNameView.text = item.attendeeName?.takeIf { it.isNotBlank() } ?: "Attendee"
@@ -88,7 +88,7 @@ class TransactionLogAdapter : RecyclerView.Adapter<TransactionLogAdapter.ViewHol
                 pointsBadgeView.setTextColor(
                     ContextCompat.getColor(
                         itemView.context,
-                        if (points > 0) R.color.icon_tint_green else R.color.eventqr_error
+                        if (points > 0) R.color.icon_tint_green else R.color.danger
                     )
                 )
             } else {

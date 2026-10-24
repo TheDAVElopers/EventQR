@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eventqr_bg"
+    android:background="@color/background"
     android:orientation="vertical">
 
     <!-- ── Header ─────────────────────────────────────────── -->
@@ -13,34 +13,33 @@
         android:layout_height="wrap_content"
         android:background="@drawable/bg_dashboard_gradient"
         android:orientation="vertical"
-        android:paddingHorizontal="20dp"
-        android:paddingTop="24dp"
-        android:paddingBottom="24dp">
+        android:paddingHorizontal="@dimen/space_20"
+        android:paddingTop="@dimen/space_xl"
+        android:paddingBottom="@dimen/space_xl">
 
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp">
+            android:layout_marginBottom="@dimen/space_20">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="56dp"
+                android:layout_marginEnd="@dimen/header_action_clearance"
                 android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/txtDashboardWelcome"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:fontFamily="sans-serif-light"
                     android:text="@string/common_welcome_back"
-                    android:textColor="#B0BEC5"
-                    android:textSize="15sp" />
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBody.Light"
+                    android:textColor="@color/deco_on_primary_greeting" />
 
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="@dimen/space_xs"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -49,70 +48,68 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
-                        android:fontFamily="sans-serif-medium"
                         android:maxLines="1"
                         android:maxWidth="190dp"
                         android:text="@string/common_attendee"
-                        android:textColor="#FFFFFF"
-                        android:textSize="22sp" />
+                        android:textColor="@color/on_primary"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextHeadline.Medium" />
 
                     <TextView
                         android:id="@+id/txtDashboardNameDot"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text=" · "
-                        android:textColor="#80FFFFFF"
-                        android:textSize="16sp"
+                        android:text="@string/separator_dot"
+                        android:textColor="@color/on_dark_50"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge"
                         android:visibility="gone" />
 
                     <LinearLayout
                         android:id="@+id/portalSwitcherChip"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
+                        android:layout_marginStart="@dimen/space_sm"
                         android:background="@drawable/bg_dashboard_portal_chip"
                         android:clickable="true"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        android:paddingHorizontal="10dp"
-                        android:paddingVertical="4dp"
+                        android:paddingHorizontal="@dimen/space_10"
+                        android:paddingVertical="@dimen/space_xs"
                         android:visibility="gone">
 
                         <TextView
                             android:id="@+id/txtCurrentPortal"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:fontFamily="sans-serif-medium"
                             android:text="@string/common_attendee"
-                            android:textColor="#FFFFFF"
-                            android:textSize="11sp" />
+                            android:textColor="@color/on_primary"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextOverline.Medium" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="4dp"
-                            android:text="▾"
-                            android:textColor="#80FFFFFF"
-                            android:textSize="11sp" />
+                            android:layout_marginStart="@dimen/space_xs"
+                            android:text="@string/glyph_dropdown_arrow"
+                            android:textColor="@color/on_dark_50"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextOverline" />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
 
             <FrameLayout
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="@dimen/icon_tile_md"
+                android:layout_height="@dimen/icon_tile_md"
                 android:layout_gravity="top|end"
                 android:background="@drawable/bg_dashboard_notification">
 
                 <ImageView
                     android:id="@+id/btnDashboardNotifications"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="@dimen/icon_md"
+                    android:layout_height="@dimen/icon_md"
                     android:layout_gravity="center"
                     android:contentDescription="@string/common_notifications"
                     android:src="@drawable/notification_bell"
-                    android:tint="#FFFFFF" />
+                    android:tint="@color/on_primary" />
 
                 <TextView
                     android:id="@+id/txtNotificationBadge"
@@ -123,13 +120,12 @@
                     android:layout_marginEnd="1dp"
                     android:background="@drawable/bg_notification_badge_count"
                     android:gravity="center"
-                    android:minWidth="16dp"
-                    android:paddingHorizontal="4dp"
+                    android:minWidth="@dimen/badge_count_min_width"
+                    android:paddingHorizontal="@dimen/space_xs"
                     android:paddingVertical="1dp"
-                    android:text="0"
-                    android:textColor="@android:color/white"
-                    android:textSize="9sp"
-                    android:textStyle="bold"
+                    android:text="@string/placeholder_zero"
+                    android:textColor="@color/on_primary"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextNano"
                     android:visibility="gone" />
             </FrameLayout>
         </FrameLayout>
@@ -147,83 +143,77 @@
                 android:background="@drawable/bg_dashboard_stat_card"
                 android:gravity="center"
                 android:orientation="vertical"
-                android:paddingVertical="14dp">
+                android:paddingVertical="@dimen/space_14">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:fontFamily="sans-serif-medium"
                     android:text="@string/common_registered"
-                    android:textColor="#80FFFFFF"
-                    android:textSize="12sp" />
+                    android:textColor="@color/on_dark_50"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Medium" />
 
                 <TextView
                     android:id="@+id/txtTotalRegistrations"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:fontFamily="sans-serif-bold"
-                    android:text="0"
-                    android:textColor="#FFFFFF"
-                    android:textSize="22sp" />
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:text="@string/placeholder_zero"
+                    android:textColor="@color/on_primary"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextHeadline.LegacyBold" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="@dimen/space_sm"
                 android:layout_weight="1"
                 android:background="@drawable/bg_dashboard_stat_card"
                 android:gravity="center"
                 android:orientation="vertical"
-                android:paddingVertical="14dp">
+                android:paddingVertical="@dimen/space_14">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:fontFamily="sans-serif-medium"
                     android:text="@string/user_dashboard_open_events"
-                    android:textColor="#80FFFFFF"
-                    android:textSize="12sp" />
+                    android:textColor="@color/on_dark_50"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Medium" />
 
                 <TextView
                     android:id="@+id/txtTotalEvents"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:fontFamily="sans-serif-bold"
-                    android:text="0"
-                    android:textColor="#FFFFFF"
-                    android:textSize="22sp" />
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:text="@string/placeholder_zero"
+                    android:textColor="@color/on_primary"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextHeadline.LegacyBold" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="@dimen/space_sm"
                 android:layout_weight="1"
                 android:background="@drawable/bg_dashboard_stat_card"
                 android:gravity="center"
                 android:orientation="vertical"
-                android:paddingVertical="14dp">
+                android:paddingVertical="@dimen/space_14">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:fontFamily="sans-serif-medium"
                     android:text="@string/common_completed"
-                    android:textColor="#80FFFFFF"
-                    android:textSize="12sp" />
+                    android:textColor="@color/on_dark_50"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Medium" />
 
                 <TextView
                     android:id="@+id/txtTotalCompleted"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:fontFamily="sans-serif-bold"
-                    android:text="0"
-                    android:textColor="#FFFFFF"
-                    android:textSize="22sp" />
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:text="@string/placeholder_zero"
+                    android:textColor="@color/on_primary"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextHeadline.LegacyBold" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
@@ -245,39 +235,33 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingBottom="16dp">
+                android:paddingBottom="@dimen/space_lg">
 
                 <!-- ── Quick Actions ──────────────────────────── -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingHorizontal="16dp"
-                    android:paddingTop="20dp">
+                    android:paddingHorizontal="@dimen/space_lg"
+                    android:paddingTop="@dimen/space_20">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="sans-serif-medium"
                         android:text="@string/user_dashboard_quick_actions"
-                        android:textColor="@color/text_primary"
-                        android:textSize="16sp" />
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Medium" />
 
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        app:cardBackgroundColor="@color/surface"
-                        app:cardCornerRadius="12dp"
-                        app:cardElevation="2dp"
-                        app:strokeColor="@color/outline"
-                        app:strokeWidth="1dp">
+                        android:layout_marginTop="@dimen/space_md"
+                        style="@style/Widget.EventQR.Card.Compact.Raised">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
-                            android:padding="16dp">
+                            android:padding="@dimen/space_lg">
 
                         <!-- Browse Events -->
                         <LinearLayout
@@ -289,32 +273,30 @@
                             android:focusable="true"
                             android:gravity="center"
                             android:orientation="vertical"
-                            android:paddingVertical="14dp">
+                            android:paddingVertical="@dimen/space_14">
 
                             <FrameLayout
-                                android:layout_width="40dp"
-                                android:layout_height="40dp">
+                                android:layout_width="@dimen/icon_tile_md"
+                                android:layout_height="@dimen/icon_tile_md">
 
                                 <ImageView
-                                    android:layout_width="20dp"
-                                    android:layout_height="20dp"
+                                    android:layout_width="@dimen/icon_md"
+                                    android:layout_height="@dimen/icon_md"
                                     android:layout_gravity="center"
                                     android:contentDescription="@string/user_dashboard_browse_events"
                                     android:src="@drawable/ic_calendar"
-                                    android:tint="@color/brand_primary" />
+                                    android:tint="@color/primary" />
                             </FrameLayout>
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
+                                android:layout_marginTop="@dimen/space_sm"
                                 android:ellipsize="end"
-                                android:fontFamily="sans-serif-medium"
                                 android:gravity="center"
                                 android:maxLines="1"
                                 android:text="@string/user_dashboard_browse_events"
-                                android:textColor="@color/text_primary"
-                                android:textSize="11sp" />
+                                android:textAppearance="@style/TextAppearance.EventQR.TextOverline.Medium" />
                         </LinearLayout>
 
                         <!-- History -->
@@ -322,38 +304,36 @@
                             android:id="@+id/btnTransactionHistory"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
+                            android:layout_marginStart="@dimen/space_sm"
                             android:layout_weight="1"
                             android:clickable="true"
                             android:focusable="true"
                             android:gravity="center"
                             android:orientation="vertical"
-                            android:paddingVertical="14dp">
+                            android:paddingVertical="@dimen/space_14">
 
                             <FrameLayout
-                                android:layout_width="40dp"
-                                android:layout_height="40dp">
+                                android:layout_width="@dimen/icon_tile_md"
+                                android:layout_height="@dimen/icon_tile_md">
 
                                 <ImageView
-                                    android:layout_width="20dp"
-                                    android:layout_height="20dp"
+                                    android:layout_width="@dimen/icon_md"
+                                    android:layout_height="@dimen/icon_md"
                                     android:layout_gravity="center"
                                     android:contentDescription="@string/user_dashboard_history"
                                     android:src="@drawable/ic_history"
-                                    android:tint="@color/brand_primary" />
+                                    android:tint="@color/primary" />
                             </FrameLayout>
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
+                                android:layout_marginTop="@dimen/space_sm"
                                 android:ellipsize="end"
-                                android:fontFamily="sans-serif-medium"
                                 android:gravity="center"
                                 android:maxLines="1"
                                 android:text="@string/common_transaction_history"
-                                android:textColor="@color/text_primary"
-                                android:textSize="11sp" />
+                                android:textAppearance="@style/TextAppearance.EventQR.TextOverline.Medium" />
                         </LinearLayout>
 
                         <!-- Request Event -->
@@ -361,38 +341,36 @@
                             android:id="@+id/btnRequestEventCard"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
+                            android:layout_marginStart="@dimen/space_sm"
                             android:layout_weight="1"
                             android:clickable="true"
                             android:focusable="true"
                             android:gravity="center"
                             android:orientation="vertical"
-                            android:paddingVertical="14dp">
+                            android:paddingVertical="@dimen/space_14">
 
                             <FrameLayout
-                                android:layout_width="40dp"
-                                android:layout_height="40dp">
+                                android:layout_width="@dimen/icon_tile_md"
+                                android:layout_height="@dimen/icon_tile_md">
 
                                 <ImageView
-                                    android:layout_width="20dp"
-                                    android:layout_height="20dp"
+                                    android:layout_width="@dimen/icon_md"
+                                    android:layout_height="@dimen/icon_md"
                                     android:layout_gravity="center"
                                     android:contentDescription="@string/user_dashboard_request_event"
                                     android:src="@drawable/ic_event_request"
-                                    android:tint="@color/brand_primary" />
+                                    android:tint="@color/primary" />
                             </FrameLayout>
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
+                                android:layout_marginTop="@dimen/space_sm"
                                 android:ellipsize="end"
-                                android:fontFamily="sans-serif-medium"
                                 android:gravity="center"
                                 android:maxLines="1"
                                 android:text="@string/user_dashboard_request_event"
-                                android:textColor="@color/text_primary"
-                                android:textSize="11sp" />
+                                android:textAppearance="@style/TextAppearance.EventQR.TextOverline.Medium" />
                         </LinearLayout>
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
@@ -403,18 +381,16 @@
                     android:id="@+id/layoutUpcomingEvents"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
+                    android:layout_marginTop="@dimen/space_xl"
                     android:orientation="vertical"
-                    android:paddingHorizontal="16dp"
+                    android:paddingHorizontal="@dimen/space_lg"
                     android:visibility="gone">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="sans-serif-medium"
                         android:text="@string/user_dashboard_next_event"
-                        android:textColor="@color/text_primary"
-                        android:textSize="16sp" />
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Medium" />
                 </LinearLayout>
 
                 <!-- ── Discover Events ────────────────────────── -->
@@ -422,9 +398,9 @@
                     android:id="@+id/layoutDiscoverEvents"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
+                    android:layout_marginTop="@dimen/space_xl"
                     android:orientation="vertical"
-                    android:paddingHorizontal="16dp"
+                    android:paddingHorizontal="@dimen/space_lg"
                     android:visibility="gone">
 
                     <LinearLayout
@@ -437,10 +413,8 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:fontFamily="sans-serif-medium"
                             android:text="@string/user_dashboard_discover_events"
-                            android:textColor="@color/text_primary"
-                            android:textSize="16sp" />
+                            android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Medium" />
 
                         <TextView
                             android:id="@+id/txtDiscoverEventsSeeAll"
@@ -448,10 +422,9 @@
                             android:layout_height="wrap_content"
                             android:clickable="true"
                             android:focusable="true"
-                            android:fontFamily="sans-serif-medium"
                             android:text="@string/user_dashboard_see_all"
-                            android:textColor="@color/brand_primary"
-                            android:textSize="13sp" />
+                            android:textColor="@color/primary"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Medium" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -461,7 +434,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp"
+                    android:padding="@dimen/space_lg"
                     android:visibility="visible">
 
                     <!-- Skeleton row 1 -->
@@ -471,8 +444,8 @@
                         android:background="@drawable/bg_staff_skeleton_card"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        android:padding="16dp"
-                        android:layout_marginBottom="12dp">
+                        android:padding="@dimen/space_lg"
+                        android:layout_marginBottom="@dimen/space_md">
 
                         <View
                             android:layout_width="40dp"
@@ -483,7 +456,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginStart="12dp"
+                            android:layout_marginStart="@dimen/space_md"
                             android:orientation="vertical">
 
                             <View
@@ -494,7 +467,7 @@
                             <View
                                 android:layout_width="140dp"
                                 android:layout_height="10dp"
-                                android:layout_marginTop="8dp"
+                                android:layout_marginTop="@dimen/space_sm"
                                 android:background="@drawable/bg_staff_skeleton_bar" />
                         </LinearLayout>
                     </LinearLayout>
@@ -506,8 +479,8 @@
                         android:background="@drawable/bg_staff_skeleton_card"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        android:padding="16dp"
-                        android:layout_marginBottom="12dp">
+                        android:padding="@dimen/space_lg"
+                        android:layout_marginBottom="@dimen/space_md">
 
                         <View
                             android:layout_width="40dp"
@@ -518,7 +491,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginStart="12dp"
+                            android:layout_marginStart="@dimen/space_md"
                             android:orientation="vertical">
 
                             <View
@@ -529,7 +502,7 @@
                             <View
                                 android:layout_width="120dp"
                                 android:layout_height="10dp"
-                                android:layout_marginTop="8dp"
+                                android:layout_marginTop="@dimen/space_sm"
                                 android:background="@drawable/bg_staff_skeleton_bar" />
                         </LinearLayout>
                     </LinearLayout>
@@ -541,8 +514,8 @@
                         android:background="@drawable/bg_staff_skeleton_card"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        android:padding="16dp"
-                        android:layout_marginBottom="12dp">
+                        android:padding="@dimen/space_lg"
+                        android:layout_marginBottom="@dimen/space_md">
 
                         <View
                             android:layout_width="40dp"
@@ -553,7 +526,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginStart="12dp"
+                            android:layout_marginStart="@dimen/space_md"
                             android:orientation="vertical">
 
                             <View
@@ -564,7 +537,7 @@
                             <View
                                 android:layout_width="160dp"
                                 android:layout_height="10dp"
-                                android:layout_marginTop="8dp"
+                                android:layout_marginTop="@dimen/space_sm"
                                 android:background="@drawable/bg_staff_skeleton_bar" />
                         </LinearLayout>
                     </LinearLayout>

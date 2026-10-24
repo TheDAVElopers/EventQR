@@ -10,6 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.ViewCompat
@@ -19,7 +20,9 @@ import androidx.core.view.doOnAttach
 import androidx.core.view.updatePadding
 import com.thedavelopers.eventqr.R
 
-private val LightColorScheme = lightColorScheme(
+@Composable
+@ReadOnlyComposable
+private fun eventQrLightColorScheme() = lightColorScheme(
     primary = BrandPrimary,
     onPrimary = TextOnPrimary,
     primaryContainer = BrandPrimaryLight,
@@ -46,7 +49,7 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun EventQrTheme(
-    spacing: EventQrSpacing = EventQrSpacing(),
+    spacing: EventQrSpacing? = null,
     content: @Composable () -> Unit,
 ) {
     val view = LocalView.current
@@ -56,10 +59,10 @@ fun EventQrTheme(
         }
     }
 
-    CompositionLocalProvider(LocalSpacing provides spacing) {
+    CompositionLocalProvider(LocalSpacing provides (spacing ?: eventQrSpacing())) {
         MaterialTheme(
-            colorScheme = LightColorScheme,
-            typography = EventQrTypography,
+            colorScheme = eventQrLightColorScheme(),
+            typography = eventQrTypography(),
             content = content,
         )
     }
@@ -69,10 +72,10 @@ fun EventQrTheme(
 fun EventQrRowTheme(
     content: @Composable () -> Unit,
 ) {
-    CompositionLocalProvider(LocalSpacing provides EventQrSpacing()) {
+    CompositionLocalProvider(LocalSpacing provides eventQrSpacing()) {
         MaterialTheme(
-            colorScheme = LightColorScheme,
-            typography = EventQrTypography,
+            colorScheme = eventQrLightColorScheme(),
+            typography = eventQrTypography(),
             content = content,
         )
     }
@@ -100,7 +103,7 @@ private fun Activity.applyEventQrAdaptiveStatusBar() {
         decor.setTag(R.id.eventqr_status_bar_adaptive, true)
         decor.viewTreeObserver.addOnGlobalLayoutListener {
             decor.removeCallbacks(update)
-            decor.postDelayed(update, 80)
+            decor.postDelayed(update, decor.integer(R.integer.motion_settle_ms).toLong())
         }
     }
     decor.post(update)

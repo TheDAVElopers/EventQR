@@ -2,21 +2,21 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Base background color -->
     <item>
-        <color android:color="#F6F7FC" />
+        <color android:color="@color/background" />
     </item>
     <!-- Top-right soft purple gradient glow -->
     <item
-        android:width="280dp"
-        android:height="280dp"
+        android:width="@dimen/glow_diameter"
+        android:height="@dimen/glow_diameter"
         android:gravity="top|end"
-        android:top="-60dp"
-        android:end="-60dp">
+        android:top="@dimen/glow_offset"
+        android:end="@dimen/glow_offset">
         <shape android:shape="oval">
             <gradient
                 android:type="radial"
-                android:gradientRadius="200dp"
-                android:startColor="#1F5B25C9"
-                android:endColor="#00F6F7FC" />
+                android:gradientRadius="@dimen/glow_radius"
+                android:startColor="@color/deco_glow_secondary"
+                android:endColor="@color/background_clear" />
         </shape>
     </item>
 </layer-list>

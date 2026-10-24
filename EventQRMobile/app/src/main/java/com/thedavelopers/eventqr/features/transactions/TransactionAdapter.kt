@@ -1,6 +1,5 @@
 package com.thedavelopers.eventqr.features.transactions
 
-import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.View
@@ -10,6 +9,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.core.api.dto.TransactionType
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
 import java.time.ZoneId
@@ -62,19 +62,19 @@ class TransactionAdapter : RecyclerView.Adapter<TransactionAdapter.ViewHolder>()
             if (!isApproved) {
                 // A rejected/failed scan awards nothing; never render it as a green "+0 pts".
                 pointsView.text = "Rejected"
-                pointsView.setTextColor(Color.parseColor("#EF4444"))
+                pointsView.setTextColor(itemView.context.color(R.color.danger))
             } else if (item.pointsDelta == 0) {
                 pointsView.text = itemView.context.getString(R.string.transaction_no_points)
-                pointsView.setTextColor(Color.parseColor("#6B7280"))
+                pointsView.setTextColor(itemView.context.color(R.color.text_secondary))
             } else {
                 val deltaPrefix = if (isEarned) "+" else ""
                 pointsView.text = "$deltaPrefix${item.pointsDelta} pts"
-                pointsView.setTextColor(if (isEarned) Color.parseColor("#10B981") else Color.parseColor("#EF4444"))
+                pointsView.setTextColor(if (isEarned) itemView.context.color(R.color.success_dark) else itemView.context.color(R.color.danger))
             }
 
             tagView.text = if (isApproved) "Success" else "Failed"
             tagView.setBackgroundResource(if (isApproved) R.drawable.bg_green_pill else R.drawable.bg_red_warning)
-            tagView.setTextColor(if (isApproved) Color.parseColor("#047857") else Color.parseColor("#B91C1C"))
+            tagView.setTextColor(if (isApproved) itemView.context.color(R.color.on_success_container) else itemView.context.color(R.color.error))
 
             val iconColor = resolveIconColor(item.transactionType)
             val background = (iconLayout.background as? GradientDrawable)?.mutate() as? GradientDrawable
@@ -85,7 +85,7 @@ class TransactionAdapter : RecyclerView.Adapter<TransactionAdapter.ViewHolder>()
                 iconLayout.setBackgroundResource(if (isEarned) R.drawable.bg_transaction_earned_icon else R.drawable.bg_transaction_redeemed_icon)
             }
             trendIcon.setImageResource(if (isEarned) R.drawable.ic_trend_up else R.drawable.ic_trend_down)
-            trendIcon.setColorFilter(if (isEarned) Color.parseColor("#4F46E5") else Color.parseColor("#059669"))
+            trendIcon.setColorFilter(if (isEarned) itemView.context.color(R.color.primary) else itemView.context.color(R.color.success_dark))
         }
 
         private fun mapTransactionTitle(type: TransactionType): String {
@@ -104,13 +104,13 @@ class TransactionAdapter : RecyclerView.Adapter<TransactionAdapter.ViewHolder>()
 
         private fun resolveIconColor(type: TransactionType): Int {
             return when (type) {
-                TransactionType.ENTRY -> Color.parseColor("#E8EAFE")
-                TransactionType.ATTENDANCE -> Color.parseColor("#EEE8FF")
-                TransactionType.BOOTH_VISIT -> Color.parseColor("#E6F7FF")
+                TransactionType.ENTRY -> itemView.context.color(R.color.accent_container_strong)
+                TransactionType.ATTENDANCE -> itemView.context.color(R.color.secondary_container)
+                TransactionType.BOOTH_VISIT -> itemView.context.color(R.color.info_container)
                 TransactionType.REWARD_REDEMPTION,
-                TransactionType.REWARD_REDEMPTION_SCAN -> Color.parseColor("#EAFDF3")
-                TransactionType.EXIT -> Color.parseColor("#F2F4F7")
-                else -> Color.parseColor("#EEF2FF")
+                TransactionType.REWARD_REDEMPTION_SCAN -> itemView.context.color(R.color.success_container)
+                TransactionType.EXIT -> itemView.context.color(R.color.surface_muted)
+                else -> itemView.context.color(R.color.accent_container)
             }
         }
     }

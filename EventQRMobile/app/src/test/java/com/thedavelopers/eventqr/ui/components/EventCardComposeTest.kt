@@ -13,6 +13,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.thedavelopers.eventqr.ui.inComposition
 import com.thedavelopers.eventqr.ui.theme.EventQrTheme
 import kotlin.math.pow
 import org.junit.Assert.assertEquals
@@ -64,6 +65,9 @@ class EventCardComposeTest {
         }
     }
 
+    private fun resolveAccents(): Map<EventBadgeStatus, EventCardAccent> =
+        composeTestRule.inComposition { EventBadgeStatus.entries.associateWith { eventCardAccent(it) } }
+
     @Test
     fun eventCardAccent_everyStatus_isUniqueOutsideTheDeclaredSharingGroups() {
         val accentGroups = listOf(
@@ -77,9 +81,10 @@ class EventCardComposeTest {
 
         assertEquals(EventBadgeStatus.entries.toSet(), accentGroups.flatten().toSet())
 
+        val accents = resolveAccents()
         val groupColors = accentGroups.map { group ->
-            val containers = group.map { eventCardAccent(it).container }.toSet()
-            val fills = group.map { eventCardAccent(it).fill }.toSet()
+            val containers = group.map { accents.getValue(it).container }.toSet()
+            val fills = group.map { accents.getValue(it).fill }.toSet()
 
             assertEquals("$group must share one container color", 1, containers.size)
             assertEquals("$group must share one fill color", 1, fills.size)
@@ -92,8 +97,9 @@ class EventCardComposeTest {
 
     @Test
     fun dateBadgeAccent_isReadableBehindWhiteTextForEveryStatus() {
+        val accents = resolveAccents()
         EventBadgeStatus.entries.forEach { status ->
-            val contrast = contrastRatio(eventCardAccent(status).container, Color.White)
+            val contrast = contrastRatio(accents.getValue(status).container, Color.White)
 
             assertTrue("$status container contrast was $contrast", contrast >= MIN_TEXT_CONTRAST)
         }
@@ -280,8 +286,9 @@ class EventCardComposeTest {
 
     @Test
     fun completedCard_doesNotReuseLiveAccentColors() {
-        val completed = eventCardAccent(EventBadgeStatus.COMPLETED)
-        val active = eventCardAccent(EventBadgeStatus.ACTIVE)
+        val accents = resolveAccents()
+        val completed = accents.getValue(EventBadgeStatus.COMPLETED)
+        val active = accents.getValue(EventBadgeStatus.ACTIVE)
 
         assertNotEquals(active.container, completed.container)
         assertNotEquals(active.fill, completed.fill)

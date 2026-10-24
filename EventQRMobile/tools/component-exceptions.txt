@@ -1,0 +1,25 @@
+# Reviewed places where a component style (Widget.EventQR.Button/Card/Chip/IconTile/Divider.*) is deliberately NOT used and the
+# old drawable / loose attributes stay, because the style would change pixels (or the background is swapped from Kotlin).
+# Read by tools/check-tokens.ps1 (stale entries fail the check).
+#
+# Format (one entry per line, '|' separated, '#' starts a comment):
+#   file|needle|reason
+#     file    res XML file name only (activity_foo.xml, bg_foo.xml)
+#     needle  text that must still be present in that file (e.g. @drawable/bg_detail_register_button)
+#     reason  why the style is not used
+# An entry whose file no longer contains the needle is STALE and fails the check.
+
+activity_event_registration.xml|androidx.cardview.widget.CardView|androidx CardView, not MaterialCardView: Widget.EventQR.Card (cardStrokeColor / strokeWidth) does not apply; radius and elevation stay as local tokens
+activity_staff_attendee_details.xml|androidx.cardview.widget.CardView|androidx CardView, not MaterialCardView: Widget.EventQR.Card does not apply; radius and elevation stay as local tokens
+item_claimed_reward.xml|androidx.cardview.widget.CardView|androidx CardView, not MaterialCardView: Widget.EventQR.Card does not apply; radius and elevation stay as local tokens
+item_registration.xml|androidx.cardview.widget.CardView|androidx CardView, not MaterialCardView: Widget.EventQR.Card does not apply; radius and elevation stay as local tokens
+item_transaction.xml|androidx.cardview.widget.CardView|androidx CardView, not MaterialCardView: Widget.EventQR.Card does not apply; radius and elevation stay as local tokens
+item_transaction_log.xml|androidx.cardview.widget.CardView|androidx CardView, not MaterialCardView: Widget.EventQR.Card does not apply; radius and elevation stay as local tokens
+activity_event_detail.xml|@drawable/bg_detail_register_button|register button background is swapped from Kotlin (EventDetailActivity setBackgroundResource), so it cannot move into Widget.EventQR.Button.Primary
+activity_request_event.xml|@drawable/button_rounded|solid brand fill, radius 15 and 1dp padding: not the gradient Widget.EventQR.Button.Primary look
+activity_request_event.xml|@drawable/bg_logout_button|solid error fill, radius_sm: a destructive cancel button, no Widget.EventQR.Button variant
+dialog_event_request_submitted.xml|@drawable/button_rounded|solid brand fill, radius 15 and 1dp padding: not the gradient Widget.EventQR.Button.Primary look
+dialog_event_request_submitted.xml|@drawable/bg_outline_button|outline button with a regular-weight 15sp label (ButtonPlatformBody); Widget.EventQR.Button.Outline defaults to the bold label
+activity_staff_assigned_events.xml|Widget.MaterialComponents.Chip.Choice|fixed brand chipBackgroundColor and white label in every state; Chip.Filter.Large uses the idle/selected state lists (chip_bg / chip_text), which would change the idle look
+activity_user_events.xml|Widget.MaterialComponents.Chip.Choice|fixed brand chipBackgroundColor and white label in every state; Chip.Filter.Large uses the idle/selected state lists (chip_bg / chip_text), which would change the idle look
+activity_user_registered_events.xml|Widget.MaterialComponents.Chip.Choice|fixed brand chipBackgroundColor and white label in every state; Chip.Filter.Large uses the idle/selected state lists (chip_bg / chip_text), which would change the idle look

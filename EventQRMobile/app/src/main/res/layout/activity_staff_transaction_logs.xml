@@ -17,25 +17,25 @@
         android:id="@+id/cardStaffTransactionsEvent"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="18dp"
+        android:layout_marginHorizontal="@dimen/space_lg"
+        android:layout_marginTop="@dimen/space_18"
         android:background="@drawable/bg_staff_filter_card_neutral"
         android:clickable="true"
         android:focusable="true"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="16dp">
+        android:paddingHorizontal="@dimen/space_lg">
 
         <View
             android:id="@+id/viewEventDot"
-            android:layout_width="8dp"
-            android:layout_height="8dp"
+            android:layout_width="@dimen/dot_sm"
+            android:layout_height="@dimen/dot_sm"
             android:background="@drawable/bg_staff_filter_status_dot_neutral" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
+            android:layout_marginStart="@dimen/space_10"
             android:layout_weight="1"
             android:orientation="vertical">
 
@@ -45,7 +45,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/staff_transaction_logs_logs_for"
                 android:textColor="@color/filter_label"
-                android:textSize="12sp" />
+                android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
 
             <TextView
                 android:id="@+id/txtStaffTransactionsEventTitle"
@@ -54,9 +54,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:text="@string/common_assigned_event"
-                android:textColor="@color/text_primary"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
         </LinearLayout>
 
         <TextView
@@ -64,19 +62,19 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/filter_label"
-            android:textSize="12sp" />
+            android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
 
         <TextView
             android:id="@+id/txtStaffTransactionsEventChevron"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_marginStart="8dp"
+            android:layout_width="@dimen/icon_32"
+            android:layout_height="@dimen/icon_32"
+            android:layout_marginStart="@dimen/space_sm"
             android:gravity="center"
             android:includeFontPadding="false"
-            android:text="▾"
-            android:textColor="#6B7280"
-            android:textSize="18sp"
-            android:translationY="-1dp" />
+            android:text="@string/glyph_dropdown_arrow"
+            android:textColor="@color/text_secondary"
+            android:textAppearance="@style/TextAppearance.EventQR.TitleRegular"
+            android:translationY="@dimen/glyph_nudge_y" />
     </LinearLayout>
 
     <Spinner
@@ -89,25 +87,25 @@
         android:id="@+id/cardStaffTransactionsPurpose"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginHorizontal="@dimen/space_lg"
+        android:layout_marginTop="@dimen/space_10"
         android:background="@drawable/bg_staff_filter_card_neutral"
         android:clickable="true"
         android:focusable="true"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="16dp">
+        android:paddingHorizontal="@dimen/space_lg">
 
         <View
             android:id="@+id/viewPurposeDot"
-            android:layout_width="8dp"
-            android:layout_height="8dp"
+            android:layout_width="@dimen/dot_sm"
+            android:layout_height="@dimen/dot_sm"
             android:background="@drawable/bg_staff_filter_status_dot_neutral" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
+            android:layout_marginStart="@dimen/space_10"
             android:layout_weight="1"
             android:orientation="vertical">
 
@@ -117,7 +115,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/staff_transaction_logs_purpose_filter"
                 android:textColor="@color/filter_label"
-                android:textSize="12sp" />
+                android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
 
             <TextView
                 android:id="@+id/txtStaffTransactionsPurposeTitle"
@@ -126,22 +124,20 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:text="@string/staff_transaction_logs_all_purposes"
-                android:textColor="@color/text_primary"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
         </LinearLayout>
 
         <TextView
             android:id="@+id/txtStaffTransactionsPurposeChevron"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_marginStart="8dp"
+            android:layout_width="@dimen/icon_32"
+            android:layout_height="@dimen/icon_32"
+            android:layout_marginStart="@dimen/space_sm"
             android:gravity="center"
             android:includeFontPadding="false"
-            android:text="▾"
-            android:textColor="#6B7280"
-            android:textSize="18sp"
-            android:translationY="-1dp" />
+            android:text="@string/glyph_dropdown_arrow"
+            android:textColor="@color/text_secondary"
+            android:textAppearance="@style/TextAppearance.EventQR.TitleRegular"
+            android:translationY="@dimen/glyph_nudge_y" />
     </LinearLayout>
 
     <Spinner
@@ -153,10 +149,10 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="12dp"
+        android:layout_marginHorizontal="@dimen/space_lg"
+        android:layout_marginTop="@dimen/space_md"
         android:background="@drawable/bg_card"
-        android:elevation="2dp"
+        android:elevation="@dimen/elevation_raised"
         android:orientation="horizontal">
 
         <LinearLayout
@@ -165,39 +161,34 @@
             android:layout_weight="1"
             android:gravity="center"
             android:orientation="vertical"
-            android:paddingVertical="12dp">
+            android:paddingVertical="@dimen/space_md">
 
             <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/bg_icon_tile_indigo"
-                android:padding="10dp"
+                android:layout_width="@dimen/icon_tile_md"
+                android:layout_height="@dimen/icon_tile_md"
+                android:padding="@dimen/space_10"
                 android:src="@drawable/ic_file"
-                app:tint="#4F46E5" />
+                app:tint="@color/primary"
+                style="@style/Widget.EventQR.IconTile.Round.Accent" />
 
             <TextView
                 android:id="@+id/txtTotalScans"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="0"
-                android:textColor="#111827"
-                android:textSize="26sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="@dimen/space_sm"
+                android:text="@string/placeholder_zero"
+                android:textAppearance="@style/TextAppearance.EventQR.PageTitle" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/staff_transaction_logs_total_scans"
-                android:textColor="#6B7280"
-                android:textSize="12sp" />
+                android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
         </LinearLayout>
 
         <View
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:layout_marginVertical="12dp"
-            android:background="#E5E7EB" />
+            android:layout_marginVertical="@dimen/space_md"
+            style="@style/Widget.EventQR.Divider.Vertical" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -205,39 +196,34 @@
             android:layout_weight="1"
             android:gravity="center"
             android:orientation="vertical"
-            android:paddingVertical="12dp">
+            android:paddingVertical="@dimen/space_md">
 
             <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/bg_icon_tile_green"
-                android:padding="10dp"
+                android:layout_width="@dimen/icon_tile_md"
+                android:layout_height="@dimen/icon_tile_md"
+                android:padding="@dimen/space_10"
                 android:src="@drawable/ic_staff_check"
-                app:tint="#10B981" />
+                app:tint="@color/success"
+                style="@style/Widget.EventQR.IconTile.Round.Success" />
 
             <TextView
                 android:id="@+id/txtSuccessfulScans"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="0"
-                android:textColor="#111827"
-                android:textSize="26sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="@dimen/space_sm"
+                android:text="@string/placeholder_zero"
+                android:textAppearance="@style/TextAppearance.EventQR.PageTitle" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/staff_transaction_logs_successful"
-                android:textColor="#6B7280"
-                android:textSize="12sp" />
+                android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
         </LinearLayout>
 
         <View
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:layout_marginVertical="12dp"
-            android:background="#E5E7EB" />
+            android:layout_marginVertical="@dimen/space_md"
+            style="@style/Widget.EventQR.Divider.Vertical" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -245,38 +231,35 @@
             android:layout_weight="1"
             android:gravity="center"
             android:orientation="vertical"
-            android:paddingVertical="12dp">
+            android:paddingVertical="@dimen/space_md">
 
             <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/bg_icon_tile_red"
-                android:padding="10dp"
+                android:layout_width="@dimen/icon_tile_md"
+                android:layout_height="@dimen/icon_tile_md"
+                android:padding="@dimen/space_10"
                 android:src="@drawable/ic_staff_close"
-                app:tint="#EF4444" />
+                app:tint="@color/danger"
+                style="@style/Widget.EventQR.IconTile.Round.Error" />
 
             <TextView
                 android:id="@+id/txtRejectedScans"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="0"
-                android:textColor="#111827"
-                android:textSize="26sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="@dimen/space_sm"
+                android:text="@string/placeholder_zero"
+                android:textAppearance="@style/TextAppearance.EventQR.PageTitle" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/common_rejected"
-                android:textColor="#6B7280"
-                android:textSize="12sp" />
+                android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
         </LinearLayout>
     </LinearLayout>
 
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout android:id="@+id/swipeRefreshStaffTransactions" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
-        <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent" android:paddingHorizontal="16dp">
-            <androidx.recyclerview.widget.RecyclerView android:id="@+id/recyclerStaffTransactions" android:layout_width="match_parent" android:layout_height="match_parent" android:clipToPadding="false" android:paddingTop="8dp" android:paddingBottom="12dp" />
+        <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent" android:paddingHorizontal="@dimen/space_lg">
+            <androidx.recyclerview.widget.RecyclerView android:id="@+id/recyclerStaffTransactions" android:layout_width="match_parent" android:layout_height="match_parent" android:clipToPadding="false" android:paddingTop="@dimen/space_sm" android:paddingBottom="@dimen/space_md" />
             <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
             android:id="@+id/txtStaffTransactionsEmptyState"
             android:layout_width="match_parent"
@@ -285,7 +268,7 @@
             app:icon="@drawable/ic_history"
             app:title="@string/staff_transaction_logs_no_transactions_logged"
             app:subtitle="@string/common_scans_you_perform_will_show_up_here" />
-            <ProgressBar android:id="@+id/pbStaffTransactionsLoadMore" android:layout_width="36dp" android:layout_height="36dp" android:layout_gravity="bottom|center_horizontal" android:layout_marginBottom="8dp" android:visibility="gone" />
+            <ProgressBar android:id="@+id/pbStaffTransactionsLoadMore" android:layout_width="@dimen/icon_tile_sm" android:layout_height="@dimen/icon_tile_sm" android:layout_gravity="bottom|center_horizontal" android:layout_marginBottom="@dimen/space_sm" android:visibility="gone" />
             <include
                 layout="@layout/include_skeleton_cards"
                 android:layout_width="match_parent"

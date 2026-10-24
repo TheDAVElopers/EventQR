@@ -348,7 +348,6 @@
     <string name="user_events_no_events_found">No events found</string>
     <string name="user_reward_details_reward">Reward</string>
     <string name="user_reward_details_reward_title">Reward Title</string>
-    <string name="user_reward_details_pts">pts</string>
     <string name="user_reward_details_reward_details">Reward Details</string>
     <string name="user_reward_details_available">Available</string>
     <string name="user_reward_details_remaining">Remaining</string>

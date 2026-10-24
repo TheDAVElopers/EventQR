@@ -3,7 +3,6 @@ package com.thedavelopers.eventqr.ui.components
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import android.graphics.Typeface
 import android.text.TextUtils
 import android.util.AttributeSet
 import android.util.TypedValue
@@ -21,6 +20,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.widget.ImageViewCompat
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
+import com.thedavelopers.eventqr.ui.theme.dimenOffset
+import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
+import com.thedavelopers.eventqr.ui.theme.strong
 
 /*
  * The two screen headers used app-wide. Restyle a header here and every page follows.
@@ -41,8 +43,6 @@ private fun Context.findActivity(): Activity? {
     }
     return null
 }
-
-private fun View.dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
 private fun Context.readHeaderAttrs(attrs: AttributeSet?, block: (title: String?, subtitle: String?, showBack: Boolean) -> Unit) {
     if (attrs == null) return block(null, null, true)
@@ -71,7 +71,7 @@ class EventQrDetailHeader @JvmOverloads constructor(
 
     init {
         setBackgroundResource(R.drawable.bg_header_surface_outline)
-        setPadding(dp(8), 0, dp(16), 0)
+        setPadding(dimenOffset(R.dimen.space_sm), 0, dimenOffset(R.dimen.space_lg), 0)
 
         backButton = ImageButton(context).apply {
             id = R.id.nav_header_back
@@ -79,11 +79,11 @@ class EventQrDetailHeader @JvmOverloads constructor(
             setBackgroundResource(ripple.resourceId)
             setImageResource(R.drawable.ic_header_back)
             ImageViewCompat.setImageTintList(this, ContextCompat.getColorStateList(context, R.color.text_secondary))
-            setPadding(dp(11), dp(11), dp(12), dp(12))
+            setPadding(dimenOffset(R.dimen.space_11), dimenOffset(R.dimen.space_11), dimenOffset(R.dimen.space_md), dimenOffset(R.dimen.space_md))
             contentDescription = context.getString(R.string.back)
-            layoutParams = LayoutParams(dp(48), dp(48), Gravity.START or Gravity.CENTER_VERTICAL).apply {
-                topMargin = dp(8)
-                bottomMargin = dp(8)
+            layoutParams = LayoutParams(dimenOffset(R.dimen.touch_target_min), dimenOffset(R.dimen.touch_target_min), Gravity.START or Gravity.CENTER_VERTICAL).apply {
+                topMargin = dimenOffset(R.dimen.space_sm)
+                bottomMargin = dimenOffset(R.dimen.space_sm)
             }
             setOnClickListener {
                 val activity = context.findActivity()
@@ -132,8 +132,8 @@ class EventQrDetailHeader @JvmOverloads constructor(
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         // Title starts right after the back button and stops short of any end actions.
         measureChild(endSlot, MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED), heightMeasureSpec)
-        val start = dp(48) + dp(4)
-        val end = if (endSlot.childCount > 0) endSlot.measuredWidth + dp(8) else 0
+        val start = dimenOffset(R.dimen.touch_target_min) + dimenOffset(R.dimen.space_xs)
+        val end = if (endSlot.childCount > 0) endSlot.measuredWidth + dimenOffset(R.dimen.space_sm) else 0
         if (titleView.paddingLeft != start || titleView.paddingRight != end) titleView.setPadding(start, 0, end, 0)
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
@@ -153,22 +153,22 @@ class EventQrTabHeader @JvmOverloads constructor(
     init {
         orientation = HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
-        setPadding(dp(20), dp(20), dp(20), dp(8))
+        setPadding(dimenOffset(R.dimen.space_20), dimenOffset(R.dimen.space_20), dimenOffset(R.dimen.space_20), dimenOffset(R.dimen.space_sm))
 
         titleView = TextView(context).apply {
             id = R.id.nav_header_title
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 26f)
-            setTypeface(typeface, Typeface.BOLD)
+            setTextSizeRes(R.dimen.type_page_title)
+            strong()
             setTextColor(ContextCompat.getColor(context, R.color.header_title))
             maxLines = 1
             ellipsize = TextUtils.TruncateAt.END
         }
         subtitleView = TextView(context).apply {
             id = R.id.nav_header_subtitle
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+            setTextSizeRes(R.dimen.type_body_compact)
             setTextColor(ContextCompat.getColor(context, R.color.header_subtitle))
             visibility = GONE
-            layoutParams = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(2) }
+            layoutParams = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dimenOffset(R.dimen.space_xxs) }
         }
         val titleColumn = LinearLayout(context).apply {
             orientation = VERTICAL
@@ -179,7 +179,7 @@ class EventQrTabHeader @JvmOverloads constructor(
         endSlot = LinearLayout(context).apply {
             orientation = HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            layoutParams = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { marginStart = dp(12) }
+            layoutParams = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { marginStart = dimenOffset(R.dimen.space_md) }
         }
         addView(titleColumn)
         addView(endSlot)

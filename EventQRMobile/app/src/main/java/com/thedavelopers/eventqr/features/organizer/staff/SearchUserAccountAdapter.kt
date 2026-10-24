@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpStaff
 
 class SearchUserAccountAdapter(
@@ -57,7 +58,7 @@ class SearchUserAccountAdapter(
             nameText.text = item.name
             emailText.text = item.email
             card.strokeWidth = if (selected) itemView.resources.getDimensionPixelSize(R.dimen.staff_selected_stroke) else 0
-            card.strokeColor = if (selected) Color.parseColor("#4F46E5") else Color.TRANSPARENT
+            card.strokeColor = if (selected) itemView.context.color(R.color.primary) else itemView.context.color(R.color.transparent)
             selectedIcon.visibility = if (selected) View.VISIBLE else View.GONE
 
             itemView.setOnClickListener {

@@ -24,14 +24,14 @@ object EventStatusBadgeStyler {
 
     @ColorRes
     fun textColorRes(status: EventStatus): Int = when (status) {
-        EventStatus.APPROVED -> R.color.eventqr_event_status_upcoming
-        EventStatus.ACTIVE -> R.color.eventqr_event_status_active
-        EventStatus.ENDED -> R.color.eventqr_event_status_completed
-        EventStatus.DRAFT -> R.color.eventqr_event_status_draft
-        EventStatus.PENDING_REVIEW -> R.color.eventqr_event_status_pending_review
-        EventStatus.REJECTED -> R.color.eventqr_event_status_rejected
-        EventStatus.CANCELLED -> R.color.eventqr_event_status_cancelled
-        EventStatus.UNKNOWN -> R.color.eventqr_event_status_unknown
+        EventStatus.APPROVED -> R.color.event_status_upcoming
+        EventStatus.ACTIVE -> R.color.event_status_active
+        EventStatus.ENDED -> R.color.event_status_completed
+        EventStatus.DRAFT -> R.color.event_status_draft
+        EventStatus.PENDING_REVIEW -> R.color.event_status_pending_review
+        EventStatus.REJECTED -> R.color.event_status_rejected
+        EventStatus.CANCELLED -> R.color.event_status_cancelled
+        EventStatus.UNKNOWN -> R.color.event_status_unknown
     }
 
     @DrawableRes
@@ -70,7 +70,7 @@ object EventStatusBadgeStyler {
         view.setTextColor(
             when (status) {
                 EventStatus.APPROVED, EventStatus.ACTIVE, EventStatus.ENDED ->
-                    ContextCompat.getColor(view.context, R.color.eventqr_text)
+                    ContextCompat.getColor(view.context, R.color.text_primary)
                 else -> ContextCompat.getColor(view.context, textColorRes(status))
             },
         )

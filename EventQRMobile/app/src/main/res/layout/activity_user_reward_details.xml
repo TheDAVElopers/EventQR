@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eventqr_bg"
+    android:background="@color/background"
     android:orientation="vertical">
 
     <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
@@ -24,9 +24,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="16dp"
-            android:paddingTop="16dp"
-            android:paddingBottom="24dp">
+            android:paddingHorizontal="@dimen/space_lg"
+            android:paddingTop="@dimen/space_lg"
+            android:paddingBottom="@dimen/space_xl">
 
             <!-- Card 1: summary -->
             <LinearLayout
@@ -34,7 +34,7 @@
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_card"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="@dimen/space_20">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -43,39 +43,37 @@
                     android:orientation="horizontal">
 
                     <FrameLayout
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:background="@drawable/bg_reward_icon_tile">
+                        android:layout_width="@dimen/icon_tile_lg"
+                        android:layout_height="@dimen/icon_tile_lg"
+                        style="@style/Widget.EventQR.IconTile">
 
                         <ImageView
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:contentDescription="@string/user_reward_details_reward"
-                            android:padding="12dp"
+                            android:padding="@dimen/space_md"
                             android:src="@drawable/ic_nav_gift"
-                            app:tint="@color/accent_signal" />
+                            app:tint="@color/primary" />
                     </FrameLayout>
 
                     <TextView
                         android:id="@+id/txtRewardTitle"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
+                        android:layout_marginStart="@dimen/space_lg"
                         android:layout_weight="1"
                         android:ellipsize="end"
                         android:gravity="start|center_vertical"
                         android:maxLines="2"
-                        android:minHeight="48dp"
+                        android:minHeight="@dimen/touch_target_min"
                         android:text="@string/user_reward_details_reward_title"
-                        android:textColor="@color/text_on_paper"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
+                        android:textAppearance="@style/TextAppearance.EventQR.TitleLarge" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="@dimen/space_20"
                     android:baselineAligned="true"
                     android:orientation="horizontal">
 
@@ -84,54 +82,52 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:includeFontPadding="false"
-                        android:textColor="@color/accent_signal"
-                        android:textSize="36sp"
-                        android:textStyle="bold"
+                        android:textColor="@color/primary"
+                        android:textAppearance="@style/TextAppearance.EventQR.Display"
                         tools:text="100" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
+                        android:layout_marginStart="@dimen/space_sm"
                         android:includeFontPadding="false"
                         android:text="@string/user_reward_details_pts_required"
-                        android:textColor="@color/text_on_paper_muted"
-                        android:textSize="14sp" />
+                        android:textColor="@color/text_secondary"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
                 </LinearLayout>
 
                 <TextView
                     android:id="@+id/txtRewardStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="@dimen/space_lg"
                     android:background="@drawable/bg_reward_status_available"
                     android:drawableStart="@drawable/ic_reward_status_available"
-                    android:drawablePadding="6dp"
+                    android:drawablePadding="@dimen/space_6"
                     android:gravity="center_vertical"
-                    android:minHeight="32dp"
-                    android:paddingHorizontal="12dp"
-                    android:paddingVertical="6dp"
+                    android:minHeight="@dimen/control_height_32"
+                    android:paddingHorizontal="@dimen/space_md"
+                    android:paddingVertical="@dimen/space_6"
                     android:text="@string/user_reward_details_available"
-                    android:textColor="@color/eventqr_badge_entered_text"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
+                    android:textColor="@color/badge_entered_text"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
             </LinearLayout>
 
             <TextView
                 android:id="@+id/warningBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/space_lg"
                 android:background="@drawable/bg_reward_notice_amber"
                 android:drawableStart="@drawable/ic_qr_warning"
-                android:drawablePadding="12dp"
-                android:drawableTint="@color/eventqr_badge_pending_text"
+                android:drawablePadding="@dimen/space_md"
+                android:drawableTint="@color/badge_pending_text"
                 android:gravity="center_vertical"
-                android:paddingHorizontal="16dp"
-                android:paddingVertical="14dp"
+                android:paddingHorizontal="@dimen/space_lg"
+                android:paddingVertical="@dimen/space_14"
                 android:text="@string/user_reward_details_you_need_more_points_to_redeem_this"
-                android:textColor="@color/eventqr_badge_pending_text"
-                android:textSize="14sp"
+                android:textColor="@color/badge_pending_text"
+                android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
                 android:visibility="gone" />
 
             <TextView
@@ -145,16 +141,16 @@
                 android:id="@+id/cardProgress"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/space_lg"
                 android:background="@drawable/bg_card"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="@dimen/space_20">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
-                    android:minHeight="48dp"
+                    android:minHeight="@dimen/touch_target_min"
                     android:orientation="horizontal">
 
                     <TextView
@@ -162,17 +158,16 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/user_reward_details_your_points"
-                        android:textColor="@color/text_on_paper_muted"
-                        android:textSize="14sp" />
+                        android:textColor="@color/text_secondary"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
 
                     <TextView
                         android:id="@+id/txtUserPoints"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/common_0_pts"
-                        android:textColor="@color/accent_signal"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:textColor="@color/primary"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong" />
                 </LinearLayout>
 
                 <ProgressBar
@@ -180,7 +175,7 @@
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="10dp"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/space_md"
                     android:importantForAccessibility="no"
                     android:max="100"
                     android:progressDrawable="@drawable/pb_reward_affordability" />
@@ -188,7 +183,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="@dimen/space_sm"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -197,22 +192,19 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:accessibilityLiveRegion="polite"
-                        android:textColor="@color/text_on_paper_muted"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong"
                         tools:text="40 / 100 pts" />
 
                     <TextView
                         android:id="@+id/txtPointsGap"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
+                        android:layout_marginStart="@dimen/space_md"
                         android:layout_weight="1"
                         android:gravity="end"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong"
                         tools:text="60 more pts to unlock"
-                        tools:textColor="@color/status_rejected" />
+                        tools:textColor="@color/error" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -221,16 +213,14 @@
                     android:orientation="vertical">
 
                     <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginTop="16dp"
-                        android:background="@color/outline" />
+                        style="@style/Widget.EventQR.Divider"
+                        android:layout_marginTop="@dimen/space_lg" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center_vertical"
-                        android:minHeight="48dp"
+                        android:minHeight="@dimen/touch_target_min"
                         android:orientation="horizontal">
 
                         <TextView
@@ -238,16 +228,14 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/user_reward_details_remaining"
-                            android:textColor="@color/text_on_paper_muted"
-                            android:textSize="14sp" />
+                            android:textColor="@color/text_secondary"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
 
                         <TextView
                             android:id="@+id/txtRewardRemaining"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/text_on_paper"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong"
                             tools:text="12 left" />
                     </LinearLayout>
                 </LinearLayout>
@@ -258,28 +246,27 @@
                 android:id="@+id/cardHowToRedeem"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/space_lg"
                 android:background="@drawable/bg_reward_hint"
                 android:gravity="top"
                 android:orientation="horizontal"
-                android:padding="16dp">
+                android:padding="@dimen/space_lg">
 
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="@dimen/icon_lg"
+                    android:layout_height="@dimen/icon_lg"
                     android:importantForAccessibility="no"
                     android:src="@drawable/ic_qr_scan"
-                    app:tint="@color/accent_signal" />
+                    app:tint="@color/primary" />
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
+                    android:layout_marginStart="@dimen/space_md"
                     android:layout_weight="1"
-                    android:lineSpacingMultiplier="1.2"
+                    android:lineSpacingMultiplier="@dimen/line_multiplier_12"
                     android:text="@string/user_reward_details_how_to_redeem"
-                    android:textColor="@color/text_on_paper"
-                    android:textSize="14sp" />
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

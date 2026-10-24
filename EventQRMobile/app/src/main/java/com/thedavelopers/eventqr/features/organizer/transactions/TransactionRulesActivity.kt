@@ -1,6 +1,10 @@
 package com.thedavelopers.eventqr.features.organizer.transactions
 
-import android.graphics.Color
+import com.thedavelopers.eventqr.ui.theme.dimenPx
+import com.thedavelopers.eventqr.ui.theme.dimenFloat
+import com.thedavelopers.eventqr.features.organizer.styledText
+import com.thedavelopers.eventqr.features.organizer.cardRes
+import com.thedavelopers.eventqr.features.organizer.spacerRes
 import android.os.Bundle
 import android.text.InputType
 import android.util.Log
@@ -10,6 +14,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode
 import com.thedavelopers.eventqr.features.organizer.*
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerTransactionRuleDto
@@ -83,15 +88,15 @@ open class TransactionRulesActivity : AppCompatActivity() {
         currentRule = null
         content.removeAllViews()
         content.addView(errorState(message) { loadData() })
-        content.addView(spacer(20))
+        content.addView(spacerRes(R.dimen.space_20))
         content.addView(disabledSaveButton())
     }
 
     private fun disabledSaveButton() = primaryButton(getString(R.string.transaction_rules_save)) { }.apply {
         id = R.id.txr_save_button
         isEnabled = false
-        alpha = 0.5f
-        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(54))
+        alpha = dimenFloat(R.dimen.alpha_disabled)
+        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dimenPx(R.dimen.control_height_54))
     }
 
     private fun renderUI() {
@@ -120,8 +125,8 @@ open class TransactionRulesActivity : AppCompatActivity() {
         content.addView(container)
 
         // Purpose selector: one rule per scan purpose.
-        container.addView(card(16).apply {
-            addView(text(getString(R.string.transaction_rules_purpose_label), 14, true).apply { setPadding(0, 0, 0, dp(8)) })
+        container.addView(cardRes(R.dimen.space_lg).apply {
+            addView(styledText(getString(R.string.transaction_rules_purpose_label), R.dimen.type_body_medium, true).apply { setPadding(0, 0, 0, dimenPx(R.dimen.space_sm)) })
             addView(android.widget.HorizontalScrollView(this@TransactionRulesActivity).apply {
                 isHorizontalScrollBarEnabled = false
                 addView(row().apply {
@@ -138,8 +143,8 @@ open class TransactionRulesActivity : AppCompatActivity() {
         })
 
         // Card 1: Duplicate Prevention
-        val card1 = card(16).apply {
-            addView(text(getString(R.string.transaction_rules_duplicate_prevention), 17, true).apply { setPadding(0, 0, 0, dp(8)) })
+        val card1 = cardRes(R.dimen.space_lg).apply {
+            addView(styledText(getString(R.string.transaction_rules_duplicate_prevention), R.dimen.type_subtitle, true).apply { setPadding(0, 0, 0, dimenPx(R.dimen.space_sm)) })
         }
 
         val allowDuplicateToggle = ruleToggle(
@@ -161,8 +166,8 @@ open class TransactionRulesActivity : AppCompatActivity() {
         container.addView(card1)
 
         // Card 2: Scan Limits
-        val card2 = card(16).apply {
-            addView(text(getString(R.string.transaction_rules_scan_limits), 17, true).apply { setPadding(0, 0, 0, dp(8)) })
+        val card2 = cardRes(R.dimen.space_lg).apply {
+            addView(styledText(getString(R.string.transaction_rules_scan_limits), R.dimen.type_subtitle, true).apply { setPadding(0, 0, 0, dimenPx(R.dimen.space_sm)) })
         }
 
         val cooldownInput = labeledInput(
@@ -172,8 +177,8 @@ open class TransactionRulesActivity : AppCompatActivity() {
             inputType = InputType.TYPE_CLASS_NUMBER
         ) { }
         card2.addView(cooldownInput)
-        card2.addView(text(getString(R.string.transaction_rules_cooldown_helper), 12, false, MUTED).apply {
-            setPadding(0, dp(6), 0, dp(10))
+        card2.addView(styledText(getString(R.string.transaction_rules_cooldown_helper), R.dimen.type_caption, false, orgColors.muted).apply {
+            setPadding(0, dimenPx(R.dimen.space_6), 0, dimenPx(R.dimen.space_10))
         })
 
         val maxScansInput = labeledInput(
@@ -183,13 +188,13 @@ open class TransactionRulesActivity : AppCompatActivity() {
             inputType = InputType.TYPE_CLASS_NUMBER
         ) { }
         card2.addView(maxScansInput)
-        card2.addView(text(getString(R.string.transaction_rules_max_scans_helper), 12, false, MUTED).apply {
-            setPadding(0, dp(6), 0, 0)
+        card2.addView(styledText(getString(R.string.transaction_rules_max_scans_helper), R.dimen.type_caption, false, orgColors.muted).apply {
+            setPadding(0, dimenPx(R.dimen.space_6), 0, 0)
         })
 
         container.addView(card2)
 
-        content.addView(spacer(20))
+        content.addView(spacerRes(R.dimen.space_20))
 
         content.addView(primaryButton(getString(R.string.transaction_rules_save)) {
             val allowDuplicate = (allowDuplicateToggle.getChildAt(0) as LinearLayout).let {
@@ -204,7 +209,7 @@ open class TransactionRulesActivity : AppCompatActivity() {
             saveRules(allowDuplicate, requiresStaff, cooldown, maxScans)
         }.apply {
             id = R.id.txr_save_button
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(54))
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dimenPx(R.dimen.control_height_54))
         })
     }
 
@@ -240,10 +245,10 @@ open class TransactionRulesActivity : AppCompatActivity() {
     }
 
     private fun divider() = android.view.View(this).apply {
-        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(1)).apply {
-            setMargins(0, dp(4), 0, dp(4))
+        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dimenPx(R.dimen.stroke_hairline)).apply {
+            setMargins(0, dimenPx(R.dimen.space_xs), 0, dimenPx(R.dimen.space_xs))
         }
-        setBackgroundColor(Color.parseColor("#F3F4F6"))
+        setBackgroundColor(color(R.color.surface_muted))
     }
 }
 

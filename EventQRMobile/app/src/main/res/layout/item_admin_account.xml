@@ -2,28 +2,27 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="10dp"
+    android:layout_marginBottom="@dimen/space_10"
     android:background="@drawable/bg_admin_surface_card"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingHorizontal="14dp"
-    android:paddingVertical="12dp">
+    android:paddingHorizontal="@dimen/space_14"
+    android:paddingVertical="@dimen/space_md">
 
     <TextView
         android:id="@+id/textAccountAvatar"
-        android:layout_width="42dp"
-        android:layout_height="42dp"
+        android:layout_width="@dimen/tile_42"
+        android:layout_height="@dimen/tile_42"
         android:background="@drawable/bg_rounded_purple_soft"
         android:gravity="center"
-        android:text="A"
-        android:textColor="#FFFFFF"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:text="@string/placeholder_initial_a"
+        android:textColor="@color/on_primary"
+        android:textAppearance="@style/TextAppearance.EventQR.TitleMedium" />
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
+        android:layout_marginStart="@dimen/space_md"
         android:layout_weight="1"
         android:orientation="vertical">
 
@@ -32,17 +31,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/item_admin_account_juan_dela_cruz"
-            android:textColor="#111827"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
 
         <TextView
             android:id="@+id/textAccountEmail"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/item_admin_account_juan_email_com"
-            android:textColor="#6B7280"
-            android:textSize="13sp" />
+            android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
     </LinearLayout>
 
     <LinearLayout
@@ -56,35 +52,33 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_admin_role_badge_purple"
-            android:paddingHorizontal="10dp"
-            android:paddingVertical="3dp"
+            android:paddingHorizontal="@dimen/space_10"
+            android:paddingVertical="@dimen/space_3"
             android:text="@string/common_attendee"
-            android:textColor="#4338CA"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+            android:textColor="@color/accent_dark"
+            android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
 
         <TextView
             android:id="@+id/textAccountStatusBadge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="@dimen/space_6"
             android:background="@drawable/bg_admin_status_active_badge"
-            android:paddingHorizontal="10dp"
-            android:paddingVertical="3dp"
+            android:paddingHorizontal="@dimen/space_10"
+            android:paddingVertical="@dimen/space_3"
             android:text="@string/common_active"
-            android:textColor="#065F46"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+            android:textColor="@color/on_success_container"
+            android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
 
         <ImageView
             android:id="@+id/actionMenu"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="@dimen/icon_lg"
+            android:layout_height="@dimen/icon_lg"
             android:layout_gravity="end"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="@dimen/space_6"
             android:contentDescription="@string/item_admin_account_more_actions"
-            android:padding="4dp"
+            android:padding="@dimen/space_xs"
             android:src="@drawable/ic_filter_list" />
     </LinearLayout>
 </LinearLayout>

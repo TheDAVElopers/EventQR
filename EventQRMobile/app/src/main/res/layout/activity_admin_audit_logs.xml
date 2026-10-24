@@ -17,7 +17,7 @@
         android:id="@+id/composeAuditFilters"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/transparent" />
+        android:background="@color/transparent" />
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshAuditLogs"
         android:layout_width="match_parent"
@@ -33,14 +33,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
-                android:paddingHorizontal="16dp"
-                android:paddingTop="4dp"
-                android:paddingBottom="18dp" />
+                android:paddingHorizontal="@dimen/space_lg"
+                android:paddingTop="@dimen/space_xs"
+                android:paddingBottom="@dimen/space_18" />
 
             <ProgressBar
                 android:id="@+id/progressAuditLoading"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="@dimen/icon_32"
+                android:layout_height="@dimen/icon_32"
                 android:layout_gravity="center"
                 android:visibility="gone" />
 

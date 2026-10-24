@@ -17,45 +17,45 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingBottom="8dp">
+        android:paddingBottom="@dimen/space_sm">
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilSearch"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="20dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginHorizontal="@dimen/space_20"
+            android:layout_marginTop="@dimen/space_sm"
             app:boxBackgroundColor="@color/surface"
-            app:boxCornerRadiusBottomEnd="20dp"
-            app:boxCornerRadiusBottomStart="20dp"
-            app:boxCornerRadiusTopEnd="20dp"
-            app:boxCornerRadiusTopStart="20dp"
-            app:boxStrokeColor="#EAEBF0"
-            app:boxStrokeWidth="1dp"
+            app:boxCornerRadiusBottomEnd="@dimen/radius_20"
+            app:boxCornerRadiusBottomStart="@dimen/radius_20"
+            app:boxCornerRadiusTopEnd="@dimen/radius_20"
+            app:boxCornerRadiusTopStart="@dimen/radius_20"
+            app:boxStrokeColor="@color/outline"
+            app:boxStrokeWidth="@dimen/stroke_hairline"
             app:hintEnabled="false"
             app:startIconDrawable="@drawable/ic_action_search"
-            app:startIconTint="#8E8EA9">
+            app:startIconTint="@color/neutral_label">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/inputEventSearch"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="@dimen/touch_target_min"
                 android:paddingVertical="0dp"
                 android:hint="@string/common_search_events"
                 android:inputType="text"
-                android:textColor="#121735"
-                android:textColorHint="#9CA3AF"
-                android:textSize="14sp" />
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_hint"
+                android:textAppearance="@style/TextAppearance.EventQR.InputBodyMedium" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="@dimen/space_md"
             android:clipToPadding="false"
-            android:paddingHorizontal="20dp"
+            android:paddingHorizontal="@dimen/space_20"
             android:scrollbars="none">
 
             <com.google.android.material.chip.ChipGroup
@@ -68,75 +68,48 @@
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipAll"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    style="@style/Widget.EventQR.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:checked="true"
                     android:text="@string/common_all"
-                    android:textColor="@color/brand_on_primary"
-                    android:textSize="13sp"
-                    app:chipBackgroundColor="@color/eventqr_indigo"
-                    app:chipCornerRadius="20dp"
-                    app:chipMinHeight="38dp"
-                    app:chipStrokeColor="#EAEBF0"
-                    app:chipStrokeWidth="0dp"
                     app:checkedIconVisible="false"
-                    app:textStartPadding="16dp"
-                    app:textEndPadding="16dp" />
+                    app:textStartPadding="@dimen/space_lg"
+                    app:textEndPadding="@dimen/space_lg"
+                    app:chipStrokeWidth="@dimen/stroke_none" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipUpcoming"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    style="@style/Widget.EventQR.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="@dimen/space_sm"
                     android:text="@string/common_upcoming"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp"
-                    app:chipBackgroundColor="@color/surface"
-                    app:chipCornerRadius="20dp"
-                    app:chipMinHeight="38dp"
-                    app:chipStrokeColor="#EAEBF0"
-                    app:chipStrokeWidth="1dp"
                     app:checkedIconVisible="false"
-                    app:textStartPadding="16dp"
-                    app:textEndPadding="16dp" />
+                    app:textStartPadding="@dimen/space_lg"
+                    app:textEndPadding="@dimen/space_lg" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipActive"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    style="@style/Widget.EventQR.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="@dimen/space_sm"
                     android:text="@string/common_active"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp"
-                    app:chipBackgroundColor="@color/surface"
-                    app:chipCornerRadius="20dp"
-                    app:chipMinHeight="38dp"
-                    app:chipStrokeColor="#EAEBF0"
-                    app:chipStrokeWidth="1dp"
                     app:checkedIconVisible="false"
-                    app:textStartPadding="16dp"
-                    app:textEndPadding="16dp" />
+                    app:textStartPadding="@dimen/space_lg"
+                    app:textEndPadding="@dimen/space_lg" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipCompleted"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    style="@style/Widget.EventQR.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="@dimen/space_sm"
                     android:text="@string/common_completed"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp"
-                    app:chipBackgroundColor="@color/surface"
-                    app:chipCornerRadius="20dp"
-                    app:chipMinHeight="38dp"
-                    app:chipStrokeColor="#EAEBF0"
-                    app:chipStrokeWidth="1dp"
                     app:checkedIconVisible="false"
-                    app:textStartPadding="16dp"
-                    app:textEndPadding="16dp" />
+                    app:textStartPadding="@dimen/space_lg"
+                    app:textEndPadding="@dimen/space_lg" />
 
             </com.google.android.material.chip.ChipGroup>
         </HorizontalScrollView>
@@ -159,9 +132,9 @@
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
                 android:nestedScrollingEnabled="true"
-                android:paddingHorizontal="20dp"
-                android:paddingTop="8dp"
-                android:paddingBottom="24dp" />
+                android:paddingHorizontal="@dimen/space_20"
+                android:paddingTop="@dimen/space_sm"
+                android:paddingBottom="@dimen/space_xl" />
 
             <LinearLayout
                 android:id="@+id/layoutStates"
@@ -170,61 +143,59 @@
                 android:layout_gravity="center"
                 android:gravity="center"
                 android:orientation="vertical"
-                android:paddingHorizontal="32dp">
+                android:paddingHorizontal="@dimen/space_xxl">
 
                 <com.google.android.material.progressindicator.CircularProgressIndicator
                     android:id="@+id/progressLoading"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:indeterminate="true"
-                    app:indicatorColor="@color/brand_primary"
-                    app:trackThickness="3dp"
+                    app:indicatorColor="@color/primary"
+                    app:trackThickness="@dimen/space_3"
                     android:visibility="gone" />
 
                 <ImageView
                     android:id="@+id/imgEmptyIcon"
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
+                    android:layout_width="@dimen/tile_64"
+                    android:layout_height="@dimen/tile_64"
                     android:contentDescription="@string/common_no_events"
                     android:src="@drawable/ic_calendar"
-                    app:tint="@color/text_disabled"
+                    app:tint="@color/neutral"
                     android:visibility="gone" />
 
                 <TextView
                     android:id="@+id/txtEventsEmpty"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/space_md"
                     android:gravity="center"
                     android:text="@string/organizer_events_no_events_available_for_the_selected"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong"
                     android:visibility="gone" />
 
                 <TextView
                     android:id="@+id/txtEventsEmptySub"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="@dimen/space_xs"
                     android:gravity="center"
                     android:text="@string/common_try_adjusting_your_search_or_filters"
                     android:textColor="@color/text_secondary"
-                    android:textSize="14sp"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
                     android:visibility="gone" />
 
                 <Button
                     android:id="@+id/btnRefreshEvents"
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="16dp"
-                    android:minWidth="120dp"
+                    android:layout_height="@dimen/touch_target_min"
+                    android:layout_marginTop="@dimen/space_lg"
+                    android:minWidth="@dimen/size_120"
                     android:text="@string/common_retry"
                     android:textAllCaps="false"
-                    android:textColor="@color/brand_primary"
-                    app:strokeColor="@color/brand_primary"
-                    app:cornerRadius="8dp"
+                    android:textColor="@color/primary"
+                    app:strokeColor="@color/primary"
+                    app:cornerRadius="@dimen/radius_sm"
                     android:visibility="gone" />
 
             </LinearLayout>

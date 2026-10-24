@@ -1,6 +1,9 @@
 package com.thedavelopers.eventqr.features.organizer
 
-import android.graphics.Color
+import com.thedavelopers.eventqr.ui.theme.dimenPx
+import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
+import com.thedavelopers.eventqr.ui.theme.strong
+import com.thedavelopers.eventqr.ui.theme.roundedRect
 import android.graphics.drawable.ColorDrawable
 import android.view.Gravity
 import android.view.View
@@ -12,11 +15,12 @@ import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.theme.color
 
 internal fun AppCompatActivity.loadingState(message: String): View {
-    return card(18).apply {
+    return cardRes(R.dimen.space_18).apply {
         gravity = Gravity.CENTER
-        addView(text(message, 14, false, MUTED).apply {
+        addView(styledText(message, R.dimen.type_body_medium, false, orgColors.muted).apply {
             gravity = Gravity.CENTER
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -40,22 +44,22 @@ internal fun AppCompatActivity.emptyState(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
         )
-        setPadding(dp(32), dp(24), dp(32), dp(24))
+        setPadding(dimenPx(R.dimen.space_xxl), dimenPx(R.dimen.space_xl), dimenPx(R.dimen.space_xxl), dimenPx(R.dimen.space_xl))
         addView(ImageView(this@emptyState).apply {
-            layoutParams = LinearLayout.LayoutParams(dp(64), dp(64))
+            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.tile_64), dimenPx(R.dimen.tile_64))
             setImageResource(iconRes)
-            setColorFilter(resources.getColor(R.color.text_disabled, theme))
+            setColorFilter(color(R.color.neutral))
             contentDescription = null
         })
-        addView(text(title, 16, true, resources.getColor(R.color.text_primary, theme)).apply {
+        addView(styledText(title, R.dimen.type_body_large, true, color(R.color.text_primary)).apply {
             gravity = Gravity.CENTER
-            setPadding(0, dp(12), 0, dp(4))
+            setPadding(0, dimenPx(R.dimen.space_md), 0, dimenPx(R.dimen.space_xs))
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
             ).apply { gravity = Gravity.CENTER_HORIZONTAL }
         })
-        addView(text(subtext, 14, false, resources.getColor(R.color.text_secondary, theme)).apply {
+        addView(styledText(subtext, R.dimen.type_body_medium, false, color(R.color.text_secondary)).apply {
             gravity = Gravity.CENTER
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -66,9 +70,9 @@ internal fun AppCompatActivity.emptyState(
             addView(primaryButton(actionLabel, onAction).apply {
                 layoutParams = LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT,
-                    dp(48),
+                    dimenPx(R.dimen.space_xxxl),
                 ).apply {
-                    setMargins(0, dp(16), 0, 0)
+                    setMargins(0, dimenPx(R.dimen.space_lg), 0, 0)
                     gravity = Gravity.CENTER_HORIZONTAL
                 }
             })
@@ -98,9 +102,9 @@ internal fun AppCompatActivity.errorState(
     message: String,
     onRetry: (() -> Unit)? = null,
 ): View {
-    return card(18).apply {
+    return cardRes(R.dimen.space_18).apply {
         gravity = Gravity.CENTER
-        addView(text(message, 14, false, ERROR).apply {
+        addView(styledText(message, R.dimen.type_body_medium, false, orgColors.error).apply {
             gravity = Gravity.CENTER
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -111,8 +115,8 @@ internal fun AppCompatActivity.errorState(
             addView(ghostButton(getString(R.string.organizer_retry), onRetry).apply {
                 layoutParams = LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT,
-                    dp(44),
-                ).apply { setMargins(0, dp(14), 0, 0) }
+                    dimenPx(R.dimen.tile_44),
+                ).apply { setMargins(0, dimenPx(R.dimen.space_14), 0, 0) }
             })
         }
     }
@@ -127,15 +131,15 @@ internal fun <T> AppCompatActivity.dataSourceBanner(load: OrganizerMvpLoad<T>): 
     val message = load.message?.takeIf { it.isNotBlank() } ?: getString(R.string.organizer_limited_local_data)
     return TextView(this).apply {
         text = message
-        textSize = 13f
-        setTextColor(Color.parseColor("#92400E"))
+        setTextSizeRes(R.dimen.type_body_compact)
+        setTextColor(color(R.color.on_warning_container))
         gravity = Gravity.CENTER_VERTICAL
-        setPadding(dp(14), dp(10), dp(14), dp(10))
-        background = rounded(Color.parseColor("#FEF3C7"), 12, Color.parseColor("#FDE68A"), density = resources.displayMetrics.density)
+        setPadding(dimenPx(R.dimen.space_14), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_14), dimenPx(R.dimen.space_10))
+        background = roundedRect(color(R.color.warning_container), R.dimen.radius_md, color(R.color.warning_outline))
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
-        ).apply { setMargins(0, 0, 0, dp(10)) }
+        ).apply { setMargins(0, 0, 0, dimenPx(R.dimen.space_10)) }
     }
 }
 
@@ -149,7 +153,7 @@ internal fun AppCompatActivity.eventSelector(
     var selectedIndex = approvedEvents.indexOfFirst { it.id == selectedEventId }.takeIf { it >= 0 } ?: 0
     if (approvedEvents.isEmpty()) selectedIndex = -1
 
-    val titleText = text(titles.getOrNull(selectedIndex) ?: getString(R.string.organizer_select_event), 15, false, TEXT)
+    val titleText = styledText(titles.getOrNull(selectedIndex) ?: getString(R.string.organizer_select_event), R.dimen.type_body, false, orgColors.text)
     val arrow = ImageView(this).apply {
         setImageResource(R.drawable.ic_arrow_drop_down)
         contentDescription = getString(R.string.organizer_select_event_description)
@@ -157,11 +161,11 @@ internal fun AppCompatActivity.eventSelector(
     val card = LinearLayout(this).apply {
         orientation = LinearLayout.HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
-        setPadding(dp(16), 0, dp(16), 0)
-        minimumHeight = dp(52)
+        setPadding(dimenPx(R.dimen.space_lg), 0, dimenPx(R.dimen.space_lg), 0)
+        minimumHeight = dimenPx(R.dimen.input_height)
         isClickable = approvedEvents.isNotEmpty()
         isFocusable = approvedEvents.isNotEmpty()
-        background = rounded(Color.WHITE, 14, BORDER, density = resources.displayMetrics.density)
+        background = roundedRect(orgColors.card, R.dimen.radius_14, orgColors.border)
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -170,7 +174,7 @@ internal fun AppCompatActivity.eventSelector(
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         })
         addView(arrow.apply {
-            layoutParams = LinearLayout.LayoutParams(dp(20), dp(20))
+            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md))
         })
     }
 
@@ -179,18 +183,18 @@ internal fun AppCompatActivity.eventSelector(
 
     fun buildDropdown(): LinearLayout = LinearLayout(this@eventSelector).apply {
         orientation = LinearLayout.VERTICAL
-        background = rounded(Color.WHITE, 14, BORDER, density = resources.displayMetrics.density)
+        background = roundedRect(orgColors.card, R.dimen.radius_14, orgColors.border)
         approvedEvents.forEachIndexed { index, event ->
             val selected = index == selectedIndex
             addView(LinearLayout(this@eventSelector).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(16), dp(14), dp(16), dp(14))
-                setBackgroundColor(if (selected) Color.parseColor("#EEF2FF") else Color.WHITE)
+                setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_14), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_14))
+                setBackgroundColor(if (selected) color(R.color.accent_container) else orgColors.card)
                 setOnClickListener {
                     selectedIndex = index
                     titleText.text = titles[index]
-                    titleText.setTextColor(TEXT)
+                    titleText.setTextColor(orgColors.text)
                     popup?.dismiss()
                     isOpen = false
                     arrow.rotation = 0f
@@ -198,9 +202,9 @@ internal fun AppCompatActivity.eventSelector(
                 }
                 addView(TextView(this@eventSelector).apply {
                     text = titles[index]
-                    setTextColor(if (selected) 0xFF4F46E5.toInt() else TEXT)
-                    textSize = 15f
-                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                    setTextColor(if (selected) orgColors.accent else orgColors.text)
+                    setTextSizeRes(R.dimen.type_body)
+                    strong()
                     layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
                 })
             })
@@ -217,8 +221,8 @@ internal fun AppCompatActivity.eventSelector(
             true,
         ).apply {
             isOutsideTouchable = true
-            elevation = dp(8).toFloat()
-            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            elevation = dimenPx(R.dimen.elevation_overlay).toFloat()
+            setBackgroundDrawable(ColorDrawable(color(R.color.transparent)))
             setOnDismissListener { isOpen = false; arrow.rotation = 0f }
         }
         isOpen = true

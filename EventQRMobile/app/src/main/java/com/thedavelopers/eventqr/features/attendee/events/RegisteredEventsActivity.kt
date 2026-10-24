@@ -14,6 +14,7 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.registrations.RegisteredEventAdapter
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
+import com.thedavelopers.eventqr.ui.theme.dimen
 import java.time.Instant
 
 open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContract.View {
@@ -84,9 +85,9 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
         for ((filter, chip) in chips) {
             val isSelected = filter == selectedFilter
             chip.isChecked = isSelected
-            chip.setTextColor(if (isSelected) ContextCompat.getColor(this, R.color.brand_on_primary) else textSecondary)
-            chip.setChipBackgroundColorResource(if (isSelected) R.color.eventqr_indigo else R.color.surface)
-            chip.chipStrokeWidth = if (isSelected) 0f else resources.displayMetrics.density
+            chip.setTextColor(if (isSelected) ContextCompat.getColor(this, R.color.on_primary) else textSecondary)
+            chip.setChipBackgroundColorResource(if (isSelected) R.color.primary else R.color.surface)
+            chip.chipStrokeWidth = if (isSelected) 0f else dimen(R.dimen.stroke_hairline)
             chip.chipStrokeColor = ContextCompat.getColorStateList(this, R.color.outline)
         }
     }

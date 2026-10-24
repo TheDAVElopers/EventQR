@@ -1,8 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="@color/eventqr_input" />
-    <corners android:radius="14dp" />
-    <stroke
-        android:width="1dp"
-        android:color="@color/eventqr_border" />
-</shape>
+<!--
+    Standard text-field background (Widget.EventQR.EditText): surface fill, 1dp strong outline,
+    2dp brand stroke while focused, error stroke while the view is activated (view.isActivated = true marks
+    an invalid field; supersedes the one-off bg_phone_input_error).
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_activated="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/surface" />
+            <corners android:radius="@dimen/radius_input" />
+            <stroke
+                android:width="@dimen/stroke_focus"
+                android:color="@color/error" />
+        </shape>
+    </item>
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/surface" />
+            <corners android:radius="@dimen/radius_input" />
+            <stroke
+                android:width="@dimen/stroke_focus"
+                android:color="@color/primary" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/surface" />
+            <corners android:radius="@dimen/radius_input" />
+            <stroke
+                android:width="@dimen/stroke_hairline"
+                android:color="@color/outline_strong" />
+        </shape>
+    </item>
+</selector>

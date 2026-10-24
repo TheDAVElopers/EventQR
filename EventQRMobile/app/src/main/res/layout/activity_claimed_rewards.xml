@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eventqr_bg"
+    android:background="@color/background"
     android:orientation="vertical">
 
     <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
@@ -21,7 +21,7 @@
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:padding="14dp">
+            android:padding="@dimen/space_14">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerClaimedRewards"
@@ -29,7 +29,7 @@
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
                 android:nestedScrollingEnabled="true"
-                android:paddingBottom="8dp" />
+                android:paddingBottom="@dimen/space_sm" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -43,7 +43,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp"
+                    android:padding="@dimen/space_lg"
                     android:visibility="visible">
 
                     <!-- Skeleton row 1 -->
@@ -53,8 +53,8 @@
                         android:background="@drawable/bg_staff_skeleton_card"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        android:padding="16dp"
-                        android:layout_marginBottom="12dp">
+                        android:padding="@dimen/space_lg"
+                        android:layout_marginBottom="@dimen/space_md">
 
                         <View
                             android:layout_width="40dp"
@@ -65,7 +65,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginStart="12dp"
+                            android:layout_marginStart="@dimen/space_md"
                             android:orientation="vertical">
 
                             <View
@@ -76,7 +76,7 @@
                             <View
                                 android:layout_width="140dp"
                                 android:layout_height="10dp"
-                                android:layout_marginTop="8dp"
+                                android:layout_marginTop="@dimen/space_sm"
                                 android:background="@drawable/bg_staff_skeleton_bar" />
                         </LinearLayout>
                     </LinearLayout>
@@ -88,8 +88,8 @@
                         android:background="@drawable/bg_staff_skeleton_card"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        android:padding="16dp"
-                        android:layout_marginBottom="12dp">
+                        android:padding="@dimen/space_lg"
+                        android:layout_marginBottom="@dimen/space_md">
 
                         <View
                             android:layout_width="40dp"
@@ -100,7 +100,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginStart="12dp"
+                            android:layout_marginStart="@dimen/space_md"
                             android:orientation="vertical">
 
                             <View
@@ -111,7 +111,7 @@
                             <View
                                 android:layout_width="120dp"
                                 android:layout_height="10dp"
-                                android:layout_marginTop="8dp"
+                                android:layout_marginTop="@dimen/space_sm"
                                 android:background="@drawable/bg_staff_skeleton_bar" />
                         </LinearLayout>
                     </LinearLayout>
@@ -123,8 +123,8 @@
                         android:background="@drawable/bg_staff_skeleton_card"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        android:padding="16dp"
-                        android:layout_marginBottom="12dp">
+                        android:padding="@dimen/space_lg"
+                        android:layout_marginBottom="@dimen/space_md">
 
                         <View
                             android:layout_width="40dp"
@@ -135,7 +135,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginStart="12dp"
+                            android:layout_marginStart="@dimen/space_md"
                             android:orientation="vertical">
 
                             <View
@@ -146,7 +146,7 @@
                             <View
                                 android:layout_width="100dp"
                                 android:layout_height="10dp"
-                                android:layout_marginTop="8dp"
+                                android:layout_marginTop="@dimen/space_sm"
                                 android:background="@drawable/bg_staff_skeleton_bar" />
                         </LinearLayout>
                     </LinearLayout>
@@ -160,20 +160,17 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:text="@string/claimed_rewards_unable_to_load_claimed_rewards"
-                    android:textColor="@color/eventqr_error"
-                    android:textSize="14sp"
+                    android:textColor="@color/danger"
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
                     android:visibility="gone" />
 
                 <Button
                     android:id="@+id/btnClaimedRewardsRetry"
-                    android:layout_width="140dp"
-                    android:layout_height="44dp"
-                    android:layout_marginTop="12dp"
-                    android:background="@drawable/bg_primary_button"
+                    style="@style/Widget.EventQR.Button.Primary.Retry"
+                    android:layout_width="@dimen/button_width_retry"
+                    android:layout_height="@dimen/control_height_44"
+                    android:layout_marginTop="@dimen/space_md"
                     android:text="@string/common_retry"
-                    android:textAllCaps="false"
-                    android:textColor="@android:color/white"
-                    android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
             <com.thedavelopers.eventqr.ui.components.EventQrEmptyState

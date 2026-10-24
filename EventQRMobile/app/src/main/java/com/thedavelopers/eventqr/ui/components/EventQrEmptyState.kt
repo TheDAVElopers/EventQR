@@ -1,9 +1,7 @@
 package com.thedavelopers.eventqr.ui.components
 
 import android.content.Context
-import android.graphics.Typeface
 import android.util.AttributeSet
-import android.util.TypedValue
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.Button
@@ -14,6 +12,9 @@ import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
 import androidx.core.widget.ImageViewCompat
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.theme.dimenOffset
+import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
+import com.thedavelopers.eventqr.ui.theme.strong
 
 /*
  * The one empty state used on every list page: muted icon, bold title, optional subtitle, optional action.
@@ -42,35 +43,35 @@ class EventQrEmptyState @JvmOverloads constructor(
     init {
         orientation = VERTICAL
         gravity = Gravity.CENTER
-        val side = dp(24)
-        setPadding(side, dp(24), side, dp(24))
+        val side = dimenOffset(R.dimen.space_xl)
+        setPadding(side, dimenOffset(R.dimen.space_xl), side, dimenOffset(R.dimen.space_xl))
 
         iconView = ImageView(context).apply {
-            layoutParams = LayoutParams(dp(64), dp(64))
-            ImageViewCompat.setImageTintList(this, ContextCompat.getColorStateList(context, R.color.text_disabled))
+            layoutParams = LayoutParams(dimenOffset(R.dimen.tile_64), dimenOffset(R.dimen.tile_64))
+            ImageViewCompat.setImageTintList(this, ContextCompat.getColorStateList(context, R.color.neutral))
             importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
         }
         titleView = TextView(context).apply {
             gravity = Gravity.CENTER
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
-            setTypeface(typeface, Typeface.BOLD)
+            setTextSizeRes(R.dimen.type_body_large)
+            strong()
             setTextColor(ContextCompat.getColor(context, R.color.text_primary))
-            layoutParams = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(12) }
+            layoutParams = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dimenOffset(R.dimen.space_md) }
         }
         subtitleView = TextView(context).apply {
             gravity = Gravity.CENTER
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+            setTextSizeRes(R.dimen.type_body_medium)
             setTextColor(ContextCompat.getColor(context, R.color.text_secondary))
             visibility = GONE
-            layoutParams = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(4) }
+            layoutParams = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dimenOffset(R.dimen.space_xs) }
         }
         actionView = Button(context).apply {
             setAllCaps(false)
-            setTextColor(ContextCompat.getColor(context, R.color.brand_on_primary))
-            setBackgroundResource(R.drawable.bg_primary_button)
-            setPadding(dp(20), 0, dp(20), 0)
+            setTextColor(ContextCompat.getColor(context, R.color.on_primary))
+            setBackgroundResource(R.drawable.bg_btn_primary)
+            setPadding(dimenOffset(R.dimen.space_20), 0, dimenOffset(R.dimen.space_20), 0)
             visibility = GONE
-            layoutParams = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(44)).apply { topMargin = dp(16) }
+            layoutParams = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dimenOffset(R.dimen.tile_44)).apply { topMargin = dimenOffset(R.dimen.space_lg) }
         }
         addView(iconView)
         addView(titleView)
@@ -92,8 +93,6 @@ class EventQrEmptyState @JvmOverloads constructor(
             }
         }
     }
-
-    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
     /**
      * The title. Kept as `text` so pages that did `emptyView.text = "..."` on a TextView keep compiling.

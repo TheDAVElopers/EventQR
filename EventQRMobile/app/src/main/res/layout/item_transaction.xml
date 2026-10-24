@@ -3,8 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="10dp"
-    app:cardCornerRadius="14dp"
+    android:layout_marginBottom="@dimen/space_10"
+    app:cardCornerRadius="@dimen/radius_14"
     app:cardElevation="0dp">
 
     <LinearLayout
@@ -12,18 +12,18 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="14dp">
+        android:padding="@dimen/space_14">
 
         <FrameLayout
             android:id="@+id/layoutTransactionIcon"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
-            android:background="@drawable/bg_transaction_earned_icon">
+            android:layout_width="@dimen/tile_42"
+            android:layout_height="@dimen/tile_42"
+            android:background="@drawable/bg_circle_success_container">
 
             <ImageView
                 android:id="@+id/imgTransactionTrend"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="@dimen/icon_md"
+                android:layout_height="@dimen/icon_md"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_trend_up" />
         </FrameLayout>
@@ -31,7 +31,7 @@
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="@dimen/space_md"
             android:layout_weight="1"
             android:orientation="vertical">
 
@@ -39,25 +39,23 @@
                 android:id="@+id/txtTransactionTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/eventqr_text"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
 
             <TextView
                 android:id="@+id/txtTransactionEvent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:textColor="#98A2B3"
-                android:textSize="13sp" />
+                android:layout_marginTop="@dimen/space_xxs"
+                android:textColor="@color/text_hint"
+                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
 
             <TextView
                 android:id="@+id/txtTransactionTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:textColor="#98A2B3"
-                android:textSize="13sp" />
+                android:layout_marginTop="@dimen/space_xxs"
+                android:textColor="@color/text_hint"
+                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
         </LinearLayout>
 
         <LinearLayout
@@ -70,22 +68,20 @@
                 android:id="@+id/txtTransactionPoints"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/eventqr_success"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:textColor="@color/success_dark"
+                android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong" />
 
             <TextView
                 android:id="@+id/txtTransactionTag"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="@dimen/space_sm"
                 android:background="@drawable/bg_green_pill"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="4dp"
+                android:paddingHorizontal="@dimen/space_10"
+                android:paddingVertical="@dimen/space_xs"
                 android:text="@string/common_success"
-                android:textColor="#047857"
-                android:textSize="12sp"
-                android:textStyle="bold" />
+                android:textColor="@color/on_success_container"
+                android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
         </LinearLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>

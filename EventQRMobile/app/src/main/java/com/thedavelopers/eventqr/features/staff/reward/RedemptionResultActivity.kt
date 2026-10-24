@@ -16,6 +16,10 @@ import androidx.appcompat.app.AppCompatActivity
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.rewards.AppRewardExtras
 import com.thedavelopers.eventqr.features.staff.StaffScreenExtras
+import com.thedavelopers.eventqr.ui.theme.color
+import com.thedavelopers.eventqr.ui.theme.dimenOffset
+import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
+import com.thedavelopers.eventqr.ui.theme.strong
 
 class RedemptionResultActivity : AppCompatActivity() {
 
@@ -43,9 +47,9 @@ class RedemptionResultActivity : AppCompatActivity() {
             }
             scroll.addView(LinearLayout(this@RedemptionResultActivity).apply {
                 orientation = LinearLayout.VERTICAL
-                setPadding(dp(20), dp(28), dp(20), dp(20))
+                setPadding(dimenOffset(R.dimen.space_20), dimenOffset(R.dimen.space_28), dimenOffset(R.dimen.space_20), dimenOffset(R.dimen.space_20))
 
-                addView(spacer(dp(20)))
+                addView(spacer(dimenOffset(R.dimen.space_20)))
 
                 // Status hero card
                 addView(LinearLayout(this@RedemptionResultActivity).apply {
@@ -54,7 +58,7 @@ class RedemptionResultActivity : AppCompatActivity() {
                     setBackgroundResource(
                         if (approved) R.drawable.bg_reward_success_hero else R.drawable.bg_reward_reject_hero
                     )
-                    setPadding(dp(24), dp(32), dp(24), dp(32))
+                    setPadding(dimenOffset(R.dimen.space_xl), dimenOffset(R.dimen.space_xxl), dimenOffset(R.dimen.space_xl), dimenOffset(R.dimen.space_xxl))
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -64,58 +68,58 @@ class RedemptionResultActivity : AppCompatActivity() {
                         orientation = LinearLayout.VERTICAL
                         gravity = Gravity.CENTER
                         setBackgroundResource(R.drawable.bg_reward_icon_circle)
-                        layoutParams = LinearLayout.LayoutParams(dp(76), dp(76))
+                        layoutParams = LinearLayout.LayoutParams(dimenOffset(R.dimen.size_76), dimenOffset(R.dimen.size_76))
 
                         addView(TextView(this@RedemptionResultActivity).apply {
                             text = if (approved) "✓" else "✕"
-                            textSize = 36f
+                            setTextSizeRes(R.dimen.type_display)
                             gravity = Gravity.CENTER
-                            setTextColor(if (approved) 0xFF047857.toInt() else 0xFF991B1B.toInt())
-                            setTypeface(typeface, Typeface.BOLD)
+                            setTextColor(if (approved) color(R.color.on_success_container) else color(R.color.on_error_container))
+                            strong()
                         })
                     })
 
-                    addView(spacer(dp(18)))
+                    addView(spacer(dimenOffset(R.dimen.space_18)))
 
                     addView(TextView(this@RedemptionResultActivity).apply {
                         text = getString(if (approved) R.string.redemption_result_redemption_approved else R.string.redemption_result_redemption_rejected)
-                        textSize = 20f
+                        setTextSizeRes(R.dimen.type_title_large)
                         gravity = Gravity.CENTER
-                        setTextColor(0xFFFFFFFF.toInt())
-                        setTypeface(typeface, Typeface.BOLD)
+                        setTextColor(color(R.color.on_primary))
+                        strong()
                     })
 
-                    addView(spacer(dp(8)))
+                    addView(spacer(dimenOffset(R.dimen.space_sm)))
 
                     addView(TextView(this@RedemptionResultActivity).apply {
                         text = message
-                        textSize = 15f
+                        setTextSizeRes(R.dimen.type_body)
                         gravity = Gravity.CENTER
-                        setTextColor(0xCCFFFFFF.toInt())
+                        setTextColor(color(R.color.on_dark_80))
                     })
                 })
 
-                addView(spacer(dp(18)))
+                addView(spacer(dimenOffset(R.dimen.space_18)))
 
                 // Detail panel
                 val detailCard = LinearLayout(this@RedemptionResultActivity).apply {
                     orientation = LinearLayout.VERTICAL
                     setBackgroundResource(R.drawable.bg_reward_dark_card)
-                    setPadding(dp(0), dp(6), dp(0), dp(6))
+                    setPadding(0, dimenOffset(R.dimen.space_6), 0, dimenOffset(R.dimen.space_6))
                 }
                 addView(detailCard)
 
                 if (rewardName.isNotBlank() && approved) {
-                    detailCard.addView(detailRow("Reward", rewardName, iconColor = 0xFF7C3AED.toInt()))
+                    detailCard.addView(detailRow("Reward", rewardName, iconColor = color(R.color.secondary_light)))
                     detailCard.addView(detailDivider())
                 }
                 detailCard.addView(detailRow(
                     "Points deducted",
                     if (approved) "−$points pts" else "0 pts",
-                    iconColor = if (approved) 0xFFEF4444.toInt() else 0xFF6B7280.toInt(),
+                    iconColor = if (approved) color(R.color.danger) else color(R.color.text_secondary),
                 ))
                 detailCard.addView(detailDivider())
-                val remainingColor = if (remaining < points) 0xFFD97706.toInt() else 0xFF059669.toInt()
+                val remainingColor = if (remaining < points) color(R.color.warning_dark) else color(R.color.success_dark)
                 detailCard.addView(detailRow(
                     "Remaining balance",
                     "$remaining pts",
@@ -128,23 +132,23 @@ class RedemptionResultActivity : AppCompatActivity() {
                     detailCard.addView(detailRow(
                         "Outcome",
                         "No points were deducted",
-                        iconColor = 0xFF6B7280.toInt(),
-                        valueAccent = 0xFF374151.toInt(),
+                        iconColor = color(R.color.text_secondary),
+                        valueAccent = color(R.color.text_body),
                     ))
                 }
 
-                addView(spacer(dp(26)))
+                addView(spacer(dimenOffset(R.dimen.size_26)))
 
                 // CTA button
                 addView(TextView(this@RedemptionResultActivity).apply {
                     text = "Tap to continue scanning"
-                    textSize = 16f
+                    setTextSizeRes(R.dimen.type_body_large)
                     gravity = Gravity.CENTER
-                    setTextColor(0xFFFFFFFF.toInt())
-                    setTypeface(typeface, Typeface.BOLD)
+                    setTextColor(color(R.color.on_primary))
+                    strong()
                     setBackgroundResource(R.drawable.bg_reward_cta)
-                    setPadding(dp(0), dp(16), dp(0), dp(16))
-                    setElevation(dp(3).toFloat())
+                    setPadding(0, dimenOffset(R.dimen.space_lg), 0, dimenOffset(R.dimen.space_lg))
+                    setElevation(dimenOffset(R.dimen.elevation_lifted).toFloat())
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -168,39 +172,39 @@ class RedemptionResultActivity : AppCompatActivity() {
         LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(20), dp(14), dp(20), dp(14))
+            setPadding(dimenOffset(R.dimen.space_20), dimenOffset(R.dimen.space_14), dimenOffset(R.dimen.space_20), dimenOffset(R.dimen.space_14))
 
             addView(TextView(this@RedemptionResultActivity).apply {
                 text = "•"
-                textSize = 18f
+                setTextSizeRes(R.dimen.type_title)
                 setTextColor(iconColor)
-                setTypeface(typeface, Typeface.BOLD)
-                layoutParams = LinearLayout.LayoutParams(dp(28), LinearLayout.LayoutParams.WRAP_CONTENT)
+                strong()
+                layoutParams = LinearLayout.LayoutParams(dimenOffset(R.dimen.space_28), LinearLayout.LayoutParams.WRAP_CONTENT)
             })
 
             addView(TextView(this@RedemptionResultActivity).apply {
                 text = label
-                textSize = 15f
-                setTextColor(0xFF4B5563.toInt())
+                setTextSizeRes(R.dimen.type_body)
+                setTextColor(color(R.color.text_body))
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             })
 
             addView(TextView(this@RedemptionResultActivity).apply {
                 text = value
-                textSize = 15f
+                setTextSizeRes(R.dimen.type_body)
                 gravity = Gravity.END
-                setTextColor(valueAccent ?: 0xFF111827.toInt())
-                setTypeface(typeface, Typeface.BOLD)
+                setTextColor(valueAccent ?: color(R.color.text_primary))
+                strong()
             })
         }
 
     private fun detailDivider(): View =
         View(this).apply {
-            setBackgroundColor(0xFFE5E7EB.toInt())
+            setBackgroundColor(color(R.color.outline))
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(1),
-            ).also { it.leftMargin = dp(48); it.rightMargin = dp(20) }
+                dimenOffset(R.dimen.stroke_hairline),
+            ).also { it.leftMargin = dimenOffset(R.dimen.space_xxxl); it.rightMargin = dimenOffset(R.dimen.space_20) }
         }
 
     private fun spacer(height: Int): View =
@@ -208,5 +212,4 @@ class RedemptionResultActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, height)
         }
 
-    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 }

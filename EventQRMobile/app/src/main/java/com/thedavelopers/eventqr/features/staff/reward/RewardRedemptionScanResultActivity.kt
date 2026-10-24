@@ -3,7 +3,6 @@ package com.thedavelopers.eventqr.features.staff.reward
 import com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
 import android.content.Intent
 import android.content.res.ColorStateList
-import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
 import android.text.TextUtils
@@ -28,6 +27,10 @@ import com.thedavelopers.eventqr.features.staff.StaffScreenExtras
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResultResponse
 import kotlinx.coroutines.launch
 import java.util.UUID
+import com.thedavelopers.eventqr.ui.theme.color
+import com.thedavelopers.eventqr.ui.theme.dimenOffset
+import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
+import com.thedavelopers.eventqr.ui.theme.strong
 
 class RewardRedemptionScanResultActivity : AppCompatActivity() {
 
@@ -72,17 +75,17 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
             }
             val content = LinearLayout(this@RewardRedemptionScanResultActivity).apply {
                 orientation = LinearLayout.VERTICAL
-                setPadding(dp(20), dp(28), dp(20), dp(20))
+                setPadding(dimenOffset(R.dimen.space_20), dimenOffset(R.dimen.space_28), dimenOffset(R.dimen.space_20), dimenOffset(R.dimen.space_20))
             }
             scroll.addView(content)
 
-            content.addView(spacer(dp(20)))
+            content.addView(spacer(dimenOffset(R.dimen.space_20)))
 
             content.addView(LinearLayout(this@RewardRedemptionScanResultActivity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
                 setBackgroundResource(R.drawable.bg_reward_points)
-                setPadding(dp(20), dp(20), dp(20), dp(20))
+                setPadding(dimenOffset(R.dimen.space_20), dimenOffset(R.dimen.space_20), dimenOffset(R.dimen.space_20), dimenOffset(R.dimen.space_20))
 
                 addView(TextView(this@RewardRedemptionScanResultActivity).apply {
                     text = attendeeName.ifBlank { "Attendee" }
@@ -91,31 +94,31 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
                         .joinToString("") { it.firstOrNull()?.toString().orEmpty() }
                         .ifBlank { "?" }
                         .uppercase()
-                    textSize = 20f
+                    setTextSizeRes(R.dimen.type_title_large)
                     gravity = Gravity.CENTER
-                    setTextColor(0xFF151A2D.toInt())
-                    setTypeface(typeface, Typeface.BOLD)
+                    setTextColor(color(R.color.text_primary))
+                    strong()
                     setBackgroundResource(R.drawable.bg_reward_icon_circle)
-                    layoutParams = LinearLayout.LayoutParams(dp(56), dp(56))
+                    layoutParams = LinearLayout.LayoutParams(dimenOffset(R.dimen.button_primary_height), dimenOffset(R.dimen.button_primary_height))
                 })
 
                 addView(LinearLayout(this@RewardRedemptionScanResultActivity).apply {
                     orientation = LinearLayout.VERTICAL
-                    setPadding(dp(16), 0, 0, 0)
+                    setPadding(dimenOffset(R.dimen.space_lg), 0, 0, 0)
                     layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
 
                     addView(TextView(this@RewardRedemptionScanResultActivity).apply {
                         text = attendeeName.ifBlank { "Attendee" }
-                        textSize = 17f
-                        setTextColor(0xFFFFFFFF.toInt())
-                        setTypeface(typeface, Typeface.BOLD)
+                        setTextSizeRes(R.dimen.type_subtitle)
+                        setTextColor(color(R.color.on_primary))
+                        strong()
                     })
 
                     addView(TextView(this@RewardRedemptionScanResultActivity).apply {
                         text = "Points Balance"
-                        textSize = 13f
-                        setTextColor(0xFFEDE9FE.toInt())
-                        setPadding(0, dp(2), 0, 0)
+                        setTextSizeRes(R.dimen.type_body_compact)
+                        setTextColor(color(R.color.secondary_container))
+                        setPadding(0, dimenOffset(R.dimen.space_xxs), 0, 0)
                     })
                 })
 
@@ -125,65 +128,65 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
 
                     balanceText = TextView(this@RewardRedemptionScanResultActivity).apply {
                         text = pointsBalance.toString()
-                        textSize = 34f
-                        setTextColor(0xFFFFFFFF.toInt())
-                        setTypeface(typeface, Typeface.BOLD)
+                        setTextSizeRes(R.dimen.type_amount_34)
+                        setTextColor(color(R.color.on_primary))
+                        strong()
                     }.also { addView(it) }
 
                     addView(TextView(this@RewardRedemptionScanResultActivity).apply {
                         text = "pts available"
-                        textSize = 12f
-                        setTextColor(0xFFEDE9FE.toInt())
+                        setTextSizeRes(R.dimen.type_caption)
+                        setTextColor(color(R.color.secondary_container))
                     })
                 })
             })
 
-            content.addView(spacer(dp(24)))
+            content.addView(spacer(dimenOffset(R.dimen.space_xl)))
 
             if (scanRejected) {
                 content.addView(LinearLayout(this@RewardRedemptionScanResultActivity).apply {
                     orientation = LinearLayout.VERTICAL
                     gravity = Gravity.CENTER
                     setBackgroundResource(R.drawable.bg_reward_dark_card)
-                    setPadding(dp(24), dp(28), dp(24), dp(28))
+                    setPadding(dimenOffset(R.dimen.space_xl), dimenOffset(R.dimen.space_28), dimenOffset(R.dimen.space_xl), dimenOffset(R.dimen.space_28))
 
                     addView(TextView(this@RewardRedemptionScanResultActivity).apply {
                         text = "✕"
-                        textSize = 32f
+                        setTextSizeRes(R.dimen.type_amount_32)
                         gravity = Gravity.CENTER
-                        setTextColor(0xFFDC2626.toInt())
-                        setTypeface(typeface, Typeface.BOLD)
+                        setTextColor(color(R.color.error))
+                        strong()
                         setBackgroundResource(R.drawable.bg_reward_icon_circle)
-                        layoutParams = LinearLayout.LayoutParams(dp(68), dp(68))
+                        layoutParams = LinearLayout.LayoutParams(dimenOffset(R.dimen.size_68), dimenOffset(R.dimen.size_68))
                     })
 
-                    addView(spacer(dp(16)))
+                    addView(spacer(dimenOffset(R.dimen.space_lg)))
 
                     addView(TextView(this@RewardRedemptionScanResultActivity).apply {
                         text = "SCAN REJECTED"
-                        textSize = 18f
+                        setTextSizeRes(R.dimen.type_title)
                         gravity = Gravity.CENTER
-                        setTextColor(0xFFDC2626.toInt())
-                        setTypeface(typeface, Typeface.BOLD)
+                        setTextColor(color(R.color.error))
+                        strong()
                     })
 
-                    addView(spacer(dp(10)))
+                    addView(spacer(dimenOffset(R.dimen.space_10)))
 
                     addView(TextView(this@RewardRedemptionScanResultActivity).apply {
                         text = rejectionReason.ifBlank { "This scan was rejected. Please try again." }
-                        textSize = 14f
+                        setTextSizeRes(R.dimen.type_body_medium)
                         gravity = Gravity.CENTER
-                        setTextColor(0xFF374151.toInt())
+                        setTextColor(color(R.color.text_body))
                     })
                 })
                 showMessage(rejectionReason.ifBlank { "Scan was rejected." })
             } else {
                 content.addView(TextView(this@RewardRedemptionScanResultActivity).apply {
                     text = "Available rewards"
-                    textSize = 14f
-                    setTextColor(0xFF6B7280.toInt())
-                    setTypeface(typeface, Typeface.BOLD)
-                    setPadding(dp(4), 0, 0, dp(12))
+                    setTextSizeRes(R.dimen.type_body_medium)
+                    setTextColor(color(R.color.text_secondary))
+                    strong()
+                    setPadding(dimenOffset(R.dimen.space_xs), 0, 0, dimenOffset(R.dimen.space_md))
                 })
 
                 rewardsContainer = LinearLayout(this@RewardRedemptionScanResultActivity).apply {
@@ -191,10 +194,10 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
                 }
                 emptyText = TextView(this@RewardRedemptionScanResultActivity).apply {
                     text = "No eligible rewards for this attendee."
-                    textSize = 14f
-                    setTextColor(0xFF6B7280.toInt())
+                    setTextSizeRes(R.dimen.type_body_medium)
+                    setTextColor(color(R.color.text_secondary))
                     gravity = Gravity.CENTER
-                    setPadding(dp(20), dp(24), dp(20), dp(24))
+                    setPadding(dimenOffset(R.dimen.space_20), dimenOffset(R.dimen.space_xl), dimenOffset(R.dimen.space_20), dimenOffset(R.dimen.space_xl))
                     setBackgroundResource(R.drawable.bg_reward_list_card)
                     visibility = View.GONE
                 }
@@ -239,9 +242,9 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
         list.forEachIndexed { index, reward ->
             val card = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
-                setPadding(dp(18), dp(16), dp(18), dp(16))
+                setPadding(dimenOffset(R.dimen.space_18), dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_18), dimenOffset(R.dimen.space_lg))
                 setBackgroundResource(R.drawable.bg_reward_dark_card)
-                setElevation(dp(3).toFloat())
+                setElevation(dimenOffset(R.dimen.elevation_lifted).toFloat())
                 setOnClickListener { confirmRedemption(reward) }
             }
 
@@ -251,47 +254,47 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
             }
             titleRow.addView(TextView(this).apply {
                 text = reward.name
-                textSize = 17f
-                setTextColor(0xFF151A2D.toInt())
-                setTypeface(typeface, Typeface.BOLD)
+                setTextSizeRes(R.dimen.type_subtitle)
+                setTextColor(color(R.color.text_primary))
+                strong()
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             })
             titleRow.addView(TextView(this).apply {
                 text = "☆ ${reward.pointsRequired} pts"
-                textSize = 13f
-                setTextColor(0xFF7C3AED.toInt())
-                setTypeface(typeface, Typeface.BOLD)
+                setTextSizeRes(R.dimen.type_body_compact)
+                setTextColor(color(R.color.secondary_light))
+                strong()
                 setBackgroundResource(R.drawable.bg_purple_pill)
-                setPadding(dp(12), dp(5), dp(12), dp(5))
+                setPadding(dimenOffset(R.dimen.space_md), dimenOffset(R.dimen.space_5), dimenOffset(R.dimen.space_md), dimenOffset(R.dimen.space_5))
             })
             card.addView(titleRow)
 
             val detailRow = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
-                setPadding(0, dp(14), 0, 0)
+                setPadding(0, dimenOffset(R.dimen.space_14), 0, 0)
             }
             val stock = reward.stockQuantity?.let { "$it left" } ?: "Unlimited stock"
             detailRow.addView(TextView(this).apply {
                 text = stock
-                textSize = 13f
-                setTextColor(0xFF6B7280.toInt())
+                setTextSizeRes(R.dimen.type_body_compact)
+                setTextColor(color(R.color.text_secondary))
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             })
             val allowDuplicates = reward.allowDuplicateClaims
             detailRow.addView(TextView(this).apply {
                 text = getString(if (allowDuplicates) R.string.reward_redemption_scan_result_duplicate_claims_allowed else R.string.reward_redemption_scan_result_one_claim_only)
-                textSize = 12f
-                setTypeface(typeface, Typeface.BOLD)
-                setTextColor(if (allowDuplicates) 0xFFB45309.toInt() else Color.parseColor("#065F46"))
+                setTextSizeRes(R.dimen.type_caption)
+                strong()
+                setTextColor(if (allowDuplicates) color(R.color.warning_dark) else color(R.color.on_success_container))
                 setBackgroundResource(if (allowDuplicates) R.drawable.bg_yellow_notice else R.drawable.bg_green_pill)
-                setPadding(dp(10), dp(4), dp(10), dp(4))
+                setPadding(dimenOffset(R.dimen.space_10), dimenOffset(R.dimen.space_xs), dimenOffset(R.dimen.space_10), dimenOffset(R.dimen.space_xs))
             })
             card.addView(detailRow)
 
             container.addView(card)
             if (index < list.size - 1) {
-                container.addView(spacer(dp(12)))
+                container.addView(spacer(dimenOffset(R.dimen.space_md)))
             }
         }
     }
@@ -360,5 +363,4 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, height)
         }
 
-    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 }

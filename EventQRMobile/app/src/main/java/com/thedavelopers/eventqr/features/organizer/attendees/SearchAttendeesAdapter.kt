@@ -1,6 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.attendees
 
-import android.graphics.Color
+import com.thedavelopers.eventqr.ui.theme.dimen
 import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.View
@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpAttendee
 import com.thedavelopers.eventqr.features.organizer.statusBucket
 import com.thedavelopers.eventqr.features.organizer.statusLabel
@@ -47,15 +48,15 @@ class SearchAttendeesAdapter(
             val status = item.statusBucket()
             statusText.text = item.statusLabel(itemView.context)
             val (backgroundColor, textColor) = when (status) {
-                "Checked In" -> Color.parseColor("#D1FAE5") to Color.parseColor("#059669")
-                "Registered" -> Color.parseColor("#E0E7FF") to Color.parseColor("#4F46E5")
-                "Exited" -> Color.parseColor("#E5E7EB") to Color.parseColor("#6B7280")
-                "No Show" -> Color.parseColor("#FEF3C7") to Color.parseColor("#B45309")
-                else -> Color.parseColor("#E5E7EB") to Color.parseColor("#4B5563")
+                "Checked In" -> itemView.context.color(R.color.success_container) to itemView.context.color(R.color.success_dark)
+                "Registered" -> itemView.context.color(R.color.accent_container_strong) to itemView.context.color(R.color.primary)
+                "Exited" -> itemView.context.color(R.color.outline) to itemView.context.color(R.color.text_secondary)
+                "No Show" -> itemView.context.color(R.color.warning_container) to itemView.context.color(R.color.warning_dark)
+                else -> itemView.context.color(R.color.outline) to itemView.context.color(R.color.text_body)
             }
             statusText.background = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
-                cornerRadius = 999f
+                cornerRadius = itemView.dimen(R.dimen.radius_pill)
                 setColor(backgroundColor)
             }
             statusText.setPadding(statusText.paddingLeft, statusText.paddingTop, statusText.paddingRight, statusText.paddingBottom)

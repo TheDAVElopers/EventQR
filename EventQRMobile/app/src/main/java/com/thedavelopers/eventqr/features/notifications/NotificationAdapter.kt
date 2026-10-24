@@ -12,6 +12,7 @@ import com.thedavelopers.eventqr.core.api.dto.NotificationStatus
 import com.thedavelopers.eventqr.core.api.dto.NotificationType
 import com.thedavelopers.eventqr.core.util.RelativeTimeUtils
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
+import com.thedavelopers.eventqr.ui.theme.color
 
 class NotificationAdapter(
     private val onItemTap: (NotificationResponse) -> Unit,
@@ -56,69 +57,69 @@ class NotificationAdapter(
                 item.notificationType == NotificationType.STAFF_ASSIGNMENT -> {
                     iconContainer.setBackgroundResource(R.drawable.bg_stat_circle_purple)
                     iconView.setImageResource(R.drawable.ic_group)
-                    iconView.setColorFilter(0xFF4F46E5.toInt())
+                    iconView.setColorFilter(itemView.context.color(R.color.primary))
                 }
                 item.notificationType == NotificationType.REGISTRATION_NEW -> {
                     iconContainer.setBackgroundResource(R.drawable.bg_stat_circle_green)
                     iconView.setImageResource(R.drawable.ic_check_circle_purple)
-                    iconView.setColorFilter(0xFF10B981.toInt())
+                    iconView.setColorFilter(itemView.context.color(R.color.success))
                 }
                 item.notificationType == NotificationType.CAPACITY_WARNING || item.notificationType == NotificationType.CAPACITY_FULL -> {
                     iconContainer.setBackgroundResource(R.drawable.bg_stat_circle_purple)
                     iconView.setImageResource(R.drawable.ic_admin_users)
-                    iconView.setColorFilter(0xFFB8860B.toInt())
+                    iconView.setColorFilter(itemView.context.color(R.color.warning_dark))
                 }
                 item.notificationType == NotificationType.REWARD_EXHAUSTED -> {
                     iconContainer.setBackgroundResource(R.drawable.bg_icon_tile_red)
                     iconView.setImageResource(R.drawable.ic_gift)
-                    iconView.setColorFilter(0xFFEF4444.toInt())
+                    iconView.setColorFilter(itemView.context.color(R.color.danger))
                 }
                 item.notificationType == NotificationType.REWARD_REDEEMED -> {
                     iconContainer.setBackgroundResource(R.drawable.bg_stat_circle_green)
                     iconView.setImageResource(R.drawable.ic_gift)
-                    iconView.setColorFilter(0xFF10B981.toInt())
+                    iconView.setColorFilter(itemView.context.color(R.color.success))
                 }
                 item.notificationType == NotificationType.POINTS_ADJUSTED -> {
                     iconContainer.setBackgroundResource(R.drawable.bg_stat_circle_purple)
                     iconView.setImageResource(R.drawable.ic_check_circle_purple)
-                    iconView.setColorFilter(0xFF4F46E5.toInt())
+                    iconView.setColorFilter(itemView.context.color(R.color.primary))
                 }
                 item.notificationType == NotificationType.EVENT_APPROVED -> {
                     iconContainer.setBackgroundResource(R.drawable.bg_stat_circle_green)
                     iconView.setImageResource(R.drawable.ic_check_circle_purple)
-                    iconView.setColorFilter(0xFF10B981.toInt())
+                    iconView.setColorFilter(itemView.context.color(R.color.success))
                 }
                 item.notificationType == NotificationType.EVENT_REJECTED -> {
                     iconContainer.setBackgroundResource(R.drawable.bg_icon_tile_red)
                     iconView.setImageResource(R.drawable.ic_error_circle)
-                    iconView.setColorFilter(0xFFEF4444.toInt())
+                    iconView.setColorFilter(itemView.context.color(R.color.danger))
                 }
                 item.notificationType == NotificationType.EVENT_STARTING_SOON -> {
                     iconContainer.setBackgroundResource(R.drawable.bg_stat_circle_purple)
                     iconView.setImageResource(R.drawable.ic_row_clock)
-                    iconView.setColorFilter(0xFF4F46E5.toInt())
+                    iconView.setColorFilter(itemView.context.color(R.color.primary))
                 }
                 item.notificationType == NotificationType.EVENT_COMPLETED -> {
                     iconContainer.setBackgroundResource(R.drawable.bg_stat_circle_green)
                     iconView.setImageResource(R.drawable.ic_check_circle_purple)
-                    iconView.setColorFilter(0xFF10B981.toInt())
+                    iconView.setColorFilter(itemView.context.color(R.color.success))
                 }
                 item.notificationType == NotificationType.SCAN_REJECTED -> {
                     iconContainer.setBackgroundResource(R.drawable.bg_icon_tile_red)
                     iconView.setImageResource(R.drawable.ic_error_circle)
-                    iconView.setColorFilter(0xFFEF4444.toInt())
+                    iconView.setColorFilter(itemView.context.color(R.color.danger))
                 }
 
                 item.notificationType == NotificationType.SCAN_APPROVED -> {
                     iconContainer.setBackgroundResource(R.drawable.bg_stat_circle_green)
                     iconView.setImageResource(R.drawable.ic_check_circle_purple)
-                    iconView.setColorFilter(0xFF10B981.toInt())
+                    iconView.setColorFilter(itemView.context.color(R.color.success))
                 }
 
                 else -> {
                     iconContainer.setBackgroundResource(R.drawable.bg_stat_circle_green)
                     iconView.setImageResource(R.drawable.ic_check_circle_purple)
-                    iconView.setColorFilter(0xFF10B981.toInt())
+                    iconView.setColorFilter(itemView.context.color(R.color.success))
                 }
             }
 

@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/eventqr_bg"
+    android:background="@color/background"
     android:orientation="vertical">
 
     <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
@@ -21,7 +21,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:padding="@dimen/space_20">
 
             <!-- Approved status header -->
             <LinearLayout
@@ -30,32 +30,32 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
-                android:padding="24dp">
+                android:padding="@dimen/space_xl">
 
                 <FrameLayout
-                    android:layout_width="100dp"
-                    android:layout_height="100dp">
+                    android:layout_width="@dimen/tile_100"
+                    android:layout_height="@dimen/tile_100">
 
                     <View
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
+                        android:layout_width="@dimen/tile_80"
+                        android:layout_height="@dimen/tile_80"
                         android:layout_gravity="center"
                         android:background="@drawable/bg_circle_green"
-                        android:alpha="0.1" />
+                        android:alpha="@dimen/alpha_wash_10" />
 
                     <View
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
+                        android:layout_width="@dimen/tile_60"
+                        android:layout_height="@dimen/tile_60"
                         android:layout_gravity="center"
                         android:background="@drawable/bg_circle_green" />
 
                     <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
+                        android:layout_width="@dimen/icon_32"
+                        android:layout_height="@dimen/icon_32"
                         android:layout_gravity="center"
                         android:contentDescription="@string/common_valid"
                         android:src="@drawable/ic_qr_success_check"
-                        app:tint="@android:color/white" />
+                        app:tint="@color/on_primary" />
 
                     <!-- Decorative burst lines placeholder (approximate design) -->
                     <ImageView
@@ -63,7 +63,7 @@
                         android:layout_height="match_parent"
                         android:contentDescription="@null"
                         android:src="@android:drawable/ic_menu_add"
-                        android:alpha="0.2"
+                        android:alpha="@dimen/alpha_wash_20"
                         android:visibility="gone" />
                 </FrameLayout>
 
@@ -71,21 +71,18 @@
                     android:id="@+id/txtTransactionState"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="@dimen/space_lg"
                     android:text="@string/staff_transaction_result_transaction_successful"
-                    android:textColor="@android:color/black"
-                    android:textSize="22sp"
-                    android:textStyle="bold" />
+                    android:textAppearance="@style/TextAppearance.EventQR.TextHeadline" />
 
                 <TextView
                     android:id="@+id/txtTransactionStateHint"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="@dimen/space_6"
                     android:gravity="center"
                     android:text="@string/staff_transaction_result_points_awarded_to_attendee"
-                    android:textColor="#111827"
-                    android:textSize="14sp" />
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
             </LinearLayout>
 
             <!-- Rejected status header -->
@@ -95,63 +92,60 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
-                android:padding="24dp"
+                android:padding="@dimen/space_xl"
                 android:visibility="gone">
 
                 <FrameLayout
-                    android:layout_width="100dp"
-                    android:layout_height="100dp">
+                    android:layout_width="@dimen/tile_100"
+                    android:layout_height="@dimen/tile_100">
 
                     <View
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
+                        android:layout_width="@dimen/tile_80"
+                        android:layout_height="@dimen/tile_80"
                         android:layout_gravity="center"
                         android:background="@drawable/bg_staff_rejected_circle"
-                        android:alpha="0.1" />
+                        android:alpha="@dimen/alpha_wash_10" />
 
                     <View
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
+                        android:layout_width="@dimen/tile_60"
+                        android:layout_height="@dimen/tile_60"
                         android:layout_gravity="center"
                         android:background="@drawable/bg_staff_rejected_circle" />
 
                     <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
+                        android:layout_width="@dimen/icon_32"
+                        android:layout_height="@dimen/icon_32"
                         android:layout_gravity="center"
                         android:src="@drawable/ic_staff_close"
-                        app:tint="@android:color/white" />
+                        app:tint="@color/on_primary" />
                 </FrameLayout>
 
                 <TextView
                     android:id="@+id/txtTransactionStateRejected"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="@dimen/space_lg"
                     android:text="@string/staff_transaction_result_transaction_rejected"
-                    android:textColor="@android:color/black"
-                    android:textSize="22sp"
-                    android:textStyle="bold" />
+                    android:textAppearance="@style/TextAppearance.EventQR.TextHeadline" />
 
                 <TextView
                     android:id="@+id/txtTransactionStateHintRejected"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="@dimen/space_6"
                     android:gravity="center"
                     android:text="@string/staff_transaction_result_scan_rejected_and_logged"
-                    android:textColor="#111827"
-                    android:textSize="14sp" />
+                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
             </LinearLayout>
 
             <!-- Transaction info card -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/space_lg"
                 android:background="@drawable/bg_card"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="@dimen/space_lg">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -160,14 +154,14 @@
                     android:orientation="horizontal">
 
                     <LinearLayout
-                        android:layout_width="42dp"
-                        android:layout_height="42dp"
-                        android:background="@drawable/bg_icon_tile_indigo"
-                        android:gravity="center">
+                        android:layout_width="@dimen/tile_42"
+                        android:layout_height="@dimen/tile_42"
+                        android:gravity="center"
+                        style="@style/Widget.EventQR.IconTile.Round.Accent">
 
                         <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
+                            android:layout_width="@dimen/icon_md"
+                            android:layout_height="@dimen/icon_md"
                             android:contentDescription="@string/staff_transaction_result_type"
                             android:src="@drawable/ic_row_tag" />
                     </LinearLayout>
@@ -175,7 +169,7 @@
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp"
+                        android:layout_marginStart="@dimen/space_14"
                         android:layout_weight="1"
                         android:orientation="vertical">
 
@@ -183,26 +177,21 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/staff_transaction_result_scan_type"
-                            android:textColor="#9CA3AF"
-                            android:textSize="11sp"
-                            android:textStyle="bold" />
+                            android:textColor="@color/text_hint"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextOverline.Strong" />
 
                         <TextView
                             android:id="@+id/txtTransactionType"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:textColor="#111827"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
+                            android:layout_marginTop="@dimen/space_xxs"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
                     </LinearLayout>
                 </LinearLayout>
 
                 <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginVertical="14dp"
-                    android:background="#F3F4F6" />
+                    android:layout_marginVertical="@dimen/space_14"
+                    style="@style/Widget.EventQR.Divider.Muted" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -211,24 +200,23 @@
                     android:orientation="horizontal">
 
                     <LinearLayout
-                        android:layout_width="42dp"
-                        android:layout_height="42dp"
-                        android:background="@drawable/bg_circle_indigo"
-                        android:backgroundTint="#EEF2FF"
-                        android:gravity="center">
+                        android:layout_width="@dimen/tile_42"
+                        android:layout_height="@dimen/tile_42"
+                        android:gravity="center"
+                        style="@style/Widget.EventQR.IconTile.Round.Accent">
 
                         <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
+                            android:layout_width="@dimen/icon_md"
+                            android:layout_height="@dimen/icon_md"
                             android:contentDescription="@string/common_attendee"
                             android:src="@drawable/ic_row_user"
-                            app:tint="#4F46E5" />
+                            app:tint="@color/primary" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp"
+                        android:layout_marginStart="@dimen/space_14"
                         android:layout_weight="1"
                         android:orientation="vertical">
 
@@ -236,25 +224,21 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/staff_transaction_result_attendee"
-                            android:textColor="#9CA3AF"
-                            android:textSize="11sp"
-                            android:textStyle="bold" />
+                            android:textColor="@color/text_hint"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextOverline.Strong" />
 
                         <TextView
                             android:id="@+id/txtTransactionAttendee"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:textColor="#111827"
-                            android:textSize="15sp" />
+                            android:layout_marginTop="@dimen/space_xxs"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextBody" />
                     </LinearLayout>
                 </LinearLayout>
 
                 <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginVertical="14dp"
-                    android:background="#F3F4F6" />
+                    android:layout_marginVertical="@dimen/space_14"
+                    style="@style/Widget.EventQR.Divider.Muted" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -263,24 +247,23 @@
                     android:orientation="horizontal">
 
                     <LinearLayout
-                        android:layout_width="42dp"
-                        android:layout_height="42dp"
-                        android:background="@drawable/bg_icon_tile_gray"
+                        android:layout_width="@dimen/tile_42"
+                        android:layout_height="@dimen/tile_42"
                         android:gravity="center"
-                        android:backgroundTint="#EEF2FF">
+                        style="@style/Widget.EventQR.IconTile.Round.Accent">
 
                         <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
+                            android:layout_width="@dimen/icon_md"
+                            android:layout_height="@dimen/icon_md"
                             android:contentDescription="@string/staff_transaction_result_time"
                             android:src="@drawable/ic_row_clock"
-                            app:tint="#4F46E5"  />
+                            app:tint="@color/primary"  />
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp"
+                        android:layout_marginStart="@dimen/space_14"
                         android:layout_weight="1"
                         android:orientation="vertical">
 
@@ -288,17 +271,15 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/staff_transaction_result_scanned_at"
-                            android:textColor="#9CA3AF"
-                            android:textSize="11sp"
-                            android:textStyle="bold" />
+                            android:textColor="@color/text_hint"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextOverline.Strong" />
 
                         <TextView
                             android:id="@+id/txtTransactionTime"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:textColor="#111827"
-                            android:textSize="15sp"
+                            android:layout_marginTop="@dimen/space_xxs"
+                            android:textAppearance="@style/TextAppearance.EventQR.TextBody"
                             />
                     </LinearLayout>
                 </LinearLayout>
@@ -309,23 +290,23 @@
                 android:id="@+id/layoutTransactionApproved"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/space_lg"
                 android:background="@drawable/bg_reward_points"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingHorizontal="14dp"
-                android:paddingVertical="12dp"
+                android:paddingHorizontal="@dimen/space_14"
+                android:paddingVertical="@dimen/space_md"
                 android:visibility="gone">
 
                 <LinearLayout
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:background="@drawable/bg_icon_tile_gray"
-                    android:gravity="center">
+                    android:layout_width="@dimen/icon_tile_md"
+                    android:layout_height="@dimen/icon_tile_md"
+                    android:gravity="center"
+                    style="@style/Widget.EventQR.IconTile.Round.Muted">
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="@dimen/icon_md"
+                        android:layout_height="@dimen/icon_md"
                         android:contentDescription="@string/staff_transaction_result_points"
                         android:src="@drawable/ic_row_star" />
                 </LinearLayout>
@@ -333,7 +314,7 @@
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
+                    android:layout_marginStart="@dimen/space_md"
                     android:layout_weight="1"
                     android:orientation="vertical">
 
@@ -341,18 +322,16 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/staff_transaction_result_points_awarded"
-                        android:textColor="#C7D2FE"
-                        android:textSize="10sp"
-                        android:textStyle="bold" />
+                        android:textColor="@color/accent_outline"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextMicro" />
 
                     <TextView
                         android:id="@+id/txtTransactionPoints"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="1dp"
-                        android:textColor="@android:color/white"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
+                        android:textColor="@color/on_primary"
+                        android:textAppearance="@style/TextAppearance.EventQR.TitleLarge" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -361,22 +340,22 @@
                 android:id="@+id/layoutTransactionRejected"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/space_lg"
                 android:background="@drawable/bg_red_warning"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="16dp"
+                android:padding="@dimen/space_lg"
                 android:visibility="gone">
 
                 <LinearLayout
-                    android:layout_width="42dp"
-                    android:layout_height="42dp"
-                    android:background="@drawable/bg_icon_tile_red"
-                    android:gravity="center">
+                    android:layout_width="@dimen/tile_42"
+                    android:layout_height="@dimen/tile_42"
+                    android:gravity="center"
+                    style="@style/Widget.EventQR.IconTile.Round.Error">
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="@dimen/icon_md"
+                        android:layout_height="@dimen/icon_md"
                         android:contentDescription="@string/common_reason"
                         android:src="@drawable/ic_row_alert" />
                 </LinearLayout>
@@ -384,7 +363,7 @@
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="14dp"
+                    android:layout_marginStart="@dimen/space_14"
                     android:layout_weight="1"
                     android:orientation="vertical">
 
@@ -392,71 +371,58 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/common_rejection_reason"
-                        android:textColor="#F87171"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
+                        android:textColor="@color/error"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextOverline.Strong" />
 
                     <TextView
                         android:id="@+id/txtTransactionReason"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:textColor="#9F1239"
-                        android:textSize="14sp" />
+                        android:layout_marginTop="@dimen/space_xs"
+                        android:textColor="@color/on_error_container"
+                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
                 </LinearLayout>
             </LinearLayout>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnViewTransactionAttendee"
                 android:layout_width="match_parent"
-                android:layout_height="54dp"
-                android:layout_marginTop="20dp"
-                android:background="@drawable/bg_staff_outline_button"
+                android:layout_height="@dimen/control_height_54"
+                android:layout_marginTop="@dimen/space_20"
                 android:text="@string/common_view_attendee_details"
-                android:textAllCaps="false"
-                android:textColor="@color/eventqr_indigo"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                app:backgroundTint="@null"
                 app:icon="@drawable/ic_visibility_on"
                 app:iconGravity="textStart"
-                app:iconTint="@color/eventqr_indigo"/>
+                app:iconTint="@color/primary"
+                style="@style/Widget.EventQR.Button.Outline.Large"/>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnTransactionScanAgain"
+                style="@style/Widget.EventQR.Button.Primary"
                 android:layout_width="match_parent"
-                android:layout_height="54dp"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_primary_button"
+                android:layout_height="@dimen/control_height_54"
+                android:layout_marginTop="@dimen/space_md"
                 android:text="@string/staff_transaction_result_scan_next_attendee"
-                android:textAllCaps="false"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                app:backgroundTint="@null"
                 app:icon="@drawable/ic_staff_scan"
-                app:iconPadding="8dp"
+                app:iconPadding="@dimen/space_sm"
                 app:iconSize="35dp"
-                app:iconTint="#FFFFFF"
-                app:iconGravity="textStart"/>
+                app:iconTint="@color/on_primary"
+                app:iconGravity="textStart"
+                android:textAppearance="@style/TextAppearance.EventQR.ButtonBodyLarge.Strong"/>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnTransactionDashboard"
+                style="@style/Widget.EventQR.Button.Text.Material"
                 android:layout_width="wrap_content"
-                android:layout_height="54dp"
+                android:layout_height="@dimen/control_height_54"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="@dimen/space_md"
                 android:text="@string/common_back_to_dashboard"
-                android:textAllCaps="false"
-                android:textColor="@color/eventqr_indigo"
-                android:textSize="15sp"
-                android:textStyle="bold"
                 app:icon="@drawable/ic_back_chevron"
-                app:iconPadding="8dp"
-                app:iconSize="26dp"
-                app:iconTint="@color/eventqr_indigo"
+                app:iconPadding="@dimen/space_sm"
+                app:iconSize="@dimen/size_26"
+                app:iconTint="@color/primary"
                 app:iconGravity="textStart"
-                style="@style/Widget.MaterialComponents.Button.TextButton"/>
+                android:textAppearance="@style/TextAppearance.EventQR.ButtonBody.Strong"/>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>
