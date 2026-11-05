@@ -10,6 +10,8 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.session.SessionRefresher
+import com.thedavelopers.eventqr.core.util.ScreenInsets
+import com.thedavelopers.eventqr.core.util.Wordmark
 import com.thedavelopers.eventqr.features.auth.login.LoginActivity
 import com.thedavelopers.eventqr.features.auth.register.RegistrationActivity
 import com.thedavelopers.eventqr.features.dashboard.DashboardRouter
@@ -48,6 +50,12 @@ open class LandingActivity : AppCompatActivity() {
 
     private fun showLandingContent() {
         setContentView(R.layout.activity_landing)
+
+        // The 64dp bar is chrome: its fill runs behind the status bar and it stays put while the
+        // page scrolls. The scroll content clears the navigation bar.
+        ScreenInsets.padForStatusBar(findViewById(R.id.authTopBar))
+        Wordmark.applyBarRules(this)
+        ScreenInsets.padForNavigationBar(findViewById(R.id.authScroll))
 
         val btnSignIn = findViewById<Button>(R.id.btnSignIn)
         val btnCreateAccount = findViewById<Button>(R.id.btnCreateAccount)

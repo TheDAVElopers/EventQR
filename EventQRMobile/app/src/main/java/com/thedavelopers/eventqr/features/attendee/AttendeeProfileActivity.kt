@@ -30,7 +30,7 @@ class AttendeeProfileActivity : AppCompatActivity() {
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var layoutProfileMenu: View
     private lateinit var txtProfileError: TextView
-    private lateinit var btnProfileRetry: Button
+    private lateinit var btnProfileRetry: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

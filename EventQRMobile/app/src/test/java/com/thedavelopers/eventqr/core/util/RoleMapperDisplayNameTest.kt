@@ -30,4 +30,12 @@ class RoleMapperDisplayNameTest {
         assertEquals("", RoleMapper.getDisplayName(context, ""))
         assertEquals("Guest", RoleMapper.getDisplayName(context, "guest"))
     }
+
+    /** Regression: the attendee portal tab for a SUPER_ADMIN must not collapse to "Admin". */
+    @Test
+    fun portalShortRoleName_keepsSuperAdminDistinctFromAdmin() {
+        assertEquals("Super Admin", PortalSwitcher.shortRoleName(context, PortalSwitcher.PORTAL_SUPER_ADMIN))
+        assertEquals("Admin", PortalSwitcher.shortRoleName(context, PortalSwitcher.PORTAL_ADMIN))
+        assertEquals("Attendee", PortalSwitcher.shortRoleName(context, PortalSwitcher.PORTAL_ATTENDEE))
+    }
 }

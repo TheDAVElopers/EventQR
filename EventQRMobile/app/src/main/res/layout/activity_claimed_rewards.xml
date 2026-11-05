@@ -1,16 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Claimed rewards (§6.2) - the same list language as the transaction history: rows on the flat
+    page, a shared skeleton, and the shared empty state. No card-per-row, no tinted icon tiles.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
+    android:background="@color/ui_background"
     android:orientation="vertical">
 
     <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="@string/attendee_profile_claimed_rewards" />
+        app:title="@string/ui_attendee_claimed_rewards" />
 
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshClaimedRewards"
@@ -21,7 +25,8 @@
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:padding="@dimen/space_14">
+            android:paddingStart="@dimen/ui_gutter"
+            android:paddingEnd="@dimen/ui_gutter">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerClaimedRewards"
@@ -31,156 +36,42 @@
                 android:nestedScrollingEnabled="true"
                 android:paddingBottom="@dimen/space_sm" />
 
+            <include
+                android:id="@+id/skeletonLoading"
+                layout="@layout/include_skeleton_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm" />
+
+            <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+                android:id="@+id/txtClaimedRewardsEmpty"
+                android:layout_width="@dimen/ui_empty_max_width"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:gutter="false" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:gravity="center"
+                android:layout_gravity="bottom"
                 android:orientation="vertical">
-
-                <LinearLayout
-                    android:id="@+id/skeletonLoading"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="@dimen/space_lg"
-                    android:visibility="visible">
-
-                    <!-- Skeleton row 1 -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_staff_skeleton_card"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:padding="@dimen/space_lg"
-                        android:layout_marginBottom="@dimen/space_md">
-
-                        <View
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:background="@drawable/bg_staff_skeleton_date_block" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="@dimen/space_md"
-                            android:orientation="vertical">
-
-                            <View
-                                android:layout_width="match_parent"
-                                android:layout_height="12dp"
-                                android:background="@drawable/bg_staff_skeleton_bar" />
-
-                            <View
-                                android:layout_width="140dp"
-                                android:layout_height="10dp"
-                                android:layout_marginTop="@dimen/space_sm"
-                                android:background="@drawable/bg_staff_skeleton_bar" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <!-- Skeleton row 2 -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_staff_skeleton_card"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:padding="@dimen/space_lg"
-                        android:layout_marginBottom="@dimen/space_md">
-
-                        <View
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:background="@drawable/bg_staff_skeleton_date_block" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="@dimen/space_md"
-                            android:orientation="vertical">
-
-                            <View
-                                android:layout_width="match_parent"
-                                android:layout_height="12dp"
-                                android:background="@drawable/bg_staff_skeleton_bar" />
-
-                            <View
-                                android:layout_width="120dp"
-                                android:layout_height="10dp"
-                                android:layout_marginTop="@dimen/space_sm"
-                                android:background="@drawable/bg_staff_skeleton_bar" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <!-- Skeleton row 3 -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_staff_skeleton_card"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:padding="@dimen/space_lg"
-                        android:layout_marginBottom="@dimen/space_md">
-
-                        <View
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:background="@drawable/bg_staff_skeleton_date_block" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="@dimen/space_md"
-                            android:orientation="vertical">
-
-                            <View
-                                android:layout_width="match_parent"
-                                android:layout_height="12dp"
-                                android:background="@drawable/bg_staff_skeleton_bar" />
-
-                            <View
-                                android:layout_width="100dp"
-                                android:layout_height="10dp"
-                                android:layout_marginTop="@dimen/space_sm"
-                                android:background="@drawable/bg_staff_skeleton_bar" />
-                        </LinearLayout>
-                    </LinearLayout>
-                </LinearLayout>
-
-                
 
                 <TextView
                     android:id="@+id/txtClaimedRewardsError"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:text="@string/claimed_rewards_unable_to_load_claimed_rewards"
-                    android:textColor="@color/danger"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                    android:textColor="@color/ui_error"
                     android:visibility="gone" />
 
-                <Button
+                <TextView
                     android:id="@+id/btnClaimedRewardsRetry"
-                    style="@style/Widget.EventQR.Button.Primary.Retry"
-                    android:layout_width="@dimen/button_width_retry"
-                    android:layout_height="@dimen/control_height_44"
-                    android:layout_marginTop="@dimen/space_md"
-                    android:text="@string/common_retry"
+                    style="@style/Widget.EventQR.Ui.Button.Ghost"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/ui_button_height_inline"
+                    android:text="@string/ui_attendee_retry"
                     android:visibility="gone" />
             </LinearLayout>
-            <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
-            android:id="@+id/txtClaimedRewardsEmpty"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone"
-            app:icon="@drawable/ic_nav_gift"
-            app:title="@string/claimed_rewards_no_claimed_rewards_yet_2"
-            app:subtitle="@string/claimed_rewards_rewards_you_claim_will_show_up_here" />
         </FrameLayout>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 </LinearLayout>

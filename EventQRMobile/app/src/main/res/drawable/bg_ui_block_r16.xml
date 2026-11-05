@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tintable block, radius 16 (sheets, media, badges-on-dark blocks). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="@dimen/ui_radius_sheet" />
+    <solid android:color="@color/ui_surface" />
+</shape>

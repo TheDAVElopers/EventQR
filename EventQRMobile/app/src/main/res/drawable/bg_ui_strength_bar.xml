@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Password strength bar segment: a neutral track the activity tints at runtime (the tint
+     is the state). Radius 2dp so four bars read as one meter, not four blocks. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/ui_hairline" />
+    <corners android:radius="@dimen/space_xxs" />
+</shape>

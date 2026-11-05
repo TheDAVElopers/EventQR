@@ -2,35 +2,46 @@ package com.thedavelopers.eventqr.ui.components
 
 import android.content.Context
 import android.view.ViewGroup
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.features.events.eventRequestBadgeStatus
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse
 import com.thedavelopers.eventqr.ui.theme.EventQrRowTheme
-import com.thedavelopers.eventqr.ui.theme.LocalSpacing
-import androidx.compose.ui.res.stringResource
-import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.theme.LocalGrid
+import com.thedavelopers.eventqr.ui.theme.LocalType
+import com.thedavelopers.eventqr.ui.theme.UiHairline
+import com.thedavelopers.eventqr.ui.theme.UiSurface
+import com.thedavelopers.eventqr.ui.theme.UiTextPrimary
+import com.thedavelopers.eventqr.ui.theme.UiTextSecondary
+
+/*
+ * Event request card. Same public API as before.
+ *
+ * A request is a row, not a decorated card: hairline card, request name in title, the ONE status
+ * badge (Pending review / Approved / Rejected - §5.4 mapping), submitted meta in body_s, and the
+ * quiet 4dp gap rhythm of the new list language. No accent stripe, no shadow.
+ */
 
 class EventRequestHolder(context: Context) {
 
@@ -66,47 +77,42 @@ fun EventRequestCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val spacing = LocalSpacing.current
+    val grid = LocalGrid.current
+    val type = LocalType.current
+    val shape = RoundedCornerShape(grid.radiusCard)
 
-    Card(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = spacing.micro)
-            .heightIn(min = spacing.listItemMinHeight)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(spacing.cardCornerRadius),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = spacing.cardElevation),
+            .padding(bottom = grid.s8)
+            .clip(shape)
+            .background(UiSurface)
+            .border(dimensionResource(R.dimen.stroke_hairline), UiHairline, shape)
+            .clickable(onClick = onClick)
+            .padding(grid.cardPadding),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(spacing.cardContentPadding),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Text(
-                    text = request.eventName.ifBlank { stringResource(R.string.common_untitled_event) },
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
-                )
-                Spacer(modifier = Modifier.width(spacing.small))
-                StatusBadge(status = eventRequestBadgeStatus(request.status))
-            }
-
-            Spacer(modifier = Modifier.height(spacing.micro))
-
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = stringResource(R.string.event_request_card_submitted_submitted_1_s, DateFormatters.formatEventDate(request.createdAt)),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = request.eventName.ifBlank { stringResource(R.string.common_untitled_event) },
+                style = type.title,
+                color = UiTextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
             )
+            Spacer(modifier = Modifier.width(grid.s8))
+            StatusBadge(status = eventRequestBadgeStatus(request.status), showIcon = false)
         }
+
+        Spacer(modifier = Modifier.height(grid.s4))
+
+        Text(
+            text = stringResource(
+                R.string.event_request_card_submitted_submitted_1_s,
+                DateFormatters.formatEventDate(request.createdAt),
+            ),
+            style = type.bodyS,
+            color = UiTextSecondary,
+        )
     }
 }

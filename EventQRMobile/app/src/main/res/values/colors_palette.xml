@@ -26,11 +26,9 @@
     <color name="p_accent_dark">#4338CA</color>
     <color name="p_accent_tint">#EEF2FF</color>
     <color name="p_accent_tint_strong">#E0E7FF</color>
-    <color name="p_accent_outline">#C7D2FE</color>
 
     <!-- Secondary (violet): only the CTA gradient end after D1 -->
     <color name="p_secondary">#5B25C9</color>
-    <color name="p_secondary_light">#7C3AED</color>
     <color name="p_secondary_tint">#EDE9FE</color>
     <color name="p_secondary_dark">#4C1D95</color>
 
@@ -39,14 +37,12 @@
     <color name="p_black">#000000</color>
     <color name="p_n50">#F7F7FA</color>
     <color name="p_n100">#F3F4F6</color>
-    <color name="p_n150">#E6E7EC</color>
     <color name="p_n200">#E5E7EB</color>
     <color name="p_n300">#D1D5DB</color>
     <color name="p_n400">#9CA3AF</color>
     <color name="p_n600">#4B5563</color>
     <color name="p_n700">#374151</color>
     <color name="p_n900">#111827</color>
-    <color name="p_navy">#121735</color>
     <color name="p_label">#8E8EA9</color>
 
     <!-- Text-only darker shades (a11y, WCAG AA 4.5:1). Same hue/saturation as p_n400 / p_label, lightest shade that passes
@@ -65,7 +61,6 @@
     <color name="p_green_800">#065F46</color>
 
     <color name="p_amber_100">#FEF3C7</color>
-    <color name="p_amber_200">#FDE68A</color>
     <color name="p_amber_500">#F59E0B</color>
     <color name="p_amber_700">#B45309</color>
     <color name="p_amber_800">#92400E</color>
@@ -78,12 +73,8 @@
     <color name="p_red_800">#991B1B</color>
 
     <color name="p_blue_100">#DBEAFE</color>
-    <color name="p_blue_500">#3B82F6</color>
-    <color name="p_blue_600">#2563EB</color>
-    <color name="p_blue_900">#1E3A8A</color>
 
     <!-- Icon-tile tints that have no status meaning -->
-    <color name="p_pink_100">#FCE7F3</color>
     <color name="p_violet_100">#F3E8FF</color>
     <color name="p_cyan_100">#CFFAFE</color>
 
@@ -92,6 +83,62 @@
     <color name="p_chart_violet">#8B5CF6</color>
     <color name="p_chart_sky">#0EA5E9</color>
     <color name="p_chart_indigo">#6366F1</color>
-    <color name="p_chart_periwinkle">#A5B4FC</color>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <!--  V2 PRIMITIVES  -  EventQR visual redesign (MyFiles/EventQR-Redesign-Plan.md).-->
+    <!--  Additive on purpose: every legacy p_* above keeps its value so the ~55      -->
+    <!--  screens that are not migrated yet render pixel-identically. The redesigned   -->
+    <!--  screens read ONLY ui_* roles (values/colors.xml), which resolve to the       -->
+    <!--  primitives below.                                                            -->
+    <!--  Values are the plan's §3.1 tables verbatim. Do not add tints here.           -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Brand indigo ramp. p_brand (above) is p_brand_700 - unchanged brand value. -->
+    <color name="p_brand_50">#F0EFFA</color>   <!-- ghost button press -->
+    <color name="p_brand_100">#E1DFF5</color>  <!-- primary_container, icon-tile background -->
+    <color name="p_brand_200">#C4C0EA</color>  <!-- on-dark muted text -->
+    <color name="p_brand_300">#A09BDC</color>  <!-- non-text only (4.74:1 on brand) -->
+    <color name="p_brand_700">#2D2A7C</color>  <!-- primary -->
+    <color name="p_brand_800">#221F63</color>  <!-- pressed state, pass-head stub block -->
+    <color name="p_brand_900">#1A1850</color>  <!-- on_primary_container, 12.46:1 on p_brand_100 -->
+
+    <!-- Accent: hi-vis lime. Confirmation only - never decoration. -->
+    <color name="p_lime_100">#EDFBC4</color>   <!-- lime badge on dark only -->
+    <color name="p_lime_400">#CDF564</color>   <!-- accent: fill only, never text -->
+    <color name="p_lime_800">#4F6B00</color>   <!-- accent_deep, 6.11:1 on white - only accent allowed as text -->
+    <color name="p_on_lime">#14121F</color>    <!-- text/icon on lime fills, 14.82:1 -->
+
+    <!-- Neutrals: indigo-tinted ink ramp. Renamed p_ink_* because the legacy p_n*  -->
+    <!-- Tailwind ramp above is still consumed by every unmigrated screen.          -->
+    <color name="p_ink_0">#FFFFFF</color>      <!-- surface -->
+    <color name="p_ink_25">#FBFAFD</color>     <!-- pressed surface -->
+    <color name="p_ink_50">#F4F3F8</color>     <!-- background -->
+    <color name="p_ink_100">#E9E7F1</color>    <!-- sunken surface, skeleton base -->
+    <color name="p_ink_200">#DAD7E4</color>    <!-- hairline, decorative, 1.42:1 -->
+    <color name="p_ink_300">#C0BCCC</color>    <!-- disabled fill, non-text -->
+    <color name="p_ink_400">#948FA6</color>    <!-- interactive outline, 3.12:1 on white -->
+    <color name="p_ink_500">#5E5A70</color>    <!-- text_secondary, 6.0:1 on background -->
+    <color name="p_ink_900">#14121F</color>    <!-- text_primary, 17.78:1 on paper -->
+
+    <!-- Semantic primitives. All pass AA on white and on their own container. -->
+    <color name="p_success_ink">#0E7C4A</color>
+    <color name="p_success_surface">#DCF3E6</color>
+    <color name="p_success_on_surface">#0A5232</color>
+    <color name="p_success_edge">#86C9A6</color>
+    <color name="p_warning_ink">#9A5B00</color>
+    <color name="p_warning_surface">#FDF0D2</color>
+    <color name="p_warning_on_surface">#6B3F00</color>
+    <color name="p_warning_edge">#E8C079</color>
+    <color name="p_error_ink">#B3241C</color>
+    <color name="p_error_surface">#FCE8E6</color>
+    <color name="p_error_on_surface">#7A1410</color>
+    <color name="p_error_edge">#E9A19B</color>
+    <color name="p_info_ink">#0B6BCB</color>
+    <color name="p_info_surface">#E1EFFC</color>
+    <color name="p_info_on_surface">#094B8F</color>
+    <color name="p_info_edge">#9CC8EE</color>
+
+    <!-- Dark primitives: defined now so ui_* roles can be repointed from          -->
+    <!-- values-night/colors.xml in Phase 5 without touching a layout.             -->
 
 </resources>

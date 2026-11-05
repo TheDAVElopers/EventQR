@@ -1,102 +1,128 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    ORGANIZER - ADD STAFF (6.4).
+
+        Top bar    56dp, back + "Add staff"
+        Strip      event glyph + event title; no chip - this screen is the add action
+        Search     48dp filled field
+        Success    48dp confirmation strip, cleared on the next keystroke
+        Rows       72dp account rows; selection is the fill plus one "Selected" badge
+        Footer     one 52dp primary action ("Set permissions") + a hairline on top
+
+    Deleted: bg_staff_search_box, the hand-rolled 54dp search row, the per-row card, the inline
+    bg_ui_card permission host, the promote dialog and the 0.9 * screenWidth success dialog.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
+    android:background="@color/ui_background"
     android:orientation="vertical">
 
-    <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
-        android:id="@+id/headerTopBar"
+    <include
+        android:id="@+id/topBar"
+        layout="@layout/include_top_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <include
+        android:id="@+id/eventStrip"
+        layout="@layout/include_organizer_event_strip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <EditText
+        android:id="@+id/edtSearchUser"
+        style="@style/Widget.EventQR.Ui.TextField.Search"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/ui_field_search_height"
+        android:layout_marginStart="@dimen/ui_gutter"
+        android:layout_marginTop="@dimen/space_12"
+        android:layout_marginEnd="@dimen/ui_gutter"
+        android:drawablePadding="@dimen/space_12"
+        android:drawableStart="@drawable/ic_ui_search"
+        android:drawableTint="@color/ui_text_secondary"
+        android:hint="@string/staff_search_hint"
+        android:imeOptions="actionSearch"
+        android:importantForAutofill="no"
+        android:inputType="text"
+        android:maxLines="1"
+        android:singleLine="true" />
+
+    <LinearLayout
+        android:id="@+id/staffAssignedStrip"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="@string/staff_search_title" />
+        android:accessibilityLiveRegion="polite"
+        android:background="@color/ui_success_container"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/ui_touch_min"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/ui_gutter"
+        android:paddingEnd="@dimen/ui_gutter"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="@dimen/ui_field_icon"
+            android:layout_height="@dimen/ui_field_icon"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_ui_check_circle"
+            android:tint="@color/ui_success" />
+
+        <TextView
+            android:id="@+id/txtStaffAssignedStrip"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_8"
+            android:layout_weight="1"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+            android:textColor="@color/ui_on_success_container" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="@dimen/space_8"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerSearchUsers"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:overScrollMode="never"
+            android:paddingBottom="@dimen/space_16" />
+
+        <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+            android:id="@+id/txtSearchEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:icon="@drawable/ic_ui_search" />
+    </FrameLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:paddingHorizontal="@dimen/space_lg"
-        android:paddingTop="@dimen/space_md">
+        android:layout_height="wrap_content"
+        android:background="@color/ui_surface"
+        android:orientation="vertical">
 
-        <LinearLayout
-            android:id="@+id/layoutSearchInput"
+        <View
             android:layout_width="match_parent"
-            android:layout_height="@dimen/input_height"
-            android:background="@drawable/bg_staff_search_box"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="@dimen/space_14">
-
-            <EditText
-                android:id="@+id/edtSearchUser"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:background="@null"
-                android:hint="@string/staff_search_hint"
-                android:imeOptions="actionSearch"
-                android:inputType="text"
-                android:maxLines="1"
-                android:singleLine="true"
-                android:textColorHint="@color/text_hint"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
-
-            <ImageView
-                android:layout_width="@dimen/icon_md"
-                android:layout_height="@dimen/icon_md"
-                android:src="@drawable/ic_search"
-                android:tint="@color/neutral" />
-        </LinearLayout>
-
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:layout_marginTop="@dimen/space_10">
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recyclerSearchUsers"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:paddingBottom="@dimen/space_md" />
-
-            <ProgressBar
-                android:id="@+id/progressSearchUsers"
-                android:layout_width="@dimen/icon_tile_md"
-                android:layout_height="@dimen/icon_tile_md"
-                android:layout_gravity="center" />
-
-            <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
-            android:id="@+id/txtSearchEmpty"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone"
-            app:icon="@drawable/ic_search"
-            app:title="@string/search_user_account_no_accounts_found" />
-        </FrameLayout>
-
-        <LinearLayout
-            android:id="@+id/layoutPermissionsHost"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_sm"
-            android:background="@color/surface"
-            android:orientation="vertical"
-            android:padding="@dimen/space_md"
-            android:visibility="gone" />
+            android:layout_height="@dimen/stroke_hairline"
+            android:background="@color/ui_hairline"
+            android:importantForAccessibility="no" />
 
         <Button
             android:id="@+id/btnAssignStaff"
-            style="@style/Widget.EventQR.Button.Primary"
+            style="@style/Widget.EventQR.Ui.Button.Primary"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/input_height"
-            android:layout_marginTop="@dimen/space_sm"
-            android:layout_marginBottom="@dimen/space_lg"
+            android:layout_height="@dimen/ui_button_height"
+            android:layout_marginStart="@dimen/ui_gutter"
+            android:layout_marginTop="@dimen/space_12"
+            android:layout_marginEnd="@dimen/ui_gutter"
+            android:layout_marginBottom="@dimen/space_16"
             android:enabled="false"
-            android:text="@string/staff_assign_button"
-            android:textAppearance="@style/TextAppearance.EventQR.ButtonPlatformBodyMedium.Strong" />
+            android:text="@string/ui_staff_set_permissions" />
     </LinearLayout>
 </LinearLayout>

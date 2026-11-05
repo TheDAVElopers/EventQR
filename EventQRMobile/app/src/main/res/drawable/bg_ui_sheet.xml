@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bottom sheet surface (§5.12): 16dp radius on the top corners only, ui_surface, no stroke.
+     The sheet's 8dp elevation belongs to the sheet window. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/ui_surface" />
+    <corners
+        android:topLeftRadius="@dimen/ui_radius_sheet"
+        android:topRightRadius="@dimen/ui_radius_sheet"
+        android:bottomLeftRadius="@dimen/radius_none"
+        android:bottomRightRadius="@dimen/radius_none" />
+</shape>

@@ -34,7 +34,7 @@ class QrDownloadButtonController(
         button.isEnabled = false
         button.alpha = button.dimenFloat(R.dimen.alpha_saving)
         button.text = ""
-        button.contentDescription = "Saving QR to gallery"
+        button.contentDescription = button.context.getString(R.string.ui_attendee_saving_pass)
         checkmark.animate().cancel()
         checkmark.visibility = View.GONE
         spinner.visibility = View.VISIBLE
@@ -48,7 +48,7 @@ class QrDownloadButtonController(
     fun showSaved(onFinished: () -> Unit) {
         isSaving = false
         button.alpha = 1f
-        button.contentDescription = BUTTON_LABEL
+        button.contentDescription = label()
         spinner.visibility = View.GONE
 
         checkmark.visibility = View.VISIBLE
@@ -76,8 +76,8 @@ class QrDownloadButtonController(
         isSaving = false
         button.isEnabled = true
         button.alpha = 1f
-        button.text = BUTTON_LABEL
-        button.contentDescription = BUTTON_LABEL
+        button.text = label()
+        button.contentDescription = label()
         checkmark.animate().cancel()
         checkmark.visibility = View.GONE
         checkmark.alpha = 1f
@@ -86,8 +86,9 @@ class QrDownloadButtonController(
         spinner.visibility = View.GONE
     }
 
+    private fun label(): String = button.context.getString(R.string.ui_attendee_save_pass)
+
     private companion object {
-        const val BUTTON_LABEL = "Download QR"
         const val OVERSHOOT_TENSION = 2.0f
     }
 }

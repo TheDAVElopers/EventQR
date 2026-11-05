@@ -8,7 +8,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
@@ -42,19 +42,20 @@ class EventQrThemeComposeTest {
     fun lightColorScheme_mapsAuditedSemanticTokens() {
         val light = composeTestRule.themeColorScheme {}
 
-        assertEquals(roleColor(R.color.primary), light.primary)
-        assertEquals(roleColor(R.color.on_primary), light.onPrimary)
-        assertEquals(roleColor(R.color.secondary), light.secondary)
-        assertEquals(roleColor(R.color.background), light.background)
-        assertEquals(roleColor(R.color.text_primary), light.onBackground)
-        assertEquals(roleColor(R.color.surface), light.surface)
-        assertEquals(roleColor(R.color.text_primary), light.onSurface)
-        assertEquals(roleColor(R.color.background), light.surfaceVariant)
-        assertEquals(roleColor(R.color.text_secondary), light.onSurfaceVariant)
-        assertEquals(roleColor(R.color.error), light.error)
-        assertEquals(roleColor(R.color.on_primary), light.onError)
-        assertEquals(roleColor(R.color.error_container), light.errorContainer)
-        assertEquals(roleColor(R.color.on_error_container), light.onErrorContainer)
+        assertEquals(roleColor(R.color.ui_primary), light.primary)
+        assertEquals(roleColor(R.color.ui_on_primary), light.onPrimary)
+        assertEquals(roleColor(R.color.ui_primary_container), light.primaryContainer)
+        assertEquals(roleColor(R.color.ui_on_primary_container), light.onPrimaryContainer)
+        assertEquals(roleColor(R.color.ui_background), light.background)
+        assertEquals(roleColor(R.color.ui_text_primary), light.onBackground)
+        assertEquals(roleColor(R.color.ui_surface), light.surface)
+        assertEquals(roleColor(R.color.ui_text_primary), light.onSurface)
+        assertEquals(roleColor(R.color.ui_surface_sunken), light.surfaceVariant)
+        assertEquals(roleColor(R.color.ui_text_secondary), light.onSurfaceVariant)
+        assertEquals(roleColor(R.color.ui_error), light.error)
+        assertEquals(roleColor(R.color.ui_on_primary), light.onError)
+        assertEquals(roleColor(R.color.ui_error_container), light.errorContainer)
+        assertEquals(roleColor(R.color.ui_on_error_container), light.onErrorContainer)
     }
 
     @Test
@@ -80,10 +81,10 @@ class EventQrThemeComposeTest {
     }
 
     @Test
-    fun brandTertiary_isUsedForLightSchemeTertiaryRole() {
+    fun tertiary_isTheAccentDeepRole() {
         val light = composeTestRule.themeColorScheme {}
 
-        assertEquals(roleColor(R.color.warning_dark), light.tertiary)
+        assertEquals(roleColor(R.color.ui_accent_deep), light.tertiary)
     }
 
     @Test
@@ -111,8 +112,8 @@ class EventQrThemeComposeTest {
     fun rowTheme_providesMaterialColorScheme() {
         val rowScheme = rowThemeColorScheme()
 
-        assertEquals(roleColor(R.color.primary), rowScheme.primary)
-        assertEquals(roleColor(R.color.text_primary), rowScheme.onSurface)
+        assertEquals(roleColor(R.color.ui_primary), rowScheme.primary)
+        assertEquals(roleColor(R.color.ui_text_primary), rowScheme.onSurface)
     }
 
     @Test
@@ -123,11 +124,11 @@ class EventQrThemeComposeTest {
     }
 
     @Test
-    fun lightColorScheme_mapsTertiaryContainerToTheAmberFamily() {
+    fun lightColorScheme_mapsTertiaryContainerToTheAccentFamily() {
         val light = composeTestRule.themeColorScheme {}
 
-        assertEquals(roleColor(R.color.warning_container), light.tertiaryContainer)
-        assertEquals(roleColor(R.color.on_warning_container), light.onTertiaryContainer)
+        assertEquals(roleColor(R.color.ui_accent_container), light.tertiaryContainer)
+        assertEquals(roleColor(R.color.ui_accent_deep), light.onTertiaryContainer)
         assertNotEquals(Color(0xFFFFD8E4), light.tertiaryContainer)
     }
 
@@ -223,7 +224,7 @@ class EventQrThemeComposeTest {
         screenVerticalPadding = 16.dp,
         cardCornerRadius = 16.dp,
         cardCornerRadiusSmall = 12.dp,
-        chipCornerRadius = 20.dp,
+        chipCornerRadius = 4.dp,
         pillCornerRadius = 999.dp,
         inputHeightMin = 48.dp,
         buttonHeightMin = 48.dp,
@@ -251,27 +252,57 @@ class EventQrThemeComposeTest {
 
     @Test
     fun typography_matchesTheShippedScale() {
-        val t = composeTestRule.inComposition { MaterialTheme.typography }
+        val t = composeTestRule.inComposition { LocalType.current }
 
-        fun check(style: TextStyle, size: Int, line: Int, weight: FontWeight, tracking: Float?) {
-            assertEquals(size.sp, style.fontSize)
-            assertEquals(line.sp, style.lineHeight)
-            assertEquals(weight, style.fontWeight)
-            assertEquals(FontFamily.SansSerif, style.fontFamily)
-            if (tracking == null) assertEquals(TextUnit.Unspecified, style.letterSpacing) else assertEquals(tracking.sp, style.letterSpacing)
+        fun check(
+            style: TextStyle,
+            size: Int,
+            line: Int,
+            weight: FontWeight,
+            family: FontFamily,
+            trackingEm: Float,
+            tabular: Boolean = false,
+        ) {
+            assertEquals("fontSize", size.sp, style.fontSize)
+            assertEquals("lineHeight", line.sp, style.lineHeight)
+            assertEquals("weight", weight, style.fontWeight)
+            assertEquals("family", family, style.fontFamily)
+            assertEquals("tracking", trackingEm.em, style.letterSpacing)
+            if (tabular) assertEquals("tnum", "tnum", style.fontFeatureSettings)
         }
-        check(t.headlineLarge, 28, 36, FontWeight.Bold, -0.5f)
-        check(t.headlineMedium, 24, 32, FontWeight.Bold, -0.3f)
-        check(t.headlineSmall, 20, 28, FontWeight.Bold, null)
-        check(t.titleLarge, 18, 26, FontWeight.SemiBold, null)
-        check(t.titleMedium, 16, 24, FontWeight.SemiBold, null)
-        check(t.titleSmall, 14, 20, FontWeight.Medium, null)
-        check(t.bodyLarge, 16, 24, FontWeight.Normal, null)
-        check(t.bodyMedium, 14, 20, FontWeight.Normal, null)
-        check(t.bodySmall, 12, 16, FontWeight.Normal, null)
-        check(t.labelLarge, 14, 20, FontWeight.SemiBold, 0.1f)
-        check(t.labelMedium, 12, 16, FontWeight.Medium, 0.2f)
-        check(t.labelSmall, 11, 14, FontWeight.Medium, 0.3f)
+
+        check(t.displayXl, 48, 52, FontWeight.ExtraBold, ArchivoFamily, -0.03f)
+        check(t.displayM, 34, 38, FontWeight.Bold, ArchivoFamily, -0.02f)
+        check(t.headline, 28, 34, FontWeight.Bold, ArchivoFamily, -0.015f)
+        check(t.titleL, 22, 26, FontWeight.Bold, ArchivoFamily, -0.01f)
+        check(t.title, 18, 24, FontWeight.SemiBold, IbmPlexFamily, 0f)
+        check(t.bodyL, 16, 24, FontWeight.Normal, IbmPlexFamily, 0f)
+        check(t.body, 15, 22, FontWeight.Normal, IbmPlexFamily, 0f)
+        check(t.bodyS, 14, 20, FontWeight.Normal, IbmPlexFamily, 0f)
+        check(t.label, 13, 18, FontWeight.Medium, IbmPlexFamily, 0.01f)
+        check(t.overline, 11, 14, FontWeight.SemiBold, IbmPlexFamily, 0.16f)
+        check(t.micro, 11, 14, FontWeight.Medium, IbmPlexFamily, 0f)
+        check(t.numericL, 34, 38, FontWeight.Bold, ArchivoFamily, -0.02f, tabular = true)
+        check(t.numericM, 20, 24, FontWeight.SemiBold, IbmPlexFamily, 0f, tabular = true)
+        check(t.numericS, 15, 20, FontWeight.SemiBold, IbmPlexFamily, 0f, tabular = true)
+    }
+
+    @Test
+    fun materialTypography_inheritsTheNewVoice() {
+        val styles = composeTestRule.inComposition {
+            listOf(
+                MaterialTheme.typography.headlineLarge,
+                LocalType.current.headline,
+                MaterialTheme.typography.titleLarge,
+                LocalType.current.title,
+                MaterialTheme.typography.bodyMedium,
+                LocalType.current.body,
+            )
+        }
+
+        assertEquals(styles[1], styles[0])
+        assertEquals(styles[3], styles[2])
+        assertEquals(styles[5], styles[4])
     }
 
     private fun lightColorScheme(): ColorScheme {
@@ -324,3 +355,4 @@ class EventQrThemeComposeTest {
         else ((channel + 0.055f) / 1.055f).pow(2.4f)
     }
 }
+

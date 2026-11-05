@@ -1,124 +1,78 @@
 package com.thedavelopers.eventqr.features.organizer
 
-import com.thedavelopers.eventqr.ui.theme.dimenPx
-import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
-import com.thedavelopers.eventqr.ui.theme.strong
-import com.thedavelopers.eventqr.ui.theme.roundedRect
 import android.graphics.drawable.ColorDrawable
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.color
+import com.thedavelopers.eventqr.ui.theme.dimenPx
 
-internal fun AppCompatActivity.loadingState(message: String): View {
-    return cardRes(R.dimen.space_18).apply {
-        gravity = Gravity.CENTER
-        addView(styledText(message, R.dimen.type_body_medium, false, orgColors.muted).apply {
-            gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            )
-        })
+/**
+ * Shared organizer states (§5.10, §5.11). Every screen uses the same empty state, the same warning
+ * strip and the same event selector field; nothing here draws its own card or its own gradient.
+ */
+
+internal fun AppCompatActivity.loadingState(message: String): View =
+    cardRes(R.dimen.ui_card_padding).apply {
+        addView(
+            styledText(message, R.dimen.ui_type_body, false, orgColors.muted).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                )
+            },
+        )
     }
-}
 
+/** Left-aligned empty state at 20dp with exactly one action (§5.10). */
 internal fun AppCompatActivity.emptyState(
-    iconRes: Int = R.drawable.ic_calendar,
+    iconRes: Int = AppIcons.Event,
     title: String,
     subtext: String,
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
-): View {
-    return LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        gravity = Gravity.CENTER
-        layoutParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-        )
-        setPadding(dimenPx(R.dimen.space_xxl), dimenPx(R.dimen.space_xl), dimenPx(R.dimen.space_xxl), dimenPx(R.dimen.space_xl))
-        addView(ImageView(this@emptyState).apply {
-            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.tile_64), dimenPx(R.dimen.tile_64))
-            setImageResource(iconRes)
-            setColorFilter(color(R.color.neutral))
-            contentDescription = null
-        })
-        addView(styledText(title, R.dimen.type_body_large, true, color(R.color.text_primary)).apply {
-            gravity = Gravity.CENTER
-            setPadding(0, dimenPx(R.dimen.space_md), 0, dimenPx(R.dimen.space_xs))
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply { gravity = Gravity.CENTER_HORIZONTAL }
-        })
-        addView(styledText(subtext, R.dimen.type_body_medium, false, color(R.color.text_secondary)).apply {
-            gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply { gravity = Gravity.CENTER_HORIZONTAL }
-        })
-        if (!actionLabel.isNullOrBlank() && onAction != null) {
-            addView(primaryButton(actionLabel, onAction).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    dimenPx(R.dimen.space_xxxl),
-                ).apply {
-                    setMargins(0, dimenPx(R.dimen.space_lg), 0, 0)
-                    gravity = Gravity.CENTER_HORIZONTAL
-                }
-            })
-        }
+): View = EventQrEmptyState(this).apply {
+    layoutParams = LinearLayout.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.LayoutParams.WRAP_CONTENT,
+    )
+    setIcon(iconRes)
+    show(title, subtext)
+    if (!actionLabel.isNullOrBlank() && onAction != null) {
+        setAction(actionLabel, primary = false, onClick = onAction)
     }
 }
 
 internal fun AppCompatActivity.centeredEmptyState(
-    iconRes: Int = R.drawable.ic_calendar,
+    iconRes: Int = AppIcons.Event,
     title: String,
     subtext: String,
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
-): View {
-    return LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        gravity = Gravity.CENTER
-        layoutParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT,
-        )
-        addView(emptyState(iconRes, title, subtext, actionLabel, onAction))
-    }
-}
+): View = emptyState(iconRes, title, subtext, actionLabel, onAction)
 
+/** Error = the same empty state, with the server's message and a Retry action. */
 internal fun AppCompatActivity.errorState(
     message: String,
     onRetry: (() -> Unit)? = null,
-): View {
-    return cardRes(R.dimen.space_18).apply {
-        gravity = Gravity.CENTER
-        addView(styledText(message, R.dimen.type_body_medium, false, orgColors.error).apply {
-            gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            )
-        })
-        if (onRetry != null) {
-            addView(ghostButton(getString(R.string.organizer_retry), onRetry).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    dimenPx(R.dimen.tile_44),
-                ).apply { setMargins(0, dimenPx(R.dimen.space_14), 0, 0) }
-            })
-        }
+): View = EventQrEmptyState(this).apply {
+    layoutParams = LinearLayout.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.LayoutParams.WRAP_CONTENT,
+    )
+    setIcon(AppIcons.Notification)
+    show(getString(R.string.organizer_dashboard_events_load_failed), message)
+    if (onRetry != null) {
+        setAction(getString(R.string.organizer_retry), primary = false, onClick = onRetry)
     }
 }
 
@@ -126,23 +80,31 @@ internal fun AppCompatActivity.errorState(
 internal fun AppCompatActivity.eventsLoadErrorState(message: String?, onRetry: () -> Unit): View =
     errorState(message?.takeIf { it.isNotBlank() } ?: getString(R.string.organizer_dashboard_events_load_failed), onRetry)
 
+/**
+ * Offline / limited-data notice: a 1dp semantic warning strip, not a tinted card. It is inside the
+ * content flow, so it reads as a status line rather than a second header.
+ */
 internal fun <T> AppCompatActivity.dataSourceBanner(load: OrganizerMvpLoad<T>): View? {
     if (load.source == OrganizerMvpDataSource.BACKEND) return null
     val message = load.message?.takeIf { it.isNotBlank() } ?: getString(R.string.organizer_limited_local_data)
     return TextView(this).apply {
         text = message
-        setTextSizeRes(R.dimen.type_body_compact)
-        setTextColor(color(R.color.on_warning_container))
+        setTextAppearance(R.style.TextAppearance_EventQR_Type_BodySmall)
+        setTextColor(color(R.color.ui_on_warning_container))
         gravity = Gravity.CENTER_VERTICAL
-        setPadding(dimenPx(R.dimen.space_14), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_14), dimenPx(R.dimen.space_10))
-        background = roundedRect(color(R.color.warning_container), R.dimen.radius_md, color(R.color.warning_outline))
+        setPadding(dimenPx(R.dimen.space_16), dimenPx(R.dimen.space_12), dimenPx(R.dimen.space_16), dimenPx(R.dimen.space_12))
+        background = ContextCompat.getDrawable(context, R.drawable.bg_ui_notice_warning)
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
-        ).apply { setMargins(0, 0, 0, dimenPx(R.dimen.space_10)) }
+        ).apply { setMargins(0, 0, 0, dimenPx(R.dimen.space_8)) }
     }
 }
 
+/**
+ * Event selector as a 56dp field row (§6.4 Reports): title + date, one 20dp chevron. The dropdown
+ * is a plain surface popup - it is not a card wrapping a hidden spinner.
+ */
 internal fun AppCompatActivity.eventSelector(
     events: List<OrganizerMvpEvent>,
     selectedEventId: String,
@@ -153,92 +115,104 @@ internal fun AppCompatActivity.eventSelector(
     var selectedIndex = approvedEvents.indexOfFirst { it.id == selectedEventId }.takeIf { it >= 0 } ?: 0
     if (approvedEvents.isEmpty()) selectedIndex = -1
 
-    val titleText = styledText(titles.getOrNull(selectedIndex) ?: getString(R.string.organizer_select_event), R.dimen.type_body, false, orgColors.text)
+    val titleText = styledText(
+        titles.getOrNull(selectedIndex) ?: getString(R.string.organizer_select_event),
+        R.dimen.ui_type_body,
+        false,
+        orgColors.text,
+    )
     val arrow = ImageView(this).apply {
-        setImageResource(R.drawable.ic_arrow_drop_down)
+        layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md))
+        setImageResource(AppIcons.Chevron)
+        imageTintList = android.content.res.ColorStateList.valueOf(color(R.color.ui_text_secondary))
         contentDescription = getString(R.string.organizer_select_event_description)
+        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
     }
-    val card = LinearLayout(this).apply {
+    val field = LinearLayout(this).apply {
         orientation = LinearLayout.HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
-        setPadding(dimenPx(R.dimen.space_lg), 0, dimenPx(R.dimen.space_lg), 0)
-        minimumHeight = dimenPx(R.dimen.input_height)
+        setPadding(dimenPx(R.dimen.space_16), 0, dimenPx(R.dimen.space_12), 0)
+        minimumHeight = dimenPx(R.dimen.ui_organizer_selector_height)
         isClickable = approvedEvents.isNotEmpty()
         isFocusable = approvedEvents.isNotEmpty()
-        background = roundedRect(orgColors.card, R.dimen.radius_14, orgColors.border)
+        background = ContextCompat.getDrawable(context, R.drawable.bg_ui_field)
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
+            dimenPx(R.dimen.ui_organizer_selector_height),
         )
         addView(titleText.apply {
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
         })
-        addView(arrow.apply {
-            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md))
-        })
+        addView(arrow.apply { layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md)) })
     }
 
     var popup: PopupWindow? = null
-    var isOpen = false
 
     fun buildDropdown(): LinearLayout = LinearLayout(this@eventSelector).apply {
         orientation = LinearLayout.VERTICAL
-        background = roundedRect(orgColors.card, R.dimen.radius_14, orgColors.border)
+        background = ContextCompat.getDrawable(this@eventSelector, R.drawable.bg_ui_card)
+        setPadding(0, dimenPx(R.dimen.space_8), 0, dimenPx(R.dimen.space_8))
         approvedEvents.forEachIndexed { index, event ->
             val selected = index == selectedIndex
-            addView(LinearLayout(this@eventSelector).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_14), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_14))
-                setBackgroundColor(if (selected) color(R.color.accent_container) else orgColors.card)
-                setOnClickListener {
-                    selectedIndex = index
-                    titleText.text = titles[index]
-                    titleText.setTextColor(orgColors.text)
-                    popup?.dismiss()
-                    isOpen = false
-                    arrow.rotation = 0f
-                    onSelected(event)
-                }
-                addView(TextView(this@eventSelector).apply {
-                    text = titles[index]
-                    setTextColor(if (selected) orgColors.accent else orgColors.text)
-                    setTextSizeRes(R.dimen.type_body)
-                    strong()
-                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-                })
-            })
+            addView(
+                LinearLayout(this@eventSelector).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                    minimumHeight = dimenPx(R.dimen.ui_touch_min)
+                    setPadding(
+                        dimenPx(R.dimen.space_16),
+                        dimenPx(R.dimen.space_12),
+                        dimenPx(R.dimen.space_16),
+                        dimenPx(R.dimen.space_12),
+                    )
+                    setBackgroundColor(
+                        ContextCompat.getColor(
+                            this@eventSelector,
+                            if (selected) R.color.ui_surface_pressed else R.color.ui_surface,
+                        ),
+                    )
+                    setOnClickListener {
+                        selectedIndex = index
+                        titleText.text = titles[index]
+                        titleText.setTextColor(orgColors.text)
+                        popup?.dismiss()
+                        onSelected(event)
+                    }
+                    addView(
+                        TextView(this@eventSelector).apply {
+                            text = titles[index]
+                            setTextAppearance(R.style.TextAppearance_EventQR_Type_Title)
+                            setTextColor(
+                                ContextCompat.getColor(
+                                    this@eventSelector,
+                                    if (selected) R.color.ui_primary else R.color.ui_text_primary,
+                                ),
+                            )
+                            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                        },
+                    )
+                },
+            )
         }
     }
 
-    fun open() {
-        if (approvedEvents.isEmpty()) return
+    field.setOnClickListener {
+        if (approvedEvents.isEmpty()) return@setOnClickListener
         popup?.dismiss()
         popup = PopupWindow(
             buildDropdown(),
-            card.width.takeIf { it > 0 } ?: ViewGroup.LayoutParams.MATCH_PARENT,
+            field.width.takeIf { it > 0 } ?: ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
             true,
         ).apply {
             isOutsideTouchable = true
-            elevation = dimenPx(R.dimen.elevation_overlay).toFloat()
-            setBackgroundDrawable(ColorDrawable(color(R.color.transparent)))
-            setOnDismissListener { isOpen = false; arrow.rotation = 0f }
+            elevation = 0f
+            setBackgroundDrawable(ColorDrawable(0x00000000))
         }
-        isOpen = true
-        arrow.rotation = 180f
-        popup?.showAsDropDown(card, 0, 0)
+        popup?.showAsDropDown(field, 0, dimenPx(R.dimen.space_4))
     }
 
-    card.setOnClickListener {
-        if (isOpen) {
-            popup?.dismiss()
-            isOpen = false
-            arrow.rotation = 0f
-        } else {
-            open()
-        }
-    }
-
-    return card
+    return field
 }

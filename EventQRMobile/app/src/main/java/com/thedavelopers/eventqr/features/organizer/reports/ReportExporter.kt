@@ -1,6 +1,5 @@
 package com.thedavelopers.eventqr.features.organizer.reports
 
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
@@ -60,10 +59,27 @@ object ReportFileNames {
 }
 
 /** Builds the CSV and PDF files for one or more report sections. Both formats share one layout: header block, then each section's table and summary. */
+/**
+ * Print palette, resolved by the caller from `ui_*` roles (§3.2). This file stays Context-free,
+ * so it carries no colour literal and calls no parser; the caller passes the app's own roles.
+ */
+data class ReportExportPalette(
+    val brandDeepest: Int,
+    val primary: Int,
+    val brandWash: Int,
+    val ink700: Int,
+    val textSecondary: Int,
+    val textPrimary: Int,
+    val sunken: Int,
+    val zebra: Int,
+    val hairline: Int,
+)
+
 class ReportExporter(
     private val labels: ReportExportLabels,
     private val eventName: String,
     private val generatedAt: String,
+    private val palette: ReportExportPalette,
 ) {
 
     private fun titleOf(reports: List<EventReportDto>): String =
@@ -150,26 +166,31 @@ class ReportExporter(
         private val cellPadY = 4f
         private val maxCellLines = 4
 
-        private fun paint(sizePt: Float, hex: String, bold: Boolean = false) = Paint().apply {
-            color = Color.parseColor(hex)
+        private fun paint(sizePt: Float, color: Int, bold: Boolean = false) = Paint().apply {
+            this.color = color
             textSize = sizePt
             isAntiAlias = true
             if (bold) typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         }
 
-        private val titlePaint = paint(20f, "#1E1B4B", bold = true)
-        private val metaPaint = paint(10f, "#6B7280")
-        private val sectionPaint = paint(13f, "#3730A3", bold = true)
-        private val headPaint = paint(9f, "#111827", bold = true)
-        private val cellPaint = paint(9f, "#374151")
-        private val mutedPaint = paint(9f, "#9CA3AF")
-        private val summaryTitlePaint = paint(11f, "#3730A3", bold = true)
-        private val footerPaint = paint(8f, "#9CA3AF")
-        private val boldCellPaint = paint(9f, "#111827", bold = true)
-        private val bannerFill = Paint().apply { color = Color.parseColor("#EEF2FF") }
-        private val headFill = Paint().apply { color = Color.parseColor("#E0E7FF") }
-        private val zebraFill = Paint().apply { color = Color.parseColor("#F9FAFB") }
-        private val rule = Paint().apply { color = Color.parseColor("#E5E7EB"); strokeWidth = 1f }
+        /*
+         * The print palette is the §3.1 ramp, restated here because this file is deliberately
+         * Context-free (see ReportExportLabels). Values mirror colors_palette.xml one for one:
+         * never introduce a new literal - add a name here and map it to the same primitive.
+         */
+        private val titlePaint = paint(20f, palette.brandDeepest, bold = true)
+        private val metaPaint = paint(10f, palette.textSecondary)
+        private val sectionPaint = paint(13f, palette.primary, bold = true)
+        private val headPaint = paint(9f, palette.textPrimary, bold = true)
+        private val cellPaint = paint(9f, palette.ink700)
+        private val mutedPaint = paint(9f, palette.textSecondary)
+        private val summaryTitlePaint = paint(11f, palette.primary, bold = true)
+        private val footerPaint = paint(8f, palette.textSecondary)
+        private val boldCellPaint = paint(9f, palette.textPrimary, bold = true)
+        private val bannerFill = Paint().apply { color = palette.brandWash }
+        private val headFill = Paint().apply { color = palette.sunken }
+        private val zebraFill = Paint().apply { color = palette.zebra }
+        private val rule = Paint().apply { color = palette.hairline; strokeWidth = 1f }
 
         private val lineH = cellPaint.fontSpacing
         private val document = PdfDocument()
@@ -392,3 +413,5 @@ class ReportExporter(
         val PHONE_OR_NUMBER = Regex("[+\\-]\\d[\\d \\-().,%]*")
     }
 }
+
+

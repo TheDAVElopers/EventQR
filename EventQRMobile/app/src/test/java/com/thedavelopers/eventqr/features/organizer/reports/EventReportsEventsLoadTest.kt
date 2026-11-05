@@ -35,6 +35,28 @@ class EventReportsEventsLoadTest {
 
     private fun EventReportsActivity.texts() = window.decorView.allTexts()
 
+    /** The empty state's action is a text button now, not a Material Button. */
+    private fun android.view.View.clickText(label: CharSequence): Boolean {
+        if (this is android.widget.TextView && text == label) {
+            performClick()
+            return true
+        }
+        if (this is android.view.ViewGroup) {
+            for (i in 0 until childCount) {
+                if (getChildAt(i).clickText(label)) return true
+            }
+        }
+        return false
+    }
+
+    private fun android.view.View.hasText(label: CharSequence): Boolean {
+        if (this is android.widget.TextView && text == label) return true
+        if (this is android.view.ViewGroup) {
+            for (i in 0 until childCount) if (getChildAt(i).hasText(label)) return true
+        }
+        return false
+    }
+
     @Test
     fun failedLoad_showsTheErrorWithRetry_notTheEmptyState() {
         val activity = build()
@@ -44,7 +66,7 @@ class EventReportsEventsLoadTest {
         val texts = activity.texts()
         assertTrue(texts.contains("Network problem. Check your connection and try again."))
         assertFalse(texts.contains(activity.getString(R.string.event_reports_no_events_title)))
-        assertNotNull(activity.window.decorView.findButton(activity.getString(R.string.organizer_retry)))
+        assertTrue(texts.contains(activity.getString(R.string.organizer_retry)))
     }
 
     @Test
@@ -61,10 +83,10 @@ class EventReportsEventsLoadTest {
         val activity = build()
         activity.onEventsLoaded(failed("Timeout"))
 
-        activity.window.decorView.findButton(activity.getString(R.string.organizer_retry))!!.performClick()
+        activity.window.decorView.clickText(activity.getString(R.string.organizer_retry))
 
         assertFalse(activity.texts().contains("Timeout"))
-        assertNull(activity.window.decorView.findButton(activity.getString(R.string.organizer_retry)))
+        assertFalse(activity.window.decorView.hasText(activity.getString(R.string.organizer_retry)))
     }
 
     private class FakeReportsRepository :

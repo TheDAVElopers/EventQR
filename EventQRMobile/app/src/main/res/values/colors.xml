@@ -18,11 +18,9 @@
     <color name="primary_disabled">@color/p_brand_disabled</color>
     <color name="on_primary">@color/p_white</color>
     <color name="on_primary_muted">@color/p_brand_on_muted</color>
-    <color name="on_primary_soft">@color/p_n100</color>
 
     <!-- Secondary: after D1 only the CTA gradient end (primary -> secondary) -->
     <color name="secondary">@color/p_secondary</color>
-    <color name="secondary_light">@color/p_secondary_light</color>
     <color name="secondary_container">@color/p_secondary_tint</color>
     <color name="on_secondary_container">@color/p_secondary_dark</color>
 
@@ -31,31 +29,19 @@
     <color name="accent_dark">@color/p_accent_dark</color>
     <color name="accent_container">@color/p_accent_tint</color>
     <color name="accent_container_strong">@color/p_accent_tint_strong</color>
-    <color name="accent_outline">@color/p_accent_outline</color>
 
     <!-- ═════════════════════════ Surfaces ═════════════════════════ -->
     <color name="background">@color/p_n50</color>
     <color name="surface">@color/p_white</color>
     <color name="surface_muted">@color/p_n100</color>
-    <color name="surface_dim">@color/p_n150</color>
-    <color name="navy">@color/p_navy</color>
-    <color name="scrim">#66000000</color>
     <color name="transparent">#00000000</color>
-    <color name="on_dark_10">#1AFFFFFF</color>
-    <color name="on_dark_15">#26FFFFFF</color>
-    <color name="on_dark_20">#33FFFFFF</color>
-    <color name="on_dark_30">#4DFFFFFF</color>
-    <color name="on_dark_50">#80FFFFFF</color>
-    <color name="on_dark_80">#CCFFFFFF</color>
     <!-- Fully transparent page background (gradient fade-out end); alpha 0 with the background hue so the fade does not go grey -->
-    <color name="background_clear">#00F7F7FA</color>
 
     <!-- ═════════════════════════ Text ═════════════════════════ -->
     <color name="text_primary">@color/p_n900</color>
     <color name="text_secondary">@color/p_text_secondary</color>
     <color name="text_body">@color/p_n600</color>
     <color name="text_hint">@color/text_secondary</color>
-    <color name="text_disabled">@color/text_hint</color>
     <color name="text_label">@color/p_text_label</color>
     <!-- NON-text counterparts (icon tints, status dots, disabled fills): the lighter pre-a11y shades, below 4.5:1 on purpose -->
     <color name="neutral">@color/p_n400</color>
@@ -83,7 +69,6 @@
     <color name="warning_dark">@color/p_amber_700</color>
     <color name="warning_container">@color/p_amber_100</color>
     <!-- visible border of warning boxes (the old FDE68A stroke) -->
-    <color name="warning_outline">@color/p_amber_200</color>
     <color name="on_warning_container">@color/p_amber_800</color>
 
     <color name="error">@color/p_red_700</color>
@@ -95,13 +80,9 @@
     <!-- visible border of error boxes / destructive rows (the old FCA5A5 stroke) -->
     <color name="error_outline">@color/p_red_300</color>
 
-    <color name="info">@color/p_blue_500</color>
-    <color name="info_dark">@color/p_blue_600</color>
     <color name="info_container">@color/p_blue_100</color>
-    <color name="on_info_container">@color/p_blue_900</color>
 
     <!-- ═════════════════════════ Icon tints ═════════════════════════ -->
-    <color name="icon_tint_green">@color/success_dark</color>
 
     <!-- ═════════════════════════ Charts (reports) ═════════════════════════ -->
     <color name="chart_1">@color/accent</color>
@@ -111,22 +92,11 @@
     <color name="chart_5">@color/p_chart_indigo</color>
     <color name="chart_6">@color/success</color>
     <color name="chart_7">@color/warning</color>
-    <color name="chart_8">@color/p_chart_periwinkle</color>
 
     <!-- ═════════════════════════ Domain roles (kept; values come from roles above) ═════════════════════════ -->
     <!-- Registration / attendance badges -->
     <color name="badge_default_bg">@color/outline</color>
     <color name="badge_default_text">@color/p_n700</color>
-    <color name="badge_registered_bg">@color/secondary_container</color>
-    <color name="badge_registered_text">@color/on_secondary_container</color>
-    <color name="badge_entered_bg">@color/success_container</color>
-    <color name="badge_entered_text">@color/on_success_container</color>
-    <color name="badge_exited_bg">@color/info_container</color>
-    <color name="badge_exited_text">@color/on_info_container</color>
-    <color name="badge_cancelled_bg">@color/error_container</color>
-    <color name="badge_cancelled_text">@color/on_error_container</color>
-    <color name="badge_pending_bg">@color/warning_container</color>
-    <color name="badge_pending_text">@color/on_warning_container</color>
 
     <!-- Event status TEXT colours (EventStatusBadgeStyler): amber/green use the dark shades so small text reaches AA-ish contrast;
          use warning / success directly for dots and fills -->
@@ -148,20 +118,110 @@
     <color name="event_badge_rejected_bg">@color/error_container</color>
     <color name="event_badge_cancelled_bg">@color/error_container</color>
     <color name="event_badge_unknown_bg">@color/outline_strong</color>
-    <color name="event_badge_registered_bg">@color/accent_container</color>
 
     <!-- Icon tile backgrounds -->
-    <color name="tile_pink">@color/p_pink_100</color>
     <color name="tile_violet">@color/p_violet_100</color>
     <color name="tile_cyan">@color/p_cyan_100</color>
-    <color name="tile_indigo">@color/primary_container</color>
 
-    <color name="avatar_gradient_start">@color/primary_dark</color>
-    <color name="avatar_gradient_end">@color/primary_light</color>
 
     <!-- Screen headers (EventQrHeaders.kt) -->
-    <color name="header_title">@color/text_primary</color>
-    <color name="header_subtitle">@color/text_label</color>
-    <color name="filter_label">@color/text_body</color>
+
+    <!-- ═════════════════════════════════════════════════════════════════════════ -->
+    <!--  V2 SEMANTIC ROLES  -  the redesign vocabulary (§3.2 of the redesign plan). -->
+    <!--                                                                             -->
+    <!--  ui_* roles are the ONLY colours the redesigned screens may use. They point  -->
+    <!--  at the v2 primitives in colors_palette.xml, so a value change happens once  -->
+    <!--  and a values-night/colors.xml override in Phase 5 flips all of them at once -->
+    <!--  without touching a single layout.                                          -->
+    <!--                                                                             -->
+    <!--  They are namespaced rather than redefining primary/background/accent       -->
+    <!--  because those names still carry the old values for the ~55 screens that are -->
+    <!--  not migrated yet. Phase 6 renames ui_* back onto the canonical names once  -->
+    <!--  the legacy vocabulary is gone.                                            -->
+    <!-- ═════════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Brand -->
+    <color name="ui_primary">@color/p_brand_700</color>
+    <color name="ui_on_primary">@color/p_ink_0</color>
+    <color name="ui_primary_pressed">@color/p_brand_800</color>
+    <color name="ui_primary_container">@color/p_brand_100</color>
+    <color name="ui_on_primary_container">@color/p_brand_900</color>
+    <color name="ui_on_primary_muted">@color/p_brand_200</color>
+    <color name="ui_primary_focus_ring">@color/p_brand_300</color>
+    <!-- Ghost button at rest is transparent; its press is the one place a 4% brand wash appears. -->
+    <color name="ui_primary_wash">@color/p_brand_50</color>
+
+    <!-- Accent: lime confirms, it never decorates. -->
+    <color name="ui_accent">@color/p_lime_400</color>
+    <color name="ui_on_accent">@color/p_on_lime</color>
+    <color name="ui_accent_deep">@color/p_lime_800</color>
+    <color name="ui_accent_container">@color/p_lime_100</color>
+
+    <!-- Surfaces -->
+    <color name="ui_background">@color/p_ink_50</color>
+    <color name="ui_surface">@color/p_ink_0</color>
+    <color name="ui_surface_sunken">@color/p_ink_100</color>
+    <color name="ui_surface_pressed">@color/p_ink_25</color>
+    <color name="ui_scrim">#66000000</color>
+
+    <!-- Lines: hairline is decorative only, outline_interactive is the 3:1 control border -->
+    <color name="ui_hairline">@color/p_ink_200</color>
+    <color name="ui_outline_interactive">@color/p_ink_400</color>
+    <color name="ui_disabled_fill">@color/p_ink_200</color>
+
+    <!-- Text: exactly two greys. A third level comes from size and weight. -->
+    <color name="ui_text_primary">@color/p_ink_900</color>
+    <color name="ui_text_secondary">@color/p_ink_500</color>
+    <color name="ui_text_disabled">@color/p_ink_300</color>
+    <color name="ui_text_on_dark">@color/p_ink_0</color>
+    <color name="ui_text_on_dark_muted">@color/p_brand_200</color>
+
+    <!-- Semantic states -->
+    <color name="ui_success">@color/p_success_ink</color>
+    <color name="ui_success_container">@color/p_success_surface</color>
+    <color name="ui_on_success_container">@color/p_success_on_surface</color>
+    <color name="ui_success_outline">@color/p_success_edge</color>
+    <color name="ui_warning">@color/p_warning_ink</color>
+    <color name="ui_warning_container">@color/p_warning_surface</color>
+    <color name="ui_on_warning_container">@color/p_warning_on_surface</color>
+    <color name="ui_warning_outline">@color/p_warning_edge</color>
+    <color name="ui_error">@color/p_error_ink</color>
+    <color name="ui_error_container">@color/p_error_surface</color>
+    <color name="ui_on_error_container">@color/p_error_on_surface</color>
+    <color name="ui_error_outline">@color/p_error_edge</color>
+    <color name="ui_info">@color/p_info_ink</color>
+    <color name="ui_info_container">@color/p_info_surface</color>
+    <color name="ui_on_info_container">@color/p_info_on_surface</color>
+    <color name="ui_info_outline">@color/p_info_edge</color>
+
+    <!-- ──────────────────────────────────────────────────────────────────────── -->
+    <!--  FOUNDATION ADDITIONS  -  Phase 1 shared components.                      -->
+    <!--  Same rules as above: these are ROLES, they resolve to primitives, and    -->
+    <!--  values-night/colors.xml can repoint every one of them in Phase 5.        -->
+    <!-- ──────────────────────────────────────────────────────────────────────── -->
+
+    <!-- Pass head: the stub block is a tone below the identity block, not an
+         interaction state, so it gets its own role instead of borrowing
+         ui_primary_pressed (which means "this is being pressed"). -->
+    <color name="ui_pass_stub">@color/p_brand_800</color>
+
+    <!-- Faint on-dark text: the EVENTQR / role overlines inside the credential and
+         the inactive half of a pass-head tab. Decorative overline weight only. -->
+    <color name="ui_text_on_dark_faint">#3DFFFFFF</color>
+
+    <!-- Dot separators in a meta line (bullet replacement): text_secondary at 60%. -->
+    <color name="ui_dot_neutral">#995E5A70</color>
+
+    <!-- Scanner: the one large dark surface. Flat, never a gradient. -->
+    <color name="ui_scan_panel">@color/p_ink_900</color>
+    <color name="ui_scan_bracket">#CCFFFFFF</color>
+    <color name="ui_scan_frame">#26FFFFFF</color>
+
+    <!-- Credential inner hairline (§5.14: 1dp at 12% white). -->
+    <color name="ui_on_dark_hairline">#1FFFFFFF</color>
+
+    <!-- Bottom-sheet drag handle (§5.12: p_n300). A non-text neutral, deliberately lighter
+         than ui_outline_interactive so the handle reads as a hint, not a control. -->
+    <color name="ui_sheet_handle">@color/p_n300</color>
 
 </resources>

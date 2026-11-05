@@ -1,22 +1,24 @@
 package com.thedavelopers.eventqr.features.admin.users
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
 import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.dto.AccountStatus
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
-import com.thedavelopers.eventqr.ui.theme.color
 
 enum class AccountAction {
     ENABLE, DISABLE, DELETE
 }
 
+/**
+ * Account rows (§5.5). One badge for the account status, chosen from the shared tone table
+ * (§5.4); the role is plain text in the meta line. No per-status drawables and no per-role
+ * colour tiles - role is not a state.
+ */
 class AdminAccountAdapter(
     private val onActionClick: (UserResponse, AccountAction) -> Unit
 ) : RecyclerView.Adapter<AdminAccountAdapter.AdminAccountViewHolder>() {
@@ -58,15 +60,13 @@ class AdminAccountAdapter(
             textEmail.text = user.email
             textRole.text = formatRole(user.role.name)
             textStatus.text = formatStatus(user.status)
-            bindRoleStyle(user.role.name)
-            bindStatusStyle(user.status)
-
-            actionMenu?.setOnClickListener { showActionMenu(user) }
+            textStatus.setTextAppearance(toneFor(user.status))
+            actionMenu.setOnClickListener { showActionMenu(user) }
         }
 
         private fun showActionMenu(user: UserResponse) {
             val context = itemView.context
-            val menu = PopupMenu(context, actionMenu!!)
+            val menu = PopupMenu(context, actionMenu)
             menu.menuInflater.inflate(R.menu.admin_account_actions, menu.menu)
 
             val enableItem = menu.menu.findItem(R.id.action_enable)
@@ -115,32 +115,11 @@ class AdminAccountAdapter(
             return normalized.replaceFirstChar { it.uppercase() }
         }
 
-        private fun bindRoleStyle(role: String) {
-            val normalized = role.uppercase()
-            val background = when {
-                normalized.contains("ADMIN") -> R.drawable.bg_admin_role_badge_pink
-                normalized.contains("ORGANIZER") -> R.drawable.bg_admin_role_badge_blue
-                normalized.contains("STAFF") -> R.drawable.bg_admin_role_badge_green
-                else -> R.drawable.bg_admin_role_badge_purple
-            }
-            textRole.setBackgroundResource(background)
-        }
-
-        private fun bindStatusStyle(status: AccountStatus) {
-            when (status) {
-                AccountStatus.ACTIVE -> {
-                    textStatus.setBackgroundResource(R.drawable.bg_admin_status_active_badge)
-                    textStatus.setTextColor(itemView.context.color(R.color.on_success_container))
-                }
-                AccountStatus.PENDING -> {
-                    textStatus.setBackgroundResource(R.drawable.bg_admin_status_pending_badge)
-                    textStatus.setTextColor(itemView.context.color(R.color.on_warning_container))
-                }
-                else -> {
-                    textStatus.setBackgroundResource(R.drawable.bg_admin_status_inactive_badge)
-                    textStatus.setTextColor(itemView.context.color(R.color.on_error_container))
-                }
-            }
+        /** `Active` confirms nothing on this screen, so it is success; every other state is neutral. */
+        private fun toneFor(status: AccountStatus): Int = when (status) {
+            AccountStatus.PENDING -> R.style.Widget_EventQR_Ui_StatusBadge_Warning
+            AccountStatus.INACTIVE, AccountStatus.SUSPENDED -> R.style.Widget_EventQR_Ui_StatusBadge_Error
+            else -> R.style.Widget_EventQR_Ui_StatusBadge_Success
         }
     }
 }

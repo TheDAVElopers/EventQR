@@ -55,9 +55,10 @@
 
     <style name="Theme.App.Starting" parent="Theme.EventQR">
         <!-- Legacy starting theme (API < 31): solid brand colour + centered logo, matching the Android 12+ splash. -->
-        <item name="android:windowBackground">@drawable/bg_splash_legacy</item>
+        <item name="android:windowBackground">@color/ui_primary</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowDisablePreview">false</item>
     </style>
 
 </resources>
+

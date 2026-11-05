@@ -1,15 +1,16 @@
 package com.thedavelopers.eventqr.features.organizer.rewards
 
+import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.ui.theme.dimenFloat
 import com.thedavelopers.eventqr.ui.theme.dimenPx
-import com.thedavelopers.eventqr.ui.theme.roundedRect
 import com.thedavelopers.eventqr.features.organizer.orgColors
 import android.app.AlertDialog
 import android.content.Context
 import android.os.Bundle
 import android.text.InputType
 import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
@@ -22,6 +23,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.features.organizer.formatOrganizerEventDate
+import com.thedavelopers.eventqr.features.organizer.tintBlock
+import com.thedavelopers.eventqr.features.organizer.formatOrganizerEventDate
+import com.thedavelopers.eventqr.features.organizer.tintBlockArgb
 import com.thedavelopers.eventqr.core.api.ApiConfig
 import com.thedavelopers.eventqr.core.api.dto.ApiResponse
 import com.thedavelopers.eventqr.core.api.sharedGson
@@ -40,6 +45,8 @@ import com.thedavelopers.eventqr.features.organizer.errorState
 import com.thedavelopers.eventqr.features.organizer.eventsLoadErrorState
 import com.thedavelopers.eventqr.features.organizer.formatCount
 import com.thedavelopers.eventqr.features.organizer.intentEventId
+import com.thedavelopers.eventqr.features.organizer.bottomNav
+import com.thedavelopers.eventqr.features.organizer.emptyState
 import com.thedavelopers.eventqr.features.organizer.organizerRefreshShell
 import com.thedavelopers.eventqr.features.organizer.primaryButton
 import com.thedavelopers.eventqr.features.organizer.resolveSelectedEvent
@@ -47,6 +54,10 @@ import com.thedavelopers.eventqr.features.organizer.saveSelectedEventId
 import com.thedavelopers.eventqr.features.organizer.selectedEventId
 import com.thedavelopers.eventqr.features.organizer.styledText
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResponse
+import com.thedavelopers.eventqr.ui.components.ListRowBinder
+import com.thedavelopers.eventqr.ui.components.PassHeadBinder
+import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRequest
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse
 import java.util.UUID
@@ -66,6 +77,8 @@ open class ManageRewardsActivity : AppCompatActivity() {
     @VisibleForTesting
     internal lateinit var selectedEvent: OrganizerMvpEvent
     private lateinit var content: LinearLayout
+    private lateinit var page: View
+    private lateinit var stateHost: android.widget.FrameLayout
     private lateinit var rewardsEnabledSwitch: SwitchCompat
     private lateinit var rewardHost: LinearLayout
     private lateinit var refreshLayout: androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -84,17 +97,28 @@ open class ManageRewardsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         repository = OrganizerRepository(this)
 
-        val shell = organizerRefreshShell(
+        setContentView(R.layout.activity_manage_rewards)
+        applyEventQrSystemBarAppearance(lightStatusBars = false)
+        content = findViewById(R.id.manageRewardsContent)
+        page = findViewById(R.id.manageRewardsPage)
+        stateHost = findViewById(R.id.manageRewardsStateHost)
+        refreshLayout = findViewById(R.id.swipeRefreshRewards)
+        rewardHost = findViewById(R.id.mrw_reward_host)
+        rewardsEnabledSwitch = findViewById(R.id.mrw_rewards_switch)
+        findViewById<LinearLayout>(R.id.bottomNavHost).addView(bottomNav(NAV_REWARDS))
+
+        val head = findViewById<View>(R.id.passHead)
+        head.findViewById<View>(R.id.passHeadIdentity).applyEventQrTopInsetPadding()
+        PassHeadBinder.bindCompact(
+            root = head,
             title = getString(R.string.manage_rewards_title),
-            selectedNav = NAV_REWARDS,
-            showBack = false,
-            topRightLabel = null,
-            onTopRight = { showRewardDialog(null) },
-            // Before an event is resolved (e.g. the event list failed to load) a pull retries that load instead.
-            onRefresh = { if (::selectedEvent.isInitialized) loadRewards(showInitialLoading = false) else loadEvents() },
+            eyebrow = getString(R.string.ui_organizer_role),
         )
-        content = shell.content
-        refreshLayout = shell.swipeRefreshLayout
+
+        // Before an event is resolved (e.g. the event list failed to load) a pull retries that load instead.
+        refreshLayout.setOnRefreshListener {
+            if (::selectedEvent.isInitialized) loadRewards(showInitialLoading = false) else loadEvents()
+        }
         // Nothing to refresh until an event is resolved; re-enabled below once the event list loads.
         refreshLayout.isEnabled = false
 
@@ -111,14 +135,15 @@ open class ManageRewardsActivity : AppCompatActivity() {
         // A failed fetch is not "no events": show the error with Retry (pull-to-refresh retries too).
         if (eventsLoad.source == OrganizerMvpDataSource.ERROR) {
             refreshLayout.isEnabled = true
-            content.removeAllViews()
-            content.addView(eventsLoadErrorState(eventsLoad.message) {
-                if (refreshLayout.isRefreshing) return@eventsLoadErrorState
-                refreshLayout.isRefreshing = true
-                content.removeAllViews()
-                loadEvents()
-            })
-            content.setBackgroundColor(orgColors.bg)
+            showState(
+                eventsLoadErrorState(eventsLoad.message) {
+                    if (refreshLayout.isRefreshing) return@eventsLoadErrorState
+                    refreshLayout.isRefreshing = true
+                    stateHost.removeAllViews()
+                    stateHost.visibility = View.GONE
+                    loadEvents()
+                },
+            )
             return
         }
         eventOptions = eventsLoad.data
@@ -132,209 +157,94 @@ open class ManageRewardsActivity : AppCompatActivity() {
         if (resolvedEvent != null) {
             selectedEvent = resolvedEvent
             rewardsEnabled = selectedEvent.rewardsStatus.equals("Enabled", ignoreCase = true)
+            page.visibility = View.VISIBLE
+            stateHost.visibility = View.GONE
             buildScreen()
             loadRewards()
             refreshRewardsEnabledFromServer()
         } else {
-            content.removeAllViews()
-            content.addView(centeredEmptyState(
-                iconRes = R.drawable.ic_nav_gift,
-                title = getString(R.string.manage_rewards_no_events_title),
-                subtext = getString(R.string.manage_rewards_no_events_subtext),
-            ))
-            content.setBackgroundColor(orgColors.bg)
+            showState(
+                centeredEmptyState(
+                    iconRes = AppIcons.Reward,
+                    title = getString(R.string.manage_rewards_no_events_title),
+                    subtext = getString(R.string.manage_rewards_no_events_subtext),
+                ),
+            )
         }
+    }
+
+    /** One transient state (load error / no event) above the page; the page itself stays in XML. */
+    private fun showState(state: View) {
+        stateHost.removeAllViews()
+        stateHost.addView(state)
+        stateHost.visibility = View.VISIBLE
+        page.visibility = View.GONE
     }
 
     @VisibleForTesting
     internal fun buildScreen() {
-        content.removeAllViews()
-        content.setBackgroundColor(orgColors.bg)
-
-        // Card 1: SELECT EVENT
-        content.addView(cardRes(R.dimen.space_lg).apply {
-            id = com.thedavelopers.eventqr.R.id.mrw_event_selector
-            addView(styledText(getString(R.string.organizer_select_event_header), R.dimen.type_overline, true, color(R.color.text_label)).apply {
-                letterSpacing = dimenFloat(R.dimen.tracking_label_05)
-                setPadding(0, 0, 0, dimenPx(R.dimen.space_sm))
-            })
-            addView(customEventSelector(eventOptions, selectedEvent) { event ->
-                if (event.id == selectedEvent.id) return@customEventSelector
-                selectedEvent = event
-                rewardsEnabled = event.rewardsStatus.equals("Enabled", ignoreCase = true)
-                saveSelectedEventId(event.id)
-                loadRewards()
-                refreshRewardsEnabledFromServer()
-            })
-        })
-
-        // Card 2: Event Rewards Toggle
-        content.addView(cardRes(R.dimen.space_lg).apply {
-            val row = LinearLayout(this@ManageRewardsActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-            }
-
-            row.addView(ImageView(this@ManageRewardsActivity).apply {
-                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.tile_42), dimenPx(R.dimen.tile_42)).apply {
-                    marginEnd = dimenPx(R.dimen.space_md)
-                }
-                background = roundedRect(color(R.color.success_container), R.dimen.radius_md)
-                setPadding(dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_10))
-                setImageResource(R.drawable.ic_nav_gift)
-                setColorFilter(color(R.color.success_dark))
-                contentDescription = null
-            })
-
-            row.addView(LinearLayout(this@ManageRewardsActivity).apply {
-                orientation = LinearLayout.VERTICAL
-                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-                    marginEnd = dimenPx(R.dimen.space_sm)
-                }
-                addView(styledText(getString(R.string.manage_rewards_event_rewards), R.dimen.type_body_large, true, orgColors.text).apply {
-                    id = com.thedavelopers.eventqr.R.id.mrw_rewards_label
-                })
-                addView(styledText(getString(R.string.manage_rewards_event_rewards_desc), R.dimen.type_body_compact, false, orgColors.muted).apply {
-                    id = com.thedavelopers.eventqr.R.id.mrw_rewards_desc
-                    setPadding(0, dimenPx(R.dimen.space_xxs), 0, 0)
-                })
-            })
-
-            rewardsEnabledSwitch = SwitchCompat(this@ManageRewardsActivity).apply {
-                id = com.thedavelopers.eventqr.R.id.mrw_rewards_switch
-                isChecked = rewardsEnabled
-                val states = arrayOf(
-                    intArrayOf(android.R.attr.state_checked),
-                    intArrayOf(-android.R.attr.state_checked)
-                )
-                val thumbColors = intArrayOf(color(R.color.surface), color(R.color.surface))
-                val trackColors = intArrayOf(color(R.color.success), color(R.color.outline_strong))
-                androidx.core.graphics.drawable.DrawableCompat.setTintList(
-                    thumbDrawable,
-                    android.content.res.ColorStateList(states, thumbColors)
-                )
-                androidx.core.graphics.drawable.DrawableCompat.setTintList(
-                    trackDrawable,
-                    android.content.res.ColorStateList(states, trackColors)
-                )
-                setOnCheckedChangeListener { _, checked -> setRewardsEnabled(checked) }
-            }
-            row.addView(rewardsEnabledSwitch)
-            addView(row)
-        })
-
-        // Section Title: Rewards
-        content.addView(styledText(getString(R.string.manage_rewards_title), R.dimen.type_title, true, orgColors.text).apply {
-            id = com.thedavelopers.eventqr.R.id.mrw_section_title
-            setPadding(dimenPx(R.dimen.space_xxs), dimenPx(R.dimen.space_14), dimenPx(R.dimen.space_xxs), dimenPx(R.dimen.space_10))
-        })
-
-        // Reward Host
-        rewardHost = LinearLayout(this).apply {
-            id = com.thedavelopers.eventqr.R.id.mrw_reward_host
-            orientation = LinearLayout.VERTICAL
-        }
-        content.addView(rewardHost)
+        bindSelector()
+        rewardsEnabledSwitch.setOnCheckedChangeListener(null)
+        rewardsEnabledSwitch.isChecked = rewardsEnabled
+        rewardsEnabledSwitch.setOnCheckedChangeListener { _, checked -> setRewardsEnabled(checked) }
+        rewardHost.removeAllViews()
     }
+
 
     /** Date shown under an event name: the backend's date with the time-of-day and zone stripped (never a raw ISO stamp). */
     private fun eventDateLabel(event: OrganizerMvpEvent): String =
-        organizerEventDateLine(event.shortDate.takeIf { it.isNotBlank() && it != "-" } ?: event.dateTime.takeIf { it != "-" }.orEmpty(), "", "")
+        formatOrganizerEventDate(
+            event.shortDate.takeIf { it.isNotBlank() && it != "-" }
+                ?: event.dateTime.takeIf { it != "-" }.orEmpty(),
+        )
 
-    private fun customEventSelector(
-        events: List<OrganizerMvpEvent>,
-        selected: OrganizerMvpEvent,
-        onSelected: (OrganizerMvpEvent) -> Unit,
-    ): View {
-        val approvedEvents = events.approvedOnly()
-        var selectedIndex = approvedEvents.indexOfFirst { it.id == selected.id }.coerceAtLeast(0)
-        val currentEvent = approvedEvents.getOrNull(selectedIndex) ?: selected
+    /**
+     * The event selector is a field row from `activity_manage_rewards.xml`; tapping it opens the
+     * same approved-event popup as before. The popup itself is a hairline surface with rows from
+     * the shared list-row styles, not a gradient card.
+     */
+    private fun bindSelector() {
+        val box = findViewById<View>(R.id.mrw_event_selector)
+        val titleText = findViewById<TextView>(R.id.mrw_event_summary_title)
+        val subtitleText = findViewById<TextView>(R.id.mrw_event_summary_count)
+        val approvedEvents = eventOptions.approvedOnly()
+        var selectedIndex = approvedEvents.indexOfFirst { it.id == selectedEvent.id }.coerceAtLeast(0)
 
-        val titleText = styledText(currentEvent.title.ifBlank { getString(R.string.manage_rewards_select_event_title) }, R.dimen.type_body, true, orgColors.text).apply {
-            maxLines = 1
-            ellipsize = android.text.TextUtils.TruncateAt.END
-        }
-        val subtitleText = styledText(
-            eventDateLabel(currentEvent),
-            R.dimen.type_body_compact,
-            false,
-            orgColors.muted,
-        ).apply {
-            maxLines = 1
-            ellipsize = android.text.TextUtils.TruncateAt.END
-        }
-
-        val arrow = ImageView(this).apply {
-            setImageResource(R.drawable.ic_arrow_drop_down)
-            setColorFilter(orgColors.muted)
-            contentDescription = getString(R.string.manage_rewards_select_event)
+        fun render(event: OrganizerMvpEvent) {
+            titleText.text = event.title.ifBlank { getString(R.string.manage_rewards_select_event_title) }
+            val dateLabel = eventDateLabel(event)
+            subtitleText.text = dateLabel
+            subtitleText.visibility = if (dateLabel.isBlank()) View.GONE else View.VISIBLE
         }
 
-        val box = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_10))
-            background = roundedRect(color(R.color.accent_container), R.dimen.radius_md, color(R.color.outline))
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            )
-
-            addView(ImageView(this@ManageRewardsActivity).apply {
-                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_tile_md), dimenPx(R.dimen.icon_tile_md)).apply {
-                    marginEnd = dimenPx(R.dimen.space_md)
-                }
-                background = roundedRect(color(R.color.accent_container), R.dimen.radius_10)
-                setPadding(dimenPx(R.dimen.space_9), dimenPx(R.dimen.space_9), dimenPx(R.dimen.space_9), dimenPx(R.dimen.space_9))
-                setImageResource(R.drawable.ic_calendar)
-                setColorFilter(orgColors.primary)
-                contentDescription = null
-            })
-
-            addView(LinearLayout(this@ManageRewardsActivity).apply {
-                orientation = LinearLayout.VERTICAL
-                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-                addView(titleText)
-                if (subtitleText.text.isNotBlank()) {
-                    addView(subtitleText)
-                }
-            })
-
-            addView(arrow.apply {
-                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_22), dimenPx(R.dimen.icon_22))
-            })
-        }
+        render(approvedEvents.getOrNull(selectedIndex) ?: selectedEvent)
 
         var popup: android.widget.PopupWindow? = null
 
-        fun buildDropdown(): LinearLayout = LinearLayout(this@ManageRewardsActivity).apply {
+        fun buildDropdown(): LinearLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            background = roundedRect(color(R.color.surface), R.dimen.radius_md, color(R.color.outline))
+            background = androidx.core.content.ContextCompat.getDrawable(this@ManageRewardsActivity, R.drawable.bg_ui_card)
+            setPadding(0, dimenPx(R.dimen.space_4), 0, dimenPx(R.dimen.space_4))
             approvedEvents.forEachIndexed { index, event ->
                 val isCurrent = index == selectedIndex
-                addView(LinearLayout(this@ManageRewardsActivity).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    gravity = Gravity.CENTER_VERTICAL
-                    setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_md))
-                    setBackgroundColor(if (isCurrent) color(R.color.accent_container) else color(R.color.surface))
-                    setOnClickListener {
+                val row = LayoutInflater.from(this@ManageRewardsActivity)
+                    .inflate(R.layout.list_row_icon, this, false)
+                ListRowBinder.bind(
+                    row = row,
+                    title = event.title.ifBlank { getString(R.string.manage_rewards_untitled_event) },
+                    meta = eventDateLabel(event).ifBlank { null },
+                    trailing = if (isCurrent) ListRowBinder.Trailing.BADGE else ListRowBinder.Trailing.NONE,
+                    trailingText = if (isCurrent) getString(R.string.item_portal_option_current) else null,
+                    badgeStyle = R.style.Widget_EventQR_Ui_StatusBadge_Valid,
+                    showDivider = index < approvedEvents.lastIndex,
+                    onClick = {
                         selectedIndex = index
-                        val sel = approvedEvents[index]
-                        titleText.text = sel.title.ifBlank { getString(R.string.manage_rewards_untitled_event) }
-                        subtitleText.text = eventDateLabel(sel)
+                        render(event)
                         popup?.dismiss()
-                        onSelected(sel)
-                    }
-                    addView(LinearLayout(this@ManageRewardsActivity).apply {
-                        orientation = LinearLayout.VERTICAL
-                        layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-                        addView(styledText(event.title.ifBlank { getString(R.string.manage_rewards_untitled_event) }, R.dimen.type_body, true, if (isCurrent) orgColors.primary else orgColors.text))
-                        val dateStr = eventDateLabel(event)
-                        if (dateStr.isNotBlank()) {
-                            addView(styledText(dateStr, R.dimen.type_caption, false, orgColors.muted))
-                        }
-                    })
-                })
+                        onEventChosen(event)
+                    },
+                )
+                addView(row)
             }
         }
 
@@ -350,15 +260,21 @@ open class ManageRewardsActivity : AppCompatActivity() {
                 true,
             ).apply {
                 isOutsideTouchable = true
-                elevation = dimenPx(R.dimen.elevation_overlay).toFloat()
-                setBackgroundDrawable(android.graphics.drawable.ColorDrawable(color(R.color.transparent)))
+                elevation = dimenPx(R.dimen.ui_sheet_elevation).toFloat()
+                setBackgroundDrawable(android.graphics.drawable.ColorDrawable(0))
             }
-            popup.showAsDropDown(box, 0, dimenPx(R.dimen.space_xs))
+            popup.showAsDropDown(box, 0, dimenPx(R.dimen.space_4))
         }
-
-        return box
     }
 
+    private fun onEventChosen(event: OrganizerMvpEvent) {
+        if (event.id == selectedEvent.id) return
+        selectedEvent = event
+        rewardsEnabled = event.rewardsStatus.equals("Enabled", ignoreCase = true)
+        saveSelectedEventId(event.id)
+        loadRewards()
+        refreshRewardsEnabledFromServer()
+    }
     private fun bindEventSummary() {
         rewardsEnabledSwitch.setOnCheckedChangeListener(null)
         rewardsEnabledSwitch.isChecked = rewardsEnabled
@@ -411,44 +327,17 @@ open class ManageRewardsActivity : AppCompatActivity() {
         rewardHost.removeAllViews()
         val enabled = rewardsEnabled
         if (rewards.isEmpty()) {
-            rewardHost.addView(LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                gravity = Gravity.CENTER
-                setPadding(dimenPx(R.dimen.space_xxl), dimenPx(R.dimen.space_xl), dimenPx(R.dimen.space_xxl), dimenPx(R.dimen.space_xl))
-                addView(ImageView(this@ManageRewardsActivity).apply {
-                    layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.tile_64), dimenPx(R.dimen.tile_64))
-                    setImageResource(R.drawable.ic_nav_gift)
-                    setColorFilter(resources.getColor(R.color.neutral, theme))
-                    contentDescription = null
-                })
-                addView(styledText(getString(R.string.manage_rewards_empty_title), R.dimen.type_body_large, true, resources.getColor(R.color.text_primary, theme)).apply {
-                    gravity = Gravity.CENTER
-                    setPadding(0, dimenPx(R.dimen.space_md), 0, dimenPx(R.dimen.space_xs))
-                    layoutParams = LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ).apply { gravity = Gravity.CENTER_HORIZONTAL }
-                })
-                addView(styledText(getString(R.string.manage_rewards_empty_subtext), R.dimen.type_body_medium, false, resources.getColor(R.color.text_secondary, theme)).apply {
-                    gravity = Gravity.CENTER
-                    layoutParams = LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ).apply { gravity = Gravity.CENTER_HORIZONTAL }
-                })
-                addView(primaryButton(getString(R.string.manage_rewards_add_reward)) { showRewardDialog(null) }.apply {
-                    layoutParams = LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        dimenPx(R.dimen.touch_target_min),
-                    ).apply {
-                        setMargins(0, dimenPx(R.dimen.space_lg), 0, 0)
-                        gravity = Gravity.CENTER_HORIZONTAL
-                    }
-                })
-            })
+            rewardHost.addView(
+                emptyState(
+                    iconRes = AppIcons.Reward,
+                    title = getString(R.string.manage_rewards_empty_title),
+                    subtext = getString(R.string.manage_rewards_empty_subtext),
+                    actionLabel = getString(R.string.manage_rewards_add_reward),
+                    onAction = { showRewardDialog(null) },
+                ),
+            )
             return
         }
-
         rewards.forEach { reward ->
             rewardHost.addView(rewardCard(reward, enabled))
         }
@@ -456,196 +345,78 @@ open class ManageRewardsActivity : AppCompatActivity() {
 
     private enum class RewardBadge { DISABLED, OUT_OF_STOCK, AVAILABLE }
 
-    private fun rewardCard(reward: RewardResponse, rewardsEnabled: Boolean): LinearLayout {
+    /** One reward row from `item_manage_reward.xml`; the badge tone comes from the §5.4 mapping. */
+    private fun rewardCard(reward: RewardResponse, rewardsEnabled: Boolean): View {
         val stockState = RewardCardState.of(reward)
-        val outOfStock = stockState.outOfStock
-        val active = rewardsEnabled && reward.status == RewardStatus.ACTIVE && !outOfStock
-        val badgeKind = when {
-            !rewardsEnabled || reward.status == RewardStatus.INACTIVE -> RewardBadge.DISABLED
-            outOfStock -> RewardBadge.OUT_OF_STOCK
-            else -> RewardBadge.AVAILABLE
+        val active = rewardsEnabled && reward.status == RewardStatus.ACTIVE && !stockState.outOfStock
+        val row = LayoutInflater.from(this).inflate(R.layout.item_manage_reward, rewardHost, false)
+
+        row.findViewById<TextView>(R.id.mrw_reward_name).text = reward.name
+        row.findViewById<TextView>(R.id.mrw_reward_points).text =
+            resources.getQuantityString(R.plurals.manage_rewards_cost_pts, reward.pointsRequired, formatCount(reward.pointsRequired))
+        row.findViewById<TextView>(R.id.mrw_reward_stock).text = rewardClaimedText(this, stockState)
+
+        val badge = row.findViewById<TextView>(R.id.mrw_reward_badge)
+        when {
+            !rewardsEnabled || reward.status == RewardStatus.INACTIVE -> {
+                badge.setText(R.string.manage_rewards_badge_disabled)
+                badge.setTextAppearance(R.style.Widget_EventQR_Ui_StatusBadge_Neutral)
+            }
+            stockState.outOfStock -> {
+                badge.setText(R.string.reward_details_out_of_stock)
+                badge.setTextAppearance(R.style.Widget_EventQR_Ui_StatusBadge_Error)
+            }
+            else -> {
+                badge.setText(R.string.manage_rewards_badge_available)
+                badge.setTextAppearance(R.style.Widget_EventQR_Ui_StatusBadge_Success)
+            }
         }
-        val badgeText = getString(
-            when (badgeKind) {
-                RewardBadge.DISABLED -> R.string.manage_rewards_badge_disabled
-                RewardBadge.OUT_OF_STOCK -> R.string.reward_details_out_of_stock
-                RewardBadge.AVAILABLE -> R.string.manage_rewards_badge_available
-            }
-        )
-        val (badgeBg, badgeTextColor, dotColor) = when (badgeKind) {
-            RewardBadge.AVAILABLE -> Triple(color(R.color.success_container), color(R.color.on_success_container), color(R.color.success))
-            RewardBadge.OUT_OF_STOCK -> Triple(color(R.color.error_container), color(R.color.error), color(R.color.danger))
-            RewardBadge.DISABLED -> Triple(color(R.color.surface_muted), color(R.color.text_body), color(R.color.neutral))
-        }
 
-        return cardRes(R.dimen.space_lg).apply {
-            alpha = if (active) 1f else dimenFloat(R.dimen.alpha_inactive)
+        row.findViewById<View>(R.id.mrw_reward_duplicate_note).visibility =
+            if (reward.allowDuplicateClaims) View.VISIBLE else View.GONE
+        row.alpha = if (active) 1f else 0.6f
 
-            val topRow = LinearLayout(this@ManageRewardsActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-            }
-
-            // Left Icon Tile
-            topRow.addView(ImageView(this@ManageRewardsActivity).apply {
-                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.tile_44), dimenPx(R.dimen.tile_44)).apply {
-                    marginEnd = dimenPx(R.dimen.space_md)
-                }
-                background = roundedRect(color(R.color.accent_container), R.dimen.radius_md)
-                setPadding(dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_10))
-                setImageResource(R.drawable.ic_nav_gift)
-                setColorFilter(orgColors.primary)
-                contentDescription = null
-            })
-
-            // Middle Column
-            val middleCol = LinearLayout(this@ManageRewardsActivity).apply {
-                orientation = LinearLayout.VERTICAL
-                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-                    marginEnd = dimenPx(R.dimen.space_sm)
-                }
-            }
-
-            middleCol.addView(styledText(reward.name, R.dimen.type_body_large, true, orgColors.text).apply {
-                id = com.thedavelopers.eventqr.R.id.mrw_reward_name
-            })
-
-            val pointsRow = LinearLayout(this@ManageRewardsActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(0, dimenPx(R.dimen.space_3), 0, dimenPx(R.dimen.space_xxs))
-            }
-            pointsRow.addView(ImageView(this@ManageRewardsActivity).apply {
-                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_14), dimenPx(R.dimen.icon_14)).apply {
-                    marginEnd = dimenPx(R.dimen.space_xs)
-                }
-                setImageResource(R.drawable.ic_gift)
-                setColorFilter(orgColors.muted)
-                contentDescription = null
-            })
-            pointsRow.addView(styledText(resources.getQuantityString(R.plurals.manage_rewards_cost_pts, reward.pointsRequired, formatCount(reward.pointsRequired)), R.dimen.type_body_compact, false, orgColors.muted).apply {
-                id = com.thedavelopers.eventqr.R.id.mrw_reward_points
-            })
-            middleCol.addView(pointsRow)
-
-            val claimedStr = rewardClaimedText(this@ManageRewardsActivity, stockState)
-            middleCol.addView(styledText(claimedStr, R.dimen.type_caption, false, orgColors.muted).apply {
-                id = com.thedavelopers.eventqr.R.id.mrw_reward_stock
-            })
-
-            topRow.addView(middleCol)
-
-            // Right Side: Badge + Chevron
-            val rightCol = LinearLayout(this@ManageRewardsActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-            }
-
-            val badgePill = LinearLayout(this@ManageRewardsActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_xs), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_xs))
-                background = roundedRect(badgeBg, R.dimen.radius_lg)
-
-                addView(View(this@ManageRewardsActivity).apply {
-                    layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.progress_bar_height), dimenPx(R.dimen.progress_bar_height)).apply {
-                        marginEnd = dimenPx(R.dimen.space_6)
-                    }
-                    background = roundedRect(dotColor, R.dimen.radius_3)
-                })
-
-                addView(styledText(badgeText, R.dimen.type_caption, true, badgeTextColor))
-            }
-            rightCol.addView(badgePill)
-
-            rightCol.addView(ImageView(this@ManageRewardsActivity).apply {
-                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_18), dimenPx(R.dimen.icon_18)).apply {
-                    marginStart = dimenPx(R.dimen.space_6)
-                }
-                setImageResource(R.drawable.ic_chevron_right)
-                setColorFilter(orgColors.muted)
-                contentDescription = null
-            })
-
-            topRow.addView(rightCol)
-            addView(topRow)
-
-            if (reward.allowDuplicateClaims) {
-                addView(styledText(getString(R.string.manage_rewards_duplicate_claims_note), R.dimen.type_caption, false, orgColors.primary).apply {
-                    setPadding(0, dimenPx(R.dimen.space_sm), 0, 0)
-                })
-            }
-
-            // Action Buttons
-            val actions = LinearLayout(this@ManageRewardsActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                ).apply { setMargins(0, dimenPx(R.dimen.space_14), 0, 0) }
-            }
-
-            val editBtn = buildActionButton(
-                label = getString(R.string.manage_rewards_edit),
-                iconRes = R.drawable.ic_edit_pencil,
-                bgColor = color(R.color.accent_container),
-                textColor = orgColors.primary,
-                iconTint = orgColors.primary,
-                onClick = { showRewardDialog(reward) }
-            ).apply {
-                id = com.thedavelopers.eventqr.R.id.mrw_reward_edit
-                layoutParams = LinearLayout.LayoutParams(0, dimenPx(R.dimen.tile_44), 1f).apply {
-                    marginEnd = dimenPx(R.dimen.space_6)
-                }
-            }
-
-            val removeBtn = buildActionButton(
-                label = getString(R.string.manage_rewards_remove),
-                iconRes = R.drawable.ic_trash,
-                bgColor = color(R.color.deco_destructive_deep),
-                textColor = color(R.color.on_primary),
-                iconTint = color(R.color.on_primary),
-                onClick = { confirmDeleteReward(reward) }
-            ).apply {
-                id = com.thedavelopers.eventqr.R.id.mrw_reward_remove
-                layoutParams = LinearLayout.LayoutParams(0, dimenPx(R.dimen.tile_44), 1f).apply {
-                    marginStart = dimenPx(R.dimen.space_6)
-                }
-            }
-
-            actions.addView(editBtn)
-            actions.addView(removeBtn)
-            addView(actions)
-        }
+        row.findViewById<View>(R.id.mrw_reward_edit).setOnClickListener { showRewardDialog(reward) }
+        row.findViewById<View>(R.id.mrw_reward_remove).setOnClickListener { confirmDeleteReward(reward) }
+        return row
     }
-
     private fun buildActionButton(
         label: String,
         iconRes: Int,
         bgColor: Int,
         textColor: Int,
         iconTint: Int,
+        outlined: Boolean = false,
         onClick: () -> Unit,
     ): LinearLayout {
         return LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
             setPadding(dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_10))
-            background = roundedRect(bgColor, R.dimen.radius_10)
+            // A destructive trigger keeps a 1dp ui_error boundary at radius 4; everything else is
+            // a flat tinted block (§5.1).
+            background = androidx.core.content.ContextCompat.getDrawable(
+                context,
+                if (outlined) R.drawable.bg_ui_button_destructive else R.drawable.bg_ui_block_r4,
+            )?.mutate()
+            if (!outlined) {
+                backgroundTintList = android.content.res.ColorStateList.valueOf(bgColor)
+            }
+            minimumHeight = dimenPx(R.dimen.ui_button_height_inline)
             isClickable = true
             isFocusable = true
             setOnClickListener { onClick() }
 
             addView(ImageView(this@ManageRewardsActivity).apply {
-                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_18), dimenPx(R.dimen.icon_18)).apply {
+                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md)).apply {
                     marginEnd = dimenPx(R.dimen.space_6)
                 }
                 setImageResource(iconRes)
-                setColorFilter(iconTint)
+                imageTintList = android.content.res.ColorStateList.valueOf(iconTint)
                 contentDescription = null
             })
 
-            addView(styledText(label, R.dimen.type_body_medium, true, textColor).apply {
+            addView(styledText(label, R.dimen.ui_type_body, true, textColor).apply {
                 gravity = Gravity.CENTER
             })
         }
@@ -919,3 +690,10 @@ private object OrganizerRewardsApiProvider {
             .create(OrganizerRewardsService::class.java)
     }
 }
+
+
+
+
+
+
+

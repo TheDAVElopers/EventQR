@@ -1,40 +1,56 @@
 package com.thedavelopers.eventqr.features.staff
 
-import com.thedavelopers.eventqr.core.util.UiStrings
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.PortalSwitcher
 import com.thedavelopers.eventqr.core.util.RoleMapper
-import com.thedavelopers.eventqr.core.util.firstNameOnly
+import com.thedavelopers.eventqr.core.util.UiStrings
 import com.thedavelopers.eventqr.features.staff.notifications.StaffNotificationsActivity
 import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
 import com.thedavelopers.eventqr.features.transactions.TransactionLogAdapter
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
-import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+import com.thedavelopers.eventqr.ui.components.PassHeadBinder
+import com.thedavelopers.eventqr.ui.components.PassHeadModel
+import com.thedavelopers.eventqr.ui.components.PassStat
+import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
+import kotlinx.coroutines.launch
+import java.text.NumberFormat
+import java.util.Locale
 
+/**
+ * Staff dashboard (§6.3). The pass head is the header - role tabs, "Today", and a two-cell stub
+ * (the API exposes scans and successful check-ins; there is no queue metric to show a fake zero
+ * for). Below it the screen has one job: open the scanner. That is a 96dp flat primary block, not
+ * a card. Recent scans are hairline rows, never raised cards.
+ */
 open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.View {
     private lateinit var presenter: StaffDashboardPresenter
     private lateinit var repository: StaffRepository
     private lateinit var adapter: TransactionLogAdapter
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var skeletonLoading: View
+    private lateinit var recyclerRecentScans: RecyclerView
+    private lateinit var emptyRecentScans: EventQrEmptyState
+    private lateinit var passHead: View
     private var isSwipeRefreshing = false
     private var isFirstResume = true
+
+    private var headBell: Int = 0
+    private var headScans: Int? = null
+    private var headCheckIns: Int? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,31 +64,22 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
 
         setContentView(R.layout.activity_staff_dashboard)
         applyEventQrSystemBarAppearance(lightStatusBars = false)
-        findViewById<View>(R.id.headerDashboard).applyEventQrTopInsetPadding()
+        findViewById<View>(R.id.passHeadIdentity).applyEventQrTopInsetPadding()
 
         repository = StaffRepository(this)
         presenter = StaffDashboardPresenter(this, repository, UiStrings(this))
         adapter = TransactionLogAdapter()
+        passHead = findViewById(R.id.passHead)
         skeletonLoading = findViewById(R.id.skeletonLoading)
+        recyclerRecentScans = findViewById(R.id.recyclerRecentScans)
+        emptyRecentScans = findViewById(R.id.txtRecentScansEmpty)
 
-        findViewById<RecyclerView?>(R.id.recyclerRecentScans)?.apply {
-            layoutManager = LinearLayoutManager(this@StaffDashboardActivity)
-            adapter = this@StaffDashboardActivity.adapter
-        }
+        recyclerRecentScans.layoutManager = LinearLayoutManager(this)
+        recyclerRecentScans.adapter = adapter
 
-        findViewById<TextView>(R.id.txtStaffName).text = (sessionManager.getFullName() ?: sessionManager.getEmail() ?: "Staff User").firstNameOnly()
-        findViewById<View>(R.id.btnNotification).setOnClickListener {
-            startActivity(Intent(this, StaffNotificationsActivity::class.java))
-        }
+        emptyRecentScans.setAction(getString(R.string.ui_staff_scan_a_pass)) { openScanner() }
 
-        findViewById<View>(R.id.txtScansToday).setOnClickListener {
-            startActivity(Intent(this, ScannerActivity::class.java))
-        }
-
-        findViewById<View>(R.id.txtCheckinsToday).setOnClickListener {
-            startActivity(Intent(this, StaffAssignedEventsActivity::class.java))
-        }
-
+        findViewById<View>(R.id.btnScanPass).setOnClickListener { openScanner() }
         configureStaffBottomNav(StaffBottomNavItem.DASHBOARD)
 
         swipeRefreshLayout = findViewById(R.id.swipeRefreshDashboard)
@@ -81,8 +88,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
             presenter.loadData()
         }
 
-        setupPortalSwitcher(sessionManager)
-
+        bindPassHead()
         presenter.loadData()
     }
 
@@ -95,57 +101,44 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
         presenter.loadData()
     }
 
-    private fun setupPortalSwitcher(sessionManager: SessionManager) {
-        val role = sessionManager.getUserRole() ?: return
-        val normalizedRole = RoleMapper.normalizeRole(role)
-        val allowedPortals = PortalSwitcher.portalsForRole(normalizedRole)
-
-        val chip = findViewById<View>(R.id.portalSwitcherChip)
-        val dot = findViewById<View>(R.id.txtStaffNameDot)
-        chip.visibility = if (allowedPortals.size > 1) View.VISIBLE else View.GONE
-        dot.visibility = if (allowedPortals.size > 1) View.VISIBLE else View.GONE
-        chip.setOnClickListener(null)
-
-        if (allowedPortals.size > 1) {
-            chip.setOnClickListener {
-                showPortalSwitcher(allowedPortals)
-            }
-        }
+    override fun onDestroy() {
+        presenter.detach()
+        super.onDestroy()
     }
 
-    private fun showPortalSwitcher(portals: List<String>) {
-        val dialog = BottomSheetDialog(this)
-        val view = layoutInflater.inflate(R.layout.bottom_sheet_portal_switcher, null)
-        val container = view.findViewById<LinearLayout>(R.id.portalOptionsContainer)
-        portals.forEach { portal ->
-            val portalView = layoutInflater.inflate(R.layout.item_portal_option, container, false)
-            portalView.findViewById<TextView>(R.id.txtPortalName).text = PortalSwitcher.title(this, portal)
-            val icon = portalView.findViewById<ImageView>(R.id.imgPortalIcon)
-            val subtitle = portalView.findViewById<TextView>(R.id.txtPortalSubtitle)
-            icon.setImageResource(PortalSwitcher.iconRes(portal))
-            subtitle.text = PortalSwitcher.subtitle(this, portal)
+    // ── Pass head ────────────────────────────────────────────────────────────
 
-            if (portal == PortalSwitcher.PORTAL_STAFF) {
-                portalView.findViewById<View>(R.id.currentPortalBadge).visibility = View.VISIBLE
-            }
+    private fun bindPassHead() {
+        val portals = PortalSwitcher.portalsForRole(
+            RoleMapper.normalizeRole(SessionManager(this).getUserRole()),
+        )
+        val roleNames = portals.map { PortalSwitcher.shortRoleName(this, it) }
+        val hasTabs = roleNames.size > 1
 
-            portalView.setOnClickListener {
-                dialog.dismiss()
-                switchToPortal(portal)
-            }
-            container.addView(portalView)
-        }
-        view.findViewById<View>(R.id.btnPortalSignOut).setOnClickListener {
-            dialog.dismiss()
-            com.thedavelopers.eventqr.core.session.SignOutFlow.confirmAndSignOut(this)
-        }
-
-        dialog.setContentView(view)
-        dialog.show()
+        PassHeadBinder.bind(
+            passHead,
+            PassHeadModel(
+                title = getString(R.string.ui_staff_today),
+                eyebrow = if (hasTabs) null else getString(R.string.ui_staff_role),
+                tabs = if (hasTabs) roleNames else emptyList(),
+                selectedTabIndex = portals.indexOf(PortalSwitcher.PORTAL_STAFF).coerceAtLeast(0),
+                bellCount = headBell,
+                stats = listOf(
+                    PassStat(formatCount(headScans), getString(R.string.ui_staff_scans)),
+                    PassStat(formatCount(headCheckIns), getString(R.string.ui_staff_check_ins)),
+                ),
+                onTabSelected = { index -> portals.getOrNull(index)?.let(::switchToPortal) },
+                onBellClick = { startActivity(Intent(this, StaffNotificationsActivity::class.java)) },
+            ),
+        )
     }
+
+    private fun formatCount(value: Int?): String =
+        value?.let { NumberFormat.getIntegerInstance(Locale.getDefault()).format(it) }
+            ?: getString(R.string.ui_staff_value_unavailable)
 
     private fun switchToPortal(portal: String) {
-        when(portal) {
+        when (portal) {
             PortalSwitcher.PORTAL_ATTENDEE -> {
                 startActivity(Intent(this, com.thedavelopers.eventqr.features.dashboard.DashboardActivity::class.java))
                 finish()
@@ -155,32 +148,29 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
                 startActivity(Intent(this, com.thedavelopers.eventqr.features.organizer.dashboard.OrganizerDashboardActivity::class.java))
                 finish()
             }
-            PortalSwitcher.PORTAL_ADMIN -> {
-                startActivity(Intent(this, com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity::class.java))
-                finish()
-            }
-            PortalSwitcher.PORTAL_SUPER_ADMIN -> {
+            PortalSwitcher.PORTAL_ADMIN, PortalSwitcher.PORTAL_SUPER_ADMIN -> {
                 startActivity(Intent(this, com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity::class.java))
                 finish()
             }
         }
     }
 
-    override fun onDestroy() {
-        presenter.detach()
-        super.onDestroy()
-    }
+    // ── Contract ─────────────────────────────────────────────────────────────
 
     override fun renderRecentScans(items: List<TransactionResponse>) {
         skeletonLoading.visibility = View.GONE
         adapter.submitItems(items)
-        findViewById<RecyclerView>(R.id.recyclerRecentScans).visibility = if (items.isEmpty()) View.GONE else View.VISIBLE
-        findViewById<EventQrEmptyState>(R.id.txtRecentScansEmpty).visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
+        val empty = items.isEmpty()
+        recyclerRecentScans.visibility = if (empty) View.GONE else View.VISIBLE
+        emptyRecentScans.visibility = if (empty) View.VISIBLE else View.GONE
+        findViewById<TextView>(R.id.txtRecentCount).text =
+            if (empty) "" else getString(R.string.ui_staff_today_count, items.size)
     }
 
     override fun updateStats(scans: Int?, checkins: Int?) {
-        findViewById<TextView>(R.id.txtScansToday).text = scans?.toString() ?: getString(R.string.common_value_unavailable)
-        findViewById<TextView>(R.id.txtCheckinsToday).text = checkins?.toString() ?: getString(R.string.common_value_unavailable)
+        headScans = scans
+        headCheckIns = checkins
+        bindPassHead()
     }
 
     override fun showMessage(message: String) {
@@ -188,13 +178,8 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
     }
 
     override fun showNotificationBadge(unreadCount: Int) {
-        val badge = findViewById<TextView>(R.id.txtNotificationBadge)
-        if (unreadCount > 0) {
-            badge.text = if (unreadCount > 99) "99+" else unreadCount.toString()
-            badge.visibility = View.VISIBLE
-        } else {
-            badge.visibility = View.GONE
-        }
+        headBell = unreadCount
+        bindPassHead()
     }
 
     override fun showLoading(isLoading: Boolean) {
@@ -212,4 +197,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
         }
     }
 
+    private fun openScanner() {
+        startActivity(Intent(this, ScannerActivity::class.java))
     }
+}

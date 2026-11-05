@@ -1,53 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    STAFF ATTENDEE DETAILS (§6.3) - retires Gen A.
+
+        One top bar. Identity card (flat 56dp tile + name + contact). A hairline spec table.
+        One primary Print ID, one secondary Scan again. Recent scans are the shared
+        TransactionLogAdapter rows, never per-scan cards.
+
+    Deleted: the rounded card with elevation, the 42dp body rows with a missing left edge, the
+    gradient-filled 64dp avatar and the chip row used as buttons.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
+    android:background="@color/ui_background"
     android:orientation="vertical">
 
-    <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
+    <include
         android:id="@+id/headerTopBar"
+        layout="@layout/include_top_bar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:title="@string/attendee_details_attendee_details" />
+        android:layout_height="wrap_content" />
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollDetails"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:clipToPadding="false"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        android:overScrollMode="never">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="@dimen/space_lg">
+            android:paddingTop="@dimen/space_20"
+            android:paddingBottom="@dimen/space_24">
 
-            <androidx.cardview.widget.CardView
+            <!-- ═════════ Identity ═════════ -->
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.EventQR.Ui.Card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="@color/surface"
-                app:cardCornerRadius="@dimen/radius_14"
-                app:cardElevation="@dimen/elevation_raised">
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginEnd="@dimen/ui_gutter">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:padding="@dimen/space_20">
+                    android:padding="@dimen/ui_card_padding">
 
                     <TextView
                         android:id="@+id/txtDetailAvatar"
-                        android:layout_width="@dimen/tile_64"
-                        android:layout_height="@dimen/tile_64"
-                        android:background="@drawable/bg_profile_button"
+                        android:layout_width="@dimen/ui_staff_identity_tile"
+                        android:layout_height="@dimen/ui_staff_identity_tile"
+                        android:background="@drawable/bg_ui_icon_tile"
                         android:gravity="center"
-                        android:text="@string/placeholder_initial_a"
-                        android:textColor="@color/on_primary"
-                        android:textAppearance="@style/TextAppearance.EventQR.HeadlineL" />
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.NumericM"
+                        android:textColor="@color/ui_primary"
+                        android:textSize="@dimen/ui_staff_identity_initial" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -62,177 +76,278 @@
                             android:layout_height="wrap_content"
                             android:ellipsize="end"
                             android:maxLines="2"
-                            android:text="@string/common_attendee"
-                            android:textColor="@color/text_primary"
-                            android:textAppearance="@style/TextAppearance.EventQR.TitleCompact" />
+                            android:textAppearance="@style/TextAppearance.EventQR.Type.TitleLarge"
+                            android:textColor="@color/ui_text_primary" />
 
                         <TextView
                             android:id="@+id/txtDetailAttendeeEmail"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/space_xs"
+                            android:layout_marginTop="@dimen/space_2"
                             android:ellipsize="end"
                             android:maxLines="1"
-                            android:textColor="@color/text_body"
-                            android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
+                            android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                            android:textColor="@color/ui_text_secondary" />
 
                         <TextView
                             android:id="@+id/txtDetailAttendeePhone"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/space_3"
+                            android:layout_marginTop="@dimen/space_2"
                             android:ellipsize="end"
                             android:maxLines="1"
-                            android:textColor="@color/text_body"
-                            android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
+                            android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                            android:textColor="@color/ui_text_secondary" />
                     </LinearLayout>
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
+            <!-- ═════════ Spec table ═════════ -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_lg"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical"
-                android:padding="@dimen/space_lg">
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_24"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:orientation="vertical">
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/control_height_42"
+                    android:layout_height="@dimen/ui_metric_row_height"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/common_event" android:textColor="@color/text_secondary" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
-                    <TextView android:id="@+id/txtDetailEventName" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:ellipsize="end" android:gravity="end" android:maxLines="1" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/ui_staff_detail_event"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
+
+                    <TextView
+                        android:id="@+id/txtDetailEventName"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_md"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:gravity="end"
+                        android:maxLines="2"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                        android:textColor="@color/ui_text_primary" />
                 </LinearLayout>
 
-                <View style="@style/Widget.EventQR.Divider" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@color/ui_hairline"
+                    android:importantForAccessibility="no" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/control_height_42"
+                    android:layout_height="@dimen/ui_metric_row_height"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/common_registration_id" android:textColor="@color/text_secondary" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
-                    <TextView android:id="@+id/txtDetailRegistrationId" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:ellipsize="end" android:gravity="end" android:maxLines="1" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/ui_staff_detail_registration"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
+
+                    <TextView
+                        android:id="@+id/txtDetailRegistrationId"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_md"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.NumericS"
+                        android:textColor="@color/ui_text_primary" />
                 </LinearLayout>
 
-                <View style="@style/Widget.EventQR.Divider" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@color/ui_hairline"
+                    android:importantForAccessibility="no" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/control_height_42"
+                    android:layout_height="@dimen/ui_metric_row_height"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/common_status" android:textColor="@color/text_secondary" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
-                    <TextView android:id="@+id/txtDetailRegistrationStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/bg_badge_default" android:includeFontPadding="false" android:paddingHorizontal="@dimen/space_md" android:paddingVertical="@dimen/space_5" android:textColor="@color/badge_default_text" android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/ui_staff_detail_status"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
+
+                    <TextView
+                        android:id="@+id/txtDetailRegistrationStatus"
+                        style="@style/Widget.EventQR.Ui.StatusBadge.Neutral"
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/ui_badge_height" />
                 </LinearLayout>
 
-                <View style="@style/Widget.EventQR.Divider" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@color/ui_hairline"
+                    android:importantForAccessibility="no" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/control_height_42"
+                    android:layout_height="@dimen/ui_metric_row_height"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/staff_attendee_details_check_in_time" android:textColor="@color/text_secondary" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
-                    <TextView android:id="@+id/txtDetailCheckInTime" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/ui_staff_detail_check_in"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
+
+                    <TextView
+                        android:id="@+id/txtDetailCheckInTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_md"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.NumericS"
+                        android:textColor="@color/ui_text_primary" />
                 </LinearLayout>
 
-                <View style="@style/Widget.EventQR.Divider" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@color/ui_hairline"
+                    android:importantForAccessibility="no" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/control_height_42"
+                    android:layout_height="@dimen/ui_metric_row_height"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/common_points_earned" android:textColor="@color/text_secondary" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
-                    <TextView android:id="@+id/txtDetailPointsBalance" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/ui_staff_detail_points"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
+
+                    <TextView
+                        android:id="@+id/txtDetailPointsBalance"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_md"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.NumericS"
+                        android:textColor="@color/ui_text_primary" />
                 </LinearLayout>
 
-                <View style="@style/Widget.EventQR.Divider" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@color/ui_hairline"
+                    android:importantForAccessibility="no" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/control_height_42"
+                    android:layout_height="@dimen/ui_metric_row_height"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/staff_attendee_details_scans" android:textColor="@color/text_secondary" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
-                    <TextView android:id="@+id/txtDetailTransactionCount" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/ui_staff_detail_scans"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
+
+                    <TextView
+                        android:id="@+id/txtDetailTransactionCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_md"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.NumericS"
+                        android:textColor="@color/ui_text_primary" />
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- ═════════ Actions ═════════ -->
             <LinearLayout
+                android:id="@+id/btnPrintOrReprintId"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_18"
+                android:layout_height="@dimen/ui_button_height"
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_24"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:background="@drawable/bg_ui_button_primary"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
                 android:orientation="horizontal">
 
-                <LinearLayout
-                    android:id="@+id/btnPrintOrReprintId"
-                    android:layout_width="0dp"
-                    android:layout_height="@dimen/touch_target_min"
-                    android:layout_marginEnd="@dimen/space_6"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_event_filter_chip_selected"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackground"
-                    android:gravity="center"
-                    android:orientation="horizontal">
+                <ImageView
+                    android:layout_width="@dimen/icon_md"
+                    android:layout_height="@dimen/icon_md"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_ui_print"
+                    android:tint="@color/ui_on_primary" />
 
-                    <ImageView
-                        android:layout_width="@dimen/icon_18"
-                        android:layout_height="@dimen/icon_18"
-                        android:src="@drawable/ic_print"
-                        app:tint="@color/on_primary" />
+                <TextView
+                    android:id="@+id/txtPrintOrReprintIdLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_sm"
+                    android:text="@string/ui_staff_print_id"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.ButtonLabel"
+                    android:textColor="@color/ui_on_primary" />
+            </LinearLayout>
 
-                    <TextView
-                        android:id="@+id/txtPrintOrReprintIdLabel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/space_sm"
-                        android:text="@string/staff_attendee_details_print_id"
-                        android:textColor="@color/on_primary"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
-                </LinearLayout>
+            <LinearLayout
+                android:id="@+id/btnScanAgain"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/ui_button_height"
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_sm"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:background="@drawable/bg_ui_button_secondary"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="horizontal">
 
-                <LinearLayout
-                    android:id="@+id/btnScanAgain"
-                    android:layout_width="0dp"
-                    android:layout_height="@dimen/touch_target_min"
-                    android:layout_marginStart="@dimen/space_6"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_scan_again_button"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackground"
-                    android:gravity="center"
-                    android:orientation="horizontal">
+                <ImageView
+                    android:layout_width="@dimen/icon_md"
+                    android:layout_height="@dimen/icon_md"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_ui_qr_code_scanner"
+                    android:tint="@color/ui_primary" />
 
-                    <ImageView
-                        android:layout_width="@dimen/icon_18"
-                        android:layout_height="@dimen/icon_18"
-                        android:src="@drawable/ic_scan"
-                        app:tint="@color/primary" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/space_sm"
-                        android:text="@string/staff_attendee_details_scan_again"
-                        android:textColor="@color/primary"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
-                </LinearLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_sm"
+                    android:text="@string/ui_staff_scan_again"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.ButtonLabel"
+                    android:textColor="@color/ui_primary" />
             </LinearLayout>
 
             <TextView
                 android:id="@+id/txtPrintPermissionNotice"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/ui_gutter"
                 android:layout_marginTop="@dimen/space_sm"
+                android:layout_marginEnd="@dimen/ui_gutter"
                 android:text="@string/staff_print_id_permission_required"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
                 android:visibility="gone" />
 
             <ProgressBar
@@ -243,44 +358,70 @@
                 android:layout_marginTop="@dimen/space_lg"
                 android:visibility="gone" />
 
-            <TextView android:id="@+id/txtDetailQrStatus" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-            <TextView android:id="@+id/txtDetailEntryStatus" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-            <TextView android:id="@+id/txtDetailAttendanceStatus" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-            <TextView android:id="@+id/txtDetailExitStatus" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-            <TextView android:id="@+id/txtDetailRegistrationDate" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+            <!-- Kept off-screen: values other staff screens rely on. -->
+            <TextView
+                android:id="@+id/txtDetailQrStatus"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/txtDetailEntryStatus"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/txtDetailAttendanceStatus"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/txtDetailExitStatus"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/txtDetailRegistrationDate"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone" />
+
+            <!-- ═════════ Recent transactions (full-bleed: rows own the 20dp inset) ═════════ -->
             <LinearLayout
                 android:id="@+id/layoutRecentTransactions"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_18"
+                android:layout_marginTop="@dimen/space_32"
                 android:orientation="vertical"
                 android:visibility="gone">
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/staff_attendee_details_recent_transactions"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong" />
-
-                <TextView
-                    android:id="@+id/txtDetailRecentTransactionsEmpty"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_md"
-                    android:background="@drawable/bg_card"
-                    android:gravity="center"
-                    android:padding="@dimen/space_xl"
-                    android:text="@string/staff_attendee_details_no_transactions_recorded_yet"
-                    android:textColor="@color/text_hint"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
-                    android:visibility="gone" />
+                    android:layout_marginStart="@dimen/ui_gutter"
+                    android:layout_marginEnd="@dimen/ui_gutter"
+                    android:layout_marginBottom="@dimen/space_sm"
+                    android:text="@string/ui_staff_recent_transactions"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recyclerDetailTransactions"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_10"
+                    android:nestedScrollingEnabled="false"
                     android:overScrollMode="never" />
+
+                <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+                    android:id="@+id/txtDetailRecentTransactionsEmpty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    app:icon="@drawable/ic_ui_receipt_long"
+                    app:subtitle="@string/ui_staff_no_transactions_body"
+                    app:title="@string/ui_staff_no_transactions" />
             </LinearLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

@@ -32,4 +32,8 @@ data class OrganizerMvpEvent(
     val capacity: Int = 0,
     val currentAttendeeCount: Int = 0,
     val availableSlots: Int = 0,
+    // Backend timestamps are the only source of the "Upcoming" display state; there is no
+    // APPROVED/UPCOMING distinction in the status enum.
+    val eventStartAt: java.time.Instant? = null,
+    val eventEndAt: java.time.Instant? = null,
 )

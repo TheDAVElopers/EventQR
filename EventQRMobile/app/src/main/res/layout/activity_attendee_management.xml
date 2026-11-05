@@ -1,290 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    ORGANIZER - ATTENDEES (6.4).
+
+        Pass head        ORGANIZER tab, title Attendees, stub REGISTERED / CHECKED IN / EXITED
+        Event selector   56dp field row (not a card wrapping a hidden spinner)
+        Grouped rows     avatar + name + email, one status badge, hairline divider inset 76dp
+        Search           44dp icon action that opens the search screen (which owns the filters)
+
+    Deleted: the 44 raw dp literals, per-card attendee blocks, the tinted stat card, the centred
+    empty block and the PopupWindow built from a GradientDrawable.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/rootAttendeeManagement"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_organizer_events_screen"
+    android:background="@color/ui_background"
     android:orientation="vertical">
 
-    <com.thedavelopers.eventqr.ui.components.EventQrTabHeader
-        android:id="@+id/headerTopBar"
+    <include
+        android:id="@+id/passHead"
+        layout="@layout/include_pass_head"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:title="@string/attendee_management_attendees"
-        app:subtitle="@string/attendee_management_view_and_manage_event_attendees">
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/btnFilterCard"
-            android:layout_width="@dimen/tile_42"
-            android:layout_height="@dimen/tile_42"
-            style="@style/Widget.EventQR.Card.Compact">
+        android:layout_height="wrap_content" />
 
-            <ImageButton
-                android:id="@+id/btnFilter"
+    <!-- Event selector: one field row. -->
+    <LinearLayout
+        android:id="@+id/layoutEventSelectorHost"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/ui_organizer_selector_height"
+        android:layout_marginStart="@dimen/ui_gutter"
+        android:layout_marginTop="@dimen/space_12"
+        android:layout_marginEnd="@dimen/ui_gutter"
+        android:background="@drawable/bg_ui_field"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_16"
+        android:paddingEnd="@dimen/space_12">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txtEventTitle"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/attendee_management_search_attendees"
-                android:padding="@dimen/space_10"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_search"
-                app:tint="@color/primary" />
-        </com.google.android.material.card.MaterialCardView>
-    </com.thedavelopers.eventqr.ui.components.EventQrTabHeader>
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                android:textColor="@color/ui_text_primary" />
 
+            <TextView
+                android:id="@+id/txtEventSelectorDate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_text_secondary" />
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="@dimen/icon_md"
+            android:layout_height="@dimen/icon_md"
+            android:layout_marginStart="@dimen/space_8"
+            android:contentDescription="@null"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_ui_chevron_right"
+            android:tint="@color/ui_text_secondary" />
+    </LinearLayout>
+
+    <!-- Section row: eyebrow + the one search action. -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingHorizontal="@dimen/space_20"
-        android:paddingTop="@dimen/space_sm">
+        android:layout_height="@dimen/ui_touch_min"
+        android:layout_marginStart="@dimen/ui_gutter"
+        android:layout_marginTop="@dimen/space_24"
+        android:layout_marginEnd="@dimen/space_8"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardCurrentEvent"
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/txtCurrentEventLabel"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:cardBackgroundColor="@color/accent_container"
-            style="@style/Widget.EventQR.Card">
+            android:layout_weight="1"
+            android:text="@string/ui_organizer_attendees"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="@dimen/space_14">
-
-                <TextView
-                    android:id="@+id/txtCurrentEventLabel"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/common_current_event"
-                    android:textColor="@color/text_label"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextOverline.Strong" />
-
-                <LinearLayout
-                    android:id="@+id/layoutEventSelectorHost"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_sm"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <FrameLayout
-                        android:layout_width="@dimen/tile_38"
-                        android:layout_height="@dimen/tile_38"
-                        style="@style/Widget.EventQR.IconTile.Secondary">
-
-                        <ImageView
-                            android:layout_width="@dimen/icon_18"
-                            android:layout_height="@dimen/icon_18"
-                            android:layout_gravity="center"
-                            android:contentDescription="@null"
-                            android:src="@drawable/ic_calendar"
-                            app:tint="@color/primary" />
-                    </FrameLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/space_10"
-                        android:layout_marginEnd="@dimen/space_sm"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/txtEventTitle"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:ellipsize="end"
-                            android:maxLines="1"
-                            android:text="@string/attendee_management_choose_an_event"
-                            android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/space_xxs"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal">
-
-                            <ImageView
-                                android:layout_width="12dp"
-                                android:layout_height="12dp"
-                                android:contentDescription="@null"
-                                android:src="@drawable/ic_calendar"
-                                app:tint="@color/neutral_label" />
-
-                            <TextView
-                                android:id="@+id/txtEventSelectorDate"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="@dimen/space_xs"
-                                android:ellipsize="end"
-                                android:maxLines="1"
-                                android:text="@string/placeholder_dash"
-                                android:textColor="@color/text_label"
-                                android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <ImageView
-                        android:layout_width="@dimen/icon_md"
-                        android:layout_height="@dimen/icon_md"
-                        android:contentDescription="@null"
-                        android:src="@drawable/ic_arrow_drop_down"
-                        app:tint="@color/primary" />
-                </LinearLayout>
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardAttendeeStats"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_md"
-            style="@style/Widget.EventQR.Card">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:baselineAligned="false"
-                android:orientation="horizontal"
-                android:paddingTop="@dimen/space_lg"
-                android:paddingBottom="@dimen/space_lg">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center_horizontal"
-                    android:orientation="vertical">
-
-                    <FrameLayout
-                        android:layout_width="@dimen/tile_38"
-                        android:layout_height="@dimen/tile_38"
-                        android:layout_marginBottom="@dimen/space_sm"
-                        style="@style/Widget.EventQR.IconTile.Secondary">
-
-                        <ImageView
-                            android:layout_width="@dimen/icon_md"
-                            android:layout_height="@dimen/icon_md"
-                            android:layout_gravity="center"
-                            android:contentDescription="@null"
-                            android:src="@drawable/ic_group"
-                            app:tint="@color/primary" />
-                    </FrameLayout>
-
-                    <TextView
-                        android:id="@+id/txtTotalCount"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_horizontal"
-                        android:text="@string/placeholder_zero"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextHeadline" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_xxs"
-                        android:gravity="center_horizontal"
-                        android:maxLines="1"
-                        android:text="@string/common_total"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
-                </LinearLayout>
-
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="36dp"
-                    android:layout_gravity="center_vertical"
-                    android:background="@color/surface_muted" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center_horizontal"
-                    android:orientation="vertical">
-
-                    <FrameLayout
-                        android:layout_width="@dimen/tile_38"
-                        android:layout_height="@dimen/tile_38"
-                        android:layout_marginBottom="@dimen/space_sm"
-                        style="@style/Widget.EventQR.IconTile.Success">
-
-                        <ImageView
-                            android:layout_width="@dimen/icon_md"
-                            android:layout_height="@dimen/icon_md"
-                            android:layout_gravity="center"
-                            android:contentDescription="@null"
-                            android:src="@drawable/ic_check_circle_green"
-                            app:tint="@color/success" />
-                    </FrameLayout>
-
-                    <TextView
-                        android:id="@+id/txtCheckedInCount"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_horizontal"
-                        android:text="@string/placeholder_zero"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextHeadline" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_xxs"
-                        android:gravity="center_horizontal"
-                        android:maxLines="1"
-                        android:text="@string/common_checked_in"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
-                </LinearLayout>
-
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="36dp"
-                    android:layout_gravity="center_vertical"
-                    android:background="@color/surface_muted" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center_horizontal"
-                    android:orientation="vertical">
-
-                    <FrameLayout
-                        android:layout_width="@dimen/tile_38"
-                        android:layout_height="@dimen/tile_38"
-                        android:layout_marginBottom="@dimen/space_sm"
-                        style="@style/Widget.EventQR.IconTile.Round.Muted">
-
-                        <ImageView
-                            android:layout_width="@dimen/icon_md"
-                            android:layout_height="@dimen/icon_md"
-                            android:layout_gravity="center"
-                            android:contentDescription="@null"
-                            android:src="@drawable/outline_block_24"
-                            app:tint="@color/text_secondary" />
-                    </FrameLayout>
-
-                    <TextView
-                        android:id="@+id/txtExitedCount"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_horizontal"
-                        android:text="@string/placeholder_zero"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextHeadline" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_xxs"
-                        android:gravity="center_horizontal"
-                        android:maxLines="1"
-                        android:text="@string/search_attendees_exited"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
-                </LinearLayout>
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
+        <ImageView
+            android:id="@+id/btnFilter"
+            style="@style/Widget.EventQR.Ui.Button.Icon"
+            android:layout_width="@dimen/ui_touch_min"
+            android:layout_height="@dimen/ui_touch_min"
+            android:contentDescription="@string/ui_organizer_search_attendees"
+            android:src="@drawable/ic_ui_search"
+            android:tint="@color/ui_text_primary" />
     </LinearLayout>
 
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
@@ -295,9 +110,7 @@
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:paddingHorizontal="@dimen/space_20"
-            android:paddingTop="@dimen/space_md">
+            android:layout_height="match_parent">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerAttendees"
@@ -305,202 +118,26 @@
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
                 android:nestedScrollingEnabled="true"
-                android:paddingBottom="@dimen/space_xl" />
+                android:overScrollMode="never"
+                android:paddingBottom="@dimen/space_24" />
 
-            <ProgressBar
-                android:id="@+id/progressAttendees"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:visibility="gone" />
-
-            <LinearLayout
+            <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
                 android:id="@+id/layoutAttendeesEmpty"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:gravity="center_horizontal"
-                android:orientation="vertical"
-                android:paddingHorizontal="@dimen/space_xxl"
-                android:paddingVertical="@dimen/space_xl"
-                android:visibility="gone">
+                android:visibility="gone"
+                app:icon="@drawable/ic_ui_person"
+                app:subtitle="@string/attendee_management_attendees_will_appear_here_once_they"
+                app:title="@string/attendee_management_no_attendees_registered_yet" />
 
-                <ImageView
-                    android:id="@+id/imgAttendeesEmptyIcon"
-                    android:layout_width="@dimen/tile_72"
-                    android:layout_height="@dimen/tile_72"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_group"
-                    app:tint="@color/deco_empty_icon" />
-
-                <TextView
-                    android:id="@+id/txtAttendeesEmptyTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_lg"
-                    android:gravity="center"
-                    android:text="@string/attendee_management_no_attendees_registered_yet"
-                    android:textColor="@color/text_primary"
-                    android:textAppearance="@style/TextAppearance.EventQR.TitleMedium" />
-
-                <TextView
-                    android:id="@+id/txtAttendeesEmptySub"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_6"
-                    android:gravity="center"
-                    android:text="@string/attendee_management_attendees_will_appear_here_once_they"
-                    android:textColor="@color/text_label"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
-            </LinearLayout>
-
-            <LinearLayout
+            <include
                 android:id="@+id/skeletonLoading"
+                layout="@layout/include_skeleton_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="visible">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/space_10"
-                    android:background="@drawable/bg_staff_skeleton_card"
-                    android:gravity="center_vertical"
-                    android:minHeight="82dp"
-                    android:orientation="horizontal"
-                    android:padding="@dimen/space_14">
-
-                    <View
-                        android:layout_width="42dp"
-                        android:layout_height="42dp"
-                        android:background="@drawable/bg_staff_skeleton_date_block" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/space_14"
-                        android:layout_marginEnd="@dimen/space_10"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="14dp"
-                            android:background="@drawable/bg_staff_skeleton_bar" />
-
-                        <View
-                            android:layout_width="140dp"
-                            android:layout_height="10dp"
-                            android:layout_marginTop="@dimen/space_sm"
-                            android:background="@drawable/bg_staff_skeleton_bar" />
-
-                        <View
-                            android:layout_width="80dp"
-                            android:layout_height="10dp"
-                            android:layout_marginTop="@dimen/space_6"
-                            android:background="@drawable/bg_staff_skeleton_bar" />
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="64dp"
-                        android:layout_height="22dp"
-                        android:background="@drawable/bg_staff_skeleton_bar" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/space_10"
-                    android:background="@drawable/bg_staff_skeleton_card"
-                    android:gravity="center_vertical"
-                    android:minHeight="82dp"
-                    android:orientation="horizontal"
-                    android:padding="@dimen/space_14">
-
-                    <View
-                        android:layout_width="42dp"
-                        android:layout_height="42dp"
-                        android:background="@drawable/bg_staff_skeleton_date_block" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/space_14"
-                        android:layout_marginEnd="@dimen/space_10"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="14dp"
-                            android:background="@drawable/bg_staff_skeleton_bar" />
-
-                        <View
-                            android:layout_width="150dp"
-                            android:layout_height="10dp"
-                            android:layout_marginTop="@dimen/space_sm"
-                            android:background="@drawable/bg_staff_skeleton_bar" />
-
-                        <View
-                            android:layout_width="90dp"
-                            android:layout_height="10dp"
-                            android:layout_marginTop="@dimen/space_6"
-                            android:background="@drawable/bg_staff_skeleton_bar" />
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="72dp"
-                        android:layout_height="22dp"
-                        android:background="@drawable/bg_staff_skeleton_bar" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_staff_skeleton_card"
-                    android:gravity="center_vertical"
-                    android:minHeight="82dp"
-                    android:orientation="horizontal"
-                    android:padding="@dimen/space_14">
-
-                    <View
-                        android:layout_width="42dp"
-                        android:layout_height="42dp"
-                        android:background="@drawable/bg_staff_skeleton_date_block" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/space_14"
-                        android:layout_marginEnd="@dimen/space_10"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="14dp"
-                            android:background="@drawable/bg_staff_skeleton_bar" />
-
-                        <View
-                            android:layout_width="120dp"
-                            android:layout_height="10dp"
-                            android:layout_marginTop="@dimen/space_sm"
-                            android:background="@drawable/bg_staff_skeleton_bar" />
-
-                        <View
-                            android:layout_width="100dp"
-                            android:layout_height="10dp"
-                            android:layout_marginTop="@dimen/space_6"
-                            android:background="@drawable/bg_staff_skeleton_bar" />
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="56dp"
-                        android:layout_height="22dp"
-                        android:background="@drawable/bg_staff_skeleton_bar" />
-                </LinearLayout>
-            </LinearLayout>
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:visibility="gone" />
         </FrameLayout>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 
@@ -509,5 +146,4 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical" />
-
 </LinearLayout>

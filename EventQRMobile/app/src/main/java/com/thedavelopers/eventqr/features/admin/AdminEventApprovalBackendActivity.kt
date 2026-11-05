@@ -1,11 +1,9 @@
 package com.thedavelopers.eventqr.features.admin
 
-import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
-import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -19,14 +17,18 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.api.dto.EventRequestStatus
-import com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity
-import com.thedavelopers.eventqr.features.admin.logs.AdminAuditLogsActivity
-import com.thedavelopers.eventqr.features.admin.users.AdminAccountManagementActivity
+import com.thedavelopers.eventqr.ui.components.CountLabel
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+import com.thedavelopers.eventqr.ui.components.PassHeadBinder
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
-import com.thedavelopers.eventqr.ui.theme.color
-import com.thedavelopers.eventqr.ui.theme.dimen
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import kotlinx.coroutines.launch
 
+/**
+ * Admin event requests list (§6.5). Compact pass head, one shared chip row, the shared
+ * EventRequestCard rows. The filter chips carry their state in the fill (§5.6), so no state
+ * drawables and no per-chip elevation are set from code.
+ */
 class AdminEventApprovalBackendActivity : AppCompatActivity() {
 
     private lateinit var repository: AdminRepository
@@ -37,6 +39,7 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
     private lateinit var chipPending: TextView
     private lateinit var chipApproved: TextView
     private lateinit var chipRejected: TextView
+    private lateinit var textCount: TextView
 
     private lateinit var loadingRequests: ProgressBar
     private lateinit var textError: TextView
@@ -54,10 +57,11 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_admin_event_requests)
-        applyEventQrSystemBarAppearance()
+        applyEventQrSystemBarAppearance(lightStatusBars = false)
 
         repository = AdminRepository(this)
         bindViews()
+        bindHeader()
         bindNavigation()
         bindFilters()
 
@@ -88,6 +92,19 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
 
         buttonRetry.setOnClickListener { loadRequests(showLoading = true) }
         swipeRefresh.setOnRefreshListener { loadRequests(showLoading = false) }
+    }
+
+    private fun bindHeader() {
+        val head = findViewById<View>(R.id.passHead)
+        head.findViewById<View>(R.id.passHeadIdentity).applyEventQrTopInsetPadding()
+        PassHeadBinder.bindCompact(
+            root = head,
+            title = getString(R.string.ui_admin_requests_title),
+            eyebrow = getString(R.string.ui_admin_tab),
+        )
+        textCount = head.findViewById<TextView>(R.id.passHeadTitleCount).apply {
+            visibility = View.VISIBLE
+        }
     }
 
     private fun bindNavigation() {
@@ -158,20 +175,15 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
             EventRequestFilter.REJECTED -> allRequests.filter { it.status == EventRequestStatus.REJECTED }
         }
         adapter.submit(filtered)
+        textCount.text = CountLabel.format(filtered.size.toLong(), getString(R.string.ui_admin_requests_count))
         textEmpty.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
     }
 
     private fun updateFilterChips(filter: EventRequestFilter) {
-        setChipState(chipAll, filter == EventRequestFilter.ALL)
-        setChipState(chipPending, filter == EventRequestFilter.PENDING)
-        setChipState(chipApproved, filter == EventRequestFilter.APPROVED)
-        setChipState(chipRejected, filter == EventRequestFilter.REJECTED)
-    }
-
-    private fun setChipState(chip: TextView, selected: Boolean) {
-        chip.setBackgroundResource(if (selected) R.drawable.bg_admin_request_filter_active else R.drawable.bg_admin_request_filter_inactive)
-        chip.setTextColor(color(if (selected) R.color.on_primary else R.color.text_secondary))
-        chip.elevation = dimen(if (selected) R.dimen.elevation_chip_selected else R.dimen.elevation_chip_idle)
+        chipAll.isSelected = filter == EventRequestFilter.ALL
+        chipPending.isSelected = filter == EventRequestFilter.PENDING
+        chipApproved.isSelected = filter == EventRequestFilter.APPROVED
+        chipRejected.isSelected = filter == EventRequestFilter.REJECTED
     }
 
     private fun setLoadingState(loading: Boolean) {
@@ -204,11 +216,11 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
         val normalized = message.lowercase()
         return when {
             normalized.contains("disabled") || normalized.contains("suspend") -> "Account is disabled. Contact support."
-            normalized.contains("401") || normalized.contains("unauthorized") -> "Session expired. Please sign in again."
+            normalized.contains("401") || normalized.contains("unauthorized") -> "Session expired. Sign in again."
             normalized.contains("403") || normalized.contains("forbidden") || normalized.contains("admin access") -> "Admin access required."
             normalized.contains("404") || normalized.contains("not found") -> "Request not found."
-            normalized.contains("400") || normalized.contains("invalid") || normalized.contains("bad request") -> "Request failed. Please verify request state and try again."
-            normalized.contains("500") -> "Server error. Please try again later."
+            normalized.contains("400") || normalized.contains("invalid") || normalized.contains("bad request") -> "Request failed. Check the request state and try again."
+            normalized.contains("500") -> "Server error. Try again later."
             normalized.contains("unable to resolve host") || normalized.contains("failed to connect") || normalized.contains("timeout") -> "No internet connection. Check your network and try again."
             else -> message
         }

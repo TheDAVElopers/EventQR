@@ -9,7 +9,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import com.thedavelopers.eventqr.core.util.EventCardPresenter
 import com.thedavelopers.eventqr.ui.theme.EventQrRowTheme
-import com.thedavelopers.eventqr.ui.theme.LocalSpacing
+import com.thedavelopers.eventqr.ui.theme.LocalGrid
+
+/*
+ * View-host bridge for [EventCard]: same public API, same state object, new look. Used by the
+ * XML list adapters that have not moved to Compose yet.
+ */
 
 data class EventCardState(
     val title: String = "",
@@ -69,7 +74,7 @@ class EventCardHolder(context: Context) {
 
 @Composable
 fun EventCardHost(state: EventCardState) {
-    val spacing = LocalSpacing.current
+    val grid = LocalGrid.current
     EventCard(
         title = state.title,
         status = parseBadgeStatus(state.status),
@@ -80,6 +85,6 @@ fun EventCardHost(state: EventCardState) {
         registeredCount = state.registeredCount,
         capacity = state.capacity?.let { EventCardPresenter.capacity(it) },
         onClick = state.onClick,
-        modifier = Modifier.padding(bottom = spacing.mediumSmall),
+        modifier = Modifier.padding(bottom = grid.s12),
     )
 }

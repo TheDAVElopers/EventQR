@@ -1,27 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    My event requests (§6.2) - retires Gen A.
+
+        Standard top bar with ONE trailing action ("New")
+        EventRequestCard rows (shared component) on the flat page
+        Shared skeleton and empty state
+
+    Deleted: the 36dp pill button inside the header, include_skeleton_cards, the centred error
+    column and the per-card decoration.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
+    android:background="@color/ui_background"
     android:orientation="vertical">
 
     <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="@string/attendee_profile_my_event_requests">
-        <TextView
+        app:title="@string/ui_attendee_my_requests">
+
+        <Button
             android:id="@+id/btnNewRequest"
+            style="@style/Widget.EventQR.Ui.Button.Ghost"
             android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:background="@drawable/bg_btn_primary"
-            android:gravity="center"
-            android:minWidth="78dp"
-            android:paddingHorizontal="@dimen/space_14"
-            android:text="@string/my_event_requests_new"
-            android:textColor="@color/on_primary"
-            android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
+            android:layout_height="@dimen/ui_button_height_inline"
+            android:minWidth="@dimen/ui_touch_min"
+            android:text="@string/ui_attendee_new" />
     </com.thedavelopers.eventqr.ui.components.EventQrDetailHeader>
 
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
@@ -32,7 +39,9 @@
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:paddingStart="@dimen/ui_gutter"
+            android:paddingEnd="@dimen/ui_gutter">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerMyEventRequests"
@@ -40,49 +49,47 @@
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
                 android:nestedScrollingEnabled="true"
-                android:paddingHorizontal="@dimen/space_lg"
                 android:paddingTop="@dimen/space_lg"
-                android:paddingBottom="@dimen/space_xl" />
+                android:paddingBottom="@dimen/space_24" />
 
-            <include layout="@layout/include_skeleton_cards" />
+            <include
+                android:id="@+id/skeletonLoading"
+                layout="@layout/include_skeleton_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_lg" />
+
+            <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+                android:id="@+id/txtMyRequestsEmpty"
+                android:layout_width="@dimen/ui_empty_max_width"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:gutter="false" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:paddingHorizontal="@dimen/space_lg">
-
-                
+                android:layout_gravity="bottom"
+                android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/txtMyRequestsError"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center"
                     android:text="@string/my_event_requests_unable_to_load_event_requests"
-                    android:textColor="@color/danger"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                    android:textColor="@color/ui_error"
                     android:visibility="gone" />
 
-                <Button
+                <TextView
                     android:id="@+id/btnMyRequestsRetry"
-                    style="@style/Widget.EventQR.Button.Primary.Retry"
-                    android:layout_width="@dimen/button_width_retry"
-                    android:layout_height="@dimen/control_height_44"
-                    android:layout_marginTop="@dimen/space_md"
-                    android:text="@string/common_retry"
+                    style="@style/Widget.EventQR.Ui.Button.Ghost"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/ui_button_height_inline"
+                    android:text="@string/ui_attendee_retry"
                     android:visibility="gone" />
             </LinearLayout>
-            <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
-            android:id="@+id/txtMyRequestsEmpty"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone"
-            app:icon="@drawable/ic_event_request"
-            app:title="@string/common_no_event_requests_yet"
-            app:subtitle="@string/my_event_requests_requests_you_submit_will_show_up_her" />
         </FrameLayout>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
+
 </LinearLayout>

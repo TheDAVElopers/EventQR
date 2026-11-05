@@ -8,6 +8,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
+import com.thedavelopers.eventqr.features.attendee.AttendeeBadges
 import java.util.UUID
 import com.thedavelopers.eventqr.ui.theme.color
 
@@ -117,14 +118,16 @@ class RegistrationAdapter(
             titleView.text = name
             detailView.text = item.attendeeEmail.ifBlank { "No email provided" }
             pointsView.text = "${item.pointsEarned} pts"
-            RegistrationStatusBadgeStyler.bind(statusView, item.status)
+            AttendeeBadges.bind(statusView, item.status)
 
             checkView.visibility = if (selectionMode) View.VISIBLE else View.GONE
             checkView.isChecked = isSelected(item)
             checkView.isEnabled = item.qrCredentialId != null
 
             (itemView as? androidx.cardview.widget.CardView)?.setCardBackgroundColor(
-                itemView.context.color(if (selectionMode && isSelected(item)) R.color.accent_container_strong else R.color.surface)
+                itemView.context.color(
+                    if (selectionMode && isSelected(item)) R.color.ui_primary_wash else R.color.ui_surface,
+                ),
             )
 
             itemView.setOnClickListener {
@@ -137,7 +140,9 @@ class RegistrationAdapter(
             checkView.setOnClickListener {
                 select(item, checkView.isChecked)
                 (itemView as? androidx.cardview.widget.CardView)?.setCardBackgroundColor(
-                    itemView.context.color(if (isSelected(item)) R.color.accent_container_strong else R.color.surface)
+                    itemView.context.color(
+                        if (isSelected(item)) R.color.ui_primary_wash else R.color.ui_surface,
+                    ),
                 )
                 onSelectionChanged?.invoke(selectedIds.size)
             }

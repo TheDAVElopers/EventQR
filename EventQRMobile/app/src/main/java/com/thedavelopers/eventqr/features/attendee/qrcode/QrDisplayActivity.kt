@@ -21,6 +21,7 @@ import com.thedavelopers.eventqr.core.util.BitmapSaver
 import com.thedavelopers.eventqr.features.qrcredential.model.dto.QrCredentialSnapshot
 import com.thedavelopers.eventqr.features.registrations.RegistrationNumberFormatter
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
+import com.thedavelopers.eventqr.ui.theme.applyEventQrBottomInsetPadding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -33,6 +34,10 @@ import kotlinx.coroutines.withContext
  * but presents the credential with a top-left back button and a "QR Display"
  * header matching the Edit Profile screen's toolbar sizing.
  */
+private val PASS_DATE_FORMATTER: java.time.format.DateTimeFormatter =
+    java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", java.util.Locale.ENGLISH)
+        .withZone(java.time.ZoneId.of("Asia/Manila"))
+
 class QrDisplayActivity : AppCompatActivity(), QrCredentialContract.View {
     private lateinit var presenter: QrCredentialPresenter
     private lateinit var qrImage: ImageView
@@ -44,6 +49,8 @@ class QrDisplayActivity : AppCompatActivity(), QrCredentialContract.View {
     private lateinit var attendeeEmailText: TextView
     private lateinit var credentialIdText: TextView
     private lateinit var eventNameText: TextView
+    private lateinit var eventMetaText: TextView
+    private lateinit var serialText: TextView
     private var currentQrCredentialId: String? = null
     private var currentQrBitmap: Bitmap? = null
     private var currentEventTitle: String? = null
@@ -54,7 +61,7 @@ class QrDisplayActivity : AppCompatActivity(), QrCredentialContract.View {
         setContentView(R.layout.activity_qr_display)
 
         presenter = QrCredentialPresenter(this, AttendeeRepository(this), UiStrings(this))
-        qrImage = findViewById(R.id.imgQrCode)
+        qrImage = findViewById(R.id.qrImage)
         qrText = findViewById(R.id.txtQrValue)
         loadingText = findViewById(R.id.txtQrLoading)
         markDownloadedButton = findViewById(R.id.btnMarkQrDownloaded)
@@ -66,9 +73,14 @@ class QrDisplayActivity : AppCompatActivity(), QrCredentialContract.View {
         attendeeNameText = findViewById(R.id.txtQrAttendeeName)
         attendeeEmailText = findViewById(R.id.txtQrAttendeeEmail)
         credentialIdText = findViewById(R.id.txtQrCredentialValue)
-        eventNameText = findViewById(R.id.txtQrEventName)
+        eventNameText = findViewById(R.id.qrEventName)
+        eventMetaText = findViewById(R.id.qrMeta)
+        serialText = findViewById(R.id.qrSerial)
+        findViewById<TextView>(R.id.qrRole).text = getString(R.string.ui_attendee_attendee)
 
         findViewById<View>(R.id.nav_header_back).setOnClickListener { finish() }
+        findViewById<View>(R.id.layoutQrPassContent).applyEventQrBottomInsetPadding()
+        KeepScreenBright.bind(this, findViewById(R.id.switchKeepBright))
 
         findViewById<Button>(R.id.btnLoadQr).setOnClickListener {
             presenter.load(
@@ -143,10 +155,26 @@ class QrDisplayActivity : AppCompatActivity(), QrCredentialContract.View {
         currentQrBitmap = bitmap
         qrImage.setImageBitmap(bitmap)
 
-        credentialIdText.text = RegistrationNumberFormatter.format(registration?.registrationNumber) ?: "-"
-        attendeeNameText.text = registration?.attendeeName ?: "Attendee"
-        attendeeEmailText.text = registration?.attendeeEmail ?: "-"
-        eventNameText.text = eventTitle ?: "Event"
+        val serial = RegistrationNumberFormatter.format(registration?.registrationNumber) ?: "-"
+        credentialIdText.text = serial
+        serialText.text = serial
+        attendeeNameText.text = registration?.attendeeName?.takeIf { it.isNotBlank() }
+            ?: getString(R.string.ui_attendee_role)
+        attendeeEmailText.text = registration?.attendeeEmail?.takeIf { it.isNotBlank() } ?: "-"
+        eventNameText.text = eventTitle?.takeIf { it.isNotBlank() } ?: getString(R.string.common_event)
+
+        val meta = listOfNotNull(
+            registration?.eventStartAt?.let { PASS_DATE_FORMATTER.format(it) },
+            registration?.eventLocation?.takeIf { it.isNotBlank() },
+        ).joinToString(" - ")
+        eventMetaText.text = meta
+        eventMetaText.visibility = if (meta.isBlank()) View.GONE else View.VISIBLE
+
+        findViewById<View>(R.id.qrCredential).contentDescription = getString(
+            R.string.ui_attendee_pass_description,
+            eventNameText.text,
+            serial,
+        )
     }
 
     private fun renderQrBitmap(value: String): Bitmap {

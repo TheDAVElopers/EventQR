@@ -197,19 +197,6 @@
         <item name="android:fontFamily">sans-serif-bold</item>
     </style>
 
-    <!-- Landing screen. Sizes come from landing_* dimens so the values-sw600dp overrides (tablet 17/17/18/14sp) keep working. -->
-    <style name="TextAppearance.EventQR.LandingTagline">
-        <item name="android:textSize">@dimen/landing_tagline_size</item>
-    </style>
-    <style name="TextAppearance.EventQR.LandingCardTitle">
-        <item name="android:textSize">@dimen/landing_card_title_size</item>
-        <item name="android:textStyle">bold</item>
-    </style>
-    <style name="TextAppearance.EventQR.LandingCardDesc">
-        <item name="android:textSize">@dimen/landing_card_desc_size</item>
-        <item name="android:textColor">@color/text_secondary</item>
-    </style>
-
     <!-- ═════════════ Button text ═════════════
          Step 0 result (verified with a Robolectric inflate of activity_landing under Theme.EventQR): an un-styled
          <Button> inflates as androidx.appcompat.widget.AppCompatButton, NOT MaterialButton, and its text appearance is
@@ -267,12 +254,6 @@
     <style name="TextAppearance.EventQR.ButtonTitle.Strong">
         <item name="android:textStyle">bold</item>
     </style>
-    <style name="TextAppearance.EventQR.ButtonLanding" parent="TextAppearance.EventQR.ButtonBase">
-        <item name="android:textSize">@dimen/landing_btn_text_size</item>
-    </style>
-    <style name="TextAppearance.EventQR.ButtonLanding.Strong">
-        <item name="android:textStyle">bold</item>
-    </style>
     <style name="TextAppearance.EventQR.ButtonPlatformCaption" parent="TextAppearance.EventQR.ButtonPlatformBase">
         <item name="android:textSize">@dimen/type_caption</item>
     </style>
@@ -313,12 +294,6 @@
     <style name="TextAppearance.EventQR.ButtonPlatformTitle.Strong">
         <item name="android:textStyle">bold</item>
     </style>
-    <style name="TextAppearance.EventQR.ButtonPlatformLanding" parent="TextAppearance.EventQR.ButtonPlatformBase">
-        <item name="android:textSize">@dimen/landing_btn_text_size</item>
-    </style>
-    <style name="TextAppearance.EventQR.ButtonPlatformLanding.Strong">
-        <item name="android:textStyle">bold</item>
-    </style>
 
     <!-- Text typed into stock Material inputs: keeps the Material default appearance (Subtitle1: tracking 0.009375) that an
          EditText / TextInputEditText got before it carried a loose textSize, at the body-medium size. -->
@@ -357,4 +332,151 @@
         <item name="android:fontFamily">sans-serif-bold</item>
         <item name="android:textStyle">normal</item>
     </style>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <!--  V2 TYPE RAMP  -  the redesign scale (§3.5 of MyFiles/EventQR-Redesign-Plan.md).-->
+    <!--                                                                              -->
+    <!--  14 roles replacing 20+ sizes. Two bundled families: Archivo (display, never  -->
+    <!--  below 20sp) and IBM Plex Sans (text). includeFontPadding is off everywhere   -->
+    <!--  and every leading is declared, so rows have a rhythm instead of a drift;     -->
+    <!--  the Numeric* roles bake in tnum so a numeral can never be proportional.      -->
+    <!--                                                                              -->
+    <!--  Namespaced as Type.* while the legacy scale above is still in use; Phase 6   -->
+    <!--  renames them onto the canonical names once every screen has migrated.        -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+    <style name="TextAppearance.EventQR.Type" parent="">
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:textColor">@color/ui_text_primary</item>
+    </style>
+
+    <!-- Display / headlines - Archivo. -->
+    <style name="TextAppearance.EventQR.Type.DisplayXl">
+        <item name="android:fontFamily">@font/archivo_extrabold</item>
+        <item name="android:textSize">@dimen/ui_type_display_xl</item>
+        <item name="android:letterSpacing">-0.03</item>
+        <item name="android:lineSpacingExtra">@dimen/ui_leading_none</item>
+    </style>
+    <style name="TextAppearance.EventQR.Type.DisplayM">
+        <item name="android:fontFamily">@font/archivo_bold</item>
+        <item name="android:textSize">@dimen/ui_type_display_m</item>
+        <item name="android:letterSpacing">-0.02</item>
+        <item name="android:lineSpacingExtra">@dimen/ui_leading_1</item>
+    </style>
+    <style name="TextAppearance.EventQR.Type.Headline">
+        <item name="android:fontFamily">@font/archivo_bold</item>
+        <item name="android:textSize">@dimen/ui_type_headline</item>
+        <item name="android:letterSpacing">-0.015</item>
+        <item name="android:lineSpacingExtra">@dimen/ui_leading_3_5</item>
+    </style>
+    <style name="TextAppearance.EventQR.Type.TitleLarge">
+        <item name="android:fontFamily">@font/archivo_bold</item>
+        <item name="android:textSize">@dimen/ui_type_title_l</item>
+        <item name="android:letterSpacing">-0.01</item>
+        <item name="android:lineSpacingExtra">@dimen/ui_leading_2</item>
+    </style>
+
+    <!-- Text - IBM Plex Sans. -->
+    <style name="TextAppearance.EventQR.Type.Title">
+        <item name="android:fontFamily">@font/ibm_plex_sans_semibold</item>
+        <item name="android:textSize">@dimen/ui_type_title</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:lineSpacingExtra">@dimen/ui_leading_half</item>
+    </style>
+    <style name="TextAppearance.EventQR.Type.BodyLarge">
+        <item name="android:fontFamily">@font/ibm_plex_sans_regular</item>
+        <item name="android:textSize">@dimen/ui_type_body_l</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:lineSpacingExtra">@dimen/ui_leading_3</item>
+    </style>
+    <style name="TextAppearance.EventQR.Type.Body">
+        <item name="android:fontFamily">@font/ibm_plex_sans_regular</item>
+        <item name="android:textSize">@dimen/ui_type_body</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:lineSpacingExtra">@dimen/ui_leading_2_5</item>
+    </style>
+    <style name="TextAppearance.EventQR.Type.BodySmall">
+        <item name="android:fontFamily">@font/ibm_plex_sans_regular</item>
+        <item name="android:textSize">@dimen/ui_type_body_s</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:lineSpacingExtra">@dimen/ui_leading_2</item>
+        <item name="android:textColor">@color/ui_text_secondary</item>
+    </style>
+    <style name="TextAppearance.EventQR.Type.Label">
+        <item name="android:fontFamily">@font/ibm_plex_sans_medium</item>
+        <item name="android:textSize">@dimen/ui_type_label</item>
+        <item name="android:letterSpacing">0.01</item>
+        <item name="android:lineSpacingExtra">@dimen/ui_leading_1</item>
+    </style>
+    <!-- ALL CAPS only here: eyebrows, field labels, table heads, role tabs. -->
+    <style name="TextAppearance.EventQR.Type.Overline">
+        <item name="android:fontFamily">@font/ibm_plex_sans_semibold</item>
+        <item name="android:textSize">@dimen/ui_type_overline</item>
+        <item name="android:letterSpacing">0.16</item>
+        <item name="android:lineSpacingExtra">@dimen/ui_leading_none</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+    <style name="TextAppearance.EventQR.Type.Micro">
+        <item name="android:fontFamily">@font/ibm_plex_sans_medium</item>
+        <item name="android:textSize">@dimen/ui_type_micro</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:lineSpacingExtra">@dimen/ui_leading_none</item>
+    </style>
+
+    <!-- Numbers. tnum is baked in: no site can forget it. -->
+    <style name="TextAppearance.EventQR.Type.NumericL">
+        <item name="android:fontFamily">@font/archivo_bold</item>
+        <item name="android:textSize">@dimen/ui_type_numeric_l</item>
+        <item name="android:letterSpacing">-0.02</item>
+        <item name="android:lineSpacingExtra">@dimen/ui_leading_1</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+    </style>
+    <style name="TextAppearance.EventQR.Type.NumericM">
+        <item name="android:fontFamily">@font/ibm_plex_sans_semibold</item>
+        <item name="android:textSize">@dimen/ui_type_numeric_m</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:lineSpacingExtra">@dimen/ui_leading_none</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+    </style>
+    <style name="TextAppearance.EventQR.Type.NumericS">
+        <item name="android:fontFamily">@font/ibm_plex_sans_semibold</item>
+        <item name="android:textSize">@dimen/ui_type_numeric_s</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:lineSpacingExtra">@dimen/ui_leading_half</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+    </style>
+
+    <!-- Options and roles built from the ramp so no site re-invents them. -->
+    <style name="TextAppearance.EventQR.Type.FieldLabel" parent="TextAppearance.EventQR.Type.Overline">
+        <item name="android:textColor">@color/ui_text_secondary</item>
+    </style>
+    <style name="TextAppearance.EventQR.Type.Eyebrow" parent="TextAppearance.EventQR.Type.Overline">
+        <item name="android:textColor">@color/ui_text_secondary</item>
+    </style>
+    <style name="TextAppearance.EventQR.Type.Link" parent="TextAppearance.EventQR.Type.Label">
+        <item name="android:textColor">@color/ui_primary</item>
+    </style>
+    <style name="TextAppearance.EventQR.Type.Help" parent="TextAppearance.EventQR.Type.Micro">
+        <item name="android:textColor">@color/ui_text_secondary</item>
+    </style>
+    <style name="TextAppearance.EventQR.Type.ButtonLabel" parent="TextAppearance.EventQR.Type.Title">
+        <item name="android:textSize">@dimen/ui_type_body</item>
+        <item name="android:letterSpacing">0.01</item>
+        <item name="android:lineSpacingExtra">@dimen/ui_leading_2_5</item>
+        <item name="android:textColor">@color/ui_on_primary</item>
+    </style>
+    <style name="TextAppearance.EventQR.Type.ButtonLabelInline" parent="TextAppearance.EventQR.Type.Label">
+        <item name="android:textColor">@color/ui_primary</item>
+    </style>
+    <!-- The logotype is the TIGHTEST type in the app, not the loosest: 0.08em against the 0.16em
+         overline that sits beside it in the landing bar (04-logo-direction.md §3, D6). The compact
+         step (0.06em, 19sp) is applied at runtime by core/util/Wordmark.kt. -->
+    <style name="TextAppearance.EventQR.Type.Wordmark">
+        <item name="android:fontFamily">@font/archivo_extrabold</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:lineSpacingExtra">@dimen/ui_leading_none</item>
+        <item name="android:textColor">@color/ui_text_primary</item>
+    </style>
+
 </resources>

@@ -1,8 +1,8 @@
 package com.thedavelopers.eventqr.features.attendee
 
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.google.android.material.chip.Chip
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.dto.RegistrationStatus
 import com.thedavelopers.eventqr.features.ShadowEncryptedSharedPreferences
@@ -45,12 +45,14 @@ class RegisteredEventsActivityTest {
     private fun shown(activity: RegisteredEventsActivity): Int =
         activity.findViewById<RecyclerView>(R.id.recyclerRegisteredEvents).adapter!!.itemCount
 
+    private fun chip(activity: RegisteredEventsActivity, id: Int): TextView = activity.findViewById(id)
+
     @Test
     fun chipsAreAllUpcomingActiveCompletedInThatOrder() {
         val activity = screen()
-        val group = activity.findViewById<com.google.android.material.chip.ChipGroup>(R.id.chipGroupRegisteredFilters)
 
-        val labels = (0 until group.childCount).map { (group.getChildAt(it) as Chip).text.toString() }
+        val labels = listOf(R.id.chipAll, R.id.chipUpcoming, R.id.chipActive, R.id.chipCompleted)
+            .map { chip(activity, it).text.toString() }
 
         assertEquals(listOf("All", "Upcoming", "Active", "Completed"), labels)
     }
@@ -61,17 +63,27 @@ class RegisteredEventsActivityTest {
 
         assertEquals(3, shown(activity)) // All
 
-        activity.findViewById<Chip>(R.id.chipUpcoming).performClick()
+        chip(activity, R.id.chipUpcoming).performClick()
         assertEquals(1, shown(activity))
 
-        activity.findViewById<Chip>(R.id.chipActive).performClick()
+        chip(activity, R.id.chipActive).performClick()
         assertEquals(1, shown(activity))
 
-        activity.findViewById<Chip>(R.id.chipCompleted).performClick()
+        chip(activity, R.id.chipCompleted).performClick()
         assertEquals(1, shown(activity))
 
-        activity.findViewById<Chip>(R.id.chipAll).performClick()
+        chip(activity, R.id.chipAll).performClick()
         assertEquals(3, shown(activity))
+    }
+
+    @Test
+    fun selectedChipCarriesTheFillStateNotAnIcon() {
+        val activity = screen()
+
+        chip(activity, R.id.chipActive).performClick()
+
+        assertEquals(true, chip(activity, R.id.chipActive).isSelected)
+        assertEquals(false, chip(activity, R.id.chipAll).isSelected)
     }
 
     @Test
@@ -81,19 +93,19 @@ class RegisteredEventsActivityTest {
         activity.showRegisteredEvents(listOf(registration("Already Over", -48, -45)))
         val empty = activity.findViewById<com.thedavelopers.eventqr.ui.components.EventQrEmptyState>(R.id.txtRegisteredEventsEmpty)
 
-        activity.findViewById<Chip>(R.id.chipUpcoming).performClick()
+        chip(activity, R.id.chipUpcoming).performClick()
         assertEquals("No upcoming registered events", empty.text.toString())
         assertEquals(android.view.View.VISIBLE, empty.visibility)
 
-        activity.findViewById<Chip>(R.id.chipActive).performClick()
+        chip(activity, R.id.chipActive).performClick()
         assertEquals("No active registered events", empty.text.toString())
 
-        activity.findViewById<Chip>(R.id.chipCompleted).performClick()
+        chip(activity, R.id.chipCompleted).performClick()
         assertEquals(android.view.View.GONE, empty.visibility)
 
         // With nothing registered at all, All keeps the original message.
         activity.showRegisteredEvents(emptyList())
-        activity.findViewById<Chip>(R.id.chipAll).performClick()
+        chip(activity, R.id.chipAll).performClick()
         assertEquals("No registered events yet", empty.text.toString())
         assertEquals(android.view.View.VISIBLE, empty.visibility)
     }

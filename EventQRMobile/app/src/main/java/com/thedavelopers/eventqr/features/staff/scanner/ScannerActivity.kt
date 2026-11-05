@@ -1,26 +1,26 @@
 package com.thedavelopers.eventqr.features.staff.scanner
 
-import com.thedavelopers.eventqr.core.util.UiStrings
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
-import android.provider.Settings
+import android.content.res.ColorStateList
 import android.graphics.drawable.ColorDrawable
+import android.graphics.Matrix
+import android.graphics.SurfaceTexture
 import android.hardware.Camera
+import android.net.Uri
 import android.os.Bundle
 import android.os.SystemClock
+import android.provider.Settings
 import android.util.Log
 import android.view.Gravity
-import android.view.SurfaceHolder
-import android.view.SurfaceView
+import android.view.TextureView
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.Button
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupWindow
@@ -31,6 +31,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.widget.ImageViewCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.zxing.BarcodeFormat
@@ -45,56 +47,63 @@ import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.core.util.UiStrings
 import com.thedavelopers.eventqr.features.idprinting.PrintPermission
-import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResponse
+import com.thedavelopers.eventqr.features.rewards.AppRewardExtras
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionScanResponse
+import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResponse
 import com.thedavelopers.eventqr.features.staff.EventSpinnerOption
 import com.thedavelopers.eventqr.features.staff.StaffAssignedEventsActivity
 import com.thedavelopers.eventqr.features.staff.StaffBottomNavItem
-import com.thedavelopers.eventqr.features.staff.StaffDashboardActivity
 import com.thedavelopers.eventqr.features.staff.StaffRepository
 import com.thedavelopers.eventqr.features.staff.StaffScreenExtras
 import com.thedavelopers.eventqr.features.staff.StaffTransactionsActivity
 import com.thedavelopers.eventqr.features.staff.configureStaffBottomNav
 import com.thedavelopers.eventqr.features.staff.model.dto.ScanVerificationResponse
-import com.thedavelopers.eventqr.features.staff.reward.RewardRedemptionScanResultActivity
-import com.thedavelopers.eventqr.features.rewards.AppRewardExtras
 import com.thedavelopers.eventqr.features.staff.result.StaffScanResultActivity
+import com.thedavelopers.eventqr.features.staff.reward.RewardRedemptionScanResultActivity
 import com.thedavelopers.eventqr.features.transactions.TransactionAdapter
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
+import com.thedavelopers.eventqr.ui.components.PassHeadBinder
+import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
+import com.thedavelopers.eventqr.ui.theme.color
+import com.thedavelopers.eventqr.ui.theme.dimenOffset
 import org.json.JSONObject
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
-import com.thedavelopers.eventqr.ui.theme.color
-import com.thedavelopers.eventqr.ui.theme.dimenOffset
-import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
-import com.thedavelopers.eventqr.ui.theme.strong
 
+/**
+ * Staff scanner (§5.13). The camera is the only large dark surface in the app and it is flat:
+ * include_scan_viewport owns the panel, the four 24dp brackets, the torch and the one guidance
+ * line. This class owns everything that can break - permission flow, camera lifecycle, ZXing
+ * decode, event/purpose selection, duplicate suppression and result routing - and keeps the
+ * screen free of toasts for flow-critical outcomes (failures land in the inline strip).
+ */
 @Suppress("DEPRECATION")
-open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceHolder.Callback, Camera.PreviewCallback {
+open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureView.SurfaceTextureListener, Camera.PreviewCallback {
     private lateinit var presenter: ScannerPresenter
     private lateinit var eventSpinner: Spinner
     private lateinit var purposeSpinner: Spinner
     private lateinit var qrInput: EditText
     private lateinit var notesInput: EditText
-    private lateinit var resultText: TextView
+    private lateinit var resultStrip: TextView
     private lateinit var adapter: TransactionAdapter
-    private lateinit var selectedEventTitle: TextView
-    private lateinit var selectedEventDate: TextView
-    private lateinit var selectedEventCard: LinearLayout
-    private lateinit var eventChevron: TextView
-    private lateinit var selectedPurposeCard: LinearLayout
-    private lateinit var selectedPurposeName: TextView
-    private lateinit var selectedPurposePoints: TextView
-    private lateinit var purposeChevron: ImageView
+    private lateinit var contextBar: View
+    private lateinit var contextEvent: TextView
+    private lateinit var contextPurpose: TextView
+    private lateinit var purposeNote: TextView
     private lateinit var purposeDropdown: LinearLayout
-    private lateinit var inlineCameraSurface: SurfaceView
-    private lateinit var inlineCameraStatus: TextView
+    private lateinit var emptyEvents: View
+    private lateinit var inlineCameraPreview: TextureView
+    private lateinit var cameraStatus: TextView
     private lateinit var scannerIcon: ImageView
     private lateinit var cameraContainer: FrameLayout
+    private lateinit var scanPanel: View
+    private lateinit var torchButton: ImageView
     private var staffUserId: String? = null
 
     private val eventOptions = mutableListOf<EventSpinnerOption>()
@@ -108,6 +117,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     private var purposePopup: PopupWindow? = null
     private var eventPopup: PopupWindow? = null
     private var camera: Camera? = null
+    private var torchOn = false
     private val decoding = AtomicBoolean(false)
     private val decoderExecutor = Executors.newSingleThreadExecutor()
     private val qrReader = MultiFormatReader()
@@ -122,8 +132,8 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     private val dateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ENGLISH)
     private val manilaZone: ZoneId = ZoneId.of("Asia/Manila")
 
-    // The system permission dialog is requested automatically at most once per screen open; after that only a tap on
-    // the camera placeholder asks again, so onResume never loops the prompt after a denial.
+    // The system permission dialog is requested automatically at most once per screen open; after
+    // that only a tap on the camera panel asks again, so onResume never loops the prompt.
     private var cameraPermissionAutoRequested = false
     private var cameraPermissionDenied = false
     private var cameraPermissionDialog: AlertDialog? = null
@@ -135,7 +145,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
             startInlineCameraIfReady()
         } else {
             cameraPermissionDenied = true
-            inlineCameraStatus.text = getString(R.string.scanner_camera_permission_tap_to_enable)
+            cameraStatus.text = getString(R.string.scanner_camera_permission_tap_to_enable)
             if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
                 Toast.makeText(this, this.getString(R.string.scanner_camera_permission_is_required_for_qr), Toast.LENGTH_LONG).show()
             } else {
@@ -161,37 +171,47 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         }
 
         setContentView(R.layout.activity_staff_scanner)
+        applyEventQrSystemBarAppearance(lightStatusBars = false)
+        findViewById<View>(R.id.passHeadIdentity).applyEventQrTopInsetPadding()
+        PassHeadBinder.bindCompact(
+            findViewById(R.id.passHead),
+            title = getString(R.string.ui_staff_scan),
+            eyebrow = getString(R.string.ui_staff_role),
+        )
 
         presenter = ScannerPresenter(this, StaffRepository(this), UiStrings(this))
         eventSpinner = findViewById(R.id.spnScannerEvent)
         purposeSpinner = findViewById(R.id.spnScannerPurpose)
         qrInput = findViewById(R.id.edtScannerQr)
         notesInput = findViewById(R.id.edtScannerNotes)
-        resultText = findViewById(R.id.txtScannerResult)
-        selectedEventCard = findViewById(R.id.cardScannerEvent)
-        selectedEventTitle = findViewById(R.id.txtScannerEventTitle)
-        selectedEventDate = findViewById(R.id.txtScannerEventDate)
-        eventChevron = findViewById(R.id.txtEventChevron)
-        selectedPurposeCard = findViewById(R.id.cardSelectedPurpose)
-        selectedPurposeName = findViewById(R.id.txtSelectedPurposeName)
-        selectedPurposePoints = findViewById(R.id.txtSelectedPurposePoints)
-        purposeChevron = findViewById(R.id.txtPurposeChevron)
+        resultStrip = findViewById(R.id.txtScannerResult)
+        contextBar = findViewById(R.id.scanContext)
+        contextEvent = findViewById(R.id.scanContextEvent)
+        contextPurpose = findViewById(R.id.scanContextPurpose)
+        purposeNote = findViewById(R.id.txtSelectedPurposePoints)
         purposeDropdown = findViewById(R.id.layoutPurposeDropdown)
-        inlineCameraSurface = findViewById(R.id.surfaceInlineCameraPreview)
-        inlineCameraStatus = findViewById(R.id.txtInlineCameraStatus)
-        scannerIcon = findViewById(R.id.imgScannerIcon)
-        cameraContainer = findViewById(R.id.frameCameraContainer)
+        emptyEvents = findViewById(R.id.txtScannerEmptyState)
+        cameraStatus = findViewById(R.id.scanGuidance)
+        scanPanel = findViewById(R.id.scanPanel)
+        torchButton = findViewById(R.id.scanTorch)
         adapter = TransactionAdapter()
-        staffUserId = SessionManager(this).getUserId()
+        staffUserId = sessionManager.getUserId()
 
-        normalizeChevron(eventChevron, false)
-        normalizeChevron(purposeChevron, false)
+        // The shared viewport's preview slot gets the camera surface, behind the frame + brackets.
+        val previewSlot = findViewById<FrameLayout>(R.id.scanPreview)
+        val preview = layoutInflater.inflate(R.layout.ui_staff_scan_preview, previewSlot, false)
+        previewSlot.addView(preview, 0)
+        inlineCameraPreview = preview.findViewById(R.id.textureInlineCameraPreview)
+        scannerIcon = preview.findViewById(R.id.imgScannerIcon)
+        cameraContainer = preview.findViewById(R.id.frameCameraContainer)
+
         purposeDropdown.visibility = View.GONE
-        inlineCameraSurface.holder.addCallback(this)
-        inlineCameraSurface.setZOrderMediaOverlay(false)
+        resultStrip.visibility = View.GONE
+        inlineCameraPreview.surfaceTextureListener = this
 
-        selectedEventCard.setOnClickListener { setEventDropdownOpen(!isEventDropdownOpen) }
-        selectedPurposeCard.setOnClickListener { setPurposeDropdownOpen(!isPurposeDropdownOpen) }
+        contextEvent.setOnClickListener { setEventDropdownOpen(!isEventDropdownOpen) }
+        contextPurpose.setOnClickListener { setPurposeDropdownOpen(!isPurposeDropdownOpen) }
+        torchButton.setOnClickListener { toggleTorch() }
 
         configureStaffBottomNav(StaffBottomNavItem.SCANNER, selectedEvent()?.id)
 
@@ -200,8 +220,8 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
             adapter = this@ScannerActivity.adapter
         }
 
-        findViewById<View>(R.id.layoutScannerPlaceholder)?.setOnClickListener { requestInlineCameraStart(userInitiated = true) }
-        findViewById<Button>(R.id.btnSubmitScan).setOnClickListener { submitCurrentSelection(trigger = "manual") }
+        scanPanel.setOnClickListener { requestInlineCameraStart(userInitiated = true) }
+        findViewById<View>(R.id.btnSubmitScan).setOnClickListener { submitCurrentSelection(trigger = "manual") }
         presenter.loadEvents()
     }
 
@@ -214,9 +234,23 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     }
     override fun onDestroy() { cameraPermissionDialog?.dismiss(); presenter.detach(); eventPopup?.dismiss(); purposePopup?.dismiss(); releaseInlineCamera(); decoderExecutor.shutdownNow(); super.onDestroy() }
 
-    override fun surfaceCreated(holder: SurfaceHolder) { startInlineCameraIfReady() }
-    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) { releaseInlineCamera(); startInlineCameraIfReady() }
-    override fun surfaceDestroyed(holder: SurfaceHolder) { releaseInlineCamera() }
+    override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
+        startInlineCameraIfReady()
+    }
+
+    /** A re-measure (rotation, insets) only needs the crop re-fitted; restarting here would restart the camera. */
+    override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {
+        runCatching { camera?.parameters?.previewSize }.getOrNull()?.let {
+            applyCenterCrop(inlineCameraPreview, it.height, it.width)
+        }
+    }
+
+    override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
+        releaseInlineCamera()
+        return true
+    }
+
+    override fun onSurfaceTextureUpdated(surface: SurfaceTexture) = Unit
 
     override fun onPreviewFrame(data: ByteArray?, camera: Camera?) {
         if (data == null || camera == null || submitInFlight || !decoding.compareAndSet(false, true)) return
@@ -229,6 +263,8 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
             }
         }
     }
+
+    // ── Contract ─────────────────────────────────────────────────────────────
 
     override fun showEvents(items: List<EventSpinnerOption>) {
         eventOptions.clear()
@@ -249,7 +285,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         bindSelectedEventHeader()
         renderEventDropdown()
         loadSelectedPurposes()
-        findViewById<TextView>(R.id.txtScannerEmptyState).visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
+        emptyEvents.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
     }
 
     override fun showPurposes(items: List<ScanPurposeResponse>) {
@@ -261,16 +297,15 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         if (activePurposes.isEmpty()) {
             purposeSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listOf(getString(R.string.scanner_no_scan_purposes_enabled_for_this_ev)))
             purposeSpinner.isEnabled = false
-            selectedPurposeName.text = getString(R.string.scanner_no_scan_purposes_enabled)
-            selectedPurposePoints.text = getString(
+            contextPurpose.text = getString(R.string.scanner_no_scan_purposes_enabled)
+            purposeNote.text = getString(
                 if (items.any { it.active && it.code == ScanPurposeCode.ID_PRINT }) {
                     R.string.staff_print_id_permission_required
                 } else {
                     R.string.scanner_configure_scan_purposes_first
-                }
+                },
             )
-            selectedPurposePoints.visibility = View.VISIBLE
-            selectedPurposePoints.setTextColor(color(R.color.text_secondary))
+            purposeNote.visibility = View.VISIBLE
         } else {
             purposeSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, activePurposes.map { it.name })
             purposeSpinner.isEnabled = true
@@ -281,11 +316,37 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     }
 
     override fun appendScanResult(result: TransactionResponse) { adapter.submitItems(listOf(result)) }
-    override fun showVerificationResult(result: ScanVerificationResponse) { submitInFlight = false; resultText.text = result.message; openVerificationResult(result) }
-    override fun showRewardRedemptionScanResult(result: RewardRedemptionScanResponse) { submitInFlight = false; openRewardRedemptionScanResult(result) }
-    override fun showScanError(message: String) { submitInFlight = false; resultText.text = message; showMessage(message); openRejectedResult(message) }
-    override fun showMessage(message: String) { Toast.makeText(this, message, Toast.LENGTH_SHORT).show() }
-    override fun showLoading(isLoading: Boolean) { findViewById<Button>(R.id.btnSubmitScan).isEnabled = !isLoading }
+
+    override fun showVerificationResult(result: ScanVerificationResponse) {
+        submitInFlight = false
+        resultStrip.visibility = View.GONE
+        openVerificationResult(result)
+    }
+
+    override fun showRewardRedemptionScanResult(result: RewardRedemptionScanResponse) {
+        submitInFlight = false
+        resultStrip.visibility = View.GONE
+        openRewardRedemptionScanResult(result)
+    }
+
+    override fun showScanError(message: String) {
+        submitInFlight = false
+        resetBracketTint()
+        // Flow-critical failure: an inline strip, never a toast (§5.13, §10.15).
+        resultStrip.text = message
+        resultStrip.visibility = View.VISIBLE
+        openRejectedResult(message)
+    }
+
+    override fun showMessage(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
+    override fun showLoading(isLoading: Boolean) {
+        findViewById<View>(R.id.btnSubmitScan).isEnabled = !isLoading
+    }
+
+    // ── Camera ───────────────────────────────────────────────────────────────
 
     private fun requestInlineCameraStart(userInitiated: Boolean) {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
@@ -294,7 +355,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
             return
         }
         if (!userInitiated && cameraPermissionAutoRequested) {
-            inlineCameraStatus.text = getString(R.string.scanner_camera_permission_tap_to_enable)
+            cameraStatus.text = getString(R.string.scanner_camera_permission_tap_to_enable)
             return
         }
         cameraPermissionAutoRequested = true
@@ -306,7 +367,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     }
 
     private fun launchCameraPermissionRequest() {
-        inlineCameraStatus.text = getString(R.string.scanner_allow_camera_access_to_scan_qr_codes)
+        cameraStatus.text = getString(R.string.scanner_allow_camera_access_to_scan_qr_codes)
         cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
     }
 
@@ -317,7 +378,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
             .setMessage(R.string.scanner_camera_permission_rationale)
             .setPositiveButton(R.string.scanner_camera_permission_allow) { _, _ -> launchCameraPermissionRequest() }
             .setNegativeButton(R.string.scanner_camera_permission_not_now) { _, _ ->
-                inlineCameraStatus.text = getString(R.string.scanner_camera_permission_tap_to_enable)
+                cameraStatus.text = getString(R.string.scanner_camera_permission_tap_to_enable)
             }
             .show()
     }
@@ -340,10 +401,10 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     }
 
     private fun startInlineCameraIfReady() {
-        if (!::inlineCameraSurface.isInitialized || camera != null) return
+        if (!::inlineCameraPreview.isInitialized || camera != null) return
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) return
-        if (!inlineCameraSurface.holder.surface.isValid) return
-        inlineCameraStatus.text = getString(R.string.staff_scanner_point_camera_at_attendee_qr_code)
+        if (!inlineCameraPreview.isAvailable) return
+        cameraStatus.text = getString(R.string.ui_scan_guidance)
         runCatching {
             camera = Camera.open().apply {
                 val params = parameters
@@ -362,17 +423,19 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
                     params.setPreviewSize(best.width, best.height)
                 }
                 this.parameters = params
-                setPreviewDisplay(inlineCameraSurface.holder)
+                setPreviewTexture(inlineCameraPreview.surfaceTexture)
                 setDisplayOrientation(90)
                 setPreviewCallback(this@ScannerActivity)
                 startPreview()
                 scannerIcon.visibility = View.GONE
-                // Adjust SurfaceView to match preview aspect ratio (center-crop)
+                // Fill the 240dp square with the preview, keeping its aspect ratio (centre-crop)
                 val previewSize = parameters.previewSize
-                applyCenterCrop(inlineCameraSurface, previewSize.height, previewSize.width, containerW, containerH)
+                applyCenterCrop(inlineCameraPreview, previewSize.height, previewSize.width)
             }
+            torchButton.isEnabled = camera?.parameters?.supportedFlashModes?.contains(Camera.Parameters.FLASH_MODE_TORCH) == true
+            updateTorchAffordance()
         }.onFailure {
-            inlineCameraStatus.text = getString(R.string.scanner_unable_to_start_camera)
+            cameraStatus.text = getString(R.string.scanner_unable_to_start_camera)
             scannerIcon.visibility = View.VISIBLE
             Log.w(tag, "inline camera failed: ${it.message}", it)
         }
@@ -385,7 +448,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     private fun chooseOptimalPreviewSize(
         sizes: List<Camera.Size>?,
         targetW: Int,
-        targetH: Int
+        targetH: Int,
     ): Camera.Size? {
         if (sizes.isNullOrEmpty()) return null
         val targetRatio = targetW.toDouble() / targetH.coerceAtLeast(1)
@@ -400,35 +463,81 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     }
 
     /**
-     * Resize [surface] so that a camera preview of [previewW]×[previewH] (portrait, post-rotation)
-     * fills [containerW]×[containerH] without distortion (center-crop).
+     * Fill the square preview with a camera frame of [previewW]×[previewH] (portrait, post-rotation)
+     * without distortion, by scaling the buffer up inside the view and letting the view clip the
+     * overhang. A TextureView draws its transformed texture inside its own bounds, so nothing of the
+     * preview can land outside the bracket square - which a SurfaceView cannot guarantee below API 30.
      */
-    private fun applyCenterCrop(
-        surface: SurfaceView,
-        previewW: Int,
-        previewH: Int,
-        containerW: Int,
-        containerH: Int
-    ) {
-        if (previewW <= 0 || previewH <= 0 || containerW <= 0 || containerH <= 0) return
-        val previewAspect = previewW.toFloat() / previewH
-        val containerAspect = containerW.toFloat() / containerH
-        val (viewW, viewH) = if (previewAspect > containerAspect) {
-            // Preview is wider proportionally → match height, overflow width
-            ((containerH * previewAspect).toInt()) to containerH
-        } else {
-            // Preview is taller proportionally → match width, overflow height
-            containerW to ((containerW / previewAspect).toInt())
-        }
-        surface.layoutParams = (surface.layoutParams as FrameLayout.LayoutParams).apply {
-            width = viewW
-            height = viewH
-            gravity = Gravity.CENTER
+    private fun applyCenterCrop(preview: TextureView, previewW: Int, previewH: Int) {
+        val viewW = preview.width.toFloat()
+        val viewH = preview.height.toFloat()
+        if (previewW <= 0 || previewH <= 0 || viewW <= 0f || viewH <= 0f) return
+        // A TextureView stretches the buffer to its bounds; scale that mapping up to a cover-crop.
+        val coverScale = maxOf(viewW / previewW, viewH / previewH)
+        val matrix = Matrix()
+        matrix.setScale(
+            coverScale * previewW / viewW,
+            coverScale * previewH / viewH,
+            viewW / 2f,
+            viewH / 2f,
+        )
+        preview.setTransform(matrix)
+    }
+
+    private fun releaseInlineCamera() {
+        camera?.setPreviewCallback(null)
+        runCatching { camera?.stopPreview() }
+        camera?.release()
+        camera = null
+        torchOn = false
+        if (::scannerIcon.isInitialized) scannerIcon.visibility = View.VISIBLE
+        if (::torchButton.isInitialized) {
+            torchButton.isEnabled = false
+            updateTorchAffordance()
         }
     }
 
-    private fun releaseInlineCamera() { camera?.setPreviewCallback(null); runCatching { camera?.stopPreview() }; camera?.release(); camera = null; if (::scannerIcon.isInitialized) scannerIcon.visibility = View.VISIBLE }
-    private fun handleInlineQrValue(rawValue: String) { val parsed = parseQrPayload(rawValue); if (parsed == null || parsed.qrValue.isBlank()) { showMessage(getString(R.string.scanner_qr_payload_format_is_invalid)); return }; qrInput.setText(parsed.qrValue); qrInput.setSelection(parsed.qrValue.length); submitCurrentSelection(trigger = "inline-camera") }
+    /** §5.13: the torch is a 44dp target inside the panel and it must actually toggle. */
+    private fun toggleTorch() {
+        val cam = camera ?: return
+        val supported = cam.parameters.supportedFlashModes.orEmpty()
+        if (!supported.contains(Camera.Parameters.FLASH_MODE_TORCH)) {
+            showMessage(getString(R.string.staff_torch_unavailable))
+            return
+        }
+        runCatching {
+            val params = cam.parameters
+            torchOn = !torchOn
+            params.flashMode = if (torchOn) Camera.Parameters.FLASH_MODE_TORCH else Camera.Parameters.FLASH_MODE_OFF
+            cam.parameters = params
+        }.onFailure { Log.w(tag, "torch toggle failed: ${it.message}", it) }
+        updateTorchAffordance()
+    }
+
+    private fun updateTorchAffordance() {
+        // The torch lives on the light guidance row, so the ink token is the readable one; lime
+        // full-strength would vanish on ui_background - ui_accent_deep is the accent for light.
+        ImageViewCompat.setImageTintList(
+            torchButton,
+            ColorStateList.valueOf(color(if (torchOn) R.color.ui_accent_deep else R.color.ui_text_primary)),
+        )
+        torchButton.contentDescription =
+            getString(if (torchOn) R.string.staff_torch_on else R.string.staff_torch_off)
+    }
+
+    // ── Decode ───────────────────────────────────────────────────────────────
+
+    private fun handleInlineQrValue(rawValue: String) {
+        val parsed = parseQrPayload(rawValue)
+        if (parsed == null || parsed.qrValue.isBlank()) {
+            showScanError(getString(R.string.scanner_qr_payload_format_is_invalid))
+            return
+        }
+        flashBrackets()
+        qrInput.setText(parsed.qrValue)
+        qrInput.setSelection(parsed.qrValue.length)
+        submitCurrentSelection(trigger = "inline-camera")
+    }
 
     private fun decodeFrame(data: ByteArray, width: Int, height: Int): String? {
         val ySize = width * height
@@ -437,7 +546,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         val rotated90 = rotateLuma90(luma, width, height)
         val rotated180 = rotateLuma90(rotated90, height, width)
         val rotated270 = rotateLuma90(rotated180, width, height)
-        val candidates = listOf(Triple(luma, width, height), Triple(rotated90, height, width), Triple(rotated180, width, height), Triple(rotated270, height, width))
+        val candidates = listOf(Triple(luma, width, height), Triple(rotated90, height, width), Triple(rotated180, width, height), Triple(rotated270, width, height))
         for ((buffer, w, h) in candidates) {
             decodeBinaryBitmap(buffer, w, h, false)?.let { return it }
             decodeBinaryBitmap(buffer, w, h, true)?.let { return it }
@@ -448,82 +557,135 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
     private fun decodeBinaryBitmap(data: ByteArray, width: Int, height: Int, invert: Boolean): String? {
         val source = PlanarYUVLuminanceSource(data, width, height, 0, 0, width, height, false)
         val bitmap = BinaryBitmap(HybridBinarizer(if (invert) source.invert() else source))
-        return try { qrReader.setHints(decodeHints); qrReader.decodeWithState(bitmap).text } catch (_: NotFoundException) { null } catch (_: Exception) { null } finally { qrReader.reset() }
+        return try {
+            qrReader.setHints(decodeHints)
+            qrReader.decodeWithState(bitmap).text
+        } catch (_: NotFoundException) {
+            null
+        } catch (_: Exception) {
+            null
+        } finally {
+            qrReader.reset()
+        }
     }
 
-    private fun rotateLuma90(input: ByteArray, width: Int, height: Int): ByteArray { val output = ByteArray(width * height); var index = 0; for (x in 0 until width) { for (y in height - 1 downTo 0) { output[index++] = input[y * width + x] } }; return output }
-    private fun loadSelectedPurposes() { selectedEvent()?.let { presenter.loadPurposes(it.id) } }
+    private fun rotateLuma90(input: ByteArray, width: Int, height: Int): ByteArray {
+        val output = ByteArray(width * height)
+        var index = 0
+        for (x in 0 until width) {
+            for (y in height - 1 downTo 0) {
+                output[index++] = input[y * width + x]
+            }
+        }
+        return output
+    }
+
+    private fun flashBrackets() {
+        setBracketTint(R.color.ui_accent)
+        scanPanel.postDelayed({ resetBracketTint() }, BRACKET_FLASH_MS)
+    }
+
+    private fun resetBracketTint() = setBracketTint(R.color.ui_scan_bracket)
+
+    private fun setBracketTint(colorRes: Int) {
+        val tint = ColorStateList.valueOf(color(colorRes))
+        BRACKET_IDS.toList().mapNotNull { findViewById<ImageView>(it) }
+            .forEach { ImageViewCompat.setImageTintList(it, tint) }
+    }
+
+    // ── Selection ────────────────────────────────────────────────────────────
+
+    private fun loadSelectedPurposes() {
+        selectedEvent()?.let { presenter.loadPurposes(it.id) }
+    }
+
     private fun selectedEvent(): EventSpinnerOption? = eventOptions.getOrNull(eventSpinner.selectedItemPosition)
 
     /**
-     * Every purpose is offered except ID printing, which needs the caller's Print IDs permission for the
-     * selected event (an event with no permission flag of its own — the unassigned caller, organizer or
-     * ADMIN — keeps it available and the server decides).
+     * Every purpose is offered except ID printing, which needs the caller's Print IDs permission for
+     * the selected event (an event with no permission flag of its own - the unassigned caller,
+     * organizer or ADMIN - keeps it available and the server decides).
      */
     private fun isPurposeAllowed(purpose: ScanPurposeResponse): Boolean =
         purpose.code != ScanPurposeCode.ID_PRINT || PrintPermission.isPrintAllowed(selectedEvent()?.canPrintId)
-    private fun bindSelectedEventHeader() { val event = selectedEvent(); selectedEventTitle.text = event?.label ?: getString(R.string.scanner_no_assigned_event); selectedEventDate.text = event?.eventStartAt?.atZone(manilaZone)?.format(dateFormatter).orEmpty() }
+
+    private fun bindSelectedEventHeader() {
+        val event = selectedEvent()
+        contextEvent.text = event?.label ?: getString(R.string.scanner_no_assigned_event)
+    }
+
     private fun bindSelectedPurposeHeader() {
         val purpose = purposeOptions.getOrNull(purposeSpinner.selectedItemPosition)
         if (purpose == null) {
-            selectedPurposeName.text = getString(R.string.staff_scanner_select_purpose)
-            selectedPurposePoints.visibility = View.GONE
+            contextPurpose.text = getString(R.string.staff_scanner_select_purpose)
+            purposeNote.visibility = View.GONE
             return
         }
-        selectedPurposeName.text = purpose.displayName()
+        contextPurpose.text = purpose.displayName()
         if (purpose.trackingOnly) {
-            selectedPurposePoints.visibility = View.GONE
+            purposeNote.visibility = View.GONE
         } else {
-            selectedPurposePoints.text = purpose.defaultDescription()
-            selectedPurposePoints.setTextColor(color(R.color.text_secondary))
-            selectedPurposePoints.visibility = View.VISIBLE
+            purposeNote.text = purpose.defaultDescription()
+            purposeNote.visibility = View.VISIBLE
         }
     }
 
+    // ── Dropdowns (shared surface, no card stack) ────────────────────────────
+
     private fun renderEventDropdown() {
         eventPopup?.dismiss()
-        eventPopup = PopupWindow(buildEventDropdownView(), selectedEventCard.width.takeIf { it > 0 } ?: ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true).apply {
+        eventPopup = PopupWindow(
+            buildEventDropdownView(),
+            contextBar.width.takeIf { it > 0 } ?: ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true,
+        ).apply {
             isOutsideTouchable = true
-            elevation = dimenOffset(R.dimen.elevation_overlay).toFloat()
-            setBackgroundDrawable(ColorDrawable(color(R.color.transparent)))
-            setOnDismissListener { isEventDropdownOpen = false; normalizeChevron(eventChevron, false) }
+            elevation = dimenOffset(R.dimen.ui_sheet_elevation).toFloat()
+            setBackgroundDrawable(ColorDrawable(color(R.color.ui_surface)))
+            setOnDismissListener { isEventDropdownOpen = false }
         }
     }
 
     private fun buildEventDropdownView(): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-        setBackgroundResource(R.drawable.bg_card)
+        setBackgroundResource(R.drawable.bg_ui_card)
         eventOptions.forEachIndexed { index, event ->
+            val selected = index == eventSpinner.selectedItemPosition
             addView(LinearLayout(this@ScannerActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
+                orientation = LinearLayout.VERTICAL
+                minimumHeight = dimenOffset(R.dimen.ui_touch_min)
                 gravity = Gravity.CENTER_VERTICAL
-                setPadding(dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_md), dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_md))
-                setBackgroundColor(if (index == eventSpinner.selectedItemPosition) color(R.color.accent_container) else color(R.color.surface))
+                setPadding(
+                    dimenOffset(R.dimen.ui_gutter),
+                    dimenOffset(R.dimen.space_md),
+                    dimenOffset(R.dimen.ui_gutter),
+                    dimenOffset(R.dimen.space_md),
+                )
+                setBackgroundColor(color(if (selected) R.color.ui_primary_wash else R.color.ui_surface))
                 setOnClickListener {
                     eventSpinner.setSelection(index, false)
                     qrInput.setText("")
                     notesInput.setText("")
                     submitInFlight = false
                     lastSubmittedSignature = null
+                    resultStrip.visibility = View.GONE
+                    resetBracketTint()
                     bindSelectedEventHeader()
                     renderEventDropdown()
                     loadSelectedPurposes()
                     setEventDropdownOpen(false)
                 }
-                addView(LinearLayout(this@ScannerActivity).apply {
-                    orientation = LinearLayout.VERTICAL
-                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-                    addView(TextView(this@ScannerActivity).apply {
-                        text = event.label
-                        setTextColor(if (index == eventSpinner.selectedItemPosition) color(R.color.primary) else color(R.color.text_primary))
-                        setTextSizeRes(R.dimen.type_body_medium)
-                        strong()
-                    })
-                    addView(TextView(this@ScannerActivity).apply {
-                        text = event.eventStartAt?.atZone(manilaZone)?.format(dateFormatter).orEmpty().ifBlank { getString(R.string.scanner_assigned_event_fallback) }
-                        setTextColor(color(R.color.text_secondary))
-                        setTextSizeRes(R.dimen.type_body_compact)
-                    })
+                addView(TextView(this@ScannerActivity).apply {
+                    text = event.label
+                    setTextAppearance(R.style.TextAppearance_EventQR_Type_Title)
+                    setTextColor(color(R.color.ui_text_primary))
+                })
+                addView(TextView(this@ScannerActivity).apply {
+                    text = event.eventStartAt?.atZone(manilaZone)?.format(dateFormatter).orEmpty()
+                        .ifBlank { getString(R.string.scanner_assigned_event_fallback) }
+                    setTextAppearance(R.style.TextAppearance_EventQR_Type_BodySmall)
+                    setTextColor(color(R.color.ui_text_secondary))
                 })
             })
         }
@@ -533,43 +695,62 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         if (open && eventOptions.isEmpty()) return
         if (open) {
             setPurposeDropdownOpen(false)
-            if (eventPopup == null || selectedEventCard.width > 0 && eventPopup?.width != selectedEventCard.width) renderEventDropdown()
+            if (eventPopup == null || contextBar.width > 0 && eventPopup?.width != contextBar.width) renderEventDropdown()
             isEventDropdownOpen = true
-            normalizeChevron(eventChevron, true)
-            eventPopup?.showAsDropDown(selectedEventCard, 0, 0)
+            eventPopup?.showAsDropDown(contextBar, 0, 0)
         } else {
             eventPopup?.dismiss()
             isEventDropdownOpen = false
-            normalizeChevron(eventChevron, false)
         }
     }
 
     private fun renderPurposeDropdown() {
         purposeDropdown.visibility = View.GONE
         purposePopup?.dismiss()
-        purposePopup = PopupWindow(buildPurposeDropdownView(), selectedPurposeCard.width.takeIf { it > 0 } ?: ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true).apply {
+        purposePopup = PopupWindow(
+            buildPurposeDropdownView(),
+            contextBar.width.takeIf { it > 0 } ?: ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true,
+        ).apply {
             isOutsideTouchable = true
-            elevation = dimenOffset(R.dimen.elevation_overlay).toFloat()
-            setBackgroundDrawable(ColorDrawable(color(R.color.transparent)))
-            setOnDismissListener { isPurposeDropdownOpen = false; normalizeChevron(purposeChevron, false) }
+            elevation = dimenOffset(R.dimen.ui_sheet_elevation).toFloat()
+            setBackgroundDrawable(ColorDrawable(color(R.color.ui_surface)))
+            setOnDismissListener { isPurposeDropdownOpen = false }
         }
     }
 
     private fun buildPurposeDropdownView(): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-        setBackgroundResource(R.drawable.bg_card)
+        setBackgroundResource(R.drawable.bg_ui_card)
         purposeOptions.forEachIndexed { index, purpose ->
+            val selected = index == purposeSpinner.selectedItemPosition
             addView(LinearLayout(this@ScannerActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
+                orientation = LinearLayout.VERTICAL
+                minimumHeight = dimenOffset(R.dimen.ui_touch_min)
                 gravity = Gravity.CENTER_VERTICAL
-                setPadding(dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_md), dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_md))
-                setBackgroundColor(if (index == purposeSpinner.selectedItemPosition) color(R.color.accent_container) else color(R.color.surface))
-                setOnClickListener { purposeSpinner.setSelection(index, false); bindSelectedPurposeHeader(); renderPurposeDropdown(); setPurposeDropdownOpen(false) }
-                addView(LinearLayout(this@ScannerActivity).apply {
-                    orientation = LinearLayout.VERTICAL
-                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-                    addView(TextView(this@ScannerActivity).apply { text = purpose.displayName(); setTextColor(if (index == purposeSpinner.selectedItemPosition) color(R.color.primary) else color(R.color.text_primary)); setTextSizeRes(R.dimen.type_body_medium); strong() })
-                    addView(TextView(this@ScannerActivity).apply { text = purpose.description?.takeIf { it.isNotBlank() } ?: purpose.defaultDescription(); setTextColor(color(R.color.text_secondary)); setTextSizeRes(R.dimen.type_body_compact) })
+                setPadding(
+                    dimenOffset(R.dimen.ui_gutter),
+                    dimenOffset(R.dimen.space_md),
+                    dimenOffset(R.dimen.ui_gutter),
+                    dimenOffset(R.dimen.space_md),
+                )
+                setBackgroundColor(color(if (selected) R.color.ui_primary_wash else R.color.ui_surface))
+                setOnClickListener {
+                    purposeSpinner.setSelection(index, false)
+                    bindSelectedPurposeHeader()
+                    renderPurposeDropdown()
+                    setPurposeDropdownOpen(false)
+                }
+                addView(TextView(this@ScannerActivity).apply {
+                    text = purpose.displayName()
+                    setTextAppearance(R.style.TextAppearance_EventQR_Type_Title)
+                    setTextColor(color(R.color.ui_text_primary))
+                })
+                addView(TextView(this@ScannerActivity).apply {
+                    text = purpose.description?.takeIf { it.isNotBlank() } ?: purpose.defaultDescription()
+                    setTextAppearance(R.style.TextAppearance_EventQR_Type_BodySmall)
+                    setTextColor(color(R.color.ui_text_secondary))
                 })
             })
         }
@@ -577,8 +758,15 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
 
     private fun setPurposeDropdownOpen(open: Boolean) {
         if (open && purposeOptions.isEmpty()) return
-        if (open) { setEventDropdownOpen(false); if (purposePopup == null || selectedPurposeCard.width > 0 && purposePopup?.width != selectedPurposeCard.width) renderPurposeDropdown(); isPurposeDropdownOpen = true; normalizeChevron(purposeChevron, true); purposePopup?.showAsDropDown(selectedPurposeCard, 0, 0) }
-        else { purposePopup?.dismiss(); isPurposeDropdownOpen = false; normalizeChevron(purposeChevron, false) }
+        if (open) {
+            setEventDropdownOpen(false)
+            if (purposePopup == null || contextBar.width > 0 && purposePopup?.width != contextBar.width) renderPurposeDropdown()
+            isPurposeDropdownOpen = true
+            purposePopup?.showAsDropDown(contextBar, 0, 0)
+        } else {
+            purposePopup?.dismiss()
+            isPurposeDropdownOpen = false
+        }
     }
 
     private fun ScanPurposeResponse.displayName(): String = when (code) {
@@ -590,6 +778,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         ScanPurposeCode.EXIT -> getString(R.string.scan_purpose_type_event_exit)
         else -> name
     }
+
     private fun ScanPurposeResponse.defaultDescription(): String = when (code) {
         ScanPurposeCode.ENTRY -> getString(R.string.scanner_purpose_desc_entry)
         ScanPurposeCode.ATTENDANCE -> getString(R.string.scanner_purpose_desc_attendance)
@@ -599,6 +788,8 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         ScanPurposeCode.EXIT -> getString(R.string.scanner_purpose_desc_exit)
         else -> getString(R.string.scanner_purpose_desc_default)
     }
+
+    // ── Submission ───────────────────────────────────────────────────────────
 
     private fun submitCurrentSelection(trigger: String) {
         val selectedEvent = selectedEvent() ?: return showMessage(getString(R.string.scanner_no_assigned_event_selected))
@@ -610,12 +801,13 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         if (qrValue.isBlank()) return showMessage(getString(R.string.scanner_manual_entry_required))
         val signature = "${selectedEvent.id}|${selectedPurpose.scanPurposeId}|$qrValue"
         val now = SystemClock.elapsedRealtime()
-        if (submitInFlight || (signature == lastSubmittedSignature && now - lastSubmittedAtMs < duplicateWindowMs)) return showMessage(getString(R.string.scanner_scan_is_already_being_processed_plea))
+        if (submitInFlight || (signature == lastSubmittedSignature && now - lastSubmittedAtMs < duplicateWindowMs)) {
+            return showMessage(getString(R.string.scanner_scan_is_already_being_processed_plea))
+        }
         submitInFlight = true
         lastSubmittedSignature = signature
         lastSubmittedAtMs = now
-        if (selectedPurpose.code == ScanPurposeCode.REWARD_REDEMPTION_SCAN
-            || selectedPurpose.code == ScanPurposeCode.REWARD_REDEMPTION) {
+        if (selectedPurpose.code == ScanPurposeCode.REWARD_REDEMPTION_SCAN || selectedPurpose.code == ScanPurposeCode.REWARD_REDEMPTION) {
             presenter.submitRewardRedemptionScan(selectedEvent.id, selectedPurpose, qrValue, staffUserId)
             return
         }
@@ -678,19 +870,6 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
         })
     }
 
-    private fun normalizeChevron(view: View, open: Boolean) {
-        when (view) {
-            is TextView -> {
-                view.includeFontPadding = false
-                view.translationY = dimenOffset(R.dimen.glyph_nudge_y).toFloat()
-                view.text = if (open) "\u25B4" else "\u25BE"
-            }
-            is ImageView -> {
-                view.rotation = if (open) 180f else 0f
-            }
-        }
-    }
-
     private fun parseQrPayload(raw: String): ParsedQrPayload? {
         val trimmed = raw.trim()
         if (trimmed.isBlank()) return null
@@ -702,11 +881,20 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, SurfaceH
             qrValue?.let { ParsedQrPayload(it, qrCredentialId) }
         }.getOrNull()
     }
+
     private fun firstNonBlank(vararg values: String?): String? = values.firstOrNull { !it.isNullOrBlank() }?.trim()
+
     private data class ParsedQrPayload(val qrValue: String, val qrCredentialId: String?)
 
     private companion object {
         const val STATE_CAMERA_PERMISSION_REQUESTED = "scanner_camera_permission_requested"
         const val STATE_CAMERA_PERMISSION_DENIED = "scanner_camera_permission_denied"
+        const val BRACKET_FLASH_MS = 600L
+        val BRACKET_IDS = intArrayOf(
+            R.id.scanBracketTl,
+            R.id.scanBracketTr,
+            R.id.scanBracketBl,
+            R.id.scanBracketBr,
+        )
     }
 }

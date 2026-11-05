@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Static splash identical to the system splash (solid indigo, 128dp icon centered) so the hand-off has no jump. -->
+<!--
+    SPLASH - flat brand fill with the mark alone, centred (04-logo-direction.md §2.3, §3.1).
+    The mark is the launch moment: no wordmark, no lime rule, no raster, no gradient. It is the same
+    shape as the launcher icon, so the first frame and the launcher teach one mark, not two.
+-->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/primary">
+    android:background="@color/ui_primary">
 
     <ImageView
-        android:id="@+id/splashLogo"
-        android:layout_width="@dimen/tile_128"
-        android:layout_height="@dimen/tile_128"
+        android:id="@+id/splashMark"
+        android:layout_width="@dimen/ui_mark_splash"
+        android:layout_height="@dimen/ui_mark_splash"
         android:layout_gravity="center"
-        android:contentDescription="@string/common_eventqr_logo"
+        android:contentDescription="@string/auth_wordmark_description"
         android:scaleType="fitCenter"
-        android:src="@drawable/white_logo" />
-
+        android:src="@drawable/ic_mark_on_dark" />
 </FrameLayout>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    LIST ROW - value (§5.5). 64dp. No leading tile (or a 32dp avatar), title + optional meta on
+    the left, a right-aligned tabular numeric_s value on the right, hairline under.
+
+    Used for metric lists, spec tables and settings rows where the number is the content.
+    ids: same contract as list_row_icon (listRowValue instead of a chevron).
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/listRow"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/listRowContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/ui_row_height_value"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/ui_row_start"
+        android:paddingEnd="@dimen/ui_row_end"
+        android:paddingTop="@dimen/ui_row_padding_vertical"
+        android:paddingBottom="@dimen/ui_row_padding_vertical">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/listRowTitle"
+                style="@style/Widget.EventQR.Ui.ListRow.Title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="Points balance" />
+
+            <TextView
+                android:id="@+id/listRowMeta"
+                style="@style/Widget.EventQR.Ui.ListRow.Meta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_2"
+                android:visibility="gone"
+                tools:text="Updated 2 min ago"
+                tools:visibility="visible" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/listRowValue"
+            style="@style/Widget.EventQR.Ui.ListRow.Value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_lg"
+            android:gravity="end"
+            tools:text="1 240" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/listRowDivider"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:layout_marginStart="@dimen/ui_row_start"
+        android:background="@color/ui_hairline"
+        android:importantForAccessibility="no" />
+
+</LinearLayout>

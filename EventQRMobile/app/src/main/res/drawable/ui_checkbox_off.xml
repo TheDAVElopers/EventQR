@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Unchecked box: 1.5dp ui_outline_interactive (3.12:1 - a border the user must perceive
+     to operate the control may never be the decorative hairline). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="@dimen/ui_checkbox_size"
+    android:height="@dimen/ui_checkbox_size"
+    android:viewportWidth="20"
+    android:viewportHeight="20">
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M3.5,0.75h13a2.75,2.75 0,0 1,2.75 2.75v13a2.75,2.75 0,0 1,-2.75 2.75h-13a2.75,2.75 0,0 1,-2.75 -2.75v-13a2.75,2.75 0,0 1,2.75 -2.75z"
+        android:strokeColor="@color/ui_outline_interactive"
+        android:strokeWidth="1.5" />
+</vector>

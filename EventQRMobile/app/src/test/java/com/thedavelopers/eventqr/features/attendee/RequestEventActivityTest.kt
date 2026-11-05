@@ -112,11 +112,13 @@ class RequestEventActivityTest {
 
         val contactTarget = activity.scrollTargetFor(contactField)
 
-        // View.top is relative to the field's own card, which made the form jump to the top section.
+        // The form is one column of fields (no per-section card), so the target is the field's own
+        // top in the scroll content minus the fixed "room for its label" offset.
+        val labelRoom = activity.resources.getDimensionPixelSize(R.dimen.space_xxl)
+        assertEquals((contactField.top - labelRoom).coerceAtLeast(0), contactTarget)
         assertTrue(
-            "contact target $contactTarget should be below the card-relative top ${contactField.top}",
-            contactTarget > contactField.top,
+            "name target should sit above the contact target",
+            activity.scrollTargetFor(nameField) < contactTarget,
         )
-        assertTrue(contactTarget > activity.scrollTargetFor(nameField))
     }
 }

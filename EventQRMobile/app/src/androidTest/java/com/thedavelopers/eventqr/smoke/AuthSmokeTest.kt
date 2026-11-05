@@ -78,9 +78,9 @@ class AuthSmokeTest {
     fun landing_withoutSession_showsSignInAndCreateAccount() {
         ActivityScenario.launch(LandingActivity::class.java).use {
             onView(withId(R.id.btnSignIn))
-                .check(matches(allOf(isDisplayed(), withText(R.string.common_sign_in))))
+                .check(matches(allOf(isDisplayed(), withText(R.string.auth_sign_in))))
             onView(withId(R.id.btnCreateAccount))
-                .check(matches(allOf(isDisplayed(), withText(R.string.common_create_account))))
+                .check(matches(allOf(isDisplayed(), withText(R.string.auth_create_account))))
         }
     }
 
@@ -164,7 +164,7 @@ class AuthSmokeTest {
 
     /** showLoading(true) disables the button and swaps its label; staying idle means no login request started. */
     private fun assertSignInIdle() {
-        onView(withId(R.id.btnSignIn)).check(matches(allOf(isEnabled(), withText(R.string.common_sign_in))))
+        onView(withId(R.id.btnSignIn)).check(matches(allOf(isEnabled(), withText(R.string.auth_sign_in))))
     }
 
     // ---- 3. Sign-up validation --------------------------------------------------------------------------------
@@ -178,11 +178,11 @@ class AuthSmokeTest {
             onView(withId(R.id.chkTerms)).perform(scrollTo(), tapCheckBoxBox())
             onView(withId(R.id.chkTerms)).check(matches(isChecked()))
 
-            onView(withId(R.id.btnRegister)).perform(scrollTo()).check(matches(isNotEnabled()))
+            onView(withId(R.id.btnRegister)).check(matches(isNotEnabled()))
 
             // Control: the same form with a strong password enables the button, so the gate is the password.
             onView(withId(R.id.edtPassword)).perform(scrollTo(), replaceText(STRONG_PASSWORD))
-            onView(withId(R.id.btnRegister)).perform(scrollTo()).check(matches(isEnabled()))
+            onView(withId(R.id.btnRegister)).check(matches(isEnabled()))
         }
     }
 
@@ -192,13 +192,13 @@ class AuthSmokeTest {
             fillValidSignUpForm(confirmPassword = STRONG_PASSWORD)
             onView(withId(R.id.chkTerms)).perform(scrollTo()).check(matches(isNotChecked()))
 
-            onView(withId(R.id.btnRegister)).perform(scrollTo()).check(matches(isNotEnabled()))
+            onView(withId(R.id.btnRegister)).check(matches(isNotEnabled()))
 
             // Control: ticking the box enables it, unticking disables it again.
             onView(withId(R.id.chkTerms)).perform(scrollTo(), tapCheckBoxBox()).check(matches(isChecked()))
-            onView(withId(R.id.btnRegister)).perform(scrollTo()).check(matches(isEnabled()))
+            onView(withId(R.id.btnRegister)).check(matches(isEnabled()))
             onView(withId(R.id.chkTerms)).perform(scrollTo(), tapCheckBoxBox()).check(matches(isNotChecked()))
-            onView(withId(R.id.btnRegister)).perform(scrollTo()).check(matches(isNotEnabled()))
+            onView(withId(R.id.btnRegister)).check(matches(isNotEnabled()))
         }
     }
 
@@ -216,8 +216,7 @@ class AuthSmokeTest {
                 .check(matches(hasErrorText(str(R.string.password_error_mismatch))))
             // showLoading(true) would relabel the button; the presenter stopped at validation.
             onView(withId(R.id.btnRegister))
-                .perform(scrollTo())
-                .check(matches(allOf(isEnabled(), withText(R.string.common_create_account))))
+                .check(matches(allOf(isEnabled(), withText(R.string.auth_create_account))))
         }
     }
 

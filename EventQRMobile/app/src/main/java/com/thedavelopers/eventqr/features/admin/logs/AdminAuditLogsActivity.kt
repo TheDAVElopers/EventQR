@@ -1,10 +1,11 @@
 package com.thedavelopers.eventqr.features.admin.logs
 
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+import com.thedavelopers.eventqr.ui.components.PassHeadBinder
+import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.os.Bundle
 import android.view.View
-import android.widget.ProgressBar
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.platform.ComposeView
@@ -18,11 +19,13 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
+import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.admin.AdminBottomNavItem
 import com.thedavelopers.eventqr.features.admin.AdminRepository
 import com.thedavelopers.eventqr.features.admin.AuditCategory
 import com.thedavelopers.eventqr.features.admin.actionPrefix
+import com.thedavelopers.eventqr.features.admin.auditDayGroups
 import com.google.android.material.snackbar.Snackbar
 import com.thedavelopers.eventqr.core.util.PagedAccumulator
 import com.thedavelopers.eventqr.core.util.addNearEndListener
@@ -32,21 +35,27 @@ import com.thedavelopers.eventqr.ui.components.FilterChipRow
 import com.thedavelopers.eventqr.ui.theme.EventQrTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import java.time.Instant
 
 class AdminAuditLogsActivity : AppCompatActivity() {
     private lateinit var repository: AdminRepository
     private lateinit var adapter: AdminAuditLogAdapter
+    private lateinit var dayHeaders: AuditDayHeaderDecoration
     private lateinit var swipeRefresh: SwipeRefreshLayout
-    private lateinit var progressLoading: ProgressBar
+    private lateinit var skeletonLoading: View
     private lateinit var textPlaceholder: EventQrEmptyState
     private lateinit var recyclerLogs: RecyclerView
 
     private val paging = PagedAccumulator<AuditLogResponse, java.util.UUID> { it.auditLogId }
     private val selectedFilter = MutableStateFlow(AuditCategory.ALL)
 
+    /** Identifies the current load: a new id tells the adapter this is a replacement, not an append. */
+    private var loadId = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_admin_audit_logs)
+        applyEventQrSystemBarAppearance(lightStatusBars = false)
 
         val normalizedRole = RoleMapper.normalizeRole(SessionManager(this).getUserRole())
         if (normalizedRole != AccountRole.ADMIN.name && normalizedRole != AccountRole.SUPER_ADMIN.name) {
@@ -57,20 +66,36 @@ class AdminAuditLogsActivity : AppCompatActivity() {
 
         repository = AdminRepository(this)
         adapter = AdminAuditLogAdapter()
+        bindHeader()
         bindViews()
         bindFilterChips()
         bindNav()
         loadLogs()
     }
 
+    private fun bindHeader() {
+        val head = findViewById<View>(R.id.passHead)
+        head.findViewById<View>(R.id.passHeadIdentity).applyEventQrTopInsetPadding()
+        PassHeadBinder.bindCompact(
+            root = head,
+            title = getString(R.string.ui_admin_logs_title),
+            eyebrow = getString(R.string.ui_admin_tab),
+        )
+    }
+
     private fun bindViews() {
         swipeRefresh = findViewById(R.id.swipeRefreshAuditLogs)
-        progressLoading = findViewById(R.id.progressAuditLoading)
+        skeletonLoading = findViewById(R.id.skeletonAuditLoading)
         textPlaceholder = findViewById(R.id.textAuditPlaceholder)
         recyclerLogs = findViewById(R.id.recyclerAuditLogs)
+        // Added once and owned by the decoration itself: a config change rebuilds this view tree,
+        // while a refresh or filter change only replaces the header set, so headers are never
+        // stacked twice and no caller has to remember to invalidate.
+        dayHeaders = AuditDayHeaderDecoration(this)
+        dayHeaders.attachTo(recyclerLogs)
         recyclerLogs.layoutManager = LinearLayoutManager(this)
         recyclerLogs.adapter = adapter
-        swipeRefresh.setOnRefreshListener { loadLogs() }
+        swipeRefresh.setOnRefreshListener { loadLogs(firstLoad = false) }
         recyclerLogs.addNearEndListener { loadPage() }
     }
 
@@ -101,14 +126,28 @@ class AdminAuditLogsActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    private fun loadLogs() {
+    override fun onStart() {
+        super.onStart()
+        // A screen left open past midnight must not keep yesterday's rows under a "TODAY" header.
+        // Idempotent submit: nothing is redrawn unless a header actually moved.
+        if (this::dayHeaders.isInitialized) dayHeaders.submit(auditDayGroups(paging.items), auditToday())
+    }
+
+    /**
+     * Restarts paging at page 0. A first load (screen open, filter change, retry) renders skeleton
+     * rows; a pull to refresh keeps the rows on screen and uses the swipe indicator instead.
+     */
+    private fun loadLogs(firstLoad: Boolean = true) {
         retrySnackbar?.dismiss()
+        loadId++
         paging.reset()
-        if (!swipeRefresh.isRefreshing) {
-            progressLoading.visibility = View.VISIBLE
+        if (firstLoad) {
+            adapter.submitItems(emptyList(), loadId)
+            dayHeaders.submit(emptyList(), auditToday())
+            recyclerLogs.visibility = View.GONE
+            textPlaceholder.hide()
+            skeletonLoading.visibility = View.VISIBLE
         }
-        recyclerLogs.visibility = View.GONE
-        textPlaceholder.visibility = View.GONE
         loadPage()
     }
 
@@ -119,25 +158,18 @@ class AdminAuditLogsActivity : AppCompatActivity() {
                 is NetworkResult.Success -> {
                     if (paging.onSuccess(ticket, result.data)) {
                         swipeRefresh.isRefreshing = false
-                        progressLoading.visibility = View.GONE
+                        skeletonLoading.visibility = View.GONE
                         applyRows()
                     }
                 }
                 is NetworkResult.Error -> {
                     if (paging.onFailure(ticket)) {
                         swipeRefresh.isRefreshing = false
-                        progressLoading.visibility = View.GONE
-                        if (paging.isEmpty) {
-                            recyclerLogs.visibility = View.GONE
-                            textPlaceholder.visibility = View.VISIBLE
-                            textPlaceholder.text = getString(R.string.admin_audit_logs_unable_to_load_audit_logs_pull_down)
-                        }
-                        retrySnackbar = Snackbar.make(recyclerLogs, result.message, Snackbar.LENGTH_INDEFINITE)
-                            .setAction(R.string.common_retry) {
-                                paging.retry()
-                                loadPage()
-                            }
-                        retrySnackbar?.show()
+                        skeletonLoading.visibility = View.GONE
+                        // The two failure paths are exclusive and decided by what is on screen, not
+                        // by the accumulator: a pull to refresh resets paging before the request, so
+                        // `paging.isEmpty` would hide rows that are still visible.
+                        if (adapter.itemCount == 0) showLoadFailure(result.serverMessage) else showRetrySnackbar(result.serverMessage)
                     }
                 }
                 NetworkResult.Loading -> Unit
@@ -149,19 +181,64 @@ class AdminAuditLogsActivity : AppCompatActivity() {
     private fun setFilter(filter: AuditCategory) {
         if (selectedFilter.value == filter) return
         selectedFilter.value = filter
-        adapter.submitItems(emptyList())
         loadLogs()
     }
 
     private fun applyRows() {
         val rows = paging.items
-        adapter.submitItems(rows)
-        recyclerLogs.visibility = if (rows.isEmpty()) View.GONE else View.VISIBLE
-        textPlaceholder.visibility = if (rows.isEmpty()) View.VISIBLE else View.GONE
-        textPlaceholder.text = when {
-            rows.isNotEmpty() -> ""
-            selectedFilter.value == AuditCategory.ALL -> getString(R.string.admin_audit_logs_no_audit_logs_yet)
-            else -> getString(R.string.admin_audit_logs_no_logs_for_filter)
+        dayHeaders.submit(auditDayGroups(rows), auditToday())
+        adapter.submitItems(rows, loadId)
+        if (rows.isEmpty()) {
+            recyclerLogs.visibility = View.GONE
+            showEmpty()
+        } else {
+            recyclerLogs.visibility = View.VISIBLE
+            textPlaceholder.hide()
         }
     }
+
+    /** §5.10: left aligned, one control. Only the filter state has something to do. */
+    private fun showEmpty() {
+        val filter = selectedFilter.value
+        if (filter == AuditCategory.ALL) {
+            textPlaceholder.show(
+                getString(R.string.ui_admin_logs_empty_title),
+                getString(R.string.ui_admin_logs_empty_body),
+            )
+            textPlaceholder.setAction(null)
+            return
+        }
+        textPlaceholder.show(
+            getString(R.string.ui_audit_empty_filter_title, getString(filter.labelRes)),
+            getString(R.string.ui_audit_empty_filter_body),
+        )
+        textPlaceholder.setAction(getString(R.string.ui_audit_empty_filter_action), primary = false) {
+            setFilter(AuditCategory.ALL)
+        }
+    }
+
+    private fun showLoadFailure(serverMessage: String?) {
+        recyclerLogs.visibility = View.GONE
+        textPlaceholder.show(
+            getString(R.string.ui_audit_error_title),
+            serverMessage?.takeIf { it.isNotBlank() } ?: getString(R.string.ui_audit_error_body),
+        )
+        textPlaceholder.setAction(getString(R.string.common_retry), primary = false) { loadLogs() }
+    }
+
+    private fun showRetrySnackbar(serverMessage: String?) {
+        retrySnackbar?.dismiss()
+        // Same source as the failure state: the server message, else fixed copy - never the
+        // transport's internal `message`.
+        val message = serverMessage?.takeIf { it.isNotBlank() } ?: getString(R.string.ui_audit_error_title)
+        retrySnackbar = Snackbar.make(recyclerLogs, message, Snackbar.LENGTH_INDEFINITE)
+            .setAction(R.string.common_retry) {
+                paging.retry()
+                loadPage()
+            }
+        retrySnackbar?.show()
+    }
+
+    /** Today in the audit zone, so the header set and the rows agree near midnight. */
+    private fun auditToday() = DateFormatters.auditDay(Instant.now())
 }

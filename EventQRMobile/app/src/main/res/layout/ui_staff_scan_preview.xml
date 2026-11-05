@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The camera well handed to include_scan_viewport's preview slot: a TextureView plus the
+     placeholder glyph shown while the camera is off. Inflated into scanPreview from
+     ScannerActivity so the shared viewport is consumed as-is (brackets and frame stay on top).
+
+     TextureView, not SurfaceView: the preview is centre-cropped to the 240dp square, which means
+     the camera view is larger than this container on one axis. A SurfaceView renders in its own
+     window and ignores clipping below API 30, so the crop leaked to the panel edges on device.
+     A TextureView is drawn in the view hierarchy and is clipped by frameCameraContainer. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/frameCameraContainer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextureView
+        android:id="@+id/textureInlineCameraPreview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <ImageView
+        android:id="@+id/imgScannerIcon"
+        android:layout_width="@dimen/ui_staff_scan_preview_icon"
+        android:layout_height="@dimen/ui_staff_scan_preview_icon"
+        android:layout_gravity="center"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_ui_qr_code_2"
+        android:tint="@color/ui_scan_bracket" />
+</FrameLayout>

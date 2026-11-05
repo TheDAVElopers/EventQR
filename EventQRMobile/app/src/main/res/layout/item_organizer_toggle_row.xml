@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    A settings/rule row (§5.5 list-row geometry, §5.9 no card): title, optional meta, trailing
+    switch. 56dp minimum so the switch keeps a 48dp target; hairline divider inset to the text edge.
+
+    Used by the Gen C screens that used to build a per-row card from a GradientDrawable:
+    Manage scan purposes and Transaction rules.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/ui_organizer_rule_row_height"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/ui_row_start"
+        android:paddingEnd="@dimen/ui_row_end"
+        android:paddingTop="@dimen/space_8"
+        android:paddingBottom="@dimen/space_8">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txtToggleTitle"
+                style="@style/Widget.EventQR.Ui.ListRow.Title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="Check in" />
+
+            <TextView
+                android:id="@+id/txtToggleMeta"
+                style="@style/Widget.EventQR.Ui.ListRow.Meta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_2"
+                android:maxLines="2"
+                tools:text="Awards points when an attendee enters." />
+        </LinearLayout>
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchToggle"
+            android:layout_width="@dimen/ui_touch_min"
+            android:layout_height="@dimen/ui_touch_min"
+            android:layout_marginStart="@dimen/space_12"
+            android:contentDescription="@null"
+            android:gravity="center" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:layout_marginStart="@dimen/ui_row_start"
+        android:background="@color/ui_hairline"
+        android:importantForAccessibility="no" />
+
+</LinearLayout>

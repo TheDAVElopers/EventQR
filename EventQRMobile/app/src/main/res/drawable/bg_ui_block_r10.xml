@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One tintable block; the caller sets backgroundTintList to a ui_* role.
+     Radius 10 (card/row-tile). Replaces on-the-fly GradientDrawable construction in
+     View-based Kotlin: no literal colours, no per-site shape code. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="@dimen/ui_radius_card" />
+    <solid android:color="@color/ui_surface" />
+</shape>

@@ -1,87 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<!--
+    TRANSACTION ROW (§5.5) - the attendee transaction history row, also handed to the scanner's
+    (hidden) results list.
+
+    The host supplies the 20dp gutter on this one (activity_user_transaction_history pads its
+    list), so the row starts at x = 0 and the divider is inset 56dp (40 tile + 16 gap) - which
+    lands on the same 76dp absolute text edge as the staff rows.
+
+        40dp primary_container tile + 20dp icon
+        title / meta / micro
+        trailing numeric_s points (semantic colour only when negative)
+
+    Deleted: the CardView wrapper, the elevation, the green "Success" pill and the tinted
+    per-type icon backgrounds.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/space_10"
-    app:cardCornerRadius="@dimen/radius_14"
-    app:cardElevation="0dp">
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
+        android:minHeight="@dimen/ui_row_height"
         android:orientation="horizontal"
-        android:padding="@dimen/space_14">
+        android:paddingStart="@dimen/radius_none"
+        android:paddingTop="@dimen/ui_row_padding_vertical"
+        android:paddingEnd="@dimen/ui_row_end"
+        android:paddingBottom="@dimen/ui_row_padding_vertical">
 
         <FrameLayout
             android:id="@+id/layoutTransactionIcon"
-            android:layout_width="@dimen/tile_42"
-            android:layout_height="@dimen/tile_42"
-            android:background="@drawable/bg_circle_success_container">
+            android:layout_width="@dimen/ui_row_tile"
+            android:layout_height="@dimen/ui_row_tile"
+            android:background="@drawable/bg_ui_icon_tile"
+            android:importantForAccessibility="no">
 
             <ImageView
                 android:id="@+id/imgTransactionTrend"
                 android:layout_width="@dimen/icon_md"
                 android:layout_height="@dimen/icon_md"
                 android:layout_gravity="center"
-                android:src="@drawable/ic_trend_up" />
+                android:contentDescription="@null"
+                android:src="@drawable/ic_ui_qr_code_2"
+                android:tint="@color/ui_primary" />
         </FrameLayout>
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/space_md"
+            android:layout_marginStart="@dimen/space_lg"
             android:layout_weight="1"
             android:orientation="vertical">
 
             <TextView
                 android:id="@+id/txtTransactionTitle"
-                android:layout_width="wrap_content"
+                style="@style/Widget.EventQR.Ui.ListRow.Title"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
+                tools:text="Event entry" />
 
             <TextView
                 android:id="@+id/txtTransactionEvent"
-                android:layout_width="wrap_content"
+                style="@style/Widget.EventQR.Ui.ListRow.Meta"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_xxs"
-                android:textColor="@color/text_hint"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
+                android:layout_marginTop="@dimen/space_2"
+                tools:text="Northgate Design Week" />
 
             <TextView
                 android:id="@+id/txtTransactionTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_xxs"
-                android:textColor="@color/text_hint"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
+                android:layout_marginTop="@dimen/space_2"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_text_secondary"
+                tools:text="12 Oct 2026, 9:41 AM" />
         </LinearLayout>
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/txtTransactionPoints"
+            style="@style/Widget.EventQR.Ui.ListRow.Value"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="end"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/txtTransactionPoints"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/success_dark"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong" />
-
-            <TextView
-                android:id="@+id/txtTransactionTag"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_sm"
-                android:background="@drawable/bg_green_pill"
-                android:paddingHorizontal="@dimen/space_10"
-                android:paddingVertical="@dimen/space_xs"
-                android:text="@string/common_success"
-                android:textColor="@color/on_success_container"
-                android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
-        </LinearLayout>
+            android:layout_marginStart="@dimen/space_md"
+            tools:text="+10 pts" />
     </LinearLayout>
-</androidx.cardview.widget.CardView>
+
+    <View
+        style="@style/Widget.EventQR.Ui.ListRow.Divider"
+        android:layout_marginStart="@dimen/ui_staff_divider_inset_compact" />
+</LinearLayout>

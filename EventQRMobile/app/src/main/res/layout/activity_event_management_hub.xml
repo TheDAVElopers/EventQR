@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    EVENT MANAGEMENT HUB (6.4) - retires Gen C.
+
+        Top bar        56dp, hairline under
+        Identity       pass-head anatomy (§4.6) at per-event scale: event name headline with the
+                       status badge as its trailing value, 1dp tear, then three stat slots on the
+                       ui_pass_stub tonal band
+        Manage         ONE grouped card holding the five management rows, 16dp chevrons
+
+    Deleted: the #0F172A -> primary_dark -> primary 3-stop GradientDrawable banner, the 96dp
+    calendar glyph, the three hand-rolled mini stat cards, the per-row roundedRect() cards with an
+    accent elevation, and the tinted 44dp icon tiles.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/ui_background"
+    android:orientation="vertical">
+
+    <include
+        android:id="@+id/topBar"
+        layout="@layout/include_top_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:overScrollMode="never">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="@dimen/space_32">
+
+            <!-- Identity: the pass-head anatomy (§4.6) at per-event scale.
+                 Outer container keeps id emh_header_banner but owns NO fill, so an injected
+                 empty/error state renders on ui_background instead of on ui_primary. -->
+            <LinearLayout
+                android:id="@+id/emh_header_banner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Block A: identity. The name is the anchor; status is its trailing value (§5.4). -->
+                <LinearLayout
+                    android:id="@+id/emh_header_identity"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_pass_head"
+                    android:orientation="vertical"
+                    android:paddingStart="@dimen/ui_gutter"
+                    android:paddingTop="@dimen/space_16"
+                    android:paddingEnd="@dimen/ui_gutter"
+                    android:paddingBottom="@dimen/space_16">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:baselineAligned="false"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/emh_event_title"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:ellipsize="end"
+                            android:maxLines="2"
+                            android:textAppearance="@style/TextAppearance.EventQR.Type.Headline"
+                            android:textColor="@color/ui_on_primary"
+                            tools:text="DevFest Manila 2026" />
+
+                        <TextView
+                            android:id="@+id/emh_status_badge"
+                            style="@style/Widget.EventQR.Ui.StatusBadge.Info"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="top"
+                            android:layout_marginStart="@dimen/space_12"
+                            android:layout_marginTop="@dimen/space_4"
+                            tools:text="Upcoming" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Tear line: full bleed, 1dp. -->
+                <View
+                    android:id="@+id/emh_header_tear"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@drawable/divider_perforation_dark"
+                    android:importantForAccessibility="no" />
+
+                <!-- Block B: stub, three equal slots on the tonal step. -->
+                <LinearLayout
+                    android:id="@+id/emh_stats_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/ui_pass_head_stub_height"
+                    android:background="@drawable/bg_pass_stub"
+                    android:baselineAligned="false"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/ui_gutter">
+
+                    <LinearLayout
+                        android:id="@+id/emh_stat_cell_1"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:paddingEnd="@dimen/ui_pass_head_stat_cell_pad">
+
+                        <TextView
+                            android:id="@+id/emh_stat_registered"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:textAppearance="@style/TextAppearance.EventQR.Type.NumericM"
+                            android:textColor="@color/ui_on_primary"
+                            tools:text="128" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/ui_pass_head_stat_label_gap"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="@string/event_management_hub_stat_registered"
+                            android:textAppearance="@style/TextAppearance.EventQR.Type.Overline"
+                            android:textColor="@color/ui_on_primary_muted" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="@dimen/stroke_hairline"
+                        android:layout_height="match_parent"
+                        android:background="@color/ui_on_dark_hairline"
+                        android:importantForAccessibility="no" />
+
+                    <LinearLayout
+                        android:id="@+id/emh_stat_cell_2"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:paddingStart="@dimen/ui_pass_head_stat_cell_pad"
+                        android:paddingEnd="@dimen/ui_pass_head_stat_cell_pad">
+
+                        <TextView
+                            android:id="@+id/emh_stat_capacity"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:textAppearance="@style/TextAppearance.EventQR.Type.NumericM"
+                            android:textColor="@color/ui_on_primary"
+                            tools:text="200" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/ui_pass_head_stat_label_gap"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="@string/event_management_hub_stat_capacity"
+                            android:textAppearance="@style/TextAppearance.EventQR.Type.Overline"
+                            android:textColor="@color/ui_on_primary_muted" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="@dimen/stroke_hairline"
+                        android:layout_height="match_parent"
+                        android:background="@color/ui_on_dark_hairline"
+                        android:importantForAccessibility="no" />
+
+                    <LinearLayout
+                        android:id="@+id/emh_stat_cell_3"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:paddingStart="@dimen/ui_pass_head_stat_cell_pad"
+                        android:paddingEnd="@dimen/ui_gutter">
+
+                        <TextView
+                            android:id="@+id/emh_stat_available"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:textAppearance="@style/TextAppearance.EventQR.Type.NumericM"
+                            android:textColor="@color/ui_on_primary"
+                            tools:text="72" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/ui_pass_head_stat_label_gap"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="@string/event_management_hub_stat_available"
+                            android:textAppearance="@style/TextAppearance.EventQR.Type.Overline"
+                            android:textColor="@color/ui_on_primary_muted" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/emh_section_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_32"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:text="@string/event_management_hub_section_title"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.EventQR.Ui.Card.Grouped"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_8"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                app:cardUseCompatPadding="false">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <include
+                        android:id="@+id/emh_menu_edit"
+                        layout="@layout/list_row_icon"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <include
+                        android:id="@+id/emh_menu_staff"
+                        layout="@layout/list_row_icon"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <include
+                        android:id="@+id/emh_menu_scan"
+                        layout="@layout/list_row_icon"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <include
+                        android:id="@+id/emh_menu_transaction"
+                        layout="@layout/list_row_icon"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <include
+                        android:id="@+id/emh_menu_id"
+                        layout="@layout/list_row_icon"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

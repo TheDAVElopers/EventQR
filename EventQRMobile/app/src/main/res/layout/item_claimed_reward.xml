@@ -1,88 +1,102 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<!--
+    Claimed reward row (§6.2) - 88dp, no card: 40dp icon tile, reward name, event, date, the ONE
+    status badge and the points spent in numeric_s. Divider inset to the text edge.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/claimedRewardRow"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/space_md"
-    app:cardCornerRadius="@dimen/radius_14"
-    app:cardElevation="@dimen/elevation_raised">
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:minHeight="@dimen/ui_attendee_reward_row"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="@dimen/space_14">
+        android:paddingStart="@dimen/ui_row_start"
+        android:paddingTop="@dimen/ui_row_padding_vertical"
+        android:paddingEnd="@dimen/ui_row_end"
+        android:paddingBottom="@dimen/ui_row_padding_vertical">
 
         <FrameLayout
-            android:layout_width="@dimen/tile_44"
-            android:layout_height="@dimen/tile_44"
-            style="@style/Widget.EventQR.IconTile.Success">
+            android:layout_width="@dimen/ui_row_tile"
+            android:layout_height="@dimen/ui_row_tile"
+            android:background="@drawable/bg_ui_icon_tile">
 
             <ImageView
                 android:id="@+id/imgClaimedGift"
-                android:layout_width="@dimen/icon_22"
-                android:layout_height="@dimen/icon_22"
+                android:layout_width="@dimen/icon_md"
+                android:layout_height="@dimen/icon_md"
                 android:layout_gravity="center"
-                android:src="@drawable/ic_gift"
-                android:tint="@color/success" />
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_ui_redeem"
+                android:tint="@color/ui_primary" />
         </FrameLayout>
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/space_md"
+            android:layout_marginStart="@dimen/space_lg"
             android:layout_weight="1"
             android:orientation="vertical">
 
             <TextView
                 android:id="@+id/txtClaimedTitle"
-                android:layout_width="wrap_content"
+                style="@style/Widget.EventQR.Ui.ListRow.Title"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
+                tools:text="Event shirt" />
 
             <TextView
                 android:id="@+id/txtClaimedEvent"
-                android:layout_width="wrap_content"
+                style="@style/Widget.EventQR.Ui.ListRow.Meta"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_xxs"
-                android:textColor="@color/text_hint"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
+                android:layout_marginTop="@dimen/space_2"
+                tools:text="DevFest Manila" />
 
             <TextView
                 android:id="@+id/txtClaimedDate"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_xxs"
-                android:textColor="@color/text_hint"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
+                android:maxLines="1"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_text_secondary"
+                tools:text="12 Oct 2026, 9:41 AM" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_sm"
             android:gravity="end"
             android:orientation="vertical">
 
             <TextView
                 android:id="@+id/txtClaimedStatus"
+                style="@style/Widget.EventQR.Ui.StatusBadge.Success"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_green_pill"
-                android:paddingHorizontal="@dimen/space_10"
-                android:paddingVertical="@dimen/space_xs"
-                android:text="@string/common_approved"
-                android:textColor="@color/on_success_container"
-                android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
+                android:layout_height="@dimen/ui_badge_height"
+                tools:text="Approved" />
 
             <TextView
                 android:id="@+id/txtClaimedPoints"
+                style="@style/Widget.EventQR.Ui.ListRow.Value"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_sm"
-                android:text="@string/item_claimed_reward_100_pts"
-                android:textColor="@color/danger"
-                android:textAppearance="@style/TextAppearance.EventQR.TextHeadline" />
+                android:layout_marginTop="@dimen/space_4"
+                android:textColor="@color/ui_error"
+                tools:text="-120 pts" />
         </LinearLayout>
     </LinearLayout>
-</androidx.cardview.widget.CardView>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:layout_marginStart="@dimen/ui_divider_inset"
+        android:background="@color/ui_hairline"
+        android:importantForAccessibility="no" />
+</LinearLayout>

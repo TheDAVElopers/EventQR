@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SKELETON BLOCK (§5.11) - one parameterized placeholder. Replaces include_skeleton_cards,
+    include_skeleton_profile, include_skeleton_edit_profile and the four bg_staff_skeleton_*.
+
+        <include layout="@layout/include_skeleton_block"
+                 android:layout_width="@dimen/ui_skeleton_title_width"
+                 android:layout_height="@dimen/ui_skeleton_bar_height" />
+
+    Width/height/radius at the call site must match the final content within 4dp, or the layout
+    jumps on load - which is the entire point of the component. Motion is applied to the view by
+    Skeleton.kt (alpha 0.55 -> 1.0, 900ms, reverse), and only when ANIMATOR_DURATION_SCALE != 0.
+
+    TalkBack: the CONTAINER gets contentDescription="Loading"; the bars are
+    importantForAccessibility="no" (§9.5).
+-->
+<View xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/Widget.EventQR.Ui.Skeleton"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/ui_skeleton_bar_height" />

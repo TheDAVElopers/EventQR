@@ -16,8 +16,6 @@ import com.thedavelopers.eventqr.core.api.dto.NotificationStatus
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 import com.thedavelopers.eventqr.ui.theme.EventQrTheme
 import com.thedavelopers.eventqr.ui.theme.dimenOffset
-import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
-import com.thedavelopers.eventqr.ui.theme.strong
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -54,10 +52,11 @@ open class UnifiedNotificationsActivity : AppCompatActivity() {
         }
 
         val markAllRead = TextView(this).apply {
-            text = getString(R.string.organizer_notifications_mark_all_read)
-            setTextSizeRes(R.dimen.type_body_compact)
-            strong()
-            setPadding(dimenOffset(R.dimen.space_sm), dimenOffset(R.dimen.space_sm), dimenOffset(R.dimen.space_sm), dimenOffset(R.dimen.space_sm))
+            text = getString(R.string.ui_notifications_mark_all_read)
+            setTextAppearance(R.style.TextAppearance_EventQR_Type_Label)
+            gravity = android.view.Gravity.CENTER
+            minHeight = dimenOffset(R.dimen.ui_touch_min)
+            setPadding(dimenOffset(R.dimen.space_12), 0, dimenOffset(R.dimen.space_12), 0)
             setOnClickListener { markAllRead() }
         }
         header.endSlot.addView(markAllRead)
@@ -67,7 +66,7 @@ open class UnifiedNotificationsActivity : AppCompatActivity() {
                     val hasUnread = list.any { it.status != NotificationStatus.READ && it.readAt == null }
                     markAllRead.visibility = if (list.isEmpty()) View.GONE else View.VISIBLE
                     markAllRead.isEnabled = hasUnread
-                    markAllRead.setTextColor(getColor(if (hasUnread) R.color.primary else R.color.text_disabled))
+                    markAllRead.setTextColor(getColor(if (hasUnread) R.color.ui_primary else R.color.ui_text_disabled))
                 }
             }
         }

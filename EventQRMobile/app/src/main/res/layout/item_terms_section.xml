@@ -1,55 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    style="@style/Widget.EventQR.Card.Compact.Flat"
+<!--
+    TERMS SECTION (§6.1).
+
+        One numbered section: 28dp `numeric_m` number in a sunken plate, title in `title`,
+        body in `body_s` on the 36dp edge, 1dp hairline under the block.
+        No card, no per-section badge drawable, no ALL-CAPS heading.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/space_md">
+    android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/layoutTermsTitleRow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="@dimen/space_lg">
-
-        <LinearLayout
-            android:id="@+id/layoutTermsTitleRow"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/txtTermsNumber"
-                style="@style/TextAppearance.EventQR.TermsBadge"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_terms_number"
-                android:gravity="center"
-                android:importantForAccessibility="no"
-                android:minWidth="28dp"
-                android:minHeight="28dp"
-                android:padding="@dimen/space_xs" />
-
-            <TextView
-                android:id="@+id/txtTermsSectionTitle"
-                style="@style/TextAppearance.EventQR.TermsSectionTitle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/space_md"
-                android:layout_weight="1"
-                android:accessibilityHeading="true"
-                android:lineSpacingMultiplier="@dimen/line_multiplier_11" />
-        </LinearLayout>
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingTop="@dimen/space_20"
+        android:paddingBottom="@dimen/space_8">
 
         <TextView
-            android:id="@+id/txtTermsSectionBody"
-            style="@style/TextAppearance.EventQR.TextBody"
-            android:layout_width="match_parent"
+            android:id="@+id/txtTermsNumber"
+            android:layout_width="@dimen/ui_terms_number_size"
+            android:layout_height="@dimen/ui_terms_number_size"
+            android:background="@drawable/bg_ui_date_block"
+            android:gravity="center"
+            android:importantForAccessibility="no"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.NumericM"
+            android:textColor="@color/ui_text_secondary"
+            tools:text="1" />
+
+        <TextView
+            android:id="@+id/txtTermsSectionTitle"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/space_40"
-            android:layout_marginTop="@dimen/space_10"
-            android:lineSpacingMultiplier="@dimen/line_multiplier_13"
-            android:textColor="@color/text_secondary" />
+            android:layout_marginStart="@dimen/space_12"
+            android:layout_weight="1"
+            android:accessibilityHeading="true"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.Title"
+            android:textColor="@color/ui_text_primary"
+            tools:text="Using EventQR" />
     </LinearLayout>
-</com.google.android.material.card.MaterialCardView>
+
+    <TextView
+        android:id="@+id/txtTermsSectionBody"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_40"
+        android:paddingBottom="@dimen/space_16"
+        android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+        android:textColor="@color/ui_text_secondary"
+        tools:text="EventQR lets you register for events..." />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:layout_marginStart="@dimen/space_40"
+        android:background="@color/ui_hairline"
+        android:importantForAccessibility="no" />
+</LinearLayout>

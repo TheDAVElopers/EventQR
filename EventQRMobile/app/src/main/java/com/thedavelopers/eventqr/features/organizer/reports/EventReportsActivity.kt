@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.reports
 
+import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.mediumWeight
 import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.ui.theme.dimenFloat
@@ -8,7 +9,6 @@ import com.thedavelopers.eventqr.ui.theme.roundedRect
 import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
 import com.thedavelopers.eventqr.ui.theme.strong
 import android.graphics.drawable.ColorDrawable
-import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.Gravity
@@ -25,6 +25,7 @@ import androidx.annotation.DimenRes
 import androidx.appcompat.app.AlertDialog
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -38,6 +39,7 @@ import com.thedavelopers.eventqr.features.reports.model.dto.EventReportFilterSta
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportFiltersDto
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportSummaryDto
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportType
+import com.thedavelopers.eventqr.ui.components.ListRowBinder
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
@@ -94,7 +96,7 @@ open class EventReportsActivity : AppCompatActivity() {
         } else {
             content.removeAllViews()
             content.addView(centeredEmptyState(
-                iconRes = R.drawable.ic_organizer_reports,
+                iconRes = AppIcons.Report,
                 title = getString(R.string.event_reports_no_events_title),
                 subtext = getString(R.string.event_reports_no_events_subtext),
             ))
@@ -135,233 +137,41 @@ open class EventReportsActivity : AppCompatActivity() {
         // and leave the selector empty while the rest of the screen works.
         skeletonLoading?.visibility = View.GONE
         container.removeAllViews()
-        container.addView(buildSelectEventCard(loadedEvents))
-        container.addView(buildSummaryHeaderCard())
+        // 56dp field row, not a glassy card wrapping a hidden spinner.
+        container.addView(
+            eventSelector(loadedEvents, selectedEvent.id) { event ->
+                selectedEvent = event
+                repository.saveSelectedEventId(event.id)
+                saveSelectedEventId(event.id)
+                loadScreen()
+            },
+        )
+        container.addView(buildSummaryMetrics())
         container.addView(sectionHeader(getString(R.string.event_reports_generate_reports)))
         container.addView(buildReportCatalogContainer(reportCatalog()))
     }
 
-    private fun buildSelectEventCard(events: List<OrganizerMvpEvent>): LinearLayout {
-        val approvedEvents = events.approvedOnly()
-        val titles = approvedEvents.map { it.title.ifBlank { getString(R.string.common_untitled_event) } }
-        var selectedIndex = approvedEvents.indexOfFirst { it.id == selectedEvent.id }.takeIf { it >= 0 } ?: 0
-        if (approvedEvents.isEmpty()) selectedIndex = -1
-
-        val currentTitleText = styledText(titles.getOrNull(selectedIndex) ?: getString(R.string.event_reports_select_event), R.dimen.type_body, true, orgColors.text)
-        val arrow = buildSelectEventArrow()
-
-        val card = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_md))
-            background = roundedRect(color(R.color.surface), R.dimen.radius_lg, color(R.color.outline))
-            elevation = dimenPx(R.dimen.elevation_raised).toFloat()
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply { setMargins(0, dimenPx(R.dimen.space_xs), 0, dimenPx(R.dimen.space_14)) }
-        }
-
-        card.addView(buildSelectEventIcon())
-
-        val textLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-                marginStart = dimenPx(R.dimen.space_md)
-                marginEnd = dimenPx(R.dimen.space_sm)
-            }
-            addView(styledText(getString(R.string.event_reports_select_event_caps), R.dimen.type_micro, true, color(R.color.text_label)))
-            addView(currentTitleText)
-        }
-        card.addView(textLayout)
-        card.addView(arrow)
-
-        var popup: PopupWindow? = null
-        var isOpen = false
-
-        fun buildDropdown(): LinearLayout = LinearLayout(this@EventReportsActivity).apply {
-            orientation = LinearLayout.VERTICAL
-            background = roundedRect(color(R.color.surface), R.dimen.radius_14, color(R.color.outline))
-            approvedEvents.forEachIndexed { index, event ->
-                val selected = index == selectedIndex
-                addView(LinearLayout(this@EventReportsActivity).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    gravity = Gravity.CENTER_VERTICAL
-                    setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_14), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_14))
-                    setBackgroundColor(if (selected) color(R.color.accent_container) else color(R.color.surface))
-                    setOnClickListener {
-                        selectedIndex = index
-                        currentTitleText.text = titles[index]
-                        popup?.dismiss()
-                        isOpen = false
-                        arrow.rotation = 0f
-                        selectedEvent = event
-                        repository.saveSelectedEventId(event.id)
-                        saveSelectedEventId(event.id)
-                        loadScreen()
-                    }
-                    addView(TextView(this@EventReportsActivity).apply {
-                        text = titles[index]
-                        setTextColor(if (selected) color(R.color.primary) else orgColors.text)
-                        setTextSizeRes(R.dimen.type_body)
-                        strong()
-                        layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-                    })
-                })
-            }
-        }
-
-        card.setOnClickListener {
-            if (approvedEvents.isEmpty()) return@setOnClickListener
-            if (isOpen) {
-                popup?.dismiss()
-                isOpen = false
-                arrow.rotation = 0f
-            } else {
-                popup?.dismiss()
-                popup = PopupWindow(
-                    buildDropdown(),
-                    card.width.takeIf { it > 0 } ?: ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    true,
-                ).apply {
-                    isOutsideTouchable = true
-                    elevation = dimenPx(R.dimen.elevation_overlay).toFloat()
-                    setBackgroundDrawable(ColorDrawable(color(R.color.transparent)))
-                    setOnDismissListener { isOpen = false; arrow.rotation = 0f }
-                }
-                isOpen = true
-                arrow.rotation = 180f
-                popup.showAsDropDown(card, 0, dimenPx(R.dimen.space_xs))
-            }
-        }
-
-        return card
-    }
-
-    // Shared by the loaded and skeleton select-event cards so the constant icon/arrow can't drift.
-    private fun buildSelectEventIcon(): LinearLayout = LinearLayout(this).apply {
-        gravity = Gravity.CENTER
-        background = roundedRect(color(R.color.accent_container), R.dimen.radius_md)
-        layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.tile_44), dimenPx(R.dimen.tile_44))
-        addView(ImageView(this@EventReportsActivity).apply {
-            setImageResource(R.drawable.ic_calendar)
-            setColorFilter(color(R.color.chart_5))
-            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_22), dimenPx(R.dimen.icon_22))
-        })
-    }
-
-    private fun buildSelectEventArrow(): ImageView = ImageView(this).apply {
-        setImageResource(R.drawable.ic_arrow_drop_down)
-        setColorFilter(color(R.color.neutral))
-        layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md))
-    }
-
-    // Same gradient as the organizer dashboard header, with the card's corner radius.
-    private fun dashboardGradient(): GradientDrawable =
-        (ResourcesCompat.getDrawable(resources, R.drawable.bg_dashboard_gradient, theme)!!.mutate() as GradientDrawable).apply {
-            cornerRadius = dimenPx(R.dimen.radius_lg).toFloat()
-        }
-
-    private fun buildSummaryHeaderCard(): LinearLayout {
-        val gradient = dashboardGradient()
-
-        return LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            background = gradient
-            setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_18))
-            elevation = dimenPx(R.dimen.elevation_lifted).toFloat()
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply { setMargins(0, 0, 0, dimenPx(R.dimen.space_18)) }
-
-            val topRow = LinearLayout(this@EventReportsActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                )
-
-                addView(TextView(this@EventReportsActivity).apply {
-                    text = selectedEvent.title
-                    setTextSizeRes(R.dimen.type_subtitle)
-                    strong()
-                    setTextColor(color(R.color.on_primary))
-                    ellipsize = android.text.TextUtils.TruncateAt.END
-                    maxLines = 1
-                    layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-                        marginEnd = dimenPx(R.dimen.space_sm)
-                    }
-                })
-
-                addView(LinearLayout(this@EventReportsActivity).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    gravity = Gravity.CENTER_VERTICAL
-                    background = roundedRect(color(R.color.on_dark_15), R.dimen.radius_md)
-                    setPadding(dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_xs), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_xs))
-
-                    addView(View(this@EventReportsActivity).apply {
-                        background = roundedRect(ResourcesCompat.getColor(resources, R.color.success, theme), R.dimen.radius_3)
-                        layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.progress_bar_height), dimenPx(R.dimen.progress_bar_height)).apply {
-                            marginEnd = dimenPx(R.dimen.space_5)
-                        }
-                    })
-
-                    addView(TextView(this@EventReportsActivity).apply {
-                        text = getString(R.string.event_reports_selected_event)
-                        setTextSizeRes(R.dimen.type_overline)
-                        strong()
-                        setTextColor(color(R.color.accent_container_strong))
-                    })
-                })
-            }
-            addView(topRow)
-
-            val statsRow = LinearLayout(this@EventReportsActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
-                setPadding(0, dimenPx(R.dimen.space_lg), 0, 0)
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                )
-
-                addView(summaryStatColumn(getString(R.string.common_registered), summary.registeredCount, first = true))
-
-                addView(summaryStatColumn(getString(R.string.common_checked_in), summary.checkedInCount))
-
-                addView(summaryStatColumn(getString(R.string.event_reports_exited), summary.exitedCount))
-            }
-            addView(statsRow)
-        }
-    }
-
-    // Mirrors the attendee dashboard stat tiles: translucent tile, 12sp medium label (on_dark_50)
-    // above a 22sp bold white value. The card is already the dark dashboard gradient, so colours carry over.
-    private fun summaryStatColumn(label: String, value: Int, first: Boolean = false): LinearLayout = LinearLayout(this).apply {
+    /**
+     * REGISTERED / CHECKED IN / EXITED as three 56dp metric rows (§5.9 form 2). This replaces the
+     * dark gradient summary card with its three translucent tiles.
+     */
+    private fun buildSummaryMetrics(): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-        gravity = Gravity.CENTER
-        background = ResourcesCompat.getDrawable(resources, R.drawable.bg_dashboard_stat_card, theme)
-        setPadding(0, dimenPx(R.dimen.space_14), 0, dimenPx(R.dimen.space_14))
-        layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-            if (!first) marginStart = dimenPx(R.dimen.space_sm)
-        }
-        addView(TextView(this@EventReportsActivity).apply {
-            text = label
-            setTextSizeRes(R.dimen.type_caption)
-            mediumWeight()
-            setTextColor(color(R.color.on_dark_50))
-            gravity = Gravity.CENTER
-        })
-        addView(TextView(this@EventReportsActivity).apply {
-            text = formatCount(value)
-            setTextSizeRes(R.dimen.type_headline)
-            strong()
-            setTextColor(color(R.color.on_primary))
-            gravity = Gravity.CENTER
-            setPadding(0, dimenPx(R.dimen.space_xs), 0, 0)
-        })
+        layoutParams = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+        ).apply { setMargins(0, dimenPx(R.dimen.space_16), 0, dimenPx(R.dimen.space_8)) }
+        addView(metricRow(getString(R.string.ui_organizer_report_registered), summary.registeredCount))
+        addView(metricRow(getString(R.string.ui_organizer_report_checked_in), summary.checkedInCount))
+        addView(metricRow(getString(R.string.ui_organizer_report_exited), summary.exitedCount))
+    }
+
+    /** label left, value right, hairline under - no card, no fill, no icon (§5.9). */
+    private fun metricRow(label: String, value: Int): View {
+        val row = layoutInflater.inflate(R.layout.widget_metric_row, null, false)
+        row.findViewById<TextView>(R.id.metricLabel)?.text = label
+        row.findViewById<TextView>(R.id.metricValue)?.text = formatCount(value)
+        return row
     }
 
     private fun sectionHeader(label: String): LinearLayout = LinearLayout(this).apply {
@@ -390,9 +200,9 @@ open class EventReportsActivity : AppCompatActivity() {
             })
 
             addView(ImageView(this@EventReportsActivity).apply {
-                setImageResource(R.drawable.ic_chevron_right)
+                setImageResource(AppIcons.Chevron)
                 setColorFilter(color(R.color.primary))
-                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_18), dimenPx(R.dimen.icon_18)).apply {
+                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.ui_chevron), dimenPx(R.dimen.ui_chevron)).apply {
                     marginStart = dimenPx(R.dimen.space_xxs)
                 }
             })
@@ -400,30 +210,25 @@ open class EventReportsActivity : AppCompatActivity() {
         addView(actionRow)
     }
 
+    /**
+     * The five report types as one grouped card of hairline rows (§5.3 CardList, §5.5). Each row
+     * carries ONE icon weight (20dp `ui_primary` in the neutral tile) and one chevron - the
+     * per-row tinted icon rainbow is deleted.
+     */
     private fun buildReportCatalogContainer(items: List<EventReportCatalogItem>): LinearLayout {
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            background = roundedRect(color(R.color.surface), R.dimen.radius_lg, color(R.color.outline))
-            elevation = dimenPx(R.dimen.elevation_raised).toFloat()
+            background = ContextCompat.getDrawable(context, R.drawable.bg_ui_card)
+            elevation = 0f
+            setPadding(0, 0, 0, 0)
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply { setMargins(0, 0, 0, dimenPx(R.dimen.space_xl)) }
+            ).apply { setMargins(0, 0, 0, dimenPx(R.dimen.space_24)) }
         }
 
         items.forEachIndexed { index, item ->
-            val itemView = buildReportMenuItem(item) { openFilterSheet(item) }
-            container.addView(itemView)
-
-            if (index < items.size - 1) {
-                container.addView(View(this).apply {
-                    setBackgroundColor(color(R.color.surface_muted))
-                    layoutParams = LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        dimenPx(R.dimen.stroke_hairline),
-                    ).apply { setMargins(dimenPx(R.dimen.space_lg), 0, dimenPx(R.dimen.space_lg), 0) }
-                })
-            }
+            container.addView(buildReportMenuItem(item, isLast = index == items.lastIndex) { openFilterSheet(item) })
         }
 
         return container
@@ -431,61 +236,20 @@ open class EventReportsActivity : AppCompatActivity() {
 
     private fun buildReportMenuItem(
         item: EventReportCatalogItem,
+        isLast: Boolean,
         onClick: () -> Unit,
-    ): LinearLayout {
-        val subtitle = getReportSubtitle(item.reportType)
-
-        return LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_14), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_14))
-            isClickable = true
-            isFocusable = true
-            setOnClickListener { onClick() }
-
-            val outVal = TypedValue()
-            theme.resolveAttribute(android.R.attr.selectableItemBackground, outVal, true)
-            setBackgroundResource(outVal.resourceId)
-
-            addView(LinearLayout(this@EventReportsActivity).apply {
-                gravity = Gravity.CENTER
-                background = roundedRect(item.iconBg, R.dimen.radius_md)
-                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.tile_44), dimenPx(R.dimen.tile_44))
-                addView(ImageView(this@EventReportsActivity).apply {
-                    setImageResource(item.iconRes)
-                    setColorFilter(item.iconTint)
-                    layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_22), dimenPx(R.dimen.icon_22))
-                })
-            })
-
-            addView(LinearLayout(this@EventReportsActivity).apply {
-                orientation = LinearLayout.VERTICAL
-                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-                    marginStart = dimenPx(R.dimen.space_14)
-                    marginEnd = dimenPx(R.dimen.space_sm)
-                }
-                addView(TextView(this@EventReportsActivity).apply {
-                    text = item.label
-                    setTextSizeRes(R.dimen.type_body)
-                    strong()
-                    setTextColor(color(R.color.primary_dark))
-                })
-                if (subtitle.isNotBlank()) {
-                    addView(TextView(this@EventReportsActivity).apply {
-                        text = subtitle
-                        setTextSizeRes(R.dimen.type_caption)
-                        setTextColor(color(R.color.text_secondary))
-                        setPadding(0, dimenPx(R.dimen.space_xxs), 0, 0)
-                    })
-                }
-            })
-
-            addView(ImageView(this@EventReportsActivity).apply {
-                setImageResource(R.drawable.ic_chevron_right)
-                setColorFilter(color(R.color.neutral))
-                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md))
-            })
-        }
+    ): View {
+        val row = layoutInflater.inflate(R.layout.list_row_icon, null, false)
+        ListRowBinder.bind(
+            row = row,
+            title = item.label,
+            meta = getReportSubtitle(item.reportType),
+            trailing = ListRowBinder.Trailing.CHEVRON,
+            showDivider = !isLast,
+            onClick = onClick,
+        )
+        row.findViewById<ImageView>(R.id.listRowIcon)?.setImageResource(item.iconRes)
+        return row
     }
 
     private fun getReportSubtitle(type: EventReportType): String = when (type) {
@@ -499,175 +263,10 @@ open class EventReportsActivity : AppCompatActivity() {
         EventReportType.POINTS -> getString(R.string.event_reports_subtitle_points)
     }
 
+    /** One parameterized skeleton (§5.11): the same geometry as the loaded selector + metric rows. */
     private fun reportsSkeleton(): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-
-        addView(buildSelectEventSkeletonCard())
-        addView(buildSummarySkeletonCard())
-        addView(sectionHeader(getString(R.string.event_reports_generate_reports)))
-        addView(buildReportCatalogSkeletonContainer())
-    }
-
-    private fun buildSelectEventSkeletonCard(): LinearLayout {
-        val card = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_md))
-            background = roundedRect(color(R.color.surface), R.dimen.radius_lg, color(R.color.outline))
-            elevation = dimenPx(R.dimen.elevation_raised).toFloat()
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply { setMargins(0, dimenPx(R.dimen.space_xs), 0, dimenPx(R.dimen.space_14)) }
-        }
-
-        card.addView(buildSelectEventIcon())
-
-        val textLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-                marginStart = dimenPx(R.dimen.space_md)
-                marginEnd = dimenPx(R.dimen.space_sm)
-            }
-            addView(styledText(getString(R.string.event_reports_select_event_caps), R.dimen.type_micro, true, color(R.color.text_label)))
-            addView(View(this@EventReportsActivity).apply {
-                background = ResourcesCompat.getDrawable(resources, R.drawable.bg_staff_skeleton_bar, theme)
-                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.size_120), dimenPx(R.dimen.icon_sm)).apply {
-                    topMargin = dimenPx(R.dimen.space_xs)
-                }
-            })
-        }
-        card.addView(textLayout)
-
-        card.addView(buildSelectEventArrow())
-
-        return card
-    }
-
-    private fun buildSummarySkeletonCard(): LinearLayout {
-        val gradient = dashboardGradient()
-
-        return LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            background = gradient
-            setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_18))
-            elevation = dimenPx(R.dimen.elevation_lifted).toFloat()
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply { setMargins(0, 0, 0, dimenPx(R.dimen.space_18)) }
-
-            val topRow = LinearLayout(this@EventReportsActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                )
-
-                addView(summarySkeletonBlock(0, R.dimen.icon_18, R.dimen.radius_sm).apply {
-                    layoutParams = LinearLayout.LayoutParams(0, dimenPx(R.dimen.icon_18), 1f).apply { marginEnd = dimenPx(R.dimen.space_sm) }
-                })
-                addView(summarySkeletonBlock(dimenPx(R.dimen.tile_80), R.dimen.icon_22, R.dimen.radius_md))
-            }
-            addView(topRow)
-
-            val statsRow = LinearLayout(this@EventReportsActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
-                setPadding(0, dimenPx(R.dimen.space_lg), 0, 0)
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                )
-                repeat(3) { i -> addView(summaryStatSkeletonColumn(first = i == 0)) }
-            }
-            addView(statsRow)
-        }
-    }
-
-    // Translucent white placeholder block for use on the purple gradient (never opaque).
-    private fun summarySkeletonBlock(widthPx: Int, @DimenRes heightRes: Int, @DimenRes radiusRes: Int): View = View(this).apply {
-        background = roundedRect(color(R.color.on_dark_20), radiusRes)
-        layoutParams = LinearLayout.LayoutParams(widthPx, dimenPx(heightRes))
-    }
-
-    // Same tile geometry as summaryStatColumn (14dp padding, 12sp label + 22sp value) so there is no layout jump.
-    private fun summaryStatSkeletonColumn(first: Boolean): LinearLayout = LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        gravity = Gravity.CENTER_HORIZONTAL
-        background = ResourcesCompat.getDrawable(resources, R.drawable.bg_dashboard_stat_card, theme)
-        setPadding(0, dimenPx(R.dimen.space_14), 0, dimenPx(R.dimen.space_14))
-        layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-            if (!first) marginStart = dimenPx(R.dimen.space_sm)
-        }
-        addView(summarySkeletonBlock(dimenPx(R.dimen.touch_target_min), R.dimen.space_md, R.dimen.radius_6))
-        addView(summarySkeletonBlock(dimenPx(R.dimen.icon_32), R.dimen.icon_22, R.dimen.radius_6).apply {
-            (layoutParams as LinearLayout.LayoutParams).topMargin = dimenPx(R.dimen.space_sm)
-        })
-    }
-
-    private fun buildReportCatalogSkeletonContainer(): LinearLayout {
-        val container = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            background = roundedRect(color(R.color.surface), R.dimen.radius_lg, color(R.color.outline))
-            elevation = dimenPx(R.dimen.elevation_raised).toFloat()
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply { setMargins(0, 0, 0, dimenPx(R.dimen.space_xl)) }
-        }
-
-        repeat(5) { index ->
-            val rowView = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_14), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_14))
-
-                addView(View(this@EventReportsActivity).apply {
-                    background = ResourcesCompat.getDrawable(resources, R.drawable.bg_staff_skeleton_date_block, theme)
-                    layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.tile_44), dimenPx(R.dimen.tile_44))
-                })
-
-                val textLayout = LinearLayout(this@EventReportsActivity).apply {
-                    orientation = LinearLayout.VERTICAL
-                    layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-                        marginStart = dimenPx(R.dimen.space_14)
-                        marginEnd = dimenPx(R.dimen.space_sm)
-                    }
-                    addView(View(this@EventReportsActivity).apply {
-                        background = ResourcesCompat.getDrawable(resources, R.drawable.bg_staff_skeleton_bar, theme)
-                        layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.size_140), dimenPx(R.dimen.icon_sm))
-                    })
-                    addView(View(this@EventReportsActivity).apply {
-                        background = ResourcesCompat.getDrawable(resources, R.drawable.bg_staff_skeleton_bar, theme)
-                        layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.size_200), dimenPx(R.dimen.space_md)).apply {
-                            topMargin = dimenPx(R.dimen.space_6)
-                        }
-                    })
-                }
-                addView(textLayout)
-
-                addView(View(this@EventReportsActivity).apply {
-                    background = ResourcesCompat.getDrawable(resources, R.drawable.bg_staff_skeleton_date_block, theme)
-                    layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md))
-                })
-            }
-            container.addView(rowView)
-
-            if (index < 4) {
-                container.addView(View(this).apply {
-                    setBackgroundColor(color(R.color.surface_muted))
-                    layoutParams = LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        dimenPx(R.dimen.stroke_hairline),
-                    ).apply { setMargins(dimenPx(R.dimen.space_lg), 0, dimenPx(R.dimen.space_lg), 0) }
-                })
-            }
-        }
-
-        return container
-
-
+        layoutInflater.inflate(R.layout.include_skeleton_card, this, true)
     }
 
     private fun openFilterSheet(item: EventReportCatalogItem) {
@@ -843,71 +442,97 @@ open class EventReportsActivity : AppCompatActivity() {
     }
 
     private fun reportCatalog(): List<EventReportCatalogItem> = listOf(
-        EventReportCatalogItem(EventReportType.ROSTER, getString(R.string.event_reports_title_roster), R.drawable.ic_group, color(R.color.chart_5), color(R.color.accent_container)),
-        EventReportCatalogItem(EventReportType.NO_SHOWS, getString(R.string.event_reports_title_no_shows), R.drawable.ic_nav_profile, color(R.color.danger), color(R.color.error_container)),
-        EventReportCatalogItem(EventReportType.ENTRY_LOGS, getString(R.string.event_reports_title_entry_logs), R.drawable.ic_scan, color(R.color.chart_3), color(R.color.tile_violet)),
-        EventReportCatalogItem(EventReportType.ATTENDANCE, getString(R.string.event_reports_title_attendance), R.drawable.ic_organizer_bar_chart, color(R.color.chart_1), color(R.color.accent_container)),
-        EventReportCatalogItem(EventReportType.CLAIMS, getString(R.string.event_reports_title_claims), R.drawable.ic_nav_gift, color(R.color.chart_7), color(R.color.warning_container)),
-        EventReportCatalogItem(EventReportType.BOOTH_VISITS, getString(R.string.event_reports_title_booth_visits), R.drawable.ic_calendar, color(R.color.chart_6), color(R.color.success_container)),
-        EventReportCatalogItem(EventReportType.EXIT_LOGS, getString(R.string.event_reports_title_exit_logs), R.drawable.ic_chevron_right, color(R.color.chart_4), color(R.color.info_container)),
-        EventReportCatalogItem(EventReportType.POINTS, getString(R.string.event_reports_title_points), R.drawable.ic_organizer_reports, color(R.color.chart_2), color(R.color.tile_cyan)),
+        EventReportCatalogItem(EventReportType.ROSTER, getString(R.string.event_reports_title_roster), AppIcons.People, color(R.color.chart_5), color(R.color.accent_container)),
+        EventReportCatalogItem(EventReportType.NO_SHOWS, getString(R.string.event_reports_title_no_shows), AppIcons.Profile, color(R.color.danger), color(R.color.error_container)),
+        EventReportCatalogItem(EventReportType.ENTRY_LOGS, getString(R.string.event_reports_title_entry_logs), AppIcons.Scan, color(R.color.chart_3), color(R.color.tile_violet)),
+        EventReportCatalogItem(EventReportType.ATTENDANCE, getString(R.string.event_reports_title_attendance), AppIcons.Report, color(R.color.chart_1), color(R.color.accent_container)),
+        EventReportCatalogItem(EventReportType.CLAIMS, getString(R.string.event_reports_title_claims), AppIcons.Reward, color(R.color.chart_7), color(R.color.warning_container)),
+        EventReportCatalogItem(EventReportType.BOOTH_VISITS, getString(R.string.event_reports_title_booth_visits), AppIcons.Event, color(R.color.chart_6), color(R.color.success_container)),
+        EventReportCatalogItem(EventReportType.EXIT_LOGS, getString(R.string.event_reports_title_exit_logs), AppIcons.Chevron, color(R.color.chart_4), color(R.color.info_container)),
+        EventReportCatalogItem(EventReportType.POINTS, getString(R.string.event_reports_title_points), AppIcons.Report, color(R.color.chart_2), color(R.color.tile_cyan)),
     )
 
     private data class DateInputHolder(val wrapper: LinearLayout, val valueView: TextView)
 
     private fun buildDateInput(label: String, onChanged: (LocalDate?) -> Unit): DateInputHolder {
-        val valueView = styledText(getString(R.string.event_reports_select), R.dimen.type_body_medium, false, orgColors.muted)
-        val wrapper = cardRes(R.dimen.space_md).apply {
-            addView(styledText(label, R.dimen.type_body_compact, true))
-            addView(row().apply {
-                setPadding(0, dimenPx(R.dimen.space_sm), 0, 0)
-                addView(valueView.apply {
-                    layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-                })
-                addView(ImageView(this@EventReportsActivity).apply {
-                    setImageResource(R.drawable.ic_calendar)
-                    setColorFilter(orgColors.muted)
-                    layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md))
-                })
-            })
-            setOnClickListener {
-                val today = LocalDate.now(ZoneId.of("Asia/Manila"))
-                android.app.DatePickerDialog(
-                    this@EventReportsActivity,
-                    { _, year, month, dayOfMonth ->
-                        val picked = LocalDate.of(year, month + 1, dayOfMonth)
-                        valueView.text = dateFormatter.format(picked)
-                        valueView.setTextColor(orgColors.text)
-                        onChanged(picked)
-                    },
-                    today.year,
-                    today.monthValue - 1,
-                    today.dayOfMonth,
-                ).show()
-            }
+        val valueView = styledText(getString(R.string.event_reports_select), R.dimen.ui_type_body, false, orgColors.muted)
+        val wrapper = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(
+                TextView(this@EventReportsActivity).apply {
+                    text = label
+                    setTextAppearance(R.style.TextAppearance_EventQR_Type_FieldLabel)
+                    setPadding(0, dimenPx(R.dimen.space_16), 0, dimenPx(R.dimen.space_8))
+                },
+            )
+            addView(
+                row().apply {
+                    minimumHeight = dimenPx(R.dimen.ui_control_height)
+                    background = ContextCompat.getDrawable(context, R.drawable.bg_ui_field)
+                    setPadding(dimenPx(R.dimen.space_16), 0, dimenPx(R.dimen.space_12), 0)
+                    addView(valueView.apply {
+                        layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+                    })
+                    addView(ImageView(this@EventReportsActivity).apply {
+                        setImageResource(AppIcons.Event)
+                        imageTintList = android.content.res.ColorStateList.valueOf(orgColors.muted)
+                        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+                        layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md))
+                    })
+                    setOnClickListener {
+                        val today = LocalDate.now(ZoneId.of("Asia/Manila"))
+                        android.app.DatePickerDialog(
+                            this@EventReportsActivity,
+                            { _, year, month, dayOfMonth ->
+                                val picked = LocalDate.of(year, month + 1, dayOfMonth)
+                                valueView.text = dateFormatter.format(picked)
+                                valueView.setTextColor(orgColors.text)
+                                onChanged(picked)
+                            },
+                            today.year,
+                            today.monthValue - 1,
+                            today.dayOfMonth,
+                        ).show()
+                    }
+                },
+            )
         }
         return DateInputHolder(wrapper, valueView)
     }
 
-    private fun labeledSearchInput(label: String, onChanged: (String) -> Unit): LinearLayout = cardRes(R.dimen.space_md).apply {
-        addView(styledText(label, R.dimen.type_body_compact, true))
+    private fun labeledSearchInput(label: String, onChanged: (String) -> Unit): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        addView(
+            TextView(this@EventReportsActivity).apply {
+                text = label
+                setTextAppearance(R.style.TextAppearance_EventQR_Type_FieldLabel)
+                setPadding(0, dimenPx(R.dimen.space_16), 0, dimenPx(R.dimen.space_8))
+            },
+        )
         addView(EditText(this@EventReportsActivity).apply {
             hint = getString(R.string.event_reports_attendee_search_hint)
-            setPadding(dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_10))
-            background = roundedRect(color(R.color.background), R.dimen.radius_10, orgColors.border)
+            setTextAppearance(R.style.TextAppearance_EventQR_Type_Body)
+            setPadding(dimenPx(R.dimen.space_16), 0, dimenPx(R.dimen.space_16), 0)
+            background = ContextCompat.getDrawable(context, R.drawable.bg_ui_field)
+            minimumHeight = dimenPx(R.dimen.ui_control_height)
             setTextColor(orgColors.text)
             setHintTextColor(orgColors.muted)
             afterTextChanged { onChanged(text.toString()) }
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-                setMargins(0, dimenPx(R.dimen.space_sm), 0, 0)
-            }
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dimenPx(R.dimen.ui_control_height))
         })
     }
 
-    private fun statusSelector(onSelected: (EventReportFilterStatus) -> Unit): LinearLayout = cardRes(R.dimen.space_md).apply {
-        addView(styledText(getString(R.string.event_reports_transaction_status), R.dimen.type_body_compact, true))
+    private fun statusSelector(onSelected: (EventReportFilterStatus) -> Unit): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        addView(
+            TextView(this@EventReportsActivity).apply {
+                text = getString(R.string.event_reports_transaction_status)
+                setTextAppearance(R.style.TextAppearance_EventQR_Type_FieldLabel)
+                setPadding(0, dimenPx(R.dimen.space_16), 0, dimenPx(R.dimen.space_8))
+            },
+        )
         val chipRow = row().apply {
-            setPadding(0, dimenPx(R.dimen.space_10), 0, 0)
+            setPadding(0, dimenPx(R.dimen.space_8), 0, 0)
             gravity = Gravity.START
         }
 
@@ -918,8 +543,16 @@ open class EventReportsActivity : AppCompatActivity() {
                     for (idx in 0 until chipRow.childCount) {
                         val child = chipRow.getChildAt(idx) as? TextView ?: continue
                         val isActive = child.text.toString().equals(label, ignoreCase = true)
-                        child.setTextColor(if (isActive) color(R.color.on_primary) else orgColors.primary)
-                        child.background = roundedRect(if (isActive) orgColors.primary else color(R.color.surface), R.dimen.radius_18, if (isActive) null else orgColors.border)
+                        child.isSelected = isActive
+                        child.setTextColor(
+                            ContextCompat.getColor(
+                                context,
+                                if (isActive) R.color.ui_on_primary else R.color.ui_text_primary,
+                            ),
+                        )
+                        child.setBackgroundResource(
+                            if (isActive) R.drawable.bg_ui_chip_selected else R.drawable.bg_ui_chip_unselected,
+                        )
                     }
                 }
             }

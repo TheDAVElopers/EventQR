@@ -1,10 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.attendees
 
-import com.thedavelopers.eventqr.ui.theme.dimenOffset
-import com.thedavelopers.eventqr.ui.theme.dimen
-import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
 import android.content.Intent
-import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.View
 import android.widget.ImageButton
@@ -12,27 +8,32 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.ui.theme.defaultBold
-import com.thedavelopers.eventqr.ui.theme.color
+import com.thedavelopers.eventqr.core.util.ScreenInsets
 import com.thedavelopers.eventqr.features.organizer.EXTRA_EVENT_ID
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpAttendee
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpDataSource
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpEvent
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpTransactionEntry
 import com.thedavelopers.eventqr.features.organizer.OrganizerRepository
-import com.thedavelopers.eventqr.features.organizer.saveSelectedEventId
-import com.thedavelopers.eventqr.features.organizer.transactions.TransactionLogsActivity
 import com.thedavelopers.eventqr.features.organizer.attendeeInitial
+import com.thedavelopers.eventqr.features.organizer.bindStatusBadge
 import com.thedavelopers.eventqr.features.organizer.intentEventId
 import com.thedavelopers.eventqr.features.organizer.resolveSelectedEvent
+import com.thedavelopers.eventqr.features.organizer.saveSelectedEventId
 import com.thedavelopers.eventqr.features.organizer.selectedEventId
 import com.thedavelopers.eventqr.features.organizer.statusBucket
 import com.thedavelopers.eventqr.features.organizer.statusLabel
-import com.thedavelopers.eventqr.features.organizer.statusPalette
+import com.thedavelopers.eventqr.features.organizer.tintBlock
 import com.thedavelopers.eventqr.features.organizer.transactionTypeLabel
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
+import com.thedavelopers.eventqr.features.organizer.transactions.TransactionLogsActivity
+import com.thedavelopers.eventqr.ui.icons.AppIcons
+import com.thedavelopers.eventqr.ui.theme.color
+import com.thedavelopers.eventqr.ui.theme.defaultBold
+import com.thedavelopers.eventqr.ui.theme.dimen
+import com.thedavelopers.eventqr.ui.theme.dimenOffset
+import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -40,6 +41,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 open class AttendeeDetailsActivity : AppCompatActivity() {
     private lateinit var repository: OrganizerRepository
@@ -53,9 +55,10 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_attendee_details)
+        ScreenInsets.padContentForNavigationBar(this)
         repository = OrganizerRepository(this)
 
-        findViewById<ImageButton>(R.id.nav_header_back).setOnClickListener { finish() }
+        findViewById<View>(R.id.topBarBack).setOnClickListener { finish() }
         findViewById<View>(R.id.btnAttendeeRetry).setOnClickListener {
             val attendeeId = intent.getStringExtra(SearchAttendeesActivity.EXTRA_ATTENDEE_ID).orEmpty()
             // If the event list itself failed there is no selected event yet: retry that load first.
@@ -135,7 +138,7 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
 
     private fun renderProfile() {
         skeletonLoading.visibility = View.GONE
-        findViewById<TextView>(R.id.nav_header_title).text = getString(R.string.attendee_details_attendee_details)
+        findViewById<TextView>(R.id.topBarTitle).text = getString(R.string.attendee_details_attendee_details)
         findViewById<TextView>(R.id.txtDetailInitial).text = attendeeInitial(attendee.name)
         findViewById<TextView>(R.id.txtDetailName).text = attendee.name
         findViewById<TextView>(R.id.txtDetailEmail).text = attendee.email
@@ -147,22 +150,16 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.txtDetailEventValue).text = selectedEvent.title
         findViewById<TextView>(R.id.txtDetailRegistrationIdValue).text = formatRegistrationId(attendee.id)
         findViewById<TextView>(R.id.txtDetailStatusValue).apply {
-            text = attendee.statusLabel(this@AttendeeDetailsActivity)
-            val (bgColor, textColor) = attendee.statusPalette(this@AttendeeDetailsActivity)
-            background = GradientDrawable().apply {
-                setColor(bgColor)
-                cornerRadius = dimen(R.dimen.radius_pill)
-            }
-            setTextColor(textColor)
+            attendee.bindStatusBadge(this)
         }
         findViewById<TextView>(R.id.txtDetailIdStatusValue).apply {
             val issued = attendee.qrCredentialStatus.equals("Issued", ignoreCase = true)
             text = getString(if (issued) R.string.attendee_details_id_issued else R.string.attendee_details_no_id)
-            background = GradientDrawable().apply {
-                setColor(getColor(if (issued) R.color.badge_entered_bg else R.color.badge_default_bg))
-                cornerRadius = dimen(R.dimen.radius_pill)
-            }
-            setTextColor(getColor(if (issued) R.color.badge_entered_text else R.color.badge_default_text))
+            // `Issued` is the only confirmation on this card, so it is the only lime badge.
+            val bg = if (issued) R.color.ui_accent else R.color.ui_surface_sunken
+            val fg = if (issued) R.color.ui_on_accent else R.color.ui_text_secondary
+            backgroundTintList = android.content.res.ColorStateList.valueOf(getColor(bg))
+            setTextColor(getColor(fg))
         }
         findViewById<TextView>(R.id.txtDetailRegisteredValue).text = formatRegisteredDate(attendee.registeredDate)
         findViewById<TextView>(R.id.txtDetailLastActivityValue).text = formatLastActivity(attendee.lastTransactionTime)
@@ -186,10 +183,7 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
                         orientation = LinearLayout.HORIZONTAL
                         gravity = android.view.Gravity.CENTER_VERTICAL
                         setPadding(dimenOffset(R.dimen.space_md), dimenOffset(R.dimen.space_md), dimenOffset(R.dimen.space_md), dimenOffset(R.dimen.space_md))
-                        background = GradientDrawable().apply {
-                            setColor(color(R.color.background))
-                            cornerRadius = dimenOffset(R.dimen.radius_md).toFloat()
-                        }
+                        tintBlock(R.color.ui_background, R.drawable.bg_ui_block_r10)
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
                             LinearLayout.LayoutParams.WRAP_CONTENT
@@ -206,18 +200,13 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
                             }
                             addView(View(this@AttendeeDetailsActivity).apply {
                                 layoutParams = LinearLayout.LayoutParams(dimenOffset(R.dimen.dot_sm), dimenOffset(R.dimen.dot_sm))
-                                background = GradientDrawable().apply {
-                                    shape = GradientDrawable.OVAL
-                                    setColor(color(R.color.deco_indigo_vivid))
-                                }
+                                tintBlock(R.color.ui_primary, R.drawable.bg_ui_dot)
                             })
                             addView(View(this@AttendeeDetailsActivity).apply {
                                 layoutParams = LinearLayout.LayoutParams(dimenOffset(R.dimen.space_xxs), 0, 1f).apply {
                                     topMargin = dimenOffset(R.dimen.space_xxs)
                                 }
-                                background = GradientDrawable().apply {
-                                    setColor(color(R.color.outline_strong))
-                                }
+                                tintBlock(R.color.ui_hairline, R.drawable.bg_ui_block_r4)
                             })
                         }
                         addView(timelineLayout)
@@ -227,14 +216,11 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
                             layoutParams = LinearLayout.LayoutParams(dimenOffset(R.dimen.icon_tile_md), dimenOffset(R.dimen.icon_tile_md)).apply {
                                 marginEnd = dimenOffset(R.dimen.space_md)
                             }
-                            background = GradientDrawable().apply {
-                                setColor(color(R.color.accent_container))
-                                cornerRadius = dimenOffset(R.dimen.radius_10).toFloat()
-                            }
+                            tintBlock(R.color.ui_primary_container, R.drawable.bg_ui_block_r10)
                             addView(android.widget.ImageView(this@AttendeeDetailsActivity).apply {
                                 layoutParams = android.widget.FrameLayout.LayoutParams(dimenOffset(R.dimen.icon_md), dimenOffset(R.dimen.icon_md), android.view.Gravity.CENTER)
-                                setImageResource(R.drawable.ic_calendar)
-                                imageTintList = android.content.res.ColorStateList.valueOf(color(R.color.deco_indigo_vivid))
+                                setImageResource(AppIcons.Event)
+                                imageTintList = android.content.res.ColorStateList.valueOf(color(R.color.ui_primary))
                             })
                         }
                         addView(iconBox)

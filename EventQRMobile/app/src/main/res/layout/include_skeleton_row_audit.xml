@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SKELETON ROW, AUDIT VARIANT (§6.5, §5.11) - the loaded audit row's geometry within 4dp: 64dp
+    tall, no leading circle, 96dp time bar + two-line action/meta stack at the same 20/16dp insets.
+    The 72dp icon variant would jump the list on load, which is what the skeleton exists to prevent.
+
+    Reduced motion / TalkBack contract is on the container, as in include_skeleton_block.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/ui_row_height_value"
+    android:gravity="center_vertical"
+    android:importantForAccessibility="noHideDescendants"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/ui_row_start"
+    android:paddingEnd="@dimen/ui_row_end">
+
+    <View
+        android:layout_width="@dimen/ui_audit_time_column"
+        android:layout_height="@dimen/ui_skeleton_bar_height"
+        android:background="@drawable/bg_ui_skeleton"
+        android:importantForAccessibility="no" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_12"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <View
+            android:layout_width="@dimen/ui_skeleton_title_width"
+            android:layout_height="@dimen/ui_skeleton_bar_height"
+            android:background="@drawable/bg_ui_skeleton"
+            android:importantForAccessibility="no" />
+
+        <View
+            android:layout_width="@dimen/ui_skeleton_meta_width"
+            android:layout_height="@dimen/ui_skeleton_bar_height"
+            android:layout_marginTop="@dimen/space_8"
+            android:background="@drawable/bg_ui_skeleton"
+            android:importantForAccessibility="no" />
+    </LinearLayout>
+</LinearLayout>

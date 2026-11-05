@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Admin copy - §6.5 and §7 of MyFiles/EventQR-Redesign-Plan.md.
+
+    Sentence case, verb-first, no exclamation marks (§7.2, §7.3). Panel labels live in the
+    `overline` role, so they are written as words here and rendered caps by the style.
+-->
+<resources>
+
+    <!-- Pass head stub and content eyebrows -->
+    <string name="ui_admin_tab">Admin</string>
+    <string name="ui_admin_title">Admin</string>
+    <string name="ui_admin_stat_pending">Pending</string>
+    <string name="ui_admin_stat_accounts">Accounts</string>
+    <string name="ui_admin_stat_audit">Audit</string>
+    <string name="ui_admin_eyebrow_overview">Overview</string>
+    <string name="ui_admin_eyebrow_manage">Manage</string>
+    <string name="ui_admin_active_events">Active events</string>
+    <string name="ui_admin_total_accounts">Total accounts</string>
+
+    <!-- Alert row: a list row inside the content flow, never a banner in the header -->
+    <plurals name="ui_admin_pending_alert">
+        <item quantity="one">%1$d event request pending review</item>
+        <item quantity="other">%1$d event requests pending review</item>
+    </plurals>
+
+    <!-- Rows -->
+    <string name="ui_admin_row_event_requests">Event requests</string>
+    <string name="ui_admin_row_event_requests_meta">Review event creation requests</string>
+    <string name="ui_admin_row_accounts">Account management</string>
+    <string name="ui_admin_row_accounts_meta">Create, disable and remove accounts</string>
+    <string name="ui_admin_row_audit_logs">Audit logs</string>
+    <string name="ui_admin_row_audit_logs_meta">Activity across the system</string>
+
+    <!-- Event requests list -->
+    <string name="ui_admin_requests_title">Event requests</string>
+    <!-- Unit only: CountLabel.format() prefixes the compact number and uppercases the noun. -->
+    <string name="ui_admin_requests_count">request</string>
+    <string name="ui_admin_requests_empty_title">No event requests</string>
+    <string name="ui_admin_requests_empty_body">Requests from organizers will show up here.</string>
+    <string name="ui_admin_filter_all">All</string>
+    <string name="ui_admin_filter_pending">Pending</string>
+    <string name="ui_admin_filter_approved">Approved</string>
+    <string name="ui_admin_filter_rejected">Rejected</string>
+
+    <!-- Account management -->
+    <string name="ui_admin_accounts_title">Accounts</string>
+    <!-- Unit only: CountLabel.format() prefixes the compact number and uppercases the noun. -->
+    <string name="ui_admin_accounts_count">account</string>
+    <string name="ui_admin_accounts_search">Search accounts</string>
+    <string name="ui_admin_accounts_create">Create admin account</string>
+    <string name="ui_admin_accounts_create_meta">Super Admin only</string>
+    <string name="ui_admin_accounts_empty_title">No accounts yet</string>
+    <string name="ui_admin_accounts_empty_body">Created accounts will show up here.</string>
+    <string name="ui_admin_accounts_empty_search_body">No account matches that search.</string>
+    <string name="ui_admin_accounts_more">Account actions</string>
+    <string name="ui_admin_role_attendee">Attendee</string>
+    <string name="ui_admin_role_staff">Staff</string>
+    <string name="ui_admin_role_organizer">Organizer</string>
+    <string name="ui_admin_role_admin">Admin</string>
+    <string name="ui_admin_role_super_admin">Super admin</string>
+
+    <!-- Create admin account -->
+    <string name="ui_admin_create_title">Create admin account</string>
+    <string name="ui_admin_create_body">The new account receives the admin role and can review event requests.</string>
+    <string name="ui_admin_create_eyebrow_identity">Identity</string>
+    <string name="ui_admin_create_eyebrow_contact">Contact</string>
+    <string name="ui_admin_create_eyebrow_security">Security</string>
+    <string name="ui_admin_create_first_name">First name</string>
+    <string name="ui_admin_create_last_name">Last name</string>
+    <string name="ui_admin_create_email">Email</string>
+    <string name="ui_admin_create_phone">Phone number</string>
+    <string name="ui_admin_create_password">Temporary password</string>
+    <string name="ui_admin_create_confirm">Confirm password</string>
+    <string name="ui_admin_create_submit">Create account</string>
+
+    <!-- Audit log -->
+    <string name="ui_admin_logs_title">Audit logs</string>
+    <string name="ui_admin_logs_empty_title">No audit logs yet</string>
+    <string name="ui_admin_logs_empty_body">Activity across the system will show up here.</string>
+
+    <!-- Audit row (§6.5 v1.6): verb-first action copy, one entry per emitted code. An unmapped
+         code falls back to its sentence-cased form, so a new backend action never renders blank. -->
+    <string name="ui_audit_action_event_request_approved">Approved an event request</string>
+    <string name="ui_audit_action_event_request_rejected">Rejected an event request</string>
+    <string name="ui_audit_action_account_enabled">Enabled an account</string>
+    <string name="ui_audit_action_account_disabled">Disabled an account</string>
+    <string name="ui_audit_action_account_updated">Updated an account</string>
+    <string name="ui_audit_action_account_status_updated">Changed an account status</string>
+    <string name="ui_audit_action_account_role_updated">Changed an account role</string>
+    <string name="ui_audit_action_account_deleted">Deleted an account</string>
+    <string name="ui_audit_meta_by">by %1$s</string>
+    <string name="ui_audit_row_description">%1$s. %2$s by %3$s, %4$s.</string>
+    <string name="ui_audit_row_description_no_target">%1$s. %2$s by %3$s.</string>
+
+    <!-- States (§5.10): one control each -->
+    <string name="ui_audit_empty_filter_title">No entries for %1$s</string>
+    <string name="ui_audit_empty_filter_body">Clear the filter to see everything.</string>
+    <string name="ui_audit_empty_filter_action">Show all</string>
+    <string name="ui_audit_error_title">Couldn\'t load audit logs</string>
+    <string name="ui_audit_error_body">Pull down to refresh.</string>
+
+    <!-- Notifications (§6.5) -->
+    <string name="ui_notifications_mark_all_read">Mark all read</string>
+    <string name="ui_notifications_empty_title">No notifications</string>
+    <string name="ui_notifications_empty_body">Updates about your events and registrations will show up here.</string>
+    <string name="ui_notifications_error_title">Couldn\'t load notifications</string>
+    <string name="ui_notifications_unread">Unread</string>
+    <string name="ui_notifications_read">Read</string>
+    <string name="ui_notifications_item">%1$s notification. %2$s</string>
+
+    <!-- Event request detail (§6.5, shared admin/attendee) -->
+    <string name="ui_request_detail_error_title">Couldn\'t load request</string>
+    <string name="ui_request_detail_description">Description</string>
+    <string name="ui_request_detail_duration">Duration</string>
+    <string name="ui_request_detail_registration">Registration window</string>
+    <string name="ui_request_detail_category">Category</string>
+    <string name="ui_request_detail_audience">Audience</string>
+    <string name="ui_request_detail_venue">Venue</string>
+    <string name="ui_request_detail_capacity">Expected attendees</string>
+    <string name="ui_request_detail_contact_email">Contact email</string>
+    <string name="ui_request_detail_contact_phone">Contact number</string>
+    <string name="ui_request_detail_reason">Reason for request</string>
+    <string name="ui_request_detail_approval_note">Approval note</string>
+    <string name="ui_request_detail_rejection_note">Rejection note</string>
+    <string name="ui_request_detail_no_note">No note provided.</string>
+    <string name="ui_request_detail_no_description">No description provided.</string>
+    <string name="ui_request_detail_not_available">Not available</string>
+    <string name="ui_request_detail_submitted_by">Submitted by %1$s</string>
+    <string name="ui_request_detail_submitted_on">Submitted %1$s</string>
+    <string name="ui_request_detail_approve">Approve</string>
+    <string name="ui_request_detail_reject">Reject</string>
+    <string name="ui_request_detail_upgrade">Upgrade to organizer</string>
+    <string name="ui_request_detail_upgraded">Upgraded to organizer</string>
+    <string name="ui_request_detail_confirm_approve">Approve request?</string>
+    <string name="ui_request_detail_confirm_reject">Reject request?</string>
+    <string name="ui_request_detail_confirm_upgrade">Upgrade to organizer?</string>
+    <string name="ui_request_detail_confirm_approve_body">The requester is notified and the event becomes live.</string>
+    <string name="ui_request_detail_confirm_reject_body">The requester is notified. This cannot be undone.</string>
+    <string name="ui_request_detail_confirm_upgrade_body">This upgrades the requester\'s account to the organizer role.</string>
+    <string name="ui_request_detail_remarks">Remarks (optional)</string>
+
+    <string name="auth_wordmark_description">EventQR</string>
+    <string name="ui_auth_step_1_of_3">Step 1 of 3</string>
+    <string name="ui_auth_step_2_of_3">Step 2 of 3</string>
+    <string name="ui_auth_step_3_of_3">Step 3 of 3</string>
+
+    <!-- Manage rewards (§6.4) -->
+    <string name="ui_rewards_select_event">Event</string>
+    <string name="ui_rewards_section">Rewards</string>
+
+</resources>
+
+

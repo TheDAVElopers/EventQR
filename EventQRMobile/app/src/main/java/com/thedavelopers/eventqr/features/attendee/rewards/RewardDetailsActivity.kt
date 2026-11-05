@@ -8,6 +8,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.session.SessionManager
 
@@ -117,19 +118,14 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
             RewardAvailability.State.AVAILABLE -> R.string.user_reward_details_available
         }
         status?.text = getString(statusRes)
-        status?.setBackgroundResource(
-            if (blocked) R.drawable.bg_reward_status_blocked else R.drawable.bg_reward_status_available,
-        )
-        status?.setTextColor(
-            ContextCompat.getColor(
-                this,
-                if (blocked) R.color.badge_cancelled_text else R.color.badge_entered_text,
-            ),
-        )
-        status?.setCompoundDrawablesRelativeWithIntrinsicBounds(
-            if (blocked) R.drawable.ic_reward_status_blocked else R.drawable.ic_reward_status_available,
-            0, 0, 0,
-        )
+        status?.let {
+            val container = if (blocked) R.color.ui_error_container else R.color.ui_accent
+            val content = if (blocked) R.color.ui_on_error_container else R.color.ui_on_accent
+            ViewCompat.setBackgroundTintList(it, ContextCompat.getColorStateList(this, container))
+            it.setTextColor(ContextCompat.getColor(this, content))
+            // The tone is the state; the badge never grows an icon (§5.4).
+            it.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, 0, 0)
+        }
 
         val warningRes = when (state) {
             RewardAvailability.State.UNAVAILABLE -> R.string.reward_details_this_reward_is_currently_unavailable
@@ -193,7 +189,7 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
         gapText.setTextColor(
             ContextCompat.getColor(
                 this,
-                if (!free && currentBalance < pointsRequired) R.color.error else R.color.success_dark,
+                if (!free && currentBalance < pointsRequired) R.color.ui_error else R.color.ui_success,
             ),
         )
 

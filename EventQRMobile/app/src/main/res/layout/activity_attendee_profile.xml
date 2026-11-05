@@ -1,59 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Attendee profile (§6.2 of MyFiles/EventQR-Redesign-Plan.md) - retires Gen A.
+
+        Left-aligned identity block: 64dp flat primary_container avatar square, name in title_l,
+        the role as the ONE status badge. No centred gradient header, no white-outline role pill.
+        Personal details as a grouped card, account actions as a second grouped card.
+        Sign out as an outlined destructive row after a 32dp gap.
+
+    Deleted: bg_dashboard_gradient header, bg_profile_initial_avatar, bg_profile_role_badge,
+    bg_sign_out_button, per-row icon tiles, and the centring.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
+    android:background="@color/ui_background"
     android:orientation="vertical">
 
+    <!-- ═════════ Identity block: one left edge, no centring ═════════ -->
     <LinearLayout
         android:id="@+id/headerProfile"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_dashboard_gradient"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:paddingHorizontal="@dimen/space_xl"
-        android:paddingTop="@dimen/space_xxl"
-        android:paddingBottom="@dimen/space_28">
+        android:background="@color/ui_background"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/ui_gutter"
+        android:paddingTop="@dimen/space_24"
+        android:paddingEnd="@dimen/ui_gutter"
+        android:paddingBottom="@dimen/space_24">
 
         <FrameLayout
-            android:layout_width="88dp"
-            android:layout_height="88dp"
-            android:background="@drawable/bg_profile_initial_avatar">
+            android:layout_width="@dimen/ui_attendee_avatar"
+            android:layout_height="@dimen/ui_attendee_avatar"
+            android:background="@drawable/bg_ui_icon_tile">
 
             <TextView
                 android:id="@+id/txtProfileInitial"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:textColor="@color/on_primary"
-                android:textAppearance="@style/TextAppearance.EventQR.Display.Medium"
+                android:textColor="@color/ui_primary"
+                android:textSize="@dimen/ui_attendee_avatar_initial"
+                android:fontFamily="@font/archivo_bold"
+                android:includeFontPadding="false"
                 tools:text="J" />
         </FrameLayout>
 
-        <TextView
-            android:id="@+id/txtProfileName"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_14"
-            android:gravity="center"
-            android:textColor="@color/on_primary"
-            android:textAppearance="@style/TextAppearance.EventQR.TitleMedium"
-            tools:text="Juan Dela Cruz" />
+            android:layout_marginStart="@dimen/space_lg"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/txtProfileRole"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_6"
-            android:background="@drawable/bg_profile_role_badge"
-            android:paddingHorizontal="@dimen/space_lg"
-            android:paddingVertical="@dimen/space_xs"
-            android:textColor="@color/on_primary"
-            android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong"
-            tools:text="Attendee" />
+            <TextView
+                android:id="@+id/txtProfileName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.TitleLarge"
+                android:textColor="@color/ui_text_primary"
+                tools:text="Juan Dela Cruz" />
+
+            <TextView
+                android:id="@+id/txtProfileRole"
+                style="@style/Widget.EventQR.Ui.StatusBadge.Neutral"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/ui_badge_height"
+                android:layout_marginTop="@dimen/space_sm"
+                tools:text="Attendee" />
+        </LinearLayout>
     </LinearLayout>
 
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
@@ -65,473 +83,335 @@
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:clipToPadding="false"
             android:fillViewport="true"
             android:overScrollMode="never">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:paddingStart="@dimen/ui_gutter"
+                android:paddingEnd="@dimen/ui_gutter"
+                android:paddingBottom="@dimen/space_32">
 
-                <!-- ==================== HEADER ==================== -->
-                
-
-                <!-- ==================== ERROR / RETRY ==================== -->
-                <LinearLayout
+                <include
+                    android:id="@+id/skeletonLoading"
+                    layout="@layout/include_skeleton_card"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center_horizontal"
-                    android:orientation="vertical"
-                    android:paddingHorizontal="@dimen/space_lg">
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/layoutProfileMenu"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
 
                     <TextView
                         android:id="@+id/txtProfileError"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_lg"
-                        android:gravity="center"
-                        android:textColor="@color/error"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
-                        android:visibility="gone"
-                        tools:text="Unable to load profile. Please check your connection." />
-
-                    <Button
-                        android:id="@+id/btnProfileRetry"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="@dimen/touch_target_min"
                         android:layout_marginTop="@dimen/space_sm"
-                        android:layout_marginBottom="@dimen/space_sm"
-                        android:text="@string/common_retry"
-                        android:textAllCaps="false"
-                        android:textColor="@color/primary"
-                        app:cornerRadius="@dimen/radius_sm"
-                        app:strokeColor="@color/primary"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                        android:textColor="@color/ui_error"
+                        android:visibility="gone"
+                        tools:text="Unable to load profile." />
+
+                    <TextView
+                        android:id="@+id/btnProfileRetry"
+                        style="@style/Widget.EventQR.Ui.Button.Ghost"
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/ui_button_height_inline"
+                        android:text="@string/ui_attendee_retry"
                         android:visibility="gone" />
-                </LinearLayout>
 
-                <!-- ==================== SKELETON LOADING ==================== -->
-                <include
-                    android:id="@+id/skeletonLoading"
-                    layout="@layout/include_skeleton_profile" />
-
-                <!-- ==================== PROFILE MENU CONTENT ==================== -->
-                <LinearLayout
-                    android:id="@+id/layoutProfileMenu"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:paddingHorizontal="@dimen/space_lg"
-                    android:paddingTop="@dimen/space_lg"
-                    android:paddingBottom="@dimen/space_xl">
-
-                    <Button
+                    <TextView
                         android:id="@+id/btnEditProfile"
                         android:layout_width="0dp"
                         android:layout_height="0dp"
                         android:visibility="gone" />
 
-                    <!-- ==================== SECTION 1: PROFILE INFORMATION ==================== -->
+                    <!-- ═════════ Personal details ═════════ -->
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:paddingHorizontal="@dimen/space_xs"
-                        android:paddingBottom="@dimen/space_6"
-                        android:text="@string/attendee_profile_profile_information"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong"
-                        android:letterSpacing="@dimen/tracking_label_05" />
+                        android:layout_marginBottom="@dimen/space_sm"
+                        android:text="@string/ui_attendee_personal_details"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
 
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/cardProfileDetails"
+                        style="@style/Widget.EventQR.Ui.Card.Grouped"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_xxs"
-                        style="@style/Widget.EventQR.Card.Compact">
+                        android:layout_height="wrap_content">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical">
 
-                            <!-- Name row -->
                             <LinearLayout
                                 android:layout_width="match_parent"
-                                android:layout_height="@dimen/button_primary_height"
+                                android:layout_height="@dimen/ui_row_height_value"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal"
-                                android:paddingHorizontal="@dimen/space_lg">
-
-                                <FrameLayout
-                                    android:layout_width="@dimen/icon_tile_sm"
-                                    android:layout_height="@dimen/icon_tile_sm">
-
-                                    <ImageView
-                                        android:layout_width="@dimen/icon_md"
-                                        android:layout_height="@dimen/icon_md"
-                                        android:layout_gravity="center"
-                                        android:importantForAccessibility="no"
-                                        android:src="@drawable/ic_profile_person"
-                                        app:tint="@color/text_secondary" />
-                                </FrameLayout>
+                                android:paddingStart="@dimen/ui_card_padding"
+                                android:paddingEnd="@dimen/ui_card_padding">
 
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="@dimen/space_md"
-                                    android:text="@string/attendee_profile_name"
-                                    android:textColor="@color/text_secondary"
-                                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
+                                    android:text="@string/ui_attendee_name"
+                                    android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                                    android:textColor="@color/ui_text_secondary" />
 
                                 <TextView
                                     android:id="@+id/txtProfileDetailName"
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="@dimen/space_md"
+                                    android:layout_marginStart="@dimen/space_lg"
                                     android:layout_weight="1"
-                                    android:gravity="end"
                                     android:ellipsize="end"
+                                    android:gravity="end"
                                     android:maxLines="1"
-                                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong"
+                                    android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                                    android:textColor="@color/ui_text_primary"
                                     tools:text="Juan Dela Cruz" />
                             </LinearLayout>
 
                             <View
-                                style="@style/Widget.EventQR.Divider"
-                                android:layout_marginStart="@dimen/row_text_inset"
-                                android:layout_marginEnd="@dimen/space_lg" />
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/stroke_hairline"
+                                android:layout_marginStart="@dimen/ui_card_padding"
+                                android:background="@color/ui_hairline" />
 
-                            <!-- Email row -->
                             <LinearLayout
                                 android:layout_width="match_parent"
-                                android:layout_height="@dimen/button_primary_height"
+                                android:layout_height="@dimen/ui_row_height_value"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal"
-                                android:paddingHorizontal="@dimen/space_lg">
-
-                                <FrameLayout
-                                    android:layout_width="@dimen/icon_tile_sm"
-                                    android:layout_height="@dimen/icon_tile_sm">
-
-                                    <ImageView
-                                        android:layout_width="@dimen/icon_md"
-                                        android:layout_height="@dimen/icon_md"
-                                        android:layout_gravity="center"
-                                        android:importantForAccessibility="no"
-                                        android:src="@drawable/ic_profile_mail"
-                                        app:tint="@color/text_secondary" />
-                                </FrameLayout>
+                                android:paddingStart="@dimen/ui_card_padding"
+                                android:paddingEnd="@dimen/ui_card_padding">
 
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="@dimen/space_md"
-                                    android:text="@string/common_email"
-                                    android:textColor="@color/text_secondary"
-                                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
+                                    android:text="@string/ui_attendee_email"
+                                    android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                                    android:textColor="@color/ui_text_secondary" />
 
                                 <TextView
                                     android:id="@+id/txtProfileDetailEmail"
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="@dimen/space_md"
+                                    android:layout_marginStart="@dimen/space_lg"
                                     android:layout_weight="1"
-                                    android:gravity="end"
                                     android:ellipsize="end"
+                                    android:gravity="end"
                                     android:maxLines="1"
-                                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
-                                    tools:text="juan.delacruz@example.com" />
+                                    android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                                    android:textColor="@color/ui_text_primary"
+                                    tools:text="juan@example.com" />
                             </LinearLayout>
 
                             <View
-                                style="@style/Widget.EventQR.Divider"
-                                android:layout_marginStart="@dimen/row_text_inset"
-                                android:layout_marginEnd="@dimen/space_lg" />
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/stroke_hairline"
+                                android:layout_marginStart="@dimen/ui_card_padding"
+                                android:background="@color/ui_hairline" />
 
-                            <!-- Phone row -->
                             <LinearLayout
                                 android:layout_width="match_parent"
-                                android:layout_height="@dimen/button_primary_height"
+                                android:layout_height="@dimen/ui_row_height_value"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal"
-                                android:paddingHorizontal="@dimen/space_lg">
-
-                                <FrameLayout
-                                    android:layout_width="@dimen/icon_tile_sm"
-                                    android:layout_height="@dimen/icon_tile_sm">
-
-                                    <ImageView
-                                        android:layout_width="@dimen/icon_md"
-                                        android:layout_height="@dimen/icon_md"
-                                        android:layout_gravity="center"
-                                        android:importantForAccessibility="no"
-                                        android:src="@drawable/ic_profile_phone"
-                                        app:tint="@color/text_secondary" />
-                                </FrameLayout>
+                                android:paddingStart="@dimen/ui_card_padding"
+                                android:paddingEnd="@dimen/ui_card_padding">
 
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="@dimen/space_md"
-                                    android:text="@string/attendee_profile_phone"
-                                    android:textColor="@color/text_secondary"
-                                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
+                                    android:text="@string/ui_attendee_phone"
+                                    android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                                    android:textColor="@color/ui_text_secondary" />
 
                                 <TextView
                                     android:id="@+id/txtProfileDetailPhone"
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="@dimen/space_md"
+                                    android:layout_marginStart="@dimen/space_lg"
                                     android:layout_weight="1"
-                                    android:gravity="end"
                                     android:ellipsize="end"
+                                    android:gravity="end"
                                     android:maxLines="1"
-                                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
+                                    android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                                    android:textColor="@color/ui_text_primary"
                                     tools:text="+63 912 345 6789" />
                             </LinearLayout>
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
 
-                    <!-- ==================== SECTION 2: ACCOUNT & ACTIVITY ==================== -->
+                    <!-- ═════════ Account ═════════ -->
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_20"
-                        android:paddingHorizontal="@dimen/space_xs"
-                        android:paddingBottom="@dimen/space_6"
-                        android:text="@string/attendee_profile_account_activity"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong"
-                        android:letterSpacing="@dimen/tracking_label_05" />
+                        android:layout_marginTop="@dimen/space_32"
+                        android:layout_marginBottom="@dimen/space_sm"
+                        android:text="@string/ui_attendee_account"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
 
-                    <!-- Unified Navigation Container -->
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/cardAccountMenu"
+                        style="@style/Widget.EventQR.Ui.Card.Grouped"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_xxs"
-                        style="@style/Widget.EventQR.Card.Compact">
+                        android:layout_height="wrap_content">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical">
 
-                            <!-- 1. Edit Profile Row -->
                             <LinearLayout
                                 android:id="@+id/cardEditProfile"
                                 android:layout_width="match_parent"
-                                android:layout_height="@dimen/button_primary_height"
+                                android:layout_height="@dimen/ui_row_height_value"
                                 android:background="?attr/selectableItemBackground"
                                 android:clickable="true"
                                 android:focusable="true"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal"
-                                android:paddingHorizontal="@dimen/space_lg">
-
-                                <FrameLayout
-                                    android:layout_width="@dimen/icon_tile_sm"
-                                    android:layout_height="@dimen/icon_tile_sm">
-
-                                    <ImageView
-                                        android:layout_width="@dimen/icon_md"
-                                        android:layout_height="@dimen/icon_md"
-                                        android:layout_gravity="center"
-                                        android:importantForAccessibility="no"
-                                        android:src="@drawable/ic_edit_pencil"
-                                        app:tint="@color/text_primary" />
-                                </FrameLayout>
+                                android:paddingStart="@dimen/ui_card_padding"
+                                android:paddingEnd="@dimen/ui_card_padding">
 
                                 <TextView
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="@dimen/space_md"
                                     android:layout_weight="1"
-                                    android:text="@string/attendee_profile_edit_profile"
-                                    android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
+                                    android:text="@string/ui_attendee_edit_profile"
+                                    android:textAppearance="@style/TextAppearance.EventQR.Type.Title"
+                                    android:textColor="@color/ui_text_primary" />
 
                                 <ImageView
-                                    android:layout_width="@dimen/icon_sm"
-                                    android:layout_height="@dimen/icon_sm"
+                                    android:layout_width="@dimen/ui_chevron"
+                                    android:layout_height="@dimen/ui_chevron"
                                     android:importantForAccessibility="no"
-                                    android:src="@drawable/ic_chevron_right"
-                                    app:tint="@color/neutral" />
+                                    android:src="@drawable/ic_ui_chevron_right"
+                                    android:tint="@color/ui_text_secondary" />
                             </LinearLayout>
 
                             <View
-                                style="@style/Widget.EventQR.Divider"
-                                android:layout_marginStart="@dimen/row_text_inset"
-                                android:layout_marginEnd="@dimen/space_lg" />
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/stroke_hairline"
+                                android:layout_marginStart="@dimen/ui_card_padding"
+                                android:background="@color/ui_hairline" />
 
-                            <!-- 2. Transaction History Row -->
                             <LinearLayout
                                 android:id="@+id/cardTransactionHistory"
                                 android:layout_width="match_parent"
-                                android:layout_height="@dimen/button_primary_height"
+                                android:layout_height="@dimen/ui_row_height_value"
                                 android:background="?attr/selectableItemBackground"
                                 android:clickable="true"
                                 android:focusable="true"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal"
-                                android:paddingHorizontal="@dimen/space_lg">
-
-                                <FrameLayout
-                                    android:layout_width="@dimen/icon_tile_sm"
-                                    android:layout_height="@dimen/icon_tile_sm">
-
-                                    <ImageView
-                                        android:layout_width="@dimen/icon_md"
-                                        android:layout_height="@dimen/icon_md"
-                                        android:layout_gravity="center"
-                                        android:importantForAccessibility="no"
-                                        android:src="@drawable/ic_history"
-                                        app:tint="@color/text_primary" />
-                                </FrameLayout>
+                                android:paddingStart="@dimen/ui_card_padding"
+                                android:paddingEnd="@dimen/ui_card_padding">
 
                                 <TextView
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="@dimen/space_md"
                                     android:layout_weight="1"
-                                    android:text="@string/common_transaction_history"
-                                    android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
+                                    android:text="@string/ui_attendee_transaction_history"
+                                    android:textAppearance="@style/TextAppearance.EventQR.Type.Title"
+                                    android:textColor="@color/ui_text_primary" />
 
                                 <ImageView
-                                    android:layout_width="@dimen/icon_sm"
-                                    android:layout_height="@dimen/icon_sm"
+                                    android:layout_width="@dimen/ui_chevron"
+                                    android:layout_height="@dimen/ui_chevron"
                                     android:importantForAccessibility="no"
-                                    android:src="@drawable/ic_chevron_right"
-                                    app:tint="@color/neutral" />
+                                    android:src="@drawable/ic_ui_chevron_right"
+                                    android:tint="@color/ui_text_secondary" />
                             </LinearLayout>
 
                             <View
-                                style="@style/Widget.EventQR.Divider"
-                                android:layout_marginStart="@dimen/row_text_inset"
-                                android:layout_marginEnd="@dimen/space_lg" />
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/stroke_hairline"
+                                android:layout_marginStart="@dimen/ui_card_padding"
+                                android:background="@color/ui_hairline" />
 
-                            <!-- 3. Claimed Rewards Row -->
                             <LinearLayout
                                 android:id="@+id/cardClaimedRewards"
                                 android:layout_width="match_parent"
-                                android:layout_height="@dimen/button_primary_height"
+                                android:layout_height="@dimen/ui_row_height_value"
                                 android:background="?attr/selectableItemBackground"
                                 android:clickable="true"
                                 android:focusable="true"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal"
-                                android:paddingHorizontal="@dimen/space_lg">
-
-                                <FrameLayout
-                                    android:layout_width="@dimen/icon_tile_sm"
-                                    android:layout_height="@dimen/icon_tile_sm">
-
-                                    <ImageView
-                                        android:layout_width="@dimen/icon_md"
-                                        android:layout_height="@dimen/icon_md"
-                                        android:layout_gravity="center"
-                                        android:importantForAccessibility="no"
-                                        android:src="@drawable/ic_nav_gift"
-                                        app:tint="@color/text_primary" />
-                                </FrameLayout>
+                                android:paddingStart="@dimen/ui_card_padding"
+                                android:paddingEnd="@dimen/ui_card_padding">
 
                                 <TextView
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="@dimen/space_md"
                                     android:layout_weight="1"
-                                    android:text="@string/attendee_profile_claimed_rewards"
-                                    android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
+                                    android:text="@string/ui_attendee_claimed_rewards"
+                                    android:textAppearance="@style/TextAppearance.EventQR.Type.Title"
+                                    android:textColor="@color/ui_text_primary" />
 
                                 <ImageView
-                                    android:layout_width="@dimen/icon_sm"
-                                    android:layout_height="@dimen/icon_sm"
+                                    android:layout_width="@dimen/ui_chevron"
+                                    android:layout_height="@dimen/ui_chevron"
                                     android:importantForAccessibility="no"
-                                    android:src="@drawable/ic_chevron_right"
-                                    app:tint="@color/neutral" />
+                                    android:src="@drawable/ic_ui_chevron_right"
+                                    android:tint="@color/ui_text_secondary" />
                             </LinearLayout>
 
                             <View
-                                style="@style/Widget.EventQR.Divider"
-                                android:layout_marginStart="@dimen/row_text_inset"
-                                android:layout_marginEnd="@dimen/space_lg" />
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/stroke_hairline"
+                                android:layout_marginStart="@dimen/ui_card_padding"
+                                android:background="@color/ui_hairline" />
 
-                            <!-- 4. My Event Requests Row -->
                             <LinearLayout
                                 android:id="@+id/cardMyEventRequests"
                                 android:layout_width="match_parent"
-                                android:layout_height="@dimen/button_primary_height"
+                                android:layout_height="@dimen/ui_row_height_value"
                                 android:background="?attr/selectableItemBackground"
                                 android:clickable="true"
                                 android:focusable="true"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal"
-                                android:paddingHorizontal="@dimen/space_lg">
-
-                                <FrameLayout
-                                    android:layout_width="@dimen/icon_tile_sm"
-                                    android:layout_height="@dimen/icon_tile_sm">
-
-                                    <ImageView
-                                        android:layout_width="@dimen/icon_md"
-                                        android:layout_height="@dimen/icon_md"
-                                        android:layout_gravity="center"
-                                        android:importantForAccessibility="no"
-                                        android:src="@drawable/ic_event_request"
-                                        app:tint="@color/text_primary" />
-                                </FrameLayout>
+                                android:paddingStart="@dimen/ui_card_padding"
+                                android:paddingEnd="@dimen/ui_card_padding">
 
                                 <TextView
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="@dimen/space_md"
                                     android:layout_weight="1"
-                                    android:text="@string/attendee_profile_my_event_requests"
-                                    android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
+                                    android:text="@string/ui_attendee_my_event_requests"
+                                    android:textAppearance="@style/TextAppearance.EventQR.Type.Title"
+                                    android:textColor="@color/ui_text_primary" />
 
                                 <ImageView
-                                    android:layout_width="@dimen/icon_sm"
-                                    android:layout_height="@dimen/icon_sm"
+                                    android:layout_width="@dimen/ui_chevron"
+                                    android:layout_height="@dimen/ui_chevron"
                                     android:importantForAccessibility="no"
-                                    android:src="@drawable/ic_chevron_right"
-                                    app:tint="@color/neutral" />
+                                    android:src="@drawable/ic_ui_chevron_right"
+                                    android:tint="@color/ui_text_secondary" />
                             </LinearLayout>
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
 
-                    <!-- ==================== SECTION 3: SIGN OUT ACTION ==================== -->
-                    <LinearLayout
+                    <!-- ═════════ Sign out: outlined destructive row ═════════ -->
+                    <TextView
                         android:id="@+id/cardSignOut"
+                        style="@style/Widget.EventQR.Ui.Button.Destructive.Inline"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/input_height"
-                        android:layout_marginTop="@dimen/space_20"
-                        android:background="@drawable/bg_sign_out_button"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingHorizontal="@dimen/space_lg">
-
-                        <FrameLayout
-                            android:layout_width="@dimen/icon_tile_sm"
-                            android:layout_height="@dimen/icon_tile_sm">
-
-                            <ImageView
-                                android:layout_width="@dimen/icon_md"
-                                android:layout_height="@dimen/icon_md"
-                                android:layout_gravity="center"
-                                android:contentDescription="@null"
-                                android:src="@drawable/ic_logout"
-                                app:tint="@color/error" />
-                        </FrameLayout>
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/space_md"
-                            android:layout_weight="1"
-                            android:text="@string/common_sign_out"
-                            android:textColor="@color/error"
-                            android:textAppearance="@style/TextAppearance.EventQR.TextBody.Medium" />
-                    </LinearLayout>
-
+                        android:layout_height="@dimen/ui_button_height_inline"
+                        android:layout_marginTop="@dimen/space_32"
+                        android:text="@string/ui_attendee_sign_out" />
                 </LinearLayout>
             </LinearLayout>
         </ScrollView>
@@ -541,4 +421,5 @@
         android:id="@+id/composeBottomNav"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
+
 </LinearLayout>

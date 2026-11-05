@@ -13,11 +13,11 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.google.android.material.textfield.TextInputLayout
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.Validators
+import com.thedavelopers.eventqr.ui.theme.applyEventQrBottomInsetPadding
 import kotlinx.coroutines.launch
 
 class AttendeeEditProfileActivity : AppCompatActivity() {
@@ -28,10 +28,12 @@ class AttendeeEditProfileActivity : AppCompatActivity() {
     private lateinit var edtFullName: EditText
     private lateinit var edtEmail: EditText
     private lateinit var edtPhone: EditText
-    private lateinit var tilPhone: TextInputLayout
+    private lateinit var layoutPhoneField: View
+    private lateinit var txtNameError: TextView
+    private lateinit var txtPhoneError: TextView
     private lateinit var cardError: View
     private lateinit var txtApiError: TextView
-    private lateinit var btnRetryProfileLoad: Button
+    private lateinit var btnRetryProfileLoad: TextView
     private lateinit var skeletonLoading: View
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var layoutEditProfileContent: View
@@ -63,7 +65,9 @@ class AttendeeEditProfileActivity : AppCompatActivity() {
         edtFullName = findViewById(R.id.edtFullName)
         edtEmail = findViewById(R.id.edtEmail)
         edtPhone = findViewById(R.id.edtPhone)
-        tilPhone = findViewById(R.id.tilPhone)
+        layoutPhoneField = findViewById(R.id.layoutPhoneField)
+        txtNameError = findViewById(R.id.txtNameError)
+        txtPhoneError = findViewById(R.id.txtPhoneError)
         cardError = findViewById(R.id.cardError)
         txtApiError = findViewById(R.id.txtApiError)
         btnRetryProfileLoad = findViewById(R.id.btnRetryProfileLoad)
@@ -79,6 +83,7 @@ class AttendeeEditProfileActivity : AppCompatActivity() {
     private fun bindActions() {
         btnBack.setOnClickListener { finish() }
         btnRetryProfileLoad.setOnClickListener { loadCurrentProfile() }
+        findViewById<View>(R.id.layoutSaveBar).applyEventQrBottomInsetPadding()
 
         btnSaveChanges.setOnClickListener { attemptSave() }
 
@@ -186,25 +191,41 @@ class AttendeeEditProfileActivity : AppCompatActivity() {
     private fun validateForm(): Boolean {
         // The backend silently ignores a blank name, so block it here instead of reporting a false success.
         val nameValid = sanitizeName().isNotBlank()
-        if (!nameValid) {
-            edtFullName.error = getString(R.string.attendee_edit_profile_full_name_is_required)
-        }
+        setFieldError(edtFullName, txtNameError, if (nameValid) null else R.string.ui_attendee_name_required)
         return validatePhone() && nameValid
     }
 
     private fun validatePhone(): Boolean {
         val phone = sanitizePhone()
         if (phone.isBlank()) {
-            edtPhone.error = getString(R.string.attendee_edit_profile_phone_number_is_required)
+            setFieldError(null, txtPhoneError, R.string.ui_attendee_phone_required)
             return false
         }
         // Same rule as registration: the field holds normalized national digits and the
         // assembled E.164 value must satisfy Validators.isValidPhoneNumber.
         if (!Validators.isValidPhoneNumber("+63$phone")) {
-            edtPhone.error = getString(R.string.error_invalid_phone_prefixed)
+            setFieldError(null, txtPhoneError, R.string.ui_attendee_phone_invalid)
             return false
         }
         return true
+    }
+
+    /**
+     * Inline error under the field (§5.2): the helper turns into an 11sp error line and the box
+     * takes the 2dp error stroke. [field] is null for the phone, whose stroke lives on its box.
+     */
+    private fun setFieldError(field: EditText?, helper: TextView, messageRes: Int?) {
+        if (messageRes == null) {
+            helper.text = null
+            helper.visibility = View.GONE
+        } else {
+            helper.setText(messageRes)
+            helper.visibility = View.VISIBLE
+        }
+        val target: View = field ?: layoutPhoneField
+        target.setBackgroundResource(
+            if (messageRes == null) R.drawable.bg_ui_field else R.drawable.bg_ui_field_error,
+        )
     }
 
     private fun hasChanges(): Boolean {
@@ -256,9 +277,9 @@ class AttendeeEditProfileActivity : AppCompatActivity() {
     private fun sanitizePhone(): String = edtPhone.text.toString().trim()
 
     private fun clearFieldErrors() {
-        edtFullName.error = null
+        setFieldError(edtFullName, txtNameError, null)
         edtEmail.error = null
-        edtPhone.error = null
+        setFieldError(null, txtPhoneError, null)
     }
 
     private fun showApiError(message: String) {
@@ -295,6 +316,6 @@ class AttendeeEditProfileActivity : AppCompatActivity() {
     private fun updateSaveButtonState() {
         val canSave = !isLoadingProfile && !isSavingProfile && hasChanges()
         btnSaveChanges.isEnabled = canSave
-        btnSaveChanges.text = getString(if (isSavingProfile) R.string.attendee_edit_profile_saving else R.string.edit_profile_save_changes)
+        btnSaveChanges.text = getString(if (isSavingProfile) R.string.ui_attendee_saving else R.string.ui_attendee_save_changes)
     }
 }

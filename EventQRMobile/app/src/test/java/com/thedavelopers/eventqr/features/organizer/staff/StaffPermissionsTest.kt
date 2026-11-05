@@ -22,6 +22,8 @@ import java.util.UUID
 @Config(sdk = [35])
 class StaffPermissionsTest {
     private val context: android.content.Context get() = ApplicationProvider.getApplicationContext()
+    private val themedContext: android.content.Context
+        get() = android.view.ContextThemeWrapper(context, R.style.Theme_EventQR)
 
     private fun user(role: String = "STAFF") = OrganizerMvpStaff(
         id = UUID.randomUUID().toString(),
@@ -37,10 +39,14 @@ class StaffPermissionsTest {
     )
 
     @Test
-    fun switches_defaultToScanOnAndOthersOff() {
-        val form = StaffPermissionsForm(context)
-        assertTrue(form.scanSwitch.isChecked)
-        assertFalse("Scan QR is always on and locked", form.scanSwitch.isEnabled)
+    fun scanIsStatedAsLocked_andOtherPermissionsDefaultOff() {
+        val form = StaffPermissionsForm(themedContext)
+        val lockedValue = requireNotNull(form.view.findViewById<android.widget.TextView>(R.id.listRowValue))
+        assertEquals(
+            "Scan is always granted, so the sheet states it instead of offering a switch",
+            context.getString(R.string.ui_staff_scan_locked_value),
+            lockedValue.text,
+        )
         assertFalse(form.printIdSwitch.isChecked)
         assertFalse(form.viewLogsSwitch.isChecked)
         assertFalse(form.manageRewardsSwitch.isChecked)
@@ -48,7 +54,7 @@ class StaffPermissionsTest {
 
     @Test
     fun addPayload_carriesTheChosenFlags() {
-        val form = StaffPermissionsForm(context)
+        val form = StaffPermissionsForm(themedContext)
         form.printIdSwitch.isChecked = true
         form.manageRewardsSwitch.isChecked = true
         val request = buildStaffAssignmentRequest(form.applyTo(user()))
@@ -64,7 +70,7 @@ class StaffPermissionsTest {
 
     @Test
     fun defaultsSendOffFlags() {
-        val request = buildStaffAssignmentRequest(StaffPermissionsForm(context).applyTo(user()))
+        val request = buildStaffAssignmentRequest(StaffPermissionsForm(themedContext).applyTo(user()))
         assertEquals(true, request.canScan)
         assertEquals(false, request.canPrintId)
         assertEquals(false, request.canViewLogs)
@@ -74,7 +80,7 @@ class StaffPermissionsTest {
     @Test
     fun editPrefillsFromTheRow_andUpdatePayloadUsesTheAssignmentFlags() {
         val row = user().copy(canPrintId = true, canViewLogs = false, canManageRewards = false)
-        val form = StaffPermissionsForm(context, row)
+        val form = StaffPermissionsForm(themedContext, row)
         assertTrue(form.printIdSwitch.isChecked)
         form.viewLogsSwitch.isChecked = true
 

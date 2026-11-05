@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icon tile (§5.5 leading slot, §5.9 the one icon tile): 10dp radius, primary_container
+     fill. Tint the child icon ui_primary; the tile itself never changes tone per screen. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/ui_primary_container" />
+    <corners android:radius="@dimen/ui_radius_card" />
+</shape>

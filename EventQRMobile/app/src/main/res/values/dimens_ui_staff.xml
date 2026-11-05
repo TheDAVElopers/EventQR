@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Dimens owned by the staff screens (Phase 3/4/5, plan §6.3, §5.13, §5.5).
+
+    Only sizes the staff layouts need and the shared layer does NOT already define. Everything
+    else comes from values/dimens.xml (closed spacing scale, radii) or
+    values/dimens_ui_shared.xml (pass head, rows, badges, scan viewport, fields).
+-->
+<resources>
+
+    <!-- Dashboard: the one primary target on the screen (§6.3 "one 96dp primary block"). -->
+    <dimen name="ui_staff_scan_block_height">96dp</dimen>
+
+    <!-- Result screens: flat semantic block at the top (§6.3 "top 160dp is a flat semantic block"). -->
+    <dimen name="ui_staff_result_block_height">160dp</dimen>
+
+    <!-- Attendee identity block: 56dp tile with an Archivo initial. -->
+    <dimen name="ui_staff_identity_tile">56dp</dimen>
+    <dimen name="ui_staff_identity_initial">22sp</dimen>
+
+    <!-- Filter chip row: 36dp chip inside a 48dp touch row (§5.6, §9.2). -->
+    <dimen name="ui_staff_chip_row">48dp</dimen>
+
+    <!-- Filter rows on the transaction log screen: 56dp, same rhythm as a metric row. -->
+    <dimen name="ui_staff_filter_row">56dp</dimen>
+
+    <!-- Reward rows on the redemption screen (§6.2 reward row language, 88dp). -->
+    <dimen name="ui_staff_reward_row">88dp</dimen>
+
+    <!-- Divider inset for a row that starts at x = 0 because its host supplies the 20dp gutter
+         (40dp tile + 16dp gap = 56dp). The staff lists with their own 20dp row inset use the
+         shared ui_divider_inset (76dp) instead. -->
+    <dimen name="ui_staff_divider_inset_compact">56dp</dimen>
+
+    <!-- Placeholder glyph inside the empty camera well. -->
+    <dimen name="ui_staff_scan_preview_icon">32dp</dimen>
+
+</resources>

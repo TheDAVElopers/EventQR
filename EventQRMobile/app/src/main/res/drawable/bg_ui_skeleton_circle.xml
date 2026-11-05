@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Skeleton circle (§5.11 SkeletonRow avatar slot): the same fill, full radius. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="@color/ui_surface_sunken" />
+</shape>

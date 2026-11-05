@@ -12,5 +12,8 @@
         <attr name="icon" format="reference" />
         <attr name="title" />
         <attr name="subtitle" />
+        <!-- true (default): this block applies the 20dp screen gutter itself.
+             false: the host container already applies it, so the block sits flush inside it. -->
+        <attr name="gutter" format="boolean" />
     </declare-styleable>
 </resources>

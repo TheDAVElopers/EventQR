@@ -28,7 +28,18 @@ class ReportExporterTest {
         recordsFormat = "%1\$d records",
         pageFormat = "Page %1\$d of %2\$d",
     )
-    private val exporter = ReportExporter(labels, "Tech Summit 2026", "Oct 10, 2026 9:00 AM")
+    private val palette = ReportExportPalette(
+        brandDeepest = 0,
+        primary = 0,
+        brandWash = 0,
+        ink700 = 0,
+        textSecondary = 0,
+        textPrimary = 0,
+        sunken = 0,
+        zebra = 0,
+        hairline = 0,
+    )
+    private val exporter = ReportExporter(labels, "Tech Summit 2026", "Oct 10, 2026 9:00 AM", palette)
     private val day = LocalDate.of(2026, 10, 10)
 
     private fun report(
@@ -148,7 +159,7 @@ class ReportExporterTest {
 
     @Test
     fun csv_neverGuardsGeneratedLabelsOrHeaders() {
-        val exporter = ReportExporter(labels.copy(event = "=Event", category = "-Category"), "=Evil Event", "Now")
+        val exporter = ReportExporter(labels.copy(event = "=Event", category = "-Category"), "=Evil Event", "Now", palette)
         val text = exporter.csv(listOf(report(columns = listOf("-Name", "@Pts"), series = linkedMapOf<String?, Long>("=Cat" to 1L)))).toString(Charsets.UTF_8)
         assertTrue(text.contains("\"=Event\",\"'=Evil Event\"\r\n"))
         assertTrue(text.contains("\"-Name\",\"@Pts\"\r\n"))
@@ -187,3 +198,4 @@ class ReportExporterTest {
         assertTrue(text.contains("\"Section 2\"\r\n"))
     }
 }
+

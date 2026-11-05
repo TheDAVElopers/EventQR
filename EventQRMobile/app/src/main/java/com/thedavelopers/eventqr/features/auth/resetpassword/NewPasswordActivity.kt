@@ -12,17 +12,24 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.util.ScreenInsets
+import com.thedavelopers.eventqr.core.util.Wordmark
 import com.thedavelopers.eventqr.core.util.Validators
+import com.thedavelopers.eventqr.core.util.setInlineError
 import com.thedavelopers.eventqr.features.auth.login.LoginActivity
+import com.thedavelopers.eventqr.ui.icons.AppIcons
+import com.thedavelopers.eventqr.ui.icons.FieldIcons
 
 /** Final step of the reset flow; receives the email and the already verified code from [ResetPasswordActivity]. */
 open class NewPasswordActivity : AppCompatActivity(), NewPasswordContract.View {
     private lateinit var presenter: NewPasswordPresenter
     private lateinit var newPasswordInput: EditText
     private lateinit var confirmPasswordInput: EditText
+    private lateinit var newPasswordErrorText: TextView
+    private lateinit var confirmPasswordErrorText: TextView
     private lateinit var resetButton: Button
     private lateinit var requirementsLayout: LinearLayout
     private lateinit var passwordLengthRequirement: TextView
@@ -35,12 +42,18 @@ open class NewPasswordActivity : AppCompatActivity(), NewPasswordContract.View {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_new_password)
+        enableEdgeToEdge()
+        ScreenInsets.padForStatusBar(findViewById(R.id.authTopBar))
+        Wordmark.applyBarRules(this)
+        ScreenInsets.padForNavigationBar(findViewById(R.id.authFooter))
 
         presenter = NewPasswordPresenter()
         presenter.attach(this, this)
 
         newPasswordInput = findViewById(R.id.edtNewPassword)
         confirmPasswordInput = findViewById(R.id.edtConfirmPassword)
+        newPasswordErrorText = findViewById(R.id.txtNewPasswordError)
+        confirmPasswordErrorText = findViewById(R.id.txtConfirmPasswordError)
         resetButton = findViewById(R.id.btnResetPassword)
         requirementsLayout = findViewById(R.id.layoutPasswordRequirements)
         passwordLengthRequirement = findViewById(R.id.txtPasswordLengthRequirement)
@@ -89,11 +102,14 @@ open class NewPasswordActivity : AppCompatActivity(), NewPasswordContract.View {
     }
 
     override fun showPasswordError(message: String?) {
-        newPasswordInput.error = if (message == Validators.PASSWORD_TOO_LONG_ERROR) getString(R.string.error_password_too_long) else message
+        newPasswordInput.setInlineError(
+            if (message == Validators.PASSWORD_TOO_LONG_ERROR) getString(R.string.error_password_too_long) else message,
+            newPasswordErrorText
+        )
     }
 
     override fun showConfirmPasswordError(message: String?) {
-        confirmPasswordInput.error = message
+        confirmPasswordInput.setInlineError(message, confirmPasswordErrorText)
     }
 
     override fun showMessage(message: String) {
@@ -131,37 +147,42 @@ open class NewPasswordActivity : AppCompatActivity(), NewPasswordContract.View {
         updateRequirement(passwordLowercaseRequirement, getString(R.string.password_req_lowercase), requirements.hasLowercase)
         updateRequirement(passwordNumberRequirement, getString(R.string.password_req_number), requirements.hasNumber)
         updateRequirement(passwordSpecialRequirement, getString(R.string.password_req_special), requirements.hasSpecial)
-        newPasswordInput.error = if (!requirements.withinMaxLength) getString(R.string.error_password_too_long) else null
+        newPasswordInput.setInlineError(
+            if (!requirements.withinMaxLength) getString(R.string.error_password_too_long) else null,
+            newPasswordErrorText
+        )
 
         resetButton.isEnabled = !isLoading && requirements.isValid &&
             newPasswordInput.text.toString() == confirmPasswordInput.text.toString()
     }
 
+    /**
+     * One checklist row, same mark as Registration: the tokenised ui_rule_on / ui_rule_off drawable
+     * carries the state (lime only when the rule is met). The label is never tinted by the state:
+     * ui_text_primary when met, ui_text_secondary while pending.
+     */
     private fun updateRequirement(view: TextView, label: String, isMet: Boolean) {
-        view.text = "${if (isMet) "✓" else "○"} $label"
-        view.setTextColor(getColor(if (isMet) R.color.success_dark else R.color.text_secondary))
+        view.text = label
+        view.setTextColor(getColor(if (isMet) R.color.ui_text_primary else R.color.ui_text_secondary))
+        view.setCompoundDrawablesRelativeWithIntrinsicBounds(
+            if (isMet) R.drawable.ui_rule_on else R.drawable.ui_rule_off,
+            0,
+            0,
+            0
+        )
     }
 
     private fun configurePasswordToggle(input: EditText) {
+        FieldIcons.apply(input)
         input.setOnTouchListener { view, event ->
             if (event.action == MotionEvent.ACTION_UP && event.rawX >= input.right - input.compoundPaddingEnd) {
                 val isVisible = input.inputType == (InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD)
                 if (isVisible) {
                     input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-                    input.setCompoundDrawablesWithIntrinsicBounds(
-                        input.compoundDrawables[0],
-                        null,
-                        ContextCompat.getDrawable(this, R.drawable.ic_visibility_on),
-                        null
-                    )
+                    FieldIcons.setTrailing(input, AppIcons.Visibility)
                 } else {
                     input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-                    input.setCompoundDrawablesWithIntrinsicBounds(
-                        input.compoundDrawables[0],
-                        null,
-                        ContextCompat.getDrawable(this, R.drawable.ic_visibility_off),
-                        null
-                    )
+                    FieldIcons.setTrailing(input, AppIcons.VisibilityOff)
                 }
                 input.setSelection(input.text.length)
                 view.performClick()
@@ -177,3 +198,7 @@ open class NewPasswordActivity : AppCompatActivity(), NewPasswordContract.View {
         const val EXTRA_CODE = "extra_code"
     }
 }
+
+
+
+

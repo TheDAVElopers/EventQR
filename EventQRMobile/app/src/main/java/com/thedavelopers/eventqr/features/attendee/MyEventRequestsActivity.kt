@@ -17,6 +17,7 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse
 import com.thedavelopers.eventqr.ui.components.EventRequestHolder
+import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -29,7 +30,7 @@ class MyEventRequestsActivity : AppCompatActivity() {
     private lateinit var skeletonLoading: View
     private lateinit var txtEmpty: EventQrEmptyState
     private lateinit var txtError: TextView
-    private lateinit var btnRetry: Button
+    private lateinit var btnRetry: TextView
     private lateinit var adapter: MyEventRequestsAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,6 +57,8 @@ class MyEventRequestsActivity : AppCompatActivity() {
         btnBack.setOnClickListener { finish() }
         btnRetry.setOnClickListener { loadRequests() }
         swipeRefresh.setOnRefreshListener { loadRequests() }
+
+        txtEmpty.setIcon(AppIcons.Request)
 
         findViewById<View>(R.id.btnNewRequest).setOnClickListener {
             startActivity(Intent(this, RequestEventActivity::class.java))
@@ -103,7 +106,10 @@ class MyEventRequestsActivity : AppCompatActivity() {
         if (requests.isEmpty()) {
             txtEmpty.visibility = View.VISIBLE
             recyclerRequests.visibility = View.GONE
-            txtEmpty.text = getString(R.string.my_event_requests_no_event_requests_yet)
+            txtEmpty.show(
+                getString(R.string.my_event_requests_no_event_requests_yet),
+                getString(R.string.ui_attendee_no_requests_body),
+            )
             adapter.submitItems(emptyList())
             return
         }

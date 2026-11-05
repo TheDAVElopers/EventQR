@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.transactions
 
+import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.dimenPx
 import com.thedavelopers.eventqr.ui.theme.dimenFloat
 import com.thedavelopers.eventqr.features.organizer.styledText
@@ -105,7 +106,7 @@ open class TransactionRulesActivity : AppCompatActivity() {
         val purposeId = selectedPurposeId
         if (purposes.isEmpty() || purposeId == null) {
             content.addView(emptyState(
-                iconRes = R.drawable.ic_organizer_reports,
+                iconRes = AppIcons.Report,
                 title = getString(R.string.transaction_rules_no_purposes_title),
                 subtext = getString(R.string.transaction_rules_no_purposes_message),
             ))
@@ -118,6 +119,13 @@ open class TransactionRulesActivity : AppCompatActivity() {
             eventId = UUID.fromString(selectedEvent.id),
             scanPurposeId = UUID.fromString(purposeId),
         )
+
+        // Rule state is held here, not read back from view child indices: the row layouts own
+        // their own hierarchy and a screen must never depend on it.
+        var allowDuplicate = rule.allowDuplicate
+        var requiresStaff = rule.requiresStaffAssignment
+        var cooldownMinutes = rule.duplicateWindowMinutes
+        var maxScans = rule.maxUsesPerRegistration
 
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -151,7 +159,7 @@ open class TransactionRulesActivity : AppCompatActivity() {
             getString(R.string.transaction_rules_allow_duplicate_title),
             getString(R.string.transaction_rules_allow_duplicate_desc),
             rule.allowDuplicate
-        ) { }
+        ) { allowDuplicate = it }
         card1.addView(allowDuplicateToggle)
         card1.addView(divider())
 
@@ -159,7 +167,7 @@ open class TransactionRulesActivity : AppCompatActivity() {
             getString(R.string.transaction_rules_require_staff_title),
             getString(R.string.transaction_rules_require_staff_desc),
             rule.requiresStaffAssignment
-        ) { }
+        ) { requiresStaff = it }
         card1.addView(requiresStaffToggle)
         card1.addView(divider())
 
@@ -175,7 +183,7 @@ open class TransactionRulesActivity : AppCompatActivity() {
             rule.duplicateWindowMinutes.toString(),
             hint = "60",
             inputType = InputType.TYPE_CLASS_NUMBER
-        ) { }
+        ) { cooldownMinutes = it.toIntOrNull() ?: 0 }
         card2.addView(cooldownInput)
         card2.addView(styledText(getString(R.string.transaction_rules_cooldown_helper), R.dimen.type_caption, false, orgColors.muted).apply {
             setPadding(0, dimenPx(R.dimen.space_6), 0, dimenPx(R.dimen.space_10))
@@ -186,7 +194,7 @@ open class TransactionRulesActivity : AppCompatActivity() {
             rule.maxUsesPerRegistration.toString(),
             hint = "10",
             inputType = InputType.TYPE_CLASS_NUMBER
-        ) { }
+        ) { maxScans = it.toIntOrNull() ?: 1 }
         card2.addView(maxScansInput)
         card2.addView(styledText(getString(R.string.transaction_rules_max_scans_helper), R.dimen.type_caption, false, orgColors.muted).apply {
             setPadding(0, dimenPx(R.dimen.space_6), 0, 0)
@@ -197,19 +205,10 @@ open class TransactionRulesActivity : AppCompatActivity() {
         content.addView(spacerRes(R.dimen.space_20))
 
         content.addView(primaryButton(getString(R.string.transaction_rules_save)) {
-            val allowDuplicate = (allowDuplicateToggle.getChildAt(0) as LinearLayout).let {
-                (it.getChildAt(1) as androidx.appcompat.widget.SwitchCompat).isChecked
-            }
-            val requiresStaff = (requiresStaffToggle.getChildAt(0) as LinearLayout).let {
-                (it.getChildAt(1) as androidx.appcompat.widget.SwitchCompat).isChecked
-            }
-            val cooldown = (cooldownInput.getChildAt(1) as android.widget.EditText).text.toString().toIntOrNull() ?: 0
-            val maxScans = (maxScansInput.getChildAt(1) as android.widget.EditText).text.toString().toIntOrNull() ?: 1
-
-            saveRules(allowDuplicate, requiresStaff, cooldown, maxScans)
+            saveRules(allowDuplicate, requiresStaff, cooldownMinutes, maxScans)
         }.apply {
             id = R.id.txr_save_button
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dimenPx(R.dimen.control_height_54))
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dimenPx(R.dimen.ui_button_height))
         })
     }
 

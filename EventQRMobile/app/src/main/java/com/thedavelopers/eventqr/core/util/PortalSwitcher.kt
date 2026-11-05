@@ -3,6 +3,7 @@ package com.thedavelopers.eventqr.core.util
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import android.content.Context
+import com.thedavelopers.eventqr.ui.icons.AppIcons
 
 /**
  * Single source of truth for the portal-switcher feature.
@@ -37,11 +38,11 @@ object PortalSwitcher {
 
     /** Row icon for a portal option. */
     fun iconRes(portal: String): Int = when (portal) {
-        PORTAL_ATTENDEE -> R.drawable.ic_nav_profile
-        PORTAL_STAFF -> R.drawable.ic_qr_scan
-        PORTAL_ORGANIZER -> R.drawable.ic_calendar
-        PORTAL_ADMIN, PORTAL_SUPER_ADMIN -> R.drawable.ic_group
-        else -> R.drawable.ic_nav_home
+        PORTAL_ATTENDEE -> AppIcons.Profile
+        PORTAL_STAFF -> AppIcons.Scan
+        PORTAL_ORGANIZER -> AppIcons.Event
+        PORTAL_ADMIN, PORTAL_SUPER_ADMIN -> AppIcons.People
+        else -> AppIcons.Home
     }
 
     /** Localized portal name; the PORTAL_* constants stay stable identifiers used for comparisons. */
@@ -51,6 +52,20 @@ object PortalSwitcher {
         PORTAL_ORGANIZER -> context.getString(R.string.organizer_dashboard_organizer_portal)
         PORTAL_ADMIN -> context.getString(R.string.admin_dashboard_admin_portal)
         PORTAL_SUPER_ADMIN -> context.getString(R.string.portal_super_admin_portal)
+        else -> portal
+    }
+
+    /**
+     * Short role label for the pass-head portal tab. The "…Portal" wording is internal
+     * vocabulary (§7.7), so the tab carries the role only; SUPER_ADMIN must stay distinct
+     * from ADMIN.
+     */
+    fun shortRoleName(context: Context, portal: String): String = when (portal) {
+        PORTAL_ATTENDEE -> context.getString(R.string.ui_attendee_role)
+        PORTAL_STAFF -> context.getString(R.string.ui_attendee_role_staff)
+        PORTAL_ORGANIZER -> context.getString(R.string.ui_attendee_role_organizer)
+        PORTAL_ADMIN -> context.getString(R.string.ui_attendee_role_admin)
+        PORTAL_SUPER_ADMIN -> context.getString(R.string.role_super_admin)
         else -> portal
     }
 

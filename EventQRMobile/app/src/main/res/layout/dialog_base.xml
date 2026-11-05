@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    DIALOG BASE (§5.12). 16dp radius, 24dp padding, title 18/600, body 15 secondary, actions
+    right-aligned TEXT buttons (max 2, primary last, never full-width).
+
+    Width rule: the dialog window sets min(320dp, screen - 40dp); this layout is match_parent
+    because the window already constrains it. The 12dp elevation belongs to the dialog window.
+
+    ids: dialogRoot, dialogTitle, dialogBody, dialogActions, dialogNegative, dialogPositive.
+    Destructive confirm: dialogPositive takes Widget.EventQR.Ui.Button.DestructiveCommit and
+    the verb as its label ("Delete").
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/dialogRoot"
+    style="@style/Widget.EventQR.Ui.Dialog"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/dialogTitle"
+        style="@style/Widget.EventQR.Ui.Dialog.Title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:text="Cancel registration?" />
+
+    <TextView
+        android:id="@+id/dialogBody"
+        style="@style/Widget.EventQR.Ui.Dialog.Body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:text="Your seat goes back to the pool. This cannot be undone." />
+
+    <LinearLayout
+        android:id="@+id/dialogActions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_24"
+        android:gravity="end"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/dialogNegative"
+            style="@style/Widget.EventQR.Ui.Button.Ghost"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/ui_button_height_inline"
+            tools:text="Keep seat" />
+
+        <Button
+            android:id="@+id/dialogPositive"
+            style="@style/Widget.EventQR.Ui.Button.Ghost"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/ui_button_height_inline"
+            android:layout_marginStart="@dimen/space_8"
+            tools:text="Cancel seat" />
+    </LinearLayout>
+
+</LinearLayout>

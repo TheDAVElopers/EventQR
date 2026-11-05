@@ -14,6 +14,8 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.thedavelopers.eventqr.ui.inComposition
+import com.thedavelopers.eventqr.ui.roleColor
+import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.ui.theme.EventQrTheme
 import kotlin.math.pow
 import org.junit.Assert.assertEquals
@@ -69,30 +71,19 @@ class EventCardComposeTest {
         composeTestRule.inComposition { EventBadgeStatus.entries.associateWith { eventCardAccent(it) } }
 
     @Test
-    fun eventCardAccent_everyStatus_isUniqueOutsideTheDeclaredSharingGroups() {
-        val accentGroups = listOf(
-            setOf(EventBadgeStatus.REJECTED, EventBadgeStatus.CANCELLED),
-            setOf(EventBadgeStatus.COMPLETED, EventBadgeStatus.DRAFT, EventBadgeStatus.UNKNOWN),
-            setOf(EventBadgeStatus.ACTIVE),
-            setOf(EventBadgeStatus.UPCOMING, EventBadgeStatus.PENDING),
-            setOf(EventBadgeStatus.APPROVED),
-            setOf(EventBadgeStatus.REGISTERED),
-        )
-
-        assertEquals(EventBadgeStatus.entries.toSet(), accentGroups.flatten().toSet())
-
+    fun eventCardAccent_isNeutralBecauseStatusLivesInTheBadge() {
+        // The redesign removed the coloured date badge: colour is meaning, and a date has none.
+        // Status is carried once, by StatusBadge. Every status therefore resolves to the same
+        // neutral container and the same primary progress fill.
         val accents = resolveAccents()
-        val groupColors = accentGroups.map { group ->
-            val containers = group.map { accents.getValue(it).container }.toSet()
-            val fills = group.map { accents.getValue(it).fill }.toSet()
 
-            assertEquals("$group must share one container color", 1, containers.size)
-            assertEquals("$group must share one fill color", 1, fills.size)
-
-            containers.single() to fills.single()
+        assertEquals(1, accents.values.map { it.container }.toSet().size)
+        assertEquals(1, accents.values.map { it.fill }.toSet().size)
+        EventBadgeStatus.entries.forEach { status ->
+            val accent = accents.getValue(status)
+            assertEquals(roleColor(R.color.ui_text_secondary), accent.container)
+            assertEquals(roleColor(R.color.ui_primary), accent.fill)
         }
-
-        assertEquals(groupColors.size, groupColors.toSet().size)
     }
 
     @Test
@@ -203,7 +194,7 @@ class EventCardComposeTest {
     fun registeredCountAndCapacity_renderProgressReadout() {
         setCard(registeredCount = 25, capacity = 50)
 
-        composeTestRule.onNodeWithText("25 / 50 Registered").assertIsDisplayed()
+        composeTestRule.onNodeWithText("25 / 50 registered").assertIsDisplayed()
         composeTestRule.onNodeWithText("50%").assertIsDisplayed()
     }
 
@@ -212,7 +203,7 @@ class EventCardComposeTest {
         setCard(registeredCount = 75, capacity = 50)
 
         composeTestRule.onNodeWithText("100%").assertIsDisplayed()
-        composeTestRule.onNodeWithText("75 / 50 Registered").assertIsDisplayed()
+        composeTestRule.onNodeWithText("75 / 50 registered").assertIsDisplayed()
     }
 
     @Test
@@ -272,7 +263,7 @@ class EventCardComposeTest {
         EventBadgeStatus.entries.forEach { status ->
             composeTestRule.onNodeWithText("Card for ${status.name}").assertIsDisplayed()
         }
-        composeTestRule.onNodeWithText("Pending").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Pending review").assertIsDisplayed()
         composeTestRule.onNodeWithText("Approved").assertIsDisplayed()
         composeTestRule.onNodeWithText("Rejected").assertIsDisplayed()
         composeTestRule.onNodeWithText("Active").assertIsDisplayed()
@@ -285,13 +276,30 @@ class EventCardComposeTest {
     }
 
     @Test
-    fun completedCard_doesNotReuseLiveAccentColors() {
-        val accents = resolveAccents()
-        val completed = accents.getValue(EventBadgeStatus.COMPLETED)
-        val active = accents.getValue(EventBadgeStatus.ACTIVE)
+    fun completedAndActive_carryDifferentBadgeLabelsNotDifferentAccents() {
+        composeTestRule.setContent {
+            EventQrTheme {
+                EventCard(
+                    title = "Completed card",
+                    status = EventBadgeStatus.COMPLETED,
+                    day = "01",
+                    month = "feb",
+                    time = "10:00 AM",
+                    location = "Venue",
+                )
+                EventCard(
+                    title = "Active card",
+                    status = EventBadgeStatus.ACTIVE,
+                    day = "02",
+                    month = "feb",
+                    time = "10:00 AM",
+                    location = "Venue",
+                )
+            }
+        }
 
-        assertNotEquals(active.container, completed.container)
-        assertNotEquals(active.fill, completed.fill)
+        composeTestRule.onNodeWithText("Completed").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Active").assertIsDisplayed()
     }
 
     @Test
@@ -337,7 +345,7 @@ class EventCardComposeTest {
         composeTestRule.onNodeWithText("Upcoming").assertIsDisplayed()
         composeTestRule.onNodeWithText("09:00 AM").assertIsDisplayed()
         composeTestRule.onNodeWithText("Manila Convention Center").assertIsDisplayed()
-        composeTestRule.onNodeWithText("25 / 50 Registered").assertIsDisplayed()
+        composeTestRule.onNodeWithText("25 / 50 registered").assertIsDisplayed()
         composeTestRule.onNodeWithText("50%").assertIsDisplayed()
     }
 
@@ -349,7 +357,7 @@ class EventCardComposeTest {
         composeTestRule.onNodeWithText("Design Systems Summit").assertIsDisplayed()
         composeTestRule.onNodeWithText("Upcoming").assertIsDisplayed()
         composeTestRule.onNodeWithText("Manila Convention Center").assertIsDisplayed()
-        composeTestRule.onNodeWithText("25 / 50 Registered").assertIsDisplayed()
+        composeTestRule.onNodeWithText("25 / 50 registered").assertIsDisplayed()
         composeTestRule.onNodeWithText("50%").assertIsDisplayed()
     }
 

@@ -1,6 +1,5 @@
 package com.thedavelopers.eventqr.features.admin.users
 
-import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -10,34 +9,44 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.widget.addTextChangedListener
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.chip.Chip
-import com.google.android.material.chip.ChipGroup
+import com.google.android.material.snackbar.Snackbar
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
-import com.thedavelopers.eventqr.core.api.dto.AccountStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
+import com.thedavelopers.eventqr.core.util.PagedAccumulator
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.core.util.addNearEndListener
 import com.thedavelopers.eventqr.features.admin.AdminBottomNavItem
-import com.thedavelopers.eventqr.features.admin.AdminEventApprovalBackendActivity
 import com.thedavelopers.eventqr.features.admin.AdminRepository
 import com.thedavelopers.eventqr.features.admin.configureAdminBottomNav
-import com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity
-import com.thedavelopers.eventqr.features.admin.logs.AdminAuditLogsActivity
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
-import com.thedavelopers.eventqr.ui.theme.dimenOffset
-import com.google.android.material.snackbar.Snackbar
-import com.thedavelopers.eventqr.core.util.PagedAccumulator
-import com.thedavelopers.eventqr.core.util.addNearEndListener
+import com.thedavelopers.eventqr.ui.components.CountLabel
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+import com.thedavelopers.eventqr.ui.components.FilterChipRow
+import com.thedavelopers.eventqr.ui.components.ListRowBinder
+import com.thedavelopers.eventqr.ui.components.PassHeadBinder
+import com.thedavelopers.eventqr.ui.icons.AppIcons
+import com.thedavelopers.eventqr.ui.theme.EventQrTheme
+import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * Account management (§6.5). Compact pass head, search field, the shared FilterChipRow for the
+ * role filter, and hairline account rows. The Material ChipGroup, the per-status badge drawables
+ * and the raised "create account" card are gone.
+ */
 class AdminAccountManagementActivity : AppCompatActivity() {
     private lateinit var repository: AdminRepository
     private lateinit var sessionManager: SessionManager
@@ -46,31 +55,38 @@ class AdminAccountManagementActivity : AppCompatActivity() {
     private lateinit var recyclerAccounts: RecyclerView
     private lateinit var progressLoading: ProgressBar
     private lateinit var textPlaceholder: EventQrEmptyState
-    private lateinit var filterChipsLayout: ChipGroup
+    private lateinit var countView: TextView
+    private lateinit var rowCreateAccount: View
 
     private val paging = PagedAccumulator<UserResponse, java.util.UUID> { it.userId }
     private var searchQuery: String = ""
     private var searchJob: Job? = null
     private var retrySnackbar: Snackbar? = null
 
+    private val selectedRoleFilter = MutableStateFlow<AccountRole?>(null)
+    private val currentUserId: String? by lazy { sessionManager.getUserId() }
+
+    private val roleFilters = mutableListOf<AccountRole?>(null)
+
     override fun onDestroy() {
         retrySnackbar?.dismiss()
         super.onDestroy()
     }
-    private var selectedRoleFilter: AccountRole? = null
-    private val currentUserId: String? by lazy { sessionManager.getUserId() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_admin_account_management)
+        applyEventQrSystemBarAppearance()
 
         repository = AdminRepository(this)
         sessionManager = SessionManager(this)
         adapter = AdminAccountAdapter(onActionClick = ::onAccountActionClick)
         bindViews()
+        bindHeader()
+        bindCreateRow()
+        bindFilterChips()
         bindNav()
         bindSearch()
-        setupRoleFilterChips()
     }
 
     override fun onResume() {
@@ -83,60 +99,69 @@ class AdminAccountManagementActivity : AppCompatActivity() {
         recyclerAccounts = findViewById(R.id.recyclerAdminAccounts)
         progressLoading = findViewById(R.id.progressAccountsLoading)
         textPlaceholder = findViewById(R.id.textAccountsPlaceholder)
-        filterChipsLayout = findViewById(R.id.filterChipsLayout)
+        rowCreateAccount = findViewById(R.id.rowCreateAccount)
         recyclerAccounts.layoutManager = LinearLayoutManager(this)
         recyclerAccounts.adapter = adapter
+    }
 
-        val isSuperAdmin = isSuperAdmin()
-        if (isSuperAdmin) {
-            findViewById<TextView>(R.id.nav_header_subtitle)?.text =
-                getString(R.string.admin_account_management_manage_admin_and_user_accounts)
-        }
-        findViewById<View>(R.id.buttonCreateAdminAccount).visibility = if (isSuperAdmin) View.VISIBLE else View.GONE
-        findViewById<View>(R.id.buttonCreateAdminAccount).setOnClickListener {
-            startActivity(Intent(this, CreateAdminAccountActivity::class.java))
+    private fun bindHeader() {
+        val head = findViewById<View>(R.id.passHead)
+        head.findViewById<View>(R.id.passHeadIdentity).applyEventQrTopInsetPadding()
+        PassHeadBinder.bindCompact(
+            root = head,
+            title = getString(R.string.ui_admin_accounts_title),
+            eyebrow = getString(R.string.ui_admin_tab),
+        )
+        countView = head.findViewById<TextView>(R.id.passHeadTitleCount)
+    }
+
+    private fun bindCreateRow() {
+        rowCreateAccount.visibility = if (isSuperAdmin()) View.VISIBLE else View.GONE
+        ListRowBinder.bind(
+            row = rowCreateAccount,
+            title = getString(R.string.ui_admin_accounts_create),
+            meta = getString(R.string.ui_admin_accounts_create_meta),
+            trailing = ListRowBinder.Trailing.CHEVRON,
+            showDivider = true,
+            onClick = { startActivity(Intent(this, CreateAdminAccountActivity::class.java)) },
+        )
+        rowCreateAccount.findViewById<android.widget.ImageView>(R.id.listRowIcon)
+            ?.setImageResource(AppIcons.Add)
+    }
+
+    private fun bindFilterChips() {
+        roleFilters.clear()
+        roleFilters.add(null)
+        if (isSuperAdmin()) roleFilters.add(AccountRole.ADMIN)
+        roleFilters.add(AccountRole.ORGANIZER)
+        roleFilters.add(AccountRole.STAFF)
+        roleFilters.add(AccountRole.ATTENDEE)
+
+        val composeView = findViewById<ComposeView>(R.id.composeAccountFilters)
+        composeView.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        composeView.setContent {
+            EventQrTheme {
+                val selected = selectedRoleFilter.collectAsStateWithLifecycle().value
+                FilterChipRow(
+                    items = roleFilters.toList(),
+                    selectedItem = selected,
+                    onItemSelected = { role ->
+                        selectedRoleFilter.value = role
+                        loadAccounts()
+                    },
+                    labelProvider = { role -> roleLabel(role) },
+                )
+            }
         }
     }
 
-    private fun setupRoleFilterChips() {
-        val roles = mutableListOf(
-            null to "All",
-            AccountRole.ORGANIZER to "Organizer",
-            AccountRole.STAFF to "Staff",
-            AccountRole.ATTENDEE to "Attendee"
-        )
-        if (isSuperAdmin()) {
-            roles.add(1, AccountRole.ADMIN to "Admin")
-        }
-
-        val chipBg = ContextCompat.getColorStateList(this, R.color.chip_bg)
-        val chipText = ContextCompat.getColorStateList(this, R.color.chip_text)
-
-        roles.forEach { (role, label) ->
-            val chip = Chip(this).apply {
-                text = label
-                isCheckable = true
-                isChecked = role == null
-                setChipIconVisible(false)
-                setCheckedIconVisible(false)
-                setChipBackgroundColor(chipBg)
-                setChipStrokeColorResource(R.color.outline)
-                setChipStrokeWidthResource(R.dimen.stroke_hairline)
-                setTextColor(chipText)
-                setOnCheckedChangeListener { _, isChecked ->
-                    if (isChecked) {
-                        selectedRoleFilter = role
-                        filterChipsLayout.check(id)
-                        loadAccounts()
-                    }
-                }
-                layoutParams = ChipGroup.LayoutParams(
-                    ChipGroup.LayoutParams.WRAP_CONTENT,
-                    ChipGroup.LayoutParams.WRAP_CONTENT
-                ).apply { setMargins(0, 0, dimenOffset(R.dimen.space_sm), 0) }
-            }
-            filterChipsLayout.addView(chip)
-        }
+    private fun roleLabel(role: AccountRole?): String = when (role) {
+        null -> getString(R.string.ui_admin_filter_all)
+        AccountRole.ADMIN -> getString(R.string.ui_admin_role_admin)
+        AccountRole.ORGANIZER -> getString(R.string.ui_admin_role_organizer)
+        AccountRole.STAFF -> getString(R.string.ui_admin_role_staff)
+        AccountRole.SUPER_ADMIN -> getString(R.string.ui_admin_role_super_admin)
+        else -> getString(R.string.ui_admin_role_attendee)
     }
 
     private fun bindNav() {
@@ -162,6 +187,7 @@ class AdminAccountManagementActivity : AppCompatActivity() {
     private fun loadAccounts() {
         retrySnackbar?.dismiss()
         paging.reset()
+        countView.visibility = View.GONE
         adapter.submitItems(emptyList())
         progressLoading.visibility = View.VISIBLE
         recyclerAccounts.visibility = View.GONE
@@ -171,19 +197,21 @@ class AdminAccountManagementActivity : AppCompatActivity() {
 
     private fun loadPage() {
         val ticket = paging.begin() ?: return
-        val role = selectedRoleFilter
+        val role = selectedRoleFilter.value
         val query = searchQuery
         lifecycleScope.launch {
             when (val result = repository.loadUsersPage(role, query, ticket.page)) {
                 is NetworkResult.Success -> {
                     if (paging.onSuccess(ticket, result.data)) {
                         val users = paging.items
+                        countView.text = CountLabel.format(paging.totalElements, getString(R.string.ui_admin_accounts_count))
+                        countView.visibility = View.VISIBLE
                         progressLoading.visibility = View.GONE
                         recyclerAccounts.visibility = if (users.isEmpty()) View.GONE else View.VISIBLE
                         textPlaceholder.visibility = if (users.isEmpty()) View.VISIBLE else View.GONE
-                        textPlaceholder.text = getString(
-                            if (query.isNotEmpty()) R.string.admin_account_management_no_accounts_match_your_search
-                            else R.string.admin_account_management_no_accounts_found_yet
+                        textPlaceholder.subtext = getString(
+                            if (query.isNotEmpty()) R.string.ui_admin_accounts_empty_search_body
+                            else R.string.ui_admin_accounts_empty_body
                         )
                         adapter.submitItems(users)
                     }
@@ -194,7 +222,9 @@ class AdminAccountManagementActivity : AppCompatActivity() {
                         if (paging.isEmpty) {
                             recyclerAccounts.visibility = View.GONE
                             textPlaceholder.visibility = View.VISIBLE
+                            // A load failure replaces the copy; the empty-state body would contradict it.
                             textPlaceholder.text = getString(R.string.admin_account_management_account_management_is_currently_unav)
+                            textPlaceholder.subtext = null
                         }
                         retrySnackbar?.dismiss()
                         retrySnackbar = Snackbar.make(recyclerAccounts, result.message, Snackbar.LENGTH_INDEFINITE)

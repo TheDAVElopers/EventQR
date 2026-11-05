@@ -41,6 +41,19 @@ class ManageRewardsActivityTest {
     private fun build(): ManageRewardsActivity =
         Robolectric.buildActivity(ManageRewardsActivity::class.java).create().get()
 
+    /** The empty state's action is a text button now, not a Material Button. */
+    private fun View.clickText(label: CharSequence): Boolean {
+        if (this is android.widget.TextView && text == label) {
+            performClick()
+            return true
+        }
+        if (this is ViewGroup) {
+            for (i in 0 until childCount) {
+                if (getChildAt(i).clickText(label)) return true
+            }
+        }
+        return false
+    }
     private fun View.findSwipeRefresh(): SwipeRefreshLayout? {
         if (this is SwipeRefreshLayout) return this
         if (this is ViewGroup) {
@@ -227,7 +240,7 @@ class ManageRewardsActivityTest {
         val texts = activity.window.decorView.allTexts()
         assertTrue(texts.contains("Network problem. Check your connection and try again."))
         assertFalse(texts.contains(activity.getString(R.string.manage_rewards_no_events_title)))
-        assertNotNull(activity.window.decorView.findButton(activity.getString(R.string.organizer_retry)))
+        assertTrue(texts.contains(activity.getString(R.string.organizer_retry)))
         assertTrue(activity.window.decorView.findSwipeRefresh()!!.isEnabled)
     }
 
@@ -245,7 +258,7 @@ class ManageRewardsActivityTest {
         val activity = build()
         activity.onEventsLoaded(failedEvents("Timeout"))
 
-        activity.window.decorView.findButton(activity.getString(R.string.organizer_retry))!!.performClick()
+        activity.window.decorView.clickText(activity.getString(R.string.organizer_retry))
 
         assertFalse(activity.window.decorView.allTexts().contains("Timeout"))
         // The spinner shows the retry is running (and SwipeRefreshLayout ignores pulls meanwhile).

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Empty-state icon plate (§5.10): 40dp, sunken fill, 10dp radius. The icon is 20dp
+     ui_text_secondary. No illustration, no blob, no giant glyph. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/ui_surface_sunken" />
+    <corners android:radius="@dimen/ui_radius_card" />
+</shape>

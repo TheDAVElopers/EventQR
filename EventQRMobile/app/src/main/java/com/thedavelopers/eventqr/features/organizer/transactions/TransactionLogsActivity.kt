@@ -1,12 +1,14 @@
 package com.thedavelopers.eventqr.features.organizer.transactions
 
+import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.boldSpan
 import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.ui.theme.dimenFloat
 import com.thedavelopers.eventqr.ui.theme.dimenPx
-import com.thedavelopers.eventqr.ui.theme.roundedRect
 import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
 import com.thedavelopers.eventqr.ui.theme.strong
+import com.thedavelopers.eventqr.features.organizer.tintBlock
+import com.thedavelopers.eventqr.features.organizer.tintBlockArgb
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.text.Spannable
@@ -96,7 +98,7 @@ open class TransactionLogsActivity : AppCompatActivity() {
             val title = getString(if (attendeeId == null) R.string.transaction_logs_no_event_logs_yet else R.string.transaction_logs_no_attendee_logs_yet)
             val subtext = getString(if (attendeeId == null) R.string.transaction_logs_transaction_logs_will_appear_here_on else R.string.transaction_logs_no_logs_found_for_this_attendee)
             list.addView(emptyState(
-                iconRes = R.drawable.ic_organizer_reports,
+                iconRes = AppIcons.Report,
                 title = title,
                 subtext = subtext,
             ))
@@ -123,7 +125,7 @@ open class TransactionLogsActivity : AppCompatActivity() {
         }
 
         val arrow = ImageView(this).apply {
-            setImageResource(R.drawable.ic_arrow_drop_down)
+            setImageResource(AppIcons.Expand)
             setColorFilter(color(R.color.neutral_label))
             contentDescription = getString(R.string.transaction_logs_select_event_cd)
         }
@@ -135,8 +137,7 @@ open class TransactionLogsActivity : AppCompatActivity() {
             minimumHeight = dimenPx(R.dimen.button_primary_height)
             isClickable = approvedEvents.isNotEmpty()
             isFocusable = approvedEvents.isNotEmpty()
-            background = roundedRect(color(R.color.surface), R.dimen.radius_14, orgColors.border)
-            elevation = dimenPx(R.dimen.elevation_raised).toFloat()
+            tintBlock(R.color.ui_surface, R.drawable.bg_ui_block_r10_stroked)
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -146,11 +147,11 @@ open class TransactionLogsActivity : AppCompatActivity() {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER
                 layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_tile_md), dimenPx(R.dimen.icon_tile_md))
-                background = roundedRect(color(R.color.accent_container), R.dimen.radius_md)
+                tintBlock(R.color.ui_primary_container, R.drawable.bg_ui_block_r10)
 
                 addView(ImageView(this@TransactionLogsActivity).apply {
                     layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md))
-                    setImageResource(R.drawable.ic_calendar)
+                    setImageResource(AppIcons.Event)
                     setColorFilter(orgColors.primary)
                 })
             }
@@ -175,7 +176,7 @@ open class TransactionLogsActivity : AppCompatActivity() {
             addView(textContainer)
 
             addView(arrow.apply {
-                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_22), dimenPx(R.dimen.icon_22))
+                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md))
             })
         }
 
@@ -184,7 +185,7 @@ open class TransactionLogsActivity : AppCompatActivity() {
 
         fun buildDropdown(): LinearLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            background = roundedRect(color(R.color.surface), R.dimen.radius_14, orgColors.border)
+            tintBlock(R.color.ui_surface, R.drawable.bg_ui_block_r10_stroked)
             approvedEvents.forEachIndexed { index, event ->
                 val selected = index == selectedIndex
                 addView(LinearLayout(this@TransactionLogsActivity).apply {
@@ -253,7 +254,7 @@ open class TransactionLogsActivity : AppCompatActivity() {
             ).apply { setMargins(0, dimenPx(R.dimen.space_3), 0, 0) }
 
             addView(ImageView(this@TransactionLogsActivity).apply {
-                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_14), dimenPx(R.dimen.icon_14))
+                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md))
                 setImageResource(iconRes)
                 setColorFilter(orgColors.muted)
             })
@@ -277,8 +278,7 @@ open class TransactionLogsActivity : AppCompatActivity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.TOP
             setPadding(dimenPx(R.dimen.space_14), dimenPx(R.dimen.space_14), dimenPx(R.dimen.space_14), dimenPx(R.dimen.space_14))
-            background = roundedRect(color(R.color.surface), R.dimen.radius_14, orgColors.border)
-            elevation = dimenPx(R.dimen.elevation_raised).toFloat()
+            tintBlock(R.color.ui_surface, R.drawable.bg_ui_block_r10_stroked)
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -288,11 +288,11 @@ open class TransactionLogsActivity : AppCompatActivity() {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER
                 layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_tile_md), dimenPx(R.dimen.icon_tile_md))
-                background = roundedRect(color(R.color.accent_container), R.dimen.radius_md)
+                tintBlock(R.color.ui_primary_container, R.drawable.bg_ui_block_r10)
 
                 addView(ImageView(this@TransactionLogsActivity).apply {
                     layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md))
-                    setImageResource(R.drawable.ic_profile_person)
+                    setImageResource(AppIcons.Profile)
                     setColorFilter(orgColors.primary)
                 })
             }
@@ -306,16 +306,16 @@ open class TransactionLogsActivity : AppCompatActivity() {
 
                 val badgeColor = if (isRejected) color(R.color.danger) else color(R.color.success_dark)
                 val badgeBgColor = if (isRejected) color(R.color.error_container) else color(R.color.success_container)
-                val badgeIconRes = if (isRejected) R.drawable.ic_row_alert else R.drawable.ic_staff_check
+                val badgeIconRes = if (isRejected) AppIcons.Error else AppIcons.Check
 
                 val statusBadge = LinearLayout(this@TransactionLogsActivity).apply {
                     orientation = LinearLayout.HORIZONTAL
                     gravity = Gravity.CENTER_VERTICAL
                     setPadding(dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_xs), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_xs))
-                    background = roundedRect(badgeBgColor, R.dimen.radius_14)
+                    tintBlockArgb(badgeBgColor, R.drawable.bg_ui_block_r10)
 
                     addView(ImageView(this@TransactionLogsActivity).apply {
-                        layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_14), dimenPx(R.dimen.icon_14))
+                        layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_sm), dimenPx(R.dimen.icon_sm))
                         setImageResource(badgeIconRes)
                         setColorFilter(badgeColor)
                     })
@@ -333,8 +333,8 @@ open class TransactionLogsActivity : AppCompatActivity() {
                 }
 
                 val chevron = ImageView(this@TransactionLogsActivity).apply {
-                    layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_18), dimenPx(R.dimen.icon_18)).apply { marginStart = dimenPx(R.dimen.space_6) }
-                    setImageResource(R.drawable.ic_chevron_right)
+                    layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.ui_chevron), dimenPx(R.dimen.ui_chevron)).apply { marginStart = dimenPx(R.dimen.space_6) }
+                    setImageResource(AppIcons.Chevron)
                     setColorFilter(color(R.color.neutral))
                 }
 
@@ -383,22 +383,22 @@ open class TransactionLogsActivity : AppCompatActivity() {
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                     ).apply { topMargin = dimenPx(R.dimen.space_6) }
 
-                    addView(detailRow(R.drawable.ic_calendar, getString(R.string.transaction_logs_detail_event, log.eventTitle)))
-                    addView(detailRow(R.drawable.ic_profile_person, getString(R.string.transaction_logs_detail_attendee, log.attendeeEmail.ifBlank { getString(R.string.transaction_logs_no_email) })))
+                    addView(detailRow(AppIcons.Event, getString(R.string.transaction_logs_detail_event, log.eventTitle)))
+                    addView(detailRow(AppIcons.Profile, getString(R.string.transaction_logs_detail_attendee, log.attendeeEmail.ifBlank { getString(R.string.transaction_logs_no_email) })))
 
                     val staffText = if (log.staffEmail.isNotBlank() && log.staffEmail != "No email" && log.staffEmail != log.staffName) {
                         getString(R.string.transaction_logs_detail_staff_email, log.staffName, log.staffEmail)
                     } else {
                         getString(R.string.transaction_logs_detail_staff, log.staffName)
                     }
-                    addView(detailRow(R.drawable.ic_group, staffText))
+                    addView(detailRow(AppIcons.People, staffText))
 
                     val timeText = if (log.timestamp.startsWith(getString(R.string.transaction_logs_scanned_at_prefix), ignoreCase = true)) {
                         log.timestamp
                     } else {
                         getString(R.string.transaction_logs_detail_scanned_at, log.timestamp)
                     }
-                    addView(detailRow(R.drawable.ic_row_clock, timeText))
+                    addView(detailRow(AppIcons.Time, timeText))
                 }
                 addView(detailsColumn)
 
@@ -408,15 +408,15 @@ open class TransactionLogsActivity : AppCompatActivity() {
                         gravity = Gravity.CENTER_VERTICAL
                         setPadding(dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_6), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_6))
                         // the old FEE2E2 hairline vanished into the merged error_container fill: no stroke
-                        background = roundedRect(color(R.color.error_container), R.dimen.radius_sm)
+                        tintBlock(R.color.ui_error_container, R.drawable.bg_ui_block_r4)
                         layoutParams = LinearLayout.LayoutParams(
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.WRAP_CONTENT,
                         ).apply { topMargin = dimenPx(R.dimen.space_10) }
 
                         addView(ImageView(this@TransactionLogsActivity).apply {
-                            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_14), dimenPx(R.dimen.icon_14))
-                            setImageResource(R.drawable.ic_row_alert)
+                            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_sm), dimenPx(R.dimen.icon_sm))
+                            setImageResource(AppIcons.Error)
                             setColorFilter(color(R.color.danger))
                         })
 

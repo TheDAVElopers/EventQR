@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SKELETON CARD (§5.11) - one hairline card holding three skeleton rows, matching the loaded
+    Card.Grouped geometry. Replaces include_skeleton_cards.xml.
+
+    Wrap in <include> where the list will be; then swap the whole include for the real card. The
+    include's width should be match_parent inside the 20dp gutter.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_ui_card"
+    android:importantForAccessibility="noHideDescendants"
+    android:orientation="vertical">
+
+    <include layout="@layout/include_skeleton_row" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:layout_marginStart="@dimen/ui_divider_inset"
+        android:background="@color/ui_hairline" />
+
+    <include layout="@layout/include_skeleton_row" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:layout_marginStart="@dimen/ui_divider_inset"
+        android:background="@color/ui_hairline" />
+
+    <include layout="@layout/include_skeleton_row" />
+
+</LinearLayout>

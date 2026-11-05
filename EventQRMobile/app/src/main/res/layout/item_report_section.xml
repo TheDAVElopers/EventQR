@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    REPORT SECTION HEADER (§6.4, combined report): section title + record count on the page,
+    hairline underneath. No card, no tinted block.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_24"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/txtSectionTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.Title"
+            tools:text="Roster" />
+
+        <TextView
+            android:id="@+id/txtSectionCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_8"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.NumericS"
+            android:textColor="@color/ui_text_secondary"
+            tools:text="24" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:layout_marginTop="@dimen/space_8"
+        android:background="@color/ui_hairline"
+        android:importantForAccessibility="no" />
+</LinearLayout>

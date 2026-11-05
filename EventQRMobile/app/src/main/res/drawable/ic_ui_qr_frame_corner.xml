@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Scanner corner bracket (§5.13). One of the four permitted custom vectors (§3.6 rule 3):
+    ic_mark_on_dark, ic_perforation_tick, ic_qr_frame_corner, ic_pass_notch.
+
+    One 24dp L-arm, stroked at 3dp with an 8dp corner radius. Rotate/mirror the same file for the
+    other three corners (scaleX / scaleY = -1) so the four brackets can never drift apart in
+    weight. Tint = ui_scan_bracket (white 80%); ui_accent only while a decode is confirmed.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <path
+        android:pathData="M1.5,23 L1.5,9.5 A8,8 0 0 1 9.5,1.5 L23,1.5"
+        android:strokeWidth="3"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="butt"
+        android:strokeLineJoin="miter"
+        android:fillColor="@android:color/transparent" />
+</vector>

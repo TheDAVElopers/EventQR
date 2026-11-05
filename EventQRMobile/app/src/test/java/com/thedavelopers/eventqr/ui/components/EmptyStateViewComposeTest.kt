@@ -1,7 +1,5 @@
 package com.thedavelopers.eventqr.ui.components
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasClickAction
@@ -10,6 +8,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
+import com.thedavelopers.eventqr.ui.icons.AppIcons
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.thedavelopers.eventqr.ui.theme.EventQrTheme
 import org.junit.Assert.assertEquals
@@ -95,7 +94,7 @@ class EmptyStateViewComposeTest {
         composeTestRule.setContent {
             EventQrTheme {
                 EmptyStateView(
-                    icon = Icons.Default.Info,
+                    icon = AppIcons.Notification,
                     title = "No events yet",
                     description = "Create your first event to get started.",
                     actionLabel = actionLabel,

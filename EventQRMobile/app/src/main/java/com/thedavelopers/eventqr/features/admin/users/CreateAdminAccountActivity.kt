@@ -12,16 +12,19 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
-import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.core.util.PhoneInput
+import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.core.util.ScreenInsets
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.admin.AdminRepository
+import com.thedavelopers.eventqr.ui.icons.AppIcons
+import com.thedavelopers.eventqr.ui.icons.FieldIcons
+import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import kotlinx.coroutines.launch
 
 class CreateAdminAccountActivity : AppCompatActivity() {
@@ -48,6 +51,9 @@ class CreateAdminAccountActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create_admin_account)
+        ScreenInsets.padContentForNavigationBar(this)
+        applyEventQrSystemBarAppearance()
+        findViewById<TextView>(R.id.topBarTitle).setText(R.string.ui_admin_create_title)
 
         repository = AdminRepository(this)
         sessionManager = SessionManager(this)
@@ -60,6 +66,7 @@ class CreateAdminAccountActivity : AppCompatActivity() {
 
         bindViews()
         bindActions()
+        listOf(emailInput, phoneInput).forEach { FieldIcons.apply(it) }
         configurePasswordToggle(passwordInput)
         configurePasswordToggle(confirmPasswordInput)
         passwordInput.addTextChangedListener(object : TextWatcher {
@@ -98,7 +105,7 @@ class CreateAdminAccountActivity : AppCompatActivity() {
     }
 
     private fun bindActions() {
-        findViewById<View>(R.id.nav_header_back).setOnClickListener { finish() }
+        findViewById<View>(R.id.topBarBack).setOnClickListener { finish() }
         createButton.setOnClickListener { submitCreateAdmin() }
     }
 
@@ -208,52 +215,50 @@ class CreateAdminAccountActivity : AppCompatActivity() {
         createButton.isEnabled = requirements.isValid
     }
 
+    /** The mark is the tokenised ui_rule_on / ui_rule_off drawable, never a glyph (§3.6). */
     private fun updateRequirement(view: TextView, label: String, isMet: Boolean) {
-        view.text = "${if (isMet) "✓" else "○"} $label"
-        view.setTextColor(getColor(if (isMet) R.color.success_dark else R.color.text_secondary))
+        view.text = label
+        view.setCompoundDrawablesRelativeWithIntrinsicBounds(
+            if (isMet) R.drawable.ui_rule_on else R.drawable.ui_rule_off,
+            0,
+            0,
+            0
+        )
+        view.setTextColor(getColor(if (isMet) R.color.ui_text_primary else R.color.ui_text_secondary))
     }
 
     private fun updateStrengthUI(metCount: Int) {
         val (colorRes, label) = when (metCount) {
-            0 -> R.color.text_secondary to ""
-            1 -> R.color.danger to getString(R.string.password_strength_weak)
-            2 -> R.color.warning to getString(R.string.password_strength_fair)
-            3 -> R.color.info to getString(R.string.password_strength_good)
-            4 -> R.color.success_dark to getString(R.string.password_strength_strong)
-            else -> R.color.text_secondary to ""
+            0 -> R.color.ui_outline_interactive to ""
+            1 -> R.color.ui_error to getString(R.string.password_strength_weak)
+            2 -> R.color.ui_warning to getString(R.string.password_strength_fair)
+            3 -> R.color.ui_info to getString(R.string.password_strength_good)
+            4 -> R.color.ui_success to getString(R.string.password_strength_strong)
+            else -> R.color.ui_outline_interactive to ""
         }
 
         passwordStrengthText.text = label
-        // Amber is only 2.1:1 as text: the label uses warning_dark, the bars keep the warning fill.
-        val labelColorRes = if (colorRes == R.color.warning) R.color.warning_dark else colorRes
-        passwordStrengthText.setTextColor(if (metCount > 0) getColor(labelColorRes) else getColor(R.color.text_secondary))
+        // Amber is only 2.1:1 as text: the label uses the on-container tone, the bars keep the fill.
+        val labelColorRes = if (colorRes == R.color.ui_warning) R.color.ui_on_warning_container else colorRes
+        passwordStrengthText.setTextColor(if (metCount > 0) getColor(labelColorRes) else getColor(R.color.ui_text_secondary))
         strengthBars.forEachIndexed { index, view ->
             view.background.mutate().setTint(
-                if (index < metCount) getColor(colorRes) else getColor(R.color.outline),
+                if (index < metCount) getColor(colorRes) else getColor(R.color.ui_outline_interactive),
             )
         }
     }
 
     private fun configurePasswordToggle(input: EditText) {
+        FieldIcons.apply(input)
         input.setOnTouchListener { view, event ->
             if (event.action == MotionEvent.ACTION_UP && event.rawX >= input.right - input.compoundPaddingEnd) {
                 val isVisible = input.inputType == (InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD)
                 if (isVisible) {
                     input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-                    input.setCompoundDrawablesWithIntrinsicBounds(
-                        input.compoundDrawables[0],
-                        null,
-                        ContextCompat.getDrawable(this, R.drawable.ic_visibility_on),
-                        null,
-                    )
+                    FieldIcons.setTrailing(input, AppIcons.Visibility)
                 } else {
                     input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-                    input.setCompoundDrawablesWithIntrinsicBounds(
-                        input.compoundDrawables[0],
-                        null,
-                        ContextCompat.getDrawable(this, R.drawable.ic_visibility_off),
-                        null,
-                    )
+                    FieldIcons.setTrailing(input, AppIcons.VisibilityOff)
                 }
                 input.setSelection(input.text.length)
                 view.performClick()

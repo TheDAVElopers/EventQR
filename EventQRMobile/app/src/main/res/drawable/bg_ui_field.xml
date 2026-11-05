@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Filled text field (§5.2). 56dp, radius 4, ui_surface_sunken, no outline at rest.
+     Focused  = 2dp ui_primary stroke.
+     Error    = 2dp ui_error stroke; the activity sets isActivated when it puts an error on
+                the field, so the box and the message agree.
+     Disabled = the sunken fill with ui_text_disabled text (set by the field style).
+     The stroke sits 1dp inside the bounds so it is never clipped by the view edge. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:state_activated="true">
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/ui_surface_sunken" />
+                    <corners android:radius="@dimen/ui_radius_button" />
+                </shape>
+            </item>
+            <item android:inset="@dimen/stroke_hairline">
+                <shape android:shape="rectangle">
+                    <solid android:color="@android:color/transparent" />
+                    <stroke
+                        android:width="@dimen/stroke_focus"
+                        android:color="@color/ui_error" />
+                    <corners android:radius="@dimen/ui_radius_button" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+
+    <item android:state_focused="true">
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/ui_surface_sunken" />
+                    <corners android:radius="@dimen/ui_radius_button" />
+                </shape>
+            </item>
+            <item android:inset="@dimen/stroke_hairline">
+                <shape android:shape="rectangle">
+                    <solid android:color="@android:color/transparent" />
+                    <stroke
+                        android:width="@dimen/stroke_focus"
+                        android:color="@color/ui_primary" />
+                    <corners android:radius="@dimen/ui_radius_button" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/ui_surface_sunken" />
+            <corners android:radius="@dimen/ui_radius_button" />
+        </shape>
+    </item>
+
+</selector>

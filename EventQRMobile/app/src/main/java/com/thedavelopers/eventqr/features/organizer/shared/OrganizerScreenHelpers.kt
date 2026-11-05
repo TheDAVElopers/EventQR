@@ -7,9 +7,11 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Typeface
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
@@ -22,21 +24,32 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.Spinner
 import android.widget.TextView
+import androidx.annotation.ColorRes
 import androidx.annotation.DimenRes
+import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.widget.TextViewCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.api.dto.EventStatus
+import com.thedavelopers.eventqr.features.attendee.AttendeeBadges
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.ui.components.EventQrBottomNavBar
+import com.thedavelopers.eventqr.ui.components.ListRowBinder
 import com.thedavelopers.eventqr.ui.components.OrganizerNavItems
+import com.thedavelopers.eventqr.ui.components.PassHeadBinder
+import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.EventQrTheme
+import com.thedavelopers.eventqr.ui.theme.applyEventQrBottomInsetPadding
+import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.ui.theme.dimen
 import com.thedavelopers.eventqr.ui.theme.dimenPx
-import com.thedavelopers.eventqr.ui.theme.roundedRect
 import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
 import com.thedavelopers.eventqr.ui.theme.strong
 import kotlin.math.max
@@ -56,30 +69,37 @@ internal const val NAV_REPORTS = "Reports"
 internal const val NAV_REWARDS = "Rewards"
 
 /**
- * Organizer colour accessors. Resolve per Context so they follow the design tokens (res/values/colors.xml roles);
- * never cache the resolved Ints in a top-level val. Usage inside any AppCompatActivity helper: `orgColors.muted`.
+ * Organizer colour accessors. Every value is a `ui_*` ROLE from res/values/colors.xml - no
+ * primitives, no hex, no legacy `danger`/`deco_*` shortcuts. Resolved per Context so they follow
+ * the semantic layer.
  */
 internal class OrganizerColors(private val context: Context) {
-    val primary: Int get() = context.color(R.color.primary)
-    /** Former PURPLE / NAV_PURPLE accents: unified with the brand colour (D1). */
-    val accent: Int get() = context.color(R.color.primary)
-    val bg: Int get() = context.color(R.color.background)
-    val card: Int get() = context.color(R.color.surface)
-    val text: Int get() = context.color(R.color.text_primary)
-    val muted: Int get() = context.color(R.color.text_secondary)
-    val border: Int get() = context.color(R.color.outline)
-    val success: Int get() = context.color(R.color.deco_status_ok_teal)
-    /**
-     * Error/destructive ACCENT for text, icons and fills: resolves to the `danger` role (EF4444), NOT the `error` role (C62828).
-     * Use `color(R.color.error)` directly where the darker on-tint error text is wanted.
-     */
-    val error: Int get() = context.color(R.color.danger)
-    /** Amber FILL / dot colour. Do not use for small text (2.1:1): use [warningText]. */
-    val warning: Int get() = context.color(R.color.warning)
-    /** Amber for small text and icons on white or light tints (`warning_dark`). */
-    val warningText: Int get() = context.color(R.color.warning_dark)
-    val onPrimary: Int get() = context.color(R.color.on_primary)
-    val accentContainer: Int get() = context.color(R.color.accent_container)
+    val primary: Int get() = context.color(R.color.ui_primary)
+    val accent: Int get() = context.color(R.color.ui_primary)
+    val bg: Int get() = context.color(R.color.ui_background)
+    val card: Int get() = context.color(R.color.ui_surface)
+    val text: Int get() = context.color(R.color.ui_text_primary)
+    val muted: Int get() = context.color(R.color.ui_text_secondary)
+    /** Decorative separators only - never a control boundary (§9.1). */
+    val border: Int get() = context.color(R.color.ui_hairline)
+    val outline: Int get() = context.color(R.color.ui_outline_interactive)
+    val sunken: Int get() = context.color(R.color.ui_surface_sunken)
+    val success: Int get() = context.color(R.color.ui_success)
+    val successContainer: Int get() = context.color(R.color.ui_success_container)
+    val onSuccessContainer: Int get() = context.color(R.color.ui_on_success_container)
+    val error: Int get() = context.color(R.color.ui_error)
+    val errorContainer: Int get() = context.color(R.color.ui_error_container)
+    val onErrorContainer: Int get() = context.color(R.color.ui_on_error_container)
+    val warning: Int get() = context.color(R.color.ui_warning)
+    val warningContainer: Int get() = context.color(R.color.ui_warning_container)
+    /** Amber as TEXT: the semantic warning role is already AA on its container. */
+    val warningText: Int get() = context.color(R.color.ui_on_warning_container)
+    val info: Int get() = context.color(R.color.ui_info)
+    val infoContainer: Int get() = context.color(R.color.ui_info_container)
+    val onInfoContainer: Int get() = context.color(R.color.ui_on_info_container)
+    val onPrimary: Int get() = context.color(R.color.ui_on_primary)
+    val accentContainer: Int get() = context.color(R.color.ui_accent_container)
+    val accentDeep: Int get() = context.color(R.color.ui_accent_deep)
 }
 
 internal val Context.orgColors: OrganizerColors get() = OrganizerColors(this)
@@ -100,65 +120,118 @@ internal fun AppCompatActivity.row(): LinearLayout =
     }
 
 internal fun AppCompatActivity.section(title: String): TextView =
-    styledText(title, R.dimen.type_body_large, true).apply {
-        setPadding(dimenPx(R.dimen.space_xxs), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_xxs), dimenPx(R.dimen.space_6))
+    styledText(title, R.dimen.ui_type_overline, true, orgColors.muted).apply {
+        setPadding(dimenPx(R.dimen.space_2), dimenPx(R.dimen.space_24), dimenPx(R.dimen.space_2), dimenPx(R.dimen.space_8))
     }
 
 internal fun AppCompatActivity.primaryButton(label: String, onClick: () -> Unit): Button =
     Button(this).apply {
         text = label
-        setAllCaps(false)
-        setTextColor(orgColors.onPrimary)
-        background = roundedRect(orgColors.accent, R.dimen.radius_sm)
-        setPadding(dimenPx(R.dimen.space_lg), 0, dimenPx(R.dimen.space_lg), 0)
+        isAllCaps = false
+        // The selector, not a flat white: a disabled primary is a neutral fill, and white on it is
+        // invisible (the style's own ui_button_primary_text states this).
+        setTextColor(ContextCompat.getColorStateList(this@primaryButton, R.color.ui_button_primary_text))
+        background = ResourcesCompat.getDrawable(resources, R.drawable.bg_ui_button_primary, theme)
+        minHeight = dimenPx(R.dimen.ui_button_height)
+        minWidth = dimenPx(R.dimen.ui_touch_min)
+        setPadding(dimenPx(R.dimen.space_16), 0, dimenPx(R.dimen.space_16), 0)
+        stateListAnimator = null
+        elevation = 0f
         setOnClickListener { onClick() }
     }
 
 internal fun AppCompatActivity.ghostButton(label: String, onClick: () -> Unit): Button =
     Button(this).apply {
         text = label
-        setAllCaps(false)
+        isAllCaps = false
         setTextColor(orgColors.primary)
-        background = roundedRect(orgColors.card, R.dimen.radius_sm, orgColors.border)
+        background = ResourcesCompat.getDrawable(resources, R.drawable.bg_ui_button_ghost, theme)
+        minHeight = dimenPx(R.dimen.ui_button_height_inline)
+        minWidth = dimenPx(R.dimen.ui_touch_min)
+        setPadding(dimenPx(R.dimen.space_16), 0, dimenPx(R.dimen.space_16), 0)
+        stateListAnimator = null
+        elevation = 0f
         setOnClickListener { onClick() }
     }
 
+/** 36dp chip, radius 4, never a pill (§5.6). Selected = primary fill, no check icon. */
 internal fun AppCompatActivity.chip(label: String, active: Boolean = false, color: Int = orgColors.primary): TextView =
-    styledText(label, R.dimen.type_caption, active, if (active) orgColors.onPrimary else color).apply {
+    styledText(label, R.dimen.ui_type_label, active, if (active) orgColors.onPrimary else orgColors.text).apply {
         gravity = Gravity.CENTER
-        setPadding(dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_7), dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_7))
-        background = roundedRect(if (active) color else orgColors.card, R.dimen.radius_18, if (active) null else orgColors.border)
+        background = ResourcesCompat.getDrawable(
+            resources,
+            if (active) R.drawable.bg_ui_chip_selected else R.drawable.bg_ui_chip_unselected,
+            theme,
+        )
+        minHeight = dimenPx(R.dimen.ui_touch_min)
+        setPadding(dimenPx(R.dimen.ui_chip_pad_h), dimenPx(R.dimen.space_8), dimenPx(R.dimen.ui_chip_pad_h), dimenPx(R.dimen.space_8))
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-        ).apply { setMargins(0, 0, dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_sm)) }
+            dimenPx(R.dimen.ui_touch_min),
+        ).apply { setMargins(0, 0, dimenPx(R.dimen.ui_chip_gap), 0) }
     }
 
+/**
+ * Status text as the ONE badge (§5.4). Tones come from the semantic mapping; a status that is not
+ * a confirmation never renders lime.
+ */
 internal fun AppCompatActivity.badge(value: String): TextView {
-    val color = when (value.lowercase()) {
-        "approved", "active", "successful", "accepted" -> orgColors.success
-        "pending" -> orgColors.warning
-        "rejected", "disabled" -> orgColors.error
-        else -> orgColors.primary
+    val (bgRes, fgRes) = when (value.lowercase()) {
+        "approved", "active", "successful", "accepted" -> R.color.ui_success_container to R.color.ui_on_success_container
+        "pending", "pending review" -> R.color.ui_warning_container to R.color.ui_on_warning_container
+        "rejected", "disabled", "blocked" -> R.color.ui_error_container to R.color.ui_on_error_container
+        "upcoming" -> R.color.ui_info_container to R.color.ui_on_info_container
+        else -> R.color.ui_surface_sunken to R.color.ui_text_secondary
     }
-    // The 13% tint is derived from the base colour; amber is only ~2.1:1 as small text, so the label uses warning_dark.
-    val labelColor = if (color == orgColors.warning) orgColors.warningText else color
-    return chip(value, false, color).apply {
-        background = roundedRect(color and 0x22FFFFFF or 0x22000000, R.dimen.radius_18)
-        setTextColor(labelColor)
+    return styledText(value, R.dimen.ui_type_overline, true, color(fgRes)).apply {
+        gravity = Gravity.CENTER
+        background = ResourcesCompat.getDrawable(resources, R.drawable.bg_ui_badge, theme)?.mutate()
+        backgroundTintList = android.content.res.ColorStateList.valueOf(color(bgRes))
+        minHeight = dimenPx(R.dimen.ui_badge_height)
+        setPadding(dimenPx(R.dimen.ui_badge_pad_h), 0, dimenPx(R.dimen.ui_badge_pad_h), 0)
+        maxLines = 1
     }
 }
 
+/**
+ * The §5.4 event badge for organizer screens: one label + tone table ([AttendeeBadges]), so a status
+ * never reads "Pending Review" on one screen and "Pending review" on another. Unknown stays neutral.
+ */
+internal fun TextView.bindEventBadge(rawStatus: String?) {
+    AttendeeBadges.bind(this, EventStatusBadgeStyler.fromLabel(rawStatus))
+}
+
+/** Binds an already date-resolved status (see [EventStatusBadgeStyler.resolve]). */
+internal fun TextView.bindEventBadge(status: EventStatus) {
+    AttendeeBadges.bind(this, status)
+}
+
+/**
+ * A secondary metric: label left, value right, hairline under, no card (§5.9 form 2).
+ * Was a centred card in a 2x2/3-up grid; that grid is what the redesign deletes.
+ */
 internal fun AppCompatActivity.summaryCard(title: String, value: String, accent: Int = orgColors.primary): LinearLayout =
-    cardRes(R.dimen.space_md).apply {
-        gravity = Gravity.CENTER
-        layoutParams = LinearLayout.LayoutParams(
-            0,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            1f,
-        ).apply { setMargins(dimenPx(R.dimen.space_xs), dimenPx(R.dimen.space_6), dimenPx(R.dimen.space_xs), dimenPx(R.dimen.space_6)) }
-        addView(styledText(value, R.dimen.type_title_large, true, orgColors.text).apply { gravity = Gravity.CENTER })
-        addView(styledText(title, R.dimen.type_overline, false, orgColors.muted).apply { gravity = Gravity.CENTER })
+    LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        addView(
+            LinearLayout(this@summaryCard).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dimenPx(R.dimen.ui_metric_row_height))
+                setPadding(dimenPx(R.dimen.ui_gutter), 0, dimenPx(R.dimen.ui_gutter), 0)
+                addView(styledText(title, R.dimen.ui_type_overline, false, orgColors.muted).apply {
+                    layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+                })
+                addView(styledText(value, R.dimen.ui_type_numeric_m, true, orgColors.text).apply {
+                    gravity = Gravity.END
+                })
+            },
+        )
+        addView(View(this@summaryCard).apply {
+            setBackgroundColor(orgColors.border)
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dimenPx(R.dimen.stroke_hairline))
+        })
     }
 
 internal fun EditText.afterTextChanged(onChanged: () -> Unit) {
@@ -226,7 +299,7 @@ internal fun AppCompatActivity.openOrganizerPage(target: Class<*>, eventId: Stri
 internal fun AppCompatActivity.showMissingEventScreen(screenTitle: String, message: String = getString(R.string.organizer_event_id_missing)) {
     organizerShell(screenTitle, message, showBack = true)
         .addView(emptyState(
-            iconRes = R.drawable.ic_calendar,
+            iconRes = AppIcons.Event,
             title = getString(R.string.organizer_no_event_selected),
             subtext = getString(R.string.organizer_no_event_selected_hint, message),
             actionLabel = getString(R.string.organizer_open_my_events),
@@ -252,93 +325,76 @@ internal fun AppCompatActivity.showEventsLoadErrorScreen(screenTitle: String, me
     organizerShell(screenTitle, showBack = true).addView(state)
 }
 
+/**
+ * A grouped management row (§5.5 `list_row_icon`): 40dp neutral icon tile, title, meta, one 16dp
+ * chevron. No per-row card, no tinted tile, no hand-rolled surface.
+ *
+ * `iconTint`/`iconBg`/`iconColorOverride` are accepted for call-site compatibility and ignored:
+ * §3.6 permits exactly three icon colour sources and a per-section pastel tile is not one.
+ */
 internal fun AppCompatActivity.menuCard(
     label: String,
     iconRes: Int,
-    iconTint: Int = orgColors.accent,
+    iconTint: Int = orgColors.primary,
     iconBg: Int = orgColors.accentContainer,
     onClick: () -> Unit,
     hideBackground: Boolean = false,
     iconColorOverride: Int? = null,
-): LinearLayout = cardRes(R.dimen.space_md).apply {
-    setOnClickListener { onClick() }
-    val content = row()
-    content.addView(ImageView(this@menuCard).apply {
-        layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.tile_42), dimenPx(R.dimen.tile_42))
-        if (!hideBackground) {
-            background = roundedRect(iconBg, R.dimen.radius_10)
-        }
-        setPadding(dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_10))
-        setImageResource(iconRes)
-        setColorFilter(iconColorOverride ?: iconTint)
-    })
-    content.addView(styledText(label, R.dimen.type_body_large, true).apply {
-        layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-            setMargins(dimenPx(R.dimen.space_lg), 0, dimenPx(R.dimen.space_sm), 0)
-        }
-    })
-    content.addView(ImageView(this@menuCard).apply {
-        layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md))
-        setImageResource(com.thedavelopers.eventqr.R.drawable.ic_chevron_right)
-        setColorFilter(orgColors.muted)
-    })
-    addView(content)
+): View {
+    val row = LayoutInflater.from(this).inflate(R.layout.list_row_icon, null, false)
+    ListRowBinder.bind(
+        row = row,
+        title = label,
+        trailing = ListRowBinder.Trailing.CHEVRON,
+        showDivider = true,
+        onClick = onClick,
+    )
+    row.findViewById<ImageView>(R.id.listRowIcon)?.setImageResource(iconRes)
+    return row
 }
 
+/** A scan-purpose row: name + optional description, trailing switch. 72dp, hairline divider. */
 internal fun AppCompatActivity.purposeCard(
     title: String,
     subtitle: String,
-    iconRes: Int = com.thedavelopers.eventqr.R.drawable.ic_qr_scan,
+    iconRes: Int = AppIcons.Scan,
     enabled: Boolean,
     onToggle: (Boolean) -> Unit,
-): LinearLayout = cardRes(R.dimen.space_md).apply {
-    val content = row()
-    content.addView(ImageView(this@purposeCard).apply {
-        layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.tile_44), dimenPx(R.dimen.tile_44))
-        background = roundedRect(orgColors.accentContainer, R.dimen.radius_10)
-        setPadding(dimenPx(R.dimen.space_11), dimenPx(R.dimen.space_11), dimenPx(R.dimen.space_11), dimenPx(R.dimen.space_11))
-        setImageResource(iconRes)
-        setColorFilter(orgColors.accent)
-    })
-    val middle = LinearLayout(this@purposeCard).apply {
-        orientation = LinearLayout.VERTICAL
-        layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-            setMargins(dimenPx(R.dimen.space_lg), 0, dimenPx(R.dimen.space_sm), 0)
-        }
+): View {
+    val holder = LayoutInflater.from(this).inflate(R.layout.item_organizer_toggle_row, null, false)
+    holder.findViewById<TextView>(R.id.txtToggleTitle)?.text = title
+    holder.findViewById<TextView>(R.id.txtToggleMeta)?.apply {
+        text = subtitle
+        visibility = if (subtitle.isBlank()) View.GONE else View.VISIBLE
     }
-    middle.addView(styledText(title, R.dimen.type_body_large, true))
-    middle.addView(styledText(subtitle, R.dimen.type_body_compact, false, orgColors.muted))
-    content.addView(middle)
-    val switch = androidx.appcompat.widget.SwitchCompat(this@purposeCard).apply {
+    holder.findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.switchToggle)?.apply {
         isChecked = enabled
         setOnCheckedChangeListener { _, checked -> onToggle(checked) }
     }
-    content.addView(switch)
-    addView(content)
+    return holder
 }
 
+/** A rule row: title + description, trailing switch, 56dp, hairline divider. */
 internal fun AppCompatActivity.ruleToggle(
     title: String,
     description: String,
     isChecked: Boolean,
     onToggle: (Boolean) -> Unit,
-): LinearLayout = LinearLayout(this).apply {
-    orientation = LinearLayout.VERTICAL
-    val top = row()
-    top.addView(LinearLayout(this@ruleToggle).apply {
-        orientation = LinearLayout.VERTICAL
-        layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-        addView(styledText(title, R.dimen.type_body, true))
-        addView(styledText(description, R.dimen.type_body_compact, false, orgColors.muted))
-    })
-    top.addView(androidx.appcompat.widget.SwitchCompat(this@ruleToggle).apply {
+): View {
+    val holder = LayoutInflater.from(this).inflate(R.layout.item_organizer_toggle_row, null, false)
+    holder.findViewById<TextView>(R.id.txtToggleTitle)?.text = title
+    holder.findViewById<TextView>(R.id.txtToggleMeta)?.apply {
+        text = description
+        visibility = if (description.isBlank()) View.GONE else View.VISIBLE
+    }
+    holder.findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.switchToggle)?.apply {
         this.isChecked = isChecked
         setOnCheckedChangeListener { _, checked -> onToggle(checked) }
-    })
-    addView(top)
-    setPadding(0, dimenPx(R.dimen.space_10), 0, dimenPx(R.dimen.space_10))
+    }
+    return holder
 }
 
+/** §5.2 form field: `overline` label 8dp above a 56dp filled box. No floating label. */
 internal fun AppCompatActivity.labeledInput(
     label: String,
     value: String,
@@ -347,20 +403,28 @@ internal fun AppCompatActivity.labeledInput(
     onChanged: (String) -> Unit,
 ): LinearLayout = LinearLayout(this).apply {
     orientation = LinearLayout.VERTICAL
-    addView(styledText(label, R.dimen.type_body_medium, true).apply { setPadding(0, dimenPx(R.dimen.space_md), 0, dimenPx(R.dimen.space_6)) })
+    addView(TextView(this@labeledInput).apply {
+        text = label
+        setTextAppearance(R.style.TextAppearance_EventQR_Type_FieldLabel)
+        setPadding(0, dimenPx(R.dimen.space_16), 0, dimenPx(R.dimen.space_8))
+    })
     addView(EditText(this@labeledInput).apply {
         this.inputType = inputType
         this.hint = hint
         setText(value)
-        background = roundedRect(orgColors.bg, R.dimen.radius_10, orgColors.border)
-        setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_14), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_14))
+        setTextAppearance(R.style.TextAppearance_EventQR_Type_Body)
+        setTextColor(orgColors.text)
+        background = ResourcesCompat.getDrawable(resources, R.drawable.bg_ui_field, theme)
+        minHeight = dimenPx(R.dimen.ui_control_height)
+        setPadding(dimenPx(R.dimen.space_16), 0, dimenPx(R.dimen.space_16), 0)
         afterTextChanged { onChanged(text.toString()) }
     })
 }
 
 /**
- * Back pages get the centered-title detail header; bottom-nav pages get the My Events style tab header.
- * Both come from ui/components/EventQrHeaders.kt, so restyle them there.
+ * The compact pass head (§4.6) for every secondary organizer screen: 64dp identity block + tear.
+ * A back page puts a 44dp arrow in the eyebrow row's trailing slot; a tab page puts the current
+ * section's action there. No gradient banner, no 96dp glyph, no centred title.
  */
 internal fun AppCompatActivity.organizerHeader(
     title: String,
@@ -370,36 +434,65 @@ internal fun AppCompatActivity.organizerHeader(
     topRightLabel: String?,
     onTopRight: (() -> Unit)?,
 ): View {
-    val action = topRightLabel?.let { label ->
-        Button(this).apply {
-            id = R.id.nav_header_action
-            text = label
-            setAllCaps(false)
-            setTextColor(orgColors.onPrimary)
-            setTextSizeRes(R.dimen.type_body_compact)
-            strong()
-            background = roundedRect(orgColors.accent, R.dimen.radius_10)
-            setOnClickListener { onTopRight?.invoke() }
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dimenPx(R.dimen.tile_38))
-            setPadding(dimenPx(R.dimen.space_14), 0, dimenPx(R.dimen.space_14), 0)
-        }
-    }
+    // A back page is a secondary screen: §5.8 top bar (back at the LEFT, title at 56dp, one
+    // trailing action). The compact pass head is for tab pages, which have no back affordance.
     if (showBack) {
-        return EventQrDetailHeader(this).apply {
-            this.title = title
-            action?.let { endSlot.addView(it) }
+        val bar = layoutInflater.inflate(R.layout.include_top_bar, null, false)
+        bar.findViewById<TextView>(R.id.topBarTitle).text = title
+        bar.findViewById<View>(R.id.topBarBack).setOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
+        }
+        val action = topRightLabel?.let { label ->
+            TextView(this).apply {
+                text = label
+                setTextAppearance(R.style.TextAppearance_EventQR_Type_Label)
+                setTextColor(orgColors.primary)
+                minHeight = dimenPx(R.dimen.ui_touch_min)
+                minWidth = dimenPx(R.dimen.ui_touch_min)
+                gravity = Gravity.CENTER
+                setPadding(dimenPx(R.dimen.space_12), 0, dimenPx(R.dimen.space_12), 0)
+                setOnClickListener { onTopRight?.invoke() }
+            }
+        }
+        if (action != null) {
+            // include_top_bar's action slot is an ImageButton; swap it for the text action.
+            val row = bar.findViewById<LinearLayout>(R.id.topBar).getChildAt(0) as LinearLayout
+            row.removeView(bar.findViewById(R.id.topBarAction))
+            row.addView(
+                action,
+                LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    dimenPx(R.dimen.ui_touch_min),
+                ).apply { marginEnd = dimenPx(R.dimen.space_8) },
+            )
+        }
+        bar.findViewById<View>(R.id.topBarDivider).setBackgroundColor(orgColors.border)
+        return bar
+    }
+
+    val head = layoutInflater.inflate(R.layout.include_pass_head_compact, null, false)
+
+    val action = topRightLabel?.let { label ->
+        TextView(this).apply {
+            text = label
+            setTextAppearance(R.style.TextAppearance_EventQR_Type_Label)
+            setTextColor(orgColors.onPrimary)
+            minHeight = dimenPx(R.dimen.ui_touch_min)
+            minWidth = dimenPx(R.dimen.ui_touch_min)
+            gravity = Gravity.CENTER
+            setPadding(dimenPx(R.dimen.space_12), 0, dimenPx(R.dimen.space_12), 0)
+            setOnClickListener { onTopRight?.invoke() }
         }
     }
-    val defaultSub = when (selectedNav) {
-        NAV_REPORTS -> getString(R.string.organizer_reports_subtitle)
-        NAV_REWARDS -> getString(R.string.organizer_rewards_subtitle)
-        else -> null
-    }
-    return EventQrTabHeader(this).apply {
-        this.title = title
-        subtitleText = subtitle ?: defaultSub
-        action?.let { endSlot.addView(it) }
-    }
+    action?.let { head.findViewById<LinearLayout>(R.id.passHeadTrailing)?.addView(it) }
+
+    PassHeadBinder.bindCompact(
+        root = head,
+        title = title,
+        eyebrow = subtitle ?: getString(R.string.ui_organizer_role),
+    )
+    head.findViewById<View>(R.id.passHeadIdentity)?.applyEventQrTopInsetPadding()
+    return head
 }
 
 internal fun AppCompatActivity.organizerRefreshShell(
@@ -413,9 +506,10 @@ internal fun AppCompatActivity.organizerRefreshShell(
 ): OrganizerRefreshShell {
     val root = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-        setBackgroundResource(R.drawable.bg_organizer_events_screen)
+        setBackgroundColor(orgColors.bg)
     }
     setContentView(root)
+    applyEventQrSystemBarAppearance(lightStatusBars = false)
 
     root.addView(organizerHeader(title, subtitle, selectedNav, showBack, topRightLabel, onTopRight))
 
@@ -425,17 +519,18 @@ internal fun AppCompatActivity.organizerRefreshShell(
     }
     val scroll = ScrollView(this).apply {
         isFillViewport = true
+        clipToPadding = false
         layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
     }
     val content = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-        setPadding(dimenPx(R.dimen.space_20), dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_20), dimenPx(R.dimen.space_xl))
+        setPadding(dimenPx(R.dimen.ui_gutter), dimenPx(R.dimen.space_16), dimenPx(R.dimen.ui_gutter), dimenPx(R.dimen.space_32))
     }
     scroll.addView(content)
     swipeRefreshLayout.addView(scroll)
     root.addView(swipeRefreshLayout)
 
-    selectedNav?.let { root.addView(bottomNav(it)) }
+    if (selectedNav != null) root.addView(bottomNav(selectedNav)) else root.applyEventQrBottomInsetPadding()
     return OrganizerRefreshShell(content, swipeRefreshLayout)
 }
 
@@ -449,14 +544,16 @@ internal fun AppCompatActivity.organizerShell(
 ): LinearLayout {
     val root = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-        setBackgroundResource(R.drawable.bg_organizer_events_screen)
+        setBackgroundColor(orgColors.bg)
     }
     setContentView(root)
+    applyEventQrSystemBarAppearance(lightStatusBars = false)
 
     root.addView(organizerHeader(title, subtitle, selectedNav, showBack, topRightLabel, onTopRight))
 
     val scroll = ScrollView(this).apply {
         isFillViewport = true
+        clipToPadding = false
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             0,
@@ -465,12 +562,12 @@ internal fun AppCompatActivity.organizerShell(
     }
     val content = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-        setPadding(dimenPx(R.dimen.space_20), dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_20), dimenPx(R.dimen.space_xl))
+        setPadding(dimenPx(R.dimen.ui_gutter), dimenPx(R.dimen.space_16), dimenPx(R.dimen.ui_gutter), dimenPx(R.dimen.space_32))
     }
     scroll.addView(content)
     root.addView(scroll)
 
-    selectedNav?.let { root.addView(bottomNav(it)) }
+    if (selectedNav != null) root.addView(bottomNav(selectedNav)) else root.applyEventQrBottomInsetPadding()
     return content
 }
 
@@ -537,12 +634,39 @@ internal fun AppCompatActivity.formatCount(value: Int): String = String.format("
 internal fun AppCompatActivity.formatCount(value: Long): String = String.format("%,d", value)
 
 internal fun OrganizerMvpEvent.lifecycleStatus(): String =
-    EventStatusBadgeStyler.displayLabel(EventStatusBadgeStyler.fromLabel(status), status)
+    EventStatusBadgeStyler.displayLabel(
+        EventStatusBadgeStyler.resolve(EventStatusBadgeStyler.fromLabel(status), eventStartAt, eventEndAt),
+        status,
+    )
 
-/** Text view: [size] is a `type_*` dimen (sp), bold goes through [strong]. */
+/**
+ * Hairline card (§5.3): `ui_surface` fill, 1dp `ui_hairline`, radius 10, elevation 0.
+ * [padding] is a `space_*` dimen.
+ */
+internal fun AppCompatActivity.cardRes(@DimenRes padding: Int = R.dimen.ui_card_padding): LinearLayout =
+    LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        val pad = dimenPx(padding)
+        setPadding(pad, pad, pad, pad)
+        background = ResourcesCompat.getDrawable(resources, R.drawable.bg_ui_card, theme)
+        elevation = 0f
+        stateListAnimator = null
+        layoutParams = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+        ).apply { setMargins(0, dimenPx(R.dimen.space_8), 0, dimenPx(R.dimen.space_8)) }
+    }
+
+/**
+ * Text built from a token size. The family is IBM Plex Sans (semibold when [bold]) and
+ * `includeFontPadding` is off, matching `TextAppearance.EventQR.Type.*`.
+ *
+ * [size] is still a dimen id because ~200 call sites pass one; the new call sites should pass the
+ * `ui_type_*` tokens. Numbers should use a `Numeric*` appearance instead of this helper.
+ */
 internal fun AppCompatActivity.styledText(
     value: String,
-    @DimenRes size: Int = R.dimen.type_body_medium,
+    @DimenRes size: Int = R.dimen.ui_type_body,
     bold: Boolean = false,
     color: Int = orgColors.text,
     align: Int? = null,
@@ -550,26 +674,54 @@ internal fun AppCompatActivity.styledText(
     text = value
     setTextSizeRes(size)
     setTextColor(color)
-    if (bold) strong()
-    includeFontPadding = true
+    typeface = ResourcesCompat.getFont(
+        this@styledText,
+        if (bold) R.font.ibm_plex_sans_semibold else R.font.ibm_plex_sans_regular,
+    )
+    includeFontPadding = false
     // Vertical LinearLayouts hand children MATCH_PARENT width by default, so text inside a MATCH_PARENT TextView stays
     // start-aligned no matter what gravity the parent declares: callers that need centered rows set it on the TextView itself.
     align?.let { gravity = it }
 }
 
-/** Card container: [padding] is a `space_*` dimen; radius_14, hairline border and elevation_raised. */
-internal fun AppCompatActivity.cardRes(@DimenRes padding: Int = R.dimen.space_lg): LinearLayout =
-    LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        val pad = dimenPx(padding)
-        setPadding(pad, pad, pad, pad)
-        background = roundedRect(orgColors.card, R.dimen.radius_14, orgColors.border)
-        elevation = dimenPx(R.dimen.elevation_raised).toFloat()
-        layoutParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-        ).apply { setMargins(0, dimenPx(R.dimen.space_sm), 0, dimenPx(R.dimen.space_10)) }
-    }
+/**
+ * A tinted block with no code-built shape: one of the `bg_ui_block_*` drawables, tinted with a
+ * `ui_*` role. Replaces every on-the-fly `GradientDrawable` in the View-based organizer screens.
+ */
+internal fun View.tintBlock(
+    @ColorRes fill: Int,
+    @DrawableRes shape: Int = R.drawable.bg_ui_block_r10,
+) {
+    background = androidx.core.content.ContextCompat.getDrawable(context, shape)?.mutate()
+    backgroundTintList = android.content.res.ColorStateList.valueOf(
+        androidx.core.content.ContextCompat.getColor(context, fill),
+    )
+}
+
+/** Same as [tintBlock] but for a colour already resolved to ARGB (e.g. `orgColors.card`). */
+internal fun View.tintBlockArgb(
+    fill: Int,
+    @DrawableRes shape: Int = R.drawable.bg_ui_block_r10,
+) {
+    background = androidx.core.content.ContextCompat.getDrawable(context, shape)?.mutate()
+    backgroundTintList = android.content.res.ColorStateList.valueOf(fill)
+}
+
+/**
+ * A backend event date string rendered in the §7.6 shape. The MVP DTO carries either an ISO date,
+ * an ISO instant or an already-formatted line; numeric/ISO output is banned in UI copy, so an
+ * unparseable value is dropped rather than echoed.
+ */
+internal fun formatOrganizerEventDate(raw: String): String {
+    val value = raw.trim().replace(Regex("\\s*·.*$"), "").substringBefore(" - ").trim()
+    if (value.isBlank() || value == "-") return ""
+    val zone = java.time.ZoneId.of("Asia/Manila")
+    val date = runCatching { java.time.LocalDate.parse(value) }.getOrNull()
+        ?: runCatching { java.time.Instant.parse(value).atZone(zone).toLocalDate() }.getOrNull()
+        ?: runCatching { java.time.OffsetDateTime.parse(value).atZoneSameInstant(zone).toLocalDate() }.getOrNull()
+        ?: runCatching { java.time.LocalDateTime.parse(value).toLocalDate() }.getOrNull()
+    return date?.format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", java.util.Locale.ENGLISH)).orEmpty()
+}
 
 /** Vertical spacer: [height] is a dimen token. */
 internal fun AppCompatActivity.spacerRes(@DimenRes height: Int): View =

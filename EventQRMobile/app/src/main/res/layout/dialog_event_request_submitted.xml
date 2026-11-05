@@ -1,53 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    EVENT REQUEST SUBMITTED (§5.12 dialog) - inflated into an AlertDialog whose window background
+    is made transparent, so this layout owns the surface.
+
+        radius 16, ui_surface fill, 24dp padding, title 18/600, body 15 in text_secondary,
+        right-aligned text actions, primary last. No full-width filled button inside a dialog.
+
+    Deleted: `bg_card`, the 16dp card radius on a dialog, the indigo status line and the two
+    full-width filled buttons that competed with each other.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="@dimen/space_20"
-    android:background="@drawable/bg_card"
+    android:layout_marginHorizontal="@dimen/ui_gutter"
+    android:background="@drawable/bg_ui_dialog"
     android:orientation="vertical"
-    android:padding="@dimen/space_lg">
+    android:padding="@dimen/ui_dialog_pad">
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/dialog_event_request_submitted_event_request_submitted"
-        android:textAppearance="@style/TextAppearance.EventQR.TitleMedium" />
+        android:textAppearance="@style/Widget.EventQR.Ui.Dialog.Title" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_sm"
+        android:layout_marginTop="@dimen/space_8"
         android:text="@string/dialog_event_request_submitted_your_event_request_has_been_submitte"
-        android:textColor="@color/text_body"
-        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
+        android:textAppearance="@style/Widget.EventQR.Ui.Dialog.Body" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_sm"
+        android:layout_marginTop="@dimen/space_8"
         android:text="@string/dialog_event_request_submitted_status_pending"
-        android:textColor="@color/primary"
-        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
+        android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+        android:textColor="@color/ui_text_primary" />
 
-    <Button
-        android:id="@+id/successViewRequestsButton"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="@dimen/input_height"
-        android:layout_marginTop="@dimen/space_14"
-        android:background="@drawable/button_rounded"
-        android:text="@string/dialog_event_request_submitted_view_my_event_request"
-        android:textAllCaps="false"
-        android:textColor="@color/on_primary"
-        android:textAppearance="@style/TextAppearance.EventQR.ButtonPlatformBody.Strong" />
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_16"
+        android:gravity="end|center_vertical"
+        android:orientation="horizontal">
 
-    <Button
-        android:id="@+id/successDashboardButton"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/input_height"
-        android:layout_marginTop="@dimen/space_10"
-        android:background="@drawable/bg_outline_button"
-        android:text="@string/common_back_to_dashboard"
-        android:textAllCaps="false"
-        android:textColor="@color/primary"
-        android:textAppearance="@style/TextAppearance.EventQR.ButtonPlatformBody" />
+        <Button
+            android:id="@+id/successDashboardButton"
+            style="@style/Widget.EventQR.Ui.Button.Ghost"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/ui_button_height_inline"
+            android:text="@string/common_back_to_dashboard" />
+
+        <Button
+            android:id="@+id/successViewRequestsButton"
+            style="@style/Widget.EventQR.Ui.Button.Ghost"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/ui_button_height_inline"
+            android:layout_marginStart="@dimen/space_8"
+            android:text="@string/dialog_event_request_submitted_view_my_event_request"
+            android:textColor="@color/ui_primary" />
+    </LinearLayout>
 </LinearLayout>

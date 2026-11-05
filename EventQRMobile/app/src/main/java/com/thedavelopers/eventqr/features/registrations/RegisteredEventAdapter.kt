@@ -4,25 +4,15 @@ import android.content.Context
 import android.content.Intent
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.QrCode
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.EventCardPresenter
@@ -35,8 +25,10 @@ import com.thedavelopers.eventqr.features.attendee.QrDisplayActivity
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.ui.components.EventCard
+import com.thedavelopers.eventqr.ui.components.UiButton
 import com.thedavelopers.eventqr.ui.components.parseBadgeStatus
 import com.thedavelopers.eventqr.ui.theme.EventQrRowTheme
+import com.thedavelopers.eventqr.ui.theme.LocalGrid
 import com.thedavelopers.eventqr.ui.theme.LocalSpacing
 
 data class RegisteredEventCardState(
@@ -118,6 +110,8 @@ class RegisteredEventAdapter : RecyclerView.Adapter<RegisteredEventAdapter.ViewH
 @Composable
 private fun RegisteredEventCard(state: RegisteredEventCardState, context: Context) {
     val spacing = LocalSpacing.current
+    val grid = LocalGrid.current
+    val shape = RoundedCornerShape(grid.radiusButton)
 
     Column(
         modifier = Modifier
@@ -140,9 +134,11 @@ private fun RegisteredEventCard(state: RegisteredEventCardState, context: Contex
                     },
                 )
             },
-            // Inside the card, not a separate row underneath it.
+            // Inside the card, not a separate row underneath it. 52dp, radius 4, no elevation and
+            // no leading icon: a button label is words (§5.1).
             footer = {
-                Button(
+                UiButton(
+                    text = stringResource(R.string.ui_attendee_view_pass),
                     onClick = {
                         context.startActivity(
                             Intent(context, QrDisplayActivity::class.java).apply {
@@ -152,18 +148,7 @@ private fun RegisteredEventCard(state: RegisteredEventCardState, context: Contex
                         )
                     },
                     modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Icon(
-                        Icons.Default.QrCode,
-                        contentDescription = null,
-                        modifier = Modifier.size(spacing.mediumSmall + spacing.extraSmall),
-                    )
-                    Spacer(modifier = Modifier.width(spacing.micro))
-                    Text(
-                        text = stringResource(R.string.registered_event_show_qr),
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                    )
-                }
+                )
             },
         )
     }

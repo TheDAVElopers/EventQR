@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shared motion integers - Phase 1. Read with Context.integer(R.integer.*) so no Kotlin file
+     carries a raw duration (tools/check-tokens.ps1 bans literal postDelayed/duration values). -->
+<resources>
+    <!-- Skeleton shimmer half-cycle (§5.11: alpha 0.55 -> 1.0, 900 ms, reverse repeat). -->
+    <integer name="motion_skeleton_ms">900</integer>
+</resources>

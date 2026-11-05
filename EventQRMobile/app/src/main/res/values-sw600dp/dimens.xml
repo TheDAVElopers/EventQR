@@ -1,22 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Landing page - tablet / large screen overrides -->
-    <dimen name="landing_logo_width">340dp</dimen>
-    <dimen name="landing_logo_height">120dp</dimen>
-    <dimen name="landing_header_padding_h">48dp</dimen>
-    <dimen name="landing_header_padding_top">56dp</dimen>
-    <dimen name="landing_header_padding_bottom">40dp</dimen>
-    <dimen name="landing_logo_margin_top">36dp</dimen>
-    <dimen name="landing_tagline_size">17sp</dimen>
-    <dimen name="landing_btn_height">58dp</dimen>
-    <dimen name="landing_btn_text_size">17sp</dimen>
-    <dimen name="landing_feature_padding_h">48dp</dimen>
-    <dimen name="landing_feature_padding_top">32dp</dimen>
-    <dimen name="landing_feature_padding_bottom">32dp</dimen>
-    <dimen name="landing_card_horizontal_padding">24dp</dimen>
-    <dimen name="landing_card_top_padding">20dp</dimen>
-    <dimen name="landing_card_bottom_padding">20dp</dimen>
-    <dimen name="landing_icon_size">36dp</dimen>
-    <dimen name="landing_card_title_size">18sp</dimen>
-    <dimen name="landing_card_desc_size">14sp</dimen>
+    <!-- V2 type overrides for tablets / large screens (§3.5). Everything else keeps the phone
+         values: overline never grows, and display_xl is the one role that scales. -->
+    <dimen name="ui_type_display_xl">64sp</dimen>
 </resources>

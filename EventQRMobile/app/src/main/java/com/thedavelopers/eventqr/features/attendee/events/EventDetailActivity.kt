@@ -17,8 +17,10 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
 import com.thedavelopers.eventqr.features.events.model.dto.EventAvailabilityResponse
 import com.thedavelopers.eventqr.features.organizer.events.EventManagementHubActivity
@@ -55,7 +57,9 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
 
         findViewById<View>(R.id.nav_header_back).setOnClickListener { finish() }
 
-        findViewById<TextView>(R.id.txtDetailTitle).text = intent.getStringExtra(EXTRA_EVENT_TITLE).orEmpty()
+        val launchTitle = intent.getStringExtra(EXTRA_EVENT_TITLE).orEmpty()
+        findViewById<TextView>(R.id.txtDetailTitle).text = launchTitle
+        findViewById<TextView>(R.id.txtDetailTitlePoster).text = launchTitle
         findViewById<TextView>(R.id.txtDetailDescription).text = intent.getStringExtra(EXTRA_EVENT_DESCRIPTION).orEmpty()
         findViewById<TextView>(R.id.txtDetailVenue).text = intent.getStringExtra(EXTRA_EVENT_LOCATION).orEmpty().ifBlank { "Location not specified" }
         
@@ -67,8 +71,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
 
         findViewById<Button>(R.id.btnRegisterForEvent).apply {
             isEnabled = false
-            text = "Loading..."
-            setBackgroundResource(R.drawable.bg_disabled_button)
+            text = getString(R.string.event_detail_loading)
         }
 
         findViewById<View>(R.id.layoutRewardsRow)?.setOnClickListener {
@@ -112,22 +115,34 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
 
     override fun renderEvent(event: AttendeeEventResponse) {
         currentEvent = event
-        // The header keeps its fixed "Event Details" title; the event name sits on the banner above the description.
+        // The top bar keeps its fixed "Event details" title; the event name sits in the media head:
+        // in the no-poster band, or on the page background under the poster.
         findViewById<TextView>(R.id.txtDetailTitle).text = event.title
-        findViewById<TextView>(R.id.txtDetailDescription).text = event.description?.takeIf { it.isNotBlank() } ?: "No event description provided."
-        findViewById<TextView>(R.id.txtDetailVenue).text = event.location?.takeIf { it.isNotBlank() } ?: "Location not specified."
+        findViewById<TextView>(R.id.txtDetailTitlePoster).text = event.title
+        // §6.2: status is the first spec-table row. A status we cannot name is not a row —
+        // an unlabelled "Unknown" above the dates reads as a failed load.
+        val status = EventStatusBadgeStyler.resolve(event.status, event.eventStartAt, event.eventEndAt)
+        val statusVisibility = if (status == EventStatus.UNKNOWN) View.GONE else View.VISIBLE
+        findViewById<View>(R.id.layoutStatusRow).visibility = statusVisibility
+        findViewById<View>(R.id.viewStatusDivider).visibility = statusVisibility
+        if (status != EventStatus.UNKNOWN) {
+            AttendeeBadges.bind(findViewById(R.id.txtDetailStatus), status)
+        }
+        findViewById<TextView>(R.id.txtDetailDescription).text = event.description?.takeIf { it.isNotBlank() } ?: getString(R.string.ui_attendee_no_description)
+        findViewById<TextView>(R.id.txtDetailVenue).text = event.location?.takeIf { it.isNotBlank() } ?: getString(R.string.ui_attendee_venue_tbd)
         renderEventPoster(event.eventLogoUrl)
 
         val manilaZone = java.time.ZoneId.of("Asia/Manila")
-        val dateFormatter = java.time.format.DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", java.util.Locale.ENGLISH).withZone(manilaZone)
-        val timeFormatter = java.time.format.DateTimeFormatter.ofPattern("hh:mm a", java.util.Locale.ENGLISH).withZone(manilaZone)
+        // §7.6: `12 Oct 2026` for a date, `12 Oct 2026, 9:41 AM` for a date and time.
+        val dateFormatter = java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", java.util.Locale.ENGLISH).withZone(manilaZone)
+        val timeFormatter = java.time.format.DateTimeFormatter.ofPattern("h:mm a", java.util.Locale.ENGLISH).withZone(manilaZone)
         
         if (event.eventStartAt != null) {
             val endAt = event.eventEndAt
             val multiDay = endAt != null &&
                 event.eventStartAt.atZone(manilaZone).toLocalDate() != endAt.atZone(manilaZone).toLocalDate()
             findViewById<TextView>(R.id.txtDetailDate).text = if (multiDay && endAt != null) {
-                val shortFormatter = java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy", java.util.Locale.ENGLISH).withZone(manilaZone)
+                val shortFormatter = java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", java.util.Locale.ENGLISH).withZone(manilaZone)
                 getString(R.string.event_detail_date_range, shortFormatter.format(event.eventStartAt), shortFormatter.format(endAt))
             } else {
                 dateFormatter.format(event.eventStartAt)
@@ -152,7 +167,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         findViewById<View>(R.id.layoutAudienceRow).visibility = audienceVisibility
         findViewById<View>(R.id.viewAudienceDivider).visibility = audienceVisibility
 
-        val regFormatter = java.time.format.DateTimeFormatter.ofPattern("MMM d, h:mm a", java.util.Locale.ENGLISH).withZone(manilaZone)
+        val regFormatter = java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy, h:mm a", java.util.Locale.ENGLISH).withZone(manilaZone)
         val regOpen = event.registrationOpenAt?.let { regFormatter.format(it) }
         val regClose = event.registrationCloseAt?.let { regFormatter.format(it) }
         val regWindow = when {
@@ -182,13 +197,19 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         updateCancelButtonVisibility()
     }
 
+    // Poster and band are exclusive: nothing is ever drawn over the image, and the no-poster plate
+    // always carries the title in the band. Callers set both title views before toggling.
+    private fun showPoster(hasPoster: Boolean) {
+        findViewById<View>(R.id.imgEventPosterHero).visibility = if (hasPoster) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.layoutHeroBand).visibility = if (hasPoster) View.GONE else View.VISIBLE
+        findViewById<View>(R.id.txtDetailTitlePoster).visibility = if (hasPoster) View.VISIBLE else View.GONE
+    }
+
     private fun renderEventPoster(eventLogoUrl: String?) {
         val posterView = findViewById<ImageView>(R.id.imgEventPosterHero)
-        val overlayView = findViewById<View>(R.id.viewEventPosterOverlay)
         val fileId = eventLogoUrl?.trim().orEmpty()
         if (fileId.isBlank()) {
-            posterView.visibility = View.GONE
-            overlayView.visibility = View.GONE
+            showPoster(false)
             return
         }
 
@@ -197,8 +218,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
                 is NetworkResult.Success -> {
                     val encoded = result.data.contentBase64
                     if (encoded.isNullOrBlank()) {
-                        posterView.visibility = View.GONE
-                        overlayView.visibility = View.GONE
+                        showPoster(false)
                         return@launch
                     }
                     runCatching {
@@ -207,20 +227,16 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
                     }.onSuccess { bitmap ->
                         if (bitmap != null) {
                             posterView.setImageBitmap(bitmap)
-                            posterView.visibility = View.VISIBLE
-                            overlayView.visibility = View.VISIBLE
+                            showPoster(true)
                         } else {
-                            posterView.visibility = View.GONE
-                            overlayView.visibility = View.GONE
+                            showPoster(false)
                         }
                     }.onFailure {
-                        posterView.visibility = View.GONE
-                        overlayView.visibility = View.GONE
+                        showPoster(false)
                     }
                 }
                 is NetworkResult.Error -> {
-                    posterView.visibility = View.GONE
-                    overlayView.visibility = View.GONE
+                    showPoster(false)
                 }
                 NetworkResult.Loading -> Unit
             }
@@ -304,14 +320,12 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         if (availability.available) {
             btn.isEnabled = true
             btn.text = getString(R.string.event_detail_register)
-            btn.setBackgroundResource(R.drawable.bg_detail_register_button)
             logRegistrationWindow(event, availability, true)
             return
         }
 
         btn.isEnabled = false
         btn.text = availability.message.ifBlank { "Registration Unavailable" }
-        btn.setBackgroundResource(R.drawable.bg_disabled_button)
         logRegistrationWindow(event, availability, false)
     }
 
@@ -338,7 +352,6 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
 
         btn.isEnabled = true
         btn.text = getString(R.string.event_detail_register)
-        btn.setBackgroundResource(R.drawable.bg_detail_register_button)
         logRegistrationWindow(event, null, true)
     }
 
@@ -413,7 +426,6 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         findViewById<Button>(R.id.btnRegisterForEvent).apply {
             isEnabled = false
             text = getString(R.string.event_detail_loading)
-            setBackgroundResource(R.drawable.bg_disabled_button)
         }
         // Register becomes available again if the registration window is still open.
         currentEvent?.let { loadEventAvailability(it) }
@@ -439,20 +451,11 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     }
 
     override fun showLoading(isLoading: Boolean) {
-        findViewById<View>(R.id.skeletonDetailTitle).visibility = if (isLoading) View.VISIBLE else View.GONE
-        findViewById<View>(R.id.skeletonDetailDescription).visibility = if (isLoading) View.VISIBLE else View.GONE
-        findViewById<View>(R.id.skeletonDetailDate).visibility = if (isLoading) View.VISIBLE else View.GONE
-        findViewById<View>(R.id.skeletonDetailTime).visibility = if (isLoading) View.VISIBLE else View.GONE
-        findViewById<View>(R.id.skeletonDetailVenue).visibility = if (isLoading) View.VISIBLE else View.GONE
-        findViewById<View>(R.id.skeletonDetailCapacity).visibility = if (isLoading) View.VISIBLE else View.GONE
-        findViewById<View>(R.id.skeletonDetailRewards).visibility = if (isLoading) View.VISIBLE else View.GONE
-        findViewById<View>(R.id.nav_header_title).visibility = if (isLoading) View.GONE else View.VISIBLE
-        findViewById<View>(R.id.txtDetailDescription).visibility = if (isLoading) View.GONE else View.VISIBLE
-        findViewById<View>(R.id.txtDetailDate).visibility = if (isLoading) View.GONE else View.VISIBLE
-        findViewById<View>(R.id.txtDetailTime).visibility = if (isLoading) View.GONE else View.VISIBLE
-        findViewById<View>(R.id.txtDetailVenue).visibility = if (isLoading) View.GONE else View.VISIBLE
-        findViewById<View>(R.id.txtDetailCapacity).visibility = if (isLoading) View.GONE else View.VISIBLE
-        findViewById<View>(R.id.txtRewardsAvailable).visibility = if (isLoading) View.GONE else View.VISIBLE
+        // The screen paints the values it was launched with, so loading never blanks content: it
+        // only disables the primary action until availability is known (set in onCreate).
+        if (!isLoading) {
+            updateCancelButtonVisibility()
+        }
     }
 
     override fun showMessage(message: String) {
@@ -477,7 +480,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
             intent.putExtra(EXTRA_EVENT_LOCATION, event.location)
             event.eventStartAt?.let {
                 val manilaZone = java.time.ZoneId.of("Asia/Manila")
-                val formatter = java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy", java.util.Locale.ENGLISH).withZone(manilaZone)
+                val formatter = java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", java.util.Locale.ENGLISH).withZone(manilaZone)
                 intent.putExtra(EXTRA_EVENT_START, formatter.format(it))
             }
         }
@@ -493,13 +496,11 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     private fun setAlreadyRegisteredState(button: Button) {
         button.isEnabled = false
         button.text = getString(R.string.event_detail_already_registered)
-        button.setBackgroundResource(R.drawable.bg_disabled_button)
     }
 
     private fun setUnverifiableState(button: Button) {
         button.isEnabled = false
         button.text = getString(R.string.event_detail_can_t_verify_registration)
-        button.setBackgroundResource(R.drawable.bg_disabled_button)
     }
 
     // A cancelled event outranks every other primary-action state (Register, Already Registered, closed, ...).
@@ -508,7 +509,6 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         findViewById<Button>(R.id.btnRegisterForEvent).apply {
             isEnabled = false
             text = getString(R.string.event_detail_event_cancelled)
-            setBackgroundResource(R.drawable.bg_disabled_button)
         }
         return true
     }
@@ -517,7 +517,6 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         findViewById<Button>(R.id.btnRegisterForEvent).apply {
             isEnabled = true
             text = getString(R.string.event_detail_manage_event)
-            setBackgroundResource(R.drawable.bg_detail_register_button)
         }
     }
 

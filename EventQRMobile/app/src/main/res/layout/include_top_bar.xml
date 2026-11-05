@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    TOP APP BAR (§5.8) - secondary screens. 56dp, ui_surface fill, NEVER transparent over a
+    gradient, no elevation, no liftOnScroll. 1dp hairline below only when content scrolls under.
+
+    Layout: back 44dp at start=4dp, title at x=56dp (title is 0dp/weight 1 with an 8dp start
+    margin), ONE trailing action at 44dp. Back and action use the icon-button style, so both
+    draw a 2dp focus ring and a ui_primary_wash press.
+
+    ids: topBar, topBarBack, topBarTitle, topBarAction, topBarDivider.
+-->
+<com.thedavelopers.eventqr.ui.components.EventQrTopBar xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/topBar"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/ui_surface"
+    android:orientation="vertical">
+
+    <LinearLayout
+        style="@style/Widget.EventQR.Ui.TopBar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/ui_top_bar_height"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/topBarBack"
+            style="@style/Widget.EventQR.Ui.TopBar.Back"
+            android:layout_width="@dimen/ui_top_bar_action"
+            android:layout_height="@dimen/ui_top_bar_action"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="@dimen/ui_top_bar_back_inset" />
+
+        <TextView
+            android:id="@+id/topBarTitle"
+            style="@style/Widget.EventQR.Ui.TopBar.Title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="@dimen/space_sm"
+            android:layout_marginEnd="@dimen/space_sm"
+            android:layout_weight="1"
+            tools:text="Event details" />
+
+        <ImageButton
+            android:id="@+id/topBarAction"
+            style="@style/Widget.EventQR.Ui.TopBar.Action"
+            android:layout_width="@dimen/ui_top_bar_action"
+            android:layout_height="@dimen/ui_top_bar_action"
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="@dimen/ui_top_bar_back_inset"
+            android:visibility="gone"
+            tools:visibility="visible" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/topBarDivider"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:background="@color/ui_hairline"
+        android:importantForAccessibility="no" />
+
+</com.thedavelopers.eventqr.ui.components.EventQrTopBar>

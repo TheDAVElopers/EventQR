@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    REPORT PREVIEW (§6.4 reports, Gen C retirement).
+
+        Shared top bar with ONE trailing text action (Export), a scrolling page on
+        ui_background, and the organizer bottom nav hosted at the end.
+
+    The page body is inflated from item_report_*.xml so no card, tint or heading is built in
+    Kotlin. This file replaces the `organizerShell()` construction inside ReportPreviewActivity.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/ui_background"
+    android:orientation="vertical">
+
+    <include
+        android:id="@+id/topBar"
+        layout="@layout/include_top_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <ScrollView
+        android:id="@+id/reportScroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:overScrollMode="never">
+
+        <LinearLayout
+            android:id="@+id/reportContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/ui_gutter"
+            android:paddingTop="@dimen/space_16"
+            android:paddingBottom="@dimen/space_32" />
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/bottomNavHost"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+</LinearLayout>

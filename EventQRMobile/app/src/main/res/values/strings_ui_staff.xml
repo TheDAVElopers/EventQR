@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Strings owned by the staff screens (plan §6.3, §7).
+
+    Copy rules: sentence case, verb-first, no "please", no exclamation marks, no "successfully".
+    ALL CAPS is never typed here - the Overline type role does the caps. Status words follow the
+    §5.4 mapping so a badge and a heading never disagree.
+-->
+<resources>
+
+    <!-- ═════════ Shared staff vocabulary (§7.7: pass, event, check in) ═════════ -->
+    <string name="ui_staff_role">Staff</string>
+    <string name="ui_staff_today">Today</string>
+    <string name="ui_staff_scans">Scans</string>
+    <string name="ui_staff_check_ins">Check-ins</string>
+    <string name="ui_staff_value_unavailable">--</string>
+    <string name="ui_staff_scan">Scan</string>
+
+    <!-- ═════════ Dashboard (§6.3) ═════════ -->
+    <string name="ui_staff_scan_a_pass">Scan a pass</string>
+    <string name="ui_staff_scan_sub">Opens the camera</string>
+    <string name="ui_staff_recent">Recent</string>
+    <string name="ui_staff_today_count">%1$d today</string>
+    <string name="ui_staff_no_scans">No scans yet</string>
+    <string name="ui_staff_no_scans_body">Scans you perform will show up here.</string>
+
+    <!-- ═════════ Scanner (§5.13) ═════════ -->
+    <string name="ui_staff_scan_label">Attendee ID</string>
+    <string name="ui_staff_scan_hint">e.g. 001</string>
+    <string name="ui_staff_verify">Verify</string>
+    <string name="ui_staff_no_events">No assigned events</string>
+    <string name="ui_staff_no_events_body">Ask your organizer to assign you to an event.</string>
+    <string name="staff_torch_on">Torch on</string>
+    <string name="staff_torch_off">Torch off</string>
+    <string name="staff_torch_unavailable">This camera has no torch.</string>
+
+    <!-- ═════════ Scan result (§6.3) ═════════ -->
+    <string name="ui_staff_result_valid">Checked in</string>
+    <string name="ui_staff_result_valid_hint">The pass was verified for this event.</string>
+    <string name="ui_staff_result_rejected">Not valid</string>
+    <string name="ui_staff_result_rejected_hint">This pass could not be used.</string>
+    <string name="ui_staff_result_inactive">Pass inactive</string>
+    <string name="ui_staff_result_inactive_hint">This pass is no longer active.</string>
+    <string name="ui_staff_result_not_allowed">Not allowed</string>
+    <string name="ui_staff_result_not_allowed_hint">This scan is not allowed.</string>
+    <string name="ui_staff_result_print_failed">Print failed</string>
+    <string name="ui_staff_result_print_failed_hint">The pass is valid, but the ID did not print.</string>
+    <string name="ui_staff_result_attendee">Attendee</string>
+    <string name="ui_staff_result_registration">Registration</string>
+    <string name="ui_staff_result_event">Event</string>
+    <string name="ui_staff_result_purpose">Scan purpose</string>
+    <string name="ui_staff_result_verified_at">Verified at</string>
+    <string name="ui_staff_result_reason">Reason</string>
+    <string name="ui_staff_result_title">Verification result</string>
+    <string name="ui_staff_result_no_reason">No reason supplied.</string>
+    <string name="ui_staff_result_just_now">Just now</string>
+    <string name="ui_staff_result_log_transaction">Log transaction</string>
+    <string name="ui_staff_result_print_id">Print ID</string>
+    <string name="ui_staff_result_logging">Logging…</string>
+    <string name="ui_staff_result_printing">Printing…</string>
+    <string name="ui_staff_result_scan_again">Scan again</string>
+    <string name="ui_staff_result_view_attendee">View attendee</string>
+    <string name="ui_staff_result_attendee_unavailable">This scan has no attendee on record.</string>
+
+    <!-- ═════════ Transaction result (§6.3) ═════════ -->
+    <string name="ui_staff_tx_approved">Points credited</string>
+    <string name="ui_staff_tx_approved_hint">The transaction was recorded.</string>
+    <string name="ui_staff_tx_rejected">Not credited</string>
+    <string name="ui_staff_tx_rejected_hint">The scan was recorded, but no points were credited.</string>
+    <string name="ui_staff_tx_type">Scan type</string>
+    <string name="ui_staff_tx_attendee">Attendee</string>
+    <string name="ui_staff_tx_time">Scanned at</string>
+    <string name="ui_staff_tx_points">Points</string>
+    <string name="ui_staff_tx_credited">Credited</string>
+    <string name="ui_staff_tx_scan_next">Scan next attendee</string>
+    <string name="ui_staff_tx_dashboard">Back to dashboard</string>
+    <string name="ui_staff_tx_title">Transaction result</string>
+    <string name="ui_staff_tx_attendee_unavailable">Attendee details are unavailable for this transaction.</string>
+
+    <!-- ═════════ Attendee details (§6.3) ═════════ -->
+    <string name="ui_staff_attendee_details">Attendee details</string>
+    <string name="ui_staff_no_phone">No phone number</string>
+    <string name="ui_staff_detail_event">Event</string>
+    <string name="ui_staff_detail_registration">Registration</string>
+    <string name="ui_staff_detail_status">Status</string>
+    <string name="ui_staff_detail_check_in">Check-in time</string>
+    <string name="ui_staff_detail_points">Points earned</string>
+    <string name="ui_staff_detail_scans">Scans</string>
+    <string name="ui_staff_print_id">Print ID</string>
+    <string name="ui_staff_reprint_id">Reprint ID</string>
+    <string name="ui_staff_scan_again">Scan again</string>
+    <string name="ui_staff_recent_transactions">Recent transactions</string>
+    <string name="ui_staff_no_transactions">No transactions yet</string>
+    <string name="ui_staff_no_transactions_body">Scans for this attendee appear here.</string>
+
+    <!-- ═════════ Assigned events (§6.3) ═════════ -->
+    <string name="ui_staff_assigned_events">Assigned events</string>
+    <string name="ui_staff_filter_all">All</string>
+    <string name="ui_staff_filter_upcoming">Upcoming</string>
+    <string name="ui_staff_filter_active">Active</string>
+    <string name="ui_staff_filter_completed">Completed</string>
+    <!-- Unit only: CountLabel.format() prefixes the compact number and uppercases the noun. -->
+    <string name="ui_staff_events_count">event</string>
+    <string name="ui_staff_no_assigned_events">No assigned events</string>
+    <string name="ui_staff_no_assigned_events_body">Events assigned to you will show up here.</string>
+
+    <!-- ═════════ Event registrations (§6.3) ═════════ -->
+    <string name="ui_staff_event_attendees">Event attendees</string>
+    <string name="ui_staff_event">Event</string>
+    <string name="ui_staff_search_attendees">Search attendees</string>
+    <string name="ui_staff_checked_in">Checked in</string>
+    <string name="ui_staff_registered">Registered</string>
+    <string name="ui_staff_select_for_print">Select attendees for batch printing</string>
+    <string name="ui_staff_select_all">Select all</string>
+    <string name="ui_staff_clear_all">Clear all</string>
+    <string name="ui_staff_print_selected">Print selected</string>
+    <string name="ui_staff_no_attendees">No attendees found</string>
+    <string name="ui_staff_no_attendees_body">Registered attendees will show up here.</string>
+
+    <!-- ═════════ Transaction logs (§6.3) ═════════ -->
+    <string name="ui_staff_logs">Transaction logs</string>
+    <string name="ui_staff_total">Total</string>
+    <string name="ui_staff_successful">Successful</string>
+    <string name="ui_staff_rejected">Rejected</string>
+    <string name="ui_staff_filter_event">Event</string>
+    <string name="ui_staff_filter_purpose">Purpose</string>
+    <string name="ui_staff_select_event">Select event</string>
+    <string name="ui_staff_all_purposes">All purposes</string>
+    <string name="ui_staff_no_logs">No transactions logged</string>
+    <string name="ui_staff_no_logs_body">Scans you perform will show up here.</string>
+    <string name="ui_staff_no_logs_prompt">Select an event to view its transactions.</string>
+    <string name="ui_staff_no_purposes">No scan purposes found for this filter.</string>
+    <string name="ui_staff_logs_attendee_fallback">Attendee</string>
+
+    <!-- ═════════ Reward redemption (§6.3, Gen C rewrite) ═════════ -->
+    <string name="ui_staff_reward_redemption">Reward redemption</string>
+    <string name="ui_staff_points_balance">Points balance</string>
+    <string name="ui_staff_available_rewards">Available rewards</string>
+    <string name="ui_staff_no_eligible_rewards">No eligible rewards</string>
+    <string name="ui_staff_no_eligible_rewards_body">This attendee cannot redeem any reward right now.</string>
+    <string name="ui_staff_scan_rejected">Scan rejected</string>
+    <string name="ui_staff_scan_rejected_body">This redemption scan was rejected. Ask the attendee to reopen their pass.</string>
+    <string name="ui_staff_redeem_title">Redeem %1$s</string>
+    <string name="ui_staff_redeem_body">This deducts %1$d points from the attendee.</string>
+    <string name="ui_staff_redeem">Redeem</string>
+    <string name="ui_staff_cancel">Cancel</string>
+    <string name="ui_staff_redemption_approved">Reward redeemed</string>
+    <string name="ui_staff_redemption_rejected">Redemption rejected</string>
+    <string name="ui_staff_reward">Reward</string>
+    <string name="ui_staff_points_deducted">Points deducted</string>
+    <string name="ui_staff_remaining_balance">Remaining balance</string>
+    <string name="ui_staff_outcome">Outcome</string>
+    <string name="ui_staff_no_points_deducted">No points were deducted</string>
+    <string name="ui_staff_continue_scanning">Scan next pass</string>
+    <string name="ui_staff_redemption_done_body">Points were deducted from the attendee.</string>
+    <string name="ui_staff_redemption_rejected_body">Nothing was deducted from the attendee.</string>
+    <string name="ui_staff_stock_left">%1$d left</string>
+    <string name="ui_staff_stock_unlimited">Unlimited</string>
+    <string name="ui_staff_one_claim">One claim only</string>
+    <string name="ui_staff_duplicates_allowed">Duplicate claims allowed</string>
+    <string name="ui_staff_rewards_unavailable">Unable to load rewards.</string>
+    <string name="ui_staff_missing_event_context">Open this screen from the scanner.</string>
+    <string name="ui_staff_missing_redemption_context">This scan is missing its redemption context.</string>
+    <string name="ui_staff_redeem_failed">The reward could not be redeemed.</string>
+
+</resources>

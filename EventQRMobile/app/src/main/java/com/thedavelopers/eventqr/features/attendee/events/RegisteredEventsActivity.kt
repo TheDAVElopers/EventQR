@@ -2,19 +2,21 @@ package com.thedavelopers.eventqr.features.attendee
 
 import android.os.Bundle
 import android.view.View
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.google.android.material.chip.Chip
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.registrations.RegisteredEventAdapter
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
+import com.thedavelopers.eventqr.ui.components.PassHeadBinder
+import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
-import com.thedavelopers.eventqr.ui.theme.dimen
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import java.time.Instant
 
 open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContract.View {
@@ -22,10 +24,10 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
     private lateinit var adapter: RegisteredEventAdapter
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var skeletonLoading: View
-    private lateinit var chipAll: Chip
-    private lateinit var chipUpcoming: Chip
-    private lateinit var chipActive: Chip
-    private lateinit var chipCompleted: Chip
+    private lateinit var chipAll: TextView
+    private lateinit var chipUpcoming: TextView
+    private lateinit var chipActive: TextView
+    private lateinit var chipCompleted: TextView
 
     private lateinit var emptyState: EventQrEmptyState
     private lateinit var defaultEmptyTitle: CharSequence
@@ -36,15 +38,26 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_registered_events)
-        applyEventQrSystemBarAppearance()
+        applyEventQrSystemBarAppearance(lightStatusBars = false)
+        findViewById<View>(R.id.passHeadIdentity).applyEventQrTopInsetPadding()
         configureAttendeeBottomNav(AttendeeBottomNavItem.REGISTERED)
+
+        PassHeadBinder.bindCompact(
+            findViewById(R.id.passHead),
+            title = getString(R.string.ui_attendee_my_passes),
+        )
 
         presenter = RegisteredEventsPresenter(this, AttendeeRepository(this))
         swipeRefresh = findViewById(R.id.swipeRefreshRegisteredEvents)
         skeletonLoading = findViewById(R.id.skeletonLoading)
 
         emptyState = findViewById(R.id.txtRegisteredEventsEmpty)
-        defaultEmptyTitle = emptyState.text ?: ""
+        emptyState.setIcon(AppIcons.Pass)
+        emptyState.setContent(
+            getString(R.string.common_no_registered_events_yet),
+            getString(R.string.user_registered_events_events_you_register_for_will_show_up),
+        )
+        defaultEmptyTitle = getString(R.string.common_no_registered_events_yet)
         chipAll = findViewById(R.id.chipAll)
         chipUpcoming = findViewById(R.id.chipUpcoming)
         chipActive = findViewById(R.id.chipActive)
@@ -73,8 +86,6 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
     }
 
     private fun updateFilterUI() {
-        val textSecondary = ContextCompat.getColor(this, R.color.text_secondary)
-
         val chips = mapOf(
             RegisteredEventFilter.ALL to chipAll,
             RegisteredEventFilter.UPCOMING to chipUpcoming,
@@ -84,11 +95,13 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
 
         for ((filter, chip) in chips) {
             val isSelected = filter == selectedFilter
-            chip.isChecked = isSelected
-            chip.setTextColor(if (isSelected) ContextCompat.getColor(this, R.color.on_primary) else textSecondary)
-            chip.setChipBackgroundColorResource(if (isSelected) R.color.primary else R.color.surface)
-            chip.chipStrokeWidth = if (isSelected) 0f else dimen(R.dimen.stroke_hairline)
-            chip.chipStrokeColor = ContextCompat.getColorStateList(this, R.color.outline)
+            chip.isSelected = isSelected
+            chip.setTextColor(
+                ContextCompat.getColor(
+                    this,
+                    if (isSelected) R.color.ui_on_primary else R.color.ui_text_primary,
+                ),
+            )
         }
     }
 

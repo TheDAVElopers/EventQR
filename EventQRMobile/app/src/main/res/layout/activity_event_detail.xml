@@ -1,61 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+    Event detail (§6.2 of MyFiles/EventQR-Redesign-Plan.md) - retires Gen A.
+
+        56dp top bar (shared spec)
+        media head - two exclusive states (§5.15), one 34/38 title scale:
+          no poster: 120dp flat ui_primary plate carrying the title in a 96dp band on its bottom edge
+          poster: 240dp full-bleed image with nothing drawn over it; the band is GONE and the title
+                  sits on the page background directly below the image (txtDetailTitlePoster)
+        spec table: overline label left, body value right, 1dp hairlines, no icons
+          STATUS is row 1: the badge is a trailing value, never a floating pill (§5.4)
+        About body copy
+        72dp sticky footer with a hairline top border
+
+    Deleted: the 220dp gradient hero, the 28sp white title on the hero, the one-big-card icon-row
+    block with 11sp caps labels, the gradient Register button and the red text Cancel button in
+    the flow.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background">
+    android:background="@color/ui_background"
+    android:orientation="vertical">
 
     <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
         android:id="@+id/layoutTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="@string/request_event_event_details" />
+        app:title="@string/ui_attendee_event_details" />
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@id/layoutBottomBar"
-        android:layout_below="@id/layoutTopBar"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:clipToPadding="false"
         android:fillViewport="true"
-        android:paddingBottom="@dimen/space_xl">
+        android:overScrollMode="never">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingBottom="@dimen/space_24">
 
+            <!-- ═════════ Media head: exclusive no-poster plate or bare poster (§5.15) ═════════ -->
             <FrameLayout
                 android:id="@+id/layoutEventHero"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/hero_height_220"
-                android:background="@drawable/bg_eventqr_gradient">
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/ui_attendee_hero_min_height"
+                android:background="@color/ui_primary">
 
                 <ImageView
                     android:id="@+id/imgEventPosterHero"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="@dimen/ui_attendee_media_height"
                     android:contentDescription="@string/event_detail_event_poster"
                     android:scaleType="centerCrop"
                     android:visibility="gone" />
 
-                <View
-                    android:id="@+id/viewEventPosterOverlay"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@color/scrim"
-                    android:visibility="gone" />
-
                 <LinearLayout
+                    android:id="@+id/layoutHeroBand"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom"
+                    android:minHeight="@dimen/ui_hero_band_height"
+                    android:background="@color/ui_primary"
                     android:orientation="vertical"
-                    android:padding="@dimen/space_xl">
-
-                    <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:paddingStart="@dimen/ui_gutter"
+                    android:paddingTop="@dimen/space_12"
+                    android:paddingEnd="@dimen/ui_gutter"
+                    android:paddingBottom="@dimen/space_24">
 
                     <TextView
                         android:id="@+id/txtDetailTitle"
@@ -63,180 +78,413 @@
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
                         android:maxLines="2"
-                        android:textColor="@color/on_primary"
-                        android:textAppearance="@style/TextAppearance.EventQR.HeadlineL" />
-
-                    <View
-                        android:id="@+id/skeletonDetailTitle"
-                        android:layout_width="match_parent"
-                        android:layout_height="24dp"
-                        android:layout_gravity="center_vertical"
-                        android:background="@drawable/bg_staff_skeleton_bar_light"
-                        android:visibility="gone" />
-                </FrameLayout>
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.DisplayM"
+                        android:textColor="@color/ui_on_primary" />
                 </LinearLayout>
             </FrameLayout>
 
+            <TextView
+                android:id="@+id/txtDetailTitlePoster"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_24"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.DisplayM"
+                android:textColor="@color/ui_text_primary"
+                android:visibility="gone" />
+
+            <!-- ═════════ Spec table ═════════ -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingHorizontal="@dimen/space_xl"
-                android:paddingTop="@dimen/space_20">
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_24"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:orientation="vertical">
 
-                <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content">
-                    <TextView android:id="@+id/txtDetailStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_event_description" android:textColor="@color/text_disabled" android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
-                    <TextView android:id="@+id/txtOrganizer" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:text="@string/event_detail_by_organizer" android:textColor="@color/text_secondary" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" android:visibility="gone" />
-                </RelativeLayout>
-
-                <FrameLayout
+                <!-- Status is derived from the date rows below it, so it sits with its evidence (§6.2). -->
+                <LinearLayout
+                    android:id="@+id/layoutStatusRow"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_lg">
+                    android:minHeight="@dimen/ui_row_height_value"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
                     <TextView
-                        android:id="@+id/txtDetailDescription"
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:lineSpacingExtra="4dp"
-                        android:textColor="@color/text_secondary"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
+                        android:layout_weight="1"
+                        android:text="@string/ui_attendee_status"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
 
-                    <View
-                        android:id="@+id/skeletonDetailDescription"
-                        android:layout_width="match_parent"
-                        android:layout_height="14dp"
-                        android:layout_gravity="top"
-                        android:background="@drawable/bg_staff_skeleton_bar"
-                        android:visibility="gone" />
-                </FrameLayout>
-
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_xl" android:background="@drawable/bg_info_card" android:orientation="vertical" android:padding="@dimen/space_20">
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
-                        <ImageView android:layout_width="@dimen/icon_lg" android:layout_height="@dimen/icon_lg" android:src="@drawable/ic_calendar" app:tint="@color/primary" />
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/space_lg" android:orientation="vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_date" android:textColor="@color/text_disabled" android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
-                            <FrameLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_xxs">
-                                <TextView android:id="@+id/txtDetailDate" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
-                                <View android:id="@+id/skeletonDetailDate" android:layout_width="130dp" android:layout_height="16dp" android:background="@drawable/bg_staff_skeleton_bar" android:visibility="gone" />
-                            </FrameLayout>
-                        </LinearLayout>
-                    </LinearLayout>
-                    <View style="@style/Widget.EventQR.Divider.Muted" android:layout_marginStart="@dimen/space_40" android:layout_marginVertical="@dimen/space_lg" />
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
-                        <ImageView android:layout_width="@dimen/icon_lg" android:layout_height="@dimen/icon_lg" android:src="@drawable/ic_row_clock" app:tint="@color/primary" />
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/space_lg" android:orientation="vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_time" android:textColor="@color/text_disabled" android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
-                            <FrameLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_xxs">
-                                <TextView android:id="@+id/txtDetailTime" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
-                                <View android:id="@+id/skeletonDetailTime" android:layout_width="90dp" android:layout_height="16dp" android:background="@drawable/bg_staff_skeleton_bar" android:visibility="gone" />
-                            </FrameLayout>
-                        </LinearLayout>
-                    </LinearLayout>
-                    <View style="@style/Widget.EventQR.Divider.Muted" android:layout_marginStart="@dimen/space_40" android:layout_marginVertical="@dimen/space_lg" />
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
-                        <ImageView android:layout_width="@dimen/icon_lg" android:layout_height="@dimen/icon_lg" android:src="@drawable/ic_location" app:tint="@color/primary" />
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/space_lg" android:orientation="vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_location" android:textColor="@color/text_disabled" android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
-                            <FrameLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_xxs">
-                                <TextView android:id="@+id/txtDetailVenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
-                                <View android:id="@+id/skeletonDetailVenue" android:layout_width="160dp" android:layout_height="16dp" android:background="@drawable/bg_staff_skeleton_bar" android:visibility="gone" />
-                            </FrameLayout>
-                        </LinearLayout>
-                    </LinearLayout>
-                    <View android:id="@+id/viewCategoryDivider" style="@style/Widget.EventQR.Divider.Muted" android:layout_marginStart="@dimen/space_40" android:layout_marginVertical="@dimen/space_lg" android:visibility="gone" />
-                    <LinearLayout android:id="@+id/layoutCategoryRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:visibility="gone">
-                        <ImageView android:layout_width="@dimen/icon_lg" android:layout_height="@dimen/icon_lg" android:src="@drawable/ic_row_tag" app:tint="@color/primary" />
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/space_lg" android:orientation="vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_category" android:textColor="@color/text_disabled" android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
-                            <TextView android:id="@+id/txtDetailCategory" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_xxs" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
-                        </LinearLayout>
-                    </LinearLayout>
-                    <View android:id="@+id/viewAudienceDivider" style="@style/Widget.EventQR.Divider.Muted" android:layout_marginStart="@dimen/space_40" android:layout_marginVertical="@dimen/space_lg" android:visibility="gone" />
-                    <LinearLayout android:id="@+id/layoutAudienceRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:visibility="gone">
-                        <ImageView android:layout_width="@dimen/icon_lg" android:layout_height="@dimen/icon_lg" android:src="@drawable/ic_nav_profile" app:tint="@color/primary" />
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/space_lg" android:orientation="vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_target_audience" android:textColor="@color/text_disabled" android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
-                            <TextView android:id="@+id/txtDetailAudience" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_xxs" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
-                        </LinearLayout>
-                    </LinearLayout>
-                    <View android:id="@+id/viewRegWindowDivider" style="@style/Widget.EventQR.Divider.Muted" android:layout_marginStart="@dimen/space_40" android:layout_marginVertical="@dimen/space_lg" android:visibility="gone" />
-                    <LinearLayout android:id="@+id/layoutRegWindowRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:visibility="gone">
-                        <ImageView android:layout_width="@dimen/icon_lg" android:layout_height="@dimen/icon_lg" android:src="@drawable/ic_calendar" app:tint="@color/primary" />
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/space_lg" android:orientation="vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_registration_window" android:textColor="@color/text_disabled" android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
-                            <TextView android:id="@+id/txtDetailRegWindow" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_xxs" android:maxLines="1" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="@dimen/type_micro" android:autoSizeMaxTextSize="@dimen/type_body_medium" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
-                        </LinearLayout>
-                    </LinearLayout>
-                    <View style="@style/Widget.EventQR.Divider.Muted" android:layout_marginStart="@dimen/space_40" android:layout_marginVertical="@dimen/space_lg" />
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
-                        <ImageView android:layout_width="@dimen/icon_lg" android:layout_height="@dimen/icon_lg" android:src="@drawable/ic_nav_profile" app:tint="@color/primary" />
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/space_lg" android:orientation="vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_capacity" android:textColor="@color/text_disabled" android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
-                            <FrameLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_xxs">
-                                <TextView android:id="@+id/txtDetailCapacity" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
-                                <View android:id="@+id/skeletonDetailCapacity" android:layout_width="140dp" android:layout_height="16dp" android:background="@drawable/bg_staff_skeleton_bar" android:visibility="gone" />
-                            </FrameLayout>
-                        </LinearLayout>
-                    </LinearLayout>
-                    <View android:id="@+id/viewRewardsDivider" style="@style/Widget.EventQR.Divider.Muted" android:layout_marginStart="@dimen/space_40" android:layout_marginVertical="@dimen/space_lg" android:visibility="gone" />
-                    <LinearLayout android:id="@+id/layoutRewardsRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:visibility="gone">
-                        <ImageView android:layout_width="@dimen/icon_lg" android:layout_height="@dimen/icon_lg" android:src="@drawable/ic_nav_gift" app:tint="@color/primary" />
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/space_lg" android:orientation="vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_rewards" android:textColor="@color/text_disabled" android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
-                            <FrameLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_xxs">
-                                <TextView android:id="@+id/txtRewardsAvailable" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_rewards_available" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
-                                <View android:id="@+id/skeletonDetailRewards" android:layout_width="140dp" android:layout_height="16dp" android:background="@drawable/bg_staff_skeleton_bar" android:visibility="gone" />
-                            </FrameLayout>
-                        </LinearLayout>
-                    </LinearLayout>
+                    <TextView
+                        android:id="@+id/txtDetailStatus"
+                        style="@style/Widget.EventQR.Ui.StatusBadge.Info"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/layoutRegistrationStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_20" android:background="@drawable/bg_info_card" android:orientation="vertical" android:padding="@dimen/space_20">
-                    <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/event_detail_registration_status" android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong" />
-                        <TextView android:id="@+id/txtRegPercent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:textColor="@color/primary" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
-                    </RelativeLayout>
-                    <ProgressBar android:id="@+id/pbRegistrationDetail" style="@android:style/Widget.ProgressBar.Horizontal" android:layout_width="match_parent" android:layout_height="@dimen/space_sm" android:layout_marginTop="@dimen/space_md" android:max="100" android:progress="0" android:progressDrawable="@drawable/pb_event_upcoming" />
-                    <TextView android:id="@+id/txtRemainingSpots" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_md" android:textColor="@color/text_secondary" android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
+                <View
+                    android:id="@+id/viewStatusDivider"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@color/ui_hairline" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_row_height_value"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/ui_attendee_date"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
+
+                    <TextView
+                        android:id="@+id/txtDetailDate"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_lg"
+                        android:layout_weight="1"
+                        android:gravity="end"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                        android:textColor="@color/ui_text_primary" />
                 </LinearLayout>
 
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@color/ui_hairline" />
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_row_height_value"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/ui_attendee_time"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
+
+                    <TextView
+                        android:id="@+id/txtDetailTime"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_lg"
+                        android:layout_weight="1"
+                        android:gravity="end"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                        android:textColor="@color/ui_text_primary" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@color/ui_hairline" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_row_height_value"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/ui_attendee_venue"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
+
+                    <TextView
+                        android:id="@+id/txtDetailVenue"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_lg"
+                        android:layout_weight="1"
+                        android:gravity="end"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                        android:textColor="@color/ui_text_primary" />
+                </LinearLayout>
+
+                <View
+                    android:id="@+id/viewCategoryDivider"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@color/ui_hairline"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/layoutCategoryRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_row_height_value"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/ui_attendee_category"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
+
+                    <TextView
+                        android:id="@+id/txtDetailCategory"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_lg"
+                        android:layout_weight="1"
+                        android:gravity="end"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                        android:textColor="@color/ui_text_primary" />
+                </LinearLayout>
+
+                <View
+                    android:id="@+id/viewAudienceDivider"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@color/ui_hairline"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/layoutAudienceRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_row_height_value"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/ui_attendee_audience"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
+
+                    <TextView
+                        android:id="@+id/txtDetailAudience"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_lg"
+                        android:layout_weight="1"
+                        android:gravity="end"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                        android:textColor="@color/ui_text_primary" />
+                </LinearLayout>
+
+                <View
+                    android:id="@+id/viewRegWindowDivider"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@color/ui_hairline"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/layoutRegWindowRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_row_height_value"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/ui_attendee_registration_window"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
+
+                    <TextView
+                        android:id="@+id/txtDetailRegWindow"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_lg"
+                        android:layout_weight="1"
+                        android:gravity="end"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                        android:textColor="@color/ui_text_primary" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@color/ui_hairline" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_row_height_value"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/ui_attendee_capacity"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
+
+                    <TextView
+                        android:id="@+id/txtDetailCapacity"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_lg"
+                        android:layout_weight="1"
+                        android:gravity="end"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                        android:textColor="@color/ui_text_primary" />
+                </LinearLayout>
+
+                <View
+                    android:id="@+id/viewRewardsDivider"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@color/ui_hairline"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/layoutRewardsRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_row_height_value"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/ui_attendee_event_rewards"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
+
+                    <TextView
+                        android:id="@+id/txtRewardsAvailable"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_lg"
+                        android:layout_weight="1"
+                        android:gravity="end"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                        android:textColor="@color/ui_primary" />
+                </LinearLayout>
             </LinearLayout>
+
+            <!-- ═════════ Registration fill ═════════ -->
+            <LinearLayout
+                android:id="@+id/layoutRegistrationStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_32"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/ui_attendee_registration"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
+
+                    <TextView
+                        android:id="@+id/txtRegPercent"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.NumericS"
+                        android:textColor="@color/ui_text_primary" />
+                </LinearLayout>
+
+                <ProgressBar
+                    android:id="@+id/pbRegistrationDetail"
+                    style="@android:style/Widget.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/ui_strength_bar_height"
+                    android:layout_marginTop="@dimen/space_sm"
+                    android:importantForAccessibility="no"
+                    android:max="100"
+                    android:progress="0"
+                    android:progressDrawable="@drawable/pb_event_upcoming" />
+
+                <TextView
+                    android:id="@+id/txtRemainingSpots"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_sm"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                    android:textColor="@color/ui_text_secondary" />
+            </LinearLayout>
+
+            <!-- ═════════ About ═════════ -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_32"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:layout_marginBottom="@dimen/space_sm"
+                android:text="@string/ui_attendee_about"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+
+            <TextView
+                android:id="@+id/txtDetailDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                android:textColor="@color/ui_text_secondary" />
         </LinearLayout>
     </ScrollView>
+
+    <!-- ═════════ Sticky footer: 1dp hairline on top, primary never scrolls away ═════════ -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:background="@color/ui_hairline" />
 
     <LinearLayout
         android:id="@+id/layoutBottomBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:background="@color/background"
+        android:background="@color/ui_surface"
         android:orientation="vertical"
-        android:paddingHorizontal="@dimen/space_lg"
-        android:paddingTop="@dimen/space_md"
-        android:paddingBottom="@dimen/space_lg">
+        android:paddingStart="@dimen/ui_gutter"
+        android:paddingTop="@dimen/space_10"
+        android:paddingEnd="@dimen/ui_gutter"
+        android:paddingBottom="@dimen/space_10">
 
         <Button
             android:id="@+id/btnRegisterForEvent"
+            style="@style/Widget.EventQR.Ui.Button.Primary"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/button_primary_height"
-            android:background="@drawable/bg_detail_register_button"
-            android:text="@string/event_detail_register"
-            android:textAllCaps="false"
-            android:textColor="@color/on_primary"
-            android:textAppearance="@style/TextAppearance.EventQR.ButtonPlatformBodyLarge.Strong" />
+            android:layout_height="@dimen/ui_button_height"
+            android:text="@string/event_detail_register" />
 
         <Button
             android:id="@+id/btnCancelRegistration"
-            style="?android:attr/borderlessButtonStyle"
+            style="@style/Widget.EventQR.Ui.Button.Destructive.Inline"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/touch_target_min"
-            android:layout_marginTop="@dimen/space_xs"
+            android:layout_height="@dimen/ui_button_height_inline"
+            android:layout_marginTop="@dimen/space_sm"
             android:text="@string/event_detail_cancel_registration"
-            android:textAllCaps="false"
-            android:textColor="@color/error"
-            android:textAppearance="@style/TextAppearance.EventQR.ButtonPlatformBodyMedium"
             android:visibility="gone" />
     </LinearLayout>
-</RelativeLayout>
+
+</LinearLayout>

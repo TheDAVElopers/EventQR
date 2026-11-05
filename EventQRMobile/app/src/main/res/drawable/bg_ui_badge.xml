@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The one status badge shape (§5.4): a full-radius rectangle. The tone is a TINT, not a
+     drawable - Widget.EventQR.Ui.StatusBadge.* sets android:backgroundTint to the tone's
+     container role, which is why there is no bg_badge_success / bg_badge_error family any more.
+
+     Height, padding and the 6dp dot live in the style / layout, not here. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/ui_surface" />
+    <corners android:radius="@dimen/ui_radius_badge" />
+</shape>

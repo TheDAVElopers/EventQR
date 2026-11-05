@@ -36,6 +36,7 @@ import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.PhoneInput
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.events.model.dto.EventCreationRequestDto
+import com.thedavelopers.eventqr.ui.theme.applyEventQrBottomInsetPadding
 import com.yalantis.ucrop.UCrop
 import kotlinx.coroutines.launch
 import java.io.File
@@ -132,6 +133,7 @@ class RequestEventActivity : AppCompatActivity() {
         sessionManager = SessionManager(this)
         bindViews()
         prefillRequester()
+        findViewById<View>(R.id.layoutSubmitBar).applyEventQrBottomInsetPadding()
 
         findViewById<View>(R.id.nav_header_back).setOnClickListener { finish() }
         findViewById<TextView>(R.id.nav_header_title).setOnClickListener { finish() }
@@ -465,7 +467,7 @@ class RequestEventActivity : AppCompatActivity() {
         firstFailingView.requestFocus()
 
         val maxShownMessages = 4
-        val shown = failures.take(maxShownMessages).joinToString("\n") { "• ${it.second}" }
+        val shown = failures.take(maxShownMessages).joinToString("\n") { it.second }
         val hiddenCount = failures.size - maxShownMessages
         val message = if (hiddenCount > 0) {
             "$shown\n" + resources.getQuantityString(R.plurals.request_event_more_issues, hiddenCount, hiddenCount)
@@ -491,7 +493,7 @@ class RequestEventActivity : AppCompatActivity() {
         isSubmitting = loading
         submitProgress.visibility = if (loading) View.VISIBLE else View.GONE
         submitButton.isEnabled = !loading
-        submitButton.text = getString(if (loading) R.string.attendee_registration_submitting else R.string.request_event_submit_request)
+        submitButton.text = getString(if (loading) R.string.ui_attendee_submitting else R.string.ui_attendee_submit_request)
     }
 
     private fun showSuccessDialog() {
@@ -570,7 +572,7 @@ class RequestEventActivity : AppCompatActivity() {
 
     private fun buildCategoryDropdownView(): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-        setBackgroundResource(R.drawable.bg_card)
+        setBackgroundResource(R.drawable.bg_ui_card)
         categoryOptions.forEachIndexed { index, option ->
             addView(LinearLayout(this@RequestEventActivity).apply {
                 orientation = LinearLayout.HORIZONTAL
@@ -579,7 +581,7 @@ class RequestEventActivity : AppCompatActivity() {
                     dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_14),
                     dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_14),
                 )
-                setBackgroundColor(if (index == spinnerEventCategory.selectedItemPosition) color(R.color.accent_container) else color(R.color.surface))
+                setBackgroundColor(if (index == spinnerEventCategory.selectedItemPosition) color(R.color.ui_primary_wash) else color(R.color.ui_surface))
                 setOnClickListener {
                     spinnerEventCategory.setSelection(index, false)
                     txtSelectedEventCategory.text = option
@@ -589,7 +591,7 @@ class RequestEventActivity : AppCompatActivity() {
                 }
                 addView(TextView(this@RequestEventActivity).apply {
                     text = option
-                    setTextColor(if (index == spinnerEventCategory.selectedItemPosition) color(R.color.primary) else color(R.color.text_primary))
+                    setTextColor(color(R.color.ui_text_primary))
                     setTextSizeRes(R.dimen.type_body)
                     strong()
                     layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)

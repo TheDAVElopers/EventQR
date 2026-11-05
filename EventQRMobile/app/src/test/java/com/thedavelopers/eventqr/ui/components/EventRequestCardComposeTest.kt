@@ -32,7 +32,7 @@ class EventRequestCardComposeTest {
         setCard(eventName = "Tech Fest 2026", status = EventRequestStatus.PENDING)
 
         composeTestRule.onNodeWithText("Tech Fest 2026").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Pending").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Pending review").assertIsDisplayed()
     }
 
     @Test
@@ -41,7 +41,7 @@ class EventRequestCardComposeTest {
 
         val expected = "Submitted ${DateFormatters.formatEventDate(fixedInstant)}"
         composeTestRule.onNodeWithText(expected).assertIsDisplayed()
-        assertEquals("Mar 14, 2026", DateFormatters.eventDateFormatter.format(fixedInstant))
+        assertEquals("14 Mar 2026", DateFormatters.eventDateFormatter.format(fixedInstant))
     }
 
     @Test
@@ -76,7 +76,7 @@ class EventRequestCardComposeTest {
         composeTestRule.onNodeWithText("Request PENDING").assertIsDisplayed()
         composeTestRule.onNodeWithText("Approved").assertIsDisplayed()
         composeTestRule.onNodeWithText("Rejected").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Pending").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Pending review").assertIsDisplayed()
     }
 
     @Test
@@ -92,7 +92,7 @@ class EventRequestCardComposeTest {
         setCard()
 
         composeTestRule.onNodeWithText("Tech Fest 2026").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Pending").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Pending review").assertIsDisplayed()
         composeTestRule
             .onNodeWithText("Submitted ${DateFormatters.formatEventDate(fixedInstant)}")
             .assertIsDisplayed()

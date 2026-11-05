@@ -1,48 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Sign up (§6.1 of MyFiles/EventQR-Redesign-Plan.md) - retires Gen A.
+
+    Same auth shell as Sign in, then three eyebrowed sections separated by 1dp perforations:
+    YOUR DETAILS / CONTACT / SECURITY. Filled 56dp fields at radius 4, a five-rule password
+    checklist whose marks turn lime as each rule is satisfied, and a 72dp sticky footer whose
+    primary never scrolls away.
+
+    Deleted from the previous version: the 238dp gradient header, the centred raster logo, the
+    54dp outlined inputs, the bullet-character password rules, the tinted requirements box and
+    the gradient submit.
+
+    Wiring kept: every field id, the five rule ids, the four strength bars, the strength label,
+    layoutPasswordRequirements (GONE until the user types), the phone prefix field, the live
+    n/10 counter, the terms checkbox with its clickable link, and the sign-in link.
+
+    authTopBar carries the status-bar inset and authFooter the navigation-bar inset (see
+    RegistrationActivity) so neither fill is clipped by the system bars.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface"
+    android:background="@color/ui_background"
     android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/authTopBar"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/auth_header_height_238"
-        android:background="@drawable/bg_signin_header"
-        android:gravity="center_horizontal"
+        android:layout_height="wrap_content"
+        android:background="@color/ui_surface"
         android:orientation="vertical"
-        android:paddingHorizontal="@dimen/space_xl"
-        android:paddingTop="@dimen/space_42">
+        android:paddingHorizontal="@dimen/ui_gutter">
 
-        <ImageView
-            android:layout_width="@dimen/tile_96"
-            android:layout_height="@dimen/tile_96"
-            android:contentDescription="@string/common_eventqr_logo"
-            android:scaleType="fitCenter"
-            android:src="@drawable/white_logo" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_10"
-            android:text="@string/signup_sign_up"
-            android:textColor="@color/on_primary"
-            android:textAppearance="@style/TextAppearance.EventQR.HeadlineXL" />
-
-        <TextView
+        <!-- Inner row is exactly 56dp; the status-bar inset is added above it as padding. -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_sm"
-            android:gravity="center"
-            android:text="@string/signup_create_your_account_and_simplify_eve"
-            android:textColor="@color/accent_container"
-            android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
+            android:layout_height="@dimen/ui_bar_height_auth"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- Lockup (§3.1): mark 20dp + 12dp + wordmark 21sp, left aligned on the 20dp gutter. -->
+            <ImageView
+                android:layout_width="@dimen/ui_mark_bar_auth"
+                android:layout_height="@dimen/ui_mark_bar_auth"
+                android:layout_marginEnd="@dimen/ui_lockup_gap"
+                android:importantForAccessibility="no"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_mark_on_light" />
+
+            <TextView
+                android:id="@+id/txtWordmark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:includeFontPadding="false"
+                android:text="@string/auth_wordmark"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Wordmark"
+                android:textSize="@dimen/ui_wordmark_size_auth"
+                android:translationY="@dimen/ui_wordmark_nudge_auth" />
+        </LinearLayout>
     </LinearLayout>
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:background="@color/ui_hairline" />
+
     <ScrollView
+        android:id="@+id/authScroll"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:clipToPadding="false"
         android:fillViewport="true"
         android:overScrollMode="never">
 
@@ -50,13 +79,36 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="@dimen/space_28"
-            android:paddingTop="@dimen/space_28"
-            android:paddingBottom="@dimen/space_28">
+            android:paddingHorizontal="@dimen/ui_gutter"
+            android:paddingTop="@dimen/space_xxl"
+            android:paddingBottom="@dimen/space_xl">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/auth_create_account"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Headline" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:text="@string/auth_signup_sub"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall" />
+
+            <!-- ═════════════════ YOUR DETAILS ═════════════════ -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xl"
+                android:text="@string/auth_section_details"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_md"
+                android:baselineAligned="false"
                 android:orientation="horizontal">
 
                 <LinearLayout
@@ -68,97 +120,113 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/common_first_name"
-                        android:textColor="@color/text_primary"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
+                        android:labelFor="@id/edtFirstName"
+                        android:text="@string/auth_label_first_name"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.FieldLabel" />
 
                     <EditText
-                        style="@style/Widget.EventQR.EditText"
                         android:id="@+id/edtFirstName"
+                        style="@style/Widget.EventQR.Ui.TextField"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/input_height"
-                        android:layout_marginTop="@dimen/space_6"
-                        android:hint="@string/common_john"
+                        android:layout_height="@dimen/ui_control_height"
+                        android:layout_marginTop="@dimen/space_sm"
+                        android:autoText="false"
                         android:inputType="textPersonName"
-                        android:paddingHorizontal="@dimen/space_14"
-                        android:textColorHint="@color/text_secondary" />
+                        android:maxLines="1" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/space_10"
+                    android:layout_marginStart="@dimen/space_md"
                     android:layout_weight="1"
                     android:orientation="vertical">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/common_last_name"
-                        android:textColor="@color/text_primary"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
+                        android:labelFor="@id/edtLastName"
+                        android:text="@string/auth_label_last_name"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.FieldLabel" />
 
                     <EditText
-                        style="@style/Widget.EventQR.EditText"
                         android:id="@+id/edtLastName"
+                        style="@style/Widget.EventQR.Ui.TextField"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/input_height"
-                        android:layout_marginTop="@dimen/space_6"
-                        android:hint="@string/common_doe"
+                        android:layout_height="@dimen/ui_control_height"
+                        android:layout_marginTop="@dimen/space_sm"
+                        android:autoText="false"
                         android:inputType="textPersonName"
-                        android:paddingHorizontal="@dimen/space_14"
-                        android:textColorHint="@color/text_secondary" />
+                        android:maxLines="1" />
                 </LinearLayout>
             </LinearLayout>
 
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/stroke_focus"
+                android:layout_marginTop="@dimen/space_lg"
+                android:background="@drawable/divider_perforation_light"
+                android:layerType="software" />
+
+            <!-- ═════════════════ CONTACT ═════════════════ -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_lg"
+                android:text="@string/auth_section_contact"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_14"
-                android:text="@string/common_email_address"
-                android:textColor="@color/text_primary"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
+                android:layout_marginTop="@dimen/space_md"
+                android:text="@string/auth_label_email"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.FieldLabel" />
 
             <EditText
-                style="@style/Widget.EventQR.EditText"
                 android:id="@+id/edtEmail"
+                style="@style/Widget.EventQR.Ui.TextField"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/input_height"
-                android:layout_marginTop="@dimen/space_6"
-                android:drawableStart="@drawable/email_icon"
-                android:drawablePadding="@dimen/space_10"
-                android:hint="@string/common_johndoe_gmail_com"
+                android:layout_height="@dimen/ui_control_height"
+                android:layout_marginTop="@dimen/space_sm"
+                android:autoText="false"
+                android:drawableStart="@drawable/ic_ui_mail"
+                android:hint="@string/auth_hint_email"
                 android:inputType="textEmailAddress"
-                android:paddingHorizontal="@dimen/space_14"
-                android:textColorHint="@color/text_secondary" />
+                android:maxLines="1" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_14"
-                android:text="@string/common_phone_number"
-                android:textColor="@color/text_primary"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
+                android:layout_marginTop="@dimen/space_lg"
+                android:text="@string/auth_label_phone"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.FieldLabel" />
 
+            <!-- The prefix and the digits share one filled 56dp box; addStatesFromChildren
+                 gives the box the EditText's focus state so the 2dp focus stroke works. -->
             <LinearLayout
                 android:id="@+id/layoutPhoneField"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/input_height"
-                android:layout_marginTop="@dimen/space_6"
-                android:background="@drawable/bg_input"
+                android:layout_height="@dimen/ui_control_height"
+                android:layout_marginTop="@dimen/space_sm"
+                android:addStatesFromChildren="true"
+                android:background="@drawable/bg_ui_field"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
                 <TextView
+                    android:id="@+id/txtPhonePrefix"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
-                    android:drawableStart="@drawable/phone_icon"
-                    android:drawablePadding="@dimen/space_10"
+                    android:drawableStart="@drawable/ic_ui_call"
+                    android:drawablePadding="@dimen/space_md"
                     android:gravity="center_vertical"
-                    android:paddingStart="@dimen/space_14"
-                    android:paddingEnd="@dimen/space_6"
+                    android:includeFontPadding="false"
+                    android:paddingStart="@dimen/space_lg"
+                    android:paddingEnd="@dimen/space_sm"
                     android:text="@string/phone_prefix"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                    android:textColor="@color/ui_text_primary" />
 
                 <EditText
                     android:id="@+id/edtPhoneNumber"
@@ -168,220 +236,262 @@
                     android:background="@null"
                     android:hint="@string/phone_hint_digits"
                     android:inputType="number"
-                    android:paddingEnd="@dimen/space_14"
-                    android:textColorHint="@color/text_secondary"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
+                    android:maxLines="1"
+                    android:paddingEnd="@dimen/space_lg"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                    android:textColor="@color/ui_text_primary"
+                    android:textColorHint="@color/ui_text_secondary" />
             </LinearLayout>
 
             <TextView
                 android:id="@+id/txtPhoneCounter"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_xxs"
+                android:layout_marginTop="@dimen/space_xs"
                 android:text="@string/counter_zero_of_ten"
                 android:textAlignment="viewEnd"
-                android:textColor="@color/text_secondary"
-                android:textAppearance="@style/TextAppearance.EventQR.TextOverline" />
+                android:textAppearance="@style/TextAppearance.EventQR.Type.NumericS"
+                android:textColor="@color/ui_text_secondary" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/stroke_focus"
+                android:layout_marginTop="@dimen/space_lg"
+                android:background="@drawable/divider_perforation_light"
+                android:layerType="software" />
+
+            <!-- ═════════════════ SECURITY ═════════════════ -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_lg"
+                android:text="@string/auth_section_security"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_14"
-                android:text="@string/common_password"
-                android:textColor="@color/text_primary"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
+                android:layout_marginTop="@dimen/space_md"
+                android:text="@string/auth_label_password"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.FieldLabel" />
 
             <EditText
-                style="@style/Widget.EventQR.EditText"
                 android:id="@+id/edtPassword"
+                style="@style/Widget.EventQR.Ui.TextField"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/input_height"
-                android:layout_marginTop="@dimen/space_6"
-                android:drawableStart="@drawable/password_icon"
-                android:drawableEnd="@drawable/ic_visibility_on"
-                android:drawablePadding="@dimen/space_10"
+                android:layout_height="@dimen/ui_control_height"
+                android:layout_marginTop="@dimen/space_sm"
+                android:autoText="false"
+                android:drawableStart="@drawable/ic_ui_lock"
+                android:drawableEnd="@drawable/ic_ui_visibility"
                 android:hint="@string/common_enter_password"
                 android:inputType="textPassword"
-                android:paddingHorizontal="@dimen/space_14"
-                android:textColorHint="@color/text_secondary" />
+                android:maxLines="1" />
 
+            <!-- Rules: the mark is a compound drawable the activity swaps, so no Unicode
+                 glyph ever stands in for an affordance. Lime only when a rule is met. -->
             <LinearLayout
                 android:id="@+id/layoutPasswordRequirements"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_10"
-                android:background="@drawable/bg_password_requirements"
+                android:layout_marginTop="@dimen/space_md"
                 android:orientation="vertical"
-                android:padding="@dimen/space_md"
                 android:visibility="gone">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <View
-                        android:id="@+id/viewStrength1"
-                        android:layout_width="0dp"
-                        android:layout_height="@dimen/bar_thin"
-                        android:layout_weight="1"
-                        android:background="@color/outline" />
-
-                    <View
-                        android:id="@+id/viewStrength2"
-                        android:layout_width="0dp"
-                        android:layout_height="@dimen/bar_thin"
-                        android:layout_marginStart="@dimen/space_sm"
-                        android:layout_weight="1"
-                        android:background="@color/outline" />
-
-                    <View
-                        android:id="@+id/viewStrength3"
-                        android:layout_width="0dp"
-                        android:layout_height="@dimen/bar_thin"
-                        android:layout_marginStart="@dimen/space_sm"
-                        android:layout_weight="1"
-                        android:background="@color/outline" />
-
-                    <View
-                        android:id="@+id/viewStrength4"
-                        android:layout_width="0dp"
-                        android:layout_height="@dimen/bar_thin"
-                        android:layout_marginStart="@dimen/space_sm"
-                        android:layout_weight="1"
-                        android:background="@color/outline" />
-                </LinearLayout>
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_md">
-
                     <LinearLayout
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:layout_weight="1"
+                        android:orientation="horizontal">
 
-                        <TextView
-                            android:id="@+id/txtPasswordLengthRequirement"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/password_req_length"
-                            android:textColor="@color/text_secondary"
-                            android:textAppearance="@style/TextAppearance.EventQR.TextOverline" />
+                        <View
+                            android:id="@+id/viewStrength1"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/ui_strength_bar_height"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_ui_strength_bar" />
 
-                        <TextView
-                            android:id="@+id/txtPasswordCapitalRequirement"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/space_xxs"
-                            android:text="@string/password_req_uppercase"
-                            android:textColor="@color/text_secondary"
-                            android:textAppearance="@style/TextAppearance.EventQR.TextOverline" />
+                        <View
+                            android:id="@+id/viewStrength2"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/ui_strength_bar_height"
+                            android:layout_marginStart="@dimen/space_xs"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_ui_strength_bar" />
 
-                        <TextView
-                            android:id="@+id/txtPasswordLowercaseRequirement"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/space_xxs"
-                            android:text="@string/password_req_lowercase"
-                            android:textColor="@color/text_secondary"
-                            android:textAppearance="@style/TextAppearance.EventQR.TextOverline" />
+                        <View
+                            android:id="@+id/viewStrength3"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/ui_strength_bar_height"
+                            android:layout_marginStart="@dimen/space_xs"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_ui_strength_bar" />
 
-                        <TextView
-                            android:id="@+id/txtPasswordNumberRequirement"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/space_xxs"
-                            android:text="@string/password_req_number"
-                            android:textColor="@color/text_secondary"
-                            android:textAppearance="@style/TextAppearance.EventQR.TextOverline" />
-
-                        <TextView
-                            android:id="@+id/txtPasswordSpecialRequirement"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/space_xxs"
-                            android:text="@string/password_req_special"
-                            android:textColor="@color/text_secondary"
-                            android:textAppearance="@style/TextAppearance.EventQR.TextOverline" />
+                        <View
+                            android:id="@+id/viewStrength4"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/ui_strength_bar_height"
+                            android:layout_marginStart="@dimen/space_xs"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_ui_strength_bar" />
                     </LinearLayout>
 
                     <TextView
                         android:id="@+id/txtPasswordStrength"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
-                </RelativeLayout>
+                        android:layout_marginStart="@dimen/space_md"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Label"
+                        android:textColor="@color/ui_text_secondary" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/txtPasswordLengthRequirement"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_md"
+                    android:drawablePadding="@dimen/space_sm"
+                    android:gravity="center_vertical"
+                    android:text="@string/password_req_length"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                    android:textColor="@color/ui_text_secondary" />
+
+                <TextView
+                    android:id="@+id/txtPasswordCapitalRequirement"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_sm"
+                    android:drawablePadding="@dimen/space_sm"
+                    android:gravity="center_vertical"
+                    android:text="@string/password_req_uppercase"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                    android:textColor="@color/ui_text_secondary" />
+
+                <TextView
+                    android:id="@+id/txtPasswordLowercaseRequirement"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_sm"
+                    android:drawablePadding="@dimen/space_sm"
+                    android:gravity="center_vertical"
+                    android:text="@string/password_req_lowercase"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                    android:textColor="@color/ui_text_secondary" />
+
+                <TextView
+                    android:id="@+id/txtPasswordNumberRequirement"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_sm"
+                    android:drawablePadding="@dimen/space_sm"
+                    android:gravity="center_vertical"
+                    android:text="@string/password_req_number"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                    android:textColor="@color/ui_text_secondary" />
+
+                <TextView
+                    android:id="@+id/txtPasswordSpecialRequirement"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_sm"
+                    android:drawablePadding="@dimen/space_sm"
+                    android:gravity="center_vertical"
+                    android:text="@string/password_req_special"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                    android:textColor="@color/ui_text_secondary" />
             </LinearLayout>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_14"
-                android:text="@string/common_confirm_password"
-                android:textColor="@color/text_primary"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
+                android:layout_marginTop="@dimen/space_lg"
+                android:text="@string/auth_label_confirm_password"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.FieldLabel" />
 
             <EditText
-                style="@style/Widget.EventQR.EditText"
                 android:id="@+id/edtConfirmPassword"
+                style="@style/Widget.EventQR.Ui.TextField"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/input_height"
-                android:layout_marginTop="@dimen/space_6"
-                android:drawableStart="@drawable/password_icon"
-                android:drawableEnd="@drawable/ic_visibility_on"
-                android:drawablePadding="@dimen/space_10"
-                android:hint="@string/common_confirm_password_2"
+                android:layout_height="@dimen/ui_control_height"
+                android:layout_marginTop="@dimen/space_sm"
+                android:autoText="false"
+                android:drawableStart="@drawable/ic_ui_lock"
+                android:drawableEnd="@drawable/ic_ui_visibility"
+                android:hint="@string/auth_hint_confirm_password"
                 android:inputType="textPassword"
-                android:paddingHorizontal="@dimen/space_14"
-                android:textColorHint="@color/text_secondary" />
+                android:maxLines="1" />
 
             <CheckBox
                 android:id="@+id/chkTerms"
+                style="@style/Widget.EventQR.Ui.CheckBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_14"
-                android:buttonTint="@color/primary"
-                android:text="@string/signup_i_agree_to_the_terms_conditions"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
-                android:textColor="@color/text_primary" />
-
-            <Button
-                android:id="@+id/btnRegister"
-                style="@style/Widget.EventQR.Button.Auth"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/button_primary_height"
                 android:layout_marginTop="@dimen/space_xl"
-                android:elevation="@dimen/elevation_4"
-                android:text="@string/common_create_account" />
+                android:text="@string/signup_i_agree_to_the_terms_conditions" />
 
             <LinearLayout
                 android:id="@+id/btnSignIn"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_lg"
+                android:layout_height="@dimen/ui_touch_min"
+                android:layout_marginTop="@dimen/space_sm"
                 android:clickable="true"
                 android:focusable="true"
-                android:gravity="center"
+                android:gravity="center_vertical"
                 android:orientation="horizontal">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/signup_already_have_an_account"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
+                    android:text="@string/auth_already_have"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.Body" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/common_sign_in"
-                    android:textColor="@color/primary"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
+                    android:layout_marginStart="@dimen/space_sm"
+                    android:text="@string/auth_sign_in"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.Title"
+                    android:textColor="@color/ui_primary" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
+
+    <!-- ═════════ Sticky footer: the primary action never scrolls away ═════════ -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:background="@color/ui_hairline" />
+
+    <LinearLayout
+        android:id="@+id/authFooter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/ui_surface"
+        android:orientation="vertical">
+
+        <!-- 52dp button + 10dp either side = the 72dp footer; the navigation-bar inset is added
+             below it as padding, so the footer's fill runs behind the gesture bar. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/ui_footer_height"
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/ui_gutter"
+            android:paddingVertical="@dimen/space_10">
+
+            <Button
+                android:id="@+id/btnRegister"
+                style="@style/Widget.EventQR.Ui.Button.Primary"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/ui_button_height"
+                android:text="@string/auth_create_account" />
+        </LinearLayout>
+    </LinearLayout>
 
 </LinearLayout>

@@ -6,10 +6,14 @@ import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.util.ScreenInsets
+import com.thedavelopers.eventqr.core.util.Wordmark
 import com.thedavelopers.eventqr.features.auth.login.LoginActivity
 import com.thedavelopers.eventqr.features.auth.resetpassword.ResetPasswordActivity
+import com.thedavelopers.eventqr.ui.icons.FieldIcons
 
 open class ForgotPasswordActivity : AppCompatActivity(), ForgotPasswordContract.View {
     private lateinit var presenter: ForgotPasswordPresenter
@@ -19,10 +23,15 @@ open class ForgotPasswordActivity : AppCompatActivity(), ForgotPasswordContract.
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_forgot_password)
+        enableEdgeToEdge()
+        ScreenInsets.padForStatusBar(findViewById(R.id.authTopBar))
+        Wordmark.applyBarRules(this)
+        ScreenInsets.padForNavigationBar(findViewById(R.id.authScroll))
 
         presenter = ForgotPasswordPresenter()
         emailInput = findViewById(R.id.editEmail)
         sendButton = findViewById(R.id.btnSendCode)
+        FieldIcons.apply(emailInput)
         presenter.attach(this, this)
 
         sendButton.setOnClickListener {
@@ -65,3 +74,6 @@ open class ForgotPasswordActivity : AppCompatActivity(), ForgotPasswordContract.
         finish()
     }
 }
+
+
+

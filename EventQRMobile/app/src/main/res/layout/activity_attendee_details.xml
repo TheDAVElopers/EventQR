@@ -1,657 +1,391 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    ORGANIZER - ATTENDEE DETAILS (6.4).
+
+        Top bar      56dp, back + title
+        Identity     left-aligned avatar tile, name title_l, email/phone body_s - no centred column
+        Spec table   overline label left / body value right, 1dp hairlines, no icons
+        Transactions grouped rows, one hairline divider inset
+        Footer       ghost "View full log"
+
+    Deleted: the centred profile card, the two-column icon row blocks, the GradientDrawable status
+    pills, the card-per-section stack and the centred error block.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_organizer_events_screen"
+    android:background="@color/ui_background"
     android:orientation="vertical">
 
-    <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
-        android:id="@+id/headerTopBar"
+    <include
+        android:id="@+id/topBar"
+        layout="@layout/include_top_bar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:title="@string/attendee_details_attendee_details" />
+        android:layout_height="wrap_content" />
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:clipToPadding="false"
         android:fillViewport="true"
-        android:scrollbars="none">
+        android:overScrollMode="never">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="@dimen/space_20"
-            android:paddingTop="@dimen/space_sm"
-            android:paddingBottom="@dimen/space_xl">
+            android:paddingBottom="@dimen/space_32">
 
+            <!-- Identity -->
+            <LinearLayout
+                android:id="@+id/cardAttendeeProfile"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/ui_gutter"
+                android:paddingTop="@dimen/space_24"
+                android:paddingEnd="@dimen/ui_gutter"
+                android:paddingBottom="@dimen/space_16">
+
+                <TextView
+                    android:id="@+id/txtDetailInitial"
+                    android:layout_width="@dimen/tile_44"
+                    android:layout_height="@dimen/tile_44"
+                    android:background="@drawable/bg_ui_icon_tile"
+                    android:gravity="center"
+                    android:textColor="@color/ui_primary"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.TitleLarge"
+                    tools:text="J" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_16"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/txtDetailName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.TitleLarge"
+                        android:textColor="@color/ui_text_primary"
+                        tools:text="Juan Dela Cruz" />
+
+                    <TextView
+                        android:id="@+id/txtDetailEmail"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                        android:textColor="@color/ui_text_secondary"
+                        tools:text="juan@example.com" />
+
+                    <TextView
+                        android:id="@+id/txtDetailPhone"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                        android:textColor="@color/ui_text_secondary"
+                        tools:text="+63 912 000 0000" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/stroke_hairline"
+                android:background="@color/ui_hairline"
+                android:importantForAccessibility="no" />
+
+            <!-- Spec table: overline label left, value right, hairline under. No icons, no cards. -->
+            <LinearLayout
+                android:id="@+id/cardAttendeeDetails"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingTop="@dimen/space_8">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/ui_metric_row_height"
+                    android:background="@color/ui_surface"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/ui_gutter"
+                    android:paddingEnd="@dimen/ui_gutter">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/ui_organizer_detail_event"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+
+                    <TextView
+                        android:id="@+id/txtDetailEventValue"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="end"
+                        android:maxLines="2"
+                        android:ellipsize="end"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                        android:textColor="@color/ui_text_primary" />
+                </LinearLayout>
+
+                <View style="@style/Widget.EventQR.Ui.ListRow.Divider" android:layout_marginStart="0dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/ui_metric_row_height"
+                    android:background="@color/ui_surface"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/ui_gutter"
+                    android:paddingEnd="@dimen/ui_gutter">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/ui_organizer_detail_registration_id"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+
+                    <TextView
+                        android:id="@+id/txtDetailRegistrationIdValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.NumericS"
+                        android:textColor="@color/ui_text_primary" />
+                </LinearLayout>
+
+                <View style="@style/Widget.EventQR.Ui.ListRow.Divider" android:layout_marginStart="0dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/ui_metric_row_height"
+                    android:background="@color/ui_surface"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/ui_gutter"
+                    android:paddingEnd="@dimen/ui_gutter">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/ui_organizer_detail_status"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+
+                    <TextView
+                        android:id="@+id/txtDetailStatusValue"
+                        style="@style/Widget.EventQR.Ui.StatusBadge.Neutral"
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/ui_badge_height" />
+                </LinearLayout>
+
+                <View style="@style/Widget.EventQR.Ui.ListRow.Divider" android:layout_marginStart="0dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/ui_metric_row_height"
+                    android:background="@color/ui_surface"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/ui_gutter"
+                    android:paddingEnd="@dimen/ui_gutter">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/ui_organizer_detail_id_status"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+
+                    <TextView
+                        android:id="@+id/txtDetailIdStatusValue"
+                        style="@style/Widget.EventQR.Ui.StatusBadge.Neutral"
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/ui_badge_height" />
+                </LinearLayout>
+
+                <View style="@style/Widget.EventQR.Ui.ListRow.Divider" android:layout_marginStart="0dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/ui_metric_row_height"
+                    android:background="@color/ui_surface"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/ui_gutter"
+                    android:paddingEnd="@dimen/ui_gutter">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/ui_organizer_detail_registered"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+
+                    <TextView
+                        android:id="@+id/txtDetailRegisteredValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.NumericS"
+                        android:textColor="@color/ui_text_primary" />
+                </LinearLayout>
+
+                <View style="@style/Widget.EventQR.Ui.ListRow.Divider" android:layout_marginStart="0dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/ui_metric_row_height"
+                    android:background="@color/ui_surface"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/ui_gutter"
+                    android:paddingEnd="@dimen/ui_gutter">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/ui_organizer_detail_last_activity"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+
+                    <TextView
+                        android:id="@+id/txtDetailLastActivityValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.NumericS"
+                        android:textColor="@color/ui_text_primary" />
+                </LinearLayout>
+
+                <View style="@style/Widget.EventQR.Ui.ListRow.Divider" android:layout_marginStart="0dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/ui_metric_row_height"
+                    android:background="@color/ui_surface"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/ui_gutter"
+                    android:paddingEnd="@dimen/ui_gutter">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/ui_organizer_detail_points"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+
+                    <TextView
+                        android:id="@+id/txtDetailPointsValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.NumericS"
+                        android:textColor="@color/ui_text_primary" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Transactions -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_24"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:text="@string/ui_organizer_detail_transactions"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+
+            <LinearLayout
+                android:id="@+id/cardTransactionHistory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/transactionHistoryContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+                <TextView
+                    android:id="@+id/txtNoTransactions"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="@dimen/ui_gutter"
+                    android:paddingTop="@dimen/space_16"
+                    android:paddingEnd="@dimen/ui_gutter"
+                    android:text="@string/ui_organizer_no_transactions"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                    android:textColor="@color/ui_text_secondary"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/btnViewFullLog"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/ui_button_height_inline"
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_8"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:minWidth="@dimen/ui_touch_min"
+                android:paddingStart="@dimen/space_12"
+                android:paddingEnd="@dimen/space_12"
+                android:text="@string/ui_organizer_detail_view_log"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Label"
+                android:textColor="@color/ui_primary" />
+
+            <!-- Error -->
             <LinearLayout
                 android:id="@+id/layoutAttendeeError"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_red_warning"
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_16"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:background="@drawable/bg_ui_card"
                 android:orientation="vertical"
-                android:padding="@dimen/space_lg"
+                android:padding="@dimen/ui_card_padding"
                 android:visibility="gone">
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/attendee_details_unable_to_load_attendee_record"
-                    android:textColor="@color/error"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
-
-                <TextView
                     android:id="@+id/txtAttendeeError"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_xs"
-                    android:text="@string/common_please_try_again"
-                    android:textColor="@color/error"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                    android:textColor="@color/ui_text_secondary" />
 
                 <Button
                     android:id="@+id/btnAttendeeRetry"
-                    style="@style/Widget.EventQR.Button.Primary.Regular"
+                    style="@style/Widget.EventQR.Ui.Button.Ghost"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_md"
-                    android:paddingLeft="@dimen/space_lg"
-                    android:paddingTop="0dp"
-                    android:paddingRight="@dimen/space_lg"
-                    android:paddingBottom="0dp"
+                    android:layout_height="@dimen/ui_button_height_inline"
+                    android:layout_marginTop="@dimen/space_8"
                     android:text="@string/common_retry" />
             </LinearLayout>
 
-            <LinearLayout
+            <include
                 android:id="@+id/skeletonLoading"
+                layout="@layout/include_skeleton_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="visible">
-
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    style="@style/Widget.EventQR.Card">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:padding="@dimen/space_lg">
-
-                        <View
-                            android:layout_width="64dp"
-                            android:layout_height="64dp"
-                            android:background="@drawable/bg_staff_skeleton_date_block" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/space_lg"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <View
-                                android:layout_width="140dp"
-                                android:layout_height="16dp"
-                                android:background="@drawable/bg_staff_skeleton_bar" />
-
-                            <View
-                                android:layout_width="180dp"
-                                android:layout_height="12dp"
-                                android:layout_marginTop="@dimen/space_sm"
-                                android:background="@drawable/bg_staff_skeleton_bar" />
-
-                            <View
-                                android:layout_width="100dp"
-                                android:layout_height="12dp"
-                                android:layout_marginTop="@dimen/space_6"
-                                android:background="@drawable/bg_staff_skeleton_bar" />
-                        </LinearLayout>
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_lg"
-                    style="@style/Widget.EventQR.Card">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="@dimen/space_lg">
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="14dp"
-                            android:background="@drawable/bg_staff_skeleton_bar" />
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="14dp"
-                            android:layout_marginTop="@dimen/space_lg"
-                            android:background="@drawable/bg_staff_skeleton_bar" />
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="14dp"
-                            android:layout_marginTop="@dimen/space_lg"
-                            android:background="@drawable/bg_staff_skeleton_bar" />
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="14dp"
-                            android:layout_marginTop="@dimen/space_lg"
-                            android:background="@drawable/bg_staff_skeleton_bar" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_lg"
-                    style="@style/Widget.EventQR.Card">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="@dimen/space_lg">
-
-                        <View
-                            android:layout_width="160dp"
-                            android:layout_height="16dp"
-                            android:background="@drawable/bg_staff_skeleton_bar" />
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="50dp"
-                            android:layout_marginTop="@dimen/space_md"
-                            android:background="@drawable/bg_staff_skeleton_card" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-            </LinearLayout>
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardAttendeeProfile"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
-                style="@style/Widget.EventQR.Card">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:padding="@dimen/space_lg">
-
-                    <TextView
-                        android:id="@+id/txtDetailInitial"
-                        android:layout_width="@dimen/tile_64"
-                        android:layout_height="@dimen/tile_64"
-                        android:background="@drawable/bg_circle_primary"
-                        android:gravity="center"
-                        android:textColor="@color/on_primary"
-                        android:textAppearance="@style/TextAppearance.EventQR.PageTitle" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/space_lg"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/txtDetailName"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:ellipsize="end"
-                            android:maxLines="1"
-                            android:textColor="@color/text_primary"
-                            android:textAppearance="@style/TextAppearance.EventQR.TitleMedium" />
-
-                        <TextView
-                            android:id="@+id/txtDetailEmail"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/space_xxs"
-                            android:ellipsize="end"
-                            android:maxLines="1"
-                            android:textColor="@color/text_label"
-                            android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
-
-                        <TextView
-                            android:id="@+id/txtDetailPhone"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/space_xxs"
-                            android:ellipsize="end"
-                            android:maxLines="1"
-                            android:textColor="@color/text_label"
-                            android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardAttendeeDetails"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_lg"
-                android:visibility="gone"
-                style="@style/Widget.EventQR.Card">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:padding="@dimen/space_lg">
-
-                        <ImageView
-                            android:layout_width="@dimen/icon_md"
-                            android:layout_height="@dimen/icon_md"
-                            android:contentDescription="@null"
-                            android:src="@drawable/ic_profile_person"
-                            app:tint="@color/primary" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/space_md"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/common_event"
-                                android:textColor="@color/text_label"
-                                android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
-
-                            <TextView
-                                android:id="@+id/txtDetailEventValue"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="@dimen/space_xxs"
-                                android:ellipsize="end"
-                                android:maxLines="1"
-                                android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
-                        </LinearLayout>
-
-                        <ImageView
-                            android:layout_width="@dimen/icon_sm"
-                            android:layout_height="@dimen/icon_sm"
-                            android:contentDescription="@null"
-                            android:src="@drawable/ic_chevron_right"
-                            app:tint="@color/neutral" />
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginStart="@dimen/space_lg"
-                        android:layout_marginEnd="@dimen/space_lg"
-                        android:background="@color/surface_muted" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:padding="@dimen/space_lg">
-
-                        <ImageView
-                            android:layout_width="@dimen/icon_md"
-                            android:layout_height="@dimen/icon_md"
-                            android:contentDescription="@null"
-                            android:src="@drawable/ic_id"
-                            app:tint="@color/primary" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/space_md"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/common_registration_id"
-                                android:textColor="@color/text_label"
-                                android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
-
-                            <TextView
-                                android:id="@+id/txtDetailRegistrationIdValue"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="@dimen/space_xxs"
-                                android:ellipsize="end"
-                                android:maxLines="1"
-                                android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginStart="@dimen/space_lg"
-                        android:layout_marginEnd="@dimen/space_lg"
-                        android:background="@color/surface_muted" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:padding="@dimen/space_lg">
-
-                        <ImageView
-                            android:layout_width="@dimen/icon_md"
-                            android:layout_height="@dimen/icon_md"
-                            android:contentDescription="@null"
-                            android:src="@drawable/ic_admin_shield"
-                            app:tint="@color/primary" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/space_md"
-                            android:text="@string/common_status"
-                            android:textColor="@color/text_label"
-                            android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="end|center_vertical"
-                            android:orientation="horizontal">
-
-                            <TextView
-                                android:id="@+id/txtDetailStatusValue"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:drawablePadding="@dimen/space_6"
-                                android:gravity="center"
-                                android:paddingHorizontal="@dimen/space_md"
-                                android:paddingVertical="@dimen/space_6"
-                                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong"
-                                android:textColor="@color/text_primary"
-                                app:drawableStartCompat="@drawable/ic_check_circle_green" />
-
-                            <TextView
-                                android:id="@+id/txtDetailIdStatusValue"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="@dimen/space_sm"
-                                android:drawablePadding="@dimen/space_6"
-                                android:gravity="center"
-                                android:paddingHorizontal="@dimen/space_md"
-                                android:paddingVertical="@dimen/space_6"
-                                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong"
-                                android:textColor="@color/text_primary"
-                                app:drawableStartCompat="@drawable/ic_id_badge_green" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginStart="@dimen/space_lg"
-                        android:layout_marginEnd="@dimen/space_lg"
-                        android:background="@color/surface_muted" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            android:padding="@dimen/space_lg">
-
-                            <ImageView
-                                android:layout_width="@dimen/icon_md"
-                                android:layout_height="@dimen/icon_md"
-                                android:contentDescription="@null"
-                                android:src="@drawable/ic_calendar"
-                                app:tint="@color/primary" />
-
-                            <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="@dimen/space_md"
-                                android:layout_weight="1"
-                                android:orientation="vertical">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="@string/common_registered"
-                                    android:textColor="@color/text_label"
-                                    android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
-
-                                <TextView
-                                    android:id="@+id/txtDetailRegisteredValue"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="@dimen/space_xxs"
-                                    android:ellipsize="end"
-                                    android:maxLines="1"
-                                    android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
-                            </LinearLayout>
-                        </LinearLayout>
-
-                        <View
-                            android:layout_width="1dp"
-                            android:layout_height="match_parent"
-                            android:background="@color/surface_muted" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            android:padding="@dimen/space_lg">
-
-                            <ImageView
-                                android:layout_width="@dimen/icon_md"
-                                android:layout_height="@dimen/icon_md"
-                                android:contentDescription="@null"
-                                android:src="@drawable/ic_row_clock"
-                                app:tint="@color/primary" />
-
-                            <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="@dimen/space_md"
-                                android:layout_weight="1"
-                                android:orientation="vertical">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="@string/attendee_details_last_approved_scan"
-                                    android:textColor="@color/text_label"
-                                    android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
-
-                                <TextView
-                                    android:id="@+id/txtDetailLastActivityValue"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="@dimen/space_xxs"
-                                    android:ellipsize="end"
-                                    android:maxLines="1"
-                                    android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
-                            </LinearLayout>
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginStart="@dimen/space_lg"
-                        android:layout_marginEnd="@dimen/space_lg"
-                        android:background="@color/surface_muted" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            android:padding="@dimen/space_lg">
-
-                            <ImageView
-                                android:layout_width="@dimen/icon_md"
-                                android:layout_height="@dimen/icon_md"
-                                android:contentDescription="@null"
-                                android:src="@drawable/ic_row_star"
-                                app:tint="@color/primary" />
-
-                            <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="@dimen/space_md"
-                                android:layout_weight="1"
-                                android:orientation="vertical">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="@string/common_points_earned"
-                                    android:textColor="@color/text_label"
-                                    android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
-
-                                <TextView
-                                    android:id="@+id/txtDetailPointsValue"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="@dimen/space_xxs"
-                                    android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
-                            </LinearLayout>
-                        </LinearLayout>
-
-                        <View
-                            android:layout_width="1dp"
-                            android:layout_height="match_parent"
-                            android:background="@color/surface_muted" />
-
-                        <View
-                            android:layout_width="0dp"
-                            android:layout_height="match_parent"
-                            android:layout_weight="1" />
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardTransactionHistory"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_lg"
-                android:visibility="gone"
-                style="@style/Widget.EventQR.Card">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="@dimen/space_lg">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <ImageView
-                            android:layout_width="@dimen/icon_22"
-                            android:layout_height="@dimen/icon_22"
-                            android:contentDescription="@null"
-                            android:src="@drawable/ic_row_clock"
-                            app:tint="@color/primary" />
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/space_sm"
-                            android:layout_weight="1"
-                            android:text="@string/attendee_details_recent_approved_transactions"
-                            android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong" />
-
-                        <LinearLayout
-                            android:id="@+id/btnViewFullLog"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:foreground="?attr/selectableItemBackground"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            android:paddingStart="@dimen/space_sm"
-                            android:paddingEnd="0dp">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/attendee_details_view_event_log"
-                                android:textColor="@color/primary"
-                                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
-
-                            <ImageView
-                                android:layout_width="@dimen/icon_14"
-                                android:layout_height="@dimen/icon_14"
-                                android:layout_marginStart="@dimen/space_xxs"
-                                android:contentDescription="@null"
-                                android:src="@drawable/ic_chevron_right"
-                                app:tint="@color/primary" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/transactionHistoryContainer"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_md"
-                        android:orientation="vertical" />
-
-                    <TextView
-                        android:id="@+id/txtNoTransactions"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_md"
-                        android:text="@string/attendee_details_no_approved_transactions_yet"
-                        android:textColor="@color/text_label"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
-                        android:visibility="gone" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_16"
+                android:layout_marginEnd="@dimen/ui_gutter" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

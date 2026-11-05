@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icon button (§5.1 "Icon" variant): 44dp target, no fill at rest, ui_primary_wash on press,
+     2dp focus ring. The glyph inside is 24dp (or 20dp in a row); this shape only draws the
+     target. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/ui_primary_wash" />
+            <corners android:radius="@dimen/ui_radius_button" />
+        </shape>
+    </item>
+
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <stroke
+                android:width="@dimen/stroke_focus"
+                android:color="@color/ui_primary" />
+            <corners android:radius="@dimen/ui_radius_button" />
+        </shape>
+    </item>
+
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <corners android:radius="@dimen/ui_radius_button" />
+        </shape>
+    </item>
+
+</selector>

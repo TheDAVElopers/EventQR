@@ -11,13 +11,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.thedavelopers.eventqr.core.api.dto.NotificationStatus
 import com.thedavelopers.eventqr.core.api.dto.NotificationType
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
+import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.EventQrTheme
 import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.ui.roleColor
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.Color
 import java.time.Instant
 import java.util.UUID
 import org.junit.Assert.assertEquals
@@ -89,26 +85,20 @@ class NotificationsScreenComposeTest {
     }
 
     @Test
-    fun approvedNotifications_useActiveGreenCheckMarkVisuals() {
-        lateinit var eventApprovedVisuals: Triple<ImageVector, Color, Color>
-        lateinit var scanApprovedVisuals: Triple<ImageVector, Color, Color>
+    fun approvedNotifications_useTheCheckMarkIcon() {
+        var eventApprovedIcon = 0
+        var scanApprovedIcon = 0
 
         composeTestRule.setContent {
             EventQrTheme {
-                eventApprovedVisuals = resolveNotificationVisuals(NotificationType.EVENT_APPROVED)
-                scanApprovedVisuals = resolveNotificationVisuals(NotificationType.SCAN_APPROVED)
+                eventApprovedIcon = resolveNotificationIcon(NotificationType.EVENT_APPROVED)
+                scanApprovedIcon = resolveNotificationIcon(NotificationType.SCAN_APPROVED)
             }
         }
 
-        assertEquals(Icons.Default.CheckCircle, eventApprovedVisuals.first)
-        assertEquals(roleColor(R.color.success), eventApprovedVisuals.second)
-        assertEquals(roleColor(R.color.success_container), eventApprovedVisuals.third)
-
-        assertEquals(Icons.Default.CheckCircle, scanApprovedVisuals.first)
-        assertEquals(roleColor(R.color.success), scanApprovedVisuals.second)
-        assertEquals(roleColor(R.color.success_container), scanApprovedVisuals.third)
+        assertEquals(AppIcons.Success, eventApprovedIcon)
+        assertEquals(AppIcons.Success, scanApprovedIcon)
     }
-
     private fun notification(
         status: NotificationStatus = NotificationStatus.PENDING,
         readAt: Instant? = null,
@@ -127,8 +117,10 @@ class NotificationsScreenComposeTest {
     private fun setCard(item: NotificationResponse, onClick: () -> Unit = {}) {
         composeTestRule.setContent {
             EventQrTheme {
-                NotificationItemCard(item = item, onClick = onClick)
+                NotificationRow(item = item, onClick = onClick)
             }
         }
     }
 }
+
+

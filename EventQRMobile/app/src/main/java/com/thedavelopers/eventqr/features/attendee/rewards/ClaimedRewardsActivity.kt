@@ -14,6 +14,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResponse
+import com.thedavelopers.eventqr.ui.icons.AppIcons
 import kotlinx.coroutines.launch
 import java.time.Instant
 
@@ -24,7 +25,7 @@ open class ClaimedRewardsActivity : AppCompatActivity(), ClaimedRewardsContract.
     private lateinit var skeletonLoading: View
     private lateinit var emptyView: EventQrEmptyState
     private lateinit var errorView: TextView
-    private lateinit var retryButton: Button
+    private lateinit var retryButton: TextView
     private lateinit var recyclerView: RecyclerView
     private var eventId: String = ""
 
@@ -43,6 +44,12 @@ open class ClaimedRewardsActivity : AppCompatActivity(), ClaimedRewardsContract.
         recyclerView = findViewById(R.id.recyclerClaimedRewards)
 
         eventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty()
+
+        emptyView.setIcon(AppIcons.Reward)
+        emptyView.setContent(
+            getString(R.string.claimed_rewards_no_claimed_rewards_yet_2),
+            getString(R.string.ui_attendee_no_claimed_body),
+        )
 
         findViewById<View>(R.id.nav_header_back)?.setOnClickListener { finish() }
         retryButton.setOnClickListener { loadClaimedRewards() }

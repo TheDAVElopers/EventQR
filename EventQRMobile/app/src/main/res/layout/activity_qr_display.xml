@@ -1,299 +1,234 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    QR display (§5.14, §6.2) - the same pass as the credential screen, opened from the registered
+    events list, so it carries the standard 56dp top bar with a back action instead of a close
+    button. Everything else is identical, and identical on purpose: one object, one anatomy.
+
+    Deleted: the centred gradient check circle, the 164dp QR with no plate, the 46sp centred event
+    name, the icon-row card and the dark-gradient download button.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface"
+    android:background="@color/ui_background"
     android:orientation="vertical">
 
     <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
         android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="@string/qr_display_qr_display" />
+        app:title="@string/ui_attendee_pass" />
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
         android:fillViewport="true"
         android:overScrollMode="never">
 
-        <FrameLayout
+        <LinearLayout
+            android:id="@+id/layoutQrPassContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="760dp"
-            android:paddingStart="@dimen/space_20"
-            android:paddingTop="@dimen/space_18"
-            android:paddingEnd="@dimen/space_20"
-            android:paddingBottom="@dimen/space_20">
+            android:orientation="vertical"
+            android:paddingStart="@dimen/ui_gutter"
+            android:paddingTop="@dimen/space_lg"
+            android:paddingEnd="@dimen/ui_gutter"
+            android:paddingBottom="@dimen/space_24">
 
+            <include
+                android:id="@+id/qrCredential"
+                layout="@layout/include_qr_credential"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/ui_attendee_pass_top_gap" />
+
+            <!-- ═════════ Pass details: the values the activity binds ═════════ -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:orientation="vertical">
-
-                <FrameLayout
-                    android:layout_width="74dp"
-                    android:layout_height="74dp"
-                    android:background="@drawable/bg_check_circle">
-
-                    <ImageView
-                        android:layout_width="@dimen/tile_42"
-                        android:layout_height="@dimen/tile_42"
-                        android:layout_gravity="center"
-                        android:contentDescription="@string/qr_display_qr_credential_ready"
-                        android:src="@drawable/ic_qr_success_check" />
-                </FrameLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_18"
-                    android:text="@string/qr_display_event_access_qr"
-                    android:textAppearance="@style/TextAppearance.EventQR.TitleLarge" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_6"
-                    android:gravity="center"
-                    android:lineSpacingExtra="@dimen/line_spacing_2"
-                    android:text="@string/qr_display_show_this_qr_at_the_entrance_for_eve"
-                    android:textColor="@color/text_secondary"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
+                android:layout_marginTop="@dimen/space_24"
+                android:background="@drawable/bg_ui_card"
+                android:orientation="vertical"
+                android:paddingStart="@dimen/ui_card_padding"
+                android:paddingEnd="@dimen/ui_card_padding">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_md"
-                    android:background="@drawable/bg_info_card"
-                    android:elevation="@dimen/elevation_raised"
-                    android:orientation="vertical"
-                    android:paddingStart="@dimen/space_14"
-                    android:paddingTop="@dimen/space_14"
-                    android:paddingEnd="@dimen/space_14"
-                    android:paddingBottom="@dimen/space_14">
+                    android:minHeight="@dimen/ui_row_height_value"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
+                        android:text="@string/ui_attendee_attendee"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
 
-                        <FrameLayout
-                            android:layout_width="@dimen/tile_34"
-                            android:layout_height="@dimen/tile_34"
-                            android:background="@drawable/bg_soft_gray_pill">
-
-                            <ImageView
-                                android:layout_width="@dimen/icon_md"
-                                android:layout_height="@dimen/icon_md"
-                                android:layout_gravity="center"
-                                android:contentDescription="@string/common_attendee"
-                                android:src="@drawable/ic_qr_attendee" />
-                        </FrameLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/space_md"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/common_attendee"
-                                android:textColor="@color/text_primary"
-                                android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
-
-                            <TextView
-                                android:id="@+id/txtQrAttendeeName"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="@dimen/space_xxs"
-                                android:text="@string/placeholder_dash"
-                                android:textColor="@color/text_secondary"
-                                android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:id="@+id/txtQrAttendeeName"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_14"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <FrameLayout
-                            android:layout_width="@dimen/tile_34"
-                            android:layout_height="@dimen/tile_34"
-                            android:background="@drawable/bg_soft_gray_pill">
-
-                            <ImageView
-                                android:layout_width="@dimen/icon_md"
-                                android:layout_height="@dimen/icon_md"
-                                android:layout_gravity="center"
-                                android:contentDescription="@string/common_email"
-                                android:src="@drawable/ic_qr_email" />
-                        </FrameLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/space_md"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/common_email"
-                                android:textColor="@color/text_primary"
-                                android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
-
-                            <TextView
-                                android:id="@+id/txtQrAttendeeEmail"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="@dimen/space_xxs"
-                                android:ellipsize="end"
-                                android:maxLines="1"
-                                android:text="@string/placeholder_dash"
-                                android:textColor="@color/text_secondary"
-                                android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_14"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <FrameLayout
-                            android:layout_width="@dimen/tile_34"
-                            android:layout_height="@dimen/tile_34"
-                            android:background="@drawable/bg_soft_gray_pill">
-
-                            <ImageView
-                                android:layout_width="@dimen/icon_md"
-                                android:layout_height="@dimen/icon_md"
-                                android:layout_gravity="center"
-                                android:contentDescription="@string/common_attendee_id"
-                                android:src="@drawable/ic_hashtag" />
-                        </FrameLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/space_md"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/common_attendee_id"
-                                android:textColor="@color/text_primary"
-                                android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
-
-                            <TextView
-                                android:id="@+id/txtQrCredentialValue"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="@dimen/space_xxs"
-                                android:text="@string/placeholder_dash"
-                                android:textColor="@color/text_secondary"
-                                android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
-                        </LinearLayout>
-                    </LinearLayout>
+                        android:layout_marginStart="@dimen/space_lg"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:gravity="end"
+                        android:maxLines="1"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                        android:textColor="@color/ui_text_primary" />
                 </LinearLayout>
 
-                <ImageView
-                    android:id="@+id/imgQrCode"
-                    android:layout_width="@dimen/qr_box_164"
-                    android:layout_height="@dimen/qr_box_164"
-                    android:layout_marginTop="@dimen/space_14"
-                    android:adjustViewBounds="true"
-                    android:background="@color/surface"
-                    android:contentDescription="@string/common_qr_code"
-                    android:elevation="@dimen/elevation_raised"
-                    android:padding="@dimen/space_6"
-                    android:scaleType="fitCenter" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@color/ui_hairline" />
 
-                <TextView
-                    android:id="@+id/txtQrEventName"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_md"
-                    android:gravity="center"
-                    android:text="@string/placeholder_dash"
-                    android:textAppearance="@style/TextAppearance.EventQR.TitleMedium" />
+                    android:minHeight="@dimen/ui_row_height_value"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                <FrameLayout
-                    android:layout_width="@dimen/tile_128"
-                    android:layout_height="@dimen/input_height"
-                    android:layout_marginTop="@dimen/space_14">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/ui_attendee_email"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
 
-                    <Button
-                        android:id="@+id/btnMarkQrDownloaded"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        style="@style/Widget.EventQR.Button.Download"
-                        android:paddingStart="@dimen/space_md"
-                        android:paddingEnd="@dimen/space_md"
-                        android:text="@string/common_download_qr" />
+                    <TextView
+                        android:id="@+id/txtQrAttendeeEmail"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_lg"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:gravity="end"
+                        android:maxLines="1"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                        android:textColor="@color/ui_text_primary" />
+                </LinearLayout>
 
-                    <ProgressBar
-                        android:id="@+id/progressQrDownload"
-                        android:layout_width="@dimen/icon_22"
-                        android:layout_height="@dimen/icon_22"
-                        android:layout_gravity="center"
-                        android:importantForAccessibility="no"
-                        android:indeterminateTint="@color/on_primary"
-                        android:visibility="gone" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@color/ui_hairline" />
 
-                    <ImageView
-                        android:id="@+id/imgQrDownloadCheck"
-                        android:layout_width="@dimen/icon_22"
-                        android:layout_height="@dimen/icon_22"
-                        android:layout_gravity="center"
-                        android:importantForAccessibility="no"
-                        android:src="@drawable/ic_qr_success_check"
-                        android:visibility="gone" />
-                </FrameLayout>
-
-                <TextView
-                    android:id="@+id/txtQrLoading"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_md"
-                    android:text="@string/common_loading_credential"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextCaption"
-                    android:visibility="gone" />
+                    android:minHeight="@dimen/ui_row_height_value"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                <EditText
-                    android:id="@+id/edtQrRegistrationId"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:visibility="gone" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/ui_attendee_registration"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
+
+                    <TextView
+                        android:id="@+id/txtQrCredentialValue"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_lg"
+                        android:layout_weight="1"
+                        android:gravity="end"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.NumericS"
+                        android:textColor="@color/ui_text_primary" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ═════════ Save pass ═════════ -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/ui_button_height"
+                android:layout_marginTop="@dimen/space_24">
 
                 <Button
-                    android:id="@+id/btnLoadQr"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
+                    android:id="@+id/btnMarkQrDownloaded"
+                    style="@style/Widget.EventQR.Ui.Button.Secondary"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/ui_button_height"
+                    android:text="@string/ui_attendee_save_pass" />
+
+                <ProgressBar
+                    android:id="@+id/progressQrDownload"
+                    android:layout_width="@dimen/ui_field_icon"
+                    android:layout_height="@dimen/ui_field_icon"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:indeterminateTint="@color/ui_primary"
                     android:visibility="gone" />
+
+                <ImageView
+                    android:id="@+id/imgQrDownloadCheck"
+                    android:layout_width="@dimen/ui_field_icon"
+                    android:layout_height="@dimen/ui_field_icon"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_ui_check_circle"
+                    android:tint="@color/ui_success"
+                    android:visibility="gone" />
+            </FrameLayout>
+
+            <!-- ═════════ Keep screen bright ═════════ -->
+            <LinearLayout
+                android:id="@+id/rowKeepBright"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/ui_touch_min"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/txtQrValue"
                     android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:visibility="gone" />
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:labelFor="@id/switchKeepBright"
+                    android:text="@string/ui_attendee_keep_screen_bright"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                    android:textColor="@color/ui_text_primary" />
 
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switchKeepBright"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="@dimen/ui_touch_min"
+                    android:minHeight="@dimen/ui_touch_min" />
             </LinearLayout>
-        </FrameLayout>
+
+            <TextView
+                android:id="@+id/txtQrLoading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_md"
+                android:text="@string/common_loading_credential"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_text_secondary"
+                android:visibility="gone" />
+
+            <!-- Hidden plumbing the activity drives; never visible. -->
+            <EditText
+                android:id="@+id/edtQrRegistrationId"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/btnLoadQr"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/txtQrValue"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone" />
+        </LinearLayout>
     </ScrollView>
+
 </LinearLayout>

@@ -5,13 +5,15 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.view.View
-import android.view.ViewGroup
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -20,36 +22,67 @@ import androidx.core.view.doOnAttach
 import androidx.core.view.updatePadding
 import com.thedavelopers.eventqr.R
 
+/*
+ * Compose theme for the redesigned app (§3.2, §3.5).
+ *
+ * The scheme reads ui_* roles only. That is what makes dark mode a one-file addition in Phase 5:
+ * add res/values-night/colors.xml, repoint the same ui_* names, then flip [EventQrTheme]'s
+ * `darkTheme` default to `isSystemInDarkTheme()`. No Compose file and no layout changes.
+ *
+ * `darkTheme` is therefore already wired (and already correct) but defaults to false, because the
+ * ~55 screens that are not migrated yet still use the legacy light-only vocabulary.
+ */
+
 @Composable
 @ReadOnlyComposable
-private fun eventQrLightColorScheme() = lightColorScheme(
-    primary = BrandPrimary,
-    onPrimary = TextOnPrimary,
-    primaryContainer = BrandPrimaryLight,
-    onPrimaryContainer = TextOnPrimary,
-    secondary = BrandPurple,
-    onSecondary = TextOnPrimary,
-    tertiary = BrandTertiary,
-    onTertiary = TextOnPrimary,
-    tertiaryContainer = StatusPendingAmberBg,
-    onTertiaryContainer = StatusPendingAmberText,
-    background = BackgroundLight,
-    onBackground = TextPrimary,
-    surface = PaperWhite,
-    onSurface = TextPrimary,
-    surfaceVariant = SurfaceAlt,
-    onSurfaceVariant = TextSecondary,
-    outline = BorderLight,
-    outlineVariant = OutlineVariant,
-    error = StatusRejectedRed,
-    onError = TextOnPrimary,
-    errorContainer = StatusRejectedRedBg,
-    onErrorContainer = StatusRejectedRedText,
-)
+private fun eventQrColorScheme(dark: Boolean): ColorScheme {
+    val scheme = if (dark) darkColorScheme() else lightColorScheme()
+    return scheme.copy(
+        primary = UiPrimary,
+        onPrimary = UiOnPrimary,
+        primaryContainer = UiPrimaryContainer,
+        onPrimaryContainer = UiOnPrimaryContainer,
+        inversePrimary = UiPrimaryFocusRing,
+        secondary = UiPrimaryContainer,
+        onSecondary = UiOnPrimaryContainer,
+        secondaryContainer = UiPrimaryContainer,
+        onSecondaryContainer = UiOnPrimaryContainer,
+        tertiary = UiAccentDeep,
+        onTertiary = UiOnPrimary,
+        tertiaryContainer = UiAccentContainer,
+        onTertiaryContainer = UiAccentDeep,
+        background = UiBackground,
+        onBackground = UiTextPrimary,
+        surface = UiSurface,
+        onSurface = UiTextPrimary,
+        surfaceVariant = UiSurfaceSunken,
+        onSurfaceVariant = UiTextSecondary,
+        surfaceContainer = UiSurface,
+        surfaceContainerHigh = UiSurface,
+        surfaceContainerLow = UiBackground,
+        surfaceTint = UiPrimary,
+        inverseSurface = UiTextPrimary,
+        inverseOnSurface = UiSurface,
+        outline = UiOutlineInteractive,
+        outlineVariant = UiHairline,
+        scrim = UiScrim,
+        error = UiError,
+        onError = UiOnPrimary,
+        errorContainer = UiErrorContainer,
+        onErrorContainer = UiOnErrorContainer,
+    )
+}
+
+/** The fourteen-role type scale, provided through [LocalType]. */
+val LocalType = staticCompositionLocalOf<EventQrType> {
+    error("EventQrType is not provided: wrap the content in EventQrTheme or EventQrRowTheme")
+}
 
 @Composable
 fun EventQrTheme(
     spacing: EventQrSpacing? = null,
+    grid: EventQrGrid? = null,
+    darkTheme: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val view = LocalView.current
@@ -59,22 +92,32 @@ fun EventQrTheme(
         }
     }
 
-    CompositionLocalProvider(LocalSpacing provides (spacing ?: eventQrSpacing())) {
+    CompositionLocalProvider(
+        LocalSpacing provides (spacing ?: eventQrSpacing()),
+        LocalGrid provides (grid ?: eventQrGrid()),
+        LocalType provides eventQrType(),
+    ) {
         MaterialTheme(
-            colorScheme = eventQrLightColorScheme(),
+            colorScheme = eventQrColorScheme(darkTheme),
             typography = eventQrTypography(),
             content = content,
         )
     }
 }
 
+/** Row / cell host: cheap version for ComposeView inside a RecyclerView item. */
 @Composable
 fun EventQrRowTheme(
+    darkTheme: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    CompositionLocalProvider(LocalSpacing provides eventQrSpacing()) {
+    CompositionLocalProvider(
+        LocalSpacing provides eventQrSpacing(),
+        LocalGrid provides eventQrGrid(),
+        LocalType provides eventQrType(),
+    ) {
         MaterialTheme(
-            colorScheme = eventQrLightColorScheme(),
+            colorScheme = eventQrColorScheme(darkTheme),
             typography = eventQrTypography(),
             content = content,
         )
@@ -150,4 +193,3 @@ fun View.applyEventQrBottomInsetPadding() {
     }
     if (isAttachedToWindow) ViewCompat.requestApplyInsets(this) else doOnAttach { ViewCompat.requestApplyInsets(it) }
 }
-

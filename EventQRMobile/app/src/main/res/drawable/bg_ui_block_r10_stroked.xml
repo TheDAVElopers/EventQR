@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tintable block with a 1dp hairline boundary, radius 10. The decorative separator used by
+     View-based organizer screens that used to build a stroked GradientDrawable per site. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="@dimen/ui_radius_card" />
+    <solid android:color="@color/ui_surface" />
+    <stroke
+        android:width="@dimen/stroke_hairline"
+        android:color="@color/ui_hairline" />
+</shape>

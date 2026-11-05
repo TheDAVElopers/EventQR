@@ -40,7 +40,7 @@ class StatusBadgeComposeTest {
         }
 
         listOf(
-            "Pending",
+            "Pending review",
             "Approved",
             "Rejected",
             "Active",
@@ -129,7 +129,7 @@ class StatusBadgeComposeTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Pending").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Pending review").assertIsDisplayed()
         composeTestRule.onNodeWithText("Upcoming").assertIsDisplayed()
     }
 
@@ -150,8 +150,20 @@ class StatusBadgeComposeTest {
     fun usesLightBadgeContainers() {
         val style = resolveStyles().getValue(EventBadgeStatus.APPROVED)
 
-        assertEquals(roleColor(R.color.success_container), style.backgroundColor)
-        assertEquals(roleColor(R.color.on_success_container), style.textColor)
+        assertEquals(roleColor(R.color.ui_success_container), style.backgroundColor)
+        assertEquals(roleColor(R.color.ui_on_success_container), style.textColor)
+    }
+
+    @Test
+    fun activeBadge_isTheOnlyLimeTone() {
+        val styles = resolveStyles()
+        val active = styles.getValue(EventBadgeStatus.ACTIVE)
+        val upcoming = styles.getValue(EventBadgeStatus.UPCOMING)
+
+        assertEquals(BadgeTone.VALID, active.tone)
+        assertEquals(BadgeTone.INFO, upcoming.tone)
+        assertEquals(roleColor(R.color.ui_accent), active.backgroundColor)
+        assertEquals(roleColor(R.color.ui_on_accent), active.textColor)
     }
 
     @Test

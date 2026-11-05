@@ -1,47 +1,94 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<!--
+    Reward row (§6.2) - 88dp, no card: 40dp icon tile, title, one-line description, the cost in
+    numeric_s right-aligned, and the ONE status badge underneath it. Divider inset to the text
+    edge (76dp) so it aligns with the title, not the icon.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rewardRow"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/space_md"
-    style="@style/Widget.EventQR.Card.Compact.Raised">
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="@dimen/space_lg">
+        android:minHeight="@dimen/ui_attendee_reward_row"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/ui_row_start"
+        android:paddingTop="@dimen/ui_row_padding_vertical"
+        android:paddingEnd="@dimen/ui_row_end"
+        android:paddingBottom="@dimen/ui_row_padding_vertical">
 
-        <TextView
-            android:id="@+id/txtRewardTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="2"
-            android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong" />
+        <FrameLayout
+            android:layout_width="@dimen/ui_row_tile"
+            android:layout_height="@dimen/ui_row_tile"
+            android:background="@drawable/bg_ui_icon_tile">
+
+            <ImageView
+                android:id="@+id/imgRewardIcon"
+                android:layout_width="@dimen/icon_md"
+                android:layout_height="@dimen/icon_md"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_ui_redeem"
+                android:tint="@color/ui_primary" />
+        </FrameLayout>
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_sm"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:layout_marginStart="@dimen/space_lg"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <TextView
-                android:id="@+id/txtRewardPoints"
-                android:layout_width="wrap_content"
+                android:id="@+id/txtRewardTitle"
+                style="@style/Widget.EventQR.Ui.ListRow.Title"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/item_reward_0_pts"
-                android:textColor="@color/primary"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
+                tools:text="Event shirt" />
 
             <TextView
                 android:id="@+id/txtRewardStock"
-                android:layout_width="0dp"
+                style="@style/Widget.EventQR.Ui.ListRow.Meta"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/space_md"
-                android:layout_weight="1"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
+                android:layout_marginTop="@dimen/space_2"
+                tools:text="Cotton, sizes S to XL" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_sm"
+            android:gravity="end"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txtRewardPoints"
+                style="@style/Widget.EventQR.Ui.ListRow.Value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="120 pts" />
+
+            <TextView
+                android:id="@+id/txtRewardStatus"
+                style="@style/Widget.EventQR.Ui.StatusBadge.Valid"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/ui_badge_height"
+                android:layout_marginTop="@dimen/space_4"
+                tools:text="Available" />
         </LinearLayout>
     </LinearLayout>
-</com.google.android.material.card.MaterialCardView>
+
+    <View
+        android:id="@+id/rewardDivider"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:layout_marginStart="@dimen/ui_divider_inset"
+        android:background="@color/ui_hairline"
+        android:importantForAccessibility="no" />
+</LinearLayout>

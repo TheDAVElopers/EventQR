@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Perforation rule on dark (§4.6 tear line / §5.14 credential). 1dp, 6dp dash, 4dp gap.
+     Pair of divider_perforation_light.xml, which is the same rule on paper. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="line">
+    <stroke
+        android:width="@dimen/stroke_hairline"
+        android:color="@color/deco_perforation_dark"
+        android:dashWidth="@dimen/ui_dash_width"
+        android:dashGap="@dimen/ui_dash_gap" />
+    <size android:height="@dimen/stroke_hairline" />
+</shape>

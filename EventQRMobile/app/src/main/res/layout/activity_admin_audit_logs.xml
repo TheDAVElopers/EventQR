@@ -1,23 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    ADMIN AUDIT LOGS (§6.5) - retires Gen A.
+
+        Compact pass head (eyebrow ADMIN, title Audit logs)
+        Shared FilterChipRow (Compose) for the category filter, outside the RecyclerView so the
+        sticky day headers pin directly under it
+        Action-led 64dp rows with a 96dp time column and sticky day headers (ItemDecoration)
+        First load: six audit skeleton rows, not a centred spinner
+
+    Deleted: the EventQrTabHeader, `bg_organizer_events_screen`, the card-per-entry rows with
+    elevation, the 38dp tinted icon tiles, the per-category badge drawables and the centred
+    ProgressBar.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_organizer_events_screen"
+    android:background="@color/ui_background"
     android:orientation="vertical">
 
-    <com.thedavelopers.eventqr.ui.components.EventQrTabHeader
-        android:id="@+id/headerTopBar"
+    <include
+        android:id="@+id/passHead"
+        layout="@layout/include_pass_head_compact"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:title="@string/admin_dashboard_audit_logs"
-        app:subtitle="@string/admin_audit_logs_track_activity_across_the_system" />
+        android:layout_height="wrap_content" />
 
     <androidx.compose.ui.platform.ComposeView
         android:id="@+id/composeAuditFilters"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/transparent" />
+        android:layout_height="wrap_content" />
+
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshAuditLogs"
         android:layout_width="match_parent"
@@ -33,25 +45,37 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
-                android:paddingHorizontal="@dimen/space_lg"
-                android:paddingTop="@dimen/space_xs"
-                android:paddingBottom="@dimen/space_18" />
+                android:paddingBottom="@dimen/space_24" />
 
-            <ProgressBar
-                android:id="@+id/progressAuditLoading"
-                android:layout_width="@dimen/icon_32"
-                android:layout_height="@dimen/icon_32"
-                android:layout_gravity="center"
-                android:visibility="gone" />
+            <LinearLayout
+                android:id="@+id/skeletonAuditLoading"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:importantForAccessibility="noHideDescendants"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <include layout="@layout/include_skeleton_row_audit" />
+
+                <include layout="@layout/include_skeleton_row_audit" />
+
+                <include layout="@layout/include_skeleton_row_audit" />
+
+                <include layout="@layout/include_skeleton_row_audit" />
+
+                <include layout="@layout/include_skeleton_row_audit" />
+
+                <include layout="@layout/include_skeleton_row_audit" />
+            </LinearLayout>
 
             <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
-            android:id="@+id/textAuditPlaceholder"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone"
-            app:icon="@drawable/ic_audit_shield"
-            app:title="@string/admin_audit_logs_no_audit_logs_yet_2"
-            app:subtitle="@string/admin_audit_logs_activity_across_the_system_will_show" />
+                android:id="@+id/textAuditPlaceholder"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                app:icon="@drawable/ic_ui_receipt_long"
+                app:subtitle="@string/ui_admin_logs_empty_body"
+                app:title="@string/ui_admin_logs_empty_title" />
         </FrameLayout>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 

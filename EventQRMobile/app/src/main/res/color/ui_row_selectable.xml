@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Person-row selection fill (5.5). Selection is the fill, not a card stroke and not a check icon:
+    the row tint stays ui_primary_container while selected, moves to ui_surface_pressed while pressed,
+    and is transparent at rest so the page background shows through.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/ui_primary_container" android:state_selected="true" />
+    <item android:color="@color/ui_surface_pressed" android:state_pressed="true" />
+    <item android:color="@android:color/transparent" />
+</selector>

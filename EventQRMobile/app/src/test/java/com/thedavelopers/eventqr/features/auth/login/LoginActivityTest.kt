@@ -100,7 +100,7 @@ class LoginActivityTest {
         assertEquals("Enter your password", activity.findViewById<EditText>(R.id.edtPassword).error.toString())
         // No navigation on invalid input.
         assertNull(shadowOf(activity).peekNextStartedActivity())
-        assertEquals("Sign In", activity.findViewById<android.widget.Button>(R.id.btnSignIn).text.toString())
+        assertEquals("Sign in", activity.findViewById<android.widget.Button>(R.id.btnSignIn).text.toString())
     }
 
     @Test

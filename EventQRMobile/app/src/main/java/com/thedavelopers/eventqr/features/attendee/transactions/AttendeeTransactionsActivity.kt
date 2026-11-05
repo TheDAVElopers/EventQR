@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.ui.theme.dimenOffset
 import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
@@ -33,7 +34,7 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
     private lateinit var skeletonLoading: View
     private lateinit var emptyText: EventQrEmptyState
     private lateinit var errorText: TextView
-    private lateinit var retryButton: Button
+    private lateinit var retryButton: TextView
     private lateinit var filterSpinner: Spinner
     private lateinit var summaryCountText: TextView
     private lateinit var recyclerView: RecyclerView
@@ -73,6 +74,8 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
         cardSelectedEvent.setOnClickListener { setEventDropdownOpen(!isEventDropdownOpen) }
 
         pendingInitialEventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty().ifBlank { null }
+
+        emptyText.setIcon(AppIcons.Logs)
 
         adapter = TransactionAdapter()
         recyclerView.apply {
@@ -241,9 +244,12 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
         }
 
         adapter.submitItems(filtered)
+        emptyText.setContent(
+            getString(R.string.attendee_transactions_no_transactions_found_for_the_select),
+            getString(R.string.ui_attendee_no_transactions_body),
+        )
         emptyText.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
         recyclerView.visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
-        emptyText.text = getString(R.string.attendee_transactions_no_transactions_found_for_the_select)
 
         summaryCountText.text = if (filtered.size == 1) "1 transaction" else "${filtered.size} transactions"
     }

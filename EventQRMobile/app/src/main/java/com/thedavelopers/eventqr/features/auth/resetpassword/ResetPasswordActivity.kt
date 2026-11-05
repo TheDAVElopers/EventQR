@@ -7,8 +7,12 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.util.ScreenInsets
+import com.thedavelopers.eventqr.core.util.Wordmark
+import com.thedavelopers.eventqr.core.util.setInlineError
 import com.thedavelopers.eventqr.features.auth.login.LoginActivity
 
 /** Code step of the reset flow; the password is chosen on [NewPasswordActivity] once the code checks out. */
@@ -18,11 +22,16 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
     private lateinit var codeInput: EditText
     private lateinit var resendButton: Button
     private lateinit var codeSentToText: TextView
+    private lateinit var codeErrorText: TextView
     private lateinit var codeExpiredText: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_reset_password)
+        enableEdgeToEdge()
+        ScreenInsets.padForStatusBar(findViewById(R.id.authTopBar))
+        Wordmark.applyBarRules(this)
+        ScreenInsets.padForNavigationBar(findViewById(R.id.authScroll))
 
         presenter = ResetPasswordPresenter()
         presenter.attach(this, this)
@@ -31,6 +40,7 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
         codeInput = findViewById(R.id.edtResetCode)
         resendButton = findViewById(R.id.btnResendCode)
         codeSentToText = findViewById(R.id.txtCodeSentTo)
+        codeErrorText = findViewById(R.id.txtCodeError)
         codeExpiredText = findViewById(R.id.txtCodeExpired)
 
         verifyButton.setOnClickListener {
@@ -74,12 +84,12 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
 
     override fun showCodeError(message: String?) {
         codeExpiredText.visibility = View.GONE
-        codeInput.error = message
+        codeInput.setInlineError(message, codeErrorText)
     }
 
     override fun showCodeExpired() {
         codeInput.text.clear()
-        codeInput.error = null
+        codeInput.setInlineError(null, codeErrorText)
         codeExpiredText.text = getString(R.string.reset_password_code_expired_resend)
         codeExpiredText.visibility = View.VISIBLE
         // The presenter re-enables Resend before this, so it can take focus.
@@ -126,3 +136,6 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
         const val EXTRA_CODE_EXPIRED = "extra_code_expired"
     }
 }
+
+
+

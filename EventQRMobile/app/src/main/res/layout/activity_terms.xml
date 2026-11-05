@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    TERMS (§6.1) - the static legal page.
+
+        Shared top bar, then the intro paragraph and one section per heading. Sections are
+        numbered rows on the page, separated by hairlines - no cards, no badge bubbles.
+
+    Deleted: `Widget.EventQR.Card.Compact.Flat` per section, `bg_terms_number` and the
+    `TextAppearance.EventQR.Terms*` one-offs.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
+    android:background="@color/ui_background"
     android:orientation="vertical">
 
     <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
@@ -23,18 +32,17 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="@dimen/space_lg"
-            android:paddingTop="@dimen/space_lg"
-            android:paddingBottom="@dimen/space_lg">
+            android:paddingHorizontal="@dimen/ui_gutter"
+            android:paddingTop="@dimen/space_24"
+            android:paddingBottom="@dimen/space_24">
 
             <TextView
-                style="@style/TextAppearance.EventQR.TextBody"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/space_lg"
-                android:lineSpacingMultiplier="@dimen/line_multiplier_12"
+                android:layout_marginBottom="@dimen/space_8"
                 android:text="@string/terms_intro"
-                android:textColor="@color/text_secondary" />
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                android:textColor="@color/ui_text_secondary" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </LinearLayout>

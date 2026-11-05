@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SCANNER VIEWPORT (§5.13) - the camera is the only large dark surface in the app, and it is
+    FLAT. No gradient, no glow, no translucent cards.
+
+        48dp context bar   event name (title) left, scan purpose (label) right, secondary
+        320x256dp panel    flat ui_scan_panel, radius 16
+        240x240dp preview  1px ui_scan_frame + four 24dp brackets at 3dp, white 80%
+        torch              44dp target, 20dp icon, 16dp inset in the panel corner
+        guidance           one body_s line under the panel - no pill, no chip
+
+    The preview is the bracket square: the camera view is centre-cropped inside scanPreview and the
+    overhang is clipped there, so no preview pixel can land outside the brackets.
+
+    Prerequisites the screen owns:
+      * panel.contentDescription = "Camera preview. Point at the attendee's pass." (§9.5);
+        brackets are importantForAccessibility=no
+      * a decode failure is an inline 56dp strip (Widget.EventQR.Ui.Scan.StatusStrip,
+        bg_ui_scan_strip) under the panel - NEVER a toast
+      * brackets tint to ui_accent only while a decode is confirmed; that is the only lime here
+
+    ids: scanRoot, scanContext, scanContextEvent, scanContextPurpose, scanPanel, scanPreview,
+         scanBracketTl/Tr/Bl/Br, scanTorch, scanGuidance.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/scanRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/ui_gutter"
+    android:paddingEnd="@dimen/ui_gutter">
+
+    <LinearLayout
+        android:id="@+id/scanContext"
+        style="@style/Widget.EventQR.Ui.Scan.Context"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/ui_scan_context_height"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/scanContextEvent"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.Title"
+            android:textColor="@color/ui_text_primary"
+            tools:text="DevFest Manila 2026" />
+
+        <TextView
+            android:id="@+id/scanContextPurpose"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_lg"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.Label"
+            android:textColor="@color/ui_text_secondary"
+            tools:text="Entry" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/scanPanel"
+        style="@style/Widget.EventQR.Ui.Scan.Panel"
+        android:layout_width="@dimen/ui_scan_panel_width"
+        android:layout_height="@dimen/ui_scan_panel_height"
+        android:contentDescription="@string/ui_scan_panel_description">
+
+        <FrameLayout
+            android:id="@+id/scanPreview"
+            android:layout_width="@dimen/ui_scan_preview"
+            android:layout_height="@dimen/ui_scan_preview"
+            android:layout_gravity="center"
+            android:clipChildren="false">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_ui_scan_frame"
+                android:importantForAccessibility="no" />
+
+            <ImageView
+                android:id="@+id/scanBracketTl"
+                style="@style/Widget.EventQR.Ui.Scan.Bracket"
+                android:layout_width="@dimen/ui_scan_bracket_arm"
+                android:layout_height="@dimen/ui_scan_bracket_arm"
+                android:layout_gravity="top|start"
+                android:importantForAccessibility="no" />
+
+            <ImageView
+                android:id="@+id/scanBracketTr"
+                style="@style/Widget.EventQR.Ui.Scan.Bracket"
+                android:layout_width="@dimen/ui_scan_bracket_arm"
+                android:layout_height="@dimen/ui_scan_bracket_arm"
+                android:layout_gravity="top|end"
+                android:importantForAccessibility="no"
+                android:scaleX="-1" />
+
+            <ImageView
+                android:id="@+id/scanBracketBl"
+                style="@style/Widget.EventQR.Ui.Scan.Bracket"
+                android:layout_width="@dimen/ui_scan_bracket_arm"
+                android:layout_height="@dimen/ui_scan_bracket_arm"
+                android:layout_gravity="bottom|start"
+                android:importantForAccessibility="no"
+                android:scaleY="-1" />
+
+            <ImageView
+                android:id="@+id/scanBracketBr"
+                style="@style/Widget.EventQR.Ui.Scan.Bracket"
+                android:layout_width="@dimen/ui_scan_bracket_arm"
+                android:layout_height="@dimen/ui_scan_bracket_arm"
+                android:layout_gravity="bottom|end"
+                android:importantForAccessibility="no"
+                android:scaleX="-1"
+                android:scaleY="-1" />
+        </FrameLayout>
+
+    </FrameLayout>
+
+    <!-- Torch lives in the guidance row: a 44dp control inside the panel corner overlapped the
+         24dp bottom-right bracket by 20dp, so it moved out of the bracket's zone. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_8"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/ui_touch_min"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/scanGuidance"
+            style="@style/Widget.EventQR.Ui.Scan.Guidance"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/ui_scan_guidance" />
+
+        <ImageButton
+            android:id="@+id/scanTorch"
+            style="@style/Widget.EventQR.Ui.Scan.Torch"
+            android:layout_width="@dimen/ui_scan_torch"
+            android:layout_height="@dimen/ui_scan_torch"
+            android:layout_marginStart="@dimen/space_12"
+            android:contentDescription="@string/ui_scan_torch" />
+    </LinearLayout>
+
+</LinearLayout>

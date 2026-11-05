@@ -1,10 +1,10 @@
 package com.thedavelopers.eventqr.features.organizer.idtemplate
 
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.ui.theme.configDpToPx
 import com.thedavelopers.eventqr.ui.theme.dimenPx
-import com.thedavelopers.eventqr.ui.theme.roundedRect
 import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
 import com.thedavelopers.eventqr.ui.theme.strong
 import androidx.lifecycle.lifecycleScope
@@ -20,6 +20,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.features.idprinting.IdCardLayoutConfig
 import com.thedavelopers.eventqr.features.organizer.*
+import com.thedavelopers.eventqr.features.organizer.tintBlock
+import com.thedavelopers.eventqr.features.organizer.tintBlockArgb
 import com.thedavelopers.eventqr.features.registrations.RegistrationNumberFormatter
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.NonCancellable
@@ -126,7 +128,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
         LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            background = roundedRect(color(R.color.accent_container), R.dimen.radius_lg, color(R.color.accent_outline))
+            tintBlock(R.color.ui_primary_container, R.drawable.bg_ui_block_r16)
             setPadding(dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_6), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_6))
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -137,9 +139,9 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
 
             // Calendar / Event Icon
             addView(ImageView(this@IdTemplateSettingsActivity).apply {
-                setImageResource(com.thedavelopers.eventqr.R.drawable.ic_calendar)
+                setImageResource(AppIcons.Event)
                 setColorFilter(color(R.color.primary))
-                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_sm), dimenPx(R.dimen.icon_sm)).apply {
+                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md)).apply {
                     marginEnd = dimenPx(R.dimen.space_sm)
                 }
             })
@@ -158,7 +160,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
     private fun lockedFieldsCard(): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
         setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg))
-        background = roundedRect(color(R.color.surface), R.dimen.radius_lg, color(R.color.outline))
+        tintBlock(R.color.ui_surface, R.drawable.bg_ui_block_r16)
         elevation = dimenPx(R.dimen.elevation_card).toFloat()
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
@@ -172,7 +174,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
         addView(createLockedRow(
             title = "QR Code",
             subtitle = "Always shown on printed ID",
-            iconRes = com.thedavelopers.eventqr.R.drawable.ic_scan,
+            iconRes = AppIcons.Scan,
         ))
 
         addView(createDivider())
@@ -180,7 +182,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
         addView(createLockedRow(
             title = "Attendee Name",
             subtitle = "Always shown on printed ID",
-            iconRes = com.thedavelopers.eventqr.R.drawable.ic_profile_person,
+            iconRes = AppIcons.Profile,
         ))
     }
 
@@ -198,7 +200,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
             addView(ImageView(this@IdTemplateSettingsActivity).apply {
                 setImageResource(iconRes)
                 setColorFilter(color(R.color.text_body))
-                background = roundedRect(color(R.color.surface_muted), R.dimen.radius_10)
+                tintBlock(R.color.ui_surface_sunken, R.drawable.bg_ui_block_r10)
                 setPadding(dimenPx(R.dimen.space_9), dimenPx(R.dimen.space_9), dimenPx(R.dimen.space_9), dimenPx(R.dimen.space_9))
                 layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.tile_38), dimenPx(R.dimen.tile_38))
             })
@@ -219,13 +221,13 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
             addView(LinearLayout(this@IdTemplateSettingsActivity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
-                background = roundedRect(color(R.color.surface_muted), R.dimen.radius_md)
+                tintBlock(R.color.ui_surface_sunken, R.drawable.bg_ui_block_r10)
                 setPadding(dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_xs), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_xs))
 
                 addView(ImageView(this@IdTemplateSettingsActivity).apply {
-                    setImageResource(com.thedavelopers.eventqr.R.drawable.ic_lock)
+                    setImageResource(AppIcons.Lock)
                     setColorFilter(color(R.color.text_secondary))
-                    layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_md)).apply {
+                    layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md)).apply {
                         marginEnd = dimenPx(R.dimen.space_xs)
                     }
                 })
@@ -237,7 +239,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
         tag = TOGGLES_TAG
         orientation = LinearLayout.VERTICAL
         setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg))
-        background = roundedRect(color(R.color.surface), R.dimen.radius_lg, color(R.color.outline))
+        tintBlock(R.color.ui_surface, R.drawable.bg_ui_block_r16)
         elevation = dimenPx(R.dimen.elevation_card).toFloat()
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
@@ -289,15 +291,15 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
         // Custom Check Box view
         val checkBoxView = ImageView(this@IdTemplateSettingsActivity).apply {
             if (isChecked) {
-                setImageResource(com.thedavelopers.eventqr.R.drawable.ic_check_white)
-                background = roundedRect(color(R.color.deco_check_teal), R.dimen.radius_6)
+                setImageResource(AppIcons.Check)
+                tintBlock(R.color.ui_success, R.drawable.bg_ui_block_r4)
                 setPadding(dimenPx(R.dimen.space_3), dimenPx(R.dimen.space_3), dimenPx(R.dimen.space_3), dimenPx(R.dimen.space_3))
                 setColorFilter(color(R.color.on_primary))
             } else {
                 setImageDrawable(null)
-                background = roundedRect(color(R.color.surface), R.dimen.radius_6, color(R.color.outline_strong))
+                tintBlock(R.color.ui_surface, R.drawable.bg_ui_block_r4)
             }
-            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_22), dimenPx(R.dimen.icon_22))
+            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md))
         }
         addView(checkBoxView)
 
@@ -310,9 +312,9 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
 
         // Chevron Icon
         addView(ImageView(this@IdTemplateSettingsActivity).apply {
-            setImageResource(com.thedavelopers.eventqr.R.drawable.ic_chevron_right)
+            setImageResource(AppIcons.Chevron)
             setColorFilter(color(R.color.neutral))
-            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_18), dimenPx(R.dimen.icon_18))
+            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.ui_chevron), dimenPx(R.dimen.ui_chevron))
         })
     }
 
@@ -330,7 +332,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
         val outerCard = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_20))
-            background = roundedRect(color(R.color.surface), R.dimen.radius_lg, color(R.color.outline))
+            tintBlock(R.color.ui_surface, R.drawable.bg_ui_block_r16)
             elevation = dimenPx(R.dimen.elevation_card).toFloat()
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -346,7 +348,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
             setPadding(dimenPx(R.dimen.space_20), dimenPx(R.dimen.space_20), dimenPx(R.dimen.space_20), dimenPx(R.dimen.space_20))
-            background = roundedRect(color(R.color.background), R.dimen.radius_md, color(R.color.surface_muted))
+            tintBlock(R.color.ui_background, R.drawable.bg_ui_block_r10)
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -357,7 +359,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
             setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg))
-            background = roundedRect(color(R.color.surface), R.dimen.radius_lg, color(R.color.outline))
+            tintBlock(R.color.ui_surface, R.drawable.bg_ui_block_r16)
             elevation = dimenPx(R.dimen.elevation_raised).toFloat()
             layoutParams = LinearLayout.LayoutParams(
                 configDp(IdCardLayoutConfig.PREVIEW_WIDTH_DP),
@@ -383,12 +385,12 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
 
             val qrBox = LinearLayout(this@IdTemplateSettingsActivity).apply {
                 gravity = Gravity.CENTER
-                background = roundedRect(color(R.color.accent_container), R.dimen.radius_md)
+                tintBlock(R.color.ui_primary_container, R.drawable.bg_ui_block_r10)
                 layoutParams = LinearLayout.LayoutParams(configDp(previewQrSizeDp), configDp(previewQrSizeDp)).apply {
                     gravity = Gravity.CENTER_HORIZONTAL
                 }
                 addView(ImageView(this@IdTemplateSettingsActivity).apply {
-                    setImageResource(com.thedavelopers.eventqr.R.drawable.dark_ic_qr_code)
+                    setImageResource(AppIcons.QrFrameCorner)
                     layoutParams = LinearLayout.LayoutParams(configDp(previewQrSizeDp - 20), configDp(previewQrSizeDp - 20))
                 })
             }
@@ -454,7 +456,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
 
         // Bottom pill handle bar
         cardView.addView(View(this).apply {
-            background = roundedRect(color(R.color.outline_strong), R.dimen.radius_2)
+            tintBlock(R.color.ui_hairline, R.drawable.bg_ui_block_r4)
             layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_tile_md), dimenPx(R.dimen.bar_thin)).apply {
                 gravity = Gravity.CENTER_HORIZONTAL
                 setMargins(0, dimenPx(R.dimen.space_md), 0, dimenPx(R.dimen.space_xs))
@@ -575,3 +577,4 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
         private const val TOGGLES_TAG = "id_display_toggles"
     }
 }
+

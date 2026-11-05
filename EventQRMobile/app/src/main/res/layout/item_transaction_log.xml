@@ -1,137 +1,115 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<!--
+    TRANSACTION LOG ROW (§5.5) - replaces the raised per-row card.
+
+        40dp primary_container tile + 20dp icon
+        title  18/600  attendee name
+        meta   14/20   transaction type
+        micro  relative time (tap = exact time, the one disclosure on the row)
+        trail  numeric_s points, right aligned - one trailing element, never a badge too
+        1dp hairline inset 76dp so it aligns to the text edge, not the icon
+
+    Used by the staff dashboard, transaction logs, attendee details and the attendee history.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/space_md"
-    android:clipToOutline="true"
-    app:cardBackgroundColor="@color/surface"
-    app:cardCornerRadius="@dimen/radius_md"
-    app:cardElevation="@dimen/elevation_raised">
+    android:orientation="vertical">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
+        android:id="@+id/listRowContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="@dimen/space_14">
+        android:background="?attr/selectableItemBackground"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/ui_row_height"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/ui_row_start"
+        android:paddingTop="@dimen/ui_row_padding_vertical"
+        android:paddingEnd="@dimen/ui_row_end"
+        android:paddingBottom="@dimen/ui_row_padding_vertical">
 
-        <!-- Transaction type icon (brand color) -->
         <FrameLayout
             android:id="@+id/iconContainer"
-            android:layout_width="@dimen/icon_tile_md"
-            android:layout_height="@dimen/icon_tile_md"
-            android:background="@drawable/bg_transaction_icon_container"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            android:layout_width="@dimen/ui_row_tile"
+            android:layout_height="@dimen/ui_row_tile"
+            android:background="@drawable/bg_ui_icon_tile"
+            android:importantForAccessibility="no">
 
             <ImageView
                 android:id="@+id/imgTypeIcon"
                 android:layout_width="@dimen/icon_md"
                 android:layout_height="@dimen/icon_md"
                 android:layout_gravity="center"
-                android:contentDescription="@string/item_transaction_log_transaction_type"
-                android:src="@drawable/ic_qr_scan"
-                app:tint="@color/primary" />
+                android:contentDescription="@null"
+                android:src="@drawable/ic_ui_qr_code_2"
+                android:tint="@color/ui_primary" />
         </FrameLayout>
 
-        <!-- Right column: chip on top, badge on bottom -->
         <LinearLayout
-            android:id="@+id/rightColumn"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="end"
-            android:layout_marginEnd="@dimen/space_md"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent">
+            android:layout_marginStart="@dimen/space_lg"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-            <!-- Transaction type chip -->
+            <TextView
+                android:id="@+id/txtAttendeeName"
+                style="@style/Widget.EventQR.Ui.ListRow.Title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="Ines Marchetti" />
+
             <TextView
                 android:id="@+id/txtTransactionType"
-                android:layout_width="wrap_content"
+                style="@style/Widget.EventQR.Ui.ListRow.Meta"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_transaction_type_chip"
-                android:paddingHorizontal="@dimen/space_10"
-                android:paddingVertical="@dimen/space_3"
-                android:text="@string/item_transaction_log_entry"
-                android:textColor="@color/primary"
-                android:textAppearance="@style/TextAppearance.EventQR.TextOverline.Strong" />
+                android:layout_marginTop="@dimen/space_2"
+                tools:text="Event entry" />
 
-            <!-- Points badge -->
             <TextView
-                android:id="@+id/txtPointsBadge"
+                android:id="@+id/txtRelativeTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_6"
-                android:background="@drawable/bg_points_chip_green"
-                android:paddingHorizontal="@dimen/space_10"
-                android:paddingVertical="@dimen/space_xs"
-                android:text="@string/item_transaction_log_50_pts"
-                android:textColor="@color/success_dark"
-                android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong"
-                android:visibility="gone" />
+                android:layout_marginTop="@dimen/space_2"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_text_secondary"
+                tools:text="5m ago" />
+
+            <TextView
+                android:id="@+id/txtExactTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_text_secondary"
+                android:visibility="gone"
+                tools:text="10 Sep 2026, 2:30 PM" />
+
+            <TextView
+                android:id="@+id/txtReason"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_2"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                android:textColor="@color/ui_error"
+                android:visibility="gone"
+                tools:text="Already checked in" />
         </LinearLayout>
 
-        <!-- Attendee name -->
         <TextView
-            android:id="@+id/txtAttendeeName"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/space_md"
-            android:layout_marginEnd="@dimen/space_sm"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text="@string/common_attendee"
-            android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong"
-            app:layout_constraintEnd_toStartOf="@id/rightColumn"
-            app:layout_constraintStart_toEndOf="@id/iconContainer"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <!-- Relative time; tap to expand exact timestamp -->
-        <TextView
-            android:id="@+id/txtRelativeTime"
+            android:id="@+id/txtPointsBadge"
+            style="@style/Widget.EventQR.Ui.ListRow.Value"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/space_md"
-            android:layout_marginTop="@dimen/space_6"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:drawablePadding="@dimen/space_xs"
-            android:paddingVertical="@dimen/space_xxs"
-            android:text="@string/item_transaction_log_5m_ago"
-            android:textAppearance="@style/TextAppearance.EventQR.TextCaption"
-            app:layout_constraintStart_toEndOf="@id/iconContainer"
-            app:layout_constraintTop_toBottomOf="@id/txtAttendeeName" />
+            tools:text="+10 pts" />
+    </LinearLayout>
 
-        <!-- Exact scanned_at timestamp (expandable) -->
-        <TextView
-            android:id="@+id/txtExactTime"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/space_md"
-            android:layout_marginTop="@dimen/space_xxs"
-            android:text="@string/item_transaction_log_sep_10_2026_2_30_pm"
-            android:textColor="@color/text_disabled"
-            android:textAppearance="@style/TextAppearance.EventQR.TextCaption"
-            android:visibility="gone"
-            app:layout_constraintStart_toEndOf="@id/iconContainer"
-            app:layout_constraintTop_toBottomOf="@id/txtRelativeTime" />
-
-        <!-- Rejection reason (only when REJECTED) -->
-        <TextView
-            android:id="@+id/txtReason"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/space_md"
-            android:layout_marginTop="@dimen/space_6"
-            android:ellipsize="end"
-            android:maxLines="2"
-            android:text="@string/common_reason"
-            android:textColor="@color/error"
-            android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/iconContainer"
-            app:layout_constraintTop_toBottomOf="@id/txtExactTime" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</androidx.cardview.widget.CardView>
+    <View
+        android:id="@+id/listRowDivider"
+        style="@style/Widget.EventQR.Ui.ListRow.Divider" />
+</LinearLayout>

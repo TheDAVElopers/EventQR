@@ -33,15 +33,19 @@ internal fun List<OrganizerMvpAttendee>.cancelledTotal(): Int = count { it.statu
 
 internal fun List<OrganizerMvpAttendee>.checkedInTotal(): Int = count { it.statusBucket() == "Checked In" }
 
-internal fun OrganizerMvpAttendee.statusPalette(context: Context): Pair<Int, Int> {
-    val (bgRes, textRes) = when (statusBucket()) {
-        "Checked In" -> R.color.badge_entered_bg to R.color.badge_entered_text
-        "Exited" -> R.color.badge_default_bg to R.color.badge_default_text
-        "No Show" -> R.color.badge_pending_bg to R.color.badge_pending_text
-        "Cancelled" -> R.color.badge_cancelled_bg to R.color.badge_cancelled_text
-        else -> R.color.badge_registered_bg to R.color.badge_registered_text
+/**
+ * One status badge (§5.4). `Checked In` is the only valid (lime) tone; every other registration
+ * state is neutral, because none of them is a confirmation.
+ */
+internal fun OrganizerMvpAttendee.bindStatusBadge(view: android.widget.TextView) {
+    val bucket = statusBucket()
+    val (bg, fg) = when (bucket) {
+        "Checked In" -> R.color.ui_accent to R.color.ui_on_accent
+        else -> R.color.ui_surface_sunken to R.color.ui_text_secondary
     }
-    return context.getColor(bgRes) to context.getColor(textRes)
+    view.text = statusLabel(view.context)
+    view.backgroundTintList = android.content.res.ColorStateList.valueOf(view.context.getColor(bg))
+    view.setTextColor(view.context.getColor(fg))
 }
 
 internal fun OrganizerMvpAttendee.statusLabel(context: Context): String = when (statusBucket().trim().uppercase(Locale.ENGLISH)) {

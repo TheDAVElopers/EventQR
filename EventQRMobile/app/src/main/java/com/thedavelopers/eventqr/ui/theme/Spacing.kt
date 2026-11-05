@@ -78,7 +78,7 @@ fun eventQrSpacing(): EventQrSpacing = EventQrSpacing(
     screenVerticalPadding = dimensionResource(R.dimen.screen_gutter),
     cardCornerRadius = dimensionResource(R.dimen.radius_card),
     cardCornerRadiusSmall = dimensionResource(R.dimen.radius_card_sm),
-    chipCornerRadius = dimensionResource(R.dimen.radius_chip),
+    chipCornerRadius = dimensionResource(R.dimen.ui_radius_button),
     pillCornerRadius = dimensionResource(R.dimen.radius_pill),
     inputHeightMin = dimensionResource(R.dimen.touch_target_min),
     buttonHeightMin = dimensionResource(R.dimen.touch_target_min),
@@ -108,3 +108,152 @@ fun eventQrSpacing(): EventQrSpacing = EventQrSpacing(
 val LocalSpacing = staticCompositionLocalOf<EventQrSpacing> {
     error("EventQrSpacing is not provided: wrap the content in EventQrTheme or EventQrRowTheme")
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// THE REDESIGN GRID (§4) - the values the new components read.
+//
+// Kept beside [EventQrSpacing] rather than inside it so the ~15 screens still on the legacy
+// EventQrSpacing keep compiling unchanged; Phase 6 folds the two together.
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+@Immutable
+data class EventQrGrid(
+    // Edges
+    val gutter: Dp,
+    val cardPadding: Dp,
+    // Spacing scale (closed set of 11)
+    val s2: Dp,
+    val s4: Dp,
+    val s8: Dp,
+    val s12: Dp,
+    val s16: Dp,
+    val s20: Dp,
+    val s24: Dp,
+    val s32: Dp,
+    val s40: Dp,
+    val s48: Dp,
+    val s64: Dp,
+    // Radii
+    val radiusButton: Dp,
+    val radiusCard: Dp,
+    val radiusSheet: Dp,
+    val radiusBadge: Dp,
+    // Controls
+    val touchMin: Dp,
+    val buttonHeight: Dp,
+    val buttonHeightInline: Dp,
+    val controlHeight: Dp,
+    // Rows
+    val rowHeight: Dp,
+    val rowHeightValue: Dp,
+    val rowHeightDate: Dp,
+    val rowPaddingVertical: Dp,
+    val rowStart: Dp,
+    val rowEnd: Dp,
+    val rowTile: Dp,
+    val rowDateBlock: Dp,
+    val dividerInset: Dp,
+    val chevron: Dp,
+    // Badge and chip
+    val badgeHeight: Dp,
+    val badgePadH: Dp,
+    val badgeDot: Dp,
+    val chipHeight: Dp,
+    val chipPadH: Dp,
+    val chipGap: Dp,
+    // Navigation and chrome
+    val navHeight: Dp,
+    val navIcon: Dp,
+    val navIndicatorWidth: Dp,
+    val navIndicatorHeight: Dp,
+    val navPaddingVertical: Dp,
+    val topBarHeight: Dp,
+    val topBarAction: Dp,
+    val metricRowHeight: Dp,
+    // Empty state and skeleton
+    val emptyPlate: Dp,
+    val emptyMaxWidth: Dp,
+    val skeletonBarHeight: Dp,
+    // Scanner
+    val scanPanelWidth: Dp,
+    val scanPanelHeight: Dp,
+    val scanPreview: Dp,
+    val scanBracketArm: Dp,
+    val scanTorch: Dp,
+    // Credential
+    val credentialWidth: Dp,
+    val credentialMinHeight: Dp,
+    val qrPlate: Dp,
+    val qrModule: Dp,
+    val notch: Dp,
+)
+
+/** Resolves the grid from res/values/dimens_ui_shared.xml. */
+@Composable
+@ReadOnlyComposable
+fun eventQrGrid(): EventQrGrid = EventQrGrid(
+    gutter = dimensionResource(R.dimen.ui_gutter),
+    cardPadding = dimensionResource(R.dimen.ui_card_padding),
+    s2 = dimensionResource(R.dimen.space_2),
+    s4 = dimensionResource(R.dimen.space_4),
+    s8 = dimensionResource(R.dimen.space_8),
+    s12 = dimensionResource(R.dimen.space_12),
+    s16 = dimensionResource(R.dimen.space_16),
+    s20 = dimensionResource(R.dimen.space_20),
+    s24 = dimensionResource(R.dimen.space_24),
+    s32 = dimensionResource(R.dimen.space_32),
+    s40 = dimensionResource(R.dimen.space_40),
+    s48 = dimensionResource(R.dimen.space_48),
+    s64 = dimensionResource(R.dimen.space_64),
+    radiusButton = dimensionResource(R.dimen.ui_radius_button),
+    radiusCard = dimensionResource(R.dimen.ui_radius_card),
+    radiusSheet = dimensionResource(R.dimen.ui_radius_sheet),
+    radiusBadge = dimensionResource(R.dimen.ui_radius_badge),
+    touchMin = dimensionResource(R.dimen.ui_touch_min),
+    buttonHeight = dimensionResource(R.dimen.ui_button_height),
+    buttonHeightInline = dimensionResource(R.dimen.ui_button_height_inline),
+    controlHeight = dimensionResource(R.dimen.ui_control_height),
+    rowHeight = dimensionResource(R.dimen.ui_row_height),
+    rowHeightValue = dimensionResource(R.dimen.ui_row_height_value),
+    rowHeightDate = dimensionResource(R.dimen.ui_row_height_date),
+    rowPaddingVertical = dimensionResource(R.dimen.ui_row_padding_vertical),
+    rowStart = dimensionResource(R.dimen.ui_row_start),
+    rowEnd = dimensionResource(R.dimen.ui_row_end),
+    rowTile = dimensionResource(R.dimen.ui_row_tile),
+    rowDateBlock = dimensionResource(R.dimen.ui_row_date_block),
+    dividerInset = dimensionResource(R.dimen.ui_divider_inset),
+    chevron = dimensionResource(R.dimen.ui_chevron),
+    badgeHeight = dimensionResource(R.dimen.ui_badge_height),
+    badgePadH = dimensionResource(R.dimen.ui_badge_pad_h),
+    badgeDot = dimensionResource(R.dimen.ui_badge_dot),
+    chipHeight = dimensionResource(R.dimen.ui_chip_height),
+    chipPadH = dimensionResource(R.dimen.ui_chip_pad_h),
+    chipGap = dimensionResource(R.dimen.ui_chip_gap),
+    navHeight = dimensionResource(R.dimen.ui_nav_height),
+    navIcon = dimensionResource(R.dimen.ui_nav_icon),
+    navIndicatorWidth = dimensionResource(R.dimen.ui_nav_indicator_width),
+    navIndicatorHeight = dimensionResource(R.dimen.ui_nav_indicator_height),
+    navPaddingVertical = dimensionResource(R.dimen.ui_nav_pad_vertical),
+    topBarHeight = dimensionResource(R.dimen.ui_top_bar_height),
+    topBarAction = dimensionResource(R.dimen.ui_top_bar_action),
+    metricRowHeight = dimensionResource(R.dimen.ui_metric_row_height),
+    emptyPlate = dimensionResource(R.dimen.ui_empty_plate),
+    emptyMaxWidth = dimensionResource(R.dimen.ui_empty_max_width),
+    skeletonBarHeight = dimensionResource(R.dimen.ui_skeleton_bar_height),
+    scanPanelWidth = dimensionResource(R.dimen.ui_scan_panel_width),
+    scanPanelHeight = dimensionResource(R.dimen.ui_scan_panel_height),
+    scanPreview = dimensionResource(R.dimen.ui_scan_preview),
+    scanBracketArm = dimensionResource(R.dimen.ui_scan_bracket_arm),
+    scanTorch = dimensionResource(R.dimen.ui_scan_torch),
+    credentialWidth = dimensionResource(R.dimen.ui_credential_width),
+    credentialMinHeight = dimensionResource(R.dimen.ui_credential_height),
+    qrPlate = dimensionResource(R.dimen.ui_qr_plate),
+    qrModule = dimensionResource(R.dimen.ui_qr_module),
+    notch = dimensionResource(R.dimen.ui_notch),
+)
+
+/** Provided by [EventQrTheme] / [EventQrRowTheme]. */
+val LocalGrid = staticCompositionLocalOf<EventQrGrid> {
+    error("EventQrGrid is not provided: wrap the content in EventQrTheme or EventQrRowTheme")
+}
+

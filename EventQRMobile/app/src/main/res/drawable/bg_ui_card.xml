@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The card (§5.3). One shape for every card variant: surface fill, 1dp hairline, radius 10dp,
+     elevation 0. A card never has a shadow; the hairline is the whole boundary. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/ui_surface" />
+    <stroke
+        android:width="@dimen/stroke_hairline"
+        android:color="@color/ui_hairline" />
+    <corners android:radius="@dimen/ui_radius_card" />
+</shape>

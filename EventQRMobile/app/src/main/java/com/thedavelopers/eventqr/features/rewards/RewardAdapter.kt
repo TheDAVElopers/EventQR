@@ -6,8 +6,13 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.features.attendee.AttendeeBadges
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse
 
+/**
+ * Reward rows (§6.2). The cost is a tabular `numeric_s` value, the state is the one badge, and the
+ * meta line is the reward's own description (or the stock, when the organizer wrote none).
+ */
 class RewardAdapter(
     private val onClick: (RewardResponse) -> Unit,
 ) : RecyclerView.Adapter<RewardAdapter.ViewHolder>() {
@@ -34,16 +39,20 @@ class RewardAdapter(
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val titleView: TextView = itemView.findViewById(R.id.txtRewardTitle)
         private val pointsView: TextView = itemView.findViewById(R.id.txtRewardPoints)
-        private val stockView: TextView = itemView.findViewById(R.id.txtRewardStock)
+        private val metaView: TextView = itemView.findViewById(R.id.txtRewardStock)
+        private val statusView: TextView = itemView.findViewById(R.id.txtRewardStatus)
 
         fun bind(item: RewardResponse) {
+            val context = itemView.context
             titleView.text = item.name
+            pointsView.text = context.getString(R.string.ui_attendee_points_cost, item.pointsRequired.toString())
 
-            pointsView.text = "☆ ${item.pointsRequired} pts"
+            val stockLabel = item.stockQuantity?.let {
+                context.getString(R.string.ui_attendee_stock_left, it)
+            } ?: context.getString(R.string.ui_attendee_stock_unlimited)
+            metaView.text = item.description?.takeIf { it.isNotBlank() } ?: stockLabel
 
-            val stockQuantity = item.stockQuantity
-            stockView.text = stockQuantity?.let { "$it left" } ?: "Unlimited"
-
+            AttendeeBadges.bind(statusView, item.status)
             itemView.setOnClickListener { onClick(item) }
         }
     }

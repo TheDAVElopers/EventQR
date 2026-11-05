@@ -2,25 +2,34 @@ package com.thedavelopers.eventqr.features.auth.changepassword
 
 import android.os.Bundle
 import android.text.Editable
+import android.text.InputType
 import android.text.TextWatcher
+import android.view.MotionEvent
 import android.view.View
+import android.widget.Button
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.textfield.TextInputEditText
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.util.ScreenInsets
 import com.thedavelopers.eventqr.core.util.Validators
+import com.thedavelopers.eventqr.core.util.setInlineError
 import com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
+import com.thedavelopers.eventqr.ui.icons.AppIcons
+import com.thedavelopers.eventqr.ui.icons.FieldIcons
 
 open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.View {
     private lateinit var presenter: ChangePasswordPresenter
-    private lateinit var currentPasswordInput: TextInputEditText
-    private lateinit var newPasswordInput: TextInputEditText
-    private lateinit var confirmPasswordInput: TextInputEditText
-    private lateinit var changeButton: MaterialButton
+    private lateinit var currentPasswordInput: EditText
+    private lateinit var newPasswordInput: EditText
+    private lateinit var confirmPasswordInput: EditText
+    private lateinit var currentPasswordErrorText: TextView
+    private lateinit var newPasswordErrorText: TextView
+    private lateinit var confirmPasswordErrorText: TextView
+    private lateinit var changeButton: Button
     private lateinit var progressBar: ProgressBar
     private lateinit var requirementsLayout: LinearLayout
     private lateinit var passwordLengthRequirement: TextView
@@ -33,12 +42,19 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_change_password)
 
+        // Edge to edge (EventQrApplication): the footer's fill runs behind the navigation bar,
+        // its content (the 52dp submit button) stays inside the safe area.
+        ScreenInsets.padForNavigationBar(findViewById(R.id.authFooter))
+
         presenter = ChangePasswordPresenter()
         presenter.attach(this, this)
 
         currentPasswordInput = findViewById(R.id.edtCurrentPassword)
         newPasswordInput = findViewById(R.id.edtNewPassword)
         confirmPasswordInput = findViewById(R.id.edtConfirmPassword)
+        currentPasswordErrorText = findViewById(R.id.txtCurrentPasswordError)
+        newPasswordErrorText = findViewById(R.id.txtNewPasswordError)
+        confirmPasswordErrorText = findViewById(R.id.txtConfirmPasswordError)
         changeButton = findViewById(R.id.btnChangePassword)
         progressBar = findViewById(R.id.progressChange)
         requirementsLayout = findViewById(R.id.layoutPasswordRequirements)
@@ -47,6 +63,10 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
         passwordLowercaseRequirement = findViewById(R.id.txtPasswordLowercaseRequirement)
         passwordNumberRequirement = findViewById(R.id.txtPasswordNumberRequirement)
         passwordSpecialRequirement = findViewById(R.id.txtPasswordSpecialRequirement)
+
+        configurePasswordToggle(currentPasswordInput)
+        configurePasswordToggle(newPasswordInput)
+        configurePasswordToggle(confirmPasswordInput)
 
         // Requirements only show when new password field is focused or has text
         newPasswordInput.setOnFocusChangeListener { _, hasFocus ->
@@ -105,15 +125,18 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
     }
 
     override fun showCurrentPasswordError(message: String?) {
-        currentPasswordInput.error = message
+        currentPasswordInput.setInlineError(message, currentPasswordErrorText)
     }
 
     override fun showNewPasswordError(message: String?) {
-        newPasswordInput.error = if (message == Validators.PASSWORD_TOO_LONG_ERROR) getString(R.string.error_password_too_long) else message
+        newPasswordInput.setInlineError(
+            if (message == Validators.PASSWORD_TOO_LONG_ERROR) getString(R.string.error_password_too_long) else message,
+            newPasswordErrorText
+        )
     }
 
     override fun showConfirmPasswordError(message: String?) {
-        confirmPasswordInput.error = message
+        confirmPasswordInput.setInlineError(message, confirmPasswordErrorText)
     }
 
     override fun showMessage(message: String) {
@@ -138,7 +161,10 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
         updateRequirement(passwordLowercaseRequirement, getString(R.string.password_req_lowercase), requirements.hasLowercase)
         updateRequirement(passwordNumberRequirement, getString(R.string.password_req_number), requirements.hasNumber)
         updateRequirement(passwordSpecialRequirement, getString(R.string.password_req_special), requirements.hasSpecial)
-        newPasswordInput.error = if (!requirements.withinMaxLength) getString(R.string.error_password_too_long) else null
+        newPasswordInput.setInlineError(
+            if (!requirements.withinMaxLength) getString(R.string.error_password_too_long) else null,
+            newPasswordErrorText
+        )
 
         validateButtonState()
     }
@@ -150,8 +176,41 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
                 && currentPasswordInput.text.toString().isNotBlank()
     }
 
+    /**
+     * One checklist row, same mark as Registration: the tokenised ui_rule_on / ui_rule_off drawable
+     * carries the state (lime only when the rule is met). The label is never tinted by the state:
+     * ui_text_primary when met, ui_text_secondary (6.0:1) while pending - never the disabled colour.
+     */
     private fun updateRequirement(view: TextView, label: String, isMet: Boolean) {
-        view.text = "${if (isMet) "\u2713" else "\u25CB"} $label"
-        view.setTextColor(getColor(if (isMet) R.color.success_dark else R.color.text_disabled))
+        view.text = label
+        view.setTextColor(getColor(if (isMet) R.color.ui_text_primary else R.color.ui_text_secondary))
+        view.setCompoundDrawablesRelativeWithIntrinsicBounds(
+            if (isMet) R.drawable.ui_rule_on else R.drawable.ui_rule_off,
+            0,
+            0,
+            0
+        )
+    }
+
+    private fun configurePasswordToggle(input: EditText) {
+        FieldIcons.apply(input)
+        input.setOnTouchListener { view, event ->
+            if (event.action == MotionEvent.ACTION_UP && event.rawX >= input.right - input.compoundPaddingEnd) {
+                val isVisible = input.inputType == (InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD)
+                if (isVisible) {
+                    input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+                    FieldIcons.setTrailing(input, AppIcons.Visibility)
+                } else {
+                    input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                    FieldIcons.setTrailing(input, AppIcons.VisibilityOff)
+                }
+                input.setSelection(input.text.length)
+                view.performClick()
+                true
+            } else {
+                false
+            }
+        }
     }
 }
+

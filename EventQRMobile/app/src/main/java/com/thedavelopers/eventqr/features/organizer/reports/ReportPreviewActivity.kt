@@ -1,17 +1,14 @@
 package com.thedavelopers.eventqr.features.organizer.reports
 
+import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.ui.theme.dimenPx
-import com.thedavelopers.eventqr.ui.theme.roundedRect
-import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
-import com.thedavelopers.eventqr.ui.theme.strong
 import androidx.lifecycle.lifecycleScope
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
@@ -21,12 +18,15 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
@@ -46,7 +46,7 @@ import com.thedavelopers.eventqr.features.reports.model.dto.EventReportFilterSta
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportSummaryDto
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportType
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportRowDto
-import androidx.annotation.RequiresApi
+import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -54,7 +54,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
-import java.io.OutputStream
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -63,6 +62,12 @@ import java.util.Locale
 import kotlin.math.min
 import kotlin.math.roundToInt
 
+/**
+ * Report preview (§6.4). The screen is an XML layout on the shared component set - shared top bar,
+ * a page of `item_report_*` blocks, and the organizer bottom nav. Every container comes from XML;
+ * Kotlin only fills cells and draws the two chart shapes. No `GradientDrawable`, no `roundedRect()`,
+ * no nested cards, no tinted tiles.
+ */
 class ReportPreviewActivity : AppCompatActivity() {
 
     companion object {
@@ -128,9 +133,8 @@ class ReportPreviewActivity : AppCompatActivity() {
     private var combinedReports: List<EventReportDto>? = null
     private var summary: EventReportSummaryDto = EventReportSummaryDto()
     private var sourceFilters: EventReportFiltersDto = EventReportFiltersDto()
-    private val dateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a", Locale.ENGLISH)
+    private val dateFormatter = com.thedavelopers.eventqr.core.util.DateFormatters.displayFormatter
         .withZone(ZoneId.of("Asia/Manila"))
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -150,215 +154,198 @@ class ReportPreviewActivity : AppCompatActivity() {
             return finishWithError(getString(R.string.report_preview_report_data_missing))
         }
 
-        val reportTitle = if (isCombined) getString(R.string.report_preview_combined_report) else (singleReport?.reportTitle ?: getString(R.string.report_preview_report))
-        content = organizerShell(
-            title = getString(R.string.report_preview_title),
-            selectedNav = NAV_REPORTS,
-            showBack = true,
-            topRightLabel = getString(R.string.report_preview_export),
-            onTopRight = { showExportDialog() },
-        )
+        setContentView(R.layout.activity_report_preview)
+        applyEventQrSystemBarAppearance(lightStatusBars = false)
+        content = findViewById(R.id.reportContent)
+        bindTopBar()
+        findViewById<LinearLayout>(R.id.bottomNavHost).addView(bottomNav(NAV_REPORTS))
 
         render()
+    }
+
+    /** §5.8 top bar: title at x = 56dp, one trailing action, hairline below. */
+    private fun bindTopBar() {
+        val bar = findViewById<View>(R.id.topBar)
+        bar.findViewById<TextView>(R.id.topBarTitle).text = getString(R.string.report_preview_title)
+        bar.findViewById<View>(R.id.topBarBack).setOnClickListener { onBackPressedDispatcher.onBackPressed() }
+
+        val export = TextView(this).apply {
+            setTextAppearance(R.style.TextAppearance_EventQR_Type_Label)
+            setTextColor(color(R.color.ui_primary))
+            text = getString(R.string.report_preview_export)
+            gravity = Gravity.CENTER
+            minWidth = dimenPx(R.dimen.ui_touch_min)
+            minHeight = dimenPx(R.dimen.ui_touch_min)
+            setPadding(dimenPx(R.dimen.space_12), 0, dimenPx(R.dimen.space_12), 0)
+            setOnClickListener { showExportDialog() }
+        }
+        val row = bar.findViewById<LinearLayout>(R.id.topBar).getChildAt(0) as LinearLayout
+        row.removeView(bar.findViewById(R.id.topBarAction))
+        row.addView(
+            export,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                dimenPx(R.dimen.ui_touch_min),
+            ).apply { marginEnd = dimenPx(R.dimen.space_8) },
+        )
     }
 
     private fun render() {
         content.removeAllViews()
 
-        // Report header info
-        content.addView(cardRes(R.dimen.space_lg).apply {
-            val report = singleReport ?: combinedReports?.firstOrNull()
-
-            // Header title row with title and badge
-            val titleRow = LinearLayout(this@ReportPreviewActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                )
-            }
-
-            val pageTitle = if (isCombined) getString(R.string.report_preview_combined_title) else (report?.reportTitle ?: getString(R.string.report_preview_report))
-            titleRow.addView(styledText(pageTitle, R.dimen.type_title, true, orgColors.text).apply {
-                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-            })
-
-            val recordBadge = TextView(this@ReportPreviewActivity).apply {
-                text = if (isCombined) getString(R.string.report_preview_reports_count, combinedReports?.size ?: 0) else getString(R.string.report_preview_records_count_caps, report?.rows?.size ?: 0)
-                setTextSizeRes(R.dimen.type_overline)
-                strong()
-                setTextColor(orgColors.primary)
-                setPadding(dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_3), dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_3))
-                background = roundedRect(color(R.color.accent_container), R.dimen.radius_6)
-            }
-            titleRow.addView(recordBadge)
-            addView(titleRow)
-
-            // Event Name
-            summary.eventName?.takeIf { it.isNotBlank() }?.let { eventName ->
-                addView(styledText(eventName, R.dimen.type_body_compact, true, color(R.color.text_body)).apply {
-                    setPadding(0, dimenPx(R.dimen.space_xs), 0, 0)
-                })
-            }
-
-            // Generated date & time
+        val header = inflate(R.layout.item_report_header)
+        val report = singleReport ?: combinedReports?.firstOrNull()
+        header.findViewById<TextView>(R.id.txtReportTitle).text =
+            if (isCombined) getString(R.string.report_preview_combined_title)
+            else (report?.reportTitle ?: getString(R.string.report_preview_report))
+        header.findViewById<TextView>(R.id.txtRecordCount).text =
+            if (isCombined) getString(R.string.report_preview_reports_count, combinedReports?.size ?: 0)
+            else getString(R.string.report_preview_records_count, report?.rows?.size ?: 0)
+        header.findViewById<TextView>(R.id.txtReportEvent).apply {
+            val name = summary.eventName
+            text = name
+            visibility = if (name.isNullOrBlank()) View.GONE else View.VISIBLE
+        }
+        header.findViewById<TextView>(R.id.txtReportGenerated).apply {
             // Server generatedAt only; never invent a client-side time.
-            report?.generatedAtInstant?.let { generatedAt ->
-                addView(styledText(getString(R.string.report_preview_generated_at, dateFormatter.format(generatedAt)), R.dimen.type_caption, false, orgColors.muted).apply {
-                    setPadding(0, dimenPx(R.dimen.space_xxs), 0, dimenPx(R.dimen.space_xs))
-                })
-            }
-
-            // Filters
-            if (!isCombined) {
-                addView(buildFilterChips(sourceFilters).apply { setPadding(0, dimenPx(R.dimen.space_6), 0, 0) })
-            } else {
-                addView(styledText(getString(R.string.report_preview_combined_contains), R.dimen.type_caption, false, orgColors.muted).apply {
-                    setPadding(0, dimenPx(R.dimen.space_xs), 0, 0)
-                })
-            }
-        })
+            val generatedAt = report?.generatedAtInstant
+            text = generatedAt?.let { getString(R.string.report_preview_generated_at, dateFormatter.format(it)) }.orEmpty()
+            visibility = if (generatedAt == null) View.GONE else View.VISIBLE
+        }
+        val chips = header.findViewById<LinearLayout>(R.id.filterChips)
+        if (!isCombined) {
+            buildFilterChips(chips, sourceFilters)
+        } else {
+            chips.addView(
+                TextView(this).apply {
+                    setTextAppearance(R.style.TextAppearance_EventQR_Type_Micro)
+                    setTextColor(color(R.color.ui_text_secondary))
+                    text = getString(R.string.report_preview_combined_contains)
+                },
+            )
+        }
+        content.addView(header)
 
         if (isCombined) {
-            combinedReports?.forEach { report ->
-                renderReportSection(report)
-            }
+            combinedReports?.forEach { renderReportSection(it) }
         } else {
             singleReport?.let { renderReportSection(it) }
         }
     }
 
-    private fun buildFilterChips(filters: EventReportFiltersDto): LinearLayout = row().apply {
-        gravity = Gravity.START
+    private fun inflate(layoutRes: Int): View = LayoutInflater.from(this).inflate(layoutRes, content, false)
+
+    private fun buildFilterChips(target: LinearLayout, filters: EventReportFiltersDto) {
         if (filters.startDate != null || filters.endDate != null) {
-            val start = filters.startDate?.format(DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH)) ?: getString(R.string.report_preview_filter_start)
-            val end = filters.endDate?.format(DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH)) ?: getString(R.string.report_preview_filter_end)
-            addView(chip(getString(R.string.report_preview_chip_date, start, end), false, orgColors.primary))
+            val start = filters.startDate?.format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.ENGLISH)) ?: getString(R.string.report_preview_filter_start)
+            val end = filters.endDate?.format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.ENGLISH)) ?: getString(R.string.report_preview_filter_end)
+            target.addView(chip(getString(R.string.report_preview_chip_date, start, end), active = false))
         }
         if (filters.attendeeQuery?.isNotBlank() == true) {
-            addView(chip(getString(R.string.report_preview_chip_attendee, filters.attendeeQuery.orEmpty()), false, orgColors.primary))
+            target.addView(chip(getString(R.string.report_preview_chip_attendee, filters.attendeeQuery.orEmpty()), active = false))
         }
         if (filters.status != EventReportFilterStatus.ALL) {
-            addView(chip(getString(R.string.report_preview_chip_status, filters.status.name), false, orgColors.primary))
+            target.addView(chip(getString(R.string.report_preview_chip_status, filters.status.name), active = false))
         }
         if (filters.startDate == null && filters.endDate == null && filters.attendeeQuery.isNullOrBlank() && filters.status == EventReportFilterStatus.ALL) {
-            addView(chip(getString(R.string.report_preview_chip_no_filters), false, orgColors.muted))
+            target.addView(chip(getString(R.string.report_preview_chip_no_filters), active = false))
         }
     }
 
     private fun renderReportSection(report: EventReportDto) {
         if (isCombined) {
-            val sectionHeader = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(dimenPx(R.dimen.space_xs), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_xs), dimenPx(R.dimen.space_xs))
-                addView(styledText(report.reportTitle ?: getString(R.string.report_preview_section), R.dimen.type_body_large, true, orgColors.primary).apply {
-                    layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-                })
-                addView(styledText(getString(R.string.report_preview_records_count, report.rows.size), R.dimen.type_caption, false, orgColors.muted))
-            }
-            content.addView(sectionHeader)
+            val section = inflate(R.layout.item_report_section)
+            section.findViewById<TextView>(R.id.txtSectionTitle).text =
+                report.reportTitle ?: getString(R.string.report_preview_section)
+            section.findViewById<TextView>(R.id.txtSectionCount).text =
+                getString(R.string.report_preview_records_count, report.rows.size)
+            content.addView(section)
         }
 
-        // Chart tailored to information type
         if (report.chartSeries.isNotEmpty()) {
-            if (isDistributionReport(report)) {
-                content.addView(DonutDistributionChartView(this, report))
-            } else {
-                content.addView(HorizontalRankedBarChartView(this, report))
-            }
+            content.addView(buildChart(report))
         }
 
-        // Empty states
         when (report.emptyState) {
-            EventReportEmptyState.NO_FILTER_MATCH -> {
-                content.addView(emptyState(
-                    iconRes = R.drawable.ic_organizer_reports,
+            EventReportEmptyState.NO_FILTER_MATCH -> content.addView(
+                emptyState(
+                    iconRes = AppIcons.Report,
                     title = getString(R.string.report_preview_no_matching_title),
                     subtext = getString(R.string.report_preview_no_matching_subtext),
                     actionLabel = getString(R.string.report_preview_back_to_filters),
                     onAction = { finish() },
-                ))
-            }
-            EventReportEmptyState.NO_EVENT_RECORDS -> {
-                content.addView(emptyState(
-                    iconRes = R.drawable.ic_organizer_reports,
+                ),
+            )
+            EventReportEmptyState.NO_EVENT_RECORDS -> content.addView(
+                emptyState(
+                    iconRes = AppIcons.Report,
                     title = getString(R.string.report_preview_no_records_title),
                     subtext = getString(R.string.report_preview_no_records_subtext),
-                ))
-            }
+                ),
+            )
             else -> {
-                // Data table
                 if (report.rows.isNotEmpty()) {
-                    content.addView(buildPaginatedDataTable(report))
+                    content.addView(buildDataTable(report))
                 } else {
-                    content.addView(emptyState(
-                        iconRes = R.drawable.ic_organizer_reports,
-                        title = getString(R.string.report_preview_no_data_title),
-                        subtext = getString(R.string.report_preview_no_data_subtext),
-                    ))
+                    content.addView(
+                        emptyState(
+                            iconRes = AppIcons.Report,
+                            title = getString(R.string.report_preview_no_data_title),
+                            subtext = getString(R.string.report_preview_no_data_subtext),
+                        ),
+                    )
                 }
             }
         }
     }
 
-    private fun isDistributionReport(report: EventReportDto): Boolean {
-        return when (report.reportType) {
-            EventReportType.ROSTER,
-            EventReportType.NO_SHOWS,
-            EventReportType.ENTRY_LOGS,
-            EventReportType.CLAIMS,
-            EventReportType.EXIT_LOGS -> true
-            EventReportType.ATTENDANCE,
-            EventReportType.BOOTH_VISITS,
-            EventReportType.POINTS -> false
-        }
+    private fun isDistributionReport(report: EventReportDto): Boolean = when (report.reportType) {
+        EventReportType.ROSTER,
+        EventReportType.NO_SHOWS,
+        EventReportType.ENTRY_LOGS,
+        EventReportType.CLAIMS,
+        EventReportType.EXIT_LOGS -> true
+        EventReportType.ATTENDANCE,
+        EventReportType.BOOTH_VISITS,
+        EventReportType.POINTS -> false
     }
 
-    private fun getChartTitle(report: EventReportDto): String {
-        return when (report.reportType) {
-            EventReportType.ROSTER -> getString(R.string.report_preview_chart_title_roster)
-            EventReportType.NO_SHOWS -> getString(R.string.report_preview_chart_title_no_shows)
-            EventReportType.ENTRY_LOGS -> getString(R.string.report_preview_chart_title_entry_logs)
-            EventReportType.ATTENDANCE -> getString(R.string.report_preview_chart_title_attendance)
-            EventReportType.CLAIMS -> getString(R.string.report_preview_chart_title_claims)
-            EventReportType.BOOTH_VISITS -> getString(R.string.report_preview_chart_title_booth_visits)
-            EventReportType.EXIT_LOGS -> getString(R.string.report_preview_chart_title_exit_logs)
-            EventReportType.POINTS -> getString(R.string.report_preview_chart_title_points)
-        }
+    private fun getChartTitle(report: EventReportDto): String = when (report.reportType) {
+        EventReportType.ROSTER -> getString(R.string.report_preview_chart_title_roster)
+        EventReportType.NO_SHOWS -> getString(R.string.report_preview_chart_title_no_shows)
+        EventReportType.ENTRY_LOGS -> getString(R.string.report_preview_chart_title_entry_logs)
+        EventReportType.ATTENDANCE -> getString(R.string.report_preview_chart_title_attendance)
+        EventReportType.CLAIMS -> getString(R.string.report_preview_chart_title_claims)
+        EventReportType.BOOTH_VISITS -> getString(R.string.report_preview_chart_title_booth_visits)
+        EventReportType.EXIT_LOGS -> getString(R.string.report_preview_chart_title_exit_logs)
+        EventReportType.POINTS -> getString(R.string.report_preview_chart_title_points)
     }
 
-    private fun getChartSubtitle(report: EventReportDto): String {
-        return when (report.reportType) {
-            EventReportType.ROSTER -> getString(R.string.report_preview_roster_chart_subtitle)
-            EventReportType.NO_SHOWS -> getString(R.string.report_preview_chart_subtitle_no_shows)
-            EventReportType.ENTRY_LOGS -> getString(R.string.report_preview_chart_subtitle_entry_logs)
-            EventReportType.ATTENDANCE -> getString(R.string.report_preview_attendance_chart_subtitle)
-            EventReportType.CLAIMS -> getString(R.string.report_preview_claims_chart_subtitle)
-            EventReportType.BOOTH_VISITS -> getString(R.string.report_preview_booth_chart_subtitle)
-            EventReportType.EXIT_LOGS -> getString(R.string.report_preview_chart_subtitle_exit_logs)
-            EventReportType.POINTS -> getString(R.string.report_preview_chart_subtitle_points)
-        }
+    private fun getChartSubtitle(report: EventReportDto): String = when (report.reportType) {
+        EventReportType.ROSTER -> getString(R.string.report_preview_roster_chart_subtitle)
+        EventReportType.NO_SHOWS -> getString(R.string.report_preview_chart_subtitle_no_shows)
+        EventReportType.ENTRY_LOGS -> getString(R.string.report_preview_chart_subtitle_entry_logs)
+        EventReportType.ATTENDANCE -> getString(R.string.report_preview_attendance_chart_subtitle)
+        EventReportType.CLAIMS -> getString(R.string.report_preview_claims_chart_subtitle)
+        EventReportType.BOOTH_VISITS -> getString(R.string.report_preview_booth_chart_subtitle)
+        EventReportType.EXIT_LOGS -> getString(R.string.report_preview_chart_subtitle_exit_logs)
+        EventReportType.POINTS -> getString(R.string.report_preview_chart_subtitle_points)
     }
 
+    /** Three chart series plus semantics (§3.2): an eight-colour palette is a template tell. */
     private fun getSliceColor(label: String, index: Int): Int {
         val lower = label.lowercase()
         return when {
-            label == OTHER_CHART_LABEL -> color(R.color.neutral)
-            lower.contains("success") || lower.contains("entered") || lower.contains("completed") -> color(R.color.success)
-            lower.contains("no show") || lower.contains("invalid") || lower.contains("cancelled") || lower.contains("failed") -> color(R.color.danger)
-            lower.contains("duplicate") || lower.contains("not entered") || lower.contains("already") || lower.contains("warning") -> color(R.color.warning)
-            lower.contains("registered") -> color(R.color.primary)
+            label == OTHER_CHART_LABEL -> color(R.color.ui_outline_interactive)
+            lower.contains("success") || lower.contains("entered") || lower.contains("completed") -> color(R.color.ui_success)
+            lower.contains("no show") || lower.contains("invalid") || lower.contains("cancelled") || lower.contains("failed") -> color(R.color.ui_error)
+            lower.contains("duplicate") || lower.contains("not entered") || lower.contains("already") || lower.contains("warning") -> color(R.color.ui_warning)
+            lower.contains("registered") -> color(R.color.ui_primary)
             else -> {
                 val palette = listOf(
                     color(R.color.chart_1),
                     color(R.color.chart_2),
                     color(R.color.chart_3),
-                    color(R.color.chart_4),
-                    color(R.color.chart_5),
-                    color(R.color.chart_6),
-                    color(R.color.chart_7)
                 )
                 palette[index % palette.size]
             }
@@ -367,153 +354,322 @@ class ReportPreviewActivity : AppCompatActivity() {
 
     private fun getColumnWeight(index: Int, columnCount: Int, reportType: EventReportType): Float {
         return when (reportType) {
-            EventReportType.CLAIMS -> {
-                when (index) {
-                    0 -> 1.0f // Name
-                    1 -> 1.1f // Benefit
-                    2 -> 1.1f // Claimed At
-                    else -> 0.8f // Result
-                }
+            EventReportType.CLAIMS -> when (index) {
+                0 -> 1.0f
+                1 -> 1.1f
+                2 -> 1.1f
+                else -> 0.8f
             }
-            EventReportType.ATTENDANCE, EventReportType.BOOTH_VISITS -> {
-                when (index) {
-                    0 -> 1.0f // Name
-                    1 -> 1.4f // Session/Activity or Booth/Session
-                    else -> 1.0f // Timestamp / Visit Time
-                }
+            EventReportType.ATTENDANCE, EventReportType.BOOTH_VISITS -> when (index) {
+                0 -> 1.0f
+                1 -> 1.4f
+                else -> 1.0f
             }
-            EventReportType.POINTS -> {
-                when (index) {
-                    0 -> 1.0f // Name
-                    1 -> 0.8f // Points (+/-)
-                    else -> 1.4f // Source Activity
-                }
+            EventReportType.POINTS -> when (index) {
+                0 -> 1.0f
+                1 -> 0.8f
+                else -> 1.4f
             }
-            EventReportType.ENTRY_LOGS, EventReportType.EXIT_LOGS -> {
-                when (index) {
-                    0 -> 1.1f // Name
-                    1 -> 1.2f // Entry/Exit Time
-                    else -> 0.9f // Result
-                }
+            EventReportType.ENTRY_LOGS, EventReportType.EXIT_LOGS -> when (index) {
+                0 -> 1.1f
+                1 -> 1.2f
+                else -> 0.9f
             }
-            EventReportType.ROSTER -> {
-                when (index) {
-                    0 -> 1.1f // Name
-                    1 -> 0.9f // Status
-                    else -> 1.1f // Registered At
-                }
+            EventReportType.ROSTER -> when (index) {
+                0 -> 1.1f
+                1 -> 0.9f
+                else -> 1.1f
             }
-            EventReportType.NO_SHOWS -> {
-                when (index) {
-                    0 -> 1.1f // Name
-                    1 -> 1.0f // Registered On
-                    else -> 1.0f // Reason
-                }
+            EventReportType.NO_SHOWS -> when (index) {
+                0 -> 1.1f
+                1 -> 1.0f
+                else -> 1.0f
             }
         }
     }
 
-    private fun getColumnGravity(index: Int, columnCount: Int, reportType: EventReportType): Int {
-        return Gravity.START or Gravity.CENTER_VERTICAL
+    // ─────────────────────────── charts ───────────────────────────
+
+    private fun buildChart(report: EventReportDto): View {
+        val card = inflate(R.layout.item_report_chart)
+        card.findViewById<TextView>(R.id.txtChartTitle).text = getChartTitle(report)
+        card.findViewById<TextView>(R.id.txtChartSubtitle).text = getChartSubtitle(report)
+        val host = card.findViewById<FrameLayout>(R.id.chartHost)
+        val legend = card.findViewById<LinearLayout>(R.id.chartLegend)
+        val total = chartDataOf(report, sortByValue = !isDistributionReport(report)).total
+
+        if (isDistributionReport(report)) {
+            card.findViewById<TextView>(R.id.txtChartTotal).text =
+                getString(R.string.report_preview_chart_total, total)
+            val data = chartDataOf(report, sortByValue = false).entries.toMap(LinkedHashMap())
+            if (total <= 0L || data.isEmpty()) {
+                host.addView(chartEmptyText(emptyChartTextRes(report.reportType)))
+                return card
+            }
+            host.addView(DonutRingView(this, data, total))
+            data.entries.forEachIndexed { index, entry ->
+                legend.addView(legendRow(entry.key, entry.value, entry.value * 100.0 / total, getSliceColor(entry.key, index)))
+            }
+        } else {
+            val data = chartDataOf(report, sortByValue = true).entries.toList()
+            card.findViewById<TextView>(R.id.txtChartTotal).text =
+                getString(R.string.report_preview_items_count, data.size)
+            if (data.isEmpty() || total <= 0L) {
+                host.addView(chartEmptyText(R.string.report_preview_no_activity))
+                return card
+            }
+            host.addView(rankedRows(data, total))
+        }
+        return card
     }
 
-    private fun buildPaginatedDataTable(report: EventReportDto): LinearLayout {
-        return cardRes(R.dimen.space_lg).apply {
-            // Header Row: Section Title + Record count pill
-            val headerRow = LinearLayout(this@ReportPreviewActivity).apply {
+    private fun chartEmptyText(res: Int): TextView = TextView(this).apply {
+        text = getString(res)
+        setTextAppearance(R.style.TextAppearance_EventQR_Type_BodySmall)
+        setTextColor(color(R.color.ui_text_secondary))
+        setPadding(0, dimenPx(R.dimen.space_24), 0, dimenPx(R.dimen.space_24))
+    }
+
+    private fun emptyChartTextRes(type: EventReportType): Int = when (type) {
+        EventReportType.POINTS -> R.string.report_preview_empty_points
+        EventReportType.ATTENDANCE -> R.string.report_preview_empty_attendance
+        EventReportType.BOOTH_VISITS -> R.string.report_preview_empty_booth
+        else -> R.string.report_preview_empty_chart
+    }
+
+    /** §6.5 list-row rhythm: one label/value pair, a 6dp bar, 12dp under it. */
+    private fun legendRow(label: String, count: Long, percent: Double, sliceColor: Int): View {
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, dimenPx(R.dimen.ui_row_padding_vertical), 0, dimenPx(R.dimen.ui_row_padding_vertical))
+        }
+        row.addView(View(this).apply {
+            background = androidx.core.content.ContextCompat.getDrawable(this@ReportPreviewActivity, R.drawable.bg_ui_dot)?.mutate()
+            backgroundTintList = android.content.res.ColorStateList.valueOf(sliceColor)
+            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.ui_badge_dot), dimenPx(R.dimen.ui_badge_dot)).apply {
+                marginEnd = dimenPx(R.dimen.space_8)
+            }
+        })
+        row.addView(TextView(this).apply {
+            text = label
+            setTextAppearance(R.style.TextAppearance_EventQR_Type_BodySmall)
+            setTextColor(color(R.color.ui_text_primary))
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        })
+        row.addView(TextView(this).apply {
+            text = count.toString()
+            setTextAppearance(R.style.TextAppearance_EventQR_Type_NumericS)
+            setTextColor(color(R.color.ui_text_primary))
+        })
+        row.addView(TextView(this).apply {
+            text = String.format(Locale.ENGLISH, " (%.1f%%)", percent)
+            setTextAppearance(R.style.TextAppearance_EventQR_Type_Micro)
+            setTextColor(color(R.color.ui_text_secondary))
+        })
+        return row
+    }
+
+    private fun rankedRows(data: List<Pair<String, Long>>, total: Long): View {
+        val container = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        val maxValue = data.maxOfOrNull { it.second } ?: 1L
+        data.forEachIndexed { index, entry ->
+            val percent = if (total > 0) (entry.second * 100.0 / total).roundToInt() else 0
+            val info = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    setMargins(0, 0, 0, dimenPx(R.dimen.space_md))
-                }
+                setPadding(0, dimenPx(R.dimen.ui_row_padding_vertical), 0, 0)
             }
-
-            headerRow.addView(styledText(getString(R.string.report_preview_detailed_records), R.dimen.type_body, true, orgColors.text).apply {
+            info.addView(TextView(this).apply {
+                text = (index + 1).toString()
+                setTextAppearance(R.style.TextAppearance_EventQR_Type_NumericS)
+                setTextColor(color(R.color.ui_text_secondary))
+                minWidth = dimenPx(R.dimen.space_24)
+            })
+            info.addView(TextView(this).apply {
+                text = entry.first
+                setTextAppearance(R.style.TextAppearance_EventQR_Type_BodySmall)
+                setTextColor(color(R.color.ui_text_primary))
+                maxLines = 1
+                ellipsize = android.text.TextUtils.TruncateAt.END
+                setPadding(dimenPx(R.dimen.space_8), 0, 0, 0)
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             })
-
-            val countBadge = TextView(this@ReportPreviewActivity).apply {
-                text = getString(R.string.report_preview_records_count, report.rows.size)
-                setTextSizeRes(R.dimen.type_overline)
-                strong()
-                setTextColor(orgColors.muted)
-                setPadding(dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_3), dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_3))
-                background = roundedRect(color(R.color.surface_muted), R.dimen.radius_6)
-            }
-            headerRow.addView(countBadge)
-            addView(headerRow)
-
-            val columnCount = report.columns.size
-
-            // Enclosed Table Container with rounded border
-            val tableContainer = LinearLayout(this@ReportPreviewActivity).apply {
-                orientation = LinearLayout.VERTICAL
-                background = roundedRect(color(R.color.surface), R.dimen.radius_sm, orgColors.border)
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                )
-            }
-
-            // Table Header row
-            val colHeader = LinearLayout(this@ReportPreviewActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setBackgroundColor(color(R.color.background))
-                setPadding(dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_10))
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                )
-            }
-
-            val isFourCol = columnCount >= 4
-            report.columns.forEachIndexed { index, column ->
-                colHeader.addView(TextView(this@ReportPreviewActivity).apply {
-                    text = displayColumnName(report.reportType, index, column)
-                    setTextSizeRes(if (isFourCol) R.dimen.type_overline else R.dimen.type_caption)
-                    strong()
-                    setTextColor(color(R.color.text_body))
-                    maxLines = 1
-                    ellipsize = android.text.TextUtils.TruncateAt.END
-                    includeFontPadding = false
-                    gravity = getColumnGravity(index, columnCount, report.reportType)
-                    textAlignment = View.TEXT_ALIGNMENT_VIEW_START
-                    setPadding(0, 0, dimenPx(R.dimen.space_6), 0)
-                    layoutParams = LinearLayout.LayoutParams(
-                        0,
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        getColumnWeight(index, columnCount, report.reportType)
-                    )
-                })
-            }
-            tableContainer.addView(colHeader)
-
-            // Divider under column headers
-            val headerDivider = View(this@ReportPreviewActivity).apply {
-                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dimenPx(R.dimen.stroke_hairline))
-                setBackgroundColor(orgColors.border)
-            }
-            tableContainer.addView(headerDivider)
-
-            // RecyclerView for rows
-            val recyclerView = RecyclerView(this@ReportPreviewActivity).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                )
-                layoutManager = LinearLayoutManager(this@ReportPreviewActivity)
-                adapter = ReportRowAdapter(report)
-                isNestedScrollingEnabled = false
-                setHasFixedSize(true)
-            }
-            tableContainer.addView(recyclerView)
-
-            addView(tableContainer)
+            info.addView(TextView(this).apply {
+                text = "${entry.second} · $percent%"
+                setTextAppearance(R.style.TextAppearance_EventQR_Type_Micro)
+                setTextColor(color(R.color.ui_text_secondary))
+            })
+            container.addView(info)
+            container.addView(
+                RankedProgressBar(
+                    context = this,
+                    fraction = if (maxValue > 0) entry.second.toFloat() / maxValue.toFloat() else 0f,
+                    barColor = getSliceColor(entry.first, index),
+                ),
+            )
         }
+        return container
+    }
+
+    /** Donut ring drawn with Paint; fills come from the semantic palette. */
+    private inner class DonutRingView(
+        context: Context,
+        private val data: Map<String, Long>,
+        private val total: Long,
+    ) : View(context) {
+
+        private val arcPaint = Paint().apply {
+            isAntiAlias = true
+            style = Paint.Style.STROKE
+            strokeCap = Paint.Cap.BUTT
+        }
+
+        private val centerValPaint = Paint().apply {
+            isAntiAlias = true
+            color = color(R.color.ui_text_primary)
+            textSize = resources.getDimension(R.dimen.ui_type_numeric_l)
+            typeface = androidx.core.content.res.ResourcesCompat.getFont(context, R.font.archivo_bold)
+            textAlign = Paint.Align.CENTER
+        }
+
+        private val centerLblPaint = Paint().apply {
+            isAntiAlias = true
+            color = color(R.color.ui_text_secondary)
+            textSize = resources.getDimension(R.dimen.ui_type_overline)
+            typeface = androidx.core.content.res.ResourcesCompat.getFont(context, R.font.ibm_plex_sans_semibold)
+            textAlign = Paint.Align.CENTER
+        }
+
+        init {
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dimenPx(R.dimen.ui_chart_donut_height),
+            )
+        }
+
+        override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+            val width = MeasureSpec.getSize(widthMeasureSpec)
+            setMeasuredDimension(width, dimenPx(R.dimen.ui_chart_donut_height))
+        }
+
+        override fun onDraw(canvas: Canvas) {
+            super.onDraw(canvas)
+            val w = width.toFloat()
+            val h = height.toFloat()
+            val cx = w / 2f
+            val cy = h / 2f
+            val strokeWidth = dimenPx(R.dimen.ui_chart_stroke).toFloat()
+            arcPaint.strokeWidth = strokeWidth
+
+            val radius = (min(cx, cy) - strokeWidth / 2f - dimenPx(R.dimen.space_8).toFloat())
+                .coerceAtLeast(dimenPx(R.dimen.icon_lg).toFloat())
+            val rect = RectF(cx - radius, cy - radius, cx + radius, cy + radius)
+
+            if (total <= 0L || data.isEmpty()) {
+                arcPaint.color = color(R.color.ui_outline_interactive)
+                canvas.drawOval(rect, arcPaint)
+                return
+            }
+
+            var startAngle = -90f
+            val entries = data.entries.toList()
+            val gapAngle = if (entries.size > 1) 2.5f else 0f
+            entries.forEachIndexed { index, entry ->
+                val sweep = (entry.value.toFloat() / total.toFloat()) * 360f
+                arcPaint.color = getSliceColor(entry.key, index)
+                if (entries.size > 1 && sweep > gapAngle) {
+                    canvas.drawArc(rect, startAngle + gapAngle / 2f, sweep - gapAngle, false, arcPaint)
+                } else {
+                    canvas.drawArc(rect, startAngle, sweep, false, arcPaint)
+                }
+                startAngle += sweep
+            }
+
+            val textY = cy - ((centerValPaint.descent() + centerValPaint.ascent()) / 2f) - dimenPx(R.dimen.space_4).toFloat()
+            canvas.drawText(total.toString(), cx, textY, centerValPaint)
+            canvas.drawText(getString(R.string.report_preview_total_caps), cx, textY + dimenPx(R.dimen.space_16).toFloat(), centerLblPaint)
+        }
+    }
+
+    private inner class RankedProgressBar(
+        context: Context,
+        private val fraction: Float,
+        private val barColor: Int,
+    ) : View(context) {
+
+        private val trackPaint = Paint().apply {
+            isAntiAlias = true
+            color = color(R.color.ui_surface_sunken)
+            style = Paint.Style.FILL
+        }
+
+        private val barPaint = Paint().apply {
+            isAntiAlias = true
+            color = barColor
+            style = Paint.Style.FILL
+        }
+
+        init {
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dimenPx(R.dimen.ui_chart_bar_height),
+            ).apply {
+                topMargin = dimenPx(R.dimen.space_4)
+                bottomMargin = dimenPx(R.dimen.space_8)
+            }
+        }
+
+        override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+            val width = MeasureSpec.getSize(widthMeasureSpec)
+            setMeasuredDimension(width, dimenPx(R.dimen.ui_chart_bar_height))
+        }
+
+        override fun onDraw(canvas: Canvas) {
+            super.onDraw(canvas)
+            val w = width.toFloat()
+            val h = height.toFloat()
+            val radius = h / 2f
+            canvas.drawRoundRect(0f, 0f, w, h, radius, radius, trackPaint)
+            if (fraction > 0f) {
+                val fillWidth = (w * fraction.coerceIn(0f, 1f)).coerceAtLeast(h)
+                canvas.drawRoundRect(0f, 0f, fillWidth, h, radius, radius, barPaint)
+            }
+        }
+    }
+
+    // ─────────────────────────── table ───────────────────────────
+
+    private fun buildDataTable(report: EventReportDto): View {
+        val card = inflate(R.layout.item_report_table)
+        card.findViewById<TextView>(R.id.txtTableCount).text =
+            getString(R.string.report_preview_records_count, report.rows.size)
+
+        val header = card.findViewById<LinearLayout>(R.id.tableHeader)
+        val columnCount = report.columns.size
+        val isFourCol = columnCount >= 4
+        report.columns.forEachIndexed { index, column ->
+            header.addView(TextView(this).apply {
+                text = displayColumnName(report.reportType, index, column)
+                setTextAppearance(if (isFourCol) R.style.TextAppearance_EventQR_Type_Overline else R.style.TextAppearance_EventQR_Type_Label)
+                setTextColor(color(R.color.ui_text_secondary))
+                maxLines = 1
+                ellipsize = android.text.TextUtils.TruncateAt.END
+                includeFontPadding = false
+                gravity = Gravity.START or Gravity.CENTER_VERTICAL
+                textAlignment = View.TEXT_ALIGNMENT_VIEW_START
+                setPadding(0, dimenPx(R.dimen.space_8), dimenPx(R.dimen.space_8), dimenPx(R.dimen.space_8))
+                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, getColumnWeight(index, columnCount, report.reportType))
+            })
+        }
+
+        val rows = card.findViewById<RecyclerView>(R.id.tableRows)
+        rows.layoutManager = LinearLayoutManager(this)
+        rows.adapter = ReportRowAdapter(report)
+        rows.isNestedScrollingEnabled = false
+        return card
     }
 
     private inner class ReportRowAdapter(
@@ -533,18 +689,14 @@ class ReportPreviewActivity : AppCompatActivity() {
                 views.clear()
                 for (i in 0 until columnCount) {
                     val tv = TextView(rowContainer.context).apply {
-                        setTextSizeRes(if (isFourCol) R.dimen.type_overline else R.dimen.type_caption)
-                        setIncludeFontPadding(false)
+                        setTextAppearance(if (isFourCol) R.style.TextAppearance_EventQR_Type_Overline else R.style.TextAppearance_EventQR_Type_Label)
+                        includeFontPadding = false
                         maxLines = 2
                         ellipsize = android.text.TextUtils.TruncateAt.END
-                        gravity = getColumnGravity(i, columnCount, report.reportType)
+                        gravity = Gravity.START or Gravity.CENTER_VERTICAL
                         textAlignment = View.TEXT_ALIGNMENT_VIEW_START
-                        setPadding(0, 0, dimenPx(R.dimen.space_6), 0)
-                        layoutParams = LinearLayout.LayoutParams(
-                            0,
-                            ViewGroup.LayoutParams.WRAP_CONTENT,
-                            getColumnWeight(i, columnCount, report.reportType)
-                        )
+                        setPadding(0, 0, dimenPx(R.dimen.space_8), 0)
+                        layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, getColumnWeight(i, columnCount, report.reportType))
                     }
                     views.add(tv)
                     rowContainer.addView(tv)
@@ -553,34 +705,26 @@ class ReportPreviewActivity : AppCompatActivity() {
 
             fun bind(rowIndex: Int) {
                 val row = rows[rowIndex]
-                if (rowIndex % 2 == 0) {
-                    rowContainer.setBackgroundColor(color(R.color.surface))
-                } else {
-                    rowContainer.setBackgroundColor(color(R.color.background))
-                }
-
                 for (i in views.indices) {
                     val value = if (i < row.values.size) row.values[i] else null
                     val isPointsCell = report.reportType == EventReportType.POINTS && i == 1
                     val pointsCell = if (isPointsCell) formatPointsCell(value) else null
                     val displayValue = pointsCell?.text ?: (value?.ifBlank { "—" } ?: "—")
                     views[i].text = displayValue
-                    val isFirst = (i == 0)
-                    views[i].gravity = getColumnGravity(i, columnCount, report.reportType)
-                    views[i].textAlignment = View.TEXT_ALIGNMENT_VIEW_START
-                    if (isFirst) views[i].strong() else views[i].typeface = null
 
                     val lower = displayValue.lowercase()
                     val cellColor = when {
-                        pointsCell?.sign == PointsSign.NEGATIVE -> color(R.color.error)
-                        pointsCell?.sign == PointsSign.POSITIVE -> color(R.color.success_dark)
-                        lower == "success" || lower == "entered" || lower == "completed" -> color(R.color.success_dark)
-                        lower == "no show" || lower == "marked no show" || lower == "invalid" || lower == "failed" -> color(R.color.error)
-                        lower == "duplicate" || lower == "already claimed" || lower == "not entered" -> color(R.color.warning_dark)
-                        isFirst -> color(R.color.text_primary)
-                        else -> color(R.color.text_body)
+                        pointsCell?.sign == PointsSign.NEGATIVE -> color(R.color.ui_error)
+                        pointsCell?.sign == PointsSign.POSITIVE -> color(R.color.ui_success)
+                        lower == "success" || lower == "entered" || lower == "completed" -> color(R.color.ui_success)
+                        lower == "no show" || lower == "marked no show" || lower == "invalid" || lower == "failed" -> color(R.color.ui_error)
+                        lower == "duplicate" || lower == "already claimed" || lower == "not entered" -> color(R.color.ui_on_warning_container)
+                        else -> color(R.color.ui_text_primary)
                     }
                     views[i].setTextColor(cellColor)
+                    views[i].setTypeface(
+                        if (i == 0) androidx.core.content.res.ResourcesCompat.getFont(this@ReportPreviewActivity, R.font.ibm_plex_sans_semibold) else null,
+                    )
                 }
             }
         }
@@ -591,9 +735,9 @@ class ReportPreviewActivity : AppCompatActivity() {
                 gravity = Gravity.CENTER_VERTICAL
                 layoutParams = RecyclerView.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
                 )
-                setPadding(dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_10))
+                setPadding(0, dimenPx(R.dimen.ui_table_row_pad_v), 0, dimenPx(R.dimen.ui_table_row_pad_v))
             }
             val holder = ViewHolder(row)
             holder.setupViews()
@@ -606,6 +750,8 @@ class ReportPreviewActivity : AppCompatActivity() {
 
         override fun getItemCount(): Int = rows.size
     }
+
+    // ─────────────────────────── export (behaviour unchanged) ───────────────────────────
 
     private fun showExportDialog() {
         val rootView = content.rootView ?: content
@@ -672,14 +818,22 @@ class ReportPreviewActivity : AppCompatActivity() {
             pageFormat = getString(R.string.report_export_page),
         )
         val eventName = summary.eventName?.takeIf { it.isNotBlank() } ?: labels.event
-        return ReportExporter(labels, eventName, dateFormatter.format(combinedGeneratedAt(reports)))
-    }
-
-    private fun emptyChartTextRes(type: EventReportType): Int = when (type) {
-        EventReportType.POINTS -> R.string.report_preview_empty_points
-        EventReportType.ATTENDANCE -> R.string.report_preview_empty_attendance
-        EventReportType.BOOTH_VISITS -> R.string.report_preview_empty_booth
-        else -> R.string.report_preview_empty_chart
+        return ReportExporter(
+            labels,
+            eventName,
+            dateFormatter.format(combinedGeneratedAt(reports)),
+            ReportExportPalette(
+                brandDeepest = color(R.color.ui_text_primary),
+                primary = color(R.color.ui_primary),
+                brandWash = color(R.color.ui_primary_container),
+                ink700 = color(R.color.ui_text_primary),
+                textSecondary = color(R.color.ui_text_secondary),
+                textPrimary = color(R.color.ui_text_primary),
+                sunken = color(R.color.ui_surface_sunken),
+                zebra = color(R.color.ui_surface_pressed),
+                hairline = color(R.color.ui_hairline),
+            ),
+        )
     }
 
     private fun combinedGeneratedAt(reports: List<EventReportDto>): Instant =
@@ -752,418 +906,6 @@ class ReportPreviewActivity : AppCompatActivity() {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
         finish()
     }
-
-    // Donut ring chart for categorical / proportional distributions
-    private inner class DonutDistributionChartView(
-        context: Context,
-        private val report: EventReportDto,
-    ) : LinearLayout(context) {
-
-        init {
-            orientation = VERTICAL
-            setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg))
-            background = roundedRect(orgColors.card, R.dimen.radius_14, orgColors.border)
-            elevation = dimenPx(R.dimen.elevation_raised).toFloat()
-            layoutParams = LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { setMargins(0, dimenPx(R.dimen.space_sm), 0, dimenPx(R.dimen.space_10)) }
-
-            setupView()
-        }
-
-        private fun setupView() {
-            val chart = chartDataOf(report, sortByValue = false)
-            val filteredData = chart.entries.toMap(LinkedHashMap())
-            val total = chart.total
-
-            // Header row
-            val headerRow = LinearLayout(context).apply {
-                orientation = HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-            }
-
-            val title = TextView(context).apply {
-                text = getChartTitle(report)
-                setTextSizeRes(R.dimen.type_body)
-                strong()
-                setTextColor(orgColors.text)
-                layoutParams = LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-            }
-            headerRow.addView(title)
-
-            val totalPill = TextView(context).apply {
-                text = getString(R.string.report_preview_chart_total, total)
-                setTextSizeRes(R.dimen.type_overline)
-                strong()
-                setTextColor(orgColors.primary)
-                setPadding(dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_3), dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_3))
-                background = roundedRect(color(R.color.accent_container), R.dimen.radius_6)
-            }
-            headerRow.addView(totalPill)
-            addView(headerRow)
-
-            // Subtitle
-            val subtitle = TextView(context).apply {
-                text = getChartSubtitle(report)
-                setTextSizeRes(R.dimen.type_caption)
-                setTextColor(orgColors.muted)
-                setPadding(0, dimenPx(R.dimen.space_xxs), 0, dimenPx(R.dimen.space_md))
-            }
-            addView(subtitle)
-
-            if (total <= 0L || filteredData.isEmpty()) {
-                val emptyTv = TextView(context).apply {
-                    text = getString(emptyChartTextRes(report.reportType))
-                    setTextSizeRes(R.dimen.type_body_compact)
-                    setTextColor(orgColors.muted)
-                    gravity = Gravity.CENTER
-                    setPadding(0, dimenPx(R.dimen.space_xl), 0, dimenPx(R.dimen.space_xl))
-                }
-                addView(emptyTv)
-                return
-            }
-
-            // Donut Ring Canvas
-            val donutRingView = DonutRingView(context, filteredData, total)
-            addView(donutRingView)
-
-            // Legend list
-            val legendContainer = LinearLayout(context).apply {
-                orientation = VERTICAL
-                setPadding(0, dimenPx(R.dimen.space_md), 0, 0)
-            }
-
-            filteredData.entries.forEachIndexed { index, entry ->
-                val sliceColor = getSliceColor(entry.key, index)
-                val percent = (entry.value * 100.0 / total)
-
-                val legendRow = LinearLayout(context).apply {
-                    orientation = HORIZONTAL
-                    gravity = Gravity.CENTER_VERTICAL
-                    setPadding(0, dimenPx(R.dimen.space_xs), 0, dimenPx(R.dimen.space_xs))
-                }
-
-                // Color indicator dot
-                val dot = View(context).apply {
-                    layoutParams = LayoutParams(dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_10)).apply {
-                        marginEnd = dimenPx(R.dimen.space_sm)
-                    }
-                    background = roundedRect(sliceColor, R.dimen.radius_5)
-                }
-                legendRow.addView(dot)
-
-                // Category Name
-                val label = TextView(context).apply {
-                    text = entry.key
-                    setTextSizeRes(R.dimen.type_body_compact)
-                    strong()
-                    setTextColor(orgColors.text)
-                    maxLines = 1
-                    ellipsize = android.text.TextUtils.TruncateAt.END
-                    layoutParams = LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-                }
-                legendRow.addView(label)
-
-                // Count
-                val count = TextView(context).apply {
-                    text = entry.value.toString()
-                    setTextSizeRes(R.dimen.type_body_compact)
-                    strong()
-                    setTextColor(orgColors.text)
-                }
-                legendRow.addView(count)
-
-                // Percentage
-                val pct = TextView(context).apply {
-                    text = String.format(Locale.ENGLISH, " (%.1f%%)", percent)
-                    setTextSizeRes(R.dimen.type_caption)
-                    setTextColor(orgColors.muted)
-                    layoutParams = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-                        marginStart = dimenPx(R.dimen.space_xs)
-                    }
-                }
-                legendRow.addView(pct)
-
-                legendContainer.addView(legendRow)
-            }
-
-            addView(legendContainer)
-        }
-    }
-
-    // Donut ring view canvas
-    private inner class DonutRingView(
-        context: Context,
-        private val data: Map<String, Long>,
-        private val total: Long,
-    ) : View(context) {
-
-        private val arcPaint = Paint().apply {
-            isAntiAlias = true
-            style = Paint.Style.STROKE
-            strokeCap = Paint.Cap.BUTT
-        }
-
-        private val centerValPaint = Paint().apply {
-            isAntiAlias = true
-            color = orgColors.text
-            textSize = dimenPx(R.dimen.icon_md).toFloat()
-            typeface = Typeface.DEFAULT_BOLD
-            textAlign = Paint.Align.CENTER
-        }
-
-        private val centerLblPaint = Paint().apply {
-            isAntiAlias = true
-            color = orgColors.muted
-            textSize = dimenPx(R.dimen.space_10).toFloat()
-            typeface = Typeface.DEFAULT_BOLD
-            textAlign = Paint.Align.CENTER
-        }
-
-        override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-            val width = MeasureSpec.getSize(widthMeasureSpec)
-            setMeasuredDimension(width, dimenPx(R.dimen.size_150))
-        }
-
-        override fun onDraw(canvas: Canvas) {
-            super.onDraw(canvas)
-            val w = width.toFloat()
-            val h = height.toFloat()
-            val cx = w / 2f
-            val cy = h / 2f
-            val strokeWidth = dimenPx(R.dimen.icon_md).toFloat()
-            arcPaint.strokeWidth = strokeWidth
-
-            val radius = (min(cx, cy) - strokeWidth / 2f - dimenPx(R.dimen.space_6).toFloat()).coerceAtLeast(dimenPx(R.dimen.icon_md).toFloat())
-            val rect = RectF(cx - radius, cy - radius, cx + radius, cy + radius)
-
-            if (total <= 0L || data.isEmpty()) {
-                arcPaint.color = color(R.color.outline)
-                canvas.drawOval(rect, arcPaint)
-                val textY = cy - ((centerValPaint.descent() + centerValPaint.ascent()) / 2f) - dimenPx(R.dimen.space_sm).toFloat()
-                canvas.drawText("0", cx, textY, centerValPaint)
-                canvas.drawText(getString(R.string.report_preview_total_caps), cx, textY + dimenPx(R.dimen.space_lg).toFloat(), centerLblPaint)
-                return
-            }
-
-            var startAngle = -90f
-            val entries = data.entries.toList()
-            val hasMultiple = entries.size > 1
-            val gapAngle = if (hasMultiple) 2.5f else 0f
-
-            for (i in entries.indices) {
-                val entry = entries[i]
-                val sweep = (entry.value.toFloat() / total.toFloat()) * 360f
-                arcPaint.color = getSliceColor(entry.key, i)
-
-                if (hasMultiple && sweep > gapAngle) {
-                    canvas.drawArc(rect, startAngle + gapAngle / 2f, sweep - gapAngle, false, arcPaint)
-                } else {
-                    canvas.drawArc(rect, startAngle, sweep, false, arcPaint)
-                }
-                startAngle += sweep
-            }
-
-            // Center total text
-            val textY = cy - ((centerValPaint.descent() + centerValPaint.ascent()) / 2f) - dimenPx(R.dimen.space_sm).toFloat()
-            canvas.drawText(total.toString(), cx, textY, centerValPaint)
-            canvas.drawText(getString(R.string.report_preview_total_caps), cx, textY + dimenPx(R.dimen.space_lg).toFloat(), centerLblPaint)
-        }
-    }
-
-    // Horizontal ranked bar chart for entity frequencies (attendance, booths, points)
-    private inner class HorizontalRankedBarChartView(
-        context: Context,
-        private val report: EventReportDto,
-    ) : LinearLayout(context) {
-
-        init {
-            orientation = VERTICAL
-            setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg))
-            background = roundedRect(orgColors.card, R.dimen.radius_14, orgColors.border)
-            elevation = dimenPx(R.dimen.elevation_raised).toFloat()
-            layoutParams = LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { setMargins(0, dimenPx(R.dimen.space_sm), 0, dimenPx(R.dimen.space_10)) }
-
-            setupView()
-        }
-
-        private fun setupView() {
-            val chart = chartDataOf(report, sortByValue = true)
-            val filteredData = chart.entries.map { java.util.AbstractMap.SimpleEntry(it.first, it.second) }
-
-            val maxValue = filteredData.maxOfOrNull { it.value } ?: 1L
-            val total = chart.total
-
-            // Header row
-            val headerRow = LinearLayout(context).apply {
-                orientation = HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-            }
-
-            val title = TextView(context).apply {
-                text = getChartTitle(report)
-                setTextSizeRes(R.dimen.type_body)
-                strong()
-                setTextColor(orgColors.text)
-                layoutParams = LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-            }
-            headerRow.addView(title)
-
-            val countPill = TextView(context).apply {
-                text = getString(R.string.report_preview_items_count, filteredData.size)
-                setTextSizeRes(R.dimen.type_overline)
-                strong()
-                setTextColor(orgColors.primary)
-                setPadding(dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_3), dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_3))
-                background = roundedRect(color(R.color.accent_container), R.dimen.radius_6)
-            }
-            headerRow.addView(countPill)
-            addView(headerRow)
-
-            // Subtitle
-            val subtitle = TextView(context).apply {
-                text = getChartSubtitle(report)
-                setTextSizeRes(R.dimen.type_caption)
-                setTextColor(orgColors.muted)
-                setPadding(0, dimenPx(R.dimen.space_xxs), 0, dimenPx(R.dimen.space_md))
-            }
-            addView(subtitle)
-
-            if (filteredData.isEmpty() || total <= 0L) {
-                val emptyTv = TextView(context).apply {
-                    text = getString(R.string.report_preview_no_activity)
-                    setTextSizeRes(R.dimen.type_body_compact)
-                    setTextColor(orgColors.muted)
-                    gravity = Gravity.CENTER
-                    setPadding(0, dimenPx(R.dimen.space_xl), 0, dimenPx(R.dimen.space_xl))
-                }
-                addView(emptyTv)
-                return
-            }
-
-            // Ranked Rows
-            filteredData.forEachIndexed { index, entry ->
-                val fraction = if (maxValue > 0) (entry.value.toFloat() / maxValue.toFloat()) else 0f
-                val percent = if (total > 0) (entry.value * 100.0 / total).roundToInt() else 0
-
-                val itemContainer = LinearLayout(context).apply {
-                    orientation = VERTICAL
-                    layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-                        setMargins(0, 0, 0, dimenPx(R.dimen.space_md))
-                    }
-                }
-
-                // Top Row: Rank Badge + Label + Value (Pct)
-                val infoRow = LinearLayout(context).apply {
-                    orientation = HORIZONTAL
-                    gravity = Gravity.CENTER_VERTICAL
-                    layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                }
-
-                val rankBadge = TextView(context).apply {
-                    text = "#${index + 1}"
-                    setTextSizeRes(R.dimen.type_micro)
-                    strong()
-                    setTextColor(orgColors.primary)
-                    gravity = Gravity.CENTER
-                    layoutParams = LayoutParams(dimenPx(R.dimen.icon_22), dimenPx(R.dimen.icon_md)).apply {
-                        marginEnd = dimenPx(R.dimen.space_sm)
-                    }
-                    background = roundedRect(color(R.color.accent_container), R.dimen.radius_xs)
-                }
-                infoRow.addView(rankBadge)
-
-                val nameLabel = TextView(context).apply {
-                    text = entry.key
-                    setTextSizeRes(R.dimen.type_body_compact)
-                    strong()
-                    setTextColor(orgColors.text)
-                    maxLines = 1
-                    ellipsize = android.text.TextUtils.TruncateAt.END
-                    layoutParams = LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-                }
-                infoRow.addView(nameLabel)
-
-                val valueLabel = TextView(context).apply {
-                    text = "${entry.value} ($percent%)"
-                    setTextSizeRes(R.dimen.type_caption)
-                    strong()
-                    setTextColor(orgColors.text)
-                    layoutParams = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-                        marginStart = dimenPx(R.dimen.space_sm)
-                    }
-                }
-                infoRow.addView(valueLabel)
-                itemContainer.addView(infoRow)
-
-                // Bar Track
-                val barColor = when (index) {
-                    0 -> color(R.color.chart_1)
-                    1 -> color(R.color.chart_5)
-                    2 -> color(R.color.chart_3)
-                    else -> color(R.color.chart_8)
-                }
-                val barView = RankedProgressBar(context, fraction, barColor)
-                itemContainer.addView(barView)
-
-                addView(itemContainer)
-            }
-        }
-    }
-
-    // Horizontal progress bar for ranked items
-    private inner class RankedProgressBar(
-        context: Context,
-        private val fraction: Float,
-        private val barColor: Int,
-    ) : View(context) {
-
-        private val trackPaint = Paint().apply {
-            isAntiAlias = true
-            color = color(R.color.surface_muted)
-            style = Paint.Style.FILL
-        }
-
-        private val barPaint = Paint().apply {
-            isAntiAlias = true
-            color = barColor
-            style = Paint.Style.FILL
-        }
-
-        init {
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                dimenPx(R.dimen.dot_sm)
-            ).apply {
-                topMargin = dimenPx(R.dimen.space_6)
-            }
-        }
-
-        override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-            val width = MeasureSpec.getSize(widthMeasureSpec)
-            setMeasuredDimension(width, dimenPx(R.dimen.dot_sm))
-        }
-
-        override fun onDraw(canvas: Canvas) {
-            super.onDraw(canvas)
-            val w = width.toFloat()
-            val h = height.toFloat()
-            val radius = h / 2f
-
-            // Draw track
-            canvas.drawRoundRect(0f, 0f, w, h, radius, radius, trackPaint)
-
-            // Draw progress
-            if (fraction > 0f) {
-                val fillWidth = (w * fraction.coerceIn(0f, 1f)).coerceAtLeast(h)
-                canvas.drawRoundRect(0f, 0f, fillWidth, h, radius, radius, barPaint)
-            }
-        }
-    }
 }
+
+

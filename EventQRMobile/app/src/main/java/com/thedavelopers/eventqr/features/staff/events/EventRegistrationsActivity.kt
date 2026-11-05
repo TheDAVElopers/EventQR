@@ -284,6 +284,8 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
     override fun showLoading(isLoading: Boolean) {
         if (isLoading && !swipeRefresh.isRefreshing) {
             skeletonLoading.visibility = View.VISIBLE
+            // Loading is not an empty result: the stale state must not cover the skeleton.
+            emptyState.visibility = View.GONE
         } else if (!isLoading) {
             skeletonLoading.visibility = View.GONE
             if (swipeRefresh.isRefreshing) {
@@ -302,8 +304,8 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         adapter.setSelectionMode(true)
         badgeSelection.visibility = View.VISIBLE
         batchPrintBar.visibility = View.VISIBLE
-        btnSelectForPrint.setBackgroundResource(R.drawable.bg_circle_primary)
-        btnSelectForPrint.imageTintList = android.content.res.ColorStateList.valueOf(color(R.color.on_primary))
+        btnSelectForPrint.setBackgroundResource(R.drawable.bg_ui_button_primary)
+        btnSelectForPrint.imageTintList = android.content.res.ColorStateList.valueOf(color(R.color.ui_on_primary))
         syncSelectionUi(adapter.getSelectedItems().size)
     }
 
@@ -312,8 +314,8 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         adapter.setSelectionMode(false)
         badgeSelection.visibility = View.GONE
         batchPrintBar.visibility = View.GONE
-        btnSelectForPrint.setBackgroundResource(R.drawable.bg_circle_muted)
-        btnSelectForPrint.imageTintList = android.content.res.ColorStateList.valueOf(color(R.color.text_primary))
+        btnSelectForPrint.setBackgroundResource(R.drawable.bg_ui_button_icon)
+        btnSelectForPrint.imageTintList = android.content.res.ColorStateList.valueOf(color(R.color.ui_text_primary))
         syncSelectionUi(0)
     }
 
@@ -322,7 +324,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         badgeSelection.text = count.toString()
         badgeSelection.visibility = if (selectionMode && count > 0) View.VISIBLE else if (selectionMode) View.VISIBLE else View.GONE
         btnPrintSelectedIds.isEnabled = count > 0
-        btnSelectAll.text = getString(if (adapter.isAllSelected()) R.string.event_registrations_clear_all else R.string.event_registrations_select_all)
+        btnSelectAll.text = getString(if (adapter.isAllSelected()) R.string.ui_staff_clear_all else R.string.ui_staff_select_all)
     }
 
     // ------------------------------------------------------------------

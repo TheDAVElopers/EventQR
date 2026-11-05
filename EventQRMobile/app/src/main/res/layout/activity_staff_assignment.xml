@@ -1,28 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    ORGANIZER - STAFF ASSIGNMENT (6.4).
+
+        Top bar    56dp, back + "Staff assignment"
+        Strip      event glyph + event title, then the "Add staff" chip (include_organizer_event_strip)
+        Rows       72dp person rows: initials plate, name, permission summary, one overflow button
+        Empty      shared empty state with the Add staff action
+        Error      the same component as an error: warning icon, message, Retry
+
+    Deleted: bg_organizer_events_screen, the EventQrDetailHeader slot button, a whole 48dp row whose
+    only content was one right-aligned text action, the per-row card, the two stacked row actions and
+    the centred empty block.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_organizer_events_screen"
+    android:background="@color/ui_background"
     android:orientation="vertical">
 
-    <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
-        android:id="@+id/headerTopBar"
+    <include
+        android:id="@+id/topBar"
+        layout="@layout/include_top_bar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:title="@string/staff_assignment_title">
-        <Button
-            android:id="@+id/btnAddStaff"
-            style="@style/Widget.EventQR.Button.Primary.Compact"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/control_height_38"
-            android:minWidth="80dp"
-            android:paddingLeft="@dimen/space_14"
-            android:paddingTop="0dp"
-            android:paddingRight="@dimen/space_14"
-            android:paddingBottom="0dp"
-            android:text="@string/staff_add_button" />
-    </com.thedavelopers.eventqr.ui.components.EventQrDetailHeader>
+        android:layout_height="wrap_content" />
+
+    <include
+        android:id="@+id/eventStrip"
+        layout="@layout/include_organizer_event_strip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshStaffAssignment"
@@ -39,25 +46,16 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
-                android:paddingHorizontal="@dimen/space_20"
-                android:paddingTop="@dimen/space_md"
-                android:paddingBottom="@dimen/space_xl" />
-
-            <ProgressBar
-                android:id="@+id/progressStaffAssignment"
-                android:layout_width="@dimen/icon_tile_md"
-                android:layout_height="@dimen/icon_tile_md"
-                android:layout_gravity="center"
-                android:visibility="gone" />
+                android:overScrollMode="never"
+                android:paddingTop="@dimen/space_8"
+                android:paddingBottom="@dimen/space_24" />
 
             <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
-            android:id="@+id/txtEmptyStaff"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone"
-            app:icon="@drawable/ic_group"
-            app:title="@string/staff_assignment_no_staff_assigned_yet"
-            app:subtitle="@string/staff_assignment_tap_add_to_assign_staff_to_this_even" />
+                android:id="@+id/txtEmptyStaff"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:icon="@drawable/ic_ui_group" />
         </FrameLayout>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 </LinearLayout>

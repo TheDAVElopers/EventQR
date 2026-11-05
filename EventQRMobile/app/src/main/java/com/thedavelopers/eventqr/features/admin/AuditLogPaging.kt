@@ -5,7 +5,9 @@ import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.dto.PageResponse
+import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.features.audit.model.dto.AuditLogResponse
+import java.time.LocalDate
 
 /**
  * The audit-log endpoint may answer with a bare array (legacy) or a Spring `Page` object. Both are
@@ -35,6 +37,25 @@ fun AuditCategory.actionPrefix(): String? = when (this) {
     AuditCategory.ACCOUNT -> "ACCOUNT_"
 }
 
-/** Target column text: target user's name, else details, else null (caller shows the placeholder). */
+/** Target text is the target user's name only; blank degrades to `by {actor}`. `details` is free text for a future detail sheet, never a row (§6.5). */
 fun auditTargetText(item: AuditLogResponse): String? =
-    item.targetUserFullName?.takeIf { it.isNotBlank() } ?: item.details?.takeIf { it.isNotBlank() }
+    item.targetUserFullName?.takeIf { it.isNotBlank() }
+
+/** A sticky day header: the day (audit zone) and the index of the first row under it. */
+data class AuditDayGroup(val day: LocalDate, val startIndex: Int)
+
+/**
+ * Day headers, derived from the whole accumulated page list (§6.5). It re-groups the list in one
+ * pass on every page - the operation is idempotent, so an appended page extends the last group and
+ * can never duplicate a header; `AuditDayHeaderDecoration.submit` skips an unchanged result, so a
+ * page boundary does not redraw or flicker a header. Rows are server-ordered, so a day's entries
+ * are contiguous.
+ */
+fun auditDayGroups(items: List<AuditLogResponse>): List<AuditDayGroup> {
+    val groups = mutableListOf<AuditDayGroup>()
+    items.forEachIndexed { index, item ->
+        val day = DateFormatters.auditDay(item.timestamp)
+        if (groups.lastOrNull()?.day != day) groups += AuditDayGroup(day, index)
+    }
+    return groups
+}

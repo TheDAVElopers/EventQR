@@ -151,7 +151,7 @@ class RoleGuardMatrixTest {
             assertEquals(
                 role.name,
                 expectedVisibility,
-                activity.findViewById<View>(R.id.buttonCreateAdminAccount).visibility
+                activity.findViewById<View>(R.id.rowCreateAccount).visibility
             )
         }
     }
@@ -172,3 +172,4 @@ class RoleGuardMatrixTest {
         assertTrue(activity.isFinishing)
     }
 }
+

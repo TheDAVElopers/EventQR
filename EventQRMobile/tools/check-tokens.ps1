@@ -33,8 +33,9 @@
       float        literal floats on android:alpha, letterSpacing, lineSpacingMultiplier (0 and 1 allowed) in res XML
                    (values/dimens.xml excluded)
       fontfamily   literal android:fontFamily="sans..." in layouts (use a TextAppearance.EventQR.* style)
-      styles       numeric sp/dp/letterSpacing items in values/styles_*.xml, themes.xml (0dp insets and 0 allowed; dimens.xml is
-                   where the numbers live)
+      styles       numeric sp/dp items in values/styles_*.xml, themes.xml (0dp insets and 0 allowed; dimens.xml is where the
+                   numbers live). android:letterSpacing is exempt: it is a unitless tracking ratio read by
+                   TypedArray.getFloat, not a dimension or a colour, so a dp/sp token cannot express it
       strings      android:text / hint / contentDescription literals (anything not starting with @ or ?) in layouts. tools:text
                    is allowed.
       textsize     android:textSize="Nsp" literals in res/layout, minus the NAMED exceptions in $textExceptions (empty after phase 2)
@@ -280,7 +281,12 @@ foreach ($f in $styleFiles) {
     foreach ($m in $styleItemRx.Matches((Read-XmlCode $f.FullName))) {
         $name = $m.Groups['name'].Value; $val = $m.Groups['val'].Value
         if ($val -match '^(?:-?0+(?:\.0+)?)(?:dp|dip|sp|px)?$') { continue }                  # 0 / 0dp are allowed (insets, letterSpacing 0)
-        if ($val -match '(?:dp|dip|sp|px)$' -or $name -match 'letterSpacing|alpha|lineSpacingMultiplier|textSize|elevation') { $n++ }
+        # android:letterSpacing is a unitless tracking ratio, not a size or a colour: TypedArray.getFloat reads the raw
+        # number, so a dp/sp value would be wrong and there is nothing here for the dimension rule to enforce. The track
+        # scale is still tokenised (dimens_ui_shared.xml ui_track_*, format="float" type="dimen"); this rule only guards
+        # colour / dimension-looking literals.
+        if ($name -match 'letterSpacing$') { continue }
+        if ($val -match '(?:dp|dip|sp|px)$' -or $name -match 'alpha|lineSpacingMultiplier|textSize|elevation') { $n++ }
     }
     Add-Hit $styles (Get-RelPath $f.FullName) $n
 }
@@ -338,7 +344,109 @@ $ktShape = Count-Matches ($ktTokens | Where-Object { $_.Name -ne 'Tokens.kt' }) 
 $composePattern = '(?<![\w.])(?!0\.dp\b)\d+(?:\.\d+)?\.(?:dp|sp)\b'
 $compose = Count-Matches $ktTokens $composePattern ${function:Read-KotlinCode}
 
-# ---- 10. stale allow-list entries --------------------------------------------------------------------------------
+# ---- 10. icons (design/05-icon-system.md §7) ----------------------------------------------------------------------
+# One family, one source, one icon per concept. Every hit is blocking.
+#   1 bijection   every res/drawable/ic_* file is in tools/icon-manifest.json and vice versa
+#   2 grid        ic_ui_<symbol>, 24x24 viewport, 24dp intrinsic (marks and the launcher are exempt)
+#   3 hash        sha256(pathData) equals the manifest value, so a hand-edit or traced import fails
+#   4 one shape   one <path>, no <group>, no strokeColor, fillColor="#FF000000" (bracket exempt)
+#   5 family      no Compose material icons import outside AppIcons.kt, no material-icons-extended,
+#                 no R.drawable.ic_ui_ outside AppIcons.kt, no @drawable/ic_ui_ outside
+#                 res/layout, res/menu and res/values/styles*.xml
+#   6 uniqueness  no two entries share a pathData hash, no symbol or concept appears twice
+$iconManifestFile = Join-Path $PSScriptRoot 'icon-manifest.json'
+$icons = New-Result
+function Add-IconHit([string]$file, [string]$why) {
+    [void]$icons.Rows.Add([pscustomobject]@{ File = "icon: $file - $why"; Count = 1 })
+    $icons.Total += 1
+}
+function Get-PathSha([string]$s) {
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try { $h = $sha.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($s)) } finally { $sha.Dispose() }
+    return (($h | ForEach-Object { $_.ToString('x2') }) -join '')
+}
+
+if (-not (Test-Path $iconManifestFile)) {
+    Add-IconHit 'tools/icon-manifest.json' 'manifest is missing'
+} else {
+    $manifest = (Read-Text $iconManifestFile) | ConvertFrom-Json
+    $entries = @($manifest.symbols) + @($manifest.custom)
+    $exempt = @($manifest.marks) + @($manifest.launcher)
+    $customFiles = @($manifest.custom | ForEach-Object { $_.file })
+    $listed = @{}
+
+    foreach ($e in $entries) {
+        $listed[$e.file] = $true
+        $file = Join-Path $res 'drawable'
+        $file = Join-Path $file "$($e.file).xml"
+        if (-not (Test-Path $file)) { Add-IconHit $e.file 'listed in the manifest but the drawable does not exist'; continue }
+        $code = Read-XmlCode $file
+        $pathData = [regex]::Match($code, 'android:pathData="([^"]+)"').Groups[1].Value
+        if ((Get-PathSha $pathData) -ne $e.sha256) { Add-IconHit $e.file 'pathData does not match the manifest hash (hand-edited or traced)' }
+
+        $vw = [regex]::Match($code, 'android:viewportWidth="([^"]+)"').Groups[1].Value
+        $vh = [regex]::Match($code, 'android:viewportHeight="([^"]+)"').Groups[1].Value
+        $w = [regex]::Match($code, 'android:width="([^"]+)"').Groups[1].Value
+        $h = [regex]::Match($code, 'android:height="([^"]+)"').Groups[1].Value
+        if ($e.symbol) {
+            if ($vw -ne '24' -or $vh -ne '24') { Add-IconHit $e.file "viewport is $vw/$vh, expected 24/24" }
+            if ($w -ne '24dp' -or $h -ne '24dp') { Add-IconHit $e.file "intrinsic size is $w/$h, expected 24dp/24dp" }
+            if ($e.file -ne "ic_ui_$($e.symbol)") { Add-IconHit $e.file "file name must be ic_ui_$($e.symbol)" }
+        }
+
+        if ($customFiles -notcontains $e.file) {
+            if ([regex]::Matches($code, '<path').Count -ne 1) { Add-IconHit $e.file 'must contain exactly one <path>' }
+            if ($code -match '<group') { Add-IconHit $e.file 'must not contain a <group>' }
+            if ($code -match 'android:strokeColor') { Add-IconHit $e.file 'must not declare android:strokeColor' }
+            if ($code -notmatch 'android:fillColor="#FF000000"') { Add-IconHit $e.file 'fillColor must be #FF000000 (tint at the use site)' }
+        }
+        if ($e.symbol) {
+            $hasMirror = $code -match 'android:autoMirrored="true"'
+            if ([bool]$e.autoMirror -ne $hasMirror) { Add-IconHit $e.file 'android:autoMirrored must match the manifest' }
+        }
+    }
+
+    foreach ($f in $drawables) {
+        $name = $f.BaseName
+        if ($name -notlike 'ic_*') { continue }
+        if ($exempt -contains $name) { continue }
+        if (-not $listed.ContainsKey($name)) { Add-IconHit $name 'drawable is not in tools/icon-manifest.json' }
+    }
+
+    foreach ($g in ($entries | Group-Object sha256 | Where-Object { $_.Count -gt 1 })) {
+        Add-IconHit (($g.Group | ForEach-Object { $_.file }) -join ', ') 'two icons share one pathData (duplicate)'
+    }
+    foreach ($g in ($entries | Where-Object { $_.symbol } | Group-Object symbol | Where-Object { $_.Count -gt 1 })) {
+        Add-IconHit $g.Name 'one symbol is mapped by two entries'
+    }
+    foreach ($g in ($entries | Group-Object concept | Where-Object { $_.Count -gt 1 })) {
+        Add-IconHit $g.Name 'one concept maps to two icons'
+    }
+}
+
+$appIcons = 'AppIcons.kt'
+foreach ($f in $kotlin) {
+    $code = Read-KotlinCode $f.FullName
+    if ($f.Name -ne $appIcons -and $code -match 'androidx\.compose\.material\.icons') {
+        Add-IconHit (Get-RelPath $f.FullName) 'imports androidx.compose.material.icons (use AppIcons)'
+    }
+    if ($f.Name -ne $appIcons -and $code -match '\bR\.drawable\.ic_') {
+        Add-IconHit (Get-RelPath $f.FullName) 'R.drawable.ic_ outside AppIcons.kt (single address rule)'
+    }
+}
+$catalog = Join-Path $root 'gradle/libs.versions.toml'
+if ((Test-Path $catalog) -and ((Read-Text $catalog) -match 'material-icons')) {
+    Add-IconHit 'gradle/libs.versions.toml' 'material-icons dependency is present (it lets a second family re-enter)'
+}
+foreach ($f in $resXml) {
+    $rel = Get-NormPath (Get-RelPath $f.FullName)
+    if ((Read-XmlCode $f.FullName) -notmatch '@drawable/ic_ui_') { continue }
+    $ok = ($rel -like 'app/src/main/res/layout/*') -or ($rel -like 'app/src/main/res/menu/*') -or
+          (($rel -like 'app/src/main/res/values/*') -and ($f.Name -like 'styles*.xml'))
+    if (-not $ok) { Add-IconHit $rel '@drawable/ic_ui_ outside res/layout, res/menu or res/values/styles*.xml' }
+}
+
+# ---- 10b. stale allow-list entries --------------------------------------------------------------------------------
 foreach ($e in $dpAllow) {
     if ($e.Hits -eq 0) { [void]$staleRows.Add([pscustomobject]@{ File = "dp-allow.txt: $($e.Line)"; Count = 1 }) }
 }
@@ -359,12 +467,13 @@ $categories = @(
     @{ Key = 'drawable';     R = $drawable;  Block = $true;  Msg = 'dp literals in non-vector drawables' },
     @{ Key = 'float';        R = $floatLit;  Block = $true;  Msg = 'literal android:alpha / letterSpacing / lineSpacingMultiplier' },
     @{ Key = 'fontfamily';   R = $fontFam;   Block = $true;  Msg = 'literal android:fontFamily in layouts' },
-    @{ Key = 'styles';       R = $styles;    Block = $true;  Msg = 'numeric sp/dp/letterSpacing in styles_*.xml / themes.xml' },
+    @{ Key = 'styles';       R = $styles;    Block = $true;  Msg = 'numeric sp/dp in styles_*.xml / themes.xml (letterSpacing exempt)' },
     @{ Key = 'strings';      R = $strings;   Block = $true;  Msg = 'android:text/hint/contentDescription literals in layouts' },
     @{ Key = 'textsize';     R = $text;      Block = $true;  Msg = 'android:textSize="Nsp" in layouts (outside the named exceptions)' },
     @{ Key = 'kotlin-dp';    R = $ktDp;      Block = $true;  Msg = 'dp(N) / density / COMPLEX_UNIT_* / applyDimension in Kotlin' },
     @{ Key = 'kotlin-shape'; R = $ktShape;   Block = $true;  Msg = 'cornerRadius/setStroke/elevation/alpha/Typeface/textSize/postDelayed/duration literals' },
     @{ Key = 'compose';      R = $compose;   Block = $true;  Msg = '<n>.dp / <n>.sp literals in Kotlin' },
+    @{ Key = 'icons';        R = $icons;     Block = $true;  Msg = 'icon family: manifest bijection, grid, hash, one shape, single family/address, uniqueness' },
     @{ Key = 'stale';        R = $stale;     Block = $true;  Msg = 'allow-list / exception entries matching nothing (delete them)' },
     @{ Key = 'deco';         R = $deco;      Block = $false; Msg = 'deco_* references (info only; decorative one-offs = design debt)' }
 )

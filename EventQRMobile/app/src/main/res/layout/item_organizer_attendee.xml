@@ -1,86 +1,96 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+    ORGANIZER - ATTENDEE ROW (§5.5 list_row_icon variant with an initials avatar).
+
+        80dp min, start 20dp / end 16dp
+        40dp avatar, radius 10, ui_primary_container fill, initials in ui_on_primary_container
+        name 18/600, email 14/20 secondary, points inline in numeric_s
+        ONE trailing thing: the status badge
+        hairline divider inset 76dp so it aligns to the name, not the avatar
+
+    No card, no shadow, no GradientDrawable pill.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/space_md"
-    style="@style/Widget.EventQR.Card.Raised"
-    app:cardUseCompatPadding="false">
+    android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/attendeeRowContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:minHeight="@dimen/ui_organizer_attendee_row_height"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
         android:gravity="center_vertical"
-        android:minHeight="@dimen/list_item_tall_min_height"
         android:orientation="horizontal"
-        android:paddingStart="@dimen/space_lg"
-        android:paddingTop="@dimen/space_14"
-        android:paddingEnd="@dimen/space_lg"
-        android:paddingBottom="@dimen/space_14">
+        android:paddingStart="@dimen/ui_row_start"
+        android:paddingEnd="@dimen/ui_row_end"
+        android:paddingTop="@dimen/ui_row_padding_vertical"
+        android:paddingBottom="@dimen/ui_row_padding_vertical">
 
         <TextView
             android:id="@+id/txtAttendeeInitial"
-            android:layout_width="@dimen/icon_tile_lg"
-            android:layout_height="@dimen/icon_tile_lg"
-            android:background="@drawable/bg_circle_primary"
+            android:layout_width="@dimen/ui_row_tile"
+            android:layout_height="@dimen/ui_row_tile"
+            android:background="@drawable/bg_ui_icon_tile"
             android:gravity="center"
-            android:text="@string/placeholder_initial_j"
-            android:textColor="@color/on_primary"
-            android:textAppearance="@style/TextAppearance.EventQR.TitleMedium" />
+            android:textColor="@color/ui_primary"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.Title"
+            tools:text="JD" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/space_14"
-            android:layout_marginEnd="@dimen/space_10"
+            android:layout_marginStart="@dimen/space_16"
+            android:layout_marginEnd="@dimen/space_8"
             android:layout_weight="1"
             android:orientation="vertical">
 
             <TextView
                 android:id="@+id/txtAttendeeName"
+                style="@style/Widget.EventQR.Ui.ListRow.Title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
+                tools:text="Juan Dela Cruz" />
 
             <TextView
                 android:id="@+id/txtAttendeeEmail"
+                style="@style/Widget.EventQR.Ui.ListRow.Meta"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_xxs"
-                android:ellipsize="end"
+                android:layout_marginTop="@dimen/space_2"
                 android:maxLines="1"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
+                tools:text="juan@example.com" />
 
             <TextView
                 android:id="@+id/txtAttendeePoints"
+                style="@style/Widget.EventQR.Ui.ListRow.Value"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_xs"
-                android:textColor="@color/primary"
-                android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
+                android:layout_marginTop="@dimen/space_2"
+                android:textColor="@color/ui_text_secondary"
+                android:visibility="gone"
+                tools:text="120 pts" />
         </LinearLayout>
 
         <TextView
             android:id="@+id/txtAttendeeStatus"
+            style="@style/Widget.EventQR.Ui.StatusBadge.Neutral"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:minWidth="0dp"
-            android:paddingHorizontal="@dimen/space_md"
-            android:paddingVertical="@dimen/space_6"
-            android:text="@string/common_registered"
-            android:textColor="@color/primary"
-            android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
-
-        <ImageView
-            android:layout_width="@dimen/icon_md"
-            android:layout_height="@dimen/icon_md"
-            android:layout_marginStart="@dimen/space_sm"
-            android:contentDescription="@null"
-            android:src="@drawable/ic_chevron_right"
-            app:tint="@color/neutral" />
+            android:layout_height="@dimen/ui_badge_height"
+            android:layout_marginStart="@dimen/space_8"
+            tools:text="Registered" />
     </LinearLayout>
 
-</com.google.android.material.card.MaterialCardView>
+    <View
+        android:id="@+id/attendeeRowDivider"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:layout_marginStart="@dimen/ui_divider_inset"
+        android:background="@color/ui_hairline"
+        android:importantForAccessibility="no" />
+</LinearLayout>

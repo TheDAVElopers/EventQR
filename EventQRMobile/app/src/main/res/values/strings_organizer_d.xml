@@ -11,7 +11,6 @@
     <string name="organizer_try_again_later">Please try again later.</string>
     <string name="organizer_selected_event">Selected Event</string>
     <string name="search_attendees_title">Search Attendees</string>
-    <string name="organizer_dashboard_default_name">Organizer</string>
     <string name="organizer_dashboard_events_load_failed">Organizer events could not be loaded.</string>
     <string name="notification_mgmt_all_types">All types</string>
     <string name="notification_mgmt_all_events">All events</string>
@@ -19,13 +18,11 @@
     <string name="organizer_no_event_selected">No event selected</string>
     <string name="organizer_no_event_selected_hint">%1$s Open this screen from My Events or the event hub.</string>
     <string name="organizer_open_my_events">Open My Events</string>
-    <string name="organizer_reports_subtitle">View and generate event reports</string>
-    <string name="organizer_rewards_subtitle">View and manage event rewards</string>
     <string name="organizer_retry">Retry</string>
     <string name="organizer_limited_local_data">Showing limited local data. Pull down to refresh.</string>
-    <string name="manage_users_title">Staff Assignment</string>
+    <string name="manage_users_title">Staff assignment</string>
     <string name="manage_users_remove_confirm">Remove %1$s from %2$s?</string>
-    <string name="search_user_account_title">Search User Account</string>
+    <string name="search_user_account_title">Add staff</string>
     <string name="txn_type_entry">Entry</string>
     <string name="txn_type_attendance">Attendance</string>
     <string name="txn_type_benefit_claim">Benefit Claim</string>
@@ -75,10 +72,6 @@
     <string name="event_reports_no_events_title">No events found</string>
     <string name="event_reports_no_events_subtext">You don\'t have any approved events yet.</string>
     <string name="event_reports_generate_reports">Generate Reports</string>
-    <string name="event_reports_select_event">Select Event</string>
-    <string name="event_reports_select_event_caps">SELECT EVENT</string>
-    <string name="event_reports_selected_event">Selected Event</string>
-    <string name="event_reports_exited">Exited</string>
     <string name="event_reports_generate_all">Generate All Reports</string>
     <string name="event_reports_subtitle_roster">Complete attendee check-in and registration roster</string>
     <string name="event_reports_subtitle_no_shows">Registered attendees who have not checked in yet</string>
@@ -100,12 +93,10 @@
     <!-- Report Preview -->
     <string name="report_preview_event_id_missing">Event ID is missing.</string>
     <string name="report_preview_report_data_missing">Report data is missing.</string>
-    <string name="report_preview_combined_report">Combined Report</string>
     <string name="report_preview_report">Report</string>
     <string name="report_preview_title">Report Preview</string>
     <string name="report_preview_export">Export</string>
     <string name="report_preview_reports_count">%1$d reports</string>
-    <string name="report_preview_records_count_caps">%1$d RECORDS</string>
     <string name="report_preview_combined_contains">Combined report containing all available sections</string>
     <string name="report_preview_filter_start">Start</string>
     <string name="report_preview_filter_end">End</string>
@@ -143,10 +134,6 @@
     <string name="report_preview_event">Event</string>
     <string name="report_preview_generated_label">Generated</string>
     <string name="report_preview_section_n">Section %1$d</string>
-    <string name="report_preview_chart_summary">Chart Series Summary</string>
-    <string name="report_preview_pdf_event">Event: %1$s</string>
-    <string name="report_preview_pdf_generated">Generated: %1$s</string>
-    <string name="report_preview_report_section">Report Section</string>
     <string name="report_preview_pdf_no_records">No records in this section.</string>
     <string name="report_export_summary">Summary</string>
     <string name="report_export_category">Category</string>
@@ -174,7 +161,6 @@
     <string name="manage_rewards_remove_failed">Failed to remove reward.</string>
     <string name="manage_rewards_removed">Reward removed.</string>
     <string name="manage_rewards_settings_failed">Failed to update reward settings.</string>
-    <string name="organizer_select_event_header">SELECT EVENT</string>
 
     <!-- Manage Scan Purposes -->
     <string name="scan_purpose_type_event_entry">Event Entry</string>
@@ -238,10 +224,8 @@
     <string name="transaction_rules_failed_save">Failed to save transaction rules: %1$s</string>
 
     <!-- Event Management Hub -->
-    <string name="event_management_hub_title">Event Management</string>
     <string name="event_management_hub_loading_details">Loading event details...</string>
     <string name="event_management_hub_details_load_failed">Event details could not be loaded.</string>
     <string name="event_management_hub_event_not_found">Event not found</string>
     <string name="event_management_hub_event_not_available">This event is not available for organizer management.</string>
-    <string name="event_management_hub_default_description">Manage your event details, attendees, and settings all in one place.</string>
 </resources>

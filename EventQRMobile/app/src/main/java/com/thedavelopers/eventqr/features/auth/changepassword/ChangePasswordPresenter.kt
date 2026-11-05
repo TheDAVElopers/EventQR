@@ -8,6 +8,7 @@ import com.thedavelopers.eventqr.features.auth.AuthRepository
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 
 class ChangePasswordPresenter() {
     private var view: ChangePasswordContract.View? = null
@@ -63,7 +64,13 @@ class ChangePasswordPresenter() {
                 }
                 is NetworkResult.Error -> {
                     view?.showLoading(false)
-                    view?.showMessage(result.message ?: string(R.string.change_password_failed))
+                    // The endpoint's 400 is IncorrectCurrentPasswordException: the policy and mismatch checks
+                    // already ran client-side, so a rejected request means the current password is wrong.
+                    if ((result.throwable as? HttpException)?.code() == 400) {
+                        view?.showCurrentPasswordError(result.message)
+                    } else {
+                        view?.showMessage(result.message ?: string(R.string.change_password_failed))
+                    }
                 }
                 NetworkResult.Loading -> Unit
                 null -> {

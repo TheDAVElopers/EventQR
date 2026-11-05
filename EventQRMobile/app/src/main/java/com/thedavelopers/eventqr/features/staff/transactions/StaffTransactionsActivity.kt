@@ -1,17 +1,19 @@
 package com.thedavelopers.eventqr.features.staff
 
-import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+import android.content.res.ColorStateList
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.ImageViewCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -26,17 +28,17 @@ import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResp
 import com.google.android.material.snackbar.Snackbar
 import com.thedavelopers.eventqr.core.util.PagedAccumulator
 import com.thedavelopers.eventqr.core.util.addNearEndListener
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+import com.thedavelopers.eventqr.ui.components.PassHeadBinder
 import com.thedavelopers.eventqr.features.staff.model.dto.StaffTransactionSummary
+import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import kotlinx.coroutines.Job
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.Locale
 import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.ui.theme.dimenOffset
-import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
-import com.thedavelopers.eventqr.ui.theme.strong
 import com.thedavelopers.eventqr.ui.theme.dimenFloat
 
 open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsContract.View {
@@ -47,11 +49,10 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
     private lateinit var skeletonLoading: View
     private lateinit var eventCard: LinearLayout
     private lateinit var eventTitleView: TextView
-    private lateinit var eventDateView: TextView
-    private lateinit var eventChevron: TextView
+    private lateinit var eventChevron: ImageView
     private lateinit var purposeCard: LinearLayout
     private lateinit var purposeTitleView: TextView
-    private lateinit var purposeChevron: TextView
+    private lateinit var purposeChevron: ImageView
     private lateinit var txtTotalScans: TextView
     private lateinit var txtSuccessfulScans: TextView
     private lateinit var txtRejectedScans: TextView
@@ -76,9 +77,8 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
 
     private companion object {
         const val PAGE_SIZE = 20
+        const val CHEVRON_OPEN_DEGREES = 180f
     }
-
-    private val manilaZone: ZoneId = ZoneId.of("Asia/Manila")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,13 +91,19 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         }
 
         setContentView(R.layout.activity_staff_transaction_logs)
+        applyEventQrSystemBarAppearance(lightStatusBars = false)
+        findViewById<View>(R.id.passHeadIdentity).applyEventQrTopInsetPadding()
+        PassHeadBinder.bindCompact(
+            findViewById(R.id.passHead),
+            title = getString(R.string.ui_staff_logs),
+            eyebrow = getString(R.string.ui_staff_role),
+        )
 
         repository = StaffRepository(this)
         adapter = TransactionLogAdapter()
 
         eventCard = findViewById(R.id.cardStaffTransactionsEvent)
         eventTitleView = findViewById(R.id.txtStaffTransactionsEventTitle)
-        eventDateView = findViewById(R.id.txtStaffTransactionsEventDate)
         eventChevron = findViewById(R.id.txtStaffTransactionsEventChevron)
         purposeCard = findViewById(R.id.cardStaffTransactionsPurpose)
         purposeTitleView = findViewById(R.id.txtStaffTransactionsPurposeTitle)
@@ -195,7 +201,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         paging.reset()
         renderSummary(StaffTransactionSummary())
         adapter.submitItems(emptyList())
-        txtEmptyState.text = getString(R.string.staff_transactions_select_an_event_to_view_its_transact)
+        txtEmptyState.text = getString(R.string.ui_staff_no_logs_prompt)
         txtEmptyState.visibility = View.VISIBLE
         recyclerView.visibility = View.GONE
         setPurposeCardEnabled(false)
@@ -288,51 +294,29 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
 
     private fun bindEventHeader() {
         val selected = assignedEvents.firstOrNull { it.eventId.toString() == selectedEventId }
-        eventTitleView.text = selected?.title ?: "Select Event"
-        eventDateView.text = selected?.eventStartAt
-            ?.atZone(manilaZone)
-            ?.format(DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ENGLISH))
-            .orEmpty()
+        eventTitleView.text = selected?.title ?: getString(R.string.ui_staff_select_event)
         applyFilterCardState()
     }
 
     private fun bindPurposeHeader() {
         val selected = purposeOptions.firstOrNull { it.id == selectedPurposeId }
-        purposeTitleView.text = selected?.label ?: "All Purposes"
+        purposeTitleView.text = selected?.label ?: getString(R.string.ui_staff_all_purposes)
         applyFilterCardState()
     }
 
     /**
-     * Swaps the filter cards between the neutral outlined state (default) and the
-     * filled brand chip state (a specific option is selected). Dropdown wiring and
-     * title text are untouched — only background/foreground styling is toggled.
+     * Selected means "this filter is narrowing the list": the value moves from secondary to
+     * primary and the chevron follows. No card fill, no dot, no stroke swap (§5.6).
      */
     private fun applyFilterCardState() {
-        val eventSelected = selectedEventId != null
-        val purposeSelected = selectedPurposeId != null
+        val selectedColor = getColor(R.color.ui_text_primary)
+        val idleColor = getColor(R.color.ui_text_secondary)
 
-        eventCard.setBackgroundResource(
-            if (eventSelected) R.drawable.bg_staff_filter_card_selected else R.drawable.bg_staff_filter_card_neutral
-        )
-        eventTitleView.setTextColor(getColor(if (eventSelected) R.color.on_primary else R.color.text_primary))
-        eventDateView.setTextColor(getColor(if (eventSelected) R.color.on_primary_muted else R.color.filter_label))
-        eventChevron.setTextColor(getColor(if (eventSelected) R.color.on_primary else R.color.text_secondary))
-        findViewById<View>(R.id.viewEventDot).setBackgroundResource(
-            if (eventSelected) R.drawable.bg_staff_scanner_status_dot else R.drawable.bg_staff_filter_status_dot_neutral
-        )
-        findViewById<TextView>(R.id.txtStaffTransactionsEventLabel)
-            .setTextColor(getColor(if (eventSelected) R.color.on_primary_muted else R.color.filter_label))
+        eventTitleView.setTextColor(if (selectedEventId != null) selectedColor else idleColor)
+        ImageViewCompat.setImageTintList(eventChevron, ColorStateList.valueOf(if (selectedEventId != null) selectedColor else idleColor))
 
-        purposeCard.setBackgroundResource(
-            if (purposeSelected) R.drawable.bg_staff_filter_card_selected else R.drawable.bg_staff_filter_card_neutral
-        )
-        purposeTitleView.setTextColor(getColor(if (purposeSelected) R.color.on_primary else R.color.text_primary))
-        purposeChevron.setTextColor(getColor(if (purposeSelected) R.color.on_primary else R.color.text_secondary))
-        findViewById<View>(R.id.viewPurposeDot).setBackgroundResource(
-            if (purposeSelected) R.drawable.bg_staff_scanner_status_dot else R.drawable.bg_staff_filter_status_dot_neutral
-        )
-        findViewById<TextView>(R.id.txtStaffTransactionsPurposeLabel)
-            .setTextColor(getColor(if (purposeSelected) R.color.on_primary_muted else R.color.filter_label))
+        purposeTitleView.setTextColor(if (selectedPurposeId != null) selectedColor else idleColor)
+        ImageViewCompat.setImageTintList(purposeChevron, ColorStateList.valueOf(if (selectedPurposeId != null) selectedColor else idleColor))
     }
 
     private fun toggleEventPopup() {
@@ -373,7 +357,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
             return
         }
         if (purposeOptions.isEmpty()) {
-            showMessage(getString(R.string.staff_transactions_no_scan_purposes_found_for_this_filt))
+            showMessage(getString(R.string.ui_staff_no_purposes))
             return
         }
         closeEventPopup()
@@ -404,16 +388,16 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
 
     private fun buildEventDropdownView(): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-        setBackgroundResource(R.drawable.bg_card)
+        setBackgroundResource(R.drawable.bg_ui_card)
         val allSelected = selectedEventId == null
-        addView(buildFilterOptionRow("Select Event", allSelected) {
+        addView(buildFilterOptionRow(getString(R.string.ui_staff_select_event), allSelected) {
             selectedEventId = null
             selectedPurposeId = null
             bindEventHeader()
             bindPurposeHeader()
             closeEventPopup()
             showPromptState()
-        }.apply { if (allSelected) setBackgroundColor(color(R.color.accent_container)) })
+        }.apply { if (allSelected) setBackgroundColor(color(R.color.ui_primary_wash)) })
 
         assignedEvents.forEach { event ->
             val isSelected = selectedEventId == event.eventId.toString()
@@ -424,20 +408,20 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
                 bindPurposeHeader()
                 closeEventPopup()
                 refreshTransactions()
-            }.apply { if (isSelected) setBackgroundColor(color(R.color.accent_container)) })
+            }.apply { if (isSelected) setBackgroundColor(color(R.color.ui_primary_wash)) })
         }
     }
 
     private fun buildPurposeDropdownView(): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-        setBackgroundResource(R.drawable.bg_card)
+        setBackgroundResource(R.drawable.bg_ui_card)
         val allSelected = selectedPurposeId == null
-        addView(buildFilterOptionRow("All Purposes", allSelected) {
+        addView(buildFilterOptionRow(getString(R.string.ui_staff_all_purposes), allSelected) {
             selectedPurposeId = null
             bindPurposeHeader()
             closePurposePopup()
             refreshTransactions()
-        }.apply { if (allSelected) setBackgroundColor(color(R.color.accent_container)) })
+        }.apply { if (allSelected) setBackgroundColor(color(R.color.ui_primary_wash)) })
 
         purposeOptions.forEach { purpose ->
             val isSelected = selectedPurposeId == purpose.id
@@ -446,7 +430,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
                 bindPurposeHeader()
                 closePurposePopup()
                 refreshTransactions()
-            }.apply { if (isSelected) setBackgroundColor(color(R.color.accent_container)) })
+            }.apply { if (isSelected) setBackgroundColor(color(R.color.ui_primary_wash)) })
         }
     }
 
@@ -454,21 +438,20 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_md), dimenOffset(R.dimen.space_lg), dimenOffset(R.dimen.space_md))
-            if (!isSelected) setBackgroundColor(color(R.color.surface))
+            minimumHeight = dimenOffset(R.dimen.ui_touch_min)
+            setPadding(dimenOffset(R.dimen.ui_gutter), dimenOffset(R.dimen.space_md), dimenOffset(R.dimen.ui_gutter), dimenOffset(R.dimen.space_md))
+            if (!isSelected) setBackgroundColor(color(R.color.ui_surface))
             setOnClickListener { onClick() }
             addView(TextView(this@StaffTransactionsActivity).apply {
                 text = label
-                setTextColor(if (isSelected) color(R.color.primary) else color(R.color.text_primary))
-                setTextSizeRes(R.dimen.type_body_medium)
-                strong()
+                setTextColor(if (isSelected) color(R.color.ui_primary) else color(R.color.ui_text_primary))
+                setTextAppearance(R.style.TextAppearance_EventQR_Type_Title)
             })
         }
 
-    private fun setChevron(view: TextView, open: Boolean) {
-        view.includeFontPadding = false
-        view.translationY = dimenOffset(R.dimen.glyph_nudge_y).toFloat()
-        view.text = if (open) "\u25B4" else "\u25BE"
+    /** Chevron state is rotation, never a text glyph (§3.6). */
+    private fun setChevron(view: ImageView, open: Boolean) {
+        view.rotation = if (open) CHEVRON_OPEN_DEGREES else 0f
     }
 
 

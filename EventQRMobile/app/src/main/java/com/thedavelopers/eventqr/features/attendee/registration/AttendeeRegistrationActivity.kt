@@ -15,7 +15,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.ui.theme.dimenFloat
+import com.thedavelopers.eventqr.ui.theme.applyEventQrBottomInsetPadding
 import com.thedavelopers.eventqr.features.terms.TermsLink
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.session.SessionManager
@@ -61,6 +61,7 @@ open class AttendeeRegistrationActivity : AppCompatActivity(), RegistrationContr
         eventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty()
 
         findViewById<ImageButton>(R.id.nav_header_back).setOnClickListener { finish() }
+        findViewById<View>(R.id.layoutBottomBar).applyEventQrBottomInsetPadding()
 
         eventCategoryText = findViewById(R.id.txtEventCategory)
         eventTitleText = findViewById(R.id.txtEventTitle)
@@ -99,7 +100,9 @@ open class AttendeeRegistrationActivity : AppCompatActivity(), RegistrationContr
 
     override fun showLoading(isLoading: Boolean) {
         this.isLoading = isLoading
-        submitButton.text = getString(if (isLoading) R.string.attendee_registration_submitting else R.string.event_registration_confirm_registration)
+        submitButton.text = getString(
+            if (isLoading) R.string.ui_attendee_submitting else R.string.ui_attendee_confirm_registration,
+        )
         updateSubmitButtonState()
     }
 
@@ -135,13 +138,13 @@ open class AttendeeRegistrationActivity : AppCompatActivity(), RegistrationContr
 
     private fun bindEventSummary() {
         val category = intent.getStringExtra(EXTRA_EVENT_CATEGORY).orEmpty().ifBlank { "Event" }
-        val title = intent.getStringExtra(EXTRA_EVENT_TITLE).orEmpty().ifBlank { "Register for Event" }
-        val date = intent.getStringExtra(EXTRA_EVENT_START).orEmpty().ifBlank { "Date to be announced" }
-        val venue = intent.getStringExtra(EXTRA_EVENT_LOCATION).orEmpty().ifBlank { "Venue to be announced" }
+        val title = intent.getStringExtra(EXTRA_EVENT_TITLE).orEmpty().ifBlank { getString(R.string.event_registration_register_for_event) }
+        val date = intent.getStringExtra(EXTRA_EVENT_START).orEmpty().ifBlank { getString(R.string.ui_attendee_date_tbd) }
+        val venue = intent.getStringExtra(EXTRA_EVENT_LOCATION).orEmpty().ifBlank { getString(R.string.ui_attendee_venue_tbd) }
 
         eventCategoryText.text = category
         eventTitleText.text = title
-        eventDateTimeVenueText.text = getString(R.string.registration_date_venue, date, venue)
+        eventDateTimeVenueText.text = getString(R.string.ui_attendee_event_meta, date, venue)
     }
 
     private fun attachInputTracking() {
@@ -250,7 +253,6 @@ open class AttendeeRegistrationActivity : AppCompatActivity(), RegistrationContr
             Validators.isValidEmail(emailInput.text.toString()) &&
             Validators.isValidPhoneNumber(phoneInput.text.toString())
         submitButton.isEnabled = !isLoading && inputsValid && termsCheckbox.isChecked
-        submitButton.alpha = if (submitButton.isEnabled) 1f else dimenFloat(R.dimen.alpha_busy)
     }
 
     companion object {

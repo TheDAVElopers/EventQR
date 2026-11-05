@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ghost button (§5.1). Transparent at rest, p_brand_50 on press, a 2dp focus ring for
+     keyboard users, no fill and no border otherwise. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/ui_primary_wash" />
+            <corners android:radius="@dimen/ui_radius_button" />
+        </shape>
+    </item>
+
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <stroke
+                android:width="@dimen/stroke_focus"
+                android:color="@color/ui_primary_focus_ring" />
+            <corners android:radius="@dimen/ui_radius_button" />
+        </shape>
+    </item>
+
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <corners android:radius="@dimen/ui_radius_button" />
+        </shape>
+    </item>
+
+</selector>

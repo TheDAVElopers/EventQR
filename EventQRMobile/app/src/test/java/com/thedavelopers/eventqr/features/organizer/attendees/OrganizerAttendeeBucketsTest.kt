@@ -92,8 +92,10 @@ class OrganizerAttendeeBucketsTest {
         val activity = Robolectric.buildActivity(AttendeeManagementActivity::class.java).create().get()
         val all = texts(activity.window.decorView)
         assertFalse("No Show tile must be hidden: $all", all.any { it.equals("No Show", ignoreCase = true) })
-        assertTrue(all.any { it == "Total" })
-        assertTrue(all.any { it == "Checked In" })
+        // §6.4: the counts live in the pass-head stub, labelled with the §5.4 vocabulary.
+        assertTrue(all.toString(), all.contains("Registered"))
+        assertTrue(all.toString(), all.contains("Checked in"))
+        assertTrue(all.toString(), all.contains("Exited"))
     }
 
     @Test

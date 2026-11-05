@@ -153,11 +153,12 @@ class RegistrationActivityTest {
         passwordInput.setText("Strong1!Pass")
 
         assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.layoutPasswordRequirements).visibility)
-        assertEquals("✓ At least 8 characters", activity.findViewById<TextView>(R.id.txtPasswordLengthRequirement).text.toString())
-        assertEquals("✓ One uppercase letter", activity.findViewById<TextView>(R.id.txtPasswordCapitalRequirement).text.toString())
-        assertEquals("✓ One lowercase letter", activity.findViewById<TextView>(R.id.txtPasswordLowercaseRequirement).text.toString())
-        assertEquals("✓ One number", activity.findViewById<TextView>(R.id.txtPasswordNumberRequirement).text.toString())
-        assertEquals("✓ One special character", activity.findViewById<TextView>(R.id.txtPasswordSpecialRequirement).text.toString())
+        // The state lives in the mark (a compound drawable), never in a Unicode glyph.
+        assertRequirementMet(activity, R.id.txtPasswordLengthRequirement, "At least 8 characters")
+        assertRequirementMet(activity, R.id.txtPasswordCapitalRequirement, "One uppercase letter")
+        assertRequirementMet(activity, R.id.txtPasswordLowercaseRequirement, "One lowercase letter")
+        assertRequirementMet(activity, R.id.txtPasswordNumberRequirement, "One number")
+        assertRequirementMet(activity, R.id.txtPasswordSpecialRequirement, "One special character")
         assertEquals("Strong", activity.findViewById<TextView>(R.id.txtPasswordStrength).text.toString())
     }
 
@@ -169,10 +170,29 @@ class RegistrationActivityTest {
         // "abcdefgh" meets only the length requirement.
         passwordInput.setText("abcdefgh")
 
-        assertEquals("✓ At least 8 characters", activity.findViewById<TextView>(R.id.txtPasswordLengthRequirement).text.toString())
-        assertEquals("○ One uppercase letter", activity.findViewById<TextView>(R.id.txtPasswordCapitalRequirement).text.toString())
-        assertEquals("✓ One lowercase letter", activity.findViewById<TextView>(R.id.txtPasswordLowercaseRequirement).text.toString())
+        assertRequirementMet(activity, R.id.txtPasswordLengthRequirement, "At least 8 characters")
+        assertRequirementUnmet(activity, R.id.txtPasswordCapitalRequirement, "One uppercase letter")
+        assertRequirementMet(activity, R.id.txtPasswordLowercaseRequirement, "One lowercase letter")
         assertEquals("Fair", activity.findViewById<TextView>(R.id.txtPasswordStrength).text.toString())
+    }
+
+    private fun assertRequirementMet(activity: RegistrationActivity, id: Int, label: String) {
+        assertRequirement(activity, id, label, activity.getColor(R.color.ui_text_primary))
+    }
+
+    private fun assertRequirementUnmet(activity: RegistrationActivity, id: Int, label: String) {
+        assertRequirement(activity, id, label, activity.getColor(R.color.ui_text_secondary))
+    }
+
+    /**
+     * A rule row carries its label as text and its state in the leading mark (a 16dp compound
+     * drawable) plus the label tone - no ✓/○ character is ever part of the string.
+     */
+    private fun assertRequirement(activity: RegistrationActivity, id: Int, label: String, expectedTextColor: Int) {
+        val view = activity.findViewById<TextView>(id)
+        assertEquals(label, view.text.toString())
+        assertEquals(expectedTextColor, view.currentTextColor)
+        assertEquals(activity.resources.getDimensionPixelSize(R.dimen.ui_rule_mark), view.compoundDrawablesRelative[0].intrinsicWidth)
     }
 
     @Test

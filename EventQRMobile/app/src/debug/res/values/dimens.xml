@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug-only sizes for the mark crispness screen. Not shipped in release. -->
+<resources>
+    <dimen name="mark_preview_16">16dp</dimen>
+    <dimen name="mark_preview_32">32dp</dimen>
+    <dimen name="mark_preview_48">48dp</dimen>
+    <!-- The adaptive icon at its own 108dp canvas, so the launcher's 96dp visible render is what is captured. -->
+    <dimen name="mark_preview_launcher">108dp</dimen>
+</resources>

@@ -1,100 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    ADMIN DASHBOARD (§6.5 of MyFiles/EventQR-Redesign-Plan.md) - retires Gen A.
+
+        Pass head   role tabs, title Admin, stub PENDING / ACCOUNTS / AUDIT
+        alert row   ONE 56dp row inside the content flow - warning badge, copy, chevron.
+                    It is a list row, never a full-width banner living in the header.
+        OVERVIEW    metric rows for the numbers that do not fit the stub (max three)
+        MANAGE      list rows; audit logs is the last row
+
+    Deleted: the "Admin Portal" gradient header, the alert banner inside it, the 2x2 white
+    cards with 42dp tinted icon tiles, the yellow bell tile, the red shield tile, the
+    rainbow status drawables and the MANAGE placeholder skeleton (static rows, no load).
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
+    android:background="@color/ui_background"
     android:orientation="vertical">
 
-    <LinearLayout
-        android:id="@+id/headerDashboard"
+    <!-- ═════════ Pass head: identity + tear + stub, max three stats ═════════ -->
+    <include
+        android:id="@+id/passHead"
+        layout="@layout/include_pass_head"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/bg_dashboard_gradient"
-        android:orientation="vertical"
-        android:paddingStart="@dimen/space_18"
-        android:paddingTop="@dimen/space_22"
-        android:paddingEnd="@dimen/space_18"
-        android:paddingBottom="@dimen/space_20">
-
-        <TextView
-            android:id="@+id/textAdminPortalTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/admin_dashboard_admin_portal"
-            android:textColor="@color/accent_container_strong"
-            android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge" />
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_xs"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/textAdminName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/admin_dashboard_admin_user"
-                android:textColor="@color/on_primary"
-                android:textAppearance="@style/TextAppearance.EventQR.TitleMedium" />
-
-            <TextView
-                android:id="@+id/textAdminPortalDot"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/space_sm"
-                android:text="@string/glyph_bullet"
-                android:textColor="@color/outline_strong"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge" />
-
-            <TextView
-                android:id="@+id/portalSwitcherChip"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/space_sm"
-                android:background="@drawable/bg_portal_chip"
-                android:paddingHorizontal="@dimen/space_10"
-                android:paddingVertical="@dimen/space_xs"
-                android:text="@string/admin_dashboard_admin"
-                android:textColor="@color/on_primary"
-                android:textAppearance="@style/TextAppearance.EventQR.TextOverline.Strong" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/cardPendingAlert"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_lg"
-            android:background="@drawable/bg_admin_alert_banner"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="@dimen/space_14"
-            android:paddingVertical="@dimen/space_md">
-
-            <ImageView
-                android:layout_width="@dimen/icon_18"
-                android:layout_height="@dimen/icon_18"
-                android:src="@drawable/notification_bell"
-                android:tint="@color/error_container" />
-
-            <TextView
-                android:id="@+id/textPendingAlert"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/space_10"
-                android:layout_weight="1"
-                android:text="@string/admin_dashboard_1_event_request_pending_review"
-                android:textColor="@color/error_container"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium.Strong" />
-
-            <ImageView
-                android:layout_width="@dimen/icon_sm"
-                android:layout_height="@dimen/icon_sm"
-                android:src="@drawable/ic_chevron_right"
-                android:tint="@color/deco_pink_light" />
-        </LinearLayout>
-    </LinearLayout>
+        android:layout_height="wrap_content" />
 
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshDashboard"
@@ -106,205 +37,134 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:paddingBottom="@dimen/space_md">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingStart="@dimen/space_14"
-            android:paddingTop="@dimen/space_14"
-            android:paddingEnd="@dimen/space_14">
-
-            <ProgressBar
-                android:id="@+id/progressDashboardLoading"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_gravity="center_horizontal"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/textDashboardLoadHint"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_sm"
-                android:gravity="center"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact"
-                android:visibility="gone" />
+            android:fillViewport="true"
+            android:overScrollMode="never">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_10"
-                android:orientation="horizontal">
+                android:orientation="vertical"
+                android:paddingBottom="@dimen/space_24">
 
+                <!-- ═════════ The one actionable row: pending review ═════════ -->
                 <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_admin_surface_card"
-                    android:orientation="vertical"
-                    android:padding="@dimen/space_14">
-
-                    <FrameLayout
-                        style="@style/Widget.EventQR.IconTile.R10.Warning"
-                        android:layout_width="@dimen/tile_34"
-                        android:layout_height="@dimen/tile_34">
-
-                        <ImageView
-                            android:layout_width="@dimen/icon_18"
-                            android:layout_height="@dimen/icon_18"
-                            android:layout_gravity="center"
-                            android:src="@drawable/ic_admin_bell"
-                            android:tint="@color/warning" />
-                    </FrameLayout>
+                    android:id="@+id/rowPendingAlert"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/ui_metric_row_height"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/ui_gutter"
+                    android:paddingEnd="@dimen/ui_row_end"
+                    android:visibility="gone"
+                    tools:visibility="visible">
 
                     <TextView
-                        android:id="@+id/textPendingRequestsValue"
+                        android:id="@+id/textPendingBadge"
+                        style="@style/Widget.EventQR.Ui.StatusBadge.Warning"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_md"
-                        android:text="@string/placeholder_zero"
-                        android:textAppearance="@style/TextAppearance.EventQR.TitleLarge" />
+                        android:layout_height="@dimen/ui_badge_height"
+                        android:text="@string/ui_admin_filter_pending" />
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:id="@+id/textPendingAlert"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="@string/admin_dashboard_pending_requests"
-                        android:textColor="@color/text_secondary"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
+                        android:layout_marginStart="@dimen/space_md"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Title"
+                        android:textColor="@color/ui_text_primary"
+                        tools:text="1 event request pending review" />
+
+                    <ImageView
+                        android:layout_width="@dimen/ui_chevron"
+                        android:layout_height="@dimen/ui_chevron"
+                        android:contentDescription="@null"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_ui_chevron_right"
+                        android:tint="@color/ui_text_secondary" />
                 </LinearLayout>
 
-                <Space
-                    android:layout_width="@dimen/space_10"
-                    android:layout_height="1dp" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
+                <!-- ═════════ OVERVIEW: metric rows, no cards ═════════ -->
+                <TextView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_admin_surface_card"
-                    android:orientation="vertical"
-                    android:padding="@dimen/space_14">
+                    android:layout_marginStart="@dimen/ui_gutter"
+                    android:layout_marginTop="@dimen/space_24"
+                    android:layout_marginEnd="@dimen/ui_gutter"
+                    android:text="@string/ui_admin_eyebrow_overview"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
 
-                    <FrameLayout
-                        style="@style/Widget.EventQR.IconTile.R10.AccentStrong"
-                        android:layout_width="@dimen/tile_34"
-                        android:layout_height="@dimen/tile_34">
+                <include
+                    android:id="@+id/metricActiveEvents"
+                    layout="@layout/widget_metric_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_8" />
 
-                        <ImageView
-                            android:layout_width="@dimen/icon_18"
-                            android:layout_height="@dimen/icon_18"
-                            android:layout_gravity="center"
-                            android:src="@drawable/ic_admin_users"
-                            android:tint="@color/primary" />
-                    </FrameLayout>
+                <include
+                    android:id="@+id/metricTotalAccounts"
+                    layout="@layout/widget_metric_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
 
-                    <TextView
-                        android:id="@+id/textTotalAccountsValue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_md"
-                        android:text="@string/placeholder_zero"
-                        android:textAppearance="@style/TextAppearance.EventQR.TitleLarge" />
+                <!-- ═════════ MANAGE ═════════ -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/ui_gutter"
+                    android:layout_marginTop="@dimen/space_32"
+                    android:layout_marginEnd="@dimen/ui_gutter"
+                    android:text="@string/ui_admin_eyebrow_manage"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/admin_dashboard_total_accounts"
-                        android:textColor="@color/text_secondary"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
-                </LinearLayout>
+                <!--
+                    MANAGE is a static navigation list, not a loaded list: nothing here waits on the
+                    network, so there is no skeleton. The placeholder skeleton that used to sit
+                    stacked on top of these rows (and was never hidden) is gone.
+                -->
+                <include
+                    android:id="@+id/rowEventRequests"
+                    layout="@layout/list_row_icon"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <include
+                    android:id="@+id/rowAccountManagement"
+                    layout="@layout/list_row_icon"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <include
+                    android:id="@+id/rowAuditLogs"
+                    layout="@layout/list_row_icon"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <ProgressBar
+                    android:id="@+id/progressDashboardLoading"
+                    android:layout_width="@dimen/ui_loading_indicator"
+                    android:layout_height="@dimen/ui_loading_indicator"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="@dimen/space_16"
+                    android:indeterminateTint="@color/ui_primary"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/textDashboardLoadHint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/ui_gutter"
+                    android:layout_marginTop="@dimen/space_8"
+                    android:accessibilityLiveRegion="polite"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                    android:textColor="@color/ui_text_secondary"
+                    android:visibility="gone" />
             </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_10"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_admin_surface_card"
-                    android:orientation="vertical"
-                    android:padding="@dimen/space_14">
-
-                    <FrameLayout
-                        style="@style/Widget.EventQR.IconTile.R10.Success"
-                        android:layout_width="@dimen/tile_34"
-                        android:layout_height="@dimen/tile_34">
-
-                        <ImageView
-                            android:layout_width="@dimen/icon_18"
-                            android:layout_height="@dimen/icon_18"
-                            android:layout_gravity="center"
-                            android:src="@drawable/ic_calendar"
-                            android:tint="@color/success" />
-                    </FrameLayout>
-
-                    <TextView
-                        android:id="@+id/textActiveEventsValue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_md"
-                        android:text="@string/placeholder_zero"
-                        android:textAppearance="@style/TextAppearance.EventQR.TitleLarge" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/common_active_events"
-                        android:textColor="@color/text_secondary"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
-                </LinearLayout>
-
-                <Space
-                    android:layout_width="@dimen/space_10"
-                    android:layout_height="1dp" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_admin_surface_card"
-                    android:orientation="vertical"
-                    android:padding="@dimen/space_14">
-
-                    <FrameLayout
-                        style="@style/Widget.EventQR.IconTile.R10"
-                        android:layout_width="@dimen/tile_34"
-                        android:layout_height="@dimen/tile_34"
-                        android:backgroundTint="@color/tile_pink">
-
-                        <ImageView
-                            android:layout_width="@dimen/icon_18"
-                            android:layout_height="@dimen/icon_18"
-                            android:layout_gravity="center"
-                            android:src="@drawable/ic_admin_shield"
-                            android:tint="@color/danger" />
-                    </FrameLayout>
-
-                    <TextView
-                        android:id="@+id/textAuditLogsValue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_md"
-                        android:text="@string/placeholder_zero"
-                        android:textAppearance="@style/TextAppearance.EventQR.TitleLarge" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/admin_dashboard_audit_logs"
-                        android:textColor="@color/text_secondary"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
-                </LinearLayout>
-            </LinearLayout>
-
-
-        </LinearLayout>
         </ScrollView>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 

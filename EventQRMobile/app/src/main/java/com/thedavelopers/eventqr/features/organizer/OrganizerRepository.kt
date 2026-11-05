@@ -397,6 +397,8 @@ private fun OrganizerEventDto.toMvpEvent(context: Context): OrganizerMvpEvent = 
     capacity = capacity,
     currentAttendeeCount = currentAttendeeCount,
     availableSlots = availableSlots,
+    eventStartAt = eventStartAt,
+    eventEndAt = eventEndAt,
 )
 
 private fun OrganizerAttendeeDto.toMvpAttendee(context: Context): OrganizerMvpAttendee = OrganizerMvpAttendee(

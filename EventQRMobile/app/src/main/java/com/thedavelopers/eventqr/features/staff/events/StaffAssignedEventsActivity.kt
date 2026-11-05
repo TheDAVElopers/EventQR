@@ -1,16 +1,15 @@
 package com.thedavelopers.eventqr.features.staff
 
-import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.google.android.material.chip.Chip
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
@@ -18,12 +17,18 @@ import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResponse
 import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
+import com.thedavelopers.eventqr.ui.components.CountLabel
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+import com.thedavelopers.eventqr.ui.components.PassHeadBinder
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
-import java.time.Instant
-import androidx.lifecycle.lifecycleScope
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import kotlinx.coroutines.launch
-import com.thedavelopers.eventqr.ui.theme.dimen
+import java.time.Instant
 
+/**
+ * Assigned events (§6.3). Compact pass head with a count, a chip row of four filters, and the
+ * shared EventCard rows. Filter state is the chip fill only - no check icon, no stroke swap.
+ */
 open class StaffAssignedEventsActivity : AppCompatActivity() {
     private lateinit var repository: StaffRepository
     private lateinit var recyclerView: RecyclerView
@@ -31,10 +36,11 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
     private lateinit var emptyState: EventQrEmptyState
     private lateinit var skeletonLoading: View
     private lateinit var swipeRefresh: SwipeRefreshLayout
-    private lateinit var chipAll: Chip
-    private lateinit var chipUpcoming: Chip
-    private lateinit var chipActive: Chip
-    private lateinit var chipCompleted: Chip
+    private lateinit var chipAll: TextView
+    private lateinit var chipUpcoming: TextView
+    private lateinit var chipActive: TextView
+    private lateinit var chipCompleted: TextView
+    private lateinit var countView: TextView
 
     private var isFirstResume = true
     private var selectedFilter: StaffEventFilter = StaffEventFilter.ALL
@@ -51,8 +57,16 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
         }
 
         setContentView(R.layout.activity_staff_assigned_events)
-        applyEventQrSystemBarAppearance()
+        applyEventQrSystemBarAppearance(lightStatusBars = false)
+        findViewById<View>(R.id.passHeadIdentity).applyEventQrTopInsetPadding()
         repository = StaffRepository(this)
+
+        countView = findViewById<TextView>(R.id.passHeadTitleCount).apply { visibility = View.VISIBLE }
+        PassHeadBinder.bindCompact(
+            findViewById(R.id.passHead),
+            title = getString(R.string.ui_staff_assigned_events),
+            eyebrow = getString(R.string.ui_staff_role),
+        )
 
         recyclerView = findViewById(R.id.recyclerAssignedEvents)
         emptyState = findViewById(R.id.txtAssignedEventsEmpty)
@@ -80,7 +94,8 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
 
-        setupBottomNav()
+        configureStaffBottomNav(StaffBottomNavItem.EVENTS)
+        updateFilterUI()
         loadEvents()
     }
 
@@ -93,33 +108,23 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
         loadEvents()
     }
 
-    private fun setupBottomNav() {
-        configureStaffBottomNav(StaffBottomNavItem.EVENTS)
-    }
-
     private fun selectFilter(filter: StaffEventFilter) {
         selectedFilter = filter
         updateFilterUI()
         renderFilteredEvents()
     }
 
+    /** The fill is the state (§5.6): selected = primary, unselected = surface + interactive stroke. */
     private fun updateFilterUI() {
-        val textSecondary = ContextCompat.getColor(this, R.color.text_secondary)
-
         val chips = mapOf(
             StaffEventFilter.ALL to chipAll,
             StaffEventFilter.UPCOMING to chipUpcoming,
             StaffEventFilter.ACTIVE to chipActive,
             StaffEventFilter.COMPLETED to chipCompleted,
         )
-
         for ((filter, chip) in chips) {
-            val isSelected = filter == selectedFilter
-            chip.isChecked = isSelected
-            chip.setTextColor(if (isSelected) ContextCompat.getColor(this, R.color.on_primary) else textSecondary)
-            chip.setChipBackgroundColorResource(if (isSelected) R.color.primary else R.color.surface)
-            chip.chipStrokeWidth = if (isSelected) 0f else dimen(R.dimen.stroke_hairline)
-            chip.chipStrokeColor = ContextCompat.getColorStateList(this, R.color.outline)
+            chip.isSelected = filter == selectedFilter
+            chip.contentDescription = chip.text
         }
     }
 
@@ -138,6 +143,7 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
                     adapter.submitItems(emptyList())
                     emptyState.text = result.message
                     emptyState.visibility = View.VISIBLE
+                    countView.text = ""
                     skeletonLoading.visibility = View.GONE
                     Toast.makeText(this@StaffAssignedEventsActivity, result.message, Toast.LENGTH_SHORT).show()
                 }
@@ -169,6 +175,11 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
             StaffEventFilter.COMPLETED -> completed
         }
 
+        countView.text = if (filtered.isEmpty()) {
+            ""
+        } else {
+            CountLabel.format(filtered.size.toLong(), getString(R.string.ui_staff_events_count))
+        }
         emptyState.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
         recyclerView.visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
         adapter.submitItems(filtered)

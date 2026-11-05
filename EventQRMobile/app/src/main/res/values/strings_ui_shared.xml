@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Shared strings for the Phase 1 component set. Kept out of values/strings.xml so the
+    foundation pass and the per-screen passes never edit the same file.
+
+    Only strings that a COMPONENT owns live here. Screen copy belongs in the screen's own
+    strings file (or strings.xml at Phase 6). Sentence case everywhere (§7.2); no exclamation
+    marks, no "Oops", no "successfully" (§7.3).
+-->
+<resources>
+
+    <!-- Pass head -->
+    <string name="ui_pass_head_bell">Notifications</string>
+    <string name="ui_pass_head_stat_event">Event</string>
+
+    <!-- Credential (§5.14) -->
+    <string name="ui_credential_brand" translatable="false">EVENTQR</string>
+    <string name="ui_credential_valid">Valid</string>
+    <string name="ui_credential_description">Pass for %1$s, registration %2$s. Double tap to enlarge.</string>
+
+    <!-- Scanner (§5.13) -->
+    <string name="ui_scan_panel_description">Camera preview. Point at the attendee\'s pass.</string>
+    <string name="ui_scan_guidance">Point the camera at the attendee\'s pass.</string>
+    <string name="ui_scan_torch">Torch</string>
+
+    <!-- Skeleton (§5.11) -->
+    <string name="ui_skeleton_loading">Loading</string>
+
+    <!-- Generic component actions -->
+
+    <!-- Card meta (replaces the raw "%1$d registered" / "%1$d / %2$d" concatenations) -->
+    <string name="ui_card_registered_count">%1$d registered</string>
+    <string name="ui_card_registered_of">%1$d / %2$d registered</string>
+    <string name="ui_card_percent">%1$d%%</string>
+
+</resources>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The dashboard's one primary target (§6.3): flat ui_primary, radius_md, no shadow.
+     Press darkens to ui_primary_pressed instead of lifting. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/ui_primary_pressed">
+
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/ui_primary" />
+            <corners android:radius="@dimen/ui_radius_card" />
+        </shape>
+    </item>
+</ripple>

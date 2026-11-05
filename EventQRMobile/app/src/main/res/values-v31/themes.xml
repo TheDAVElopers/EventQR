@@ -2,9 +2,11 @@
 <resources>
 
     <!--
-        Starting theme for Android 12+ (API 31+): solid indigo with the full wordmark from the first frame.
-        The icon (splash_icon_logo) is sized to fit inside the system's circular mask. No animation duration, so
-        the splash is dismissed as soon as LandingActivity draws.
+        Starting theme for Android 12+ (API 31+): flat indigo with the mark alone. The system splash is
+        icon-only - it cannot render the wordmark, so it shows the same 96dp mark the in-app splash and the
+        launcher do (04-logo-direction.md §4). The icon is sized inside the 288dp canvas so its corners clear
+        the system's circular mask. No animation duration, so the splash is dismissed as soon as
+        LandingActivity draws.
     -->
     <style name="Theme.App.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_logo</item>

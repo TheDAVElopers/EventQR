@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Dimens owned by the attendee screens (Phase 3/4). Everything that already has a shared token
+    in dimens_ui_shared.xml / dimens.xml is NOT repeated here - this file only holds the sizes the
+    attendee layouts need and the shared layer does not define.
+-->
+<resources>
+
+    <!-- Event detail poster height (§5.15). -->
+    <dimen name="ui_attendee_media_height">240dp</dimen>
+
+    <!-- Media head (5.15): minHeight with no poster, band carries the title. -->
+    <dimen name="ui_attendee_hero_min_height">120dp</dimen>
+    <dimen name="ui_hero_band_height">96dp</dimen>
+
+    <!-- Profile identity block (§6.2: 64dp square avatar, initial in Archivo at 24sp). -->
+    <dimen name="ui_attendee_avatar">64dp</dimen>
+    <dimen name="ui_attendee_avatar_initial">24sp</dimen>
+
+    <!-- Quick-action chip row: 48dp touch row around a 36dp chip (§9.2). -->
+    <dimen name="ui_attendee_chip_row">48dp</dimen>
+
+    <!-- Reward row: 88dp (§6.2). -->
+    <dimen name="ui_attendee_reward_row">88dp</dimen>
+
+    <!-- Credential screens: 40dp above the pass (§6.2). -->
+    <dimen name="ui_attendee_pass_top_gap">40dp</dimen>
+
+</resources>

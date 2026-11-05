@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dialog surface (§5.12): 16dp radius, ui_surface, NO stroke. The elevation (12dp) belongs
+     to the dialog window, not to this shape; a dialog is one of the two things in the app
+     allowed to cast. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/ui_surface" />
+    <corners android:radius="@dimen/ui_radius_sheet" />
+</shape>

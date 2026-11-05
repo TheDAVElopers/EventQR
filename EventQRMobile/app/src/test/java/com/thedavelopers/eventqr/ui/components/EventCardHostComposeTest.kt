@@ -46,7 +46,7 @@ class EventCardHostComposeTest {
     fun rawEnumStatus_isNotRenderedVerbatimAsBadgeLabel() {
         setHost(EventCardState(title = "Campus Tech Fest", status = "PENDING_REVIEW"))
 
-        composeTestRule.onNodeWithText("Pending").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Pending review").assertIsDisplayed()
         composeTestRule.onNodeWithText("PENDING_REVIEW").assertDoesNotExist()
     }
 
@@ -104,7 +104,7 @@ class EventCardHostComposeTest {
     fun registeredCountAndCapacity_renderProgressReadout() {
         setHost(EventCardState(title = "Campus Tech Fest", registeredCount = 30, capacity = 60))
 
-        composeTestRule.onNodeWithText("30 / 60 Registered").assertIsDisplayed()
+        composeTestRule.onNodeWithText("30 / 60 registered").assertIsDisplayed()
         composeTestRule.onNodeWithText("50%").assertIsDisplayed()
     }
 

@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.scanpurposes
 
+import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.dimenPx
 import com.thedavelopers.eventqr.ui.theme.dimenFloat
 import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
@@ -136,7 +137,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         purposeHost.removeAllViews()
         if (purposes.isEmpty()) {
             purposeHost.addView(emptyState(
-                iconRes = R.drawable.ic_scan,
+                iconRes = AppIcons.Scan,
                 title = getString(R.string.manage_scan_purposes_empty_title),
                 subtext = getString(R.string.manage_scan_purposes_empty_subtext),
                 actionLabel = getString(R.string.manage_scan_purposes_add_action),
@@ -161,8 +162,10 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
             ).apply {
                 setOnClickListener { showAddEditDialog(purpose) }
             }
-            val toggleSwitch = (purposeCard.getChildAt(0) as? LinearLayout)
-                ?.getChildAt(2) as? androidx.appcompat.widget.SwitchCompat
+            // The row owns its hierarchy; look the switch up by id instead of by child index.
+            val toggleSwitch = purposeCard.findViewById<androidx.appcompat.widget.SwitchCompat>(
+                com.thedavelopers.eventqr.R.id.switchToggle,
+            )
             toggleSwitch?.id = com.thedavelopers.eventqr.R.id.msp_purpose_toggle
             toggleSwitch?.setOnCheckedChangeListener { _, checked ->
                 togglePurpose(purpose, checked, toggleSwitch)

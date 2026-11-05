@@ -11,6 +11,7 @@ import com.thedavelopers.eventqr.features.dashboard.model.dto.DashboardUpcomingE
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
 import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
+import com.thedavelopers.eventqr.ui.components.PassStat
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.async
@@ -196,14 +197,6 @@ class DashboardPresenter(
                 null
             }
 
-            val upcomingCount = if (eventsResult is NetworkResult.Success || allEvents.isNotEmpty()) {
-                DashboardStats.upcomingCount(allEvents.map { it.eventStartAt }, now)
-            } else if (summaryResult is NetworkResult.Success) {
-                summaryResult.data.totalEvents.toInt()
-            } else {
-                0
-            }
-
             val completedCount: Long? = if (registrationsResult is NetworkResult.Success) {
                 tabCounts.completed.toLong()
             } else {
@@ -213,7 +206,6 @@ class DashboardPresenter(
             if (summaryResult is NetworkResult.Success) {
                 val summary = summaryResult.data.copy(
                     totalRegistrations = registeredCount,
-                    totalEvents = upcomingCount.toLong(),
                     completedEventsCount = completedCount,
                     upcomingEvents = nextEventList,
                     discoverEvents = discoverEvents,
@@ -221,7 +213,7 @@ class DashboardPresenter(
                 view?.showSummary(summary)
             } else if (allEvents.isNotEmpty() || registrations.isNotEmpty()) {
                 val fallbackSummary = DashboardSummary(
-                    totalEvents = upcomingCount.toLong(),
+                    totalEvents = events.size.toLong(),
                     totalRegistrations = registeredCount,
                     totalTransactions = 0L,
                     totalPoints = 0L,
@@ -282,6 +274,22 @@ object DashboardStats {
         return RegistrationCounts(registered = live.size - completed, completed = completed)
     }
 
-    /** Events that have not started yet (start strictly after now); ongoing events are excluded. */
-    fun upcomingCount(starts: List<Instant?>, now: Instant): Int = starts.count { it?.isAfter(now) == true }
+    /**
+     * The three pass-head cells, in order: points, registered events, check-ins.
+     *
+     * The middle cell is the attendee's own registration count, never the event catalogue size.
+     * A null [summary] means the dashboard failed to load, so every value stays unknown and
+     * [format] renders "--" instead of a fake zero.
+     */
+    fun passHeadStats(
+        summary: DashboardSummary?,
+        pointsLabel: String,
+        registeredLabel: String,
+        checkInsLabel: String,
+        format: (Long?) -> String,
+    ): List<PassStat> = listOf(
+        PassStat(format(summary?.totalPoints), pointsLabel),
+        PassStat(format(summary?.totalRegistrations), registeredLabel),
+        PassStat(format(summary?.completedEventsCount), checkInsLabel),
+    )
 }

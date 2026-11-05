@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tintable block, radius 4 (controls, chips, small inline marks). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="@dimen/ui_radius_button" />
+    <solid android:color="@color/ui_surface" />
+</shape>

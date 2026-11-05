@@ -1,8 +1,8 @@
 package com.thedavelopers.eventqr.features.organizer.events
 
+import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.dimenPx
 import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
-import com.thedavelopers.eventqr.ui.theme.roundedRect
 import com.thedavelopers.eventqr.features.organizer.styledText
 import com.thedavelopers.eventqr.features.organizer.cardRes
 import androidx.lifecycle.lifecycleScope
@@ -25,6 +25,8 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.features.organizer.tintBlock
+import com.thedavelopers.eventqr.features.organizer.tintBlockArgb
 import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequest
@@ -79,7 +81,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
     private var selectedBannerFile: File? = null
     private var newBannerFileId: String? = null
 
-    private val zoneId: ZoneId = ZoneId.systemDefault()
+    private val zoneId: ZoneId = ZoneId.of("Asia/Manila")
     private val displayFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a")
 
     private val bannerPicker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -139,8 +141,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
 
     private fun buildEventHeaderCard(): LinearLayout = cardRes(R.dimen.space_lg).apply {
         id = com.thedavelopers.eventqr.R.id.eed_event_header_card
-        background = roundedRect(color(R.color.accent_container), R.dimen.radius_lg, color(R.color.outline))
-        elevation = dimenPx(R.dimen.elevation_raised).toFloat()
+        tintBlock(R.color.ui_primary_container, R.drawable.bg_ui_block_r16)
 
         val row = LinearLayout(this@EditEventDetailsActivity).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -149,10 +150,10 @@ class EditEventDetailsActivity : AppCompatActivity() {
 
         val iconBox = FrameLayout(this@EditEventDetailsActivity).apply {
             layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.tile_44), dimenPx(R.dimen.tile_44)).apply { marginEnd = dimenPx(R.dimen.space_md) }
-            background = roundedRect(color(R.color.secondary_container), R.dimen.radius_md)
+            tintBlock(R.color.secondary_container, R.drawable.bg_ui_block_r10)
             addView(ImageView(this@EditEventDetailsActivity).apply {
-                layoutParams = FrameLayout.LayoutParams(dimenPx(R.dimen.icon_22), dimenPx(R.dimen.icon_22), android.view.Gravity.CENTER)
-                setImageResource(R.drawable.ic_calendar)
+                layoutParams = FrameLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md), android.view.Gravity.CENTER)
+                setImageResource(AppIcons.Event)
                 setColorFilter(color(R.color.primary))
             })
         }
@@ -189,10 +190,10 @@ class EditEventDetailsActivity : AppCompatActivity() {
 
         val iconBox = FrameLayout(this).apply {
             layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.tile_38), dimenPx(R.dimen.tile_38)).apply { marginEnd = dimenPx(R.dimen.space_10) }
-            background = roundedRect(color(R.color.secondary_container), R.dimen.radius_10)
+            tintBlock(R.color.secondary_container, R.drawable.bg_ui_block_r10)
             addView(ImageView(this@EditEventDetailsActivity).apply {
                 layoutParams = FrameLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md), android.view.Gravity.CENTER)
-                setImageResource(R.drawable.ic_edit_pencil)
+                setImageResource(AppIcons.Edit)
                 setColorFilter(color(R.color.primary))
             })
         }
@@ -207,7 +208,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
         titleInput = addInputRow(
             formCard,
             "Title",
-            R.drawable.ic_edit_note,
+            AppIcons.Edit,
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES,
         ).apply {
             id = com.thedavelopers.eventqr.R.id.eed_title_input
@@ -226,7 +227,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
         descriptionInput = addInputRow(
             formCard,
             "Description",
-            R.drawable.ic_file,
+            AppIcons.Document,
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_MULTI_LINE,
             singleLine = false,
             minLines = 3,
@@ -237,7 +238,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
         venueInput = addInputRow(
             formCard,
             "Venue",
-            R.drawable.ic_location,
+            AppIcons.Location,
         ).apply {
             id = com.thedavelopers.eventqr.R.id.eed_venue_input
         }
@@ -245,7 +246,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
         capacityInput = addInputRow(
             formCard,
             "Capacity",
-            R.drawable.ic_group,
+            AppIcons.People,
             inputType = InputType.TYPE_CLASS_NUMBER,
         ).apply {
             id = com.thedavelopers.eventqr.R.id.eed_capacity_input
@@ -258,10 +259,10 @@ class EditEventDetailsActivity : AppCompatActivity() {
         }
         val bannerIconBox = FrameLayout(this).apply {
             layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_tile_sm), dimenPx(R.dimen.icon_tile_sm)).apply { marginEnd = dimenPx(R.dimen.space_10) }
-            background = roundedRect(color(R.color.secondary_container), R.dimen.radius_10)
+            tintBlock(R.color.secondary_container, R.drawable.bg_ui_block_r10)
             addView(ImageView(this@EditEventDetailsActivity).apply {
-                layoutParams = FrameLayout.LayoutParams(dimenPx(R.dimen.icon_18), dimenPx(R.dimen.icon_18), android.view.Gravity.CENTER)
-                setImageResource(R.drawable.ic_camera)
+                layoutParams = FrameLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md), android.view.Gravity.CENTER)
+                setImageResource(AppIcons.Camera)
                 setColorFilter(color(R.color.primary))
             })
         }
@@ -273,7 +274,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
             id = com.thedavelopers.eventqr.R.id.eed_banner_preview
             adjustViewBounds = true
             scaleType = ImageView.ScaleType.CENTER_CROP
-            background = roundedRect(color(R.color.surface_muted), R.dimen.radius_md, orgColors.border)
+            tintBlock(R.color.surface_muted, R.drawable.bg_ui_block_r10)
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dimenPx(R.dimen.size_180))
         }
         formCard.addView(bannerPreview)
@@ -314,10 +315,10 @@ class EditEventDetailsActivity : AppCompatActivity() {
 
         val iconBox = FrameLayout(this).apply {
             layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.tile_38), dimenPx(R.dimen.tile_38)).apply { marginEnd = dimenPx(R.dimen.space_10) }
-            background = roundedRect(color(R.color.secondary_container), R.dimen.radius_10)
+            tintBlock(R.color.secondary_container, R.drawable.bg_ui_block_r10)
             addView(ImageView(this@EditEventDetailsActivity).apply {
                 layoutParams = FrameLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md), android.view.Gravity.CENTER)
-                setImageResource(R.drawable.ic_calendar)
+                setImageResource(AppIcons.Event)
                 setColorFilter(color(R.color.primary))
             })
         }
@@ -330,21 +331,21 @@ class EditEventDetailsActivity : AppCompatActivity() {
 
         headerRow.addView(styledText("🔒 Locked", R.dimen.type_overline, true, color(R.color.primary)).apply {
             setPadding(dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_xs), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_xs))
-            background = roundedRect(color(R.color.secondary_container), R.dimen.radius_md)
+            tintBlock(R.color.secondary_container, R.drawable.bg_ui_block_r10)
         })
 
         scheduleCard.addView(headerRow)
 
-        regOpenView = addLockedRow(scheduleCard, "Registration Start Date & Time", R.drawable.ic_row_clock)!!.apply {
+        regOpenView = addLockedRow(scheduleCard, "Registration Start Date & Time", AppIcons.Time)!!.apply {
             id = com.thedavelopers.eventqr.R.id.eed_reg_open_value
         }
-        regCloseView = addLockedRow(scheduleCard, "Registration End Date & Time", R.drawable.ic_row_clock)!!.apply {
+        regCloseView = addLockedRow(scheduleCard, "Registration End Date & Time", AppIcons.Time)!!.apply {
             id = com.thedavelopers.eventqr.R.id.eed_reg_close_value
         }
-        eventStartView = addLockedRow(scheduleCard, "Event Start Date & Time", R.drawable.ic_calendar)!!.apply {
+        eventStartView = addLockedRow(scheduleCard, "Event Start Date & Time", AppIcons.Event)!!.apply {
             id = com.thedavelopers.eventqr.R.id.eed_event_start_value
         }
-        eventEndView = addLockedRow(scheduleCard, "Event End Date & Time", R.drawable.ic_calendar)!!.apply {
+        eventEndView = addLockedRow(scheduleCard, "Event End Date & Time", AppIcons.Event)!!.apply {
             id = com.thedavelopers.eventqr.R.id.eed_event_end_value
         }
         return scheduleCard
@@ -359,9 +360,9 @@ class EditEventDetailsActivity : AppCompatActivity() {
 
         val iconBox = FrameLayout(this).apply {
             layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_tile_sm), dimenPx(R.dimen.icon_tile_sm)).apply { marginEnd = dimenPx(R.dimen.space_10) }
-            background = roundedRect(color(R.color.secondary_container), R.dimen.radius_10)
+            tintBlock(R.color.secondary_container, R.drawable.bg_ui_block_r10)
             addView(ImageView(this@EditEventDetailsActivity).apply {
-                layoutParams = FrameLayout.LayoutParams(dimenPx(R.dimen.icon_18), dimenPx(R.dimen.icon_18), android.view.Gravity.CENTER)
+                layoutParams = FrameLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md), android.view.Gravity.CENTER)
                 setImageResource(iconRes)
                 setColorFilter(color(R.color.primary))
             })
@@ -374,7 +375,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
             addView(styledText(label, R.dimen.type_body_compact, true, orgColors.text).apply { setPadding(0, 0, 0, dimenPx(R.dimen.space_xs)) })
 
             val value = styledText("-", R.dimen.type_body_compact, false, color(R.color.text_secondary)).apply {
-                background = roundedRect(color(R.color.surface_muted), R.dimen.radius_10, orgColors.border)
+                tintBlock(R.color.surface_muted, R.drawable.bg_ui_block_r10)
                 setPadding(dimenPx(R.dimen.space_14), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_14), dimenPx(R.dimen.space_10))
                 isEnabled = false
             }
@@ -405,9 +406,9 @@ class EditEventDetailsActivity : AppCompatActivity() {
                 marginEnd = dimenPx(R.dimen.space_10)
                 if (!singleLine) topMargin = dimenPx(R.dimen.space_xs)
             }
-            background = roundedRect(color(R.color.secondary_container), R.dimen.radius_10)
+            tintBlock(R.color.secondary_container, R.drawable.bg_ui_block_r10)
             addView(ImageView(this@EditEventDetailsActivity).apply {
-                layoutParams = FrameLayout.LayoutParams(dimenPx(R.dimen.icon_18), dimenPx(R.dimen.icon_18), android.view.Gravity.CENTER)
+                layoutParams = FrameLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md), android.view.Gravity.CENTER)
                 setImageResource(iconRes)
                 setColorFilter(color(R.color.primary))
             })
@@ -425,7 +426,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
                 this.minLines = minLines
                 setTextSizeRes(R.dimen.type_body_medium)
                 setTextColor(orgColors.text)
-                background = roundedRect(color(R.color.background), R.dimen.radius_10, orgColors.border)
+                tintBlock(R.color.background, R.drawable.bg_ui_block_r10)
                 setPadding(dimenPx(R.dimen.space_14), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_14), dimenPx(R.dimen.space_10))
             }
             addView(editText)

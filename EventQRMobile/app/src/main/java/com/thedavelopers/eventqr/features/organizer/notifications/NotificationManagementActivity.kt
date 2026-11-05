@@ -1,9 +1,5 @@
 package com.thedavelopers.eventqr.features.organizer.notifications
 
-import com.thedavelopers.eventqr.ui.theme.dimenOffset
-import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
-import com.thedavelopers.eventqr.ui.theme.strong
-import com.thedavelopers.eventqr.core.util.UiStrings
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.Gravity
@@ -18,21 +14,26 @@ import android.widget.PopupWindow
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.core.api.dto.NotificationStatus
 import com.thedavelopers.eventqr.core.api.dto.NotificationType
+import com.thedavelopers.eventqr.core.util.ScreenInsets
+import com.thedavelopers.eventqr.core.util.UiStrings
 import com.thedavelopers.eventqr.features.notifications.NotificationAdapter
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpDataSource
 import com.thedavelopers.eventqr.features.organizer.OrganizerRepository
+import com.thedavelopers.eventqr.ui.theme.color
+import com.thedavelopers.eventqr.ui.theme.dimenOffset
+import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
+import com.thedavelopers.eventqr.ui.theme.strong
 import java.util.UUID
+import kotlinx.coroutines.launch
 
 class NotificationManagementActivity : AppCompatActivity() {
 
@@ -55,6 +56,7 @@ class NotificationManagementActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_organizer_notifications)
+        ScreenInsets.padContentForNavigationBar(this)
 
         val repo = OrganizerRepository(this)
         viewModel = ViewModelProvider(this, object : ViewModelProvider.Factory {
@@ -74,7 +76,8 @@ class NotificationManagementActivity : AppCompatActivity() {
     }
 
     private fun setupBack() {
-        findViewById<ImageButton>(R.id.nav_header_back).setOnClickListener { finish() }
+        findViewById<View>(R.id.topBarBack).setOnClickListener { finish() }
+        findViewById<TextView>(R.id.topBarTitle).text = getString(R.string.common_notifications)
     }
 
     private fun setupMarkAllRead(repo: OrganizerRepository) {

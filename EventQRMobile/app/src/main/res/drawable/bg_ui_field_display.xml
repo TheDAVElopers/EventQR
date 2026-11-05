@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Filled field, display variant (§5.2): sunken fill and NO state changes. For a value that
+     is shown in field geometry but is not editable (event name on a registration summary,
+     read-only email). The screen sets android:focusable="false". -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/ui_surface_sunken" />
+    <corners android:radius="@dimen/ui_radius_button" />
+</shape>

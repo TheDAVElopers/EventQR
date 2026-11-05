@@ -31,32 +31,32 @@ class TokensTest {
     @Test
     fun dimenPx_roundsLikeRoundToInt() {
         // 3dp = 7.875px, 7dp = 18.375px, 5dp = 13.125px, 9dp = 23.625px
-        for ((id, dp) in listOf(R.dimen.space_3 to 3, R.dimen.space_7 to 7, R.dimen.space_5 to 5, R.dimen.space_9 to 9, R.dimen.space_lg to 16)) {
+        for ((id, dp) in listOf(R.dimen.space_4 to 4, R.dimen.space_12 to 12, R.dimen.space_24 to 24, R.dimen.space_lg to 16)) {
             assertEquals("dimenPx($dp dp)", (dp * density).roundToInt(), context.dimenPx(id))
         }
-        assertEquals(8, context.dimenPx(R.dimen.space_3))
+        assertEquals(11, context.dimenPx(R.dimen.space_4))
     }
 
     @Test
     fun dimenOffset_truncatesLikeToInt() {
-        for ((id, dp) in listOf(R.dimen.space_3 to 3, R.dimen.space_7 to 7, R.dimen.space_5 to 5, R.dimen.space_9 to 9, R.dimen.space_lg to 16)) {
+        for ((id, dp) in listOf(R.dimen.space_4 to 4, R.dimen.space_12 to 12, R.dimen.space_24 to 24, R.dimen.space_lg to 16)) {
             assertEquals("dimenOffset($dp dp)", (dp * density).toInt(), context.dimenOffset(id))
         }
-        assertEquals(7, context.dimenOffset(R.dimen.space_3))
-        assertNotEquals(context.dimenPx(R.dimen.space_3), context.dimenOffset(R.dimen.space_3))
+        assertEquals(10, context.dimenOffset(R.dimen.space_4))
+        assertNotEquals(context.dimenPx(R.dimen.space_4), context.dimenOffset(R.dimen.space_4))
     }
 
     @Test
     fun dimen_isUnroundedFloat() {
-        assertEquals(3 * density, context.dimen(R.dimen.space_3), 0.0001f)
-        assertEquals(14 * density, context.dimen(R.dimen.radius_14), 0.0001f)
+        assertEquals(4 * density, context.dimen(R.dimen.space_4), 0.0001f)
+        assertEquals(4 * density, context.dimen(R.dimen.ui_radius_button), 0.0001f)
     }
 
     @Test
     fun dimenFloatAndInteger_readUnitlessTokens() {
         assertEquals(0.5f, context.dimenFloat(R.dimen.alpha_disabled), 0f)
-        assertEquals(0.0892857f, context.dimenFloat(R.dimen.tracking_button), 0f)
-        assertEquals(-0.5f, context.dimenFloat(R.dimen.tracking_compose_tight), 0f)
+        assertEquals(0.01f, context.dimenFloat(R.dimen.ui_track_label), 0f)
+        assertEquals(-0.03f, context.dimenFloat(R.dimen.ui_track_display_xl), 0f)
         assertEquals(280, context.integer(R.integer.motion_pulse_ms))
         assertEquals(400, context.integer(R.integer.motion_restore_ms))
         assertEquals(80, context.integer(R.integer.motion_settle_ms))
@@ -65,9 +65,9 @@ class TokensTest {
     @Test
     fun viewForwards_matchContextHelpers() {
         val v = TextView(context)
-        assertEquals(context.dimen(R.dimen.space_7), v.dimen(R.dimen.space_7), 0f)
-        assertEquals(context.dimenPx(R.dimen.space_7), v.dimenPx(R.dimen.space_7))
-        assertEquals(context.dimenOffset(R.dimen.space_7), v.dimenOffset(R.dimen.space_7))
+        assertEquals(context.dimen(R.dimen.space_8), v.dimen(R.dimen.space_8), 0f)
+        assertEquals(context.dimenPx(R.dimen.space_8), v.dimenPx(R.dimen.space_8))
+        assertEquals(context.dimenOffset(R.dimen.space_8), v.dimenOffset(R.dimen.space_8))
         assertEquals(context.dimenFloat(R.dimen.alpha_busy), v.dimenFloat(R.dimen.alpha_busy), 0f)
         assertEquals(context.integer(R.integer.motion_settle_ms), v.integer(R.integer.motion_settle_ms))
     }
@@ -129,16 +129,17 @@ class TokensTest {
     @Test
     fun rippleAndChipHeightTokens_haveTheOriginalValues() {
         assertEquals(0.12f, context.dimenFloat(R.dimen.alpha_ripple), 0f)
-        assertEquals(32 * density, context.dimen(R.dimen.control_height_32), 0.001f)
+        assertEquals(36 * density, context.dimen(R.dimen.ui_chip_height), 0.001f)
     }
 
     @Test
     fun roundedRect_usesRadiusAndRoundedStroke() {
-        val withStroke = context.roundedRect(0xFF112233.toInt(), R.dimen.radius_14, 0xFF445566.toInt()) as GradientDrawable
-        assertEquals(14 * density, withStroke.cornerRadius, 0.001f)
+        val withStroke = context.roundedRect(0xFF112233.toInt(), R.dimen.ui_radius_button, 0xFF445566.toInt()) as GradientDrawable
+        assertEquals(4 * density, withStroke.cornerRadius, 0.001f)
         val noStroke = context.roundedRect(0xFF112233.toInt(), R.dimen.radius_md)
         assertEquals(12 * density, noStroke.cornerRadius, 0.001f)
         // stroke width is private on the drawable; the helper must not throw for either overload
         context.roundedRect(0xFF112233.toInt(), R.dimen.radius_md, 0xFF445566.toInt(), R.dimen.stroke_focus)
     }
 }
+

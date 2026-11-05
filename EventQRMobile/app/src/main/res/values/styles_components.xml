@@ -23,7 +23,7 @@
 
     <!-- Primary CTA: brand -> secondary gradient (bg_btn_primary), white text. Text appearance is set per site (see above). -->
     <style name="Widget.EventQR.Button.Primary" parent="">
-        <item name="android:background">@drawable/bg_btn_primary</item>
+        <item name="android:background">@drawable/bg_ui_button_primary</item>
         <item name="backgroundTint">@null</item>
         <item name="android:textColor">@color/on_primary</item>
         <item name="android:textAllCaps">false</item>
@@ -45,7 +45,7 @@
     <!-- Auth screens CTA (sign in / sign up / forgot): brand gradient press background, 16sp bold (forgot overrides the text
          appearance with ButtonPlatformBody.Strong). No animator; elevation stays on the view (5 / 4 / 4). -->
     <style name="Widget.EventQR.Button.Auth" parent="">
-        <item name="android:background">@drawable/bg_auth_button_press</item>
+        <item name="android:background">@drawable/bg_ui_button_primary</item>
         <item name="backgroundTint">@null</item>
         <item name="android:textAppearance">@style/TextAppearance.EventQR.ButtonPlatformBodyLarge.Strong</item>
         <item name="android:textColor">@color/on_primary</item>
@@ -74,25 +74,11 @@
 
     <!-- QR download button: dark brand gradient (bg_qr_download_button), 12sp bold sans-serif, white text. Plain <Button> sites. -->
     <style name="Widget.EventQR.Button.Download" parent="">
-        <item name="android:background">@drawable/bg_qr_download_button</item>
+        <item name="android:background">@drawable/bg_ui_button_primary</item>
         <item name="backgroundTint">@null</item>
         <item name="android:textAppearance">@style/TextAppearance.EventQR.ButtonPlatformCaption.StrongSans</item>
         <item name="android:textColor">@color/on_primary</item>
         <item name="android:textAllCaps">false</item>
-    </style>
-
-    <!-- Landing screen buttons (plain <Button>): white pill filled (primary text) and transparent outline (white text). Size comes
-         from landing_btn_text_size so the tablet override keeps working. Elevation stays on the view. -->
-    <style name="Widget.EventQR.Button.Landing.Filled" parent="">
-        <item name="android:background">@drawable/bg_white_pill_button</item>
-        <item name="backgroundTint">@null</item>
-        <item name="android:textAppearance">@style/TextAppearance.EventQR.ButtonPlatformLanding.Strong</item>
-        <item name="android:textColor">@color/primary</item>
-        <item name="android:textAllCaps">false</item>
-    </style>
-    <style name="Widget.EventQR.Button.Landing.Outline" parent="Widget.EventQR.Button.Landing.Filled">
-        <item name="android:background">@drawable/bg_dark_outline_button</item>
-        <item name="android:textColor">@color/on_primary</item>
     </style>
 
     <!-- Borderless text button, brand text on a transparent background. Plain <Button> sites set the weight/size via
@@ -218,7 +204,7 @@
         <item name="android:textAppearance">@style/TextAppearance.EventQR.ChipLabel</item>
         <item name="chipStrokeColor">@color/outline</item>
         <item name="chipStrokeWidth">@dimen/stroke_hairline</item>
-        <item name="chipCornerRadius">@dimen/radius_chip</item>
+        <item name="chipCornerRadius">@dimen/ui_radius_button</item>
         <item name="chipMinHeight">@dimen/chip_min_height</item>
         <item name="rippleColor">@color/primary_ripple</item>
     </style>
@@ -345,4 +331,78 @@
         <item name="android:layout_height">match_parent</item>
     </style>
 
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <!--  V2 COMPONENTS  -  redesign shell, auth and landing (§5 of the plan).        -->
+    <!--                                                                              -->
+    <!--  Flat, radius 4 buttons and inputs, hairline dividers, zero shadow on        -->
+    <!--  content. Everything reads ui_* roles and ui_* dimens; no literals.          -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Primary button: flat ui_primary, radius 4, 52dp at the call site. Press moves to
+         ui_primary_pressed; focus draws a 2dp p_brand_300 ring inside the shape; disabled is
+         a neutral fill with ui_outline_interactive text (never a tinted primary). No ripple
+         circle, no elevation, no pill radius. -->
+    <style name="Widget.EventQR.Ui.Button.Primary" parent="">
+        <item name="android:background">@drawable/bg_ui_button_primary</item>
+        <item name="backgroundTint">@null</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:elevation">@dimen/ui_elevation_none</item>
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.ButtonLabel</item>
+        <item name="android:textColor">@color/ui_button_primary_text</item>
+        <item name="android:textAllCaps">false</item>
+        <!-- TextView carries TOP|START by default; a <Button> does not need this, a styled TextView does. -->
+        <item name="android:gravity">center</item>
+        <item name="android:minHeight">@dimen/ui_button_height</item>
+        <item name="android:minWidth">@dimen/ui_touch_min</item>
+        <item name="android:paddingHorizontal">@dimen/space_xl</item>
+    </style>
+
+    <!-- Ghost button: primary label on nothing, 48dp (touch floor), press fills p_brand_50. -->
+    <style name="Widget.EventQR.Ui.Button.Ghost" parent="">
+        <item name="android:background">@drawable/bg_ui_button_ghost</item>
+        <item name="backgroundTint">@null</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:elevation">@dimen/ui_elevation_none</item>
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.ButtonLabelInline</item>
+        <item name="android:textColor">@color/ui_primary</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:gravity">center</item>
+        <item name="android:minHeight">@dimen/ui_button_height_inline</item>
+        <item name="android:paddingHorizontal">@dimen/space_lg</item>
+    </style>
+
+    <!-- Filled field: 56dp, radius 4, sunken fill, no resting outline, 2dp ui_primary on
+         focus and 2dp ui_error when the activity marks the field activated. Restyling the
+         bare EditText (rather than wrapping it in a TextInputLayout) keeps every existing
+         findViewById(EditText), .error popup and compound-drawable toggle working. -->
+    <style name="Widget.EventQR.Ui.TextField" parent="Widget.AppCompat.EditText">
+        <item name="android:background">@drawable/bg_ui_field</item>
+        <item name="android:minHeight">@dimen/ui_control_height</item>
+        <item name="android:maxHeight">@dimen/ui_control_height</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.Body</item>
+        <item name="android:textColor">@color/ui_text_primary</item>
+        <item name="android:textColorHint">@color/ui_text_secondary</item>
+        <item name="android:paddingStart">@dimen/space_lg</item>
+        <item name="android:paddingEnd">@dimen/space_lg</item>
+        <item name="android:drawablePadding">@dimen/space_md</item>
+        <item name="android:drawableTint">@color/ui_text_secondary</item>
+        <item name="android:backgroundTint">@null</item>
+    </style>
+
+    <!-- Checkbox row: 20dp mark, 12dp gap, 48dp touch. The mark is a compound drawable so
+         the state list follows the CompoundButton's own state_checked. -->
+    <style name="Widget.EventQR.Ui.CheckBox" parent="Widget.AppCompat.CompoundButton.CheckBox">
+        <item name="android:button">@null</item>
+        <item name="android:drawableStart">@drawable/ui_checkbox</item>
+        <item name="android:drawablePadding">@dimen/space_md</item>
+        <item name="android:minHeight">@dimen/ui_touch_min</item>
+        <item name="android:minWidth">@dimen/ui_touch_min</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.Body</item>
+        <item name="android:textColor">@color/ui_text_primary</item>
+    </style>
+
 </resources>
+
+

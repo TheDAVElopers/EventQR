@@ -1,428 +1,331 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    STAFF TRANSACTION RESULT (§6.3) - retires Gen A.
+
+        Semantic block   160dp flat success / error, one 24dp icon + state word (display_m)
+        Spec table       scan type, attendee, scanned at - hairlines only, no icon rows
+        Points           numeric value + a Valid badge; lime lives only in that badge
+        Actions          primary Scan next, secondary View attendee, ghost Back to dashboard
+
+    Deleted: the concentric success rings, the centred state title, the 42dp tinted icon tiles,
+    bg_reward_points, bg_red_warning and the raised card stack.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
+    android:background="@color/ui_background"
     android:orientation="vertical">
 
-    <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
+    <include
         android:id="@+id/headerTopBar"
+        layout="@layout/include_top_bar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:title="@string/staff_transaction_result_transaction_result" />
+        android:layout_height="wrap_content" />
 
     <ScrollView
+        android:id="@+id/scrollResult"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:overScrollMode="never">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="@dimen/space_20">
+            android:paddingBottom="@dimen/space_24">
 
-            <!-- Approved status header -->
+            <!-- ═════════ Semantic block: approved ═════════ -->
             <LinearLayout
                 android:id="@+id/headerApproved"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
+                android:layout_height="@dimen/ui_staff_result_block_height"
+                android:background="@color/ui_success"
+                android:gravity="center_vertical"
                 android:orientation="vertical"
-                android:padding="@dimen/space_xl">
+                android:paddingStart="@dimen/ui_gutter"
+                android:paddingEnd="@dimen/ui_gutter">
 
-                <FrameLayout
-                    android:layout_width="@dimen/tile_100"
-                    android:layout_height="@dimen/tile_100">
-
-                    <View
-                        android:layout_width="@dimen/tile_80"
-                        android:layout_height="@dimen/tile_80"
-                        android:layout_gravity="center"
-                        android:background="@drawable/bg_circle_green"
-                        android:alpha="@dimen/alpha_wash_10" />
-
-                    <View
-                        android:layout_width="@dimen/tile_60"
-                        android:layout_height="@dimen/tile_60"
-                        android:layout_gravity="center"
-                        android:background="@drawable/bg_circle_green" />
-
-                    <ImageView
-                        android:layout_width="@dimen/icon_32"
-                        android:layout_height="@dimen/icon_32"
-                        android:layout_gravity="center"
-                        android:contentDescription="@string/common_valid"
-                        android:src="@drawable/ic_qr_success_check"
-                        app:tint="@color/on_primary" />
-
-                    <!-- Decorative burst lines placeholder (approximate design) -->
-                    <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:contentDescription="@null"
-                        android:src="@android:drawable/ic_menu_add"
-                        android:alpha="@dimen/alpha_wash_20"
-                        android:visibility="gone" />
-                </FrameLayout>
+                <ImageView
+                    android:layout_width="@dimen/icon_lg"
+                    android:layout_height="@dimen/icon_lg"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_ui_check"
+                    android:tint="@color/ui_on_primary" />
 
                 <TextView
                     android:id="@+id/txtTransactionState"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_lg"
-                    android:text="@string/staff_transaction_result_transaction_successful"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextHeadline" />
+                    android:layout_marginTop="@dimen/space_md"
+                    android:ellipsize="end"
+                    android:maxLines="2"
+                    android:text="@string/ui_staff_tx_approved"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.DisplayM"
+                    android:textColor="@color/ui_on_primary" />
 
                 <TextView
                     android:id="@+id/txtTransactionStateHint"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_6"
-                    android:gravity="center"
-                    android:text="@string/staff_transaction_result_points_awarded_to_attendee"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
+                    android:layout_marginTop="@dimen/space_4"
+                    android:ellipsize="end"
+                    android:maxLines="2"
+                    android:text="@string/ui_staff_tx_approved_hint"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                    android:textColor="@color/ui_on_primary" />
             </LinearLayout>
 
-            <!-- Rejected status header -->
+            <!-- ═════════ Semantic block: rejected ═════════ -->
             <LinearLayout
                 android:id="@+id/headerRejected"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
+                android:layout_height="@dimen/ui_staff_result_block_height"
+                android:background="@color/ui_error"
+                android:gravity="center_vertical"
                 android:orientation="vertical"
-                android:padding="@dimen/space_xl"
+                android:paddingStart="@dimen/ui_gutter"
+                android:paddingEnd="@dimen/ui_gutter"
                 android:visibility="gone">
 
-                <FrameLayout
-                    android:layout_width="@dimen/tile_100"
-                    android:layout_height="@dimen/tile_100">
-
-                    <View
-                        android:layout_width="@dimen/tile_80"
-                        android:layout_height="@dimen/tile_80"
-                        android:layout_gravity="center"
-                        android:background="@drawable/bg_staff_rejected_circle"
-                        android:alpha="@dimen/alpha_wash_10" />
-
-                    <View
-                        android:layout_width="@dimen/tile_60"
-                        android:layout_height="@dimen/tile_60"
-                        android:layout_gravity="center"
-                        android:background="@drawable/bg_staff_rejected_circle" />
-
-                    <ImageView
-                        android:layout_width="@dimen/icon_32"
-                        android:layout_height="@dimen/icon_32"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_staff_close"
-                        app:tint="@color/on_primary" />
-                </FrameLayout>
+                <ImageView
+                    android:layout_width="@dimen/icon_lg"
+                    android:layout_height="@dimen/icon_lg"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_ui_close"
+                    android:tint="@color/ui_on_primary" />
 
                 <TextView
                     android:id="@+id/txtTransactionStateRejected"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_lg"
-                    android:text="@string/staff_transaction_result_transaction_rejected"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextHeadline" />
+                    android:layout_marginTop="@dimen/space_md"
+                    android:ellipsize="end"
+                    android:maxLines="2"
+                    android:text="@string/ui_staff_tx_rejected"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.DisplayM"
+                    android:textColor="@color/ui_on_primary" />
 
                 <TextView
                     android:id="@+id/txtTransactionStateHintRejected"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_6"
-                    android:gravity="center"
-                    android:text="@string/staff_transaction_result_scan_rejected_and_logged"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
+                    android:layout_marginTop="@dimen/space_4"
+                    android:ellipsize="end"
+                    android:maxLines="2"
+                    android:text="@string/ui_staff_tx_rejected_hint"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                    android:textColor="@color/ui_on_primary" />
             </LinearLayout>
 
-            <!-- Transaction info card -->
+            <!-- ═════════ Spec table ═════════ -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_lg"
-                android:background="@drawable/bg_card"
                 android:orientation="vertical"
-                android:padding="@dimen/space_lg">
+                android:paddingStart="@dimen/ui_gutter"
+                android:paddingTop="@dimen/space_24"
+                android:paddingEnd="@dimen/ui_gutter">
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="@dimen/ui_metric_row_height"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <LinearLayout
-                        android:layout_width="@dimen/tile_42"
-                        android:layout_height="@dimen/tile_42"
-                        android:gravity="center"
-                        style="@style/Widget.EventQR.IconTile.Round.Accent">
-
-                        <ImageView
-                            android:layout_width="@dimen/icon_md"
-                            android:layout_height="@dimen/icon_md"
-                            android:contentDescription="@string/staff_transaction_result_type"
-                            android:src="@drawable/ic_row_tag" />
-                    </LinearLayout>
-
-                    <LinearLayout
+                    <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/space_14"
                         android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:text="@string/ui_staff_tx_type"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/staff_transaction_result_scan_type"
-                            android:textColor="@color/text_hint"
-                            android:textAppearance="@style/TextAppearance.EventQR.TextOverline.Strong" />
-
-                        <TextView
-                            android:id="@+id/txtTransactionType"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/space_xxs"
-                            android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
-                    </LinearLayout>
+                    <TextView
+                        android:id="@+id/txtTransactionType"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_md"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:gravity="end"
+                        android:maxLines="2"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                        android:textColor="@color/ui_text_primary" />
                 </LinearLayout>
 
                 <View
-                    android:layout_marginVertical="@dimen/space_14"
-                    style="@style/Widget.EventQR.Divider.Muted" />
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@color/ui_hairline"
+                    android:importantForAccessibility="no" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="@dimen/ui_metric_row_height"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <LinearLayout
-                        android:layout_width="@dimen/tile_42"
-                        android:layout_height="@dimen/tile_42"
-                        android:gravity="center"
-                        style="@style/Widget.EventQR.IconTile.Round.Accent">
-
-                        <ImageView
-                            android:layout_width="@dimen/icon_md"
-                            android:layout_height="@dimen/icon_md"
-                            android:contentDescription="@string/common_attendee"
-                            android:src="@drawable/ic_row_user"
-                            app:tint="@color/primary" />
-                    </LinearLayout>
-
-                    <LinearLayout
+                    <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/space_14"
                         android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:text="@string/ui_staff_tx_attendee"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/staff_transaction_result_attendee"
-                            android:textColor="@color/text_hint"
-                            android:textAppearance="@style/TextAppearance.EventQR.TextOverline.Strong" />
-
-                        <TextView
-                            android:id="@+id/txtTransactionAttendee"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/space_xxs"
-                            android:textAppearance="@style/TextAppearance.EventQR.TextBody" />
-                    </LinearLayout>
+                    <TextView
+                        android:id="@+id/txtTransactionAttendee"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_md"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:gravity="end"
+                        android:maxLines="1"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                        android:textColor="@color/ui_text_primary" />
                 </LinearLayout>
 
                 <View
-                    android:layout_marginVertical="@dimen/space_14"
-                    style="@style/Widget.EventQR.Divider.Muted" />
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@color/ui_hairline"
+                    android:importantForAccessibility="no" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="@dimen/ui_metric_row_height"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <LinearLayout
-                        android:layout_width="@dimen/tile_42"
-                        android:layout_height="@dimen/tile_42"
-                        android:gravity="center"
-                        style="@style/Widget.EventQR.IconTile.Round.Accent">
-
-                        <ImageView
-                            android:layout_width="@dimen/icon_md"
-                            android:layout_height="@dimen/icon_md"
-                            android:contentDescription="@string/staff_transaction_result_time"
-                            android:src="@drawable/ic_row_clock"
-                            app:tint="@color/primary"  />
-                    </LinearLayout>
-
-                    <LinearLayout
+                    <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/space_14"
                         android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:text="@string/ui_staff_tx_time"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/staff_transaction_result_scanned_at"
-                            android:textColor="@color/text_hint"
-                            android:textAppearance="@style/TextAppearance.EventQR.TextOverline.Strong" />
-
-                        <TextView
-                            android:id="@+id/txtTransactionTime"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/space_xxs"
-                            android:textAppearance="@style/TextAppearance.EventQR.TextBody"
-                            />
-                    </LinearLayout>
+                    <TextView
+                        android:id="@+id/txtTransactionTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_md"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.NumericS"
+                        android:textColor="@color/ui_text_primary" />
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Approved: points card -->
+            <!-- ═════════ Points (approved only) ═════════ -->
             <LinearLayout
                 android:id="@+id/layoutTransactionApproved"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_lg"
-                android:background="@drawable/bg_reward_points"
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_24"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:background="@drawable/bg_ui_card"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingHorizontal="@dimen/space_14"
-                android:paddingVertical="@dimen/space_md"
+                android:paddingStart="@dimen/ui_card_padding"
+                android:paddingTop="@dimen/space_md"
+                android:paddingEnd="@dimen/ui_card_padding"
+                android:paddingBottom="@dimen/space_md"
                 android:visibility="gone">
 
-                <LinearLayout
-                    android:layout_width="@dimen/icon_tile_md"
-                    android:layout_height="@dimen/icon_tile_md"
-                    android:gravity="center"
-                    style="@style/Widget.EventQR.IconTile.Round.Muted">
-
-                    <ImageView
-                        android:layout_width="@dimen/icon_md"
-                        android:layout_height="@dimen/icon_md"
-                        android:contentDescription="@string/staff_transaction_result_points"
-                        android:src="@drawable/ic_row_star" />
-                </LinearLayout>
-
-                <LinearLayout
+                <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/space_md"
                     android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:text="@string/ui_staff_tx_points"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/staff_transaction_result_points_awarded"
-                        android:textColor="@color/accent_outline"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextMicro" />
+                <TextView
+                    android:id="@+id/txtTransactionPoints"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.NumericL"
+                    android:textColor="@color/ui_text_primary" />
 
-                    <TextView
-                        android:id="@+id/txtTransactionPoints"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="1dp"
-                        android:textColor="@color/on_primary"
-                        android:textAppearance="@style/TextAppearance.EventQR.TitleLarge" />
-                </LinearLayout>
+                <TextView
+                    style="@style/Widget.EventQR.Ui.StatusBadge.Valid"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/ui_badge_height"
+                    android:layout_marginStart="@dimen/space_md"
+                    android:text="@string/ui_staff_tx_credited" />
             </LinearLayout>
 
-            <!-- Rejected: reason card -->
-            <LinearLayout
+            <!-- ═════════ Rejection reason ═════════ -->
+            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/layoutTransactionRejected"
+                style="@style/Widget.EventQR.Ui.Card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_lg"
-                android:background="@drawable/bg_red_warning"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="@dimen/space_lg"
-                android:visibility="gone">
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_24"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:visibility="gone"
+                app:cardBackgroundColor="@color/ui_error_container"
+                app:strokeWidth="@dimen/stroke_none">
 
                 <LinearLayout
-                    android:layout_width="@dimen/tile_42"
-                    android:layout_height="@dimen/tile_42"
-                    android:gravity="center"
-                    style="@style/Widget.EventQR.IconTile.Round.Error">
-
-                    <ImageView
-                        android:layout_width="@dimen/icon_md"
-                        android:layout_height="@dimen/icon_md"
-                        android:contentDescription="@string/common_reason"
-                        android:src="@drawable/ic_row_alert" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/space_14"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:padding="@dimen/ui_card_padding">
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/common_rejection_reason"
-                        android:textColor="@color/error"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextOverline.Strong" />
+                        android:text="@string/ui_staff_result_reason"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline"
+                        android:textColor="@color/ui_on_error_container" />
 
                     <TextView
                         android:id="@+id/txtTransactionReason"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_xs"
-                        android:textColor="@color/on_error_container"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
+                        android:layout_marginTop="@dimen/space_4"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                        android:textColor="@color/ui_on_error_container" />
                 </LinearLayout>
-            </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnViewTransactionAttendee"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/control_height_54"
-                android:layout_marginTop="@dimen/space_20"
-                android:text="@string/common_view_attendee_details"
-                app:icon="@drawable/ic_visibility_on"
-                app:iconGravity="textStart"
-                app:iconTint="@color/primary"
-                style="@style/Widget.EventQR.Button.Outline.Large"/>
-
-            <com.google.android.material.button.MaterialButton
+            <!-- ═════════ Actions ═════════ -->
+            <TextView
                 android:id="@+id/btnTransactionScanAgain"
-                style="@style/Widget.EventQR.Button.Primary"
+                style="@style/Widget.EventQR.Ui.Button.Primary"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/control_height_54"
-                android:layout_marginTop="@dimen/space_md"
-                android:text="@string/staff_transaction_result_scan_next_attendee"
-                app:icon="@drawable/ic_staff_scan"
-                app:iconPadding="@dimen/space_sm"
-                app:iconSize="35dp"
-                app:iconTint="@color/on_primary"
-                app:iconGravity="textStart"
-                android:textAppearance="@style/TextAppearance.EventQR.ButtonBodyLarge.Strong"/>
+                android:layout_height="@dimen/ui_button_height"
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_32"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:gravity="center"
+                android:text="@string/ui_staff_tx_scan_next" />
 
-            <com.google.android.material.button.MaterialButton
+            <TextView
+                android:id="@+id/btnViewTransactionAttendee"
+                style="@style/Widget.EventQR.Ui.Button.Secondary"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/ui_button_height"
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_sm"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:gravity="center"
+                android:text="@string/ui_staff_result_view_attendee" />
+
+            <TextView
                 android:id="@+id/btnTransactionDashboard"
-                style="@style/Widget.EventQR.Button.Text.Material"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/control_height_54"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="@dimen/space_md"
-                android:text="@string/common_back_to_dashboard"
-                app:icon="@drawable/ic_back_chevron"
-                app:iconPadding="@dimen/space_sm"
-                app:iconSize="@dimen/size_26"
-                app:iconTint="@color/primary"
-                app:iconGravity="textStart"
-                android:textAppearance="@style/TextAppearance.EventQR.ButtonBody.Strong"/>
+                style="@style/Widget.EventQR.Ui.Button.Ghost"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/ui_button_height_inline"
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_sm"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:gravity="center"
+                android:text="@string/ui_staff_tx_dashboard" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

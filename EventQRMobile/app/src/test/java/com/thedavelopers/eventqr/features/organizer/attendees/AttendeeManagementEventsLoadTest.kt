@@ -1,12 +1,12 @@
 package com.thedavelopers.eventqr.features.organizer.attendees
 
 import android.view.View
-import android.widget.TextView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.ShadowEncryptedSharedPreferences
 import com.thedavelopers.eventqr.features.ShadowMasterKeys
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -25,14 +25,15 @@ class AttendeeManagementEventsLoadTest {
 
         activity.showEventsLoadFailedState("Timeout.")
 
-        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.layoutAttendeesEmpty).visibility)
+        val empty = activity.findViewById<EventQrEmptyState>(R.id.layoutAttendeesEmpty)
+        assertEquals(View.VISIBLE, empty.visibility)
         assertEquals(
             activity.getString(R.string.organizer_dashboard_events_load_failed),
-            activity.findViewById<TextView>(R.id.txtAttendeesEmptyTitle).text.toString(),
+            empty.text.toString(),
         )
         assertEquals(
             activity.getString(R.string.organizer_events_load_failed_pull_to_retry, "Timeout."),
-            activity.findViewById<TextView>(R.id.txtAttendeesEmptySub).text.toString(),
+            empty.subtext.toString(),
         )
         assertTrue(activity.findViewById<SwipeRefreshLayout>(R.id.swipeRefreshAttendeeManagement).isEnabled)
     }

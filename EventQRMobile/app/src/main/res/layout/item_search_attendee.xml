@@ -1,78 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<!--
+    ORGANIZER - SEARCH RESULT ROW (5.5 list_row_icon geometry).
+
+        72dp, 40dp initials avatar, name 18/600, email 14/20 secondary, one status badge,
+        hairline divider inset 76dp. No per-row card and no GradientDrawable pill.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/space_md"
-    style="@style/Widget.EventQR.Card">
+    android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/searchAttendeeRowContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:minHeight="@dimen/ui_organizer_attendee_row_height"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
         android:gravity="center_vertical"
-        android:minHeight="@dimen/list_item_min_height"
         android:orientation="horizontal"
-        android:paddingHorizontal="@dimen/space_lg"
-        android:paddingVertical="@dimen/space_md">
+        android:paddingStart="@dimen/ui_row_start"
+        android:paddingEnd="@dimen/ui_row_end"
+        android:paddingTop="@dimen/ui_row_padding_vertical"
+        android:paddingBottom="@dimen/ui_row_padding_vertical">
 
-        <FrameLayout
-            android:layout_width="@dimen/tile_44"
-            android:layout_height="@dimen/tile_44"
-            android:layout_marginEnd="@dimen/space_md"
-            style="@style/Widget.EventQR.IconTile.Secondary">
-
-            <ImageView
-                android:layout_width="@dimen/icon_md"
-                android:layout_height="@dimen/icon_md"
-                android:layout_gravity="center"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_profile_person"
-                app:tint="@color/primary" />
-        </FrameLayout>
+        <TextView
+            android:id="@+id/txtSearchAttendeeInitial"
+            android:layout_width="@dimen/ui_row_tile"
+            android:layout_height="@dimen/ui_row_tile"
+            android:background="@drawable/bg_ui_icon_tile"
+            android:gravity="center"
+            android:textColor="@color/ui_primary"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.Title"
+            tools:text="JD" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/space_sm"
+            android:layout_marginStart="@dimen/space_16"
+            android:layout_marginEnd="@dimen/space_8"
             android:layout_weight="1"
             android:orientation="vertical">
 
             <TextView
                 android:id="@+id/txtSearchAttendeeName"
+                style="@style/Widget.EventQR.Ui.ListRow.Title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBody.Strong" />
+                tools:text="Juan Dela Cruz" />
 
             <TextView
                 android:id="@+id/txtSearchAttendeeEmail"
+                style="@style/Widget.EventQR.Ui.ListRow.Meta"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_xxs"
-                android:ellipsize="end"
+                android:layout_marginTop="@dimen/space_2"
                 android:maxLines="1"
-                android:textColor="@color/text_label"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
+                tools:text="juan@example.com" />
         </LinearLayout>
 
         <TextView
             android:id="@+id/txtSearchAttendeeStatus"
+            style="@style/Widget.EventQR.Ui.StatusBadge.Neutral"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:paddingHorizontal="@dimen/space_md"
-            android:paddingVertical="@dimen/space_6"
-            android:textColor="@color/success_dark"
-            android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
-
-        <ImageView
-            android:layout_width="@dimen/icon_md"
-            android:layout_height="@dimen/icon_md"
-            android:layout_marginStart="@dimen/space_6"
-            android:contentDescription="@null"
-            android:src="@drawable/ic_chevron_right"
-            app:tint="@color/neutral" />
+            android:layout_height="@dimen/ui_badge_height"
+            android:layout_marginStart="@dimen/space_8"
+            tools:text="Checked in" />
     </LinearLayout>
 
-</com.google.android.material.card.MaterialCardView>
+    <View
+        android:id="@+id/searchAttendeeDivider"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:layout_marginStart="@dimen/ui_divider_inset"
+        android:background="@color/ui_hairline"
+        android:importantForAccessibility="no" />
+</LinearLayout>

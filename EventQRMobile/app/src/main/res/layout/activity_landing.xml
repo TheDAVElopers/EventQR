@@ -1,236 +1,346 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+    Landing (§6.1 of MyFiles/EventQR-Redesign-Plan.md) - retires Gen A.
+
+    A sticky 64dp wordmark bar, a left-aligned display_xl hero on the 20dp gutter, the
+    mini-pass (flat ui_primary, full bleed, the only object on the screen that gets to be
+    beautiful), one primary and one ghost action, then the three reasons as a numbered list
+    with hairlines - no cards, no icons, no centred column.
+
+    The bar is chrome, not content: it stays put while the page scrolls, so the hero and the
+    mini-pass can never slide under the status bar.
+
+    Deleted from the previous version: the 315 degree gradient block, the 270x100 centred
+    raster wordmark, the centred tagline, the two stacked pills and the three raised cards
+    with 40dp PNG icons.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface"
-    android:fillViewport="true"
-    android:scrollbars="none">
+    android:background="@color/ui_background"
+    android:orientation="vertical">
 
+    <!-- ═════════ Bar: wordmark left at the gutter, ACCESS PASS overline right ═════════ -->
     <LinearLayout
+        android:id="@+id/authTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:background="@color/ui_surface"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/ui_gutter">
 
+        <!-- Inner row is exactly 64dp; the status-bar inset is added above it as padding,
+             so the bar is 64dp of content plus the inset and its fill runs behind it. -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_eventqr_gradient"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
-            android:paddingHorizontal="@dimen/landing_header_padding_h"
-            android:paddingTop="@dimen/landing_header_padding_top"
-            android:paddingBottom="@dimen/landing_header_padding_bottom">
+            android:layout_height="@dimen/ui_bar_height_landing"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
+            <!-- Lockup (§3.1): mark 24dp + 12dp + wordmark, left aligned on the 20dp gutter. The mark
+                 is decorative here - the wordmark already announces the brand. -->
             <ImageView
-                android:layout_width="@dimen/landing_logo_width"
-                android:layout_height="@dimen/landing_logo_height"
-                android:layout_marginTop="@dimen/landing_logo_margin_top"
-                android:adjustViewBounds="true"
-                android:contentDescription="@string/common_eventqr_logo"
+                android:layout_width="@dimen/ui_mark_bar_landing"
+                android:layout_height="@dimen/ui_mark_bar_landing"
+                android:layout_marginEnd="@dimen/ui_lockup_gap"
+                android:importantForAccessibility="no"
                 android:scaleType="fitCenter"
-                android:src="@drawable/splash_logo_w_text_right" />
+                android:src="@drawable/ic_mark_on_light" />
 
             <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/landing_tagline_margin_top"
-                android:gravity="center"
-                android:lineSpacingExtra="@dimen/line_spacing_3"
-                android:text="@string/landing_one_qr_code_every_event_instant_acce"
-                android:textColor="@color/on_primary"
-                android:textAppearance="@style/TextAppearance.EventQR.LandingTagline" />
-
-            <Button
-                style="@style/Widget.EventQR.Button.Landing.Filled"
-                android:id="@+id/btnSignIn"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/landing_btn_height"
-                android:layout_marginTop="@dimen/landing_btn_margin_top"
-                android:elevation="@dimen/elevation_lifted"
-                android:text="@string/common_sign_in" />
-
-            <Button
-                style="@style/Widget.EventQR.Button.Landing.Outline"
-                android:id="@+id/btnCreateAccount"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/landing_btn_height"
-                android:layout_marginTop="@dimen/landing_btn_margin_top"
-                android:layout_marginBottom="@dimen/landing_btn_margin_bottom"
-                android:text="@string/common_create_account" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/background"
-            android:orientation="vertical"
-            android:paddingHorizontal="@dimen/landing_feature_padding_h"
-            android:paddingTop="@dimen/landing_feature_padding_top"
-            android:paddingBottom="@dimen/landing_feature_padding_bottom">
-
-            <TextView
+                android:id="@+id/txtWordmark"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/landing_why_choose_eventqr"
-                android:textAppearance="@style/TextAppearance.EventQR.SectionTitle"
-                android:textStyle="bold" />
+                android:gravity="center_vertical"
+                android:includeFontPadding="false"
+                android:text="@string/auth_wordmark"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Wordmark"
+                android:textSize="@dimen/ui_wordmark_size_landing"
+                android:translationY="@dimen/ui_wordmark_nudge_landing" />
 
-            <com.google.android.material.card.MaterialCardView
-                style="@style/Widget.EventQR.Card.Compact.Raised"
-                android:layout_width="match_parent"
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/txtBarEyebrow"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/landing_card_margin_top"
-                android:clickable="true"
-                android:focusable="true">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="@dimen/landing_card_horizontal_padding"
-                    android:paddingTop="@dimen/landing_card_top_padding"
-                    android:paddingBottom="@dimen/landing_card_bottom_padding">
-
-                    <ImageView
-                        android:layout_width="@dimen/landing_icon_size"
-                        android:layout_height="@dimen/landing_icon_size"
-                        android:background="@drawable/dark_ic_qr_code"
-                        android:padding="@dimen/landing_icon_padding"
-                        android:contentDescription="@string/landing_qr_code_icon"
-                        android:scaleType="centerInside" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/landing_card_text_margin_start"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/landing_one_qr_all_access"
-                            android:textColor="@color/text_primary"
-                            android:textAppearance="@style/TextAppearance.EventQR.LandingCardTitle" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/space_xs"
-                            android:text="@string/landing_register_once_and_use_your_unique_qr"
-                            android:textAppearance="@style/TextAppearance.EventQR.LandingCardDesc" />
-                    </LinearLayout>
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.card.MaterialCardView
-                style="@style/Widget.EventQR.Card.Compact.Raised"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/landing_card_margin_top"
-                android:clickable="true"
-                android:focusable="true">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="@dimen/landing_card_horizontal_padding"
-                    android:paddingTop="@dimen/landing_card_top_padding"
-                    android:paddingBottom="@dimen/landing_card_bottom_padding">
-
-                    <ImageView
-                        android:layout_width="@dimen/landing_icon_size"
-                        android:layout_height="@dimen/landing_icon_size"
-                        android:background="@drawable/dark_ic_check_mark"
-                        android:padding="@dimen/landing_icon_padding"
-                        android:contentDescription="@string/landing_verification_check_icon"
-                        android:scaleType="centerInside" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/landing_card_text_margin_start"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/landing_instant_verification"
-                            android:textColor="@color/text_primary"
-                            android:textAppearance="@style/TextAppearance.EventQR.LandingCardTitle" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/space_xs"
-                            android:text="@string/landing_quick_identity_verification_and_seam"
-                            android:textAppearance="@style/TextAppearance.EventQR.LandingCardDesc" />
-                    </LinearLayout>
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.card.MaterialCardView
-                style="@style/Widget.EventQR.Card.Compact.Raised"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/landing_card_margin_top"
-                android:clickable="true"
-                android:focusable="true">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="@dimen/landing_card_horizontal_padding"
-                    android:paddingTop="@dimen/landing_card_top_padding"
-                    android:paddingBottom="@dimen/landing_card_bottom_padding">
-
-                    <ImageView
-                        android:layout_width="@dimen/landing_icon_size"
-                        android:layout_height="@dimen/landing_icon_size"
-                        android:background="@drawable/dark_ic_star"
-                        android:padding="@dimen/landing_icon_padding"
-                        android:contentDescription="@string/landing_rewards_star_icon"
-                        android:scaleType="centerInside" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/landing_card_text_margin_start"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/landing_rewards_benefits"
-                            android:textColor="@color/text_primary"
-                            android:textAppearance="@style/TextAppearance.EventQR.LandingCardTitle" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/space_xs"
-                            android:text="@string/landing_earn_points_claim_benefits_and_redee"
-                            android:textAppearance="@style/TextAppearance.EventQR.LandingCardDesc" />
-                    </LinearLayout>
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
+                android:text="@string/auth_access_pass"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
         </LinearLayout>
-
     </LinearLayout>
 
-</ScrollView>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:background="@color/ui_hairline" />
+
+    <ScrollView
+        android:id="@+id/authScroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- ═════════ Hero: one left edge, no centring ═════════ -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="@dimen/ui_gutter"
+                android:paddingTop="@dimen/ui_hero_top_gap">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/auth_landing_hero"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.DisplayXl" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_lg"
+                    android:text="@string/auth_landing_sub"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.BodyLarge"
+                    android:textColor="@color/ui_text_secondary" />
+            </LinearLayout>
+
+            <!-- ═════════ Mini-pass: flat fill, square edges, bleeds to both gutters ═════════ -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/ui_minipass_height"
+                android:layout_marginTop="@dimen/space_xl"
+                android:background="@color/ui_primary"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="@dimen/ui_gutter">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/auth_access_pass"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow"
+                        android:textColor="@color/ui_text_on_dark_muted" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_sm"
+                        android:text="@string/auth_minipass_title"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Title"
+                        android:textColor="@color/ui_text_on_dark" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_sm"
+                        android:text="@string/auth_minipass_serial"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.NumericS"
+                        android:textColor="@color/ui_text_on_dark_muted" />
+                </LinearLayout>
+
+                <FrameLayout
+                    android:layout_width="@dimen/ui_minipass_qr_plate"
+                    android:layout_height="@dimen/ui_minipass_qr_plate"
+                    android:layout_marginStart="@dimen/space_lg"
+                    android:background="@drawable/bg_ui_qr_plate"
+                    android:importantForAccessibility="no"
+                    android:padding="@dimen/ui_minipass_qr_pad">
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:importantForAccessibility="no"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ui_pass_qr_art" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- ═════════ Actions: primary then ghost, single column at the gutter ═════════ -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="@dimen/ui_gutter"
+                android:paddingTop="@dimen/space_xl">
+
+                <Button
+                    android:id="@+id/btnSignIn"
+                    style="@style/Widget.EventQR.Ui.Button.Primary"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/ui_button_height"
+                    android:text="@string/auth_sign_in" />
+
+                <Button
+                    android:id="@+id/btnCreateAccount"
+                    style="@style/Widget.EventQR.Ui.Button.Ghost"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/ui_button_height_inline"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:text="@string/auth_create_account" />
+            </LinearLayout>
+
+            <!-- ═════════ Why EventQR: a numbered list, not three cards ═════════ -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xxl"
+                android:paddingHorizontal="@dimen/ui_gutter"
+                android:paddingBottom="@dimen/space_sm"
+                android:text="@string/auth_landing_why"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/stroke_hairline"
+                android:background="@color/ui_hairline" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingHorizontal="@dimen/ui_gutter"
+                android:paddingVertical="@dimen/space_lg">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="@dimen/ui_feature_number_width"
+                    android:text="@string/auth_feature_number_1"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.NumericM"
+                    android:textColor="@color/ui_text_secondary" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_lg"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/auth_feature_1_title"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Title" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_xxs"
+                        android:text="@string/auth_feature_1_body"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/stroke_hairline"
+                android:background="@color/ui_hairline" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingHorizontal="@dimen/ui_gutter"
+                android:paddingVertical="@dimen/space_lg">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="@dimen/ui_feature_number_width"
+                    android:text="@string/auth_feature_number_2"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.NumericM"
+                    android:textColor="@color/ui_text_secondary" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_lg"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/auth_feature_2_title"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Title" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_xxs"
+                        android:text="@string/auth_feature_2_body"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/stroke_hairline"
+                android:background="@color/ui_hairline" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingHorizontal="@dimen/ui_gutter"
+                android:paddingVertical="@dimen/space_lg">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="@dimen/ui_feature_number_width"
+                    android:text="@string/auth_feature_number_3"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.NumericM"
+                    android:textColor="@color/ui_text_secondary" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_lg"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/auth_feature_3_title"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Title" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_xxs"
+                        android:text="@string/auth_feature_3_body"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/stroke_hairline"
+                android:background="@color/ui_hairline" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/space_xxl" />
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

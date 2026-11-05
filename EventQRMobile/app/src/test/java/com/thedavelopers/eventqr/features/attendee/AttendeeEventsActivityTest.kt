@@ -5,7 +5,7 @@ import android.widget.EditText
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.google.android.material.chip.Chip
+import android.widget.TextView
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.features.ShadowEncryptedSharedPreferences
@@ -83,10 +83,10 @@ class AttendeeEventsActivityTest {
         val activity = launch(repo).get()
 
         activity.findViewById<EditText>(R.id.inputEventSearch).setText("fair")
-        activity.findViewById<Chip>(R.id.chipUpcoming).performClick()
+        activity.findViewById<TextView>(R.id.chipUpcoming).performClick()
         assertEquals(1, activity.cardCount())
 
-        activity.findViewById<Chip>(R.id.chipAll).performClick()
+        activity.findViewById<TextView>(R.id.chipAll).performClick()
         assertEquals(1, activity.cardCount())
     }
 }

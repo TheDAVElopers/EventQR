@@ -1,26 +1,36 @@
 package com.thedavelopers.eventqr.features.organizer.events
 
-import com.thedavelopers.eventqr.ui.theme.dimen
-import androidx.lifecycle.lifecycleScope
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.google.android.material.chip.Chip
-import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.EventCardPresenter
-import com.thedavelopers.eventqr.features.organizer.*
-import com.thedavelopers.eventqr.ui.components.EventCardHolder
+import com.thedavelopers.eventqr.features.organizer.NAV_EVENTS
+import com.thedavelopers.eventqr.features.organizer.OrganizerMvpDataSource
+import com.thedavelopers.eventqr.features.organizer.OrganizerMvpEvent
+import com.thedavelopers.eventqr.features.organizer.OrganizerMvpLoad
+import com.thedavelopers.eventqr.features.organizer.OrganizerRepository
+import com.thedavelopers.eventqr.features.organizer.approvedOnly
+import com.thedavelopers.eventqr.features.organizer.bottomNav
+import com.thedavelopers.eventqr.features.organizer.lifecycleStatus
+import com.thedavelopers.eventqr.features.organizer.openOrganizerPage
+import com.thedavelopers.eventqr.ui.components.CountLabel
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+import com.thedavelopers.eventqr.ui.components.PassHeadBinder
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
@@ -31,50 +41,48 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+/**
+ * Organizer event list (§6.4). Compact pass head + 48dp search + chip row + 96dp date rows.
+ * Every event is a row on the page with a hairline divider; there is no card per event.
+ */
 open class ManageEventsActivity : AppCompatActivity() {
 
     private lateinit var repository: OrganizerRepository
     private lateinit var recyclerView: RecyclerView
-    private lateinit var emptyView: android.widget.TextView
-    private lateinit var emptySubView: android.widget.TextView
-    private lateinit var emptyIcon: android.widget.ImageView
-    private lateinit var progressLoading: CircularProgressIndicator
-    private lateinit var retryButton: android.widget.Button
-    private lateinit var chipAll: Chip
-    private lateinit var chipUpcoming: Chip
-    private lateinit var chipActive: Chip
-    private lateinit var chipCompleted: Chip
+    private lateinit var emptyState: EventQrEmptyState
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var skeletonLoading: View
     private lateinit var adapter: OrganizerEventAdapter
+    private lateinit var countView: TextView
     private var allEvents: List<OrganizerMvpEvent> = emptyList()
-    private var selectedFilter = "All"
+    private var selectedFilter = FILTER_ALL
     private var isFirstResume = true
     private var eventsSource: OrganizerMvpLoad<List<OrganizerMvpEvent>> =
         OrganizerMvpLoad(emptyList(), OrganizerMvpDataSource.ERROR, null)
     private val organizerZone: ZoneId = ZoneId.of("Asia/Manila")
     private val dayFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("d", Locale.ENGLISH)
     private val monthFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM", Locale.ENGLISH)
-    private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH)
+    private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         repository = OrganizerRepository(this)
         setContentView(R.layout.activity_organizer_events)
-        applyEventQrSystemBarAppearance()
+        applyEventQrSystemBarAppearance(lightStatusBars = false)
+        findViewById<View>(R.id.passHeadIdentity).applyEventQrTopInsetPadding()
 
         swipeRefresh = findViewById(R.id.swipeRefreshEvents)
         skeletonLoading = findViewById(R.id.skeletonLoading)
         recyclerView = findViewById(R.id.recyclerEvents)
-        emptyView = findViewById(R.id.txtEventsEmpty)
-        emptySubView = findViewById(R.id.txtEventsEmptySub)
-        emptyIcon = findViewById(R.id.imgEmptyIcon)
-        progressLoading = findViewById(R.id.progressLoading)
-        retryButton = findViewById(R.id.btnRefreshEvents)
-        chipAll = findViewById(R.id.chipAll)
-        chipUpcoming = findViewById(R.id.chipUpcoming)
-        chipActive = findViewById(R.id.chipActive)
-        chipCompleted = findViewById(R.id.chipCompleted)
+        emptyState = findViewById(R.id.layoutEventsEmpty)
+
+        val passHead = findViewById<View>(R.id.passHead)
+        countView = findViewById<TextView>(R.id.passHeadTitleCount).apply { visibility = View.VISIBLE }
+        PassHeadBinder.bindCompact(
+            root = passHead,
+            title = getString(R.string.ui_organizer_events),
+            eyebrow = getString(R.string.ui_organizer_role),
+        )
 
         adapter = OrganizerEventAdapter { event ->
             openOrganizerPage(EventManagementHubActivity::class.java, event.id, event.title)
@@ -83,11 +91,11 @@ open class ManageEventsActivity : AppCompatActivity() {
         recyclerView.adapter = adapter
 
         swipeRefresh.setOnRefreshListener { loadEvents() }
-        retryButton.setOnClickListener { loadEvents() }
-        chipAll.setOnClickListener { selectFilter("All") }
-        chipUpcoming.setOnClickListener { selectFilter("Upcoming") }
-        chipActive.setOnClickListener { selectFilter("Active") }
-        chipCompleted.setOnClickListener { selectFilter("Completed") }
+        emptyState.setAction(getString(R.string.common_retry)) { loadEvents() }
+        findViewById<View>(R.id.chipAll).setOnClickListener { selectFilter(FILTER_ALL) }
+        findViewById<View>(R.id.chipUpcoming).setOnClickListener { selectFilter("Upcoming") }
+        findViewById<View>(R.id.chipActive).setOnClickListener { selectFilter("Active") }
+        findViewById<View>(R.id.chipCompleted).setOnClickListener { selectFilter("Completed") }
 
         findViewById<EditText>(R.id.inputEventSearch).addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -97,10 +105,9 @@ open class ManageEventsActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        val navContainer = findViewById<LinearLayout>(R.id.layoutOrganizerBottomNav)
-        navContainer.addView(bottomNav(NAV_EVENTS))
+        findViewById<LinearLayout>(R.id.layoutOrganizerBottomNav).addView(bottomNav(NAV_EVENTS))
 
-        updateTabs()
+        updateChips()
         loadEvents()
     }
 
@@ -115,25 +122,30 @@ open class ManageEventsActivity : AppCompatActivity() {
 
     private fun selectFilter(filter: String) {
         selectedFilter = filter
-        updateTabs()
+        updateChips()
         renderFilteredEvents()
     }
 
-    private fun updateTabs() {
-        val textSecondary = ContextCompat.getColor(this, R.color.text_secondary)
+    /** §5.6: the fill is the state; there is no check icon and no pill. */
+    private fun updateChips() {
         val chips = mapOf(
-            "All" to chipAll,
-            "Upcoming" to chipUpcoming,
-            "Active" to chipActive,
-            "Completed" to chipCompleted,
+            FILTER_ALL to findViewById<TextView>(R.id.chipAll),
+            "Upcoming" to findViewById<TextView>(R.id.chipUpcoming),
+            "Active" to findViewById<TextView>(R.id.chipActive),
+            "Completed" to findViewById<TextView>(R.id.chipCompleted),
         )
         for ((label, chip) in chips) {
-            val isSelected = label == selectedFilter
-            chip.isChecked = isSelected
-            chip.setTextColor(if (isSelected) ContextCompat.getColor(this, R.color.on_primary) else textSecondary)
-            chip.setChipBackgroundColorResource(if (isSelected) R.color.primary else R.color.surface)
-            chip.chipStrokeWidth = if (isSelected) 0f else dimen(R.dimen.stroke_hairline)
-            chip.chipStrokeColor = ContextCompat.getColorStateList(this, R.color.outline)
+            val selected = label == selectedFilter
+            chip.isSelected = selected
+            chip.setBackgroundResource(
+                if (selected) R.drawable.bg_ui_chip_selected else R.drawable.bg_ui_chip_unselected,
+            )
+            chip.setTextColor(
+                ContextCompat.getColor(
+                    this,
+                    if (selected) R.color.ui_on_primary else R.color.ui_text_primary,
+                ),
+            )
         }
     }
 
@@ -145,7 +157,6 @@ open class ManageEventsActivity : AppCompatActivity() {
             eventsSource = repository.loadEventsForMvp()
             swipeRefresh.isRefreshing = false
             allEvents = eventsSource.data
-            retryButton.visibility = View.GONE
             renderFilteredEvents()
         }
     }
@@ -153,7 +164,7 @@ open class ManageEventsActivity : AppCompatActivity() {
     private fun getFilteredByStatus(): List<OrganizerMvpEvent> {
         val approved = allEvents.approvedOnly()
         return when (selectedFilter) {
-            "All" -> {
+            FILTER_ALL -> {
                 val active = approved.filter { it.lifecycleStatus() == "Active" }
                     .sortedBy { parseEventStartDateTime(it) }
                 val upcoming = approved.filter { it.lifecycleStatus() == "Upcoming" }
@@ -169,10 +180,8 @@ open class ManageEventsActivity : AppCompatActivity() {
         }
     }
 
-    private fun getSearchQuery(): String {
-        val editText = findViewById<EditText>(R.id.inputEventSearch)
-        return editText.text.toString()
-    }
+    private fun getSearchQuery(): String =
+        findViewById<EditText>(R.id.inputEventSearch).text.toString()
 
     private fun renderFilteredEvents() {
         val query = getSearchQuery()
@@ -181,50 +190,39 @@ open class ManageEventsActivity : AppCompatActivity() {
             else list.filter { it.title.contains(query, ignoreCase = true) }
         }
         adapter.submitItems(filtered)
+        countView.text = CountLabel.format(filtered.size.toLong(), getString(R.string.ui_organizer_events_count))
         recyclerView.visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
         showEmptyOrError(filtered.isEmpty())
     }
 
     private fun showLoading() {
         recyclerView.visibility = View.GONE
-        emptyIcon.visibility = View.GONE
-        emptyView.visibility = View.GONE
-        emptySubView.visibility = View.GONE
-        retryButton.visibility = View.GONE
-        progressLoading.visibility = View.GONE
+        emptyState.visibility = View.GONE
         if (!swipeRefresh.isRefreshing) {
             skeletonLoading.visibility = View.VISIBLE
         }
     }
 
     private fun showEmptyOrError(isEmpty: Boolean) {
-        progressLoading.visibility = View.GONE
         skeletonLoading.visibility = View.GONE
         swipeRefresh.isRefreshing = false
         if (!isEmpty) {
-            emptyIcon.visibility = View.GONE
-            emptyView.visibility = View.GONE
-            emptySubView.visibility = View.GONE
-            retryButton.visibility = View.GONE
+            emptyState.visibility = View.GONE
             return
         }
-        emptyIcon.visibility = View.VISIBLE
-        emptyView.visibility = View.VISIBLE
-        emptySubView.visibility = View.VISIBLE
+        emptyState.visibility = View.VISIBLE
         if (eventsSource.source == OrganizerMvpDataSource.ERROR) {
-            emptyView.text = eventsSource.message ?: "Organizer events could be loaded."
-            emptySubText = "Pull down to refresh or tap retry"
-            retryButton.visibility = View.VISIBLE
+            emptyState.show(
+                eventsSource.message ?: getString(R.string.organizer_dashboard_events_load_failed),
+                getString(R.string.ui_organizer_no_events_body),
+            )
         } else {
-            emptyView.text = getString(R.string.organizer_events_no_events_available_for_the_selected)
-            emptySubText = "Try adjusting your search or filters"
-            retryButton.visibility = View.GONE
+            emptyState.show(
+                getString(R.string.organizer_events_no_events_available_for_the_selected),
+                getString(R.string.common_try_adjusting_your_search_or_filters),
+            )
         }
     }
-
-    private var emptySubText: String
-        get() = emptySubView.text.toString()
-        set(value) { emptySubView.text = value }
 
     private fun parseEventStartDateTime(event: OrganizerMvpEvent): LocalDateTime? {
         val candidates = listOfNotNull(event.dateTime, event.shortDate)
@@ -255,21 +253,21 @@ open class ManageEventsActivity : AppCompatActivity() {
         return runCatching { Instant.parse(normalized).atZone(organizerZone).toLocalDateTime() }.getOrNull()
             ?: runCatching { OffsetDateTime.parse(normalized).atZoneSameInstant(organizerZone).toLocalDateTime() }.getOrNull()
             ?: runCatching { ZonedDateTime.parse(normalized).withZoneSameInstant(organizerZone).toLocalDateTime() }.getOrNull()
+            ?: runCatching { LocalDateTime.parse(normalized, DateTimeFormatter.ofPattern("d MMM yyyy, h:mm a", Locale.ENGLISH)) }.getOrNull()
+            ?: runCatching { LocalDateTime.parse(normalized, DateTimeFormatter.ofPattern("d MMM yyyy h:mm a", Locale.ENGLISH)) }.getOrNull()
             ?: runCatching { LocalDateTime.parse(normalized, DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a", Locale.ENGLISH)) }.getOrNull()
-            ?: runCatching { LocalDateTime.parse(normalized, DateTimeFormatter.ofPattern("MMMM d, yyyy h:mm a", Locale.ENGLISH)) }.getOrNull()
-            ?: runCatching { LocalDateTime.parse(normalized, DateTimeFormatter.ofPattern("MMM d, yyyy, h:mm a", Locale.ENGLISH)) }.getOrNull()
-            ?: runCatching { LocalDateTime.parse(normalized, DateTimeFormatter.ofPattern("MMMM d, yyyy, h:mm a", Locale.ENGLISH)) }.getOrNull()
             ?: runCatching { LocalDateTime.parse(normalized, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")) }.getOrNull()
     }
 
     private fun parseDateValue(value: String): LocalDate? {
         val normalized = value.replace("•", "").replace("  ", " ").trim()
         return runCatching { LocalDate.parse(normalized, DateTimeFormatter.ISO_LOCAL_DATE) }.getOrNull()
+            ?: runCatching { LocalDate.parse(normalized, DateTimeFormatter.ofPattern("d MMM yyyy", Locale.ENGLISH)) }.getOrNull()
             ?: runCatching { LocalDate.parse(normalized, DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH)) }.getOrNull()
-            ?: runCatching { LocalDate.parse(normalized, DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.ENGLISH)) }.getOrNull()
             ?: parseDateTimeValue(normalized)?.toLocalDate()
     }
 
+    /** One event = one `list_row_date` (§5.5). The row is the target. */
     inner class OrganizerEventAdapter(
         private val onClick: (OrganizerMvpEvent) -> Unit,
     ) : RecyclerView.Adapter<OrganizerEventAdapter.ViewHolder>() {
@@ -282,38 +280,56 @@ open class ManageEventsActivity : AppCompatActivity() {
             notifyDataSetChanged()
         }
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            return ViewHolder(EventCardHolder(parent.context))
-        }
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
+            ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.list_row_date, parent, false))
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            holder.bind(items[position])
+            holder.bind(items[position], position == items.lastIndex)
         }
 
         override fun getItemCount(): Int = items.size
 
-        inner class ViewHolder(private val card: EventCardHolder) :
-            RecyclerView.ViewHolder(card.view) {
+        inner class ViewHolder(private val row: View) : RecyclerView.ViewHolder(row) {
 
-            fun bind(event: OrganizerMvpEvent) {
+            fun bind(event: OrganizerMvpEvent, isLast: Boolean) {
                 val parsedStart = parseEventStartDateTime(event)
                 val parsedDate = parsedStart?.toLocalDate() ?: parseEventDateOnly(event)
-                val day = parsedDate?.format(dayFormatter) ?: EventCardPresenter.UNKNOWN_DAY
-                val month = parsedDate?.format(monthFormatter)?.uppercase(Locale.ENGLISH) ?: EventCardPresenter.UNKNOWN_MONTH
+                row.findViewById<TextView>(R.id.listRowDay).text =
+                    parsedDate?.format(dayFormatter) ?: EventCardPresenter.UNKNOWN_DAY
+                row.findViewById<TextView>(R.id.listRowMonth).text =
+                    parsedDate?.format(monthFormatter)?.uppercase(Locale.ENGLISH) ?: EventCardPresenter.UNKNOWN_MONTH
+                row.findViewById<TextView>(R.id.listRowTitle).text = event.title
                 val time = parsedStart?.format(timeFormatter) ?: EventCardPresenter.UNKNOWN_TIME
+                val location = event.venue.takeIf { it.isNotBlank() && it != "Venue not set" }
+                    ?: EventCardPresenter.UNKNOWN_LOCATION
+                row.findViewById<TextView>(R.id.listRowMeta).text = listOf(time, location)
+                    .filter {
+                        it != EventCardPresenter.UNKNOWN_TIME && it != EventCardPresenter.UNKNOWN_LOCATION
+                    }
+                    .joinToString(" - ")
 
-                card.update(
-                    title = event.title,
-                    status = event.lifecycleStatus(),
-                    day = day,
-                    month = month,
-                    time = time,
-                    location = event.venue.takeIf { it.isNotBlank() && it != "Venue not set" } ?: EventCardPresenter.UNKNOWN_LOCATION,
-                    count = event.currentAttendeeCount.coerceAtLeast(0),
-                    capacity = EventCardPresenter.capacity(event.capacity),
-                    onClick = { onClick(event) },
-                )
+                val badge = row.findViewById<TextView>(R.id.listRowBadge)
+                val status = event.lifecycleStatus()
+                badge.text = status
+                val (bg, fg) = when (status) {
+                    "Active" -> R.color.ui_accent to R.color.ui_on_accent
+                    "Upcoming" -> R.color.ui_info_container to R.color.ui_on_info_container
+                    "Draft", "Pending Review" -> R.color.ui_warning_container to R.color.ui_on_warning_container
+                    "Cancelled", "Rejected" -> R.color.ui_error_container to R.color.ui_on_error_container
+                    else -> R.color.ui_surface_sunken to R.color.ui_text_secondary
+                }
+                badge.backgroundTintList =
+                    android.content.res.ColorStateList.valueOf(ContextCompat.getColor(row.context, bg))
+                badge.setTextColor(ContextCompat.getColor(row.context, fg))
+
+                row.findViewById<View>(R.id.listRowContainer).setOnClickListener { onClick(event) }
+                row.findViewById<View>(R.id.listRowDivider).visibility =
+                    if (isLast) View.GONE else View.VISIBLE
             }
         }
+    }
+
+    private companion object {
+        const val FILTER_ALL = "All"
     }
 }

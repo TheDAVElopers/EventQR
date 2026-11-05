@@ -4,20 +4,45 @@ import android.util.TypedValue
 import androidx.annotation.DimenRes
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.core.content.res.ResourcesCompat
 import com.thedavelopers.eventqr.R
 
-/**
- * Reads a text-size token (a `<dimen>` in sp, e.g. `type_headline_l`) as a Compose [TextUnit]. The number in dimens.xml is
- * returned unscaled, so Compose applies the user's font scale exactly once, as it does for a literal `28.sp`.
+/*
+ * The redesign type scale (§3.5 of MyFiles/EventQR-Redesign-Plan.md).
+ *
+ * Two bundled families, fourteen roles, one job each. Archivo is display only and is never used
+ * below 20sp. IBM Plex Sans is the text face. Numerals are tabular in every Numeric* role - the
+ * tnum feature is baked into the style, so no screen can forget it.
+ *
+ * Every size, line height and tracking value is read from res/values/dimens_ui_shared.xml, so
+ * XML (TextAppearance.EventQR.Type.*) and Compose resolve the same numbers. Nothing here is a
+ * literal.
  */
+
+/** Archivo 700/800. Display roles only; never below 20sp. */
+val ArchivoFamily = FontFamily(
+    Font(R.font.archivo_bold, FontWeight.Bold),
+    Font(R.font.archivo_extrabold, FontWeight.ExtraBold),
+)
+
+/** IBM Plex Sans 400/500/600. Every text role. */
+val IbmPlexFamily = FontFamily(
+    Font(R.font.ibm_plex_sans_regular, FontWeight.Normal),
+    Font(R.font.ibm_plex_sans_medium, FontWeight.Medium),
+    Font(R.font.ibm_plex_sans_semibold, FontWeight.SemiBold),
+)
+
+/** Reads a text-size token (a `<dimen>` in sp) as a Compose [TextUnit], unscaled. */
 @Composable
 @ReadOnlyComposable
 fun spResource(@DimenRes id: Int): TextUnit {
@@ -26,94 +51,177 @@ fun spResource(@DimenRes id: Int): TextUnit {
     return TypedValue.complexToFloat(value.data).sp
 }
 
-/** A unitless float token (`<item type="dimen" format="float">`) as a Compose letter spacing in sp. */
+/** A unitless float token as a letter spacing in em (0.16em = the overline tracking). */
 @Composable
 @ReadOnlyComposable
-private fun trackingResource(@DimenRes id: Int): TextUnit =
-    ResourcesCompat.getFloat(LocalContext.current.resources, id).sp
+private fun trackingEm(@DimenRes id: Int): TextUnit =
+    ResourcesCompat.getFloat(LocalContext.current.resources, id).em
 
-/** Material 3 typography built from the `type_*`, `line_height_*` and `tracking_compose_*` tokens in dimens.xml. */
+/** The fourteen roles, resolved once per composition. */
+@Immutable
+data class EventQrType(
+    val displayXl: TextStyle,
+    val displayM: TextStyle,
+    val headline: TextStyle,
+    val titleL: TextStyle,
+    val title: TextStyle,
+    val bodyL: TextStyle,
+    val body: TextStyle,
+    val bodyS: TextStyle,
+    val label: TextStyle,
+    val overline: TextStyle,
+    val micro: TextStyle,
+    val numericL: TextStyle,
+    val numericM: TextStyle,
+    val numericS: TextStyle,
+    /** Status badge label: 11sp / 600 / 0.06em, NOT all caps (§5.4). */
+    val badge: TextStyle,
+)
+
+/** Builds the scale. Call inside a composition (it reads dimension resources). */
 @Composable
 @ReadOnlyComposable
-fun eventQrTypography(): Typography = Typography(
-    headlineLarge = TextStyle(
-        fontFamily = FontFamily.SansSerif,
+fun eventQrType(): EventQrType = EventQrType(
+    displayXl = TextStyle(
+        fontFamily = ArchivoFamily,
+        fontWeight = FontWeight.ExtraBold,
+        fontSize = spResource(R.dimen.ui_type_display_xl),
+        lineHeight = spResource(R.dimen.ui_lh_display_xl),
+        letterSpacing = trackingEm(R.dimen.ui_track_display_xl),
+    ),
+    displayM = TextStyle(
+        fontFamily = ArchivoFamily,
         fontWeight = FontWeight.Bold,
-        fontSize = spResource(R.dimen.type_headline_l),
-        lineHeight = spResource(R.dimen.line_height_36),
-        letterSpacing = trackingResource(R.dimen.tracking_compose_tight),
+        fontSize = spResource(R.dimen.ui_type_display_m),
+        lineHeight = spResource(R.dimen.ui_lh_display_m),
+        letterSpacing = trackingEm(R.dimen.ui_track_display_m),
     ),
-    headlineMedium = TextStyle(
-        fontFamily = FontFamily.SansSerif,
+    headline = TextStyle(
+        fontFamily = ArchivoFamily,
         fontWeight = FontWeight.Bold,
-        fontSize = spResource(R.dimen.type_24),
-        lineHeight = spResource(R.dimen.line_height_32),
-        letterSpacing = trackingResource(R.dimen.tracking_compose_tight_sm),
+        fontSize = spResource(R.dimen.ui_type_headline),
+        lineHeight = spResource(R.dimen.ui_lh_headline),
+        letterSpacing = trackingEm(R.dimen.ui_track_headline),
     ),
-    headlineSmall = TextStyle(
-        fontFamily = FontFamily.SansSerif,
+    titleL = TextStyle(
+        fontFamily = ArchivoFamily,
         fontWeight = FontWeight.Bold,
-        fontSize = spResource(R.dimen.type_title_large),
-        lineHeight = spResource(R.dimen.line_height_28),
+        fontSize = spResource(R.dimen.ui_type_title_l),
+        lineHeight = spResource(R.dimen.ui_lh_title_l),
+        letterSpacing = trackingEm(R.dimen.ui_track_title_l),
     ),
-    titleLarge = TextStyle(
-        fontFamily = FontFamily.SansSerif,
+    title = TextStyle(
+        fontFamily = IbmPlexFamily,
         fontWeight = FontWeight.SemiBold,
-        fontSize = spResource(R.dimen.type_title),
-        lineHeight = spResource(R.dimen.line_height_26),
+        fontSize = spResource(R.dimen.ui_type_title),
+        lineHeight = spResource(R.dimen.ui_lh_title),
+        letterSpacing = trackingEm(R.dimen.ui_track_title),
     ),
-    titleMedium = TextStyle(
-        fontFamily = FontFamily.SansSerif,
+    bodyL = TextStyle(
+        fontFamily = IbmPlexFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = spResource(R.dimen.ui_type_body_l),
+        lineHeight = spResource(R.dimen.ui_lh_body_l),
+        letterSpacing = trackingEm(R.dimen.ui_track_body),
+    ),
+    body = TextStyle(
+        fontFamily = IbmPlexFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = spResource(R.dimen.ui_type_body),
+        lineHeight = spResource(R.dimen.ui_lh_body),
+        letterSpacing = trackingEm(R.dimen.ui_track_body),
+    ),
+    bodyS = TextStyle(
+        fontFamily = IbmPlexFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = spResource(R.dimen.ui_type_body_s),
+        lineHeight = spResource(R.dimen.ui_lh_body_s),
+        letterSpacing = trackingEm(R.dimen.ui_track_body),
+    ),
+    label = TextStyle(
+        fontFamily = IbmPlexFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = spResource(R.dimen.ui_type_label),
+        lineHeight = spResource(R.dimen.ui_lh_label),
+        letterSpacing = trackingEm(R.dimen.ui_track_label),
+    ),
+    overline = TextStyle(
+        fontFamily = IbmPlexFamily,
         fontWeight = FontWeight.SemiBold,
-        fontSize = spResource(R.dimen.type_body_large),
-        lineHeight = spResource(R.dimen.line_height_24),
+        fontSize = spResource(R.dimen.ui_type_overline),
+        lineHeight = spResource(R.dimen.ui_lh_overline),
+        letterSpacing = trackingEm(R.dimen.ui_track_overline),
     ),
-    titleSmall = TextStyle(
-        fontFamily = FontFamily.SansSerif,
+    micro = TextStyle(
+        fontFamily = IbmPlexFamily,
         fontWeight = FontWeight.Medium,
-        fontSize = spResource(R.dimen.type_body_medium),
-        lineHeight = spResource(R.dimen.line_height_20),
+        fontSize = spResource(R.dimen.ui_type_micro),
+        lineHeight = spResource(R.dimen.ui_lh_micro),
+        letterSpacing = trackingEm(R.dimen.ui_track_micro),
     ),
-    bodyLarge = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Normal,
-        fontSize = spResource(R.dimen.type_body_large),
-        lineHeight = spResource(R.dimen.line_height_24),
+    numericL = TextStyle(
+        fontFamily = ArchivoFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = spResource(R.dimen.ui_type_numeric_l),
+        lineHeight = spResource(R.dimen.ui_lh_numeric_l),
+        letterSpacing = trackingEm(R.dimen.ui_track_numeric_l),
+        fontFeatureSettings = "tnum",
     ),
-    bodyMedium = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Normal,
-        fontSize = spResource(R.dimen.type_body_medium),
-        lineHeight = spResource(R.dimen.line_height_20),
-    ),
-    bodySmall = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Normal,
-        fontSize = spResource(R.dimen.type_caption),
-        lineHeight = spResource(R.dimen.line_height_16),
-    ),
-    labelLarge = TextStyle(
-        fontFamily = FontFamily.SansSerif,
+    numericM = TextStyle(
+        fontFamily = IbmPlexFamily,
         fontWeight = FontWeight.SemiBold,
-        fontSize = spResource(R.dimen.type_body_medium),
-        lineHeight = spResource(R.dimen.line_height_20),
-        letterSpacing = trackingResource(R.dimen.tracking_compose_label_sm),
+        fontSize = spResource(R.dimen.ui_type_numeric_m),
+        lineHeight = spResource(R.dimen.ui_lh_numeric_m),
+        letterSpacing = trackingEm(R.dimen.ui_track_numeric_m),
+        fontFeatureSettings = "tnum",
     ),
-    labelMedium = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Medium,
-        fontSize = spResource(R.dimen.type_caption),
-        lineHeight = spResource(R.dimen.line_height_16),
-        letterSpacing = trackingResource(R.dimen.tracking_compose_label_md),
+    numericS = TextStyle(
+        fontFamily = IbmPlexFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = spResource(R.dimen.ui_type_numeric_s),
+        lineHeight = spResource(R.dimen.ui_lh_numeric_s),
+        letterSpacing = trackingEm(R.dimen.ui_track_numeric_s),
+        fontFeatureSettings = "tnum",
     ),
-    labelSmall = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Medium,
-        fontSize = spResource(R.dimen.type_overline),
-        lineHeight = spResource(R.dimen.line_height_14),
-        letterSpacing = trackingResource(R.dimen.tracking_compose_label_lg),
+    badge = TextStyle(
+        fontFamily = IbmPlexFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = spResource(R.dimen.ui_type_overline),
+        lineHeight = spResource(R.dimen.ui_lh_overline),
+        letterSpacing = trackingEm(R.dimen.ui_track_badge),
+        fontFeatureSettings = "tnum",
     ),
 )
+
+/**
+ * Material 3 Typography mapped onto the fourteen roles, so a Material component that reads
+ * `MaterialTheme.typography` inherits the new voice instead of Roboto.
+ *
+ * The mapping is deliberately lossy: M3 has no display_m or numeric_* slot, so those are read
+ * through [LocalType] and never through MaterialTheme.
+ */
+@Composable
+@ReadOnlyComposable
+fun eventQrTypography(): Typography {
+    val type = eventQrType()
+    return Typography(
+        displayLarge = type.displayXl,
+        displayMedium = type.displayM,
+        displaySmall = type.displayM,
+        headlineLarge = type.headline,
+        headlineMedium = type.headline,
+        headlineSmall = type.titleL,
+        titleLarge = type.title,
+        titleMedium = type.title,
+        titleSmall = type.label,
+        bodyLarge = type.bodyL,
+        bodyMedium = type.body,
+        bodySmall = type.bodyS,
+        labelLarge = type.label,
+        labelMedium = type.label,
+        labelSmall = type.micro,
+    )
+}
 
 /** Kept for call sites that used the old top-level val; resolved per composition now. */
 val EventQrTypography: Typography

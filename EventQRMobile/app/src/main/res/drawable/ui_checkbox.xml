@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Checkbox mark, 20dp, radius 4. Replaces the stock Material box so terms and the
+     remember-email row read like a printed form. Driven by the CompoundButton's own
+     state_checked: the drawable is attached as drawableStart, so no Kotlin is needed. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_checked="true" android:drawable="@drawable/ui_checkbox_on" />
+    <item android:drawable="@drawable/ui_checkbox_off" />
+</selector>

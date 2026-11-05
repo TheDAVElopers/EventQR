@@ -1,27 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Rewards (§6.2 of MyFiles/EventQR-Redesign-Plan.md) - retires Gen A.
+
+        Compact pass head ("Rewards")
+        Event field (48dp, filled) - the reward list is per event, so the event comes first
+        Balance: a prominent tabular number on the flat page, never a gradient card. It carries
+        lime only through the status badge on a reward, never as decoration.
+        Chip row: Available / Claimed / History
+        88dp reward rows with hairline dividers (no per-row card)
+
+    Deleted: the 315-degree gradient balance card with the 46sp number, the violet text action,
+    bg_reward_points, bg_reward_dark_card, per-reward raised cards, and the copy-pasted skeletons.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_organizer_events_screen"
+    android:background="@color/ui_background"
     android:orientation="vertical">
 
-    <com.thedavelopers.eventqr.ui.components.EventQrTabHeader
-        android:id="@+id/headerTopBar"
+    <include
+        android:id="@+id/passHead"
+        layout="@layout/include_pass_head_compact"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:title="@string/user_rewards_rewards"
-        app:subtitle="@string/user_rewards_earn_and_claim_event_rewards">
-        <TextView
-            android:id="@+id/txtMyClaims"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingHorizontal="@dimen/space_xs"
-            android:paddingVertical="@dimen/space_sm"
-            android:text="@string/user_rewards_my_claims"
-            android:textColor="@color/secondary_light"
-            android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Medium" />
-    </com.thedavelopers.eventqr.ui.components.EventQrTabHeader>
+        android:layout_height="wrap_content" />
 
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshRewards"
@@ -34,91 +36,86 @@
             android:layout_height="match_parent"
             android:clipToPadding="false"
             android:fillViewport="true"
-            android:paddingBottom="@dimen/space_md">
+            android:overScrollMode="never">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingHorizontal="@dimen/space_lg"
+                android:paddingStart="@dimen/ui_gutter"
                 android:paddingTop="@dimen/space_lg"
-                android:paddingBottom="@dimen/space_xl">
+                android:paddingEnd="@dimen/ui_gutter"
+                android:paddingBottom="@dimen/space_24">
 
-                <!-- Error state -->
+                <TextView
+                    android:id="@+id/txtRewardsError"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                    android:textColor="@color/ui_error"
+                    android:visibility="gone" />
+
                 <LinearLayout
                     android:id="@+id/errorRewardsContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center"
                     android:orientation="vertical"
-                    android:paddingTop="@dimen/space_lg"
-                    android:paddingBottom="@dimen/space_md">
+                    android:visibility="gone">
 
                     <TextView
-                        android:id="@+id/txtRewardsError"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:textColor="@color/danger"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
-                        android:visibility="gone" />
-
-                    <Button
                         android:id="@+id/btnRewardsRetry"
-                        style="@style/Widget.EventQR.Button.Primary.Retry"
-                        android:layout_width="@dimen/button_width_retry"
-                        android:layout_height="@dimen/control_height_44"
-                        android:layout_marginTop="@dimen/space_md"
-                        android:text="@string/common_retry"
+                        style="@style/Widget.EventQR.Ui.Button.Ghost"
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/ui_button_height_inline"
+                        android:text="@string/ui_attendee_retry"
                         android:visibility="gone" />
                 </LinearLayout>
 
-                <!-- Empty events state -->
-                <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
-                    android:id="@+id/layoutNoRegisteredEvents"
+                <FrameLayout
                     android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"
-                    android:visibility="gone"
-                    app:icon="@drawable/ic_nav_gift"
-                    app:title="@string/common_no_registered_events_yet"
-                    app:subtitle="@string/user_rewards_register_for_an_event_to_start_earni" />
+                    android:layout_height="wrap_content">
 
-                <!-- Main content wrapper -->
+                    <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+                        android:id="@+id/layoutNoRegisteredEvents"
+                        android:layout_width="@dimen/ui_empty_max_width"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        app:gutter="false" />
+                </FrameLayout>
+
                 <LinearLayout
                     android:id="@+id/layoutRewardsContent"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
-                    <!-- "Select Registered Event" label (always visible) -->
+                    <!-- ═════════ Event field ═════════ -->
                     <TextView
                         android:id="@+id/txtSelectEventLabel"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_md"
-                        android:text="@string/user_rewards_select_registered_event"
-                        android:textColor="@color/text_secondary"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextBody.Medium" />
+                        android:text="@string/ui_attendee_registered_event"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.FieldLabel" />
 
-                    <!-- Dropdown card (always visible, contains text + skeleton bar) -->
-                    <FrameLayout
+                    <LinearLayout
                         android:id="@+id/cardSelectedEvent"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/input_height"
-                        android:layout_marginTop="@dimen/space_10"
-                        android:background="@drawable/bg_rewards_dropdown"
+                        android:layout_height="@dimen/ui_field_search_height"
+                        android:layout_marginTop="@dimen/space_sm"
+                        android:background="@drawable/bg_ui_field"
                         android:clickable="true"
-                        android:focusable="true">
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                        <!-- Actual dropdown text -->
                         <LinearLayout
                             android:id="@+id/layoutDropdownContent"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:gravity="center_vertical"
                             android:orientation="horizontal"
-                            android:paddingHorizontal="@dimen/space_lg">
+                            android:paddingStart="@dimen/space_lg"
+                            android:paddingEnd="@dimen/space_md">
 
                             <TextView
                                 android:id="@+id/txtSelectedEventTitle"
@@ -128,7 +125,8 @@
                                 android:ellipsize="end"
                                 android:maxLines="1"
                                 android:text="@string/common_select_event"
-                                android:textAppearance="@style/TextAppearance.EventQR.TextBody" />
+                                android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                                android:textColor="@color/ui_text_primary" />
 
                             <ImageView
                                 android:id="@+id/spinnerArrow"
@@ -136,17 +134,18 @@
                                 android:layout_height="@dimen/icon_md"
                                 android:layout_marginStart="@dimen/space_sm"
                                 android:contentDescription="@string/common_dropdown"
-                                android:src="@drawable/ic_arrow_drop_down"
-                                android:tint="@color/text_secondary" />
+                                android:importantForAccessibility="no"
+                                android:src="@drawable/ic_ui_expand_more"
+                                android:tint="@color/ui_text_secondary" />
                         </LinearLayout>
 
-                        <!-- Dropdown skeleton bar -->
                         <View
                             android:id="@+id/skeletonDropdown"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
+                            android:background="@drawable/bg_ui_skeleton"
                             android:visibility="gone" />
-                    </FrameLayout>
+                    </LinearLayout>
 
                     <Spinner
                         android:id="@+id/spinnerRegisteredEvents"
@@ -154,186 +153,107 @@
                         android:layout_height="0dp"
                         android:visibility="gone" />
 
-                    <LinearLayout
-                        android:id="@+id/layoutEventDropdown"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_card"
-                        android:orientation="vertical"
-                        android:visibility="gone" />
-
-                    <!-- Purple points balance card (always visible) -->
+                    <!-- ═════════ Balance: the number is the content ═════════ -->
                     <LinearLayout
                         android:id="@+id/cardRewardsBalance"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_xl"
-                        android:background="@drawable/bg_reward_points"
-                        android:elevation="@dimen/elevation_5"
-                        android:orientation="vertical"
-                        android:paddingHorizontal="@dimen/space_xl"
-                        android:paddingTop="@dimen/space_22"
-                        android:paddingBottom="@dimen/space_20">
+                        android:layout_marginTop="@dimen/space_32"
+                        android:orientation="vertical">
 
-                        <!-- Event name (toggle between text and skeleton) -->
-                        <FrameLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content">
-
-                            <TextView
-                                android:id="@+id/txtRewardsEventTitle"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:ellipsize="end"
-                                android:maxLines="2"
-                                android:textColor="@color/deco_on_hero_subtitle"
-                                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
-
-                            <View
-                                android:id="@+id/skeletonEventName"
-                                android:layout_width="160dp"
-                                android:layout_height="12dp"
-                                android:background="@drawable/bg_staff_skeleton_bar_light"
-                                android:visibility="gone" />
-                        </FrameLayout>
-
-                        <!-- "Event Points Balance" label (always visible) -->
                         <TextView
-                            android:layout_width="match_parent"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/space_xs"
-                            android:text="@string/user_rewards_event_points_balance"
-                            android:textColor="@color/on_primary"
-                            android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.LegacyBold" />
+                            android:text="@string/ui_attendee_balance"
+                            android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
 
-                        <!-- Points value (toggle between text and skeleton) -->
                         <FrameLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/space_sm">
+                            android:layout_marginTop="@dimen/space_xs">
 
                             <TextView
                                 android:id="@+id/txtRewardsBalance"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/placeholder_zero"
-                                android:textColor="@color/on_primary"
-                                android:textAppearance="@style/TextAppearance.EventQR.DisplayXL" />
-                        </FrameLayout>
+                                android:includeFontPadding="false"
+                                android:textAppearance="@style/TextAppearance.EventQR.Type.NumericL"
+                                android:textColor="@color/ui_text_primary" />
 
-                        <!-- "points available" subtitle (always visible) -->
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/space_xxs"
-                            android:text="@string/user_rewards_points_available_for_this_event"
-                            android:textColor="@color/secondary_container"
-                            android:textAppearance="@style/TextAppearance.EventQR.TextBody" />
+                            <View
+                                android:id="@+id/skeletonEventName"
+                                android:layout_width="@dimen/ui_skeleton_meta_width"
+                                android:layout_height="@dimen/ui_skeleton_bar_height"
+                                android:layout_gravity="center_vertical"
+                                android:background="@drawable/bg_ui_skeleton"
+                                android:visibility="gone" />
+                        </FrameLayout>
                     </LinearLayout>
 
-                    <!-- "Available Rewards" section header (always visible) -->
+                    <!-- ═════════ Available / Claimed / History ═════════ -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/ui_attendee_chip_row"
+                        android:layout_marginTop="@dimen/space_24"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/chipAvailable"
+                            android:layout_width="wrap_content"
+                            android:layout_height="@dimen/ui_chip_height"
+                            style="@style/Widget.EventQR.Ui.Chip"
+                            android:text="@string/ui_attendee_available" />
+
+                        <TextView
+                            android:id="@+id/txtMyClaims"
+                            style="@style/Widget.EventQR.Ui.Chip"
+                            android:layout_width="wrap_content"
+                            android:layout_height="@dimen/ui_chip_height"
+                            android:layout_marginStart="@dimen/ui_chip_gap"
+                            android:text="@string/ui_attendee_claimed" />
+
+                        <TextView
+                            android:id="@+id/txtRewardsHistory"
+                            style="@style/Widget.EventQR.Ui.Chip"
+                            android:layout_width="wrap_content"
+                            android:layout_height="@dimen/ui_chip_height"
+                            android:layout_marginStart="@dimen/ui_chip_gap"
+                            android:text="@string/ui_attendee_history" />
+                    </LinearLayout>
+
                     <TextView
                         android:id="@+id/txtRewardsSectionTitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_22"
-                        android:text="@string/user_rewards_available_rewards"
-                        android:textAppearance="@style/TextAppearance.EventQR.TitleLarge.LegacyBold" />
-
-                    <!-- Rewards empty state -->
-                    <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
-                        android:id="@+id/layoutRewardsEmpty"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_sm"
-                        android:visibility="gone"
-                        app:icon="@drawable/ic_nav_gift"
-                        app:title="@string/user_rewards_no_rewards_available_yet"
-                        app:subtitle="@string/user_rewards_check_back_later_for_rewards_for_thi" />
+                        android:layout_marginTop="@dimen/space_24"
+                        android:layout_marginBottom="@dimen/space_sm"
+                        android:text="@string/ui_attendee_available_rewards"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
 
-                    <!-- Rewards list skeleton (shown during loading) -->
-                    <LinearLayout
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+                            android:id="@+id/layoutRewardsEmpty"
+                            android:layout_width="@dimen/ui_empty_max_width"
+                            android:layout_height="wrap_content"
+                            android:visibility="gone"
+                            app:gutter="false" />
+                    </FrameLayout>
+
+                    <include
                         android:id="@+id/layoutRewardsSkeleton"
+                        layout="@layout/include_skeleton_card"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_md"
-                        android:orientation="vertical"
-                        android:visibility="gone">
+                        android:visibility="gone" />
 
-                        <!-- Reward card skeleton 1 -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="@dimen/space_md"
-                            android:background="@drawable/bg_staff_skeleton_card"
-                            android:orientation="vertical"
-                            android:padding="@dimen/space_lg">
-
-                            <View
-                                android:layout_width="match_parent"
-                                android:layout_height="14dp"
-                                android:background="@drawable/bg_staff_skeleton_bar" />
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="@dimen/space_md"
-                                android:gravity="center_vertical"
-                                android:orientation="horizontal">
-
-                                <View
-                                    android:layout_width="80dp"
-                                    android:layout_height="28dp"
-                                    android:background="@drawable/bg_staff_skeleton_date_block" />
-
-                                <View
-                                    android:layout_width="60dp"
-                                    android:layout_height="10dp"
-                                    android:layout_marginStart="@dimen/space_md"
-                                    android:background="@drawable/bg_staff_skeleton_bar" />
-                            </LinearLayout>
-                        </LinearLayout>
-
-                        <!-- Reward card skeleton 2 -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/bg_staff_skeleton_card"
-                            android:orientation="vertical"
-                            android:padding="@dimen/space_lg">
-
-                            <View
-                                android:layout_width="match_parent"
-                                android:layout_height="14dp"
-                                android:background="@drawable/bg_staff_skeleton_bar" />
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="@dimen/space_md"
-                                android:gravity="center_vertical"
-                                android:orientation="horizontal">
-
-                                <View
-                                    android:layout_width="80dp"
-                                    android:layout_height="28dp"
-                                    android:background="@drawable/bg_staff_skeleton_date_block" />
-
-                                <View
-                                    android:layout_width="60dp"
-                                    android:layout_height="10dp"
-                                    android:layout_marginStart="@dimen/space_md"
-                                    android:background="@drawable/bg_staff_skeleton_bar" />
-                            </LinearLayout>
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <!-- Actual rewards recycler -->
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/recyclerRewards"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_md"
                         android:clipToPadding="false"
                         android:nestedScrollingEnabled="false"
                         android:visibility="gone" />
@@ -346,4 +266,5 @@
         android:id="@+id/composeBottomNav"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
+
 </LinearLayout>

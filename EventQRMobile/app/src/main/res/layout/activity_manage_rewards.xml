@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    MANAGE REWARDS (§6.4 rewards, Gen C retirement).
+
+        Compact pass head (eyebrow ORGANIZER, title Rewards), the event selector as a field row,
+        one 44dp rewards switch row, the reward rows, and the organizer bottom nav.
+
+    XML replaces the runtime construction: no `cardRes()`, no `tintedBlock()`, no hand-rolled
+    headings.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/ui_background"
+    android:orientation="vertical">
+
+    <include
+        android:id="@+id/passHead"
+        layout="@layout/include_pass_head_compact"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
+        android:id="@+id/swipeRefreshRewards"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            android:overScrollMode="never">
+
+            <LinearLayout
+                android:id="@+id/manageRewardsContent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="@dimen/ui_gutter"
+                android:paddingTop="@dimen/space_16"
+                android:paddingBottom="@dimen/space_32">
+
+                <FrameLayout
+                    android:id="@+id/manageRewardsStateHost"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/manageRewardsPage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                <!-- ═════════ Event selector: a field row, not a card wrapping a spinner ═════════ -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/ui_rewards_select_event"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+
+                <LinearLayout
+                    android:id="@+id/mrw_event_selector"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_8"
+                    android:addStatesFromChildren="true"
+                    android:background="@drawable/bg_ui_field"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:minHeight="@dimen/ui_control_height"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/space_16"
+                    android:paddingEnd="@dimen/space_12">
+
+                    <ImageView
+                        android:layout_width="@dimen/icon_md"
+                        android:layout_height="@dimen/icon_md"
+                        android:contentDescription="@null"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_ui_event"
+                        android:tint="@color/ui_text_secondary" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_12"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:paddingVertical="@dimen/space_8">
+
+                        <TextView
+                            android:id="@+id/mrw_event_summary_title"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:textAppearance="@style/TextAppearance.EventQR.Type.Title" />
+
+                        <TextView
+                            android:id="@+id/mrw_event_summary_count"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                            android:textColor="@color/ui_text_secondary" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="@dimen/ui_chevron"
+                        android:layout_height="@dimen/ui_chevron"
+                        android:contentDescription="@string/manage_rewards_select_event"
+                        android:src="@drawable/ic_ui_expand_more"
+                        android:tint="@color/ui_text_secondary" />
+                </LinearLayout>
+
+                <!-- ═════════ The rewards switch: one 44dp row ═════════ -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_24"
+                    android:gravity="center_vertical"
+                    android:minHeight="@dimen/ui_touch_min"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/mrw_rewards_label"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/manage_rewards_event_rewards"
+                            android:textAppearance="@style/TextAppearance.EventQR.Type.Title" />
+
+                        <TextView
+                            android:id="@+id/mrw_rewards_desc"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/manage_rewards_event_rewards_desc"
+                            android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                            android:textColor="@color/ui_text_secondary" />
+                    </LinearLayout>
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/mrw_rewards_switch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/ui_touch_min"
+                        android:layout_marginStart="@dimen/space_12"
+                        android:minWidth="@dimen/ui_touch_min" />
+                </LinearLayout>
+
+                <!-- ═════════ Rewards ═════════ -->
+                <TextView
+                    android:id="@+id/mrw_section_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_32"
+                    android:text="@string/ui_rewards_section"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+
+                <LinearLayout
+                    android:id="@+id/mrw_reward_host"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_8"
+                    android:orientation="vertical" />
+                </LinearLayout>
+            </LinearLayout>
+        </ScrollView>
+    </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
+
+    <LinearLayout
+        android:id="@+id/bottomNavHost"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+</LinearLayout>

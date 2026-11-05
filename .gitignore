@@ -6,6 +6,7 @@ MyFiles
 GEMINI.md
 CLAUDE.md
 DESIGN.md
+.hermes.md
 
 # Tooling / local state
 .idea/
@@ -13,6 +14,7 @@ DESIGN.md
 .opencode/
 .serena/
 **/.serena/
+graphify-out/
 build_output.log
 dependency-check-scan*.log
 dependency-check-scan*.err

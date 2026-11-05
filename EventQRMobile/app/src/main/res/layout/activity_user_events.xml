@@ -1,140 +1,101 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Discover (§6.2 of MyFiles/EventQR-Redesign-Plan.md) - retires Gen B.
+
+        Compact pass head (Block A + tear) - "Discover" with the result count in the end slot
+        48dp filled search field, no label
+        36dp chips in a 48dp row: All / Upcoming / Active / Completed
+        EventCard rows on the flat page background
+
+    Deleted: the 280dp radial purple glow, the 26sp + 13sp tab header, the 54dp outlined search
+    box, the 38dp pill chips, the per-card status + progress + coloured date-badge stack, and the
+    copy-pasted skeleton block.
+
+    Empty/error state is the shared EventQrEmptyState (left aligned, one action).
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_organizer_events_screen"
+    android:background="@color/ui_background"
     android:orientation="vertical">
 
-    <com.thedavelopers.eventqr.ui.components.EventQrTabHeader
-        android:id="@+id/toolbarDiscoverEvents"
+    <include
+        android:id="@+id/passHead"
+        layout="@layout/include_pass_head_compact"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:title="@string/user_dashboard_discover_events"
-        app:subtitle="@string/user_events_find_and_register_for_upcoming_event" />
+        android:layout_height="wrap_content" />
 
-    <LinearLayout
+    <EditText
+        android:id="@+id/inputEventSearch"
+        style="@style/Widget.EventQR.Ui.TextField.Search"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/transparent"
-        android:orientation="vertical"
-        android:paddingHorizontal="@dimen/space_lg">
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilSearch"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_md"
-            app:boxBackgroundColor="@color/surface"
-            app:boxCornerRadiusBottomEnd="@dimen/radius_md"
-            app:boxCornerRadiusBottomStart="@dimen/radius_md"
-            app:boxCornerRadiusTopEnd="@dimen/radius_md"
-            app:boxCornerRadiusTopStart="@dimen/radius_md"
-            app:boxStrokeColor="@color/outline"
-            app:hintEnabled="false"
-            app:startIconDrawable="@drawable/ic_action_search"
-            app:startIconTint="@color/neutral">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/inputEventSearch"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/common_search_events"
-                android:inputType="text"
-                android:textColorHint="@color/text_disabled"
-                android:textAppearance="@style/TextAppearance.EventQR.InputBodyMedium" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-    </LinearLayout>
+        android:layout_height="@dimen/ui_field_search_height"
+        android:layout_marginStart="@dimen/ui_gutter"
+        android:layout_marginTop="@dimen/space_lg"
+        android:layout_marginEnd="@dimen/ui_gutter"
+        android:drawableStart="@drawable/ic_ui_search"
+        android:drawablePadding="@dimen/space_md"
+        android:drawableTint="@color/ui_text_secondary"
+        android:hint="@string/common_search_events"
+        android:imeOptions="actionSearch"
+        android:inputType="text"
+        android:maxLines="1"
+        android:textColorHint="@color/ui_text_secondary" />
 
     <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_md"
-        android:paddingBottom="@dimen/space_lg"
+        android:layout_marginTop="@dimen/space_lg"
+        android:clipToPadding="false"
+        android:paddingStart="@dimen/ui_gutter"
+        android:paddingEnd="@dimen/ui_gutter"
         android:scrollbars="none">
 
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/chipGroupFilters"
+        <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingHorizontal="@dimen/space_lg"
-            app:singleSelection="true"
-            app:selectionRequired="true">
+            android:layout_height="@dimen/ui_attendee_chip_row"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-            <com.google.android.material.chip.Chip
+            <TextView
                 android:id="@+id/chipAll"
-                style="@style/Widget.MaterialComponents.Chip.Choice"
+                style="@style/Widget.EventQR.Ui.Chip"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:text="@string/common_all"
-                android:textColor="@color/on_primary"
-                app:chipBackgroundColor="@color/primary"
-                app:chipCornerRadius="@dimen/radius_xl"
-                app:chipMinHeight="@dimen/chip_min_height_lg"
-                app:chipStrokeColor="@color/outline"
-                app:chipStrokeWidth="@dimen/stroke_none"
-                app:textStartPadding="@dimen/space_md"
-                app:textEndPadding="@dimen/space_md" />
+                android:layout_height="@dimen/ui_chip_height"
+                android:text="@string/ui_attendee_all" />
 
-            <com.google.android.material.chip.Chip
+            <TextView
                 android:id="@+id/chipUpcoming"
-                style="@style/Widget.MaterialComponents.Chip.Choice"
+                style="@style/Widget.EventQR.Ui.Chip"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/space_sm"
-                android:text="@string/common_upcoming"
-                android:textColor="@color/text_secondary"
-                app:chipBackgroundColor="@color/surface"
-                app:chipCornerRadius="@dimen/radius_xl"
-                app:chipMinHeight="@dimen/chip_min_height_lg"
-                app:chipStrokeColor="@color/outline"
-                app:chipStrokeWidth="@dimen/stroke_hairline"
-                app:textStartPadding="@dimen/space_md"
-                app:textEndPadding="@dimen/space_md" />
+                android:layout_height="@dimen/ui_chip_height"
+                android:layout_marginStart="@dimen/ui_chip_gap"
+                android:text="@string/ui_attendee_upcoming" />
 
-            <com.google.android.material.chip.Chip
+            <TextView
                 android:id="@+id/chipActive"
-                style="@style/Widget.MaterialComponents.Chip.Choice"
+                style="@style/Widget.EventQR.Ui.Chip"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/space_sm"
-                android:text="@string/common_active"
-                android:textColor="@color/text_secondary"
-                app:chipBackgroundColor="@color/surface"
-                app:chipCornerRadius="@dimen/radius_xl"
-                app:chipMinHeight="@dimen/chip_min_height_lg"
-                app:chipStrokeColor="@color/outline"
-                app:chipStrokeWidth="@dimen/stroke_hairline"
-                app:textStartPadding="@dimen/space_md"
-                app:textEndPadding="@dimen/space_md" />
+                android:layout_height="@dimen/ui_chip_height"
+                android:layout_marginStart="@dimen/ui_chip_gap"
+                android:text="@string/ui_attendee_active" />
 
-            <com.google.android.material.chip.Chip
+            <TextView
                 android:id="@+id/chipCompleted"
-                style="@style/Widget.MaterialComponents.Chip.Choice"
+                style="@style/Widget.EventQR.Ui.Chip"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/space_sm"
-                android:text="@string/common_completed"
-                android:textColor="@color/text_secondary"
-                app:chipBackgroundColor="@color/surface"
-                app:chipCornerRadius="@dimen/radius_xl"
-                app:chipMinHeight="@dimen/chip_min_height_lg"
-                app:chipStrokeColor="@color/outline"
-                app:chipStrokeWidth="@dimen/stroke_hairline"
-                app:textStartPadding="@dimen/space_md"
-                app:textEndPadding="@dimen/space_md" />
-
-        </com.google.android.material.chip.ChipGroup>
+                android:layout_height="@dimen/ui_chip_height"
+                android:layout_marginStart="@dimen/ui_chip_gap"
+                android:text="@string/ui_attendee_completed" />
+        </LinearLayout>
     </HorizontalScrollView>
 
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshEvents"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_marginTop="@dimen/space_16"
         android:layout_weight="1">
 
         <FrameLayout
@@ -147,66 +108,24 @@
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
                 android:nestedScrollingEnabled="true"
-                android:paddingHorizontal="@dimen/space_lg"
-                android:paddingTop="@dimen/space_md"
-                android:paddingBottom="@dimen/space_xl" />
+                android:paddingStart="@dimen/ui_gutter"
+                android:paddingEnd="@dimen/ui_gutter"
+                android:paddingBottom="@dimen/space_24" />
 
-            <include layout="@layout/include_skeleton_cards" />
-
-            <LinearLayout
-                android:id="@+id/layoutStates"
+            <include
+                android:id="@+id/skeletonLoading"
+                layout="@layout/include_skeleton_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:paddingHorizontal="@dimen/space_xxl">
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_sm"
+                android:layout_marginEnd="@dimen/ui_gutter" />
 
-                <ImageView
-                    android:id="@+id/imgEmptyIcon"
-                    android:layout_width="@dimen/tile_64"
-                    android:layout_height="@dimen/tile_64"
-                    android:contentDescription="@string/common_no_events"
-                    android:src="@drawable/ic_calendar"
-                    android:tint="@color/neutral"
-                    android:visibility="gone" />
-
-                <TextView
-                    android:id="@+id/txtEventsEmpty"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_md"
-                    android:gravity="center"
-                    android:text="@string/user_events_no_events_found"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong"
-                    android:visibility="gone" />
-
-                <TextView
-                    android:id="@+id/txtEventsEmptySub"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_xs"
-                    android:gravity="center"
-                    android:text="@string/common_try_adjusting_your_search_or_filters"
-                    android:textColor="@color/text_secondary"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
-                    android:visibility="gone" />
-
-                <Button
-                    android:id="@+id/btnRefreshEvents"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="@dimen/touch_target_min"
-                    android:layout_marginTop="@dimen/space_lg"
-                    android:minWidth="@dimen/size_120"
-                    android:text="@string/common_retry"
-                    android:textAllCaps="false"
-                    android:textColor="@color/primary"
-                    app:strokeColor="@color/primary"
-                    app:cornerRadius="@dimen/radius_sm"
-                    android:visibility="gone" />
-
-            </LinearLayout>
+            <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+                android:id="@+id/txtEventsEmpty"
+                android:layout_width="@dimen/ui_empty_max_width"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
         </FrameLayout>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 
@@ -214,4 +133,5 @@
         android:id="@+id/composeBottomNav"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
+
 </LinearLayout>

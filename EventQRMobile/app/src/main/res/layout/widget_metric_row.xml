@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    METRIC ROW (§5.9, form 2) - the ONLY way to show a secondary number.
+
+        56dp, overline label left, numeric_m value right, 1dp hairline underneath
+        no card, no fill, no icon, no coloured number
+
+    The primary three metrics belong in the pass-head stub, never here. A 2x2 or 2x3 grid of
+    equal cards is banned (§10.4).
+
+    ids: metricRow, metricLabel, metricValue, metricDivider.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/metricRow"
+        style="@style/Widget.EventQR.Ui.MetricRow"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/ui_metric_row_height"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/metricLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.Overline"
+            android:textColor="@color/ui_text_secondary"
+            tools:text="This week" />
+
+        <TextView
+            android:id="@+id/metricValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_lg"
+            android:gravity="end"
+            android:maxLines="1"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.NumericM"
+            android:textColor="@color/ui_text_primary"
+            tools:text="128" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/metricDivider"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:layout_marginStart="@dimen/ui_gutter"
+        android:background="@color/ui_hairline"
+        android:importantForAccessibility="no" />
+
+</LinearLayout>

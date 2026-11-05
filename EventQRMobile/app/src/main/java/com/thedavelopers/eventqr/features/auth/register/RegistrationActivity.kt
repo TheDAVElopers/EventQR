@@ -12,13 +12,17 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.util.ScreenInsets
+import com.thedavelopers.eventqr.core.util.Wordmark
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.auth.AuthRepository
 import com.thedavelopers.eventqr.features.auth.login.LoginActivity
 import com.thedavelopers.eventqr.features.terms.TermsLink
+import com.thedavelopers.eventqr.ui.icons.AppIcons
+import com.thedavelopers.eventqr.ui.icons.FieldIcons
 
 open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View {
     private lateinit var presenter: RegistrationPresenter
@@ -44,6 +48,13 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_signup)
+
+        // Edge to edge: the bar's fill runs behind the status bar and the sticky footer's fill
+        // behind the navigation bar, while their content stays inside the safe area.
+        enableEdgeToEdge()
+        ScreenInsets.padForStatusBar(findViewById(R.id.authTopBar))
+        Wordmark.applyBarRules(this)
+        ScreenInsets.padForNavigationBar(findViewById(R.id.authFooter))
 
         presenter = RegistrationPresenter(this, AuthRepository(this), UiStrings(this))
         firstNameInput = findViewById(R.id.edtFirstName)
@@ -71,6 +82,9 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
         )
         presenter.attach(this)
 
+        FieldIcons.apply(emailInput)
+        // The phone glyph sits on the "+63" prefix inside the shared field box, not on the EditText.
+        FieldIcons.apply(findViewById(R.id.txtPhonePrefix))
         configurePasswordToggle(passwordInput)
         configurePasswordToggle(confirmPasswordInput)
         configurePhoneInput()
@@ -96,7 +110,7 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
             // (+63 + digits, e.g. +639171234567) is assembled only here at submit time.
             val phoneDigits = phoneInput.text.toString()
             if (phoneDigits.length != 10) {
-                phoneInput.error = getString(R.string.error_invalid_phone_prefixed)
+                setFieldError(phoneInput, getString(R.string.error_invalid_phone_prefixed))
                 return@setOnClickListener
             }
             presenter.submitRegistration(
@@ -121,22 +135,35 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
 
     override fun showLoading(isLoading: Boolean) {
         registerButton.isEnabled = !isLoading && isRegistrationFormValid()
-        registerButton.text = getString(if (isLoading) R.string.registration_creating_account else R.string.common_create_account)
+        registerButton.text = getString(if (isLoading) R.string.registration_creating_account else R.string.auth_create_account)
     }
 
     override fun showFieldError(field: String, message: String?) {
+        // bg_ui_field draws its 2dp error stroke from state_activated, so every field that
+        // carries an error also shows one.
         when (field) {
-            "firstName" -> firstNameInput.error = message
-            "lastName" -> lastNameInput.error = message
+            "firstName" -> setFieldError(firstNameInput, message)
+            "lastName" -> setFieldError(lastNameInput, message)
             "fullName" -> {
-                firstNameInput.error = message
-                lastNameInput.error = message
+                setFieldError(firstNameInput, message)
+                setFieldError(lastNameInput, message)
             }
-            "email" -> emailInput.error = message
-            "phone" -> phoneInput.error = if (message == Validators.PHONE_ERROR) getString(R.string.error_invalid_phone_prefixed) else message
-            "password" -> passwordInput.error = if (message == Validators.PASSWORD_TOO_LONG_ERROR) getString(R.string.error_password_too_long) else message
-            "confirmPassword" -> confirmPasswordInput.error = message
+            "email" -> setFieldError(emailInput, message)
+            "phone" -> setFieldError(
+                phoneInput,
+                if (message == Validators.PHONE_ERROR) getString(R.string.error_invalid_phone_prefixed) else message
+            )
+            "password" -> setFieldError(
+                passwordInput,
+                if (message == Validators.PASSWORD_TOO_LONG_ERROR) getString(R.string.error_password_too_long) else message
+            )
+            "confirmPassword" -> setFieldError(confirmPasswordInput, message)
         }
+    }
+
+    private fun setFieldError(field: EditText, message: String?) {
+        field.error = message
+        field.isActivated = message != null
     }
 
     override fun showMessage(message: String) {
@@ -164,6 +191,7 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
         updateRequirement(passwordNumberRequirement, getString(R.string.password_req_number), requirements.hasNumber)
         updateRequirement(passwordSpecialRequirement, getString(R.string.password_req_special), requirements.hasSpecial)
         passwordInput.error = if (!requirements.withinMaxLength) getString(R.string.error_password_too_long) else null
+        passwordInput.isActivated = !requirements.withinMaxLength
 
         updateStrengthUI(requirements.strengthLevel)
         updateRegisterButtonState()
@@ -176,29 +204,40 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
         registerButton.isEnabled = isRegistrationFormValid()
     }
 
+    /**
+     * One checklist row. The mark is a compound drawable, not a ✓/○ character: lime only when
+     * the rule is met, a neutral ring in ui_outline_interactive while it is not. The label stays
+     * readable in both states - the mark carries the state, not the text colour.
+     */
     private fun updateRequirement(view: TextView, label: String, isMet: Boolean) {
-        view.text = "${if (isMet) "✓" else "○"} $label"
-        view.setTextColor(getColor(if (isMet) R.color.success_dark else R.color.text_secondary))
+        view.text = label
+        view.setCompoundDrawablesRelativeWithIntrinsicBounds(
+            if (isMet) R.drawable.ui_rule_on else R.drawable.ui_rule_off,
+            0,
+            0,
+            0
+        )
+        view.setTextColor(getColor(if (isMet) R.color.ui_text_primary else R.color.ui_text_secondary))
     }
 
     private fun updateStrengthUI(metCount: Int) {
-        val (colorRes, label) = when (metCount) {
-            0 -> R.color.text_secondary to ""
-            1 -> R.color.danger to getString(R.string.password_strength_weak)
-            2 -> R.color.warning to getString(R.string.password_strength_fair)
-            3 -> R.color.info to getString(R.string.password_strength_good)
-            4 -> R.color.success_dark to getString(R.string.password_strength_strong)
-            else -> R.color.text_secondary to ""
+        // The label carries the tone as text (AA on the page); the bars use the tone's outline
+        // colour, which is the 3:1 non-text version of the same state.
+        val (labelColor, barColor, label) = when (metCount) {
+            0 -> Triple(R.color.ui_text_secondary, R.color.ui_hairline, "")
+            1 -> Triple(R.color.ui_error, R.color.ui_error_outline, getString(R.string.password_strength_weak))
+            2 -> Triple(R.color.ui_warning, R.color.ui_warning_outline, getString(R.string.password_strength_fair))
+            3 -> Triple(R.color.ui_info, R.color.ui_info_outline, getString(R.string.password_strength_good))
+            4 -> Triple(R.color.ui_success, R.color.ui_success_outline, getString(R.string.password_strength_strong))
+            else -> Triple(R.color.ui_text_secondary, R.color.ui_hairline, "")
         }
 
         passwordStrengthText.text = label
-        // Amber is only 2.1:1 as text: the label uses warning_dark, the bars keep the warning fill.
-        val labelColorRes = if (colorRes == R.color.warning) R.color.warning_dark else colorRes
-        passwordStrengthText.setTextColor(if (metCount > 0) getColor(labelColorRes) else getColor(R.color.text_secondary))
+        passwordStrengthText.setTextColor(if (metCount > 0) getColor(labelColor) else getColor(R.color.ui_text_secondary))
 
         strengthBars.forEachIndexed { index, view ->
             view.background.mutate().setTint(
-                if (index < metCount) getColor(colorRes) else getColor(R.color.outline)
+                if (index < metCount) getColor(barColor) else getColor(R.color.ui_hairline)
             )
         }
     }
@@ -240,25 +279,16 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
     }
 
     private fun configurePasswordToggle(input: EditText) {
+        FieldIcons.apply(input)
         input.setOnTouchListener { view, event ->
             if (event.action == MotionEvent.ACTION_UP && event.rawX >= input.right - input.compoundPaddingEnd) {
                 val isVisible = input.inputType == (InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD)
                 if (isVisible) {
                     input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-                    input.setCompoundDrawablesWithIntrinsicBounds(
-                        input.compoundDrawables[0],
-                        null,
-                        ContextCompat.getDrawable(this, R.drawable.ic_visibility_on),
-                        null
-                    )
+                    FieldIcons.setTrailing(input, AppIcons.Visibility)
                 } else {
                     input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-                    input.setCompoundDrawablesWithIntrinsicBounds(
-                        input.compoundDrawables[0],
-                        null,
-                        ContextCompat.getDrawable(this, R.drawable.ic_visibility_off),
-                        null
-                    )
+                    FieldIcons.setTrailing(input, AppIcons.VisibilityOff)
                 }
                 input.setSelection(input.text.length)
                 view.performClick()

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    REPORT PREVIEW header (§6.4): title + record-count badge, event name, generated line, the
+    applied filter chips. No card, no tinted tile, no ALL-CAPS heading.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/txtReportTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.TitleLarge"
+            tools:text="Attendance report" />
+
+        <TextView
+            android:id="@+id/txtRecordCount"
+            style="@style/Widget.EventQR.Ui.StatusBadge.Info"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/ui_badge_height"
+            android:layout_marginStart="@dimen/space_8"
+            tools:text="24 records" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/txtReportEvent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_8"
+        android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+        android:textColor="@color/ui_text_secondary"
+        tools:text="DevFest 2026" />
+
+    <TextView
+        android:id="@+id/txtReportGenerated"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_2"
+        android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+        android:textColor="@color/ui_text_secondary"
+        tools:text="Generated 12 Oct 2026, 9:41 AM" />
+
+    <LinearLayout
+        android:id="@+id/filterChips"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_8"
+        android:gravity="start|center_vertical"
+        android:orientation="horizontal" />
+</LinearLayout>

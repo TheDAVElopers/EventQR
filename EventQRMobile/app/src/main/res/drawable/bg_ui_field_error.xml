@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Filled field, error variant (§5.2). Same 56dp box as bg_ui_field but the resting stroke is
+     already 2dp ui_error, so a field can be rendered in its error state without the screen
+     toggling isActivated. Used by Widget.EventQR.Ui.TextField.Error. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:state_focused="true">
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/ui_surface_sunken" />
+                    <corners android:radius="@dimen/ui_radius_button" />
+                </shape>
+            </item>
+            <item android:inset="@dimen/stroke_hairline">
+                <shape android:shape="rectangle">
+                    <solid android:color="@android:color/transparent" />
+                    <stroke
+                        android:width="@dimen/stroke_focus"
+                        android:color="@color/ui_error" />
+                    <corners android:radius="@dimen/ui_radius_button" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+
+    <item>
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/ui_surface_sunken" />
+                    <corners android:radius="@dimen/ui_radius_button" />
+                </shape>
+            </item>
+            <item android:inset="@dimen/stroke_hairline">
+                <shape android:shape="rectangle">
+                    <solid android:color="@android:color/transparent" />
+                    <stroke
+                        android:width="@dimen/stroke_focus"
+                        android:color="@color/ui_error" />
+                    <corners android:radius="@dimen/ui_radius_button" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+
+</selector>

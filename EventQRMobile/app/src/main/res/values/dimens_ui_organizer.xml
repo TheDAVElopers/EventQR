@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Dimension tokens owned by the organizer screens (plan §4.1: 4dp grid, closed scale).
+
+    Only values that are genuinely organizer-specific live here. Shared geometry (gutters, rows,
+    buttons, fields, badges, chips, pass head, top bar) comes from dimens_ui_shared.xml, and the
+    base scale comes from dimens.xml. No alias of an existing token, and no off-scale value except
+    the 1dp/2dp/3dp rules that §4.1 documents.
+-->
+<resources>
+
+    <!-- Event selector: a field row, not a card wrapping a hidden spinner (§6.4 Reports). -->
+    <dimen name="ui_organizer_selector_height">56dp</dimen>
+
+    <!-- Reward row: 40dp tile + two text lines + trailing cost, matching list_row_icon geometry. -->
+
+    <!-- Attendee rows carry name + email + badge, so they sit between 72 and 88dp. -->
+    <dimen name="ui_organizer_attendee_row_height">80dp</dimen>
+
+    <!-- Bulk-selection action in the attendees header: 44dp visual, 48dp target. -->
+
+    <!-- ID template preview: the printed card is 85.6 x 54 mm; the on-screen preview keeps the
+         1.586 aspect ratio at a size that fits the 20dp gutters on a 360dp screen. -->
+
+    <!-- Transaction rule row: label + switch, 56dp so the switch keeps a 48dp target. -->
+    <dimen name="ui_organizer_rule_row_height">56dp</dimen>
+
+    <!-- Scan-purpose row: name + description + trailing count. -->
+
+</resources>

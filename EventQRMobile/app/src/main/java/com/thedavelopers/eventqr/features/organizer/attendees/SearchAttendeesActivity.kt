@@ -1,6 +1,5 @@
 package com.thedavelopers.eventqr.features.organizer.attendees
 
-import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
@@ -15,7 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.ui.theme.color
+import com.thedavelopers.eventqr.core.util.ScreenInsets
 import com.thedavelopers.eventqr.features.organizer.EXTRA_EVENT_ID
 import com.thedavelopers.eventqr.features.organizer.EXTRA_EVENT_TITLE
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpAttendee
@@ -29,6 +28,8 @@ import com.thedavelopers.eventqr.features.organizer.resolveSelectedEvent
 import com.thedavelopers.eventqr.features.organizer.selectedEventId
 import com.thedavelopers.eventqr.features.organizer.showEventsLoadErrorScreen
 import com.thedavelopers.eventqr.features.organizer.showMissingEventScreen
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+import com.thedavelopers.eventqr.ui.theme.color
 import kotlinx.coroutines.launch
 
 open class SearchAttendeesActivity : AppCompatActivity() {
@@ -45,11 +46,12 @@ open class SearchAttendeesActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search_attendees)
+        ScreenInsets.padContentForNavigationBar(this)
 
         repository = OrganizerRepository(this)
 
-        findViewById<ImageButton>(R.id.nav_header_back).setOnClickListener { finish() }
-        findViewById<TextView>(R.id.nav_header_title).text = getString(R.string.search_attendees_search_attendees)
+        findViewById<View>(R.id.topBarBack).setOnClickListener { finish() }
+        findViewById<TextView>(R.id.topBarTitle).text = getString(R.string.ui_organizer_search_attendees)
 
         // Set initial dynamic title from Intent while fetching the full event object
         val initialTitle = intentEventTitle()?.takeIf { it.isNotBlank() }
@@ -76,10 +78,7 @@ open class SearchAttendeesActivity : AppCompatActivity() {
             findViewById<TextView>(R.id.txtSearchSubtitle).text = selectedEvent.title.ifBlank { getString(R.string.organizer_selected_event) }
 
             searchInput = findViewById(R.id.edtSearchAttendees)
-            searchInput.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, R.drawable.ic_search, 0)
-            searchInput.compoundDrawablePadding = resources.getDimensionPixelSize(R.dimen.organizer_search_icon_padding)
             emptyState = findViewById(R.id.txtSearchEmpty)
-            progressBar = findViewById(R.id.progressSearchAttendees)
 
             adapter = SearchAttendeesAdapter { openDetails(it) }
             findViewById<RecyclerView>(R.id.recyclerSearchAttendees).apply {
@@ -115,11 +114,9 @@ open class SearchAttendeesActivity : AppCompatActivity() {
     }
 
     private fun loadAttendees() {
-        progressBar.visibility = View.VISIBLE
         lifecycleScope.launch {
             val load = repository.loadAttendeesForMvp(selectedEvent.id)
             attendees = load.data
-            progressBar.visibility = View.GONE
             render()
         }
     }
@@ -128,15 +125,25 @@ open class SearchAttendeesActivity : AppCompatActivity() {
         val query = searchInput.text?.toString().orEmpty()
         val filtered = attendees.filter { it.matchesOrganizerAttendeeQuery(query, currentFilter) }
         adapter.submitItems(filtered)
+        emptyState.setContent(
+            getString(
+                if (attendees.isEmpty()) R.string.search_attendees_no_attendees_found_for_this_event
+                else R.string.search_attendees_no_attendees_match_your_search,
+            ),
+        )
         emptyState.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
-        emptyState.text = getString(if (attendees.isEmpty()) R.string.search_attendees_no_attendees_found_for_this_event else R.string.search_attendees_no_attendees_match_your_search)
     }
 
     private fun updateChips() {
         filterChips.forEach { (label, chip) ->
             val selected = label == currentFilter
-            chip.setBackgroundResource(if (selected) R.drawable.bg_event_filter_chip_selected else R.drawable.bg_event_filter_chip_unselected)
-            chip.setTextColor(if (selected) color(R.color.on_primary) else color(R.color.text_body))
+            chip.isSelected = selected
+            chip.setBackgroundResource(
+                if (selected) R.drawable.bg_ui_chip_selected else R.drawable.bg_ui_chip_unselected,
+            )
+            chip.setTextColor(
+                getColor(if (selected) R.color.ui_on_primary else R.color.ui_text_primary),
+            )
         }
     }
 

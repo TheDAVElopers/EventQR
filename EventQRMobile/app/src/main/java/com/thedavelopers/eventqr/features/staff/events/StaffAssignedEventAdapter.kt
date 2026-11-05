@@ -3,32 +3,25 @@ package com.thedavelopers.eventqr.features.staff
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.QrCodeScanner
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.recyclerview.widget.RecyclerView
+import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.EventCardPresenter
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResponse
 import com.thedavelopers.eventqr.ui.components.EventCard
+import com.thedavelopers.eventqr.ui.components.UiButton
+import com.thedavelopers.eventqr.ui.components.UiButtonTone
 import com.thedavelopers.eventqr.ui.components.parseBadgeStatus
 import com.thedavelopers.eventqr.ui.theme.EventQrRowTheme
+import com.thedavelopers.eventqr.ui.theme.LocalGrid
 import com.thedavelopers.eventqr.ui.theme.LocalSpacing
 
 data class StaffAssignedEventCardState(
@@ -125,43 +118,28 @@ private fun StaffAssignedEventCard(
         time = state.time,
         location = state.location,
         modifier = Modifier.padding(bottom = spacing.mediumSmall),
+        // §5.1: one flat button family, radius 4, no elevation, no pill. A button label is words,
+        // so no leading icon is carried inside the control.
         footer = {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(spacing.small),
+                horizontalArrangement = Arrangement.spacedBy(LocalGrid.current.s8),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Button(
+                UiButton(
+                    text = stringResource(R.string.ui_staff_scan),
                     onClick = onScanClick,
                     modifier = Modifier.weight(1f),
-                ) {
-                    Icon(
-                        Icons.Default.QrCodeScanner,
-                        contentDescription = null,
-                        modifier = Modifier.size(spacing.mediumSmall + spacing.extraSmall),
-                    )
-                    Spacer(modifier = Modifier.width(spacing.micro))
-                    Text(
-                        text = "Scan QR",
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                    )
-                }
-
-                OutlinedButton(
+                    tone = UiButtonTone.PRIMARY,
+                    inline = true,
+                )
+                UiButton(
+                    text = stringResource(R.string.attendee_management_attendees),
                     onClick = onAttendeesClick,
                     modifier = Modifier.weight(1f),
-                ) {
-                    Icon(
-                        Icons.Default.Groups,
-                        contentDescription = null,
-                        modifier = Modifier.size(spacing.mediumSmall + spacing.extraSmall),
-                    )
-                    Spacer(modifier = Modifier.width(spacing.micro))
-                    Text(
-                        text = "Attendees",
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                    )
-                }
+                    tone = UiButtonTone.SECONDARY,
+                    inline = true,
+                )
             }
         },
     )

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pass notch (§5.14): a 24dp punch-out in the page colour, centred on the perforation so the
+     credential reads as a torn ticket. Tinted from the background role, so dark mode follows
+     automatically in Phase 5. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="@color/ui_background" />
+</shape>

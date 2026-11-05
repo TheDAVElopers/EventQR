@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Meta separator dot (§3.6 bullet replacement): 6dp, full radius, text_secondary at 60%.
+     Placed between two meta strings instead of a "•" character. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="@color/ui_dot_neutral" />
+</shape>

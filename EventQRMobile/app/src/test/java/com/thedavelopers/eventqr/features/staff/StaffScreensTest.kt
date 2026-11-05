@@ -81,15 +81,15 @@ class StaffScreensTest {
     fun dashboardTiles_showDashesNotZeroWhenUnknown_andAreLabelledHonestly() {
         val activity = Robolectric.buildActivity(StaffDashboardActivity::class.java).create().get()
         activity.updateStats(null, null)
-        assertEquals("--", activity.findViewById<TextView>(R.id.txtScansToday).text.toString())
-        assertEquals("--", activity.findViewById<TextView>(R.id.txtCheckinsToday).text.toString())
+        assertEquals("--", activity.findViewById<TextView>(R.id.passHeadStat1Value).text.toString())
+        assertEquals("--", activity.findViewById<TextView>(R.id.passHeadStat2Value).text.toString())
 
         activity.updateStats(7, 3)
-        assertEquals("7", activity.findViewById<TextView>(R.id.txtScansToday).text.toString())
-        assertEquals("3", activity.findViewById<TextView>(R.id.txtCheckinsToday).text.toString())
+        assertEquals("7", activity.findViewById<TextView>(R.id.passHeadStat1Value).text.toString())
+        assertEquals("3", activity.findViewById<TextView>(R.id.passHeadStat2Value).text.toString())
 
-        assertEquals("My Scans Today", context.getString(R.string.staff_dashboard_scanned_today))
-        assertEquals("Check-ins Today", context.getString(R.string.staff_dashboard_successful_check_ins))
+        assertEquals("Scans", context.getString(R.string.ui_staff_scans))
+        assertEquals("Check-ins", context.getString(R.string.ui_staff_check_ins))
     }
 
     // ---- admin dashboard tiles
@@ -100,14 +100,14 @@ class StaffScreensTest {
         val activity = Robolectric.buildActivity(AdminDashboardActivity::class.java).create().get()
 
         activity.renderStats(null)
-        assertEquals("--", activity.findViewById<TextView>(R.id.textTotalAccountsValue).text.toString())
-        assertEquals("--", activity.findViewById<TextView>(R.id.textActiveEventsValue).text.toString())
-        assertEquals("--", activity.findViewById<TextView>(R.id.textAuditLogsValue).text.toString())
+        assertEquals("--", activity.findViewById<View>(R.id.metricTotalAccounts).findViewById<TextView>(R.id.metricValue).text.toString())
+        assertEquals("--", activity.findViewById<View>(R.id.metricActiveEvents).findViewById<TextView>(R.id.metricValue).text.toString())
+        assertEquals("--", activity.findViewById<TextView>(R.id.passHeadStat3Value).text.toString())
 
         activity.renderStats(AdminStatsResponse(totalAccounts = 12, activeEvents = 3, auditLogCount = 2500))
-        assertEquals("12", activity.findViewById<TextView>(R.id.textTotalAccountsValue).text.toString())
-        assertEquals("3", activity.findViewById<TextView>(R.id.textActiveEventsValue).text.toString())
-        assertEquals("2.5k", activity.findViewById<TextView>(R.id.textAuditLogsValue).text.toString())
+        assertEquals("12", activity.findViewById<View>(R.id.metricTotalAccounts).findViewById<TextView>(R.id.metricValue).text.toString())
+        assertEquals("3", activity.findViewById<View>(R.id.metricActiveEvents).findViewById<TextView>(R.id.metricValue).text.toString())
+        assertEquals("2.5k", activity.findViewById<TextView>(R.id.passHeadStat3Value).text.toString())
     }
 
     // ---- scan result
@@ -127,7 +127,7 @@ class StaffScreensTest {
         val activity = scanResult(qrActive = true)
 
         assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.headerApproved).visibility)
-        assertEquals(View.VISIBLE, activity.findViewById<Button>(R.id.btnContinueTransaction).visibility)
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.btnContinueTransaction).visibility)
     }
 
     @Test
@@ -137,10 +137,10 @@ class StaffScreensTest {
         assertEquals(View.GONE, activity.findViewById<View>(R.id.headerApproved).visibility)
         assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.headerRejected).visibility)
         assertEquals(
-            context.getString(R.string.staff_scan_result_qr_inactive),
+            context.getString(R.string.ui_staff_result_inactive),
             activity.findViewById<TextView>(R.id.txtScanResultStateRejected).text.toString(),
         )
-        assertEquals(View.GONE, activity.findViewById<Button>(R.id.btnContinueTransaction).visibility)
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.btnContinueTransaction).visibility)
     }
 
     @Test
@@ -156,25 +156,25 @@ class StaffScreensTest {
 
         assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.headerRejected).visibility)
         assertEquals(
-            context.getString(R.string.staff_scan_result_not_allowed),
+            context.getString(R.string.ui_staff_result_not_allowed),
             activity.findViewById<TextView>(R.id.txtScanResultStateRejected).text.toString(),
         )
         assertEquals("Already scanned for this purpose", activity.findViewById<TextView>(R.id.txtScanResultReason).text.toString())
-        assertEquals(View.GONE, activity.findViewById<Button>(R.id.btnContinueTransaction).visibility)
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.btnContinueTransaction).visibility)
     }
 
     @Test
     fun scanResult_noHardCodedVerifiedSuccessfullyCopyForActiveScans() {
         val activity = scanResult(qrActive = true)
         val hint = activity.findViewById<TextView>(R.id.txtScanResultStatusHint).text.toString()
-        assertEquals(context.getString(R.string.staff_scan_result_qr_active_hint), hint)
+        assertEquals(context.getString(R.string.ui_staff_result_valid_hint), hint)
     }
 
     @Test
     fun scanResult_headerBackReturnsToExistingScannerWithoutStartingANewOne() {
         val activity = scanResult(qrActive = true)
 
-        activity.findViewById<View>(R.id.nav_header_back).performClick()
+        activity.findViewById<View>(R.id.topBarBack).performClick()
 
         assertTrue(activity.isFinishing)
         assertNull(Shadows.shadowOf(activity).nextStartedActivity)
@@ -192,17 +192,17 @@ class StaffScreensTest {
         activity.bindPrintFailed("Active ID template not found for event")
 
         assertEquals(
-            context.getString(R.string.staff_print_failed_title),
+            context.getString(R.string.ui_staff_result_print_failed),
             activity.findViewById<TextView>(R.id.txtScanResultStateRejected).text.toString(),
         )
         assertEquals(
-            context.getString(R.string.staff_print_failed_hint),
+            context.getString(R.string.ui_staff_result_print_failed_hint),
             activity.findViewById<TextView>(R.id.txtScanResultStatusHintRejected).text.toString(),
         )
         assertEquals("Active ID template not found for event", activity.findViewById<TextView>(R.id.txtScanResultReason).text.toString())
-        assertEquals(View.VISIBLE, activity.findViewById<Button>(R.id.btnViewAttendeeDetails).visibility)
-        assertEquals(View.VISIBLE, activity.findViewById<Button>(R.id.btnScanAgain).visibility)
-        assertEquals(View.GONE, activity.findViewById<Button>(R.id.btnContinueTransaction).visibility)
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.btnViewAttendeeDetails).visibility)
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.btnScanAgain).visibility)
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.btnContinueTransaction).visibility)
     }
 
     @Test
@@ -235,7 +235,7 @@ class StaffScreensTest {
         activity.onPrintOutcome(AndroidIdPrinter.PrintOutcome.FAILED, "Print logged (no physical printer connected)")
 
         assertEquals(
-            context.getString(R.string.staff_print_failed_title),
+            context.getString(R.string.ui_staff_result_print_failed),
             activity.findViewById<TextView>(R.id.txtScanResultStateRejected).text.toString(),
         )
         assertEquals(
@@ -319,3 +319,4 @@ class StaffScreensTest {
         assertEquals("Scan rejected and logged", rejected.findViewById<TextView>(R.id.txtTransactionStateHintRejected).text.toString())
     }
 }
+

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Scanner camera panel (§5.13). The only large dark surface in the app and it is FLAT:
+     ui_scan_panel, 16dp radius, no gradient, no glow behind it. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/ui_scan_panel" />
+    <corners android:radius="@dimen/ui_radius_sheet" />
+</shape>

@@ -34,8 +34,8 @@ class OrganizerLabelsTest {
 
     @Test
     fun dashboardLabels_areAccurate() {
-        assertEquals("Total Registrations", context.getString(R.string.organizer_dashboard_total_registrations))
-        assertEquals("Rewards Redeemed", context.getString(R.string.organizer_dashboard_rewards_redeemed))
+        assertEquals("Total registrations", context.getString(R.string.organizer_dashboard_total_registrations))
+        assertEquals("Rewards redeemed", context.getString(R.string.organizer_dashboard_rewards_redeemed))
         assertEquals("No events are happening right now.", context.getString(R.string.organizer_dashboard_no_events_happening_now))
     }
 
@@ -43,10 +43,14 @@ class OrganizerLabelsTest {
     fun dashboardScreen_usesNewLabels_andNoApproveCopy() {
         val activity = Robolectric.buildActivity(OrganizerDashboardActivity::class.java).create().get()
         val all = texts(activity.window.decorView)
-        assertTrue(all.toString(), all.contains("Total Registrations"))
-        assertTrue(all.toString(), all.contains("Rewards Redeemed"))
-        assertTrue(all.toString(), all.contains("No events are happening right now."))
-        assertFalse(all.any { it == "Total Attendees" || it == "Rewards Given" || it.contains("Approve or create") })
+        // §6.4: the stub is APPROVED / REGISTRATIONS / REDEEMED, and the metric rows are
+        // Active events / Upcoming / Ended. The old "Total registrations" cards are deleted.
+        assertTrue(all.toString(), all.contains("Registered"))
+        assertTrue(all.toString(), all.contains("Redeemed"))
+        assertTrue(all.toString(), all.contains("No events yet"))
+        assertFalse(all.toString(), all.contains("Total Attendees"))
+        assertFalse(all.toString(), all.contains("Rewards Given"))
+        assertFalse(all.toString(), all.any { it.contains("Approve or create") })
     }
 
     @Test
@@ -75,3 +79,4 @@ class OrganizerLabelsTest {
         assertEquals("Only staff assigned to this event can log scans", context.getString(R.string.transaction_rules_require_staff_desc))
     }
 }
+

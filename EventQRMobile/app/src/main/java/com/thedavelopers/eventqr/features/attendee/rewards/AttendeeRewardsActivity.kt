@@ -16,11 +16,13 @@ import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.ui.theme.dimenOffset
 import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
@@ -32,9 +34,12 @@ import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
 import com.thedavelopers.eventqr.features.rewards.RewardAdapter
 import com.thedavelopers.eventqr.features.rewards.model.dto.PointBalanceResponse
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+import com.thedavelopers.eventqr.ui.components.PassHeadBinder
+import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import kotlinx.coroutines.launch
 import java.time.Instant
-import java.util.Locale
 
 open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
     private data class RegisteredEventOption(
@@ -48,11 +53,10 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var errorContainer: View
     private lateinit var errorText: TextView
-    private lateinit var retryButton: Button
+    private lateinit var retryButton: TextView
     private lateinit var emptyEventsText: View
     private lateinit var emptyRewardsText: View
     private lateinit var eventSpinner: Spinner
-    private lateinit var eventTitleText: TextView
     private lateinit var balanceText: TextView
     private lateinit var rewardsSectionTitle: TextView
     private lateinit var claimsAction: TextView
@@ -79,7 +83,27 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_rewards)
+        applyEventQrSystemBarAppearance(lightStatusBars = false)
+        findViewById<View>(R.id.passHeadIdentity).applyEventQrTopInsetPadding()
         configureAttendeeBottomNav(AttendeeBottomNavItem.REWARDS)
+        PassHeadBinder.bindCompact(
+            findViewById(R.id.passHead),
+            title = getString(R.string.ui_attendee_rewards),
+        )
+        findViewById<EventQrEmptyState>(R.id.layoutNoRegisteredEvents).apply {
+            setIcon(AppIcons.Reward)
+            setContent(
+                getString(R.string.common_no_registered_events_yet),
+                getString(R.string.user_rewards_register_for_an_event_to_start_earni),
+            )
+        }
+        findViewById<EventQrEmptyState>(R.id.layoutRewardsEmpty).apply {
+            setIcon(AppIcons.Reward)
+            setContent(
+                getString(R.string.user_rewards_no_rewards_available_yet),
+                getString(R.string.user_rewards_check_back_later_for_rewards_for_thi),
+            )
+        }
 
         repository = AttendeeRepository(this)
         presenter = RewardsPresenter(this, repository, UiStrings(this))
@@ -117,7 +141,6 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         txtSelectedEventTitle = findViewById(R.id.txtSelectedEventTitle)
         selectEventLabel = findViewById(R.id.txtSelectEventLabel)
         layoutRewardsContent = findViewById(R.id.layoutRewardsContent)
-        eventTitleText = findViewById(R.id.txtRewardsEventTitle)
         balanceText = findViewById(R.id.txtRewardsBalance)
         rewardsSectionTitle = findViewById(R.id.txtRewardsSectionTitle)
         claimsAction = findViewById(R.id.txtMyClaims)
@@ -140,6 +163,14 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
             selectedEventId?.takeIf { it.isNotBlank() }?.let { intent.putExtra(EXTRA_EVENT_ID, it) }
             startActivity(intent)
         }
+
+        // The chip row is the section switcher (§6.2): Available (this screen), Claimed, History.
+        findViewById<View>(R.id.txtRewardsHistory).setOnClickListener {
+            startActivity(Intent(this, AttendeeTransactionsActivity::class.java))
+        }
+        val availableChip = findViewById<TextView>(R.id.chipAvailable)
+        availableChip.isSelected = true
+        availableChip.setTextColor(ContextCompat.getColor(this, R.color.ui_on_primary))
 
         retryButton.setOnClickListener { refreshRewardsPreservingSelection() }
         swipeRefresh.setOnRefreshListener { refreshRewardsPreservingSelection() }
@@ -167,7 +198,6 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
             layoutDropdownContent.visibility = if (showSkeleton) View.GONE else View.VISIBLE
             skeletonDropdown.visibility = if (showSkeleton) View.VISIBLE else View.GONE
 
-            eventTitleText.visibility = if (showSkeleton) View.GONE else View.VISIBLE
             skeletonEventName.visibility = if (showSkeleton) View.VISIBLE else View.GONE
 
             balanceText.visibility = View.VISIBLE
@@ -178,7 +208,6 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
             layoutDropdownContent.visibility = View.VISIBLE
             skeletonDropdown.visibility = View.GONE
 
-            eventTitleText.visibility = View.VISIBLE
             skeletonEventName.visibility = View.GONE
 
             balanceText.visibility = View.VISIBLE
@@ -205,7 +234,6 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         layoutDropdownContent.visibility = View.VISIBLE
         skeletonDropdown.visibility = View.GONE
 
-        eventTitleText.visibility = View.VISIBLE
         skeletonEventName.visibility = View.GONE
 
         balanceText.visibility = View.VISIBLE
@@ -231,7 +259,6 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         layoutDropdownContent.visibility = View.VISIBLE
         skeletonDropdown.visibility = View.GONE
 
-        eventTitleText.visibility = View.VISIBLE
         skeletonEventName.visibility = View.GONE
 
         balanceText.visibility = View.VISIBLE
@@ -271,7 +298,6 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         val showSkeleton = !swipeRefresh.isRefreshing && !cacheSaysNoRegistrations
         layoutDropdownContent.visibility = if (showSkeleton) View.GONE else View.VISIBLE
         skeletonDropdown.visibility = if (showSkeleton) View.VISIBLE else View.GONE
-        eventTitleText.visibility = if (showSkeleton) View.GONE else View.VISIBLE
         skeletonEventName.visibility = if (showSkeleton) View.VISIBLE else View.GONE
         balanceText.visibility = View.VISIBLE
         layoutRewardsSkeleton.visibility = if (showSkeleton) View.VISIBLE else View.GONE
@@ -410,8 +436,6 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
     private fun loadSelectedEventRewards(option: RegisteredEventOption) {
         selectedEventId = option.eventId
         selectedEventTitle = option.title
-        eventTitleText.text = option.title.uppercase(Locale.getDefault())
-        eventTitleText.visibility = View.VISIBLE
         skeletonEventName.visibility = View.GONE
         presenter.load(option.eventId, attendeeUserId)
     }

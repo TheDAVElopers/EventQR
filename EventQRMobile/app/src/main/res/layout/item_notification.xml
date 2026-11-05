@@ -11,7 +11,6 @@
         android:layout_height="wrap_content"
         android:background="@drawable/bg_notification_card_read"
         android:baselineAligned="false"
-        android:elevation="@dimen/elevation_none"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:padding="@dimen/space_lg">
@@ -27,10 +26,10 @@
 
             <ImageView
                 android:id="@+id/imgNotificationIcon"
-                android:layout_width="@dimen/icon_22"
-                android:layout_height="@dimen/icon_22"
+                android:layout_width="@dimen/icon_md"
+                android:layout_height="@dimen/icon_md"
                 android:contentDescription="@null"
-                android:src="@drawable/ic_check_circle_purple"
+                android:src="@drawable/ic_ui_check_circle"
                 app:tint="@color/success" />
         </LinearLayout>
 
@@ -64,11 +63,11 @@
                 android:orientation="horizontal">
 
                 <ImageView
-                    android:layout_width="@dimen/icon_14"
-                    android:layout_height="@dimen/icon_14"
+                    android:layout_width="@dimen/icon_md"
+                    android:layout_height="@dimen/icon_md"
                     android:layout_marginEnd="@dimen/space_xs"
                     android:contentDescription="@null"
-                    android:src="@drawable/ic_calendar"
+                    android:src="@drawable/ic_ui_event"
                     app:tint="@color/neutral_label" />
 
                 <TextView
@@ -99,8 +98,9 @@
                 android:layout_width="@dimen/icon_sm"
                 android:layout_height="@dimen/icon_sm"
                 android:contentDescription="@null"
-                android:src="@drawable/ic_chevron_right"
+                android:src="@drawable/ic_ui_chevron_right"
                 app:tint="@color/neutral_label" />
         </LinearLayout>
     </LinearLayout>
 </FrameLayout>
+

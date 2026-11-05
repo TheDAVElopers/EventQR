@@ -7,12 +7,14 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
 
 /*
- * The one pull-to-refresh used app-wide: same purple spinner on a white disc on every page.
- * Restyle it here and every page follows.
+ * The one pull-to-refresh (§5.11).
  *
- * Placement rule: it wraps only the content below the header, never the header itself, so the spinner
- * always drops in under the header and the header stays put. Pages with a hero header (dashboards,
- * profile) keep that header above this layout, not inside it.
+ * Resting spinner: ui_primary on the ui_surface disc, 2dp stroke. No shadow, no raised disc, no
+ * tinted variant per screen. Placement rule unchanged: it wraps only the content BELOW the
+ * header, never the header itself, so the spinner drops in under the pass head and the head stays
+ * put.
+ *
+ * The skeleton that shows while it spins must match the loaded geometry within 4dp (§5.11).
  */
 class EventQrSwipeRefreshLayout @JvmOverloads constructor(
     context: Context,
@@ -20,7 +22,12 @@ class EventQrSwipeRefreshLayout @JvmOverloads constructor(
 ) : SwipeRefreshLayout(context, attrs) {
 
     init {
-        setColorSchemeColors(ContextCompat.getColor(context, R.color.primary))
-        setProgressBackgroundColorSchemeColor(ContextCompat.getColor(context, R.color.surface))
+        setColorSchemeColors(ContextCompat.getColor(context, R.color.ui_primary))
+        setProgressBackgroundColorSchemeColor(ContextCompat.getColor(context, R.color.ui_surface))
+        setProgressViewOffset(
+            false,
+            resources.getDimensionPixelOffset(R.dimen.space_sm),
+            resources.getDimensionPixelOffset(R.dimen.space_xxxl),
+        )
     }
 }

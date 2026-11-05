@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    EventQR mark - "stamped corner" (MyFiles/design/04-logo-direction.md §2), dark colourway.
+
+    Master 96 x 96, s = 12: frame stroke 12, arm 36, gap 24, outer radius 6. Three open bracket
+    corners plus one solid 36 x 36 lime corner at the bottom right - no floating dot, no QR eye.
+
+    Fills only, four paths, no <group>, no strokeWidth. Never apply android:tint to this file: it
+    would recolour the lime block. ic_mark_on_light.xml carries byte-identical path data.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M0,6 A6,6 0 0 1 6,0 H36 V12 H12 V36 H0 Z" />
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M90,0 A6,6 0 0 1 96,6 V36 H84 V12 H60 V0 Z" />
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M0,90 A6,6 0 0 0 6,96 H36 V84 H12 V60 H0 Z" />
+    <path
+        android:fillColor="@color/ui_accent"
+        android:pathData="M60,60 H96 V90 A6,6 0 0 1 90,96 H60 Z" />
+</vector>

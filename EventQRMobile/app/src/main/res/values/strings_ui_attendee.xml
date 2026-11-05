@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Strings owned by the attendee screens (Phase 3/4 of MyFiles/EventQR-Redesign-Plan.md, §6.2).
+
+    Copy rules (§7): sentence case, verb-first, no "please", no exclamation marks, no
+    "successfully"; ALL CAPS never typed here - the Overline type role does the caps.
+    fmt args are positional so a translator can reorder them.
+-->
+<resources>
+
+    <!-- ═════════ Role and pass vocabulary (§7.7: "pass", "event", "points") ═════════ -->
+    <string name="ui_attendee_role">Attendee</string>
+    <string name="ui_attendee_role_staff">Staff</string>
+    <string name="ui_attendee_role_organizer">Organizer</string>
+    <string name="ui_attendee_role_admin">Admin</string>
+    <string name="ui_attendee_points">Points</string>
+    <string name="ui_attendee_events">Events</string>
+    <string name="ui_attendee_check_ins">Check-ins</string>
+    <string name="ui_attendee_balance">Balance</string>
+    <string name="ui_attendee_registration">Registration</string>
+    <string name="ui_attendee_email">Email</string>
+    <string name="ui_attendee_attendee">Attendee</string>
+
+    <!-- ═════════ Dashboard (§6.2) ═════════ -->
+    <string name="ui_attendee_view_pass">View pass</string>
+    <string name="ui_attendee_discover">Discover</string>
+    <string name="ui_attendee_quick_actions">Quick actions</string>
+    <!-- Chip labels only. Screen titles keep ui_attendee_transaction_history / ui_attendee_request_event. -->
+    <string name="ui_attendee_quick_history">History</string>
+    <string name="ui_attendee_quick_request">Request</string>
+    <string name="ui_attendee_my_passes">My passes</string>
+    <string name="ui_attendee_rewards">Rewards</string>
+    <string name="ui_attendee_dashboard_empty_next">No upcoming events</string>
+    <string name="ui_attendee_dashboard_empty_next_body">Events you register for appear here.</string>
+    <string name="ui_attendee_dashboard_empty_activity">No activity yet</string>
+    <string name="ui_attendee_dashboard_empty_activity_body">Check-ins and points show up here.</string>
+
+    <!-- ═════════ Discover (§6.2) ═════════ -->
+    <!-- Unit only: CountLabel.format() prefixes the compact number and uppercases the noun. -->
+    <string name="ui_attendee_events_count">event</string>
+    <string name="ui_attendee_discover_empty_body">Browse events and register to get a pass.</string>
+
+    <!-- ═════════ Event detail (§6.2) ═════════ -->
+    <string name="ui_attendee_about">About</string>
+    <string name="ui_attendee_event_details">Event details</string>
+    <string name="ui_attendee_no_description">No description yet.</string>
+    <string name="ui_attendee_venue_tbd">Venue to be announced</string>
+    <string name="ui_attendee_date_tbd">Date to be announced</string>
+    <string name="ui_attendee_date">Date</string>
+    <string name="ui_attendee_status">Status</string>
+    <string name="ui_attendee_time">Time</string>
+    <string name="ui_attendee_venue">Venue</string>
+    <string name="ui_attendee_category">Category</string>
+    <string name="ui_attendee_audience">Audience</string>
+    <string name="ui_attendee_registration_window">Registration window</string>
+    <string name="ui_attendee_capacity">Capacity</string>
+    <string name="ui_attendee_event_rewards">Rewards</string>
+
+    <!-- ═════════ Registration (§6.2, §6.6) ═════════ -->
+    <string name="ui_attendee_registrant_details">Your details</string>
+
+    <!-- ═════════ QR credential (§5.14, §6.2) ═════════ -->
+    <string name="ui_attendee_save_pass">Save pass</string>
+    <string name="ui_attendee_saving_pass">Saving pass to gallery</string>
+    <string name="ui_attendee_pass">Pass</string>
+    <string name="ui_attendee_keep_screen_bright">Keep screen bright</string>
+
+    <!-- ═════════ Rewards (§6.2) ═════════ -->
+    <string name="ui_attendee_available">Available</string>
+    <string name="ui_attendee_claimed">Claimed</string>
+    <string name="ui_attendee_history">History</string>
+    <string name="ui_attendee_points_cost">%1$s pts</string>
+    <string name="ui_attendee_points_spent">-%1$d pts</string>
+    <string name="ui_attendee_points_required">pts required</string>
+    <string name="ui_attendee_available_rewards">Available rewards</string>
+    <string name="ui_attendee_registered_event">Registered event</string>
+    <string name="ui_attendee_stock_left">%1$d left</string>
+    <string name="ui_attendee_stock_unlimited">Unlimited</string>
+    <string name="ui_attendee_unavailable">Unavailable</string>
+    <string name="ui_attendee_registered">Registered</string>
+    <string name="ui_attendee_entered">Entered</string>
+    <string name="ui_attendee_exited">Exited</string>
+    <string name="ui_attendee_no_show">No show</string>
+    <string name="ui_attendee_your_points">Your points</string>
+    <string name="ui_attendee_remaining">Remaining</string>
+    <string name="ui_attendee_how_to_redeem_title">How to redeem</string>
+    <string name="ui_attendee_reward">Reward</string>
+    <string name="ui_attendee_reward_details">Reward details</string>
+    <string name="ui_attendee_register_for_event">Register for event</string>
+    <string name="ui_attendee_how_to_redeem">Show your pass at the rewards desk and staff deduct the points.</string>
+    <string name="ui_attendee_redeemed">Approved</string>
+    <string name="ui_attendee_pending">Pending</string>
+    <string name="ui_attendee_rejected">Rejected</string>
+
+    <!-- ═════════ Profile (§6.2) ═════════ -->
+    <string name="ui_attendee_personal_details">Personal details</string>
+    <string name="ui_attendee_account">Account</string>
+    <string name="ui_attendee_security">Security</string>
+    <string name="ui_attendee_name">Name</string>
+    <string name="ui_attendee_phone">Phone</string>
+    <string name="ui_attendee_edit_profile">Edit profile</string>
+    <string name="ui_attendee_transaction_history">Transaction history</string>
+    <string name="ui_attendee_claimed_rewards">Claimed rewards</string>
+    <string name="ui_attendee_my_event_requests">My event requests</string>
+    <string name="ui_attendee_change_password">Change password</string>
+    <string name="ui_attendee_save_changes">Save changes</string>
+    <string name="ui_attendee_saving">Saving…</string>
+    <string name="ui_attendee_full_name">Full name</string>
+    <string name="ui_attendee_email_locked">Email is set at registration and cannot be changed.</string>
+    <string name="ui_attendee_phone_hint">10 digits, without the +63 prefix</string>
+    <string name="ui_attendee_phone_required">Enter your mobile number.</string>
+    <string name="ui_attendee_name_required">Enter your full name.</string>
+    <string name="ui_attendee_phone_invalid">That is not a valid PH mobile number.</string>
+
+    <!-- ═════════ Request event (§6.2, §6.6) ═════════ -->
+    <string name="ui_attendee_request_event">Request event</string>
+    <string name="ui_attendee_my_requests">My requests</string>
+    <string name="ui_attendee_event_information">Event information</string>
+    <string name="ui_attendee_schedule">Schedule and venue</string>
+    <string name="ui_attendee_requester">Requester</string>
+    <string name="ui_attendee_setup">Event setup</string>
+    <string name="ui_attendee_reason">Reason for request</string>
+    <string name="ui_attendee_submit_request">Submit request</string>
+    <string name="ui_attendee_confirm_registration">Confirm registration</string>
+    <string name="ui_attendee_submitting">Submitting…</string>
+    <string name="ui_attendee_event_meta">%1$s - %2$s</string>
+    <string name="ui_attendee_sign_out">Sign out</string>
+    <string name="ui_attendee_cancel">Cancel</string>
+    <string name="ui_attendee_new">New</string>
+    <string name="ui_attendee_select">Select</string>
+
+    <!-- ═════════ Status vocabulary (§5.4 mapping, sentence case per §7.2) ═════════ -->
+    <string name="ui_attendee_upcoming">Upcoming</string>
+    <string name="ui_attendee_active">Active</string>
+    <string name="ui_attendee_completed">Completed</string>
+    <string name="ui_attendee_pending_review">Pending review</string>
+    <string name="ui_attendee_draft">Draft</string>
+    <string name="ui_attendee_cancelled">Cancelled</string>
+    <string name="ui_attendee_unknown">Unknown</string>
+    <string name="ui_attendee_all">All</string>
+
+    <!-- ═════════ Lists ═════════ -->
+    <string name="ui_attendee_no_events_found">No events found</string>
+    <string name="ui_attendee_no_events_body">Try another search, or clear the filter.</string>
+    <string name="ui_attendee_no_transactions_body">Points you earn and spend appear here.</string>
+    <string name="ui_attendee_no_requests_body">Requests you submit appear here.</string>
+    <string name="ui_attendee_no_claimed_body">Rewards you claim appear here.</string>
+
+    <!-- ═════════ Shared ═════════ -->
+    <string name="ui_attendee_retry">Retry</string>
+    <string name="ui_attendee_pass_description">Pass for %1$s, registration %2$s.</string>
+
+</resources>

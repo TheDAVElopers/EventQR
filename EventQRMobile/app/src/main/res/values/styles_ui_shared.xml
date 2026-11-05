@@ -1,0 +1,526 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Shared component styles, Phase 1 (§5 of MyFiles/EventQR-Redesign-Plan.md).
+
+    Companion to values/styles_components.xml: that file keeps the Phase 0/2 Ui.* styles the
+    auth screens already use, this file adds the rest of the family. Same namespace on purpose -
+    a layout never has to know which file a Widget.EventQR.Ui.* style is defined in.
+
+    Rules encoded here:
+      * radius 4 on every control, 10 on every card and row tile, 16 on sheets/dialogs/credential
+      * elevation 0 on all content; hairline strokes only
+      * every size is an @dimen token and every colour is a ui_* role - no literals
+      * ALL CAPS only in TextAppearance.EventQR.Type.Overline
+-->
+<resources>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!--  TEXT APPEARANCES owned by the components (not part of the 14-role ramp) -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Status badge label (§5.4): 11sp / 600 / 0.06em, NOT all caps. Built from the ramp
+         rather than parented to Overline, because Overline is the one all-caps role. -->
+    <style name="TextAppearance.EventQR.Type.Badge" parent="">
+        <item name="android:fontFamily">@font/ibm_plex_sans_semibold</item>
+        <item name="android:textSize">@dimen/ui_type_overline</item>
+        <item name="android:letterSpacing">@dimen/ui_track_badge</item>
+        <item name="android:lineSpacingExtra">@dimen/ui_leading_none</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">@color/ui_on_success_container</item>
+    </style>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!--  BUTTONS (§5.1) - one family, four tones, two heights                   -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- 52dp Secondary: ui_primary_container fill, ui_primary label. -->
+    <style name="Widget.EventQR.Ui.Button.Secondary" parent="@style/Widget.EventQR.Ui.Button.Primary">
+        <item name="android:background">@drawable/bg_ui_button_secondary</item>
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.ButtonLabel</item>
+        <item name="android:textColor">@color/ui_primary</item>
+    </style>
+
+    <!-- 48dp Secondary, inline (sheet action stack, empty-state secondary action). -->
+    <style name="Widget.EventQR.Ui.Button.Secondary.Inline">
+        <item name="android:minHeight">@dimen/ui_button_height_inline</item>
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.ButtonLabelInline</item>
+    </style>
+
+    <!-- 52dp Destructive TRIGGER: surface fill, 1dp ui_error boundary, ui_error label. -->
+    <style name="Widget.EventQR.Ui.Button.Destructive" parent="@style/Widget.EventQR.Ui.Button.Primary">
+        <item name="android:background">@drawable/bg_ui_button_destructive</item>
+        <item name="android:textColor">@color/ui_button_destructive_text</item>
+    </style>
+
+    <!-- 48dp Destructive, inline (a single destructive row action). -->
+    <style name="Widget.EventQR.Ui.Button.Destructive.Inline">
+        <item name="android:minHeight">@dimen/ui_button_height_inline</item>
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.ButtonLabelInline</item>
+    </style>
+
+    <!-- Destructive COMMIT: the only filled red button in the app, and only inside a confirm
+         dialog. Use ui_error fill with white text; the verb is the label ("Delete"). -->
+    <style name="Widget.EventQR.Ui.Button.DestructiveCommit" parent="@style/Widget.EventQR.Ui.Button.Primary">
+        <item name="android:background">@drawable/bg_ui_button_destructive_commit</item>
+        <item name="android:textColor">@color/ui_on_primary</item>
+    </style>
+
+    <!-- 48dp icon button: transparent at rest, ui_primary_wash on press, 2dp focus ring.
+         The glyph is set per site (24dp standalone, 20dp inside a row). -->
+    <style name="Widget.EventQR.Ui.Button.Icon" parent="">
+        <item name="android:background">@drawable/bg_ui_button_icon</item>
+        <item name="android:backgroundTint">@null</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:elevation">@dimen/ui_elevation_none</item>
+        <item name="android:minWidth">@dimen/ui_button_height_inline</item>
+        <item name="android:minHeight">@dimen/ui_button_height_inline</item>
+        <item name="android:padding">@dimen/space_sm</item>
+        <item name="android:scaleType">centerInside</item>
+        <item name="android:tint">@color/ui_text_primary</item>
+    </style>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!--  TEXT FIELDS (§5.2) - variants of Widget.EventQR.Ui.TextField           -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Field label above the box: overline, secondary, 8dp gap is the caller's layout_margin. -->
+    <style name="Widget.EventQR.Ui.FieldLabel" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.FieldLabel</item>
+    </style>
+
+    <!-- Error variant: the box is already 2dp ui_error at rest. -->
+    <style name="Widget.EventQR.Ui.TextField.Error" parent="@style/Widget.EventQR.Ui.TextField">
+        <item name="android:background">@drawable/bg_ui_field_error</item>
+    </style>
+
+    <!-- Filled variant: the default field IS filled. Named explicitly so a screen can state the
+     intent, and so a "filled" search/filled/error triad reads in the style list. -->
+    <style name="Widget.EventQR.Ui.TextField.Filled" parent="@style/Widget.EventQR.Ui.TextField" />
+
+    <!-- Display variant: sunken fill, no focus/error state. Pair with focusable=false. -->
+    <style name="Widget.EventQR.Ui.TextField.Display" parent="@style/Widget.EventQR.Ui.TextField">
+        <item name="android:background">@drawable/bg_ui_field_display</item>
+    </style>
+
+    <!-- Multiline: the 56dp cap is removed, text starts at the top, 3 lines minimum (§5.2 uses
+     the same 15sp body; the box grows instead of scrolling one line). -->
+    <style name="Widget.EventQR.Ui.TextField.Multiline" parent="@style/Widget.EventQR.Ui.TextField">
+        <item name="android:maxHeight">@dimen/ui_field_multiline_height</item>
+        <item name="android:minHeight">@dimen/ui_field_multiline_height</item>
+        <item name="android:gravity">top|start</item>
+        <item name="android:paddingTop">@dimen/space_md</item>
+        <item name="android:paddingBottom">@dimen/space_md</item>
+        <item name="android:minLines">3</item>
+        <item name="android:maxLines">6</item>
+        <item name="android:singleLine">false</item>
+    </style>
+
+    <!-- Search: 48dp, radius 4, no label. 20dp ui_text_secondary leading icon is set per site. -->
+    <style name="Widget.EventQR.Ui.TextField.Search" parent="@style/Widget.EventQR.Ui.TextField">
+        <item name="android:minHeight">@dimen/ui_field_search_height</item>
+        <item name="android:maxHeight">@dimen/ui_field_search_height</item>
+        <item name="android:inputType">text</item>
+    </style>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!--  CARDS (§5.3) - radius 10, 1dp hairline, elevation 0                     -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+    <style name="Widget.EventQR.Ui.Card" parent="Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">@dimen/ui_radius_card</item>
+        <item name="cardElevation">@dimen/ui_elevation_none</item>
+        <item name="cardUseCompatPadding">false</item>
+        <item name="strokeWidth">@dimen/stroke_hairline</item>
+        <item name="strokeColor">@color/ui_hairline</item>
+        <item name="cardBackgroundColor">@color/ui_surface</item>
+    </style>
+
+    <!-- Interactive: pressed fill moves to ui_surface_pressed, focus draws a 2dp ui_primary
+         outline. Same radius, same hairline, still no shadow. -->
+    <style name="Widget.EventQR.Ui.Card.Interactive">
+        <item name="android:foreground">?attr/selectableItemBackground</item>
+        <item name="rippleColor">@color/ui_primary_wash</item>
+    </style>
+
+    <!-- Grouped list card: one card, N rows, 1dp dividers inset 16dp inside. Rows never get
+         their own card. -->
+    <style name="Widget.EventQR.Ui.Card.Grouped">
+        <item name="cardCornerRadius">@dimen/ui_radius_card</item>
+        <item name="cardElevation">@dimen/ui_elevation_none</item>
+        <item name="cardUseCompatPadding">false</item>
+        <item name="strokeWidth">@dimen/stroke_hairline</item>
+        <item name="strokeColor">@color/ui_hairline</item>
+        <item name="cardBackgroundColor">@color/ui_surface</item>
+    </style>
+
+    <!-- Media card: poster holder, 16dp radius on the TOP corners only (§5.3 CardMedia). -->
+    <style name="Widget.EventQR.Ui.Card.Media">
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.EventQR.CardMedia</item>
+        <item name="strokeWidth">@dimen/stroke_none</item>
+        <item name="cardElevation">@dimen/ui_elevation_none</item>
+    </style>
+
+    <style name="ShapeAppearance.EventQR.CardMedia" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">@dimen/ui_radius_sheet</item>
+        <item name="cornerSizeTopRight">@dimen/ui_radius_sheet</item>
+        <item name="cornerSizeBottomLeft">@dimen/radius_none</item>
+        <item name="cornerSizeBottomRight">@dimen/radius_none</item>
+    </style>
+
+    <!-- Card content inset: 16dp, so card text sits at 36dp when the card is on the 20dp gutter. -->
+    <style name="Widget.EventQR.Ui.Card.Padding" parent="">
+        <item name="android:padding">@dimen/ui_card_padding</item>
+    </style>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!--  STATUS BADGE (§5.4) - one shape, six tones, one size                   -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+    <style name="Widget.EventQR.Ui.StatusBadge" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">@dimen/ui_badge_height</item>
+        <item name="android:minHeight">@dimen/ui_badge_height</item>
+        <item name="android:background">@drawable/bg_ui_badge</item>
+        <item name="android:backgroundTint">@color/ui_surface_sunken</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingStart">@dimen/ui_badge_pad_h</item>
+        <item name="android:paddingEnd">@dimen/ui_badge_pad_h</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.Badge</item>
+        <item name="android:textColor">@color/ui_text_secondary</item>
+    </style>
+
+    <style name="Widget.EventQR.Ui.StatusBadge.Neutral">
+        <item name="android:backgroundTint">@color/ui_surface_sunken</item>
+        <item name="android:textColor">@color/ui_text_secondary</item>
+    </style>
+    <style name="Widget.EventQR.Ui.StatusBadge.Success">
+        <item name="android:backgroundTint">@color/ui_success_container</item>
+        <item name="android:textColor">@color/ui_on_success_container</item>
+    </style>
+    <style name="Widget.EventQR.Ui.StatusBadge.Warning">
+        <item name="android:backgroundTint">@color/ui_warning_container</item>
+        <item name="android:textColor">@color/ui_on_warning_container</item>
+    </style>
+    <style name="Widget.EventQR.Ui.StatusBadge.Error">
+        <item name="android:backgroundTint">@color/ui_error_container</item>
+        <item name="android:textColor">@color/ui_on_error_container</item>
+    </style>
+    <style name="Widget.EventQR.Ui.StatusBadge.Info">
+        <item name="android:backgroundTint">@color/ui_info_container</item>
+        <item name="android:textColor">@color/ui_on_info_container</item>
+    </style>
+    <!-- Valid: the only lime badge. Confirmation only (§P3). -->
+    <style name="Widget.EventQR.Ui.StatusBadge.Valid">
+        <item name="android:backgroundTint">@color/ui_accent</item>
+        <item name="android:textColor">@color/ui_on_accent</item>
+    </style>
+
+    <!-- Optional 6dp status dot, same tone as the label. A View, drawn before the text. -->
+    <style name="Widget.EventQR.Ui.StatusBadge.Dot" parent="">
+        <item name="android:layout_width">@dimen/ui_badge_dot</item>
+        <item name="android:layout_height">@dimen/ui_badge_dot</item>
+        <item name="android:layout_marginEnd">@dimen/ui_badge_dot_gap</item>
+        <item name="android:background">@drawable/bg_ui_dot</item>
+    </style>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!--  CHIPS (§5.6) - 36dp, radius 4, never a pill                            -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+    <style name="Widget.EventQR.Ui.Chip" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">@dimen/ui_chip_height</item>
+        <item name="android:minHeight">@dimen/ui_chip_height</item>
+        <item name="android:minWidth">@dimen/ui_touch_min</item>
+        <item name="android:background">@drawable/bg_ui_chip</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">@dimen/ui_chip_pad_h</item>
+        <item name="android:paddingEnd">@dimen/ui_chip_pad_h</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.Label</item>
+        <item name="android:textColor">@color/ui_chip_text</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!-- Action variant: a leading glyph says what the action is; a check icon would say "selected". -->
+    <style name="Widget.EventQR.Ui.Chip.Action" parent="@style/Widget.EventQR.Ui.Chip">
+        <item name="android:drawablePadding">@dimen/space_4</item>
+        <item name="android:drawableTint">@color/ui_text_secondary</item>
+        <item name="android:paddingStart">@dimen/ui_chip_action_pad_h</item>
+        <item name="android:paddingEnd">@dimen/ui_chip_action_pad_h</item>
+        <item name="android:paddingTop">@dimen/space_sm</item>
+        <item name="android:paddingBottom">@dimen/space_sm</item>
+    </style>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!--  LIST ROWS (§5.5) - style fragments used by list_row_*.xml              -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+    <style name="Widget.EventQR.Ui.ListRow.Title" parent="">
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.Title</item>
+        <item name="android:textColor">@color/ui_text_primary</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="Widget.EventQR.Ui.ListRow.Meta" parent="">
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.BodySmall</item>
+        <item name="android:textColor">@color/ui_text_secondary</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="Widget.EventQR.Ui.ListRow.Value" parent="">
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.NumericS</item>
+        <item name="android:textColor">@color/ui_text_primary</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- Row divider, inset to the text edge (20 + 40 + 16 = 76dp) so it aligns with the title,
+         not with the icon. This is the detail that makes a list look authored (§5.5). -->
+    <style name="Widget.EventQR.Ui.ListRow.Divider" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/stroke_hairline</item>
+        <item name="android:layout_marginStart">@dimen/ui_divider_inset</item>
+        <item name="android:background">@color/ui_hairline</item>
+    </style>
+
+    <style name="Widget.EventQR.Ui.ListRow.Chevron" parent="">
+        <item name="android:layout_width">@dimen/ui_chevron</item>
+        <item name="android:layout_height">@dimen/ui_chevron</item>
+        <item name="android:src">@drawable/ic_ui_chevron_right</item>
+        <item name="android:tint">@color/ui_text_secondary</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!--  METRIC ROW (§5.9 form 2) - 56dp, label left / value right, hairline     -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+    <style name="Widget.EventQR.Ui.MetricRow" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/ui_metric_row_height</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingStart">@dimen/ui_gutter</item>
+        <item name="android:paddingEnd">@dimen/ui_gutter</item>
+    </style>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!--  TOP APP BAR (§5.8)                                                     -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+    <style name="Widget.EventQR.Ui.TopBar" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/ui_top_bar_height</item>
+        <item name="android:background">@color/ui_surface</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+    </style>
+
+    <style name="Widget.EventQR.Ui.TopBar.Back" parent="@style/Widget.EventQR.Ui.Button.Icon">
+        <item name="android:src">@drawable/ic_ui_arrow_back</item>
+        <item name="android:tint">@color/ui_text_primary</item>
+        <item name="android:contentDescription">@string/back</item>
+    </style>
+
+    <!-- Title: layout params stay at the call site (a style cannot set layout_weight). -->
+    <style name="Widget.EventQR.Ui.TopBar.Title" parent="">
+        <item name="android:ellipsize">end</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.Title</item>
+        <item name="android:textColor">@color/ui_text_primary</item>
+    </style>
+
+    <style name="Widget.EventQR.Ui.TopBar.Action" parent="@style/Widget.EventQR.Ui.Button.Icon" />
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!--  DIALOG / SHEET SURFACES (§5.12)                                        -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+    <style name="Widget.EventQR.Ui.Dialog" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/bg_ui_dialog</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:padding">@dimen/ui_dialog_pad</item>
+    </style>
+
+    <style name="Widget.EventQR.Ui.Dialog.Title" parent="">
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.Title</item>
+        <item name="android:textColor">@color/ui_text_primary</item>
+    </style>
+
+    <style name="Widget.EventQR.Ui.Dialog.Body" parent="">
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.Body</item>
+        <item name="android:textColor">@color/ui_text_secondary</item>
+        <item name="android:layout_marginTop">@dimen/space_sm</item>
+    </style>
+
+    <style name="Widget.EventQR.Ui.Sheet" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/bg_ui_sheet</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:paddingBottom">@dimen/ui_gutter</item>
+    </style>
+
+    <style name="Widget.EventQR.Ui.Sheet.Handle" parent="">
+        <item name="android:layout_width">@dimen/ui_sheet_handle_width</item>
+        <item name="android:layout_height">@dimen/ui_sheet_handle_height</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:layout_marginTop">@dimen/ui_sheet_handle_top</item>
+        <item name="android:background">@drawable/bg_ui_sheet_handle</item>
+    </style>
+
+    <style name="Widget.EventQR.Ui.Sheet.Title" parent="">
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.TitleLarge</item>
+        <item name="android:textColor">@color/ui_text_primary</item>
+        <item name="android:layout_marginTop">@dimen/space_lg</item>
+        <item name="android:paddingStart">@dimen/ui_gutter</item>
+        <item name="android:paddingEnd">@dimen/ui_gutter</item>
+    </style>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!--  SKELETON (§5.11)                                                       -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+    <style name="Widget.EventQR.Ui.Skeleton" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/ui_skeleton_bar_height</item>
+        <item name="android:background">@drawable/bg_ui_skeleton</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
+    <style name="Widget.EventQR.Ui.Skeleton.Circle" parent="">
+        <item name="android:layout_width">@dimen/ui_skeleton_avatar</item>
+        <item name="android:layout_height">@dimen/ui_skeleton_avatar</item>
+        <item name="android:background">@drawable/bg_ui_skeleton_circle</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!--  SCANNER (§5.13)                                                        -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+    <style name="Widget.EventQR.Ui.Scan.Panel" parent="">
+        <item name="android:layout_width">@dimen/ui_scan_panel_width</item>
+        <item name="android:layout_height">@dimen/ui_scan_panel_height</item>
+        <item name="android:background">@drawable/bg_ui_scan_panel</item>
+        <item name="android:clipChildren">false</item>
+    </style>
+
+    <style name="Widget.EventQR.Ui.Scan.Bracket" parent="">
+        <item name="android:layout_width">@dimen/ui_scan_bracket_arm</item>
+        <item name="android:layout_height">@dimen/ui_scan_bracket_arm</item>
+        <item name="android:src">@drawable/ic_ui_qr_frame_corner</item>
+        <item name="android:tint">@color/ui_scan_bracket</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
+    <style name="Widget.EventQR.Ui.Scan.Torch" parent="@style/Widget.EventQR.Ui.Button.Icon">
+        <item name="android:layout_width">@dimen/ui_scan_torch</item>
+        <item name="android:layout_height">@dimen/ui_scan_torch</item>
+        <item name="android:src">@drawable/ic_ui_flashlight_on</item>
+        <!-- The torch sits in the guidance row on ui_background, not inside the dark panel, so it
+             takes the ink tint of a light surface. ScannerActivity.updateTorchAffordance() flips it
+             to ui_accent_deep while the torch is on; both states must stay readable here. -->
+        <item name="android:tint">@color/ui_text_primary</item>
+        <item name="android:contentDescription">@string/ui_scan_torch</item>
+    </style>
+
+    <style name="Widget.EventQR.Ui.Scan.Guidance" parent="">
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.BodySmall</item>
+        <item name="android:textColor">@color/ui_text_secondary</item>
+    </style>
+
+    <style name="Widget.EventQR.Ui.Scan.Context" parent="">
+        <item name="android:layout_height">@dimen/ui_scan_context_height</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+    </style>
+
+    <style name="Widget.EventQR.Ui.Scan.StatusStrip" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/ui_scan_status_height</item>
+        <item name="android:background">@drawable/bg_ui_scan_strip</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingStart">@dimen/space_lg</item>
+        <item name="android:paddingEnd">@dimen/space_lg</item>
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.Body</item>
+        <item name="android:textColor">@color/ui_on_error_container</item>
+    </style>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!--  CREDENTIAL (§5.14)                                                     -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+    <style name="Widget.EventQR.Ui.Credential" parent="">
+        <item name="android:layout_width">@dimen/ui_credential_width</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">@dimen/ui_credential_height</item>
+        <item name="android:background">@drawable/bg_credential_surface</item>
+        <item name="android:clipChildren">false</item>
+        <item name="android:clipToPadding">false</item>
+    </style>
+
+    <style name="Widget.EventQR.Ui.Credential.Plate" parent="">
+        <item name="android:layout_width">@dimen/ui_qr_plate</item>
+        <item name="android:layout_height">@dimen/ui_qr_plate</item>
+        <item name="android:background">@drawable/bg_ui_qr_plate</item>
+        <item name="android:padding">@dimen/ui_qr_quiet</item>
+    </style>
+
+    <style name="Widget.EventQR.Ui.Credential.Notch" parent="">
+        <item name="android:layout_width">@dimen/ui_notch</item>
+        <item name="android:layout_height">@dimen/ui_notch</item>
+        <item name="android:background">@drawable/bg_ui_notch</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
+    <style name="Widget.EventQR.Ui.Credential.Overline" parent="">
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.Overline</item>
+        <item name="android:textColor">@color/ui_text_on_dark_faint</item>
+    </style>
+
+    <style name="Widget.EventQR.Ui.Credential.EventName" parent="">
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.DisplayM</item>
+        <item name="android:textColor">@color/ui_text_on_dark</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="Widget.EventQR.Ui.Credential.Meta" parent="">
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.BodySmall</item>
+        <item name="android:textColor">@color/ui_text_on_dark_muted</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="Widget.EventQR.Ui.Credential.Serial" parent="">
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.NumericS</item>
+        <item name="android:textColor">@color/ui_text_on_dark</item>
+    </style>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!--  EMPTY STATE (§5.10) - the custom view owns its children; this style is  -->
+    <!--  the container contract so a screen can slot it without guessing.        -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+    <style name="Widget.EventQR.Ui.EmptyState" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingStart">@dimen/ui_gutter</item>
+        <item name="android:paddingEnd">@dimen/ui_gutter</item>
+        <item name="android:paddingTop">@dimen/ui_empty_top_offset</item>
+    </style>
+
+</resources>

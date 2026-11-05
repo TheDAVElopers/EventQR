@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Android 12+ system splash icon: the EventQR icon mark only (no wordmark). The system masks the 288dp icon canvas
-     to a 192dp circle, so the square mark is sized 128dp (diagonal 181dp) to sit fully inside it. Keep this size in
-     sync with splashLogo in activity_splash_modern.xml and bg_splash_legacy.xml. -->
+<!--
+    Android 12+ system splash icon: the mark on dark, alone and centred, inside a canvas large enough
+    that the system's circular icon mask never reaches its corners (04-logo-direction.md §4).
+    A layer-list's intrinsic size comes from its child drawables, so the canvas here is the mark's own
+    96dp; the item is inset to 64dp, which keeps the mark's 45.3dp half-diagonal inside the mask
+    circle. A 96dp item would be inscribed in that same circle and get its four corners cut.
+-->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:width="@dimen/splash_canvas" android:height="@dimen/splash_canvas">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/transparent" />
-        </shape>
-    </item>
     <item
-        android:width="@dimen/tile_128"
-        android:height="@dimen/tile_128"
+        android:width="@dimen/ui_mark_splash"
+        android:height="@dimen/ui_mark_splash"
         android:gravity="center"
-        android:drawable="@drawable/white_logo" />
+        android:drawable="@drawable/ic_mark_on_dark" />
 </layer-list>

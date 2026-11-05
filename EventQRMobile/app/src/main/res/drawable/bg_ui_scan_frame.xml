@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Scanner preview frame (§5.13): 1px frame around the 240dp preview. It stays a hairline
+     until a decode is confirmed, then the brackets (not this frame) turn ui_accent. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@android:color/transparent" />
+    <stroke
+        android:width="@dimen/ui_scan_frame_stroke"
+        android:color="@color/ui_scan_frame" />
+    <corners android:radius="@dimen/ui_radius_button" />
+</shape>

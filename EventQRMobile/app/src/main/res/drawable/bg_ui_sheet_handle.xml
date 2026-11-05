@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sheet drag handle (§5.12): 32x4dp, p_n300, full radius. Drawn as a shape so it tints with
+     the neutral ramp instead of being a bitmap. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/ui_sheet_handle" />
+    <corners android:radius="@dimen/ui_radius_badge" />
+</shape>

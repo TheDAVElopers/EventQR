@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Offline / limited-data notice strip (5.12 replaces bg_yellow_notice).
+     One semantic role pair, radius 10, no elevation, no icon tile. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="@dimen/ui_radius_card" />
+    <solid android:color="@color/ui_warning_container" />
+</shape>

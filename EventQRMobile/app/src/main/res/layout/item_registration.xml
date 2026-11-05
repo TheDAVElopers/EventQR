@@ -1,92 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+    Registration row (§5.3 Card, §5.5 row language). One hairline card per row is acceptable here
+    because the row IS the selectable object in the staff attendee list; it carries the shared
+    card style, a flat 40dp avatar tile, the ONE status badge and the points in numeric_s.
+-->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/space_md"
-    app:cardBackgroundColor="@color/surface"
-    app:cardCornerRadius="@dimen/radius_14"
-    app:cardElevation="@dimen/elevation_raised">
+    android:layout_marginBottom="@dimen/space_sm"
+    style="@style/Widget.EventQR.Ui.Card">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
+        android:minHeight="@dimen/ui_row_height"
         android:orientation="horizontal"
-        android:paddingStart="@dimen/space_lg"
-        android:paddingTop="@dimen/space_14"
-        android:paddingEnd="@dimen/space_lg"
-        android:paddingBottom="@dimen/space_14">
+        android:paddingStart="@dimen/ui_card_padding"
+        android:paddingTop="@dimen/ui_row_padding_vertical"
+        android:paddingEnd="@dimen/ui_card_padding"
+        android:paddingBottom="@dimen/ui_row_padding_vertical">
 
         <CheckBox
             android:id="@+id/chkRegistrationSelect"
+            style="@style/Widget.EventQR.Ui.CheckBox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/space_md"
             android:visibility="gone"
-            app:tint="@color/primary" />
+            tools:visibility="visible" />
 
         <TextView
             android:id="@+id/txtRegistrationAvatar"
-            android:layout_width="@dimen/tile_44"
-            android:layout_height="@dimen/tile_44"
-            android:background="@drawable/bg_profile_button"
+            android:layout_width="@dimen/ui_row_tile"
+            android:layout_height="@dimen/ui_row_tile"
+            android:background="@drawable/bg_ui_icon_tile"
             android:gravity="center"
             android:text="@string/placeholder_initial_a"
-            android:textColor="@color/on_primary"
-            android:textAppearance="@style/TextAppearance.EventQR.TitleLarge" />
+            android:textAppearance="@style/TextAppearance.EventQR.Type.Title"
+            android:textColor="@color/ui_primary" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/space_md"
+            android:layout_marginStart="@dimen/space_lg"
             android:layout_weight="1"
             android:orientation="vertical">
 
             <TextView
                 android:id="@+id/txtRegistrationTitle"
+                style="@style/Widget.EventQR.Ui.ListRow.Title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong" />
+                tools:text="Juan Dela Cruz" />
 
             <TextView
                 android:id="@+id/txtRegistrationDetails"
+                style="@style/Widget.EventQR.Ui.ListRow.Meta"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_xxs"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
+                android:layout_marginTop="@dimen/space_2"
+                tools:text="juan@example.com" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_sm"
             android:gravity="end"
             android:orientation="vertical">
 
             <TextView
                 android:id="@+id/txtRegistrationStatus"
+                style="@style/Widget.EventQR.Ui.StatusBadge.Neutral"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_badge_default"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:minHeight="24dp"
-                android:paddingHorizontal="@dimen/space_md"
-                android:paddingVertical="@dimen/space_5"
-                android:textColor="@color/badge_default_text"
-                android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
+                android:layout_height="@dimen/ui_badge_height"
+                tools:text="Registered" />
 
             <TextView
                 android:id="@+id/txtRegistrationPoints"
+                style="@style/Widget.EventQR.Ui.ListRow.Value"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_sm"
-                android:text="@string/common_0_pts"
-                android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
+                android:layout_marginTop="@dimen/space_4"
+                android:textColor="@color/ui_text_secondary"
+                tools:text="10 pts" />
         </LinearLayout>
     </LinearLayout>
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>

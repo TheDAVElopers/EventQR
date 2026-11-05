@@ -21,7 +21,7 @@ import org.robolectric.Robolectric
 import org.robolectric.annotation.Config
 import java.util.UUID
 
-/** The header is a fixed "Event Details"; the event name belongs on the banner above the description. */
+/** The header is a fixed "Event details"; the event name belongs on the banner above the description. */
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [35], shadows = [ShadowMasterKeys::class, ShadowEncryptedSharedPreferences::class])
 class EventDetailActivityTest {
@@ -38,7 +38,7 @@ class EventDetailActivityTest {
     fun whileLoading_headerSaysEventDetailsAndTheBannerShowsTheNameFromTheIntent() {
         val activity = build("Summer Fest")
 
-        assertEquals("Event Details", activity.findViewById<TextView>(R.id.nav_header_title).text.toString())
+        assertEquals("Event details", activity.findViewById<TextView>(R.id.nav_header_title).text.toString())
         assertEquals("Summer Fest", activity.findViewById<TextView>(R.id.txtDetailTitle).text.toString())
     }
 
@@ -49,7 +49,7 @@ class EventDetailActivityTest {
         activity.renderEvent(event("Night Market"))
 
         assertEquals("Night Market", activity.findViewById<TextView>(R.id.txtDetailTitle).text.toString())
-        assertEquals("Event Details", activity.findViewById<TextView>(R.id.nav_header_title).text.toString())
+        assertEquals("Event details", activity.findViewById<TextView>(R.id.nav_header_title).text.toString())
         assertEquals("About the event", activity.findViewById<TextView>(R.id.txtDetailDescription).text.toString())
     }
 

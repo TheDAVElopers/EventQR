@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    LIST ROW - icon (§5.5). One of three row layouts replacing fourteen.
+
+        72dp min (88dp with a 2-line meta)
+        start 20dp / end 16dp / vertical 14dp
+        40dp leading tile, 10dp radius, primary_container fill, 20dp primary icon
+        title 18/600 one line; meta 14/20 secondary max 2 lines
+        ONE trailing thing: 16dp chevron, a status badge, or a numeric_s value - never two
+        divider 1dp hairline inset 76dp, so it aligns to the text edge and not the icon
+
+    Usage: inflate into a row container, or bind:
+
+        ListRowBinder.bindIcon(row, ListRowModel(
+            icon = R.drawable.ic_ui_event,
+            title = "DevFest 2026",
+            meta = "12 Oct - PICC, Pasay",
+            trailing = ListRowTrailing.CHEVRON,
+            onClick = { ... },
+        ))
+
+    ids: listRow, listRowContainer, listRowTile, listRowIcon, listRowTitle, listRowMeta,
+         listRowTrailing, listRowChevron, listRowValue, listRowBadge, listRowDivider.
+    The root has no background and no card: rows live in one Card.Grouped, or on the page.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/listRow"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/listRowContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/ui_row_height"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/ui_row_start"
+        android:paddingEnd="@dimen/ui_row_end"
+        android:paddingTop="@dimen/ui_row_padding_vertical"
+        android:paddingBottom="@dimen/ui_row_padding_vertical">
+
+        <FrameLayout
+            android:id="@+id/listRowTile"
+            android:layout_width="@dimen/ui_row_tile"
+            android:layout_height="@dimen/ui_row_tile"
+            android:background="@drawable/bg_ui_icon_tile">
+
+            <ImageView
+                android:id="@+id/listRowIcon"
+                android:layout_width="@dimen/icon_md"
+                android:layout_height="@dimen/icon_md"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:scaleType="centerInside"
+                android:tint="@color/ui_primary"
+                tools:src="@drawable/ic_ui_notifications_none" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_lg"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/listRowTitle"
+                style="@style/Widget.EventQR.Ui.ListRow.Title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="DevFest Manila 2026" />
+
+            <TextView
+                android:id="@+id/listRowMeta"
+                style="@style/Widget.EventQR.Ui.ListRow.Meta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_2"
+                tools:text="12 Oct 2026 - PICC, Pasay" />
+        </LinearLayout>
+
+        <!-- One trailing slot. Show exactly one of chevron / value / badge. -->
+        <LinearLayout
+            android:id="@+id/listRowTrailing"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_sm"
+            android:gravity="center_vertical|end"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/listRowValue"
+                style="@style/Widget.EventQR.Ui.ListRow.Value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                tools:text="10 pts"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/listRowBadge"
+                style="@style/Widget.EventQR.Ui.StatusBadge.Success"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/ui_badge_height"
+                android:visibility="gone"
+                tools:text="Checked in" />
+
+            <ImageView
+                android:id="@+id/listRowChevron"
+                style="@style/Widget.EventQR.Ui.ListRow.Chevron"
+                android:layout_width="@dimen/ui_chevron"
+                android:layout_height="@dimen/ui_chevron"
+                android:visibility="visible" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <View
+        android:id="@+id/listRowDivider"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:layout_marginStart="@dimen/ui_divider_inset"
+        android:background="@color/ui_hairline"
+        android:importantForAccessibility="no" />
+
+</LinearLayout>

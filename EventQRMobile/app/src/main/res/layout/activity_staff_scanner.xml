@@ -1,218 +1,132 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    STAFF SCANNER (§6.3, §5.13) - the signature screen. Retires Gen A + Gen B.
+
+    Order: compact pass head (title Scan) -> context bar 48dp -> flat 320x256 camera panel ->
+    one guidance line -> manual entry (normal field + primary button, radius 4) -> inline error
+    strip -> bottom nav.
+
+    The panel, brackets, torch and guidance come from include_scan_viewport - one dark surface,
+    flat, no gradient, no glow, no translucent cards. ScannerActivity injects the TextureView into
+    scanPreview (ui_staff_scan_preview.xml) so the shared viewport is used as-is.
+
+    Deleted: the radial glow background, the two stacked white cards ("SCANNING FOR" / "SCAN
+    PURPOSE"), the gradient camera well, the #C4B5FD brackets, the status pill, the permanent
+    manual-entry card, the glyph chevrons and the floating nav card.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_organizer_events_screen"
+    android:background="@color/ui_background"
     android:orientation="vertical">
 
-    <com.thedavelopers.eventqr.ui.components.EventQrTabHeader
-        android:id="@+id/headerTopBar"
+    <!-- ═════════ Pass head (compact): eyebrow + title + tear ═════════ -->
+    <include
+        android:id="@+id/passHead"
+        layout="@layout/include_pass_head_compact"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:title="@string/staff_scanner_scan_qr"
-        app:subtitle="@string/staff_scanner_scan_attendee_qr_codes" />
+        android:layout_height="wrap_content" />
 
-    <androidx.core.widget.NestedScrollView
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:clipToPadding="false"
         android:fillViewport="false"
-        android:scrollbars="none">
+        android:overScrollMode="never">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="@dimen/space_lg"
-            android:paddingTop="@dimen/space_sm"
-            android:paddingBottom="@dimen/space_xl">
+            android:paddingBottom="@dimen/space_24">
 
-            <!-- Event being scanned -->
-            <LinearLayout
-                android:id="@+id/cardScannerEvent"
+            <!-- ═════════ Context bar + flat camera panel + guidance ═════════ -->
+            <include
+                android:id="@+id/scanViewport"
+                layout="@layout/include_scan_viewport"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_scan_card"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center_vertical"
-                android:minHeight="@dimen/size_68"
-                android:orientation="horizontal"
-                android:paddingHorizontal="@dimen/space_lg"
-                android:paddingVertical="@dimen/space_md">
+                android:layout_marginTop="@dimen/space_12" />
 
-                <FrameLayout
-                    android:layout_width="@dimen/icon_tile_md"
-                    android:layout_height="@dimen/icon_tile_md"
-                    android:background="@drawable/bg_scan_icon_tile">
+            <!-- Purpose detail (+10 pts, "one claim only", ...) under the guidance line. -->
+            <TextView
+                android:id="@+id/txtSelectedPurposePoints"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_4"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_text_secondary"
+                android:visibility="gone" />
 
-                    <ImageView
-                        android:layout_width="@dimen/icon_md"
-                        android:layout_height="@dimen/icon_md"
-                        android:layout_gravity="center"
-                        android:contentDescription="@null"
-                        android:src="@drawable/ic_calendar"
-                        app:tint="@color/primary" />
-                </FrameLayout>
+            <!-- ═════════ Manual entry: label, field, primary button ═════════ -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_24"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:text="@string/ui_staff_scan_label"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.FieldLabel" />
 
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/space_md"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+            <EditText
+                android:id="@+id/edtScannerQr"
+                style="@style/Widget.EventQR.Ui.TextField"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/ui_control_height"
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_8"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:hint="@string/ui_staff_scan_hint"
+                android:importantForAutofill="no"
+                android:inputType="text"
+                android:maxLines="1"
+                android:singleLine="true" />
 
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
+            <TextView
+                android:id="@+id/btnSubmitScan"
+                style="@style/Widget.EventQR.Ui.Button.Primary"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/ui_button_height"
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_12"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:gravity="center"
+                android:text="@string/ui_staff_verify" />
 
-                        <View
-                            android:layout_width="@dimen/dot_sm"
-                            android:layout_height="@dimen/dot_sm"
-                            android:background="@drawable/bg_staff_scanner_status_dot" />
+            <!-- No assigned events: says what to do next, never a red banner. Below the manual entry
+                 so the field and its primary button stay above the fold. -->
+            <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+                android:id="@+id/txtScannerEmptyState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:icon="@drawable/ic_ui_event"
+                app:subtitle="@string/ui_staff_no_events_body"
+                app:title="@string/ui_staff_no_events" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/space_6"
-                            android:letterSpacing="@dimen/tracking_label"
-                            android:text="@string/staff_scanner_scanning_for"
-                            android:textColor="@color/text_label"
-                            android:textAppearance="@style/TextAppearance.EventQR.TextOverline.Strong" />
-                    </LinearLayout>
+            <!-- Decode / submission failure: an inline 56dp strip, never a toast (§5.13). -->
+            <TextView
+                android:id="@+id/txtScannerResult"
+                style="@style/Widget.EventQR.Ui.Scan.StatusStrip"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/ui_scan_status_height"
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_12"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:visibility="gone" />
 
-                    <TextView
-                        android:id="@+id/txtScannerEventTitle"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_xxs"
-                        android:ellipsize="end"
-                        android:maxLines="1"
-                        android:text="@string/common_assigned_event"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong" />
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/txtScannerEventDate"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/space_sm"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:textColor="@color/text_label"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
-
-                <TextView
-                    android:id="@+id/txtEventChevron"
-                    android:layout_width="@dimen/icon_32"
-                    android:layout_height="@dimen/icon_32"
-                    android:layout_marginStart="@dimen/space_xs"
-                    android:gravity="center"
-                    android:includeFontPadding="false"
-                    android:text="@string/glyph_dropdown_arrow"
-                    android:textColor="@color/text_label"
-                    android:textAppearance="@style/TextAppearance.EventQR.TitleRegular"
-                    android:translationY="@dimen/glyph_nudge_y" />
-            </LinearLayout>
-
+            <!-- ── Off-screen plumbing kept for behaviour parity ── -->
             <Spinner
                 android:id="@+id/spnScannerEvent"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/txtScannerEmptyState"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_md"
-                android:background="@drawable/bg_scan_card"
-                android:padding="@dimen/space_lg"
-                android:text="@string/staff_scanner_no_assigned_events_are_available_for"
-                android:textColor="@color/text_secondary"
-                android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium"
-                android:visibility="gone" />
-
-            <!-- Scan purpose -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_20"
-                android:letterSpacing="@dimen/tracking_label"
-                android:text="@string/common_scan_purpose"
-                android:textColor="@color/text_label"
-                android:textAppearance="@style/TextAppearance.EventQR.TextCaption.Strong" />
-
-            <LinearLayout
-                android:id="@+id/cardSelectedPurpose"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_sm"
-                android:background="@drawable/bg_scan_card"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center_vertical"
-                android:minHeight="@dimen/size_68"
-                android:orientation="horizontal"
-                android:paddingHorizontal="@dimen/space_lg"
-                android:paddingVertical="@dimen/space_md">
-
-                <FrameLayout
-                    android:layout_width="@dimen/icon_tile_md"
-                    android:layout_height="@dimen/icon_tile_md"
-                    android:background="@drawable/bg_scan_icon_tile">
-
-                    <ImageView
-                        android:layout_width="@dimen/icon_md"
-                        android:layout_height="@dimen/icon_md"
-                        android:layout_gravity="center"
-                        android:contentDescription="@null"
-                        android:src="@drawable/ic_qr_scan"
-                        app:tint="@color/primary" />
-                </FrameLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/space_md"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/txtSelectedPurposeName"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:ellipsize="end"
-                        android:maxLines="1"
-                        android:text="@string/staff_scanner_select_purpose"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong" />
-
-                    <TextView
-                        android:id="@+id/txtSelectedPurposePoints"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_xxs"
-                        android:ellipsize="end"
-                        android:maxLines="1"
-                        android:textColor="@color/primary"
-                        android:visibility="gone"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact.Strong" />
-                </LinearLayout>
-
-                <ImageView
-                    android:id="@+id/txtPurposeChevron"
-                    android:layout_width="@dimen/icon_lg"
-                    android:layout_height="@dimen/icon_lg"
-                    android:layout_marginStart="@dimen/space_sm"
-                    android:contentDescription="@string/common_dropdown"
-                    android:src="@drawable/ic_arrow_drop_down"
-                    android:tint="@color/neutral_label" />
-            </LinearLayout>
 
             <Spinner
                 android:id="@+id/spnScannerPurpose"
@@ -222,168 +136,24 @@
 
             <LinearLayout
                 android:id="@+id/layoutPurposeDropdown"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_scan_card"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
                 android:orientation="vertical"
                 android:visibility="gone" />
-
-            <!-- Camera viewport -->
-            <LinearLayout
-                android:id="@+id/layoutScannerPlaceholder"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_20"
-                android:background="@drawable/bg_scan_viewport"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center_horizontal"
-                android:orientation="vertical"
-                android:paddingHorizontal="@dimen/space_20"
-                android:paddingVertical="@dimen/space_20">
-
-                <FrameLayout
-                    android:layout_width="236dp"
-                    android:layout_height="236dp">
-
-                    <FrameLayout
-                        android:id="@+id/frameCameraContainer"
-                        android:layout_width="192dp"
-                        android:layout_height="192dp"
-                        android:layout_gravity="center"
-                        android:background="@drawable/bg_scan_camera_well"
-                        android:clipChildren="true">
-
-                        <SurfaceView
-                            android:id="@+id/surfaceInlineCameraPreview"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent" />
-
-                        <ImageView
-                            android:id="@+id/imgScannerIcon"
-                            android:layout_width="@dimen/size_76"
-                            android:layout_height="@dimen/size_76"
-                            android:layout_gravity="center"
-                            android:src="@drawable/ic_qr_scan"
-                            app:tint="@color/deco_scan_placeholder" />
-                    </FrameLayout>
-
-                    <View
-                        android:layout_width="@dimen/scan_corner_length"
-                        android:layout_height="@dimen/scan_corner_length"
-                        android:layout_gravity="top|start"
-                        android:background="@drawable/bg_scan_corner_tl" />
-
-                    <View
-                        android:layout_width="@dimen/scan_corner_length"
-                        android:layout_height="@dimen/scan_corner_length"
-                        android:layout_gravity="top|end"
-                        android:background="@drawable/bg_scan_corner_tr" />
-
-                    <View
-                        android:layout_width="@dimen/scan_corner_length"
-                        android:layout_height="@dimen/scan_corner_length"
-                        android:layout_gravity="bottom|start"
-                        android:background="@drawable/bg_scan_corner_bl" />
-
-                    <View
-                        android:layout_width="@dimen/scan_corner_length"
-                        android:layout_height="@dimen/scan_corner_length"
-                        android:layout_gravity="bottom|end"
-                        android:background="@drawable/bg_scan_corner_br" />
-                </FrameLayout>
-
-                <TextView
-                    android:id="@+id/txtInlineCameraStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_md"
-                    android:background="@drawable/bg_scan_status_pill"
-                    android:gravity="center"
-                    android:paddingHorizontal="@dimen/space_lg"
-                    android:paddingVertical="@dimen/space_sm"
-                    android:text="@string/staff_scanner_point_camera_at_attendee_qr_code"
-                    android:textColor="@color/on_primary"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
-            </LinearLayout>
-
-            <!-- Manual entry -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_20"
-                android:background="@drawable/bg_scan_card"
-                android:orientation="vertical"
-                android:padding="@dimen/space_lg">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/staff_scanner_enter_manually"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_xxs"
-                    android:text="@string/staff_scanner_camera_not_working_type_the_attendee"
-                    android:textColor="@color/text_label"
-                    android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_14"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <EditText
-                        android:id="@+id/edtScannerQr"
-                        android:layout_width="0dp"
-                        android:layout_height="@dimen/touch_target_min"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_input_filled"
-                        android:hint="@string/staff_scanner_attendee_id_e_g_001"
-                        android:inputType="text"
-                        android:paddingHorizontal="@dimen/space_lg"
-                        android:singleLine="true"
-                        android:textAppearance="@style/TextAppearance.EventQR.TextBodyMedium" />
-
-                    <Button
-                        android:id="@+id/btnSubmitScan"
-                        android:layout_width="96dp"
-                        android:layout_height="@dimen/touch_target_min"
-                        android:layout_marginStart="@dimen/space_10"
-                        android:background="@drawable/bg_scanner_button"
-                        android:text="@string/staff_scanner_verify"
-                        android:textAllCaps="false"
-                        android:textColor="@color/on_primary"
-                        android:textAppearance="@style/TextAppearance.EventQR.ButtonPlatformBody.Strong" />
-                </LinearLayout>
-            </LinearLayout>
 
             <EditText
                 android:id="@+id/edtScannerNotes"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
-                android:visibility="gone"
-                tools:ignore="MissingConstraints" />
-
-            <TextView
-                android:id="@+id/txtScannerResult"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:visibility="gone"
-                tools:ignore="MissingConstraints" />
+                android:visibility="gone" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerScannerResults"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
-                android:visibility="gone"
-                tools:ignore="MissingConstraints" />
+                android:visibility="gone" />
         </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
+    </ScrollView>
 
     <androidx.compose.ui.platform.ComposeView
         android:id="@+id/composeBottomNav"

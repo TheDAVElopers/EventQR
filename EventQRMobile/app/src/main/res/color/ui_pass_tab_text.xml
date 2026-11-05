@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pass-head role tab label (§4.6): active = white, inactive = ui_on_primary_muted (6.12:1 on
+     the brand fill). Selected state is set by the binder / screen. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true" android:color="@color/ui_on_primary" />
+    <item android:color="@color/ui_on_primary_muted" />
+</selector>

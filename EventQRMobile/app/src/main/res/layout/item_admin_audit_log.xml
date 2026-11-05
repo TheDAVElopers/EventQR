@@ -1,65 +1,123 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    AUDIT LOG ROW (§6.5 v1.6) - action-led, two-line row on the page. No card, no icon tile, no type
+    tag, no chevron, no ripple: the row has no destination.
+
+        time    `h:mm a` numeric_s tnum, fixed 96dp column, `text_secondary`, one line
+        action  ListRow.Title 18/600, one line  <- the only field that varies, so it leads
+        meta    ListRow.Meta 14/20, `by {actor}` + 3dp dot + `{target}`, up to two lines
+        divider 1dp hairline inset 20dp (the time column's left edge)
+
+    `fontScale > 1.3`: the time column is GONE and the same value is prepended to the meta line
+    (textAuditTimeInline), so a 360dp screen never clips the stack.
+
+    Deleted: the 4-column build and the trailing unlabelled target column (and its width cap).
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/space_10"
-    android:background="@drawable/bg_admin_surface_card"
-    android:elevation="@dimen/elevation_raised"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
-    android:paddingStart="@dimen/space_lg"
-    android:paddingTop="@dimen/space_14"
-    android:paddingEnd="@dimen/space_lg"
-    android:paddingBottom="@dimen/space_14">
-
-    <FrameLayout
-        android:id="@+id/auditIconTile"
-        android:layout_width="@dimen/tile_38"
-        android:layout_height="@dimen/tile_38"
-        android:background="@drawable/bg_admin_role_badge_green">
-
-        <ImageView
-            android:id="@+id/imgAuditIcon"
-            android:layout_width="@dimen/icon_md"
-            android:layout_height="@dimen/icon_md"
-            android:layout_gravity="center"
-            android:contentDescription="@string/item_admin_audit_log_audit_log_type"
-            android:src="@drawable/ic_audit_shield"
-            app:tint="@color/success" />
-    </FrameLayout>
+    android:orientation="vertical">
 
     <LinearLayout
-        android:layout_width="0dp"
+        android:id="@+id/auditRowContent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/space_14"
-        android:layout_weight="1"
-        android:orientation="vertical">
+        android:minHeight="@dimen/ui_row_height_value"
+        android:gravity="top"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/ui_row_start"
+        android:paddingTop="@dimen/space_8"
+        android:paddingEnd="@dimen/ui_row_end"
+        android:paddingBottom="@dimen/space_8">
 
         <TextView
-            android:id="@+id/textAuditActionTitle"
-            android:layout_width="match_parent"
+            android:id="@+id/textAuditTime"
+            android:layout_width="@dimen/ui_audit_time_column"
             android:layout_height="wrap_content"
             android:ellipsize="end"
+            android:importantForAccessibility="no"
             android:maxLines="1"
-            android:textAppearance="@style/TextAppearance.EventQR.TextBodyLarge.Strong" />
+            android:textAppearance="@style/TextAppearance.EventQR.Type.NumericS"
+            android:textColor="@color/ui_text_secondary"
+            tools:text="9:41 AM" />
 
-        <TextView
-            android:id="@+id/textAuditActorTarget"
-            android:layout_width="match_parent"
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_5"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="@color/text_body"
-            android:textAppearance="@style/TextAppearance.EventQR.TextBodyCompact" />
+            android:layout_marginStart="@dimen/space_12"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/textAuditTimestamp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_5"
-            android:textColor="@color/text_hint"
-            android:textAppearance="@style/TextAppearance.EventQR.TextCaption" />
+            <TextView
+                android:id="@+id/textAuditAction"
+                style="@style/Widget.EventQR.Ui.ListRow.Title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:importantForAccessibility="no"
+                tools:text="Approved an event request" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_2"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/textAuditTimeInline"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/space_8"
+                    android:layout_weight="2"
+                    android:ellipsize="end"
+                    android:importantForAccessibility="no"
+                    android:maxLines="1"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.NumericS"
+                    android:textColor="@color/ui_text_secondary"
+                    android:visibility="gone"
+                    tools:text="9:41 AM"
+                    tools:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/textAuditActor"
+                    style="@style/Widget.EventQR.Ui.ListRow.Meta"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:importantForAccessibility="no"
+                    android:maxLines="1"
+                    tools:text="by Maria Santos" />
+
+                <View
+                    android:id="@+id/auditMetaDot"
+                    android:layout_width="@dimen/ui_audit_meta_dot"
+                    android:layout_height="@dimen/ui_audit_meta_dot"
+                    android:layout_marginStart="@dimen/space_8"
+                    android:layout_marginEnd="@dimen/space_8"
+                    android:background="@drawable/bg_ui_dot"
+                    android:importantForAccessibility="no" />
+
+                <!-- Both names hold a weighted half so neither can starve the other out of the row. -->
+                <TextView
+                    android:id="@+id/textAuditTarget"
+                    style="@style/Widget.EventQR.Ui.ListRow.Meta"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:importantForAccessibility="no"
+                    android:maxLines="1"
+                    tools:text="DevFest Manila" />
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:layout_marginStart="@dimen/ui_gutter"
+        android:background="@color/ui_hairline"
+        android:importantForAccessibility="no" />
 </LinearLayout>

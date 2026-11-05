@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Perforation rule (§4.4): a 1dp dashed line in the decorative hairline colour. Used to
+     separate the sign-up sections and to close the pass head. 6dp dash / 4dp gap. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="line">
+    <stroke
+        android:width="@dimen/stroke_hairline"
+        android:color="@color/ui_hairline"
+        android:dashWidth="@dimen/ui_dash_width"
+        android:dashGap="@dimen/ui_dash_gap" />
+    <size android:height="@dimen/stroke_hairline" />
+</shape>

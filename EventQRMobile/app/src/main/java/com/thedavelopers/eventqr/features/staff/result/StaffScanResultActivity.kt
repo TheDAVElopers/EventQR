@@ -4,39 +4,41 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.LinearLayout
-import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.annotation.VisibleForTesting
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode
-import com.thedavelopers.eventqr.core.api.dto.TransactionResult
-import com.thedavelopers.eventqr.core.api.dto.TransactionType
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.idprinting.AndroidIdPrinter
 import com.thedavelopers.eventqr.features.idprinting.PrintPermission
-import com.thedavelopers.eventqr.features.staff.StaffDashboardActivity
 import com.thedavelopers.eventqr.features.staff.StaffRepository
+import com.thedavelopers.eventqr.features.staff.StaffBadges
 import com.thedavelopers.eventqr.features.staff.StaffScreenExtras
-import com.thedavelopers.eventqr.features.staff.orUnknown
 import com.thedavelopers.eventqr.features.staff.details.StaffAttendeeDetailsActivity
+import com.thedavelopers.eventqr.features.staff.model.dto.ScanVerificationResponse
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionRequest
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
-import com.thedavelopers.eventqr.features.staff.model.dto.ScanVerificationResponse
-import androidx.lifecycle.lifecycleScope
+import com.thedavelopers.eventqr.ui.theme.applyEventQrBottomInsetPadding
+import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import kotlinx.coroutines.launch
 import java.util.UUID
-import com.thedavelopers.eventqr.ui.theme.color
-import com.thedavelopers.eventqr.ui.theme.dimenOffset
-import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
+/**
+ * Staff scan result (§6.3). A flat semantic block carries the state; a spec table carries the
+ * facts; the footer carries exactly one primary action. All state text comes from strings so the
+ * heading, the hint and the badge can never disagree.
+ */
 open class StaffScanResultActivity : AppCompatActivity() {
     private val tag = "StaffQrTransaction"
     private lateinit var repository: StaffRepository
@@ -66,8 +68,11 @@ open class StaffScanResultActivity : AppCompatActivity() {
         }
 
         setContentView(R.layout.activity_staff_scan_result)
+        findViewById<View>(R.id.headerTopBar).applyEventQrTopInsetPadding()
+        findViewById<View>(R.id.layoutFooter).applyEventQrBottomInsetPadding()
         repository = newRepository()
-        
+        findViewById<TextView>(R.id.topBarTitle).text = getString(R.string.ui_staff_result_title)
+
         val isValid = intent.getBooleanExtra(StaffScreenExtras.EXTRA_IS_VALID, false)
         scanState = ScanResultState.from(
             isValid = isValid,
@@ -78,22 +83,16 @@ open class StaffScanResultActivity : AppCompatActivity() {
         bindStaticFields(isValid)
         applyActionLabels()
 
-        findViewById<Button>(R.id.btnContinueTransaction).setOnClickListener {
+        findViewById<View>(R.id.btnContinueTransaction).setOnClickListener {
             if (scanState == ScanResultState.ACTIVE) {
                 recordTransaction()
             }
         }
-        findViewById<Button>(R.id.btnViewAttendeeDetails).setOnClickListener {
-            openAttendeeDetails()
-        }
-        findViewById<Button>(R.id.btnScanAgain).setOnClickListener {
-            finish()
-        }
-        // Header back behaves like system back: the scanner that opened this screen is still underneath,
-        // so starting a new one would stack duplicate scanners.
-        findViewById<View>(R.id.nav_header_back).setOnClickListener {
-            finish()
-        }
+        findViewById<View>(R.id.btnViewAttendeeDetails).setOnClickListener { openAttendeeDetails() }
+        findViewById<View>(R.id.btnScanAgain).setOnClickListener { finish() }
+        // Header back behaves like system back: the scanner that opened this screen is still
+        // underneath, so starting a new one would stack duplicate scanners.
+        findViewById<View>(R.id.topBarBack).setOnClickListener { finish() }
     }
 
     /** Overridden in tests to inject a fake repository. */
@@ -102,14 +101,26 @@ open class StaffScanResultActivity : AppCompatActivity() {
 
     private fun applyActionLabels() {
         val purposeCode = intent.getStringExtra(StaffScreenExtras.EXTRA_SCAN_PURPOSE_CODE).orEmpty()
-        findViewById<Button>(R.id.btnContinueTransaction).text =
-            getString(if (purposeCode == ScanPurposeCode.ID_PRINT.name) R.string.staff_attendee_details_print_id else R.string.staff_scan_result_log_transaction)
+        findViewById<TextView>(R.id.btnContinueTransaction).text =
+            getString(
+                if (purposeCode == ScanPurposeCode.ID_PRINT.name) {
+                    R.string.ui_staff_result_print_id
+                } else {
+                    R.string.ui_staff_result_log_transaction
+                },
+            )
     }
 
     private fun bindStaticFields(isValid: Boolean) {
-        findViewById<TextView>(R.id.txtScanResultEvent).text = intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_TITLE).orUnknown("Assigned event")
-        findViewById<TextView>(R.id.txtScanResultPurpose).text = intent.getStringExtra(StaffScreenExtras.EXTRA_SCAN_PURPOSE_NAME).orUnknown("Scan purpose")
-        findViewById<TextView>(R.id.txtScanResultReason).text = intent.getStringExtra(StaffScreenExtras.EXTRA_MESSAGE).orUnknown("No reason supplied")
+        findViewById<TextView>(R.id.txtScanResultEvent).text =
+            intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_TITLE)?.takeIf { it.isNotBlank() }
+                ?: getString(R.string.staff_scan_result_event)
+        findViewById<TextView>(R.id.txtScanResultPurpose).text =
+            intent.getStringExtra(StaffScreenExtras.EXTRA_SCAN_PURPOSE_NAME)?.takeIf { it.isNotBlank() }
+                ?: getString(R.string.ui_staff_result_purpose)
+        findViewById<TextView>(R.id.txtScanResultReason).text =
+            intent.getStringExtra(StaffScreenExtras.EXTRA_MESSAGE)?.takeIf { it.isNotBlank() }
+                ?: getString(R.string.ui_staff_result_no_reason)
 
         if (isValid) {
             findViewById<View>(R.id.headerApproved).visibility = View.VISIBLE
@@ -117,79 +128,96 @@ open class StaffScanResultActivity : AppCompatActivity() {
             findViewById<View>(R.id.layoutApprovedDetails).visibility = View.VISIBLE
             findViewById<View>(R.id.layoutRejectedReason).visibility = View.GONE
             findViewById<View>(R.id.cardVerificationDetails).visibility = View.VISIBLE
-            
-            findViewById<TextView>(R.id.txtScanResultAttendeeName).text = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_NAME).orUnknown()
-            findViewById<TextView>(R.id.txtScanResultAttendeeEmail).text = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_EMAIL).orUnknown()
-            findViewById<TextView>(R.id.txtScanResultRegistrationStatus).text =
-                intent.getStringExtra(StaffScreenExtras.EXTRA_REGISTRATION_STATUS)
-                    ?.let { raw -> runCatching { com.thedavelopers.eventqr.core.api.dto.RegistrationStatus.valueOf(raw.trim().uppercase()) }.getOrNull() }
-                    ?.let { com.thedavelopers.eventqr.features.registrations.RegistrationStatusBadgeStyler.displayLabel(it) }
-                    ?: intent.getStringExtra(StaffScreenExtras.EXTRA_REGISTRATION_STATUS).orUnknown()
+
+            findViewById<TextView>(R.id.txtScanResultAttendeeName).text =
+                intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_NAME)?.takeIf { it.isNotBlank() }
+                    ?: getString(R.string.ui_staff_result_attendee)
+            findViewById<TextView>(R.id.txtScanResultAttendeeEmail).text =
+                intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_EMAIL).orEmpty()
+            val registrationStatus = currentRegistrationStatus()
+            findViewById<View>(R.id.txtScanResultRegistrationStatus).visibility =
+                if (registrationStatus == null) View.GONE else View.VISIBLE
+            StaffBadges.bind(findViewById(R.id.txtScanResultRegistrationStatus), registrationStatus)
             findViewById<TextView>(R.id.txtScanResultStatusHint).text =
                 intent.getStringExtra(StaffScreenExtras.EXTRA_MESSAGE)?.takeIf { it.isNotBlank() }
-                    ?: getString(R.string.staff_scan_result_qr_active_hint)
-            findViewById<Button>(R.id.btnContinueTransaction).visibility = View.VISIBLE
-            findViewById<Button>(R.id.btnViewAttendeeDetails).visibility = View.VISIBLE
-            
-            // New UI fields binding
-            val verifiedAt = intent.getStringExtra(StaffScreenExtras.EXTRA_VERIFIED_AT)
-            findViewById<TextView>(R.id.txtScanResultVerifiedAt).text = formatVerifiedAt(verifiedAt)
+                    ?: getString(R.string.ui_staff_result_valid_hint)
+            findViewById<View>(R.id.btnContinueTransaction).visibility = View.VISIBLE
+            findViewById<View>(R.id.btnViewAttendeeDetails).visibility = View.VISIBLE
 
-            findViewById<Button>(R.id.btnContinueTransaction).visibility = View.VISIBLE
-            findViewById<Button>(R.id.btnViewAttendeeDetails).visibility = View.VISIBLE
+            findViewById<TextView>(R.id.txtScanResultVerifiedAt).text =
+                formatVerifiedAt(intent.getStringExtra(StaffScreenExtras.EXTRA_VERIFIED_AT))
+
             if (scanState == ScanResultState.INACTIVE) bindInactiveState()
             if (scanState == ScanResultState.NOT_ELIGIBLE) bindNotEligibleState()
         } else {
             findViewById<View>(R.id.headerApproved).visibility = View.GONE
             findViewById<View>(R.id.headerRejected).visibility = View.VISIBLE
-            findViewById<TextView>(R.id.txtScanResultStateRejected).text = getString(R.string.staff_scan_result_verification_rejected)
+            findViewById<TextView>(R.id.txtScanResultStateRejected).text = getString(R.string.ui_staff_result_rejected)
             findViewById<TextView>(R.id.txtScanResultStatusHintRejected).text = getString(R.string.staff_scan_result_backend_verification_rejected_the_sc)
             findViewById<View>(R.id.layoutApprovedDetails).visibility = View.GONE
             findViewById<View>(R.id.layoutRejectedReason).visibility = View.VISIBLE
             findViewById<View>(R.id.cardVerificationDetails).visibility = View.GONE
-            findViewById<Button>(R.id.btnContinueTransaction).visibility = View.GONE
-            findViewById<Button>(R.id.btnViewAttendeeDetails).visibility = View.GONE
+            findViewById<View>(R.id.btnContinueTransaction).visibility = View.GONE
+            findViewById<View>(R.id.btnViewAttendeeDetails).visibility = View.GONE
         }
     }
 
     /** Verified attendee, but the QR / registration is not active: show why and make logging impossible. */
     private fun bindInactiveState() {
+        demoteBadge()
         findViewById<View>(R.id.headerApproved).visibility = View.GONE
         findViewById<View>(R.id.headerRejected).visibility = View.VISIBLE
-        findViewById<TextView>(R.id.txtScanResultStateRejected).text = getString(R.string.staff_scan_result_qr_inactive)
-        findViewById<TextView>(R.id.txtScanResultStatusHintRejected).text = getString(R.string.staff_scan_result_qr_inactive_hint)
+        findViewById<TextView>(R.id.txtScanResultStateRejected).text = getString(R.string.ui_staff_result_inactive)
+        findViewById<TextView>(R.id.txtScanResultStatusHintRejected).text = getString(R.string.ui_staff_result_inactive_hint)
         findViewById<TextView>(R.id.txtScanResultReason).text =
             intent.getStringExtra(StaffScreenExtras.EXTRA_MESSAGE)?.takeIf { it.isNotBlank() }
                 ?: getString(R.string.staff_scan_result_qr_inactive_reason)
         findViewById<View>(R.id.layoutRejectedReason).visibility = View.VISIBLE
         findViewById<View>(R.id.cardVerificationDetails).visibility = View.GONE
-        findViewById<Button>(R.id.btnContinueTransaction).visibility = View.GONE
+        findViewById<View>(R.id.btnContinueTransaction).visibility = View.GONE
     }
 
-    /** Active QR, but the backend says this scan would be rejected: show the backend reason, make logging impossible. */
+    /** Active QR, but the backend says this scan would be rejected: show the backend reason. */
     private fun bindNotEligibleState() {
+        demoteBadge()
         findViewById<View>(R.id.headerApproved).visibility = View.GONE
         findViewById<View>(R.id.headerRejected).visibility = View.VISIBLE
-        findViewById<TextView>(R.id.txtScanResultStateRejected).text = getString(R.string.staff_scan_result_not_allowed)
-        findViewById<TextView>(R.id.txtScanResultStatusHintRejected).text = getString(R.string.staff_scan_result_not_allowed_hint)
+        findViewById<TextView>(R.id.txtScanResultStateRejected).text = getString(R.string.ui_staff_result_not_allowed)
+        findViewById<TextView>(R.id.txtScanResultStatusHintRejected).text = getString(R.string.ui_staff_result_not_allowed_hint)
         findViewById<TextView>(R.id.txtScanResultReason).text =
             intent.getStringExtra(StaffScreenExtras.EXTRA_MESSAGE)?.takeIf { it.isNotBlank() }
                 ?: getString(R.string.staff_scan_result_not_allowed_reason)
         findViewById<View>(R.id.layoutRejectedReason).visibility = View.VISIBLE
         findViewById<View>(R.id.cardVerificationDetails).visibility = View.GONE
-        findViewById<Button>(R.id.btnContinueTransaction).visibility = View.GONE
+        findViewById<View>(R.id.btnContinueTransaction).visibility = View.GONE
     }
 
     private fun bindRejectedResult(message: String) {
+        demoteBadge()
         findViewById<View>(R.id.headerApproved).visibility = View.GONE
         findViewById<View>(R.id.headerRejected).visibility = View.VISIBLE
-        findViewById<TextView>(R.id.txtScanResultStateRejected).text = getString(R.string.staff_scan_result_verification_rejected)
+        findViewById<TextView>(R.id.txtScanResultStateRejected).text = getString(R.string.ui_staff_result_rejected)
         findViewById<TextView>(R.id.txtScanResultStatusHintRejected).text = getString(R.string.staff_scan_result_transaction_could_not_be_completed)
         findViewById<TextView>(R.id.txtScanResultReason).text = message
         findViewById<View>(R.id.layoutApprovedDetails).visibility = View.GONE
         findViewById<View>(R.id.layoutRejectedReason).visibility = View.VISIBLE
         findViewById<View>(R.id.cardVerificationDetails).visibility = View.GONE
-        findViewById<Button>(R.id.btnContinueTransaction).visibility = View.GONE
+        findViewById<View>(R.id.btnContinueTransaction).visibility = View.GONE
+    }
+
+    private fun currentRegistrationStatus(): com.thedavelopers.eventqr.core.api.dto.RegistrationStatus? =
+        intent.getStringExtra(StaffScreenExtras.EXTRA_REGISTRATION_STATUS)
+            ?.let { raw ->
+                runCatching {
+                    com.thedavelopers.eventqr.core.api.dto.RegistrationStatus.valueOf(raw.trim().uppercase())
+                }.getOrNull()
+            }
+
+    private fun demoteBadge() {
+        val badge = findViewById<TextView>(R.id.txtScanResultRegistrationStatus)
+        if (badge.visibility == View.VISIBLE) {
+            StaffBadges.bind(badge, currentRegistrationStatus(), confirmed = false)
+        }
     }
 
     private fun recordTransaction() {
@@ -204,9 +232,6 @@ open class StaffScanResultActivity : AppCompatActivity() {
         val staffUserId = intent.getStringExtra(StaffScreenExtras.EXTRA_STAFF_USER_ID).orEmpty().ifBlank { sessionManager.getUserId().orEmpty() }
         val purposeCode = intent.getStringExtra(StaffScreenExtras.EXTRA_SCAN_PURPOSE_CODE).orEmpty()
         val attendeeId = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_ID).orEmpty()
-        val registrationId = intent.getStringExtra(StaffScreenExtras.EXTRA_REGISTRATION_ID).orEmpty()
-        val qrCredentialId = intent.getStringExtra(StaffScreenExtras.EXTRA_QR_CREDENTIAL_ID).orEmpty()
-        val purposeLabel = intent.getStringExtra(StaffScreenExtras.EXTRA_SCAN_PURPOSE_NAME).orUnknown("Scan Purpose")
 
         val parsedPurposeCode = runCatching { ScanPurposeCode.valueOf(purposeCode) }.getOrNull()
 
@@ -225,17 +250,14 @@ open class StaffScanResultActivity : AppCompatActivity() {
         val parsedStaffUserId = runCatching { UUID.fromString(staffUserId) }.getOrNull()
         if (parsedEventId == null || parsedPurposeId == null || parsedStaffUserId == null || parsedPurposeCode == null) {
             Toast.makeText(this, this.getString(R.string.staff_scan_result_transaction_failed_invalid_scan_cont), Toast.LENGTH_SHORT).show()
-            Log.w(
-                tag,
-                "invalid context eventId=$eventId purposeId=$purposeId staffUserId=$staffUserId purposeCode=$purposeCode"
-            )
+            Log.w(tag, "invalid context eventId=$eventId purposeId=$purposeId staffUserId=$staffUserId purposeCode=$purposeCode")
             return
         }
 
         savingTransaction = true
         findViewById<LinearProgressIndicator>(R.id.progressTransactionInline).visibility = View.VISIBLE
-        findViewById<Button>(R.id.btnContinueTransaction).isEnabled = false
-        findViewById<Button>(R.id.btnContinueTransaction).text = getString(R.string.staff_scan_result_logging)
+        findViewById<View>(R.id.btnContinueTransaction).isEnabled = false
+        findViewById<TextView>(R.id.btnContinueTransaction).text = getString(R.string.ui_staff_result_logging)
 
         lifecycleScope.launch {
             val request = TransactionRequest(
@@ -249,7 +271,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
                 is NetworkResult.Success -> {
                     Log.d(
                         tag,
-                        "backendSaveResult success=true transactionId=${result.data.transactionId} eventId=${result.data.eventId} scanPurposeId=${result.data.scanPurposeId} transactionResult=${result.data.transactionResult}"
+                        "backendSaveResult success=true transactionId=${result.data.transactionId} eventId=${result.data.eventId} scanPurposeId=${result.data.scanPurposeId} transactionResult=${result.data.transactionResult}",
                     )
                     openTransactionResult(result.data)
                 }
@@ -263,7 +285,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
             }
             savingTransaction = false
             findViewById<LinearProgressIndicator>(R.id.progressTransactionInline).visibility = View.GONE
-            findViewById<Button>(R.id.btnContinueTransaction).isEnabled = true
+            findViewById<View>(R.id.btnContinueTransaction).isEnabled = true
             applyActionLabels()
         }
     }
@@ -276,8 +298,8 @@ open class StaffScanResultActivity : AppCompatActivity() {
 
         savingTransaction = true
         findViewById<LinearProgressIndicator>(R.id.progressTransactionInline).visibility = View.VISIBLE
-        findViewById<Button>(R.id.btnContinueTransaction).isEnabled = false
-        findViewById<Button>(R.id.btnContinueTransaction).text = getString(R.string.staff_scan_result_printing)
+        findViewById<View>(R.id.btnContinueTransaction).isEnabled = false
+        findViewById<TextView>(R.id.btnContinueTransaction).text = getString(R.string.ui_staff_result_printing)
 
         lifecycleScope.launch {
             val eventName = intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_TITLE).orEmpty()
@@ -316,8 +338,9 @@ open class StaffScanResultActivity : AppCompatActivity() {
                         visibleFields = visibleFields,
                         qrValue = qrValue,
                     )
-                    // The print is logged PENDING before the dialog opens (the log call is also the server-side
-                    // check); it is then confirmed with, and the result shown for, what the user did in the dialog.
+                    // The print is logged PENDING before the dialog opens (the log call is also the
+                    // server-side check); it is then confirmed with, and the result shown for, what
+                    // the user did in the dialog.
                     openSystemPrintDialog(eventId, cardData, result.data.printLogId, result.data.message)
                 }
                 is NetworkResult.Error -> {
@@ -328,14 +351,14 @@ open class StaffScanResultActivity : AppCompatActivity() {
             }
             savingTransaction = false
             findViewById<LinearProgressIndicator>(R.id.progressTransactionInline).visibility = View.GONE
-            findViewById<Button>(R.id.btnContinueTransaction).isEnabled = true
+            findViewById<View>(R.id.btnContinueTransaction).isEnabled = true
             applyActionLabels()
         }
     }
 
     /**
-     * Opens the system print dialog for a card the server already logged as PENDING; the log is confirmed
-     * with what the user actually did in the dialog.
+     * Opens the system print dialog for a card the server already logged as PENDING; the log is
+     * confirmed with what the user actually did in the dialog.
      */
     @VisibleForTesting
     internal open fun openSystemPrintDialog(
@@ -347,7 +370,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
         val printRepository = repository
         AndroidIdPrinter.print(
             this@StaffScanResultActivity,
-            "EventQR ID — ${cardData.attendeeName}",
+            "EventQR ID - ${cardData.attendeeName}",
             cardData,
         ) { outcome ->
             printRepository.confirmPrintLogsInBackground(eventId, listOf(printLogId), outcome)
@@ -356,10 +379,10 @@ open class StaffScanResultActivity : AppCompatActivity() {
     }
 
     /**
-     * A failed ID-print request. A refusal — the permission can be revoked mid-session, so the server answers
-     * 403 — gets the permission copy instead of the generic ID-print-failed panel: this screen is reachable
-     * without the scanner's permission-filtered purpose picker, so the refusal must not look like a printer or
-     * template failure. Nothing is printed in either case.
+     * A failed ID-print request. A refusal - the permission can be revoked mid-session, so the
+     * server answers 403 - gets the permission copy instead of the generic ID-print-failed panel:
+     * this screen is reachable without the scanner's permission-filtered purpose picker, so the
+     * refusal must not look like a printer or template failure. Nothing is printed in either case.
      */
     @VisibleForTesting
     internal fun bindPrintFailure(result: NetworkResult.Error) {
@@ -386,17 +409,18 @@ open class StaffScanResultActivity : AppCompatActivity() {
     /** Print-specific failure: the scan was verified, so it must not read as "Verification Rejected". */
     @VisibleForTesting
     internal fun bindPrintFailed(reason: String) {
+        demoteBadge()
         findViewById<View>(R.id.headerApproved).visibility = View.GONE
         findViewById<View>(R.id.headerRejected).visibility = View.VISIBLE
-        findViewById<TextView>(R.id.txtScanResultStateRejected).text = getString(R.string.staff_print_failed_title)
-        findViewById<TextView>(R.id.txtScanResultStatusHintRejected).text = getString(R.string.staff_print_failed_hint)
-        findViewById<TextView>(R.id.txtScanResultReason).text = reason.ifBlank { getString(R.string.staff_print_failed_hint) }
+        findViewById<TextView>(R.id.txtScanResultStateRejected).text = getString(R.string.ui_staff_result_print_failed)
+        findViewById<TextView>(R.id.txtScanResultStatusHintRejected).text = getString(R.string.ui_staff_result_print_failed_hint)
+        findViewById<TextView>(R.id.txtScanResultReason).text = reason.ifBlank { getString(R.string.ui_staff_result_print_failed_hint) }
         findViewById<View>(R.id.layoutApprovedDetails).visibility = View.GONE
         findViewById<View>(R.id.layoutRejectedReason).visibility = View.VISIBLE
         findViewById<View>(R.id.cardVerificationDetails).visibility = View.GONE
-        findViewById<Button>(R.id.btnContinueTransaction).visibility = View.GONE
-        findViewById<Button>(R.id.btnViewAttendeeDetails).visibility = View.VISIBLE
-        findViewById<Button>(R.id.btnScanAgain).visibility = View.VISIBLE
+        findViewById<View>(R.id.btnContinueTransaction).visibility = View.GONE
+        findViewById<View>(R.id.btnViewAttendeeDetails).visibility = View.VISIBLE
+        findViewById<View>(R.id.btnScanAgain).visibility = View.VISIBLE
     }
 
     private fun showPrintNoticeDialog(title: String, message: String) {
@@ -408,52 +432,19 @@ open class StaffScanResultActivity : AppCompatActivity() {
     }
 
     private fun showPrintSuccessDialog(message: String) {
-        val container = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dimenOffset(R.dimen.space_xl), dimenOffset(R.dimen.space_xl), dimenOffset(R.dimen.space_xl), dimenOffset(R.dimen.space_xl))
-            setBackgroundResource(R.drawable.bg_card)
-        }
-
-        container.addView(TextView(this).apply {
-            text = getString(R.string.staff_print_sent_title)
-            setTextSizeRes(R.dimen.type_headline_l)
-            setTextColor(color(R.color.text_primary))
-            textAlignment = View.TEXT_ALIGNMENT_CENTER
-        })
-        container.addView(TextView(this).apply {
-            text = message.ifBlank { getString(R.string.staff_print_sent_default_message) }
-            setTextSizeRes(R.dimen.type_body_large)
-            setTextColor(color(R.color.text_secondary))
-            textAlignment = View.TEXT_ALIGNMENT_CENTER
-            setPadding(0, dimenOffset(R.dimen.space_md), 0, dimenOffset(R.dimen.space_20))
-        })
-        val doneButton = Button(this).apply {
-            text = getString(R.string.staff_print_done)
-            setBackgroundResource(R.drawable.bg_scanner_button)
-            setTextColor(color(R.color.on_primary))
-        }
-        container.addView(doneButton)
-
-        val dialog = AlertDialog.Builder(this)
-            .setView(container)
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.staff_print_sent_title))
+            .setMessage(message.ifBlank { getString(R.string.staff_print_sent_default_message) })
             .setCancelable(false)
-            .create()
-        doneButton.setOnClickListener {
-            dialog.dismiss()
-            openAttendeeDetails()
-        }
-        dialog.show()
+            .setPositiveButton(getString(R.string.staff_print_done)) { _, _ -> openAttendeeDetails() }
+            .show()
     }
 
-
     private fun formatVerifiedAt(raw: String?): String {
-        if (raw.isNullOrBlank()) return "Just now"
+        val fallback = getString(R.string.ui_staff_result_just_now)
+        if (raw.isNullOrBlank()) return fallback
         val instant = runCatching { java.time.Instant.parse(raw) }.getOrNull()
-        return if (instant != null) {
-            com.thedavelopers.eventqr.core.util.DateFormatters.formatInstant(instant)
-        } else {
-            "Just now"
-        }
+        return if (instant != null) DISPLAY_FORMATTER.format(instant) else fallback
     }
 
     private fun openTransactionResult(result: TransactionResponse) {
@@ -480,7 +471,7 @@ open class StaffScanResultActivity : AppCompatActivity() {
     private fun openAttendeeDetails() {
         val attendeeId = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_ID)
         if (attendeeId.isNullOrBlank()) {
-            Toast.makeText(this, this.getString(R.string.staff_scan_result_attendee_details_are_only_available), Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, this.getString(R.string.ui_staff_result_attendee_unavailable), Toast.LENGTH_SHORT).show()
             return
         }
         startActivity(Intent(this, StaffAttendeeDetailsActivity::class.java).apply {
@@ -496,5 +487,8 @@ open class StaffScanResultActivity : AppCompatActivity() {
 
     private companion object {
         const val STATE_CLIENT_REQUEST_ID = "client_request_id"
+        val DISPLAY_FORMATTER: DateTimeFormatter =
+            DateTimeFormatter.ofPattern("d MMM yyyy, h:mm a", Locale.ENGLISH)
+                .withZone(ZoneId.of("Asia/Manila"))
     }
 }

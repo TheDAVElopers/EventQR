@@ -54,6 +54,7 @@
         <activity android:name=".features.organizer.idtemplate.IdTemplateSettingsActivity" android:exported="false" />
         <activity android:name=".features.organizer.events.EventManagementHubActivity" android:exported="false" />
         <activity android:name=".features.organizer.events.EditEventDetailsActivity" android:exported="false" />
+        <activity android:name=".features.organizer.events.OrganizerEventDetailsActivity" android:exported="false" />
         <activity android:name=".features.organizer.transactions.TransactionRulesActivity" android:exported="false" />
         <activity android:name=".features.organizer.scanpurposes.ManageScanPurposesActivity" android:exported="false" />
         <activity android:name=".features.organizer.staff.ManageUsersActivity" android:exported="false" />

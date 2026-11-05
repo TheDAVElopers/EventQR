@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- Debug-only: the mark at every shipped size, for the acceptance capture (04-logo-direction.md
+             §5, C1). Never part of a release build. -->
+        <activity
+            android:name=".debug.MarkPreviewActivity"
+            android:exported="true"
+            android:theme="@style/Theme.EventQR" />
+        <!-- Debug-only: every ic_ui_* at 24dp, the §7.7 icon-sheet capture. -->
+        <activity
+            android:name=".debug.IconSheetActivity"
+            android:exported="true"
+            android:theme="@style/Theme.EventQR" />
+    </application>
+</manifest>

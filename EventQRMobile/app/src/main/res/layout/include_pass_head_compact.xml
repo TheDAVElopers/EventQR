@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    COMPACT PASS HEAD (§4.6, §4.6 rules) - Block A only, 64dp, for secondary screens
+    (detail, forms, scanner, discover). Keeps the tear line as the bottom edge so a detail page
+    still reads as part of the same credential system.
+
+        20dp gutter  paddingTop, under the status-bar inset - the same 20dp screen gutter
+                      the full pass head shows below the inset
+        20dp row     eyebrow (overline, on_primary_muted)  +  one optional trailing slot
+        44dp row     title (headline 28/34, on_primary, max 1 line)  +  optional count
+        1dp          divider_perforation_dark
+
+    The result count belongs on the title row, baseline-aligned with the title, so it reads as
+    part of the title line instead of floating above the title's cap height in the eyebrow row.
+    The 20dp eyebrow row is too short to hold a second text line for that job.
+
+    The title always keeps the row's remaining width (0dp + weight 1), so a long count can never
+    push it below the majority of the line: the count is capped at ui_pass_head_count_max (~40% of
+    the row at the narrowest supported width). Inside that cap it autosizes from the overline size
+    (11sp) down to ui_pass_head_count_text_min (9sp), so a longer label steps down instead of
+    losing its end; ellipsis only applies if even 9sp does not fit.
+
+    The label is bounded first at the data layer: every screen renders it through
+    CountLabel.format, which compacts the number (28 EVENTS, 1.2K EVENTS, 12K EVENTS, 1.2M EVENTS)
+    and never exceeds 16 characters. The autosize above is the safety net for a long translation,
+    not the fix for a long count.
+
+    Usage: the same contract as include_pass_head.xml, through PassHeadBinder.bindCompact().
+
+        <include android:id="@+id/passHead" layout="@layout/include_pass_head_compact"
+                 android:layout_width="match_parent" android:layout_height="wrap_content" />
+
+    ids: passHead, passHeadIdentity (inset this one), passHeadEyebrow, passHeadTitle,
+         passHeadTitleCount (overline count, made visible by setting its text),
+         passHeadTrailing (a slot in the eyebrow row - an icon button, or a short action label;
+         metadata and result counts belong on the title row, never here),
+         passHeadTear.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/passHead"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/passHeadIdentity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_pass_head"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/ui_gutter"
+        android:paddingTop="@dimen/ui_gutter"
+        android:paddingEnd="@dimen/ui_gutter">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/ui_pass_head_compact_row"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/passHeadEyebrow"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow"
+                android:textColor="@color/ui_on_primary_muted"
+                tools:text="Discover" />
+
+            <LinearLayout
+                android:id="@+id/passHeadTrailing"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical|end"
+                android:orientation="horizontal" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/passHeadTitleRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:baselineAligned="true"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/passHeadTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minHeight="@dimen/ui_pass_head_title_min"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Headline"
+                android:textColor="@color/ui_on_primary"
+                tools:text="Scan" />
+
+            <!-- Baseline-aligned to the title by the row. GONE until a screen sets a count, so a
+                 head without one keeps the title's full width. Capped so the title keeps the
+                 majority of the row; inside the cap the text steps down from the overline size to
+                 9sp, so a longer count shrinks rather than truncates. The text itself comes from
+                 CountLabel.format (<= 16 characters), so autosize stays a safety net. Autosize is
+                 set here on the one shared include, not per screen and not on the shared
+                 TextAppearance (the appearance is used by eyebrows, tabs and labels that must not
+                 shrink). -->
+            <TextView
+                android:id="@+id/passHeadTitleCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_12"
+                android:autoSizeMaxTextSize="@dimen/ui_type_overline"
+                android:autoSizeMinTextSize="@dimen/ui_pass_head_count_text_min"
+                android:autoSizeTextType="uniform"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:maxWidth="@dimen/ui_pass_head_count_max"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow"
+                android:textColor="@color/ui_on_primary_muted"
+                android:visibility="gone"
+                tools:text="28 EVENTS"
+                tools:visibility="visible" />
+        </LinearLayout>
+
+        <!-- The tear line sits ON the dark block, so the 24%-white dashes are visible and the
+             block still ends on a hard edge. -->
+        <View
+            android:id="@+id/passHeadTear"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/stroke_hairline"
+            android:background="@drawable/divider_perforation_dark"
+            android:importantForAccessibility="no" />
+    </LinearLayout>
+
+</LinearLayout>

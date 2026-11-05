@@ -1,9 +1,10 @@
 package com.thedavelopers.eventqr.features.attendee
 
+import android.view.View
 import android.widget.EditText
+import android.widget.TextView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.google.android.material.textfield.TextInputLayout
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.features.ShadowEncryptedSharedPreferences
@@ -16,10 +17,10 @@ import org.robolectric.Robolectric
 import org.robolectric.annotation.Config
 
 /**
- * Robolectric tests for the edit-profile phone field: the layout must not truncate
- * pasted input before normalizePhoneDigits() runs (same bug as activity_signup.xml),
- * validation reuses Validators on the assembled E.164 value, and the Material counter
- * (counterMaxLength=10) reflects the post-normalization national length.
+ * Robolectric tests for the edit-profile phone field: the layout must not truncate pasted input
+ * before normalizePhoneDigits() runs, validation reuses Validators on the assembled E.164 value,
+ * and the inline error line under the field carries the message (the redesign replaced the
+ * Material counter with a static helper).
  * The save network call is not unit-testable (see registration test coverage notes).
  */
 @RunWith(AndroidJUnit4::class)
@@ -31,6 +32,12 @@ class AttendeeEditProfileActivityTest {
 
     private fun phoneInput(activity: AttendeeEditProfileActivity): EditText =
         activity.findViewById(R.id.edtPhone)
+
+    private fun phoneError(activity: AttendeeEditProfileActivity): TextView =
+        activity.findViewById(R.id.txtPhoneError)
+
+    private fun nameError(activity: AttendeeEditProfileActivity): TextView =
+        activity.findViewById(R.id.txtNameError)
 
     // -- Phone normalization ------------------------------------------------------
 
@@ -81,23 +88,17 @@ class AttendeeEditProfileActivityTest {
         assertEquals("9123456789", phoneInput(activity).text.toString())
     }
 
-    // -- Counter / limit UI -------------------------------------------------------
-
     @Test
-    fun phoneCounter_enabledWithTenAndNeverExceedsNationalLength() {
+    fun phoneErrorLine_isHiddenUntilValidationFails() {
         val activity = buildActivity()
-        val tilPhone = activity.findViewById<TextInputLayout>(R.id.tilPhone)
 
-        assertEquals(true, tilPhone.isCounterEnabled)
-        assertEquals(10, tilPhone.counterMaxLength)
+        assertEquals(View.GONE, phoneError(activity).visibility)
 
-        // The counter mirrors the field text; the normalizer keeps it at <= 10 digits
-        // so it can never report a value above 10/10.
-        phoneInput(activity).setText("+639171234567")
-        assertEquals(10, phoneInput(activity).text.length)
+        phoneInput(activity).setText("123")
+        activity.findViewById<android.widget.Button>(R.id.btnSaveChanges).performClick()
 
-        phoneInput(activity).setText("123456789012345")
-        assertEquals(10, phoneInput(activity).text.length)
+        assertEquals(View.VISIBLE, phoneError(activity).visibility)
+        assertEquals(activity.getString(R.string.ui_attendee_phone_invalid), phoneError(activity).text.toString())
     }
 
     // -- Validation wiring --------------------------------------------------------
@@ -110,8 +111,8 @@ class AttendeeEditProfileActivityTest {
         activity.findViewById<android.widget.Button>(R.id.btnSaveChanges).performClick()
 
         assertEquals(
-            activity.getString(R.string.error_invalid_phone_prefixed),
-            phoneInput(activity).error.toString(),
+            activity.getString(R.string.ui_attendee_phone_invalid),
+            phoneError(activity).text.toString(),
         )
     }
 
@@ -121,7 +122,10 @@ class AttendeeEditProfileActivityTest {
 
         activity.findViewById<android.widget.Button>(R.id.btnSaveChanges).performClick()
 
-        assertEquals("Phone number is required.", phoneInput(activity).error.toString())
+        assertEquals(
+            activity.getString(R.string.ui_attendee_phone_required),
+            phoneError(activity).text.toString(),
+        )
     }
 
     @Test
@@ -138,7 +142,7 @@ class AttendeeEditProfileActivityTest {
         phoneInput(activity).setText("09171234567")
         activity.findViewById<android.widget.Button>(R.id.btnSaveChanges).performClick()
 
-        assertNull(phoneInput(activity).error)
+        assertEquals(View.GONE, phoneError(activity).visibility)
         assertEquals("9171234567", phoneInput(activity).text.toString())
     }
 
@@ -154,10 +158,11 @@ class AttendeeEditProfileActivityTest {
         activity.findViewById<android.widget.Button>(R.id.btnSaveChanges).performClick()
 
         assertEquals(
-            activity.getString(R.string.attendee_edit_profile_full_name_is_required),
-            nameInput.error.toString(),
+            activity.getString(R.string.ui_attendee_name_required),
+            nameError(activity).text.toString(),
         )
-        assertNull(phoneInput(activity).error)
+        assertEquals(View.VISIBLE, nameError(activity).visibility)
+        assertEquals(View.GONE, phoneError(activity).visibility)
         assertEquals("John Doe", sessionManager.getFullName())
     }
 }

@@ -1,7 +1,5 @@
 package com.thedavelopers.eventqr.features.organizer
 
-import com.thedavelopers.eventqr.ui.theme.dimen
-import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,6 +7,10 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
 
+/**
+ * Attendee rows on the shared `item_organizer_attendee` geometry (§5.5). The badge tone comes from
+ * the one status mapping; the row itself draws no card and no pill.
+ */
 class AttendeeManagementAdapter(
     private val onClick: (OrganizerMvpAttendee) -> Unit,
 ) : RecyclerView.Adapter<AttendeeManagementAdapter.ViewHolder>() {
@@ -27,7 +29,7 @@ class AttendeeManagementAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(items[position])
+        holder.bind(items[position], position == items.lastIndex)
     }
 
     override fun getItemCount(): Int = items.size
@@ -39,7 +41,7 @@ class AttendeeManagementAdapter(
         private val pointsText: TextView = itemView.findViewById(R.id.txtAttendeePoints)
         private val statusText: TextView = itemView.findViewById(R.id.txtAttendeeStatus)
 
-        fun bind(item: OrganizerMvpAttendee) {
+        fun bind(item: OrganizerMvpAttendee, isLast: Boolean) {
             avatar.text = attendeeInitial(item.name)
             nameText.text = item.name
             emailText.text = item.email
@@ -51,15 +53,11 @@ class AttendeeManagementAdapter(
                 pointsText.visibility = View.GONE
             }
 
-            val (backgroundColor, textColor) = item.statusPalette(itemView.context)
-            statusText.text = item.statusLabel(itemView.context)
-            statusText.background = GradientDrawable().apply {
-                setColor(backgroundColor)
-                cornerRadius = itemView.dimen(R.dimen.radius_pill)
-            }
-            statusText.setTextColor(textColor)
+            item.bindStatusBadge(statusText)
 
-            itemView.setOnClickListener { onClick(item) }
+            itemView.findViewById<View>(R.id.attendeeRowContainer).setOnClickListener { onClick(item) }
+            itemView.findViewById<View>(R.id.attendeeRowDivider).visibility =
+                if (isLast) View.GONE else View.VISIBLE
         }
     }
 }

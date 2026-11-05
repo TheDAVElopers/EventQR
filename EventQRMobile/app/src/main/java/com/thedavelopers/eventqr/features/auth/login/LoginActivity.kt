@@ -10,16 +10,20 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.RememberedEmailStore
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.core.util.ScreenInsets
+import com.thedavelopers.eventqr.core.util.Wordmark
 import com.thedavelopers.eventqr.features.auth.AuthRepository
 import com.thedavelopers.eventqr.features.auth.forgotpassword.ForgotPasswordActivity
 import com.thedavelopers.eventqr.features.auth.register.RegistrationActivity
 import com.thedavelopers.eventqr.features.dashboard.DashboardActivity
+import com.thedavelopers.eventqr.ui.icons.AppIcons
+import com.thedavelopers.eventqr.ui.icons.FieldIcons
 
 open class LoginActivity : AppCompatActivity(), LoginContract.View {
     private lateinit var presenter: LoginPresenter
@@ -34,6 +38,13 @@ open class LoginActivity : AppCompatActivity(), LoginContract.View {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_signin)
+
+        // Edge to edge: the 56dp bar's fill runs behind the status bar, the scroll content
+        // clears the navigation bar.
+        enableEdgeToEdge()
+        ScreenInsets.padForStatusBar(findViewById(R.id.authTopBar))
+        Wordmark.applyBarRules(this)
+        ScreenInsets.padForNavigationBar(findViewById(R.id.authScroll))
 
         presenter = LoginPresenter(this, AuthRepository(this), UiStrings(this), getString(R.string.login_account_disabled), getString(R.string.login_rate_limited), getString(R.string.login_invalid_request), getString(R.string.login_check_spaces)) { minutes ->
             resources.getQuantityString(R.plurals.login_rate_limited_minutes, minutes, minutes)
@@ -51,6 +62,7 @@ open class LoginActivity : AppCompatActivity(), LoginContract.View {
             passwordInput.requestFocus()
         }
         presenter.attach(this)
+        FieldIcons.apply(emailInput)
         configurePasswordToggle(passwordInput)
 
         signInButton.setOnClickListener {
@@ -73,15 +85,19 @@ open class LoginActivity : AppCompatActivity(), LoginContract.View {
 
     override fun showLoading(isLoading: Boolean) {
         signInButton.isEnabled = !isLoading
-        signInButton.text = getString(if (isLoading) R.string.login_signing_in else R.string.common_sign_in)
+        signInButton.text = getString(if (isLoading) R.string.login_signing_in else R.string.auth_sign_in)
     }
 
     override fun showEmailError(message: String?) {
         emailInput.error = message
+        // bg_ui_field draws the 2dp error stroke from state_activated, so the box and the
+        // message never disagree about whether the field is in error.
+        emailInput.isActivated = message != null
     }
 
     override fun showPasswordError(message: String?) {
         passwordInput.error = message
+        passwordInput.isActivated = message != null
     }
 
     override fun showMessage(message: String) {
@@ -130,25 +146,16 @@ open class LoginActivity : AppCompatActivity(), LoginContract.View {
     }
 
     private fun configurePasswordToggle(input: EditText) {
+        FieldIcons.apply(input)
         input.setOnTouchListener { view, event ->
             if (event.action == MotionEvent.ACTION_UP && event.rawX >= input.right - input.compoundPaddingEnd) {
                 val isVisible = input.inputType == (InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD)
                 if (isVisible) {
                     input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-                    input.setCompoundDrawablesWithIntrinsicBounds(
-                        input.compoundDrawables[0],
-                        null,
-                        ContextCompat.getDrawable(this, R.drawable.ic_visibility_on),
-                        null
-                    )
+                    FieldIcons.setTrailing(input, AppIcons.Visibility)
                 } else {
                     input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-                    input.setCompoundDrawablesWithIntrinsicBounds(
-                        input.compoundDrawables[0],
-                        null,
-                        ContextCompat.getDrawable(this, R.drawable.ic_visibility_off),
-                        null
-                    )
+                    FieldIcons.setTrailing(input, AppIcons.VisibilityOff)
                 }
                 input.setSelection(input.text.length)
                 view.performClick()

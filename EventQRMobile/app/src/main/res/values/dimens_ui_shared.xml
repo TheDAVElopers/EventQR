@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Shared component dimens - Phase 1 of MyFiles/EventQR-Redesign-Plan.md (§4, §5).
+
+    NEW tokens only. values/dimens.xml keeps the legacy scale for the ~55 screens that are not
+    migrated yet; nothing here is a duplicate of a legacy name. Every value is the plan's table
+    value verbatim.
+
+    Naming: ui_<component>_<property>. XML, Compose and Kotlin all read these; no component may
+    carry a raw dp that has a token here.
+-->
+<resources>
+
+    <!-- ═════════ Spacing: the closed 11-value scale (§4.2), canonical names ═════════
+         space_20 / space_40 / space_64 already exist in dimens.xml; these are the seven
+         names that did not, so the plan's vocabulary is complete. -->
+    <dimen name="space_2">2dp</dimen>
+    <dimen name="space_4">4dp</dimen>
+    <dimen name="space_8">8dp</dimen>
+    <dimen name="space_12">12dp</dimen>
+    <dimen name="space_16">16dp</dimen>
+    <dimen name="space_24">24dp</dimen>
+    <dimen name="space_32">32dp</dimen>
+    <dimen name="space_48">48dp</dimen>
+
+    <!-- ═════════ Pass head (§4.6) ═════════ -->
+    <dimen name="ui_pass_head_identity_height">116dp</dimen>   <!-- minHeight: grows with fontScale -->
+    <dimen name="ui_pass_head_row_tabs">56dp</dimen>
+    <dimen name="ui_pass_head_title_min">44dp</dimen>
+    <dimen name="ui_pass_head_stub_height">56dp</dimen>
+    <dimen name="ui_pass_head_compact_row">20dp</dimen>
+    <!-- ~40% of the 280dp title row at the narrowest supported width (320dp), so the title keeps
+         at least ~55% of the row at every width. Within the cap the count autosizes from the
+         overline size (11sp) down to this floor instead of truncating; ellipsis is the last resort
+         only when even the floor does not fit. 9sp is the smallest step the type ramp allows. -->
+    <dimen name="ui_pass_head_count_max">112dp</dimen>
+    <dimen name="ui_pass_head_count_text_min">9sp</dimen>
+    <!-- Autosize granularity: 11sp -> 9sp in 0.5sp steps (four steps), matching android:autoSize*. -->
+    <dimen name="ui_pass_head_count_text_step">0.5sp</dimen>
+    <dimen name="ui_pass_head_tab_height">44dp</dimen>
+    <dimen name="ui_pass_head_tab_gap">20dp</dimen>
+    <dimen name="ui_pass_head_tab_underline">2dp</dimen>
+    <dimen name="ui_pass_head_tab_underline_gap">6dp</dimen>
+    <dimen name="ui_pass_head_stat_cell_pad">12dp</dimen>
+    <dimen name="ui_pass_head_stat_label_gap">2dp</dimen>
+    <dimen name="ui_bell_size">44dp</dimen>
+    <dimen name="ui_bell_icon">20dp</dimen>
+    <dimen name="ui_count_badge_size">18dp</dimen>
+    <dimen name="ui_count_badge_offset">-2dp</dimen>
+    <dimen name="ui_chip_dark_height">28dp</dimen>
+
+    <!-- ═════════ Cards (§5.3) ═════════ -->
+    <dimen name="ui_card_padding">16dp</dimen>
+
+    <!-- ═════════ Fields (§5.2) ═════════ -->
+    <dimen name="ui_field_multiline_height">96dp</dimen>  <!-- 3–6 lines, grows with the text -->
+    <dimen name="ui_field_search_height">48dp</dimen>     <!-- search field, no label -->
+
+    <!-- ═════════ List rows (§5.5) ═════════ -->
+    <dimen name="ui_row_height">72dp</dimen>
+    <dimen name="ui_row_height_tall">88dp</dimen>
+    <dimen name="ui_row_height_value">64dp</dimen>
+    <dimen name="ui_row_height_date">96dp</dimen>
+    <dimen name="ui_row_padding_vertical">14dp</dimen>       <!-- plan §5.5, 2dp grid -->
+    <dimen name="ui_row_start">20dp</dimen>
+    <dimen name="ui_row_end">16dp</dimen>
+    <dimen name="ui_row_tile">40dp</dimen>
+    <dimen name="ui_row_date_block">44dp</dimen>
+    <dimen name="ui_divider_inset">76dp</dimen>              <!-- 20 + 40 + 16: aligns to the text edge -->
+    <dimen name="ui_chevron">16dp</dimen>
+
+    <!-- ═════════ Status badge (§5.4) ═════════ -->
+    <dimen name="ui_badge_height">24dp</dimen>
+    <dimen name="ui_badge_pad_h">8dp</dimen>
+    <dimen name="ui_badge_dot">6dp</dimen>
+    <dimen name="ui_badge_dot_gap">4dp</dimen>
+
+    <!-- ═════════ Chip (§5.6) ═════════ -->
+    <dimen name="ui_chip_height">36dp</dimen>
+    <dimen name="ui_chip_pad_h">12dp</dimen>
+    <dimen name="ui_chip_action_pad_h">8dp</dimen>          <!-- three-up budget with a 24dp glyph (§5.6) -->
+    <dimen name="ui_chip_gap">8dp</dimen>
+
+    <!-- ═════════ Bottom nav (§5.7) ═════════ -->
+    <dimen name="ui_nav_height">64dp</dimen>
+    <dimen name="ui_nav_icon">24dp</dimen>
+    <dimen name="ui_nav_indicator_width">24dp</dimen>
+    <dimen name="ui_nav_indicator_height">3dp</dimen>
+    <dimen name="ui_nav_pad_vertical">12dp</dimen>
+
+    <!-- ═════════ Top app bar (§5.8) ═════════ -->
+    <dimen name="ui_top_bar_height">56dp</dimen>
+    <dimen name="ui_top_bar_back_inset">4dp</dimen>
+    <dimen name="ui_top_bar_title_start">56dp</dimen>
+    <dimen name="ui_top_bar_action">44dp</dimen>
+
+    <!-- ═════════ Metric row (§5.9) ═════════ -->
+    <dimen name="ui_metric_row_height">56dp</dimen>
+
+    <!-- ═════════ Empty state (§5.10) ═════════ -->
+    <dimen name="ui_empty_plate">48dp</dimen>
+    <dimen name="ui_empty_glyph">24dp</dimen>
+    <dimen name="ui_empty_gap_title">16dp</dimen>
+    <dimen name="ui_empty_gap_body">4dp</dimen>
+    <dimen name="ui_empty_gap_action">16dp</dimen>
+    <dimen name="ui_empty_max_width">320dp</dimen>
+    <dimen name="ui_empty_top_offset">40dp</dimen>
+
+    <!-- ═════════ Skeleton (§5.11) ═════════ -->
+    <dimen name="ui_skeleton_bar_height">12dp</dimen>
+    <dimen name="ui_skeleton_title_width">160dp</dimen>
+    <dimen name="ui_skeleton_meta_width">96dp</dimen>
+    <dimen name="ui_skeleton_row_height">72dp</dimen>
+    <dimen name="ui_skeleton_avatar">40dp</dimen>
+
+    <!-- Loading indicator: one size everywhere; the InlineProgress style sets the stroke -->
+    <dimen name="ui_loading_indicator">24dp</dimen>
+
+    <!-- Report preview chart block: the donut and the ranked bars share one frame -->
+    <dimen name="ui_chart_donut_height">150dp</dimen>
+    <dimen name="ui_chart_stroke">20dp</dimen>
+    <dimen name="ui_chart_bar_height">6dp</dimen>
+    <dimen name="ui_table_row_pad_v">12dp</dimen>
+
+    <!-- Audit log row (§6.5): fixed timestamp column, sticky day header, meta dot -->
+    <dimen name="ui_audit_time_column">96dp</dimen>
+    <dimen name="ui_audit_day_header_height">32dp</dimen>
+    <dimen name="ui_audit_meta_dot">3dp</dimen>
+
+    <!-- Terms section number plate (§6.1) -->
+    <dimen name="ui_terms_number_size">28dp</dimen>
+
+    <!-- ═════════ Mark and wordmark (§3.7, 04-logo-direction.md §2-3) ═════════
+         One mark, three shipped sizes plus the launcher/splash canvas. Cap heights are the control
+         dimension for the wordmark (Archivo cap = 0.68 em, so textSize = cap / 0.68); the sp sizes are
+         the cap values divided by 0.68 and rounded. -->
+    <dimen name="ui_mark_bar_landing">24dp</dimen>       <!-- 64dp landing bar lockup -->
+    <dimen name="ui_mark_bar_auth">20dp</dimen>          <!-- 56dp auth bar lockup -->
+    <dimen name="ui_mark_splash">64dp</dimen>            <!-- splash, mark alone -->
+    <!-- The launcher mask is a circle of about 0.60 of the 108dp canvas, so a square mark must be
+         <= 0.707 of that circle to keep its four corners: 108 x 0.60 x 0.707 = 46.1dp. 64dp cut every
+         corner (the mark's half-diagonal was 45.3dp against a 32.4dp mask radius). -->
+    <dimen name="ui_mark_launcher">46dp</dimen>          <!-- adaptive icon ink of the 108dp canvas -->
+    <dimen name="ui_mark_launcher_canvas">108dp</dimen>
+    <!-- Lockup gap is an OPTICAL 12dp: letterSpacing adds ~0.08em before the first glyph and 'E' carries
+         its own sidebearing, so a 12dp margin renders as a 14.1dp ink gap. 10dp lands the measured gap
+         on 12dp (§5 C2 of the direction doc measures it from ink). -->
+    <dimen name="ui_lockup_gap">10dp</dimen>
+    <dimen name="ui_wordmark_cap_landing">16dp</dimen>
+    <dimen name="ui_wordmark_cap_auth">14dp</dimen>
+    <dimen name="ui_wordmark_cap_compact">13dp</dimen>
+    <dimen name="ui_wordmark_size_landing">24sp</dimen>
+    <dimen name="ui_wordmark_size_auth">21sp</dimen>
+    <dimen name="ui_wordmark_size_compact">19sp</dimen>
+    <!-- includeFontPadding=false still leaves the line box (ascent + descent) taller than the cap band,
+         so a centred TextView puts the cap band ~1dp above the mark's centre. These cancel that. -->
+    <dimen name="ui_wordmark_nudge_landing">0.5dp</dimen>
+    <dimen name="ui_wordmark_nudge_auth">1dp</dimen>
+    <item name="ui_track_wordmark_compact" format="float" type="dimen">0.06</item>
+
+    <item name="ui_skeleton_alpha_min" format="float" type="dimen">0.55</item>
+
+    <!-- ═════════ Sheets and dialogs (§5.12) ═════════ -->
+    <dimen name="ui_sheet_handle_width">32dp</dimen>
+    <dimen name="ui_sheet_handle_height">4dp</dimen>
+    <dimen name="ui_sheet_handle_top">8dp</dimen>
+    <dimen name="ui_sheet_elevation">8dp</dimen>
+    <dimen name="ui_dialog_pad">24dp</dimen>
+
+    <!-- ═════════ Scanner viewport (§5.13) ═════════ -->
+    <dimen name="ui_scan_panel_width">320dp</dimen>
+    <dimen name="ui_scan_panel_height">256dp</dimen>        <!-- 8dp above/below the 240dp square -->
+    <dimen name="ui_scan_preview">240dp</dimen>             <!-- square; the camera preview is cropped to it -->
+    <dimen name="ui_scan_bracket_arm">24dp</dimen>
+    <dimen name="ui_scan_torch">44dp</dimen>
+    <dimen name="ui_scan_torch_inset">16dp</dimen>
+    <dimen name="ui_scan_context_height">48dp</dimen>
+    <dimen name="ui_scan_status_height">56dp</dimen>
+    <dimen name="ui_scan_frame_stroke">1dp</dimen>
+
+    <!-- ═════════ QR credential (§5.14) ═════════ -->
+    <dimen name="ui_credential_width">320dp</dimen>
+    <dimen name="ui_credential_height">440dp</dimen>          <!-- minHeight: 2-line titles grow it -->
+    <dimen name="ui_credential_pad">20dp</dimen>
+    <dimen name="ui_qr_plate">216dp</dimen>
+    <dimen name="ui_qr_module">184dp</dimen>
+    <dimen name="ui_qr_quiet">16dp</dimen>
+    <dimen name="ui_notch">24dp</dimen>
+    <dimen name="ui_notch_offset">-12dp</dimen>
+    <dimen name="ui_notch_positive_offset">12dp</dimen>
+
+    <!-- ═════════ Type: line heights (sp), the plan's §3.5 table ═════════ -->
+    <dimen name="ui_lh_display_xl">52sp</dimen>
+    <dimen name="ui_lh_display_m">38sp</dimen>
+    <dimen name="ui_lh_headline">34sp</dimen>
+    <dimen name="ui_lh_title_l">26sp</dimen>
+    <dimen name="ui_lh_title">24sp</dimen>
+    <dimen name="ui_lh_body_l">24sp</dimen>
+    <dimen name="ui_lh_body">22sp</dimen>
+    <dimen name="ui_lh_body_s">20sp</dimen>
+    <dimen name="ui_lh_label">18sp</dimen>
+    <dimen name="ui_lh_overline">14sp</dimen>
+    <dimen name="ui_lh_micro">14sp</dimen>
+    <dimen name="ui_lh_numeric_l">38sp</dimen>
+    <dimen name="ui_lh_numeric_m">24sp</dimen>
+    <dimen name="ui_lh_numeric_s">20sp</dimen>
+
+    <!-- Tracking (§3.5, em). <item type="dimen" format="float"> is the only container for a
+         unitless float in resources; read it with Context.dimenFloat / ResourcesCompat.getFloat. -->
+    <item name="ui_track_display_xl" format="float" type="dimen">-0.03</item>
+    <item name="ui_track_display_m" format="float" type="dimen">-0.02</item>
+    <item name="ui_track_headline" format="float" type="dimen">-0.015</item>
+    <item name="ui_track_title_l" format="float" type="dimen">-0.01</item>
+    <item name="ui_track_title" format="float" type="dimen">0</item>
+    <item name="ui_track_body" format="float" type="dimen">0</item>
+    <item name="ui_track_label" format="float" type="dimen">0.01</item>
+    <item name="ui_track_overline" format="float" type="dimen">0.16</item>
+    <item name="ui_track_micro" format="float" type="dimen">0</item>
+    <item name="ui_track_numeric_l" format="float" type="dimen">-0.02</item>
+    <item name="ui_track_numeric_m" format="float" type="dimen">0</item>
+    <item name="ui_track_numeric_s" format="float" type="dimen">0</item>
+    <item name="ui_track_badge" format="float" type="dimen">0.06</item>
+    <!-- The 6-character reset code: 0.3em, the one centred field (§4.5) -->
+    <item name="ui_track_code" format="float" type="dimen">0.3</item>
+
+    <!-- ═════════ Misc ═════════ -->
+
+</resources>
+

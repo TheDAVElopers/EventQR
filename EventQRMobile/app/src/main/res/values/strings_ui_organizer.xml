@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Strings owned by the organizer screens (plan 6.4, 7).
+
+    Copy rules: sentence case, verb-first, no "please", no exclamation marks, no "successfully".
+    ALL CAPS is never typed here - the Overline type role does the caps. Status words follow the
+    5.4 mapping so a badge and a heading never disagree. 7.7: "pass", never "QR code" or
+    "credential", in UI copy.
+-->
+<resources>
+
+    <!-- Shared organizer vocabulary -->
+    <string name="ui_organizer_role">Organizer</string>
+    <string name="ui_organizer_events">Events</string>
+    <string name="ui_organizer_attendees">Attendees</string>
+    <string name="ui_organizer_value_unavailable">--</string>
+
+    <!-- Organizer dashboard -->
+    <string name="ui_organizer_approved">Approved</string>
+    <string name="ui_organizer_registrations">Registered</string>
+    <string name="ui_organizer_redeemed">Redeemed</string>
+    <string name="ui_organizer_this_week">This week</string>
+    <string name="ui_organizer_next_event">Next event</string>
+    <string name="ui_organizer_active_events">Active events</string>
+    <string name="ui_organizer_metrics_upcoming">Upcoming</string>
+    <string name="ui_organizer_metrics_ended">Ended</string>
+    <string name="ui_organizer_see_all">See all</string>
+    <string name="ui_organizer_no_events">No events yet</string>
+    <string name="ui_organizer_no_events_body">Create an event to start taking registrations.</string>
+    <string name="ui_organizer_no_active_events">No active events</string>
+    <string name="ui_organizer_no_active_events_body">Active events show up here once they start.</string>
+    <string name="ui_organizer_create_event">Create event</string>
+    <!-- Unit only: CountLabel.format() prefixes the compact number and uppercases the noun. -->
+    <string name="ui_organizer_events_count">event</string>
+    <string name="ui_organizer_none_scheduled">Nothing scheduled</string>
+
+    <!-- Event management hub (6.4) -->
+    <string name="ui_organizer_hub_title">Manage event</string>
+
+    <!-- Event details, read-only (6.4) -->
+    <string name="ui_organizer_event_details_title">Event details</string>
+    <string name="ui_organizer_date">Date</string>
+    <string name="ui_organizer_time">Time</string>
+    <string name="ui_organizer_venue">Venue</string>
+    <string name="ui_organizer_registration_window">Registration window</string>
+    <string name="ui_organizer_organizer">Organizer</string>
+    <string name="ui_organizer_coorganizers">Co-organizers</string>
+    <string name="ui_organizer_about">About</string>
+    <string name="ui_organizer_reports">Reports</string>
+
+    <!-- Attendees -->
+    <string name="ui_organizer_search_attendees">Search attendees</string>
+    <string name="ui_organizer_attendee_search_hint">Search name or email</string>
+
+    <!-- Reports -->
+    <string name="ui_organizer_report_registered">Registered</string>
+    <string name="ui_organizer_report_checked_in">Checked in</string>
+    <string name="ui_organizer_report_exited">Exited</string>
+    <string name="ui_organizer_selected">Selected</string>
+
+    <!-- Rewards -->
+
+    <string name="ui_organizer_add_staff">Add staff</string>
+
+    <!-- Staff assignment (6.4) -->
+    <string name="ui_staff_no_staff">No staff yet</string>
+    <string name="ui_staff_no_staff_body">Assign staff to scan passes at this event.</string>
+    <string name="ui_staff_load_failed">Couldn\'t load staff</string>
+    <string name="ui_staff_load_failed_body">Pull down to refresh.</string>
+    <string name="ui_staff_access_disabled">Access disabled</string>
+    <string name="ui_staff_row_actions">Actions for %1$s</string>
+    <string name="ui_staff_remove_from_event">Remove from event</string>
+    <string name="ui_staff_permissions_title">Permissions</string>
+    <string name="ui_staff_permissions_identity">%1$s, %2$s</string>
+    <string name="ui_staff_scan_locked">Scan a pass</string>
+    <string name="ui_staff_scan_locked_meta">Every staff member can scan.</string>
+    <string name="ui_staff_scan_locked_value">Always on</string>
+    <string name="ui_staff_promote_note">This promotes the account to staff.</string>
+    <string name="ui_staff_assigned">%1$s can now scan passes.</string>
+    <string name="ui_staff_set_permissions">Set permissions</string>
+    <string name="ui_staff_search_title">Add staff</string>
+    <string name="ui_staff_search_prompt">Find a staff account</string>
+    <string name="ui_staff_search_prompt_body">Search by name or email.</string>
+    <string name="ui_staff_search_none">No account found</string>
+    <string name="ui_staff_search_none_body">Check the spelling, or ask them to create an account.</string>
+
+    <!-- Attendee details -->
+    <string name="ui_organizer_detail_event">Event</string>
+    <string name="ui_organizer_detail_registration_id">Registration ID</string>
+    <string name="ui_organizer_detail_status">Status</string>
+    <string name="ui_organizer_detail_id_status">ID status</string>
+    <string name="ui_organizer_detail_registered">Registered</string>
+    <string name="ui_organizer_detail_last_activity">Last activity</string>
+    <string name="ui_organizer_detail_points">Points</string>
+    <string name="ui_organizer_detail_transactions">Transaction history</string>
+    <string name="ui_organizer_detail_view_log">View full log</string>
+    <!-- Scan purposes / transaction rules / logs -->
+    <string name="ui_organizer_no_transactions">No transactions yet</string>
+
+    <!-- ID template -->
+
+    <!-- Dialogs / destructive confirms -->
+
+</resources>

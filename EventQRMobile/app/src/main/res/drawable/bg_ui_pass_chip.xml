@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pass-head portal chip (§4.6 optional row0 chip): 12% white fill, 4dp radius, white
+     overline label. Used when a screen has one portal and no role tabs. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/ui_on_dark_hairline" />
+    <corners android:radius="@dimen/ui_radius_button" />
+</shape>

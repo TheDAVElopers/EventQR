@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pass head identity block (§4.6, Block A). Flat ui_primary, square corners, no stroke:
+     the block is a printed band, not a card. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/ui_primary" />
+</shape>
