@@ -1,88 +1,104 @@
 package com.thedavelopers.eventqr.features.organizer.events
 
-import com.thedavelopers.eventqr.ui.icons.AppIcons
-import com.thedavelopers.eventqr.ui.theme.dimenPx
-import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
-import com.thedavelopers.eventqr.features.organizer.styledText
-import com.thedavelopers.eventqr.features.organizer.cardRes
-import androidx.lifecycle.lifecycleScope
 import android.graphics.BitmapFactory
+import android.graphics.Rect
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
-import android.text.InputType
 import android.text.TextWatcher
 import android.util.Base64
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
-import android.widget.FrameLayout
 import android.widget.ImageView
-import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
+import androidx.core.view.updatePadding
+import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.features.organizer.tintBlock
-import com.thedavelopers.eventqr.features.organizer.tintBlockArgb
-import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.core.util.DateFormatters
+import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequest
 import com.thedavelopers.eventqr.features.organizer.OrganizerRepository
-import com.thedavelopers.eventqr.features.organizer.ghostButton
+import com.thedavelopers.eventqr.features.organizer.formatCount
 import com.thedavelopers.eventqr.features.organizer.intentEventId
-import com.thedavelopers.eventqr.features.organizer.intentEventTitle
-import com.thedavelopers.eventqr.features.organizer.intentEventViewOnly
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerEventDto
-import com.thedavelopers.eventqr.features.organizer.orgColors
-import com.thedavelopers.eventqr.features.organizer.organizerShell
-import com.thedavelopers.eventqr.features.organizer.primaryButton
 import com.thedavelopers.eventqr.features.organizer.showMissingEventScreen
+import com.thedavelopers.eventqr.ui.theme.applyEventQrBottomInsetPadding
+import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.yalantis.ucrop.UCrop
-import kotlinx.coroutines.launch
+import java.io.File
+import java.util.Locale
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import kotlin.math.max
 
 /**
- * SDD 3.5 (UC-20) — Manage Approved Event Details.
+ * Organizer event editor (§6.4 v1.7) - the Draft / Pending review / Approved screen.
+ *
+ * Five eyebrowed sections in the view page's block order (Event, Schedule, Registration, About,
+ * Banner), the shared identity head with both meta lines hidden, and one bottom-anchored save bar.
+ * Everything here binds a real layout: no view is built at runtime, and no field name reaches the
+ * user.
+ *
+ * Behaviour:
+ *  * dirty = the four fields differ from the value the server sent, or a new banner was picked
+ *  * `Save changes` is disabled while clean; the first edit adds the `Unsaved changes` line above
+ *    the button, so the button never moves (§6.6)
+ *  * validation is inline and committed once: errors clear on the next keystroke, the first invalid
+ *    field scrolls into view and takes focus, and a server rejection keeps every entered value
+ *  * back on clean work finishes; back on dirty work asks first
+ *  * a failed save reports in the bar, never in a toast
+ *  * the Active / Completed fallback disables the fields and hides the save bar behind one line
  */
 class EditEventDetailsActivity : AppCompatActivity() {
 
     private lateinit var repository: OrganizerRepository
     private lateinit var eventId: String
-    private lateinit var content: LinearLayout
-    private lateinit var statusView: TextView
-    private lateinit var saveButton: Button
-    private lateinit var eventHeaderTitleView: TextView
-    private var screenTitle: String = EDIT_LABEL
 
+    private lateinit var scroll: ScrollView
+    private lateinit var head: View
     private lateinit var titleInput: EditText
-    private lateinit var descriptionInput: EditText
     private lateinit var venueInput: EditText
     private lateinit var capacityInput: EditText
-
-    private lateinit var regOpenView: TextView
-    private lateinit var regCloseView: TextView
-    private lateinit var eventStartView: TextView
-    private lateinit var eventEndView: TextView
-
+    private lateinit var descriptionInput: EditText
+    private lateinit var titleError: TextView
+    private lateinit var capacityNote: TextView
+    private lateinit var eventDatesValue: TextView
+    private lateinit var windowValue: TextView
     private lateinit var bannerPreview: ImageView
-    private lateinit var bannerStatus: TextView
+    private lateinit var bannerNote: TextView
     private lateinit var bannerPickButton: Button
+    private lateinit var saveBar: View
+    private lateinit var saveButton: Button
+    private lateinit var saveProgress: View
+    private lateinit var saveError: TextView
+    private lateinit var unsavedLine: TextView
+    private lateinit var lockedNote: TextView
 
     private var loadedEvent: OrganizerEventDto? = null
     private var selectedBannerFile: File? = null
-    private var newBannerFileId: String? = null
 
-    private val zoneId: ZoneId = ZoneId.of("Asia/Manila")
-    private val displayFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a")
+    /** Values as the server sent them; dirty is a plain comparison against this. */
+    private var original = Draft("", "", "", "")
+    private var bannerDirty = false
+    private var capacityErrorShown = false
+    private var saving = false
+    private var locked = false
+
+    /** Suppresses the dirty recalc while the loaded values are written into the fields. */
+    private var populating = false
 
     private val bannerPicker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let { launchBannerCrop(it) }
@@ -96,345 +112,317 @@ class EditEventDetailsActivity : AppCompatActivity() {
                     if (croppedUri != null) {
                         handleCroppedBanner(croppedUri)
                     } else {
-                        bannerStatus.text = getString(R.string.edit_event_details_unable_to_process_banner_please_try)
-                        bannerStatus.setTextColor(orgColors.error)
+                        showBannerNote(R.string.ui_organizer_edit_banner_failed, error = true)
                     }
                 }
                 result.resultCode == UCrop.RESULT_ERROR -> {
                     result.data?.let { UCrop.getError(it) }
-                    bannerStatus.text = getString(R.string.edit_event_details_unable_to_crop_banner_please_choose)
-                    bannerStatus.setTextColor(orgColors.error)
+                    showBannerNote(R.string.ui_organizer_edit_banner_failed, error = true)
                 }
             }
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_organizer_event_edit)
+        applyEventQrSystemBarAppearance(lightStatusBars = true)
         repository = OrganizerRepository(this)
-        eventId = intentEventId() ?: return showMissingEventScreen("Edit Event Details")
+        bindViews()
+        applySaveBarInsets()
 
-        screenTitle = if (intentEventViewOnly()) VIEW_LABEL else EDIT_LABEL
-        content = organizerShell(
-            title = screenTitle,
-            subtitle = null,
-            showBack = true,
-        )
-        content.addView(buildEventHeaderCard())
-        content.addView(buildLockedSchedule())
-        content.addView(buildForm())
-        statusView = styledText("", R.dimen.type_body_compact, false).apply {
-            id = com.thedavelopers.eventqr.R.id.eed_status
-            setPadding(dimenPx(R.dimen.space_xs), dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_xs), 0)
-        }
-        content.addView(statusView)
-        saveButton = primaryButton("Save Changes") { saveChanges() }.apply {
-            id = com.thedavelopers.eventqr.R.id.eed_save_button
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                dimenPx(R.dimen.space_xxxl),
-            ).apply { setMargins(0, dimenPx(R.dimen.space_md), 0, dimenPx(R.dimen.space_lg)) }
-        }
-        content.addView(saveButton)
+        eventId = intentEventId()
+            ?: return showMissingEventScreen(getString(R.string.ui_organizer_edit_title))
 
+        findViewById<TextView>(R.id.topBarTitle).setText(R.string.ui_organizer_edit_title)
+        findViewById<View>(R.id.topBarBack).setOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
+        }
+        bannerPickButton.setOnClickListener { bannerPicker.launch("image/*") }
+        wireInputs()
+        onBackPressedDispatcher.addCallback(this, backCallback)
         loadEvent()
     }
 
-    private fun buildEventHeaderCard(): LinearLayout = cardRes(R.dimen.space_lg).apply {
-        id = com.thedavelopers.eventqr.R.id.eed_event_header_card
-        tintBlock(R.color.ui_primary_container, R.drawable.bg_ui_block_r16)
-
-        val row = LinearLayout(this@EditEventDetailsActivity).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = android.view.Gravity.CENTER_VERTICAL
-        }
-
-        val iconBox = FrameLayout(this@EditEventDetailsActivity).apply {
-            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.tile_44), dimenPx(R.dimen.tile_44)).apply { marginEnd = dimenPx(R.dimen.space_md) }
-            tintBlock(R.color.secondary_container, R.drawable.bg_ui_block_r10)
-            addView(ImageView(this@EditEventDetailsActivity).apply {
-                layoutParams = FrameLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md), android.view.Gravity.CENTER)
-                setImageResource(AppIcons.Event)
-                setColorFilter(color(R.color.primary))
-            })
-        }
-        row.addView(iconBox)
-
-        val textStack = LinearLayout(this@EditEventDetailsActivity).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-
-            addView(styledText("EVENT NAME", R.dimen.type_overline, true, color(R.color.text_label)).apply {
-                setPadding(0, 0, 0, dimenPx(R.dimen.space_xxs))
-            })
-
-            eventHeaderTitleView = styledText(intentEventTitle()?.takeIf { it.isNotBlank() } ?: "-", R.dimen.type_title_large, true, color(R.color.text_primary)).apply {
-                id = com.thedavelopers.eventqr.R.id.eed_event_header_title
-            }
-            addView(eventHeaderTitleView)
-        }
-        row.addView(textStack)
-
-        addView(row)
+    private fun bindViews() {
+        scroll = findViewById(R.id.eeScroll)
+        head = findViewById(R.id.oeHead)
+        titleInput = findViewById(R.id.eeTitleInput)
+        venueInput = findViewById(R.id.eeVenueInput)
+        capacityInput = findViewById(R.id.eeCapacityInput)
+        descriptionInput = findViewById(R.id.eeDescriptionInput)
+        titleError = findViewById(R.id.eeTitleError)
+        capacityNote = findViewById(R.id.eeCapacityNote)
+        eventDatesValue = findViewById(R.id.eeEventDatesValue)
+        windowValue = findViewById(R.id.eeWindowValue)
+        bannerPreview = findViewById(R.id.eeBannerPreview)
+        bannerNote = findViewById(R.id.eeBannerNote)
+        bannerPickButton = findViewById(R.id.eeBannerPick)
+        saveBar = findViewById(R.id.eeSaveBar)
+        saveButton = findViewById(R.id.eeSaveButton)
+        saveProgress = findViewById(R.id.eeSaveProgress)
+        saveError = findViewById(R.id.eeSaveError)
+        unsavedLine = findViewById(R.id.eeUnsaved)
+        lockedNote = findViewById(R.id.eeLockedNote)
     }
 
-    private fun buildForm(): LinearLayout {
-        val formCard = cardRes(R.dimen.space_lg).apply {
-            id = com.thedavelopers.eventqr.R.id.eed_form_card
+    /**
+     * The bar is the last block in normal layout flow, so the keyboard and the gesture bar push it
+     * up instead of hiding it. `max(nav, ime)` holds for both the resized and the edge-to-edge
+     * window, and `adjustResize` in the manifest covers the older path.
+     */
+    private fun applySaveBarInsets() {
+        val baseBottom = saveBar.paddingBottom
+        ViewCompat.setOnApplyWindowInsetsListener(saveBar) { view, insets ->
+            val nav = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+            view.updatePadding(bottom = baseBottom + max(nav, ime))
+            insets
         }
+        ViewCompat.requestApplyInsets(saveBar)
+    }
 
-        val headerRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = android.view.Gravity.CENTER_VERTICAL
-            setPadding(0, 0, 0, dimenPx(R.dimen.space_md))
+    /** Focus alone is not enough on a resized window: every field brings itself (and its label) in. */
+    private fun wireInputs() {
+        val watcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+            override fun afterTextChanged(s: Editable?) = onDraftChanged()
         }
-
-        val iconBox = FrameLayout(this).apply {
-            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.tile_38), dimenPx(R.dimen.tile_38)).apply { marginEnd = dimenPx(R.dimen.space_10) }
-            tintBlock(R.color.secondary_container, R.drawable.bg_ui_block_r10)
-            addView(ImageView(this@EditEventDetailsActivity).apply {
-                layoutParams = FrameLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md), android.view.Gravity.CENTER)
-                setImageResource(AppIcons.Edit)
-                setColorFilter(color(R.color.primary))
-            })
+        listOf(titleInput, venueInput, capacityInput, descriptionInput).forEach { input ->
+            input.addTextChangedListener(watcher)
+            input.setOnFocusChangeListener { view, hasFocus -> if (hasFocus) ensureVisible(view) }
         }
-        headerRow.addView(iconBox)
+    }
 
-        headerRow.addView(styledText("Editable details", R.dimen.type_body_large, true, orgColors.text).apply {
-            id = com.thedavelopers.eventqr.R.id.eed_form_title
-        })
-
-        formCard.addView(headerRow)
-
-        titleInput = addInputRow(
-            formCard,
-            "Title",
-            AppIcons.Edit,
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES,
-        ).apply {
-            id = com.thedavelopers.eventqr.R.id.eed_title_input
-            addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    val newTitle = s?.toString()?.trim().orEmpty()
-                    if (newTitle.isNotBlank()) {
-                        eventHeaderTitleView.text = newTitle
-                    }
-                }
-                override fun afterTextChanged(s: Editable?) {}
-            })
+    private fun ensureVisible(field: View) {
+        field.post {
+            val slack = resources.getDimensionPixelSize(R.dimen.space_24)
+            scroll.requestChildRectangleOnScreen(
+                field,
+                Rect(0, -slack, field.width, field.height + slack),
+                true,
+            )
         }
+    }
 
-        descriptionInput = addInputRow(
-            formCard,
-            "Description",
-            AppIcons.Document,
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_MULTI_LINE,
-            singleLine = false,
-            minLines = 3,
-        ).apply {
-            id = com.thedavelopers.eventqr.R.id.eed_description_input
-        }
+    // ---------------------------------------------------------------- data
 
-        venueInput = addInputRow(
-            formCard,
-            "Venue",
-            AppIcons.Location,
-        ).apply {
-            id = com.thedavelopers.eventqr.R.id.eed_venue_input
+    private fun loadEvent() {
+        lifecycleScope.launch {
+            when (val result = repository.fetchOrganizerEvent(eventId)) {
+                is NetworkResult.Success -> result.data?.let { populate(it) }
+                is NetworkResult.Error -> showMissingEventScreen(
+                    getString(R.string.ui_organizer_edit_title),
+                    result.message ?: getString(R.string.event_management_hub_details_load_failed),
+                )
+                NetworkResult.Loading -> Unit
+            }
         }
+    }
 
-        capacityInput = addInputRow(
-            formCard,
-            "Capacity",
-            AppIcons.People,
-            inputType = InputType.TYPE_CLASS_NUMBER,
-        ).apply {
-            id = com.thedavelopers.eventqr.R.id.eed_capacity_input
-        }
-
-        val bannerHeaderRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = android.view.Gravity.CENTER_VERTICAL
-            setPadding(0, dimenPx(R.dimen.space_lg), 0, dimenPx(R.dimen.space_sm))
-        }
-        val bannerIconBox = FrameLayout(this).apply {
-            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_tile_sm), dimenPx(R.dimen.icon_tile_sm)).apply { marginEnd = dimenPx(R.dimen.space_10) }
-            tintBlock(R.color.secondary_container, R.drawable.bg_ui_block_r10)
-            addView(ImageView(this@EditEventDetailsActivity).apply {
-                layoutParams = FrameLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md), android.view.Gravity.CENTER)
-                setImageResource(AppIcons.Camera)
-                setColorFilter(color(R.color.primary))
-            })
-        }
-        bannerHeaderRow.addView(bannerIconBox)
-        bannerHeaderRow.addView(styledText("Event Banner", R.dimen.type_body, true, orgColors.text))
-        formCard.addView(bannerHeaderRow)
-
-        bannerPreview = ImageView(this).apply {
-            id = com.thedavelopers.eventqr.R.id.eed_banner_preview
-            adjustViewBounds = true
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            tintBlock(R.color.surface_muted, R.drawable.bg_ui_block_r10)
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dimenPx(R.dimen.size_180))
-        }
-        formCard.addView(bannerPreview)
-
-        formCard.addView(
-            styledText("No banner set. Tap below to choose a 16:9 landscape image.", R.dimen.type_caption, false, orgColors.muted).apply {
-                id = com.thedavelopers.eventqr.R.id.eed_banner_status
-                setPadding(0, dimenPx(R.dimen.space_sm), 0, 0)
-            }.also { bannerStatus = it },
+    private fun populate(event: OrganizerEventDto) {
+        loadedEvent = event
+        locked = isLocked(event)
+        val status = EventStatusBadgeStyler.resolve(
+            EventStatusBadgeStyler.fromLabel(event.status),
+            event.eventStartAt,
+            event.eventEndAt,
+        )
+        OrganizerEventHeadBinder.bind(
+            root = head,
+            title = event.title?.takeIf { it.isNotBlank() }
+                ?: getString(R.string.organizer_untitled_event),
+            status = status,
+            whenText = null,
+            whereText = null,
         )
 
-        formCard.addView(ghostButton("Choose new banner") { bannerPicker.launch("image/*") }.apply {
-            id = com.thedavelopers.eventqr.R.id.eed_banner_pick_button
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dimenPx(R.dimen.tile_44)).apply {
-                setMargins(0, dimenPx(R.dimen.space_10), 0, 0)
-            }
-        }.also { bannerPickButton = it })
+        populating = true
+        titleInput.setText(event.title.orEmpty())
+        venueInput.setText(event.venue.orEmpty())
+        descriptionInput.setText(event.description.orEmpty())
+        // A machine-facing numeric field: no grouping, ASCII digits, so Locale.ROOT is correct.
+        capacityInput.setText(String.format(Locale.ROOT, "%d", event.capacity.coerceAtLeast(0)))
+        populating = false
 
-        formCard.addView(
-            styledText("Locked: eventId, organizer, approval status, registration windows, start date, end date and rewards stay unchanged.", R.dimen.type_caption, false, orgColors.muted).apply {
-                id = com.thedavelopers.eventqr.R.id.eed_locked_note
-                setPadding(0, dimenPx(R.dimen.space_14), 0, 0)
+        eventDatesValue.text = eventDatesText(event)
+        windowValue.text = registrationWindow(event)
+        original = draft()
+        bannerDirty = false
+        selectedBannerFile = null
+        loadBannerPreview(event)
+        if (locked) applyLock(event) else renderDirty()
+    }
+
+    private fun isLocked(event: OrganizerEventDto): Boolean =
+        event.status.equals("Active", ignoreCase = true) ||
+            event.status.equals("Completed", ignoreCase = true)
+
+    /** The one locked state that survives: no fields, no bar, one line that says why. */
+    private fun applyLock(event: OrganizerEventDto) {
+        val reason = getString(
+            if (event.status.equals("Active", ignoreCase = true)) {
+                R.string.edit_event_details_ongoing
+            } else {
+                R.string.edit_event_details_completed
             },
         )
-        return formCard
+        lockedNote.text = getString(R.string.edit_event_details_editing_locked, reason)
+        lockedNote.visibility = View.VISIBLE
+        listOf(titleInput, venueInput, capacityInput, descriptionInput).forEach { it.isEnabled = false }
+        bannerPickButton.isEnabled = false
+        saveBar.visibility = View.GONE
+        // The bar carried the navigation-bar inset; with it gone the scroll takes it over, so the
+        // last section never sits under the gesture bar.
+        scroll.applyEventQrBottomInsetPadding()
     }
 
-    private fun buildLockedSchedule(): LinearLayout {
-        val scheduleCard = cardRes(R.dimen.space_lg).apply {
-            id = com.thedavelopers.eventqr.R.id.eed_schedule_card
+    /** `12 Jun 2026, 9:00 AM - 5:00 PM`, the range when the event spans days. */
+    private fun eventDatesText(event: OrganizerEventDto): String {
+        val start = event.eventStartAt ?: return getString(R.string.ui_organizer_value_unavailable)
+        val end = event.eventEndAt
+        val date = if (end != null &&
+            DateFormatters.formatEventDate(end) != DateFormatters.formatEventDate(start)
+        ) {
+            getString(
+                R.string.event_detail_date_range,
+                DateFormatters.formatEventDate(start),
+                DateFormatters.formatEventDate(end),
+            )
+        } else {
+            DateFormatters.formatEventDate(start)
         }
-
-        val headerRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = android.view.Gravity.CENTER_VERTICAL
-            setPadding(0, 0, 0, dimenPx(R.dimen.space_md))
+        val time = if (end != null) {
+            "${DateFormatters.formatTime(start)} - ${DateFormatters.formatTime(end)}"
+        } else {
+            DateFormatters.formatTime(start)
         }
-
-        val iconBox = FrameLayout(this).apply {
-            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.tile_38), dimenPx(R.dimen.tile_38)).apply { marginEnd = dimenPx(R.dimen.space_10) }
-            tintBlock(R.color.secondary_container, R.drawable.bg_ui_block_r10)
-            addView(ImageView(this@EditEventDetailsActivity).apply {
-                layoutParams = FrameLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md), android.view.Gravity.CENTER)
-                setImageResource(AppIcons.Event)
-                setColorFilter(color(R.color.primary))
-            })
-        }
-        headerRow.addView(iconBox)
-
-        headerRow.addView(styledText("Schedule (Locked)", R.dimen.type_body_large, true, orgColors.text).apply {
-            id = com.thedavelopers.eventqr.R.id.eed_schedule_title
-            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-        })
-
-        headerRow.addView(styledText("🔒 Locked", R.dimen.type_overline, true, color(R.color.primary)).apply {
-            setPadding(dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_xs), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_xs))
-            tintBlock(R.color.secondary_container, R.drawable.bg_ui_block_r10)
-        })
-
-        scheduleCard.addView(headerRow)
-
-        regOpenView = addLockedRow(scheduleCard, "Registration Start Date & Time", AppIcons.Time)!!.apply {
-            id = com.thedavelopers.eventqr.R.id.eed_reg_open_value
-        }
-        regCloseView = addLockedRow(scheduleCard, "Registration End Date & Time", AppIcons.Time)!!.apply {
-            id = com.thedavelopers.eventqr.R.id.eed_reg_close_value
-        }
-        eventStartView = addLockedRow(scheduleCard, "Event Start Date & Time", AppIcons.Event)!!.apply {
-            id = com.thedavelopers.eventqr.R.id.eed_event_start_value
-        }
-        eventEndView = addLockedRow(scheduleCard, "Event End Date & Time", AppIcons.Event)!!.apply {
-            id = com.thedavelopers.eventqr.R.id.eed_event_end_value
-        }
-        return scheduleCard
+        return "$date, $time"
     }
 
-    private fun addLockedRow(parent: LinearLayout, label: String, iconRes: Int): TextView? {
-        val rowContainer = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = android.view.Gravity.CENTER_VERTICAL
-            setPadding(0, dimenPx(R.dimen.space_sm), 0, dimenPx(R.dimen.space_sm))
+    private fun registrationWindow(event: OrganizerEventDto): String {
+        val open = event.registrationOpenAt?.let { DateFormatters.displayFormatter.format(it) }
+        val close = event.registrationCloseAt?.let { DateFormatters.displayFormatter.format(it) }
+        return when {
+            open != null && close != null -> "$open - $close"
+            else -> open ?: close ?: getString(R.string.ui_organizer_value_unavailable)
         }
-
-        val iconBox = FrameLayout(this).apply {
-            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_tile_sm), dimenPx(R.dimen.icon_tile_sm)).apply { marginEnd = dimenPx(R.dimen.space_10) }
-            tintBlock(R.color.secondary_container, R.drawable.bg_ui_block_r10)
-            addView(ImageView(this@EditEventDetailsActivity).apply {
-                layoutParams = FrameLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md), android.view.Gravity.CENTER)
-                setImageResource(iconRes)
-                setColorFilter(color(R.color.primary))
-            })
-        }
-        rowContainer.addView(iconBox)
-
-        val rightStack = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-            addView(styledText(label, R.dimen.type_body_compact, true, orgColors.text).apply { setPadding(0, 0, 0, dimenPx(R.dimen.space_xs)) })
-
-            val value = styledText("-", R.dimen.type_body_compact, false, color(R.color.text_secondary)).apply {
-                tintBlock(R.color.surface_muted, R.drawable.bg_ui_block_r10)
-                setPadding(dimenPx(R.dimen.space_14), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_14), dimenPx(R.dimen.space_10))
-                isEnabled = false
-            }
-            addView(value)
-        }
-        rowContainer.addView(rightStack)
-        parent.addView(rowContainer)
-
-        return rightStack.getChildAt(1) as? TextView
     }
 
-    private fun addInputRow(
-        parent: LinearLayout,
-        label: String,
-        iconRes: Int,
-        inputType: Int = InputType.TYPE_CLASS_TEXT,
-        singleLine: Boolean = true,
-        minLines: Int = 1,
-    ): EditText {
-        val rowContainer = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = if (singleLine) android.view.Gravity.CENTER_VERTICAL else android.view.Gravity.TOP
-            setPadding(0, dimenPx(R.dimen.space_sm), 0, dimenPx(R.dimen.space_sm))
+    // ---------------------------------------------------------------- dirty state
+
+    private data class Draft(
+        val title: String,
+        val venue: String,
+        val capacity: String,
+        val description: String,
+    )
+
+    private fun draft(): Draft = Draft(
+        title = titleInput.text.toString().trim(),
+        venue = venueInput.text.toString().trim(),
+        capacity = capacityInput.text.toString().trim(),
+        description = descriptionInput.text.toString().trim(),
+    )
+
+    private fun isDirty(): Boolean = bannerDirty || draft() != original
+
+    private fun renderDirty() {
+        if (locked) {
+            saveButton.isEnabled = false
+            unsavedLine.visibility = View.GONE
+            return
+        }
+        val dirty = isDirty()
+        saveButton.isEnabled = dirty && !saving && loadedEvent != null
+        unsavedLine.isVisible = dirty
+    }
+
+    private fun onDraftChanged() {
+        if (populating) return
+        applyHeadTitle()
+        if (titleError.isVisible) setTitleError(titleErrorFor())
+        if (capacityErrorShown) setCapacityError(capacityErrorFor())
+        renderDirty()
+    }
+
+    /** The head is bound from data, so a typed title has to follow it - text and its one a11y node. */
+    private fun applyHeadTitle() {
+        val title = titleInput.text.toString().trim()
+        head.findViewById<TextView>(R.id.oeHeadTitle).text = title
+        val status = head.findViewById<TextView>(R.id.oeHeadStatus).text?.toString().orEmpty()
+        head.findViewById<View>(R.id.oeHeadTitleRow).contentDescription =
+            if (status.isNotBlank()) "$title, $status" else title
+    }
+
+    // ---------------------------------------------------------------- validation
+
+    private fun titleErrorFor(): String? =
+        if (titleInput.text.toString().isBlank()) {
+            getString(R.string.ui_organizer_edit_title_required)
+        } else {
+            null
         }
 
-        val iconBox = FrameLayout(this).apply {
-            layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_tile_sm), dimenPx(R.dimen.icon_tile_sm)).apply {
-                marginEnd = dimenPx(R.dimen.space_10)
-                if (!singleLine) topMargin = dimenPx(R.dimen.space_xs)
-            }
-            tintBlock(R.color.secondary_container, R.drawable.bg_ui_block_r10)
-            addView(ImageView(this@EditEventDetailsActivity).apply {
-                layoutParams = FrameLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md), android.view.Gravity.CENTER)
-                setImageResource(iconRes)
-                setColorFilter(color(R.color.primary))
-            })
+    private fun capacityErrorFor(): String? {
+        val registered = loadedEvent?.currentAttendeeCount?.coerceAtLeast(0) ?: 0
+        val value = capacityInput.text.toString().trim().toIntOrNull()
+        return when {
+            value == null || value <= 0 -> getString(R.string.ui_organizer_edit_capacity_required)
+            // Data-backed rule: a capacity under the registrations already taken is refused inline
+            // instead of round-tripping to the server.
+            value < registered ->
+                getString(R.string.ui_organizer_edit_capacity_minimum, formatCount(registered))
+            else -> null
         }
-        rowContainer.addView(iconBox)
+    }
 
-        val rightStack = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-            addView(styledText(label, R.dimen.type_body_compact, true, orgColors.text).apply { setPadding(0, 0, 0, dimenPx(R.dimen.space_xs)) })
+    private fun setTitleError(message: String?) {
+        titleError.text = message.orEmpty()
+        titleError.visibility = if (message == null) View.GONE else View.VISIBLE
+        titleInput.setBackgroundResource(
+            if (message == null) R.drawable.bg_ui_field else R.drawable.bg_ui_field_error,
+        )
+    }
 
-            val editText = EditText(this@EditEventDetailsActivity).apply {
-                this.inputType = inputType
-                isSingleLine = singleLine
-                this.minLines = minLines
-                setTextSizeRes(R.dimen.type_body_medium)
-                setTextColor(orgColors.text)
-                tintBlock(R.color.background, R.drawable.bg_ui_block_r10)
-                setPadding(dimenPx(R.dimen.space_14), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_14), dimenPx(R.dimen.space_10))
-            }
-            addView(editText)
+    /** One micro slot: the helper at rest, the error (in `ui_error`) once the field is invalid. */
+    private fun setCapacityError(message: String?) {
+        capacityErrorShown = message != null
+        if (message == null) {
+            capacityNote.setText(R.string.ui_organizer_edit_capacity_helper)
+            capacityNote.setTextColor(ContextCompat.getColor(this, R.color.ui_text_secondary))
+            capacityInput.setBackgroundResource(R.drawable.bg_ui_field)
+        } else {
+            capacityNote.text = message
+            capacityNote.setTextColor(ContextCompat.getColor(this, R.color.ui_error))
+            capacityInput.setBackgroundResource(R.drawable.bg_ui_field_error)
         }
-        rowContainer.addView(rightStack)
-        parent.addView(rowContainer)
+    }
 
-        return rightStack.getChildAt(1) as EditText
+    private fun validate(): Boolean {
+        val title = titleErrorFor()
+        val capacity = capacityErrorFor()
+        setTitleError(title)
+        setCapacityError(capacity)
+        val firstInvalid = when {
+            title != null -> titleInput
+            capacity != null -> capacityInput
+            else -> null
+        }
+        firstInvalid?.let {
+            it.requestFocus()
+            ensureVisible(it)
+        }
+        return firstInvalid == null
+    }
+
+    // ---------------------------------------------------------------- banner
+
+    private fun showBannerNote(stringRes: Int, error: Boolean = false) {
+        bannerNote.setText(stringRes)
+        bannerNote.setTextColor(
+            ContextCompat.getColor(this, if (error) R.color.ui_error else R.color.ui_text_secondary),
+        )
     }
 
     private fun launchBannerCrop(sourceUri: Uri) {
@@ -461,27 +449,24 @@ class EditEventDetailsActivity : AppCompatActivity() {
         }.onSuccess {
             if (croppedFile.length() > MAX_BANNER_BYTES) {
                 croppedFile.delete()
-                bannerStatus.text = getString(R.string.edit_event_details_banner_must_not_exceed_5_mb_please_c)
-                bannerStatus.setTextColor(orgColors.error)
+                showBannerNote(R.string.ui_organizer_edit_banner_too_large, error = true)
                 return
             }
             selectedBannerFile?.delete()
             selectedBannerFile = croppedFile
+            bannerDirty = true
             bannerPreview.setImageURI(croppedUri)
-            bannerPreview.background = null
-            bannerStatus.text = getString(R.string.edit_event_details_new_banner_selected_16_9_it_will_be)
-            bannerStatus.setTextColor(orgColors.accent)
+            showBannerNote(R.string.ui_organizer_edit_banner_selected)
+            renderDirty()
         }.onFailure {
-            bannerStatus.text = getString(R.string.edit_event_details_unable_to_attach_banner_please_choos)
-            bannerStatus.setTextColor(orgColors.error)
+            showBannerNote(R.string.ui_organizer_edit_banner_failed, error = true)
         }
     }
 
     private fun loadBannerPreview(current: OrganizerEventDto) {
         val fileId = current.eventLogoUrl?.trim().orEmpty()
         if (fileId.isBlank()) {
-            bannerPreview.visibility = View.GONE
-            bannerStatus.text = getString(R.string.edit_event_details_no_banner_set_tap_below_to_choose_a)
+            showBannerNote(R.string.ui_organizer_edit_banner_note)
             return
         }
         lifecycleScope.launch {
@@ -489,7 +474,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
                 is NetworkResult.Success -> {
                     val encoded = result.data?.contentBase64
                     if (encoded.isNullOrBlank()) {
-                        bannerPreview.visibility = View.GONE
+                        showBannerNote(R.string.ui_organizer_edit_banner_note)
                         return@launch
                     }
                     runCatching {
@@ -498,129 +483,85 @@ class EditEventDetailsActivity : AppCompatActivity() {
                     }.onSuccess { bitmap ->
                         if (bitmap != null) {
                             bannerPreview.setImageBitmap(bitmap)
-                            bannerPreview.background = null
-                            bannerPreview.visibility = View.VISIBLE
-                            bannerStatus.text = getString(R.string.edit_event_details_current_banner_tap_below_to_replace)
+                            showBannerNote(R.string.ui_organizer_edit_banner_current)
                         } else {
-                            bannerPreview.visibility = View.GONE
+                            // A stored banner that will not decode leaves the empty plate, and the
+                            // note keeps stating the constraint instead of claiming an image.
+                            showBannerNote(R.string.ui_organizer_edit_banner_note)
                         }
                     }.onFailure {
-                        bannerPreview.visibility = View.GONE
+                        showBannerNote(R.string.ui_organizer_edit_banner_note)
                     }
                 }
-                is NetworkResult.Error -> bannerPreview.visibility = View.GONE
+                is NetworkResult.Error -> showBannerNote(R.string.ui_organizer_edit_banner_note)
                 NetworkResult.Loading -> Unit
             }
         }
     }
 
-    private fun loadEvent() {
-        lifecycleScope.launch {
-            when (val result = repository.fetchOrganizerEvent(eventId)) {
-                is NetworkResult.Success -> result.data?.let { populate(it) }
-                is NetworkResult.Error -> {
-                    statusView.text = result.message
-                    statusView.setTextColor(orgColors.error)
-                    saveButton.isEnabled = false
-                }
-                NetworkResult.Loading -> Unit
-            }
-        }
+    // ---------------------------------------------------------------- save
+
+    private fun setSaving(value: Boolean) {
+        saving = value
+        saveProgress.visibility = if (value) View.VISIBLE else View.GONE
+        saveButton.text = if (value) "" else getString(R.string.ui_organizer_edit_save)
+        saveButton.contentDescription =
+            if (value) getString(R.string.ui_organizer_edit_saving) else null
+        renderDirty()
     }
 
-    private fun populate(event: OrganizerEventDto) {
-        loadedEvent = event
-        val titleText = event.title.orEmpty()
-        eventHeaderTitleView.text = titleText.ifBlank { "-" }
-        titleInput.setText(titleText)
-        descriptionInput.setText(event.description.orEmpty())
-        venueInput.setText(event.venue.orEmpty())
-        capacityInput.setText(event.capacity.coerceAtLeast(0).toString())
-        regOpenView.text = event.registrationOpenAt?.let { formatLockedInstant(it) } ?: "-"
-        regCloseView.text = event.registrationCloseAt?.let { formatLockedInstant(it) } ?: "-"
-        eventStartView.text = event.eventStartAt?.let { formatLockedInstant(it) } ?: "-"
-        eventEndView.text = event.eventEndAt?.let { formatLockedInstant(it) } ?: "-"
-        loadBannerPreview(event)
-        if (isEditLocked(event)) applyEditLock(event)
-    }
-
-    private fun formatLockedInstant(instant: java.time.Instant): String =
-        java.time.LocalDateTime.ofInstant(instant, zoneId).format(displayFormatter)
-
-    private fun isEditLocked(event: OrganizerEventDto): Boolean =
-        event.status.equals("Active", ignoreCase = true) ||
-            event.status.equals("Completed", ignoreCase = true)
-
-    private fun applyEditLock(event: OrganizerEventDto) {
-        val reason = getString(if (event.status.equals("Active", ignoreCase = true)) R.string.edit_event_details_ongoing else R.string.edit_event_details_completed)
-        statusView.text = getString(R.string.edit_event_details_editing_locked, reason)
-        statusView.setTextColor(orgColors.error)
-        screenTitle = VIEW_LABEL
-        updateHeaderTitle(VIEW_LABEL)
-        listOf(titleInput, descriptionInput, venueInput, capacityInput).forEach { it.isEnabled = false }
-        bannerPickButton.isEnabled = false
-        saveButton.visibility = View.GONE
-    }
-
-    private fun updateHeaderTitle(label: String) {
-        var parent: android.view.ViewParent? = content.parent
-        while (parent is ViewGroup && parent.parent is ViewGroup) parent = parent.parent
-        val root = parent as? ViewGroup ?: return
-        fun find(group: ViewGroup): TextView? {
-            for (i in 0 until group.childCount) {
-                val child = group.getChildAt(i)
-                if (child is TextView) {
-                    val text = child.text?.toString()
-                    if (text == EDIT_LABEL || text == VIEW_LABEL) return child
-                    continue
-                }
-                if (child is ViewGroup) find(child)?.let { return it }
-            }
-            return null
-        }
-        find(root)?.text = label
+    private fun showSaveFailure(message: String?) {
+        saveError.text = message?.takeIf { it.isNotBlank() }?.let {
+            getString(R.string.ui_organizer_edit_save_failed, it)
+        } ?: getString(R.string.ui_organizer_edit_save_failed_plain)
+        saveError.visibility = View.VISIBLE
     }
 
     private fun saveChanges() {
-        val title = titleInput.text.toString().trim()
-        val capacityValue = capacityInput.text.toString().trim().toIntOrNull()
+        if (saving || locked) return
+        if (!validate()) return
+        val current = loadedEvent ?: return
 
-        titleInput.error = if (title.isBlank()) "Title is required" else null
-        if (capacityValue == null || capacityValue <= 0) capacityInput.error = getString(R.string.edit_event_details_capacity_must_be_greater_than_0)
-        if (title.isBlank() || capacityValue == null || capacityValue <= 0) return
-
-        val current = loadedEvent ?: run {
-            Toast.makeText(this, this.getString(R.string.edit_event_details_event_not_loaded_yet), Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        saveButton.isEnabled = false
-        statusView.text = ""
+        saveError.visibility = View.GONE
+        setSaving(true)
         lifecycleScope.launch {
             val uploadResult = selectedBannerFile?.let { file ->
-                when (val result = withContext(NonCancellable) { repository.uploadEventBanner(file) }.also { ensureActive() }) {
+                when (
+                    val result = withContext(NonCancellable) {
+                        repository.uploadEventBanner(file)
+                    }.also { ensureActive() }
+                ) {
                     is NetworkResult.Success -> result.data?.fileId?.toString()
                     is NetworkResult.Error -> {
-                        statusView.text = result.message.ifBlank { "Could not upload banner. Please try another image." }
-                        statusView.setTextColor(orgColors.error)
-                        saveButton.isEnabled = true
+                        setSaving(false)
+                        showSaveFailure(result.message)
                         return@launch
                     }
                     NetworkResult.Loading -> null
                 }
             }
-            val bannerFileId = uploadResult ?: newBannerFileId ?: current.eventLogoUrl
+            val bannerFileId = uploadResult ?: current.eventLogoUrl
 
             val request = buildRequest(current, bannerFileId)
-            when (val result = withContext(NonCancellable) { repository.updateOrganizerEvent(eventId, request) }.also { ensureActive() }) {
+            when (
+                val result = withContext(NonCancellable) {
+                    repository.updateOrganizerEvent(eventId, request)
+                }.also { ensureActive() }
+            ) {
                 is NetworkResult.Success -> {
-                    Toast.makeText(this@EditEventDetailsActivity, this@EditEventDetailsActivity.getString(R.string.edit_event_details_event_updated), Toast.LENGTH_SHORT).show()
+                    original = draft()
+                    bannerDirty = false
+                    Toast.makeText(
+                        this@EditEventDetailsActivity,
+                        getString(R.string.edit_event_details_event_updated),
+                        Toast.LENGTH_SHORT,
+                    ).show()
                     finish()
                 }
                 is NetworkResult.Error -> {
-                    statusView.text = result.message
-                    statusView.setTextColor(orgColors.error)
-                    saveButton.isEnabled = true
+                    // Every entered value stays; the failure lives in the bar.
+                    setSaving(false)
+                    showSaveFailure(result.message)
                 }
                 NetworkResult.Loading -> Unit
             }
@@ -640,9 +581,20 @@ class EditEventDetailsActivity : AppCompatActivity() {
         rewardsEnabled = current.rewardsEnabled ?: false,
     )
 
+    // ---------------------------------------------------------------- back
+
+    private val backCallback = object : OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() {
+            if (saving) return
+            if (!isDirty()) {
+                finish()
+                return
+            }
+            DiscardChangesDialog.create(this@EditEventDetailsActivity) { finish() }.show()
+        }
+    }
+
     companion object {
         private const val MAX_BANNER_BYTES = 5L * 1024L * 1024L
-        private const val EDIT_LABEL = "Edit Event Details"
-        private const val VIEW_LABEL = "View Event Details"
     }
 }

@@ -27,7 +27,12 @@
     <dimen name="ui_pass_head_identity_height">116dp</dimen>   <!-- minHeight: grows with fontScale -->
     <dimen name="ui_pass_head_row_tabs">56dp</dimen>
     <dimen name="ui_pass_head_title_min">44dp</dimen>
-    <dimen name="ui_pass_head_stub_height">56dp</dimen>
+    <dimen name="ui_pass_head_stub_height">60dp</dimen>
+    <!-- Breathing room above the value and below the label inside the stub. Small enough that the
+         default-scale content (value + gap + label = ~47dp) still sits inside the 60dp floor, so
+         1.0 renders exactly 60dp; at larger font scales the band grows and this stays as the clear
+         margin between the glyphs and the band edge instead of 0dp. -->
+    <dimen name="ui_pass_head_stub_pad_v">4dp</dimen>
     <dimen name="ui_pass_head_compact_row">20dp</dimen>
     <!-- ~40% of the 280dp title row at the narrowest supported width (320dp), so the title keeps
          at least ~55% of the row at every width. Within the cap the count autosizes from the
@@ -138,9 +143,11 @@
     <dimen name="ui_mark_bar_auth">20dp</dimen>          <!-- 56dp auth bar lockup -->
     <dimen name="ui_mark_splash">64dp</dimen>            <!-- splash, mark alone -->
     <!-- The launcher mask is a circle of about 0.60 of the 108dp canvas, so a square mark must be
-         <= 0.707 of that circle to keep its four corners: 108 x 0.60 x 0.707 = 46.1dp. 64dp cut every
-         corner (the mark's half-diagonal was 45.3dp against a 32.4dp mask radius). -->
-    <dimen name="ui_mark_launcher">46dp</dimen>          <!-- adaptive icon ink of the 108dp canvas -->
+         <= 0.707 of that circle to keep its four corners: 108 x 0.60 x 0.707 = 46.1dp, which stays the
+         documented circle-safe maximum. 40dp is chosen deliberately: a smaller mark on the home screen
+         still clears the mask with 6dp to spare. 64dp cut every corner (the mark's half-diagonal was
+         45.3dp against a 32.4dp mask radius). -->
+    <dimen name="ui_mark_launcher">40dp</dimen>          <!-- adaptive icon ink of the 108dp canvas (46dp is the circle-safe max) -->
     <dimen name="ui_mark_launcher_canvas">108dp</dimen>
     <!-- Lockup gap is an OPTICAL 12dp: letterSpacing adds ~0.08em before the first glyph and 'E' carries
          its own sidebearing, so a 12dp margin renders as a 14.1dp ink gap. 10dp lands the measured gap

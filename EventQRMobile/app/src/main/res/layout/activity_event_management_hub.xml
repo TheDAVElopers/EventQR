@@ -98,19 +98,26 @@
                     android:background="@drawable/divider_perforation_dark"
                     android:importantForAccessibility="no" />
 
-                <!-- Block B: stub, three equal slots on the tonal step. -->
+                <!-- Block B: stub, three equal slots on the tonal step.
+                     56dp is a minimum - the value over the label grows with the font scale, so a
+                     fixed height clips the label (same rule as include_pass_head.xml). -->
                 <LinearLayout
                     android:id="@+id/emh_stats_row"
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/ui_pass_head_stub_height"
+                    android:layout_height="wrap_content"
                     android:background="@drawable/bg_pass_stub"
                     android:baselineAligned="false"
+                    android:clipChildren="false"
                     android:gravity="center_vertical"
+                    android:minHeight="@dimen/ui_pass_head_stub_height"
                     android:orientation="horizontal"
                     android:paddingStart="@dimen/ui_gutter">
 
                     <LinearLayout
                         android:id="@+id/emh_stat_cell_1"
+                        android:clipChildren="false"
+                        android:paddingTop="@dimen/ui_pass_head_stub_pad_v"
+                        android:paddingBottom="@dimen/ui_pass_head_stub_pad_v"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -146,6 +153,9 @@
 
                     <LinearLayout
                         android:id="@+id/emh_stat_cell_2"
+                        android:clipChildren="false"
+                        android:paddingTop="@dimen/ui_pass_head_stub_pad_v"
+                        android:paddingBottom="@dimen/ui_pass_head_stub_pad_v"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -182,6 +192,9 @@
 
                     <LinearLayout
                         android:id="@+id/emh_stat_cell_3"
+                        android:clipChildren="false"
+                        android:paddingTop="@dimen/ui_pass_head_stub_pad_v"
+                        android:paddingBottom="@dimen/ui_pass_head_stub_pad_v"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"

@@ -1,18 +1,29 @@
 package com.thedavelopers.eventqr.ui.components
 
 import android.content.Context
+import android.graphics.Rect
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.compose.ui.platform.ComposeView
+import androidx.core.content.ContextCompat
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import com.thedavelopers.eventqr.features.ShadowEncryptedSharedPreferences
 import com.thedavelopers.eventqr.features.ShadowMasterKeys
+import com.thedavelopers.eventqr.features.organizer.events.DiscardChangesDialog
+import com.thedavelopers.eventqr.features.organizer.events.OrganizerEventHeadBinder
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -64,6 +75,234 @@ class ComponentInflationTest {
         assertEquals(View.GONE, root.findViewById<View>(R.id.passHeadCell3).visibility)
         assertEquals(View.GONE, root.findViewById<View>(R.id.passHeadDivider3).visibility)
         assertEquals(View.VISIBLE, root.findViewById<View>(R.id.passHeadBellBadge).visibility)
+    }
+
+    /**
+     * Regression for the notched bell badge: the 18dp count sits with a -2dp top/end margin (§4.6),
+     * so it overhangs the 44dp bell frame by 2dp. Every ancestor that could clip it has to opt out,
+     * otherwise the badge renders as a circle with its top-end corner bitten off.
+     */
+    @Test
+    fun passHead_bellBadge_isNotClippedByItsAncestors() {
+        val root = inflate(R.layout.include_pass_head, LinearLayout(themedContext()))
+        PassHeadBinder.bind(root, PassHeadModel(title = "Juan", bellCount = 8))
+
+        root.measure(
+            View.MeasureSpec.makeMeasureSpec(1080, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+        )
+        root.layout(0, 0, root.measuredWidth, root.measuredHeight)
+
+        val bell = root.findViewById<ViewGroup>(R.id.passHeadBell)
+        val badge = root.findViewById<View>(R.id.passHeadBellBadge)
+        val row0 = bell.parent as ViewGroup
+        val identity = row0.parent as ViewGroup
+
+        // The spec's -2dp offset makes the badge overhang the bell frame on the top and end edges.
+        assertTrue("badge does not overhang the bell frame", badge.right > bell.width && badge.top < 0)
+        // So no ancestor may clip it. clipChildren has to be off all the way up: in hardware
+        // rendering a child is clipped to its own bounds whenever its PARENT keeps clipChildren,
+        // so leaving it on Block A clipped row0 (and the badge inside it) at the gutter edge.
+        assertFalse("passHeadBell clips the badge", bell.clipChildren)
+        assertFalse("row0 clips the badge", row0.clipChildren)
+        assertFalse("passHeadIdentity clips the badge", identity.clipChildren)
+        // The software path clips to the padded rect instead, hence the padding opt-out too.
+        assertFalse("passHeadIdentity clips the badge to its padding", identity.clipToPadding)
+    }
+
+    /**
+     * The same rule against the real host layouts. Inflating the four dashboards catches a host
+     * that wraps the pass head in a clipping container - the include owns the clip chain, and a
+     * host that keeps clipChildren on any box narrower than the badge re-notches it.
+     */
+    @Test
+    fun passHead_bellBadge_isNotClippedInAnyDashboardHost() {
+        val hosts = intArrayOf(
+            R.layout.activity_user_dashboard,
+            R.layout.activity_staff_dashboard,
+            R.layout.activity_organizer_dashboard,
+            R.layout.activity_admin_dashboard,
+        )
+        hosts.forEach { layoutRes ->
+            val host = themedContext().resources.getResourceEntryName(layoutRes)
+            val root = inflate(layoutRes, LinearLayout(themedContext()))
+            // A ComposeView needs a window recomposer, which a detached inflate does not have.
+            hideComposeViews(root)
+            PassHeadBinder.bind(
+                root.findViewById(R.id.passHead),
+                PassHeadModel(title = "Juan", bellCount = 8),
+            )
+            root.measure(
+                View.MeasureSpec.makeMeasureSpec(1080, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(2400, View.MeasureSpec.EXACTLY),
+            )
+            root.layout(0, 0, root.measuredWidth, root.measuredHeight)
+
+            val badge = root.findViewById<View>(R.id.passHeadBellBadge)
+            val badgeRect = boundsIn(root as ViewGroup, badge)
+            assertTrue(
+                "$host: badge does not overhang the bell frame",
+                badgeRect.right > boundsIn(root as ViewGroup, badge.parent as View).right,
+            )
+
+            // A child is cropped to its own bounds whenever its PARENT keeps clipChildren, and the
+            // crop takes the whole subtree with it. So for every box the badge's ink escapes, the
+            // box's parent has to opt out - the regression here was Block A keeping clipChildren,
+            // which cropped row0 (and the badge) at the gutter edge with nothing else clipping.
+            var node: View = badge
+            while (true) {
+                val box = boundsIn(root as ViewGroup, node)
+                val escapes = badgeRect.left < box.left || badgeRect.top < box.top ||
+                    badgeRect.right > box.right || badgeRect.bottom > box.bottom
+                if (escapes) {
+                    val holder = node.parent as ViewGroup
+                    assertFalse(
+                        "$host: ${holder.javaClass.simpleName} clips ${node.javaClass.simpleName}, " +
+                            "which carries the badge (badge=$badgeRect box=$box)",
+                        holder.clipChildren,
+                    )
+                }
+                val parent = node.parent as View
+                if (parent === root) break
+                node = parent
+            }
+        }
+    }
+
+    private fun boundsIn(root: ViewGroup, view: View): Rect =
+        Rect(0, 0, view.width, view.height)
+            .also { root.offsetDescendantRectToMyCoords(view, it) }
+
+    /**
+     * Regression for the clipped stat label: Block B is a 56dp MINIMUM band, not a fixed 56dp box.
+     * The value (numeric_m) over the label (overline) scale with the font size, and on the fixed
+     * band the cell ran out of height: the label was squeezed to what was left and the stub's own
+     * clipChildren cut the glyphs mid-cap. Measured on device at fontScale 1.5 the label got a 30px
+     * box for a 43px line and its ink ended on the band's last row (0px clear); at 2.0 it got 0px.
+     */
+    @Test
+    fun passHead_stub_isAMinimumSoTheStatTextCanGrow() {
+        val context = themedContext()
+        val minHeight = context.resources.getDimensionPixelSize(R.dimen.ui_pass_head_stub_height)
+        val root = inflate(R.layout.include_pass_head, LinearLayout(context))
+        PassHeadBinder.bind(
+            root,
+            PassHeadModel(title = "Juan", stats = listOf(PassStat("1 240", "Points"))),
+        )
+
+        val stub = root.findViewById<View>(R.id.passHeadStub)
+        val value = root.findViewById<android.widget.TextView>(R.id.passHeadStat1Value)
+        val label = root.findViewById<View>(R.id.passHeadStat1Label)
+
+        // The boundary itself: a floor, never a fixed height. Same shape as Block A (116dp min)
+        // and row1 (44dp min), and as the per-event stub in activity_organizer_event_details.
+        assertEquals(
+            "the stub must be wrap_content, not a fixed band",
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            stub.layoutParams.height,
+        )
+        assertEquals("stub min height", minHeight, stub.minimumHeight)
+
+        measureAndLayout(root, 1080)
+        // Robolectric measures text with stub metrics, so the band is never asserted against the
+        // real 56dp-at-1.0 result (verified on device: 371..525px at fontScale 1.0, unchanged by
+        // this fix); only the floor holds in a unit test.
+        assertTrue(
+            "stub is ${stub.measuredHeight}px, below its ${minHeight}px floor",
+            stub.measuredHeight >= minHeight,
+        )
+
+        // Grow the type the way a large font scale does. The band has to take the extra height and
+        // both cells have to keep a full line box - a fixed band squeezes the label to 0 instead.
+        value.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, 240f)
+        measureAndLayout(root, 1080)
+
+        assertTrue(
+            "stub did not grow with its text: ${stub.measuredHeight}px against a ${minHeight}px floor",
+            stub.measuredHeight > minHeight,
+        )
+        assertTrue("label was squeezed to ${label.measuredHeight}px", label.measuredHeight > 0)
+        val cell = label.parent as View
+        assertTrue(
+            "cell ${cell.height}px overflows the ${stub.measuredHeight}px band",
+            cell.height <= stub.measuredHeight,
+        )
+    }
+
+    /**
+     * The value and label must sit INSIDE the band with a clear margin, at any text size, and no
+     * box between the glyphs and the window may crop them. The cells carry a vertical pad
+     * (ui_pass_head_stub_pad_v) so a grown band never lands a glyph on its edge, and the stub and
+     * its cells opt out of clipChildren so a squeezed or oversized line is never chopped mid-cap.
+     */
+    @Test
+    fun passHead_stub_keepsValueAndLabelInsideTheBandAtAnyTextSize() {
+        val context = themedContext()
+        val pad = context.resources.getDimensionPixelSize(R.dimen.ui_pass_head_stub_pad_v)
+        val root = inflate(R.layout.include_pass_head, LinearLayout(context))
+        PassHeadBinder.bind(
+            root,
+            PassHeadModel(
+                title = "Juan",
+                stats = listOf(PassStat("1 240", "Points"), PassStat("6", "Registered"), PassStat("12", "Check-ins")),
+            ),
+        )
+        val stub = root.findViewById<ViewGroup>(R.id.passHeadStub)
+        assertFalse("passHeadStub crops its cells", stub.clipChildren)
+
+        // 1.0 -> 2.0 of the 20sp/11sp ramp, in px at the unit-test density.
+        for (valuePx in listOf(40f, 60f, 120f, 240f)) {
+            val labelPx = valuePx * 11f / 20f
+            val ids = listOf(
+                R.id.passHeadStat1Value to R.id.passHeadStat1Label,
+                R.id.passHeadStat2Value to R.id.passHeadStat2Label,
+                R.id.passHeadStat3Value to R.id.passHeadStat3Label,
+            )
+            ids.forEach { (valueId, labelId) ->
+                root.findViewById<android.widget.TextView>(valueId)
+                    .setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, valuePx)
+                root.findViewById<android.widget.TextView>(labelId)
+                    .setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, labelPx)
+            }
+            measureAndLayout(root, 1080)
+
+            ids.forEach { (valueId, labelId) ->
+                val value = root.findViewById<View>(valueId)
+                val label = root.findViewById<View>(labelId)
+                val cell = value.parent as ViewGroup
+                val where = "text ${valuePx}px"
+                assertFalse("$where: a stat cell crops its text", cell.clipChildren)
+                assertTrue("$where: label has no height", label.height > 0)
+                assertTrue("$where: cell has no top pad", cell.paddingTop >= pad && pad > 0)
+                assertTrue("$where: cell has no bottom pad", cell.paddingBottom >= pad)
+                // Value above label, both inside the band, label bottom a pad clear of the edge.
+                assertTrue("$where: value starts above the band", cell.top + value.top >= pad)
+                assertTrue("$where: label overlaps the value", label.top >= value.bottom)
+                assertTrue(
+                    "$where: label bottom ${cell.top + label.bottom}px is within $pad px of the " +
+                        "${stub.height}px band edge",
+                    cell.top + label.bottom <= stub.height - pad,
+                )
+            }
+        }
+    }
+
+    private fun measureAndLayout(root: View, width: Int) {
+        root.measure(
+            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+        )
+        root.layout(0, 0, root.measuredWidth, root.measuredHeight)
+    }
+
+    private fun hideComposeViews(view: View) {
+        if (view is ComposeView) {
+            view.visibility = View.GONE
+            return
+        }
+        if (view is ViewGroup) {
+            for (index in 0 until view.childCount) hideComposeViews(view.getChildAt(index))
+        }
     }
 
     @Test
@@ -292,6 +531,7 @@ class ComponentInflationTest {
             R.layout.activity_admin_account_management,
             R.layout.activity_create_admin_account,
             R.layout.activity_admin_audit_logs,
+            R.layout.activity_event_management_hub,
             R.layout.activity_forgot_password,
             R.layout.activity_reset_password,
             R.layout.activity_new_password,
@@ -309,6 +549,7 @@ class ComponentInflationTest {
             R.layout.item_report_chart,
             R.layout.item_report_table,
             R.layout.dialog_event_request_submitted,
+            R.layout.activity_organizer_event_details,
         )
         for (layout in screens) {
             assertNotNull(
@@ -318,5 +559,457 @@ class ComponentInflationTest {
         }
     }
 
-}
+    /**
+     * §4.6 per-event identity head: the name with the badge as the title row's trailing value, the
+     * two optional meta lines, and the tear as the dark block's LAST child (as a sibling it painted
+     * on `ui_background` at ~1.01:1 and was invisible).
+     */
+    @Test
+    fun organizerEventHead_bindsNameStatusWhenWhere() {
+        val context = themedContext()
+        val root = inflate(R.layout.include_organizer_event_head, LinearLayout(context))
+        OrganizerEventHeadBinder.bind(
+            root,
+            title = "DevFest Manila 2026",
+            status = EventStatus.APPROVED,
+            whenText = "12 Jun 2026, 9:00 AM - 5:00 PM",
+            whereText = "SMX Convention Center",
+        )
 
+        assertEquals(
+            "DevFest Manila 2026",
+            (root.findViewById<View>(R.id.oeHeadTitle) as android.widget.TextView).text.toString(),
+        )
+        assertEquals(View.VISIBLE, root.findViewById<View>(R.id.oeHeadStatus).visibility)
+        assertEquals(View.VISIBLE, root.findViewById<View>(R.id.oeHeadWhen).visibility)
+        assertEquals(View.VISIBLE, root.findViewById<View>(R.id.oeHeadWhere).visibility)
+
+        val head = root as ViewGroup
+        assertEquals(
+            "the tear must be the head's last child",
+            R.id.oeHeadTear,
+            head.getChildAt(head.childCount - 1).id,
+        )
+
+        // §9.5: one node for the name plus status, and the badge's tone is never read.
+        assertEquals(
+            "DevFest Manila 2026, Upcoming",
+            head.findViewById<View>(R.id.oeHeadTitleRow).contentDescription,
+        )
+        assertEquals(
+            View.IMPORTANT_FOR_ACCESSIBILITY_NO,
+            head.findViewById<View>(R.id.oeHeadStatus).importantForAccessibility,
+        )
+    }
+
+    /** Blank meta shrinks the head to the title row; every text container stays wrap_content (§9.3). */
+    @Test
+    fun organizerEventHead_hidesBlankMetaAndKeepsEveryTextContainerWrapContent() {
+        val context = themedContext()
+        val root = inflate(R.layout.include_organizer_event_head, LinearLayout(context))
+        OrganizerEventHeadBinder.bind(
+            root,
+            title = "DevFest Manila 2026",
+            status = null,
+            whenText = " ",
+            whereText = null,
+        )
+
+        assertEquals(View.GONE, root.findViewById<View>(R.id.oeHeadWhen).visibility)
+        assertEquals(View.GONE, root.findViewById<View>(R.id.oeHeadWhere).visibility)
+        assertEquals(View.GONE, root.findViewById<View>(R.id.oeHeadStatus).visibility)
+
+        listOf(R.id.oeHeadTitle, R.id.oeHeadWhen, R.id.oeHeadWhere).forEach { id ->
+            assertEquals(
+                "view $id must be wrap_content, not a fixed text container",
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                root.findViewById<View>(id).layoutParams.height,
+            )
+        }
+        assertEquals(3, (root.findViewById<View>(R.id.oeHeadTitle) as android.widget.TextView).maxLines)
+    }
+
+    /** A 3-line 28sp title at 2.0 needs the row: the badge reflows under it, `space_8` above. */
+    @Test
+    @Config(
+        sdk = [35],
+        shadows = [ShadowMasterKeys::class, ShadowEncryptedSharedPreferences::class],
+        fontScale = 2.0f,
+    )
+    fun organizerEventHead_badgeReflowsBelowTheTitleAtLargeFont() {
+        val context = themedContext()
+        val root = inflate(R.layout.include_organizer_event_head, LinearLayout(context))
+        OrganizerEventHeadBinder.bind(
+            root,
+            title = "DevFest Manila 2026",
+            status = EventStatus.REJECTED,
+            whenText = "12 Jun 2026",
+            whereText = "SMX Convention Center",
+        )
+
+        val badge = root.findViewById<View>(R.id.oeHeadStatus)
+        val meta = root.findViewById<ViewGroup>(R.id.oeHeadMeta)
+        val titleRow = root.findViewById<ViewGroup>(R.id.oeHeadTitleRow)
+
+        assertSame("the badge must leave the title row", meta, badge.parent)
+        assertNotSame(titleRow, badge.parent)
+        assertSame(
+            "the badge is the meta block's last line",
+            badge,
+            meta.getChildAt(meta.childCount - 1),
+        )
+        val params = badge.layoutParams as ViewGroup.MarginLayoutParams
+        assertEquals(
+            "space_8 above the reflowed badge",
+            context.resources.getDimensionPixelSize(R.dimen.space_8),
+            params.topMargin,
+        )
+        assertEquals("no start margin once reflowed", 0, params.marginStart)
+    }
+
+    /** At the default scale the badge stays the title row's trailing value (§5.4 placement). */
+    @Test
+    fun organizerEventHead_badgeTrailsTheTitleAtDefaultFont() {
+        val context = themedContext()
+        val root = inflate(R.layout.include_organizer_event_head, LinearLayout(context))
+        OrganizerEventHeadBinder.bind(
+            root,
+            title = "DevFest Manila 2026",
+            status = EventStatus.ACTIVE,
+            whenText = null,
+            whereText = null,
+        )
+
+        val badge = root.findViewById<View>(R.id.oeHeadStatus)
+        val titleRow = root.findViewById<ViewGroup>(R.id.oeHeadTitleRow)
+        assertSame(titleRow, badge.parent)
+        assertEquals(
+            context.resources.getDimensionPixelSize(R.dimen.space_12),
+            (badge.layoutParams as ViewGroup.MarginLayoutParams).marginStart,
+        )
+        assertEquals(
+            context.resources.getDimensionPixelSize(R.dimen.ui_badge_height),
+            badge.minimumHeight,
+        )
+        assertEquals(
+            "the head overrides the shared badge's fixed 24dp height",
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            badge.layoutParams.height,
+        )
+    }
+
+    /**
+     * The view page's seven blocks in order (§6.4 v1.7): top bar, scroll holding head -> stub ->
+     * three-row table -> review note -> About -> actions, plus the skeleton that replaces the shipped
+     * `visibility="invisible"` blank. Date / Time / Venue are ids that must no longer exist: they are
+     * the head's `when` and `where`.
+     */
+    @Test
+    fun organizerEventDetails_hasTheSevenBlockOrderAndNoDateVenueRows() {
+        val context = themedContext()
+        val root = inflate(R.layout.activity_organizer_event_details, LinearLayout(context)) as ViewGroup
+        val density = context.resources.displayMetrics.density
+        val screenWidth = (360f * density).toInt()
+
+        // First load: the skeleton is on screen and the content is not (no invisible blank).
+        val scroll = root.getChildAt(1) as ScrollView
+        val skeleton = root.getChildAt(2) as ViewGroup
+        assertEquals(View.VISIBLE, skeleton.visibility)
+        assertEquals(View.GONE, scroll.visibility)
+
+        // Layout the loaded page: a GONE subtree is never measured, so the geometry checks below
+        // need the content visible, exactly as bind() leaves it.
+        scroll.visibility = View.VISIBLE
+        skeleton.visibility = View.GONE
+
+        root.measure(
+            View.MeasureSpec.makeMeasureSpec(screenWidth, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec((800f * density).toInt(), View.MeasureSpec.EXACTLY),
+        )
+        root.layout(0, 0, root.measuredWidth, root.measuredHeight)
+
+        val column = scroll.getChildAt(0) as LinearLayout
+
+        assertEquals("block 2 is the shared head", R.id.oeHead, column.getChildAt(0).id)
+        assertEquals("block 3 is the stub", R.id.oedStub, column.getChildAt(1).id)
+        assertEquals("block 5 is the review note", R.id.oedReviewNote, column.getChildAt(3).id)
+        assertEquals("block 6 is About", R.id.oedAboutBlock, column.getChildAt(4).id)
+
+        // Stub: a floor, never a fixed band - value over label grows at large font scale.
+        val stub = column.getChildAt(1)
+        assertEquals(ViewGroup.LayoutParams.WRAP_CONTENT, stub.layoutParams.height)
+        assertEquals(
+            context.resources.getDimensionPixelSize(R.dimen.ui_pass_head_stub_height),
+            stub.minimumHeight,
+        )
+
+        // Table: exactly three rows, each followed by its hairline.
+        val table = column.getChildAt(2) as ViewGroup
+        assertEquals("three rows plus three hairlines", 6, table.childCount)
+        assertEquals(R.id.oedRowRegistration, table.getChildAt(0).id)
+        assertEquals(R.id.oedRowOrganizer, table.getChildAt(2).id)
+        assertEquals(R.id.oedRowCoOrganizers, table.getChildAt(4).id)
+        listOf("oedRowDate", "oedRowTime", "oedRowVenue").forEach { gone ->
+            assertEquals(
+                "$gone must be deleted: date, time and venue live in the head",
+                0,
+                context.resources.getIdentifier(gone, "id", context.packageName),
+            )
+        }
+
+        // Actions: primary first, ghost beneath, 8dp apart, both full width - not an equal pair.
+        val actions = column.getChildAt(5) as ViewGroup
+        assertEquals(2, actions.childCount)
+        val primary = actions.getChildAt(0)
+        val ghost = actions.getChildAt(1)
+        assertEquals(R.id.oedActionAttendees, primary.id)
+        assertEquals(R.id.oedActionReports, ghost.id)
+        assertTrue(
+            "the primary sits above the ghost",
+            primary.top + primary.height <= ghost.top,
+        )
+        assertEquals(
+            "8dp between the two actions",
+            context.resources.getDimensionPixelSize(R.dimen.space_8),
+            ghost.top - (primary.top + primary.height),
+        )
+        assertEquals(
+            context.resources.getDimensionPixelSize(R.dimen.ui_button_height),
+            primary.minimumHeight,
+        )
+        assertEquals(
+            context.resources.getDimensionPixelSize(R.dimen.ui_button_height_inline),
+            ghost.minimumHeight,
+        )
+        assertEquals(ViewGroup.LayoutParams.MATCH_PARENT, primary.layoutParams.width)
+        assertEquals(ViewGroup.LayoutParams.MATCH_PARENT, ghost.layoutParams.width)
+        // The floors hold at 1.0 (measured 52 / 48) and the controls may only grow with the label.
+        assertTrue("primary is ${primary.height}px", primary.height >= primary.minimumHeight)
+        assertTrue("ghost is ${ghost.height}px", ghost.height >= ghost.minimumHeight)
+
+        // Skeleton: head + stub + three rows in their own geometry, never an invisible blank.
+        assertEquals(
+            context.getString(R.string.ui_skeleton_loading),
+            skeleton.contentDescription.toString(),
+        )
+        assertEquals(
+            context.resources.getDimensionPixelSize(R.dimen.ui_organizer_head_skeleton_height),
+            skeleton.getChildAt(0).layoutParams.height,
+        )
+        assertEquals(
+            context.resources.getDimensionPixelSize(R.dimen.ui_pass_head_stub_height),
+            skeleton.getChildAt(1).layoutParams.height,
+        )
+        val skeletonRows = skeleton.getChildAt(2) as ViewGroup
+        assertEquals(3, skeletonRows.childCount)
+        for (index in 0 until skeletonRows.childCount) {
+            assertEquals(
+                context.resources.getDimensionPixelSize(R.dimen.ui_metric_row_height),
+                skeletonRows.getChildAt(index).minimumHeight,
+            )
+        }
+    }
+
+    /**
+     * The editor (§6.4 v1.7): full-bleed head first, five eyebrowed sections in the view page's
+     * block order, four perforations between them, and §5.2's field anatomy - labelFor at its own
+     * control, a wrap_content box on the 56dp floor.
+     */
+    @Test
+    fun organizerEventEdit_hasTheSectionOrderAndTheFieldAnatomy() {
+        val context = themedContext()
+        val root = inflate(R.layout.activity_organizer_event_edit, LinearLayout(context)) as ViewGroup
+
+        val scroll = root.getChildAt(1) as ScrollView
+        val column = scroll.getChildAt(0) as LinearLayout
+        assertEquals("the head is full-bleed: no padding on the scroll column", 0, column.paddingStart)
+        assertEquals("block 1 of the column is the shared head", R.id.oeHead, column.getChildAt(0).id)
+        assertEquals(
+            "the editor hides both meta lines: the venue is a field and the schedule is a row",
+            View.GONE,
+            root.findViewById<View>(R.id.oeHeadWhen).visibility,
+        )
+        assertEquals(View.GONE, root.findViewById<View>(R.id.oeHeadWhere).visibility)
+
+        val form = column.getChildAt(1) as ViewGroup
+        assertEquals("locked note + 5 sections + 4 perforations", 10, form.childCount)
+        assertEquals(R.id.eeSectionEvent, form.getChildAt(1).id)
+        assertEquals(R.id.eeSectionSchedule, form.getChildAt(3).id)
+        assertEquals(R.id.eeSectionRegistration, form.getChildAt(5).id)
+        assertEquals(R.id.eeSectionAbout, form.getChildAt(7).id)
+        assertEquals(R.id.eeSectionBanner, form.getChildAt(9).id)
+
+        val controlHeight = context.resources.getDimensionPixelSize(R.dimen.ui_control_height)
+        listOf(
+            R.id.eeTitleLabel to R.id.eeTitleInput,
+            R.id.eeVenueLabel to R.id.eeVenueInput,
+            R.id.eeCapacityLabel to R.id.eeCapacityInput,
+        ).forEach { (labelId, inputId) ->
+            val label = root.findViewById<android.widget.TextView>(labelId)
+            val input = root.findViewById<View>(inputId)
+            assertEquals("label $labelId must point at its control", inputId, label.labelFor)
+            assertEquals(
+                "field $inputId must be wrap_content, not a fixed box",
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                input.layoutParams.height,
+            )
+            assertEquals("field $inputId floor", controlHeight, input.minimumHeight)
+        }
+
+        // The description is the multiline control: 96dp minimum, not a one-line box.
+        assertEquals(
+            R.id.eeDescriptionInput,
+            root.findViewById<android.widget.TextView>(R.id.eeDescriptionLabel).labelFor,
+        )
+        assertEquals(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            root.findViewById<View>(R.id.eeDescriptionInput).layoutParams.height,
+        )
+        assertEquals(
+            context.resources.getDimensionPixelSize(R.dimen.ui_field_multiline_height),
+            root.findViewById<View>(R.id.eeDescriptionInput).minimumHeight,
+        )
+        // Banner: 16:9 at the 320dp content width.
+        assertEquals(
+            context.resources.getDimensionPixelSize(R.dimen.ui_organizer_event_banner_height),
+            root.findViewById<View>(R.id.eeBannerPreview).layoutParams.height,
+        )
+
+        // No text container in the whole layout is a fixed height (§9.3).
+        assertTrue(
+            "the layout must actually hold type",
+            assertNoFixedTextContainers(root, "activity_organizer_event_edit") >= 10,
+        )
+    }
+
+    /** §9.3: a view that holds type grows with the font scale; only media may carry a fixed size. */
+    private fun assertNoFixedTextContainers(view: View, layout: String): Int {
+        var checked = 0
+        if (view is android.widget.TextView) {
+            val name = if (view.id == View.NO_ID) {
+                "${view.javaClass.simpleName} \"${view.text}\""
+            } else {
+                view.resources.getResourceEntryName(view.id)
+            }
+            if (view.layoutParams.height != ViewGroup.LayoutParams.WRAP_CONTENT) {
+                throw AssertionError("$layout: $name is ${view.layoutParams.height}px high")
+            }
+            checked++
+        }
+        if (view is ViewGroup) {
+            for (index in 0 until view.childCount) {
+                checked += assertNoFixedTextContainers(view.getChildAt(index), layout)
+            }
+        }
+        return checked
+    }
+
+    /**
+     * The save bar is the screen's last block, its height is a floor, and the primary starts
+     * disabled because nothing is dirty until the first edit.
+     */
+    @Test
+    fun organizerEventEdit_saveBarIsTheLastBlockAndStartsDisabled() {
+        val context = themedContext()
+        val root = inflate(R.layout.activity_organizer_event_edit, LinearLayout(context)) as ViewGroup
+
+        val last = root.getChildAt(root.childCount - 1)
+        assertEquals("the save bar is the last block", R.id.eeSaveBar, last.id)
+        assertEquals(ViewGroup.LayoutParams.WRAP_CONTENT, last.layoutParams.height)
+        assertEquals(
+            context.resources.getDimensionPixelSize(R.dimen.ui_footer_height),
+            last.minimumHeight,
+        )
+        assertFalse("clean form: save must start disabled", root.findViewById<View>(R.id.eeSaveButton).isEnabled)
+        assertEquals(View.GONE, root.findViewById<View>(R.id.eeUnsaved).visibility)
+        assertEquals(View.GONE, root.findViewById<View>(R.id.eeSaveError).visibility)
+        assertEquals(View.GONE, root.findViewById<View>(R.id.eeSaveProgress).visibility)
+
+        // 52dp primary on its floor, never a fixed height.
+        val save = root.findViewById<View>(R.id.eeSaveButton)
+        assertEquals(ViewGroup.LayoutParams.WRAP_CONTENT, save.layoutParams.height)
+        assertEquals(
+            context.resources.getDimensionPixelSize(R.dimen.ui_button_height),
+            save.minimumHeight,
+        )
+
+        // §6.6: the bar is bottom-anchored, so the dirty line grows it upward and the primary keeps
+        // its place on screen.
+        val density = context.resources.displayMetrics.density
+        val screenWidth = (360f * density).toInt()
+        val screenHeight = (800f * density).toInt()
+        fun layoutScreen() {
+            root.measure(
+                View.MeasureSpec.makeMeasureSpec(screenWidth, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(screenHeight, View.MeasureSpec.EXACTLY),
+            )
+            root.layout(0, 0, root.measuredWidth, root.measuredHeight)
+        }
+        layoutScreen()
+        assertEquals("the bar sits on the bottom edge", screenHeight, last.bottom)
+        val cleanButtonTop = boundsIn(root, save).top
+        val cleanBarHeight = last.height
+
+        root.findViewById<View>(R.id.eeUnsaved).visibility = View.VISIBLE
+        layoutScreen()
+        assertEquals("dirty state must not move the primary", cleanButtonTop, boundsIn(root, save).top)
+        assertTrue("the bar grows upward", last.height > cleanBarHeight)
+        assertEquals("the bar keeps the bottom edge", screenHeight, last.bottom)
+    }
+
+    /** The locked rows are values, not controls: no editable field, no tap, a 56dp floor. */
+    @Test
+    fun organizerEventEdit_lockedRowsAreReadOnly() {
+        val context = themedContext()
+        val root = inflate(R.layout.activity_organizer_event_edit, LinearLayout(context))
+
+        val rowFloor = context.resources.getDimensionPixelSize(R.dimen.ui_metric_row_height)
+        listOf(R.id.eeEventDatesRow to R.id.eeEventDatesValue, R.id.eeWindowRow to R.id.eeWindowValue)
+            .forEach { (rowId, valueId) ->
+                val row = root.findViewById<View>(rowId)
+                val value = root.findViewById<View>(valueId)
+                assertFalse("row $rowId must be read-only", value is android.widget.EditText)
+                assertFalse("value $valueId must not be tappable", row.isClickable)
+                assertEquals(ViewGroup.LayoutParams.WRAP_CONTENT, row.layoutParams.height)
+                assertEquals("row $rowId floor", rowFloor, row.minimumHeight)
+            }
+        assertEquals(View.GONE, root.findViewById<View>(R.id.eeLockedNote).visibility)
+    }
+
+    /** Dirty back: the discard confirm says what will be lost and only `Discard` commits. */
+    @Test
+    fun discardChangesDialog_wiresKeepEditingAndDestructiveDiscard() {
+        val context = themedContext()
+        var discarded = false
+        val dialog = DiscardChangesDialog.create(context) { discarded = true }
+        dialog.show()
+
+        assertEquals(
+            context.getString(R.string.ui_organizer_edit_discard_title),
+            dialog.findViewById<android.widget.TextView>(R.id.dialogTitle)?.text.toString(),
+        )
+        assertEquals(
+            context.getString(R.string.ui_organizer_edit_discard_body),
+            dialog.findViewById<android.widget.TextView>(R.id.dialogBody)?.text.toString(),
+        )
+        val keep = dialog.findViewById<Button>(R.id.dialogNegative)!!
+        val commit = dialog.findViewById<Button>(R.id.dialogPositive)!!
+        assertEquals(context.getString(R.string.ui_organizer_edit_keep_editing), keep.text.toString())
+        assertEquals(context.getString(R.string.ui_organizer_edit_discard), commit.text.toString())
+        assertEquals(
+            "the commit carries the filled red label colour (`DestructiveCommit`), the ghost does not",
+            ContextCompat.getColor(context, R.color.ui_on_primary),
+            commit.currentTextColor,
+        )
+
+        keep.performClick()
+        assertFalse("Keep editing must not discard", discarded)
+        assertFalse(dialog.isShowing)
+
+        val second = DiscardChangesDialog.create(context) { discarded = true }
+        second.show()
+        second.findViewById<Button>(R.id.dialogPositive)?.performClick()
+        assertTrue("Discard must point at the discard callback", discarded)
+        assertFalse(second.isShowing)
+    }
+}

@@ -47,6 +47,40 @@
     <string name="ui_organizer_coorganizers">Co-organizers</string>
     <string name="ui_organizer_about">About</string>
     <string name="ui_organizer_reports">Reports</string>
+    <string name="ui_organizer_view_attendees">View attendees</string>
+    <string name="ui_organizer_open_reports">Open reports</string>
+    <string name="ui_organizer_review_note">Review note</string>
+
+    <!-- Event editor (6.4). Sections, field labels, helper/validation, save + discard copy. -->
+    <string name="ui_organizer_edit_title">Edit event</string>
+    <string name="ui_organizer_edit_section_event">Event</string>
+    <string name="ui_organizer_edit_section_schedule">Schedule</string>
+    <string name="ui_organizer_edit_section_registration">Registration</string>
+    <string name="ui_organizer_edit_section_banner">Banner</string>
+    <string name="ui_organizer_edit_label_title">Title</string>
+    <string name="ui_organizer_edit_label_capacity">Capacity</string>
+    <string name="ui_organizer_edit_label_description">Description</string>
+    <string name="ui_organizer_edit_event_dates">Event dates</string>
+    <string name="ui_organizer_edit_locked_note">Dates are set when the event is created and can\'t be changed here.</string>
+    <string name="ui_organizer_edit_title_required">Enter a title.</string>
+    <string name="ui_organizer_edit_capacity_helper">At least the number already registered.</string>
+    <string name="ui_organizer_edit_capacity_required">Enter the number of seats.</string>
+    <string name="ui_organizer_edit_capacity_minimum">Capacity can\'t be lower than the %1$s registrations already taken.</string>
+    <string name="ui_organizer_edit_choose_banner">Choose banner</string>
+    <string name="ui_organizer_edit_banner_note">Images must be 16:9 and under 5 MB.</string>
+    <string name="ui_organizer_edit_banner_current">Current banner.</string>
+    <string name="ui_organizer_edit_banner_selected">New banner selected. It uploads when you save.</string>
+    <string name="ui_organizer_edit_banner_too_large">That image is over 5 MB. Choose a smaller one.</string>
+    <string name="ui_organizer_edit_banner_failed">Couldn\'t read that image. Choose another one.</string>
+    <string name="ui_organizer_edit_save">Save changes</string>
+    <string name="ui_organizer_edit_saving">Saving</string>
+    <string name="ui_organizer_edit_unsaved">Unsaved changes</string>
+    <string name="ui_organizer_edit_save_failed">Couldn\'t save your changes. %1$s</string>
+    <string name="ui_organizer_edit_save_failed_plain">Couldn\'t save your changes. Try again.</string>
+    <string name="ui_organizer_edit_discard_title">Discard changes?</string>
+    <string name="ui_organizer_edit_discard_body">Your edits to this event will be lost.</string>
+    <string name="ui_organizer_edit_keep_editing">Keep editing</string>
+    <string name="ui_organizer_edit_discard">Discard</string>
 
     <!-- Attendees -->
     <string name="ui_organizer_search_attendees">Search attendees</string>

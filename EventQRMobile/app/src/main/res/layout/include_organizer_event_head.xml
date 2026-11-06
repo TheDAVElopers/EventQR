@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    ORGANIZER EVENT IDENTITY HEAD (§4.6 per-event rule, component inventory §1a) - the per-event
+    scale of Block A, shared by the organizer event view and the event editor.
+
+        20dp gutter   paddingStart/End ui_gutter, space_16 paddingTop
+        title row     event name in Headline + StatusBadge as the row's trailing value
+        meta rows     optional `when` (space_8 above) and optional `where` (space_2 above),
+                      BodySmall in ui_on_primary_muted, both GONE until a screen binds them
+        1dp tear      divider_perforation_dark, the block's LAST child so the 24%-white dashes
+                      land on ui_primary instead of the page background
+
+    wrap_content height everywhere: a 3-line title at fontScale 2.0 grows the block. No fixed text
+    container, no maxHeight.
+
+    The badge is the trailing value of the title row, top-aligned, and its height is overridden here
+    to wrap_content + minHeight 24dp. The shared Widget.EventQR.Ui.StatusBadge keeps its fixed
+    24dp height for the ~40 other sites; this head must not clip a larger font scale, so it opts
+    out locally rather than changing the shared style's blast radius.
+
+    The binder (OrganizerEventHeadBinder) moves the badge out of the title row to the last line of
+    the meta block at fontScale > 1.3, where a trailing badge beside a 3-line 28sp title would
+    leave roughly 90dp for the name.
+
+    Usage:
+        <include layout="@layout/include_organizer_event_head"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content" />
+
+    ids: oeHead, oeHeadTitleRow, oeHeadTitle, oeHeadStatus, oeHeadMeta, oeHeadWhen, oeHeadWhere,
+         oeHeadTear. The root keeps @+id/oeHead, so findViewById(R.id.oeHead) works without an id
+    on the <include>.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/oeHead"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_pass_head"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/ui_gutter"
+    android:paddingTop="@dimen/space_16"
+    android:paddingEnd="@dimen/ui_gutter">
+
+    <LinearLayout
+        android:id="@+id/oeHeadTitleRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/oeHeadTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:gravity="start"
+            android:maxLines="3"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.Headline"
+            android:textColor="@color/ui_on_primary"
+            tools:text="DevFest Manila 2026" />
+
+        <!-- Trailing value of the title row (§5.4 placement). Height wraps: the shared badge style
+             fixes 24dp, which clips a grown label, so this site opts out with a 24dp floor. -->
+        <TextView
+            android:id="@+id/oeHeadStatus"
+            style="@style/Widget.EventQR.Ui.StatusBadge.Info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:layout_marginStart="@dimen/space_12"
+            android:layout_marginTop="@dimen/space_4"
+            android:minHeight="@dimen/ui_badge_height"
+            tools:text="Completed" />
+    </LinearLayout>
+
+    <!-- The badge reflows into this block at fontScale > 1.3, as its last line. -->
+    <LinearLayout
+        android:id="@+id/oeHeadMeta"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/oeHeadWhen"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_8"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+            android:textColor="@color/ui_on_primary_muted"
+            android:visibility="gone"
+            tools:text="12 Jun 2026, 9:00 AM - 5:00 PM"
+            tools:visibility="visible" />
+
+        <TextView
+            android:id="@+id/oeHeadWhere"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_2"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+            android:textColor="@color/ui_on_primary_muted"
+            android:visibility="gone"
+            tools:text="SMX Convention Center"
+            tools:visibility="visible" />
+    </LinearLayout>
+
+    <!-- Last child inside the dark block: the dashes must land on ui_primary. space_16 above is the
+         block's bottom breathing room; the block closes flush on the perforation. -->
+    <View
+        android:id="@+id/oeHeadTear"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:layout_marginTop="@dimen/space_16"
+        android:background="@drawable/divider_perforation_dark"
+        android:importantForAccessibility="no" />
+</LinearLayout>

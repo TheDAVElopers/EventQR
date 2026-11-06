@@ -19,10 +19,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -460,13 +463,15 @@ fun PassHead(
                 .background(UiOnDarkHairline),
         )
 
-        // stub
+        // stub - 56dp is a floor, not the height: the cell type scales with the font size, so the
+        // band takes its tallest cell and the dividers fill whatever the band got.
         val shown = stats.take(3)
         if (shown.isNotEmpty()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(dimensionResource(R.dimen.ui_pass_head_stub_height))
+                    .height(IntrinsicSize.Min)
+                    .heightIn(min = dimensionResource(R.dimen.ui_pass_head_stub_height))
                     .background(UiPassStub)
                     .padding(start = grid.gutter),
                 verticalAlignment = Alignment.CenterVertically,
@@ -476,7 +481,7 @@ fun PassHead(
                         Box(
                             modifier = Modifier
                                 .width(dimensionResource(R.dimen.stroke_hairline))
-                                .height(dimensionResource(R.dimen.ui_pass_head_stub_height))
+                                .fillMaxHeight()
                                 .background(UiOnDarkHairline),
                         )
                     }
@@ -484,9 +489,13 @@ fun PassHead(
                         stat = stat,
                         modifier = Modifier
                             .weight(1f)
+                            // vertical pad lives on the cell, not the Row: the dividers keep the
+                            // full band height and the glyphs keep a clear margin when it grows.
                             .padding(
                                 start = if (index == 0) grid.s2 else grid.s12,
                                 end = grid.s12,
+                                top = dimensionResource(R.dimen.ui_pass_head_stub_pad_v),
+                                bottom = dimensionResource(R.dimen.ui_pass_head_stub_pad_v),
                             ),
                     )
                 }

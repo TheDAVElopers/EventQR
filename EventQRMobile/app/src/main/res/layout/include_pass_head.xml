@@ -7,7 +7,8 @@
                  row1   44dp min      title, Archivo 700 28/34, on_primary, max 2 lines
                  row2   optional      subtitle, body_s, on_primary_muted
         Tear    1dp          full bleed divider_perforation_dark
-        Block B stub 56dp    flat ui_pass_stub, 3 equal cells, 1dp on_dark_hairline dividers
+        Block B stub 56dp min flat ui_pass_stub, 3 equal cells, 1dp on_dark_hairline dividers
+                              (min, not fixed: the value/label grow with the font scale)
 
     HOW TO USE
     ══════════
@@ -35,7 +36,11 @@
         passHeadTabs         LinearLayout of passHeadTab1..4 (TextView + underline bg)
         passHeadEyebrow      overline shown when there are no tabs and no chip
         passHeadChip         portal chip, 12% white
-        passHeadBell         FrameLayout 44dp; passHeadBellBadge is the 18dp count
+        passHeadBell         FrameLayout 44dp; passHeadBellBadge is the 18dp count, offset -2dp
+                             top/end, so it overhangs the bell frame. Every container between the
+                             badge and the window must keep clipChildren=false (bell frame, row0,
+                             passHeadIdentity) + clipToPadding=false on passHeadIdentity - see the
+                             note under row0.
         passHeadTitle        headline
         passHeadSubtitle     body_s, GONE when empty
         passHeadStub         Block B; passHeadStat{1,2,3}{Value,Label}, dividers 2 and 3
@@ -59,14 +64,24 @@
         android:layout_height="wrap_content"
         android:minHeight="@dimen/ui_pass_head_identity_height"
         android:background="@drawable/bg_pass_head"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:orientation="vertical"
         android:paddingStart="@dimen/ui_gutter"
         android:paddingEnd="@dimen/ui_gutter">
 
-        <!-- row0: tabs / eyebrow / chip on the left, bell on the right -->
+        <!-- row0: tabs / eyebrow / chip on the left, bell on the right.
+
+             clipChildren=false is load-bearing up the whole chain: in hardware rendering a child's
+             RenderNode is clipped to its own bounds whenever its PARENT keeps clipChildren, so one
+             clipping ancestor is enough to notch the badge. The badge sits 2dp past the bell frame
+             (ui_count_badge_offset), which is the bell's, row0's and Block A's content edge - so
+             bell, row0 AND passHeadIdentity all opt out. clipToPadding=false on Block A covers the
+             software path, which clips to the padded rect instead. -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="@dimen/ui_pass_head_row_tabs">
+            android:layout_height="@dimen/ui_pass_head_row_tabs"
+            android:clipChildren="false">
 
             <LinearLayout
                 android:id="@+id/passHeadTabs"
@@ -184,11 +199,14 @@
                 tools:text="Attendee"
                 tools:visibility="visible" />
 
+            <!-- 44dp bell frame. clipChildren=false: the 18dp badge is placed with a -2dp top
+                 and -2dp end margin (4.6), so a full circle needs 2dp of overhang. -->
             <FrameLayout
                 android:id="@+id/passHeadBell"
                 android:layout_width="@dimen/ui_bell_size"
                 android:layout_height="@dimen/ui_bell_size"
                 android:layout_gravity="end|center_vertical"
+                android:clipChildren="false"
                 android:visibility="gone"
                 tools:visibility="visible">
 
@@ -259,13 +277,22 @@
         android:background="@drawable/divider_perforation_dark"
         android:importantForAccessibility="no" />
 
-    <!-- ═════════════════ Block B: stub, max three stats ═════════════════ -->
+    <!-- ═════════════════ Block B: stub, max three stats ═════════════════
+
+         56dp is a MINIMUM, not a fixed height: the value (numeric_m) over the label (overline)
+         grows with the font scale, and a fixed 56dp band squeezed the label to 0dp at 2.0 -
+         the stub's own clipChildren then cut the glyphs mid-cap. wrap_content + minHeight keeps
+         the band at 56dp at 1.0 and lets it grow, exactly like Block A's 116dp min and row1's
+         44dp min. Same pattern as the per-event stub (activity_organizer_event_details.xml). -->
     <LinearLayout
         android:id="@+id/passHeadStub"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/ui_pass_head_stub_height"
+        android:layout_height="wrap_content"
         android:background="@drawable/bg_pass_stub"
+        android:baselineAligned="false"
+        android:clipChildren="false"
         android:gravity="center_vertical"
+        android:minHeight="@dimen/ui_pass_head_stub_height"
         android:orientation="horizontal"
         android:paddingStart="@dimen/ui_gutter">
 
@@ -273,7 +300,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:clipChildren="false"
             android:orientation="vertical"
+            android:paddingTop="@dimen/ui_pass_head_stub_pad_v"
+            android:paddingBottom="@dimen/ui_pass_head_stub_pad_v"
             android:paddingEnd="@dimen/ui_pass_head_stat_cell_pad">
 
             <TextView
@@ -310,7 +340,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:clipChildren="false"
             android:orientation="vertical"
+            android:paddingTop="@dimen/ui_pass_head_stub_pad_v"
+            android:paddingBottom="@dimen/ui_pass_head_stub_pad_v"
             android:paddingStart="@dimen/ui_pass_head_stat_cell_pad"
             android:paddingEnd="@dimen/ui_pass_head_stat_cell_pad">
 
@@ -348,7 +381,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:clipChildren="false"
             android:orientation="vertical"
+            android:paddingTop="@dimen/ui_pass_head_stub_pad_v"
+            android:paddingBottom="@dimen/ui_pass_head_stub_pad_v"
             android:paddingStart="@dimen/ui_pass_head_stat_cell_pad">
 
             <TextView

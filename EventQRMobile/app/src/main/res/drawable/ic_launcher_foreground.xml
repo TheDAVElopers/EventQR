@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Launcher foreground (§3.7 + 04-logo-direction.md §4): the one mark, 46 of the 108 canvas, so the
+    Launcher foreground (§3.7 + 04-logo-direction.md §4): the one mark, 40 of the 108 canvas, so the
     launcher and the in-app mark are the same shape. 46dp is the measured maximum that survives the
-    circular launcher mask (0.60 of the canvas): the mark's rounded-corner half-diagonal is 31.3dp
-    against a 32.4dp mask radius. Layer-list rather than a second copy of the paths: the mark has
-    exactly one definition. Background stays the flat @color/ui_primary shape.
+    circular launcher mask (0.60 of the canvas); the mark's rounded-corner half-diagonal there is
+    31.3dp against a 32.4dp mask radius, so 40dp is a deliberate step down that keeps extra clearance.
+    Layer-list rather than a second copy of the paths: the mark has exactly one definition. Background
+    stays the flat @color/ui_primary shape.
 -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item
