@@ -9,8 +9,15 @@ data class DashboardSummary(
     val totalRegistrations: Long?,
     val totalTransactions: Long,
     val totalPoints: Long,
-    /** Server-provided completed count; null when the backend did not send it (older servers). */
+    /**
+     * Server-provided completed count; null when the backend did not send it (older servers).
+     * Kept as the server-contract mirror; the attendee pass head does not read it.
+     */
     val completedEventsCount: Long? = null,
+    /** Registrations the attendee actually attended; null = unknown, so the stub renders "--". */
+    val checkInsCount: Long? = null,
+    /** Lifetime non-cancelled registrations (ended and no-show included); null = unknown. */
+    val lifetimeRegistrationsCount: Long? = null,
     val totalNotifications: Long,
     val fullName: String? = null,
     val upcomingEvents: List<DashboardUpcomingEvent>? = emptyList(),

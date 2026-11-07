@@ -26,7 +26,11 @@
                 eyebrow = "ATTENDEE",
                 title = "Juan",
                 subtitle = null,
-                stats = listOf(PassStat("1 240", "Points"), PassStat("6", "Events")),
+                stats = listOf(
+                    PassStat("6", "Registered"),
+                    PassStat("4", "Check-ins"),
+                    PassStat("12", "Events"),
+                ),
                 bellCount = 3,
             ),
         )
@@ -314,7 +318,7 @@
                 android:maxLines="1"
                 android:textAppearance="@style/TextAppearance.EventQR.Type.NumericM"
                 android:textColor="@color/ui_on_primary"
-                tools:text="1 240" />
+                tools:text="6" />
 
             <TextView
                 android:id="@+id/passHeadStat1Label"
@@ -325,7 +329,7 @@
                 android:maxLines="1"
                 android:textAppearance="@style/TextAppearance.EventQR.Type.Overline"
                 android:textColor="@color/ui_on_primary_muted"
-                tools:text="Points" />
+                tools:text="Registered" />
         </LinearLayout>
 
         <View
@@ -355,7 +359,7 @@
                 android:maxLines="1"
                 android:textAppearance="@style/TextAppearance.EventQR.Type.NumericM"
                 android:textColor="@color/ui_on_primary"
-                tools:text="6" />
+                tools:text="4" />
 
             <TextView
                 android:id="@+id/passHeadStat2Label"
@@ -366,7 +370,7 @@
                 android:maxLines="1"
                 android:textAppearance="@style/TextAppearance.EventQR.Type.Overline"
                 android:textColor="@color/ui_on_primary_muted"
-                tools:text="Events" />
+                tools:text="Check-ins" />
         </LinearLayout>
 
         <View
@@ -406,7 +410,7 @@
                 android:maxLines="1"
                 android:textAppearance="@style/TextAppearance.EventQR.Type.Overline"
                 android:textColor="@color/ui_on_primary_muted"
-                tools:text="Check-ins" />
+                tools:text="Events" />
         </LinearLayout>
     </LinearLayout>
 

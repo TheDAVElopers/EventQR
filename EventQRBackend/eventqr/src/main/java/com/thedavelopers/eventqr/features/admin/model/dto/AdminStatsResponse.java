@@ -1,4 +1,10 @@
 package com.thedavelopers.eventqr.features.admin.model.dto;
 
-public record AdminStatsResponse(long totalAccounts, long activeEvents, long auditLogCount) {
+import java.util.List;
+
+public record AdminStatsResponse(
+        long totalAccounts,
+        long activeEvents,
+        long pendingEventRequests,
+        List<PendingEventRequestPreview> pendingPreview) {
 }

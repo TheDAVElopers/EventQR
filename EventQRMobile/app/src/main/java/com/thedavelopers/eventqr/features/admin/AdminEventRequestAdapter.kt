@@ -18,7 +18,7 @@ class AdminEventRequestAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AdminEventRequestViewHolder {
-        return AdminEventRequestViewHolder(EventRequestHolder(parent.context))
+        return AdminEventRequestViewHolder(EventRequestHolder(parent.context, showRequester = true))
     }
 
     override fun onBindViewHolder(holder: AdminEventRequestViewHolder, position: Int) {

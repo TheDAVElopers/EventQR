@@ -95,19 +95,21 @@ class StaffScreensTest {
     // ---- admin dashboard tiles
 
     @Test
-    fun adminTiles_showDashesWhenStatsFail_andServerNumbersOtherwise() {
+    fun adminHead_showsDashesWhenStatsFail_andServerNumbersOtherwise() {
         SessionManager(context).saveRole(AccountRole.ADMIN)
         val activity = Robolectric.buildActivity(AdminDashboardActivity::class.java).create().get()
 
         activity.renderStats(null)
-        assertEquals("--", activity.findViewById<View>(R.id.metricTotalAccounts).findViewById<TextView>(R.id.metricValue).text.toString())
-        assertEquals("--", activity.findViewById<View>(R.id.metricActiveEvents).findViewById<TextView>(R.id.metricValue).text.toString())
+        assertEquals("--", activity.findViewById<TextView>(R.id.passHeadStat1Value).text.toString())
+        assertEquals("--", activity.findViewById<TextView>(R.id.passHeadStat2Value).text.toString())
         assertEquals("--", activity.findViewById<TextView>(R.id.passHeadStat3Value).text.toString())
 
-        activity.renderStats(AdminStatsResponse(totalAccounts = 12, activeEvents = 3, auditLogCount = 2500))
-        assertEquals("12", activity.findViewById<View>(R.id.metricTotalAccounts).findViewById<TextView>(R.id.metricValue).text.toString())
-        assertEquals("3", activity.findViewById<View>(R.id.metricActiveEvents).findViewById<TextView>(R.id.metricValue).text.toString())
-        assertEquals("2.5k", activity.findViewById<TextView>(R.id.passHeadStat3Value).text.toString())
+        activity.renderStats(
+            AdminStatsResponse(totalAccounts = 12, activeEvents = 3, pendingEventRequests = 2),
+        )
+        assertEquals("2", activity.findViewById<TextView>(R.id.passHeadStat1Value).text.toString())
+        assertEquals("3", activity.findViewById<TextView>(R.id.passHeadStat2Value).text.toString())
+        assertEquals("12", activity.findViewById<TextView>(R.id.passHeadStat3Value).text.toString())
     }
 
     // ---- scan result

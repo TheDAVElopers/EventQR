@@ -49,24 +49,6 @@ data class OrganizerEventDto(
     val eventLogoUrl: String? = null,
 )
 
-data class OrganizerDashboardDto(
-    val organizerUserId: UUID? = null,
-    val organizerName: String? = null,
-    val organizerEmail: String? = null,
-    val organization: String? = null,
-    val totalEvents: Long = 0L,
-    val totalAttendees: Long = 0L,
-    /** Counted-as-registered across approved/active/ended events (same number as totalAttendees). */
-    val totalRegistrations: Long? = null,
-    /** Count of REDEEMED reward redemptions. */
-    val rewardRedemptions: Long? = null,
-    val totalTransactions: Long = 0L,
-    val totalPointsAwarded: Long = 0L,
-    val rewardsSummary: String? = null,
-    val recentEvents: List<OrganizerEventDto> = emptyList(),
-    val event: OrganizerEventDto? = null,
-)
-
 data class OrganizerAttendeeDto(
     val attendeeId: UUID? = null,
     val registrationId: UUID,

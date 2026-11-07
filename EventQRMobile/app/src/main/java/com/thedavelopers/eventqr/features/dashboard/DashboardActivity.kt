@@ -48,7 +48,7 @@ import java.util.Locale
 
 /**
  * Attendee dashboard (§6.2). The pass head is the header: role tabs, first name, and a three-cell
- * stub (POINTS / EVENTS / CHECK-INS) replacing the 135-degree gradient block and its translucent
+ * stub (REGISTERED / CHECK-INS / EVENTS) replacing the 135-degree gradient block and its translucent
  * stat tiles. Below it the screen answers one question - "what is next" - with a 96dp date row,
  * then three quieter rows, then two chips. No stat grid, no quick-action card.
  */
@@ -188,9 +188,9 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         val roleNames = portals.map { PortalSwitcher.shortRoleName(this, it) }
         val stats = DashboardStats.passHeadStats(
             summary = summary,
-            pointsLabel = getString(R.string.ui_attendee_points),
             registeredLabel = getString(R.string.ui_attendee_registered),
             checkInsLabel = getString(R.string.ui_attendee_check_ins),
+            eventsLabel = getString(R.string.ui_attendee_events),
             format = { formatCount(it) },
         )
 

@@ -28,7 +28,6 @@ import com.thedavelopers.eventqr.features.idprinting.model.dto.IdTemplateConfigR
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdTemplateConfigResponse
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerAttendeeDto
-import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDashboardDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerEventDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerScanPurposeDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerScanPurposeRequestDto
@@ -215,12 +214,6 @@ interface ApiService {
         @Path("eventId") eventId: String,
         @Body request: EventRequest,
     ): ApiResponse<EventResponse>
-
-    @GET("organizer/dashboard")
-    suspend fun getOrganizerDashboardSummary(): ApiResponse<OrganizerDashboardDto>
-
-    @GET("organizer/events/{eventId}/dashboard")
-    suspend fun getOrganizerDashboard(@Path("eventId") eventId: String): ApiResponse<OrganizerDashboardDto>
 
     @GET("organizer/events/{eventId}/attendees")
     suspend fun getOrganizerAttendees(@Path("eventId") eventId: String): ApiResponse<List<OrganizerAttendeeDto>>

@@ -21,7 +21,11 @@ import com.thedavelopers.eventqr.R
  *         PassHeadModel(
  *             eyebrow = "ATTENDEE",
  *             title = "Juan",
- *             stats = listOf(PassStat("1 240", "Points"), PassStat("6", "Events")),
+ *             stats = listOf(
+ *                 PassStat("6", "Registered"),
+ *                 PassStat("4", "Check-ins"),
+ *                 PassStat("12", "Events"),
+ *             ),
  *             bellCount = 3,
  *         ),
  *     )
@@ -232,7 +236,7 @@ object ListRowBinder {
 
     /**
      * @param badgeStyle one of the `Widget.EventQR.Ui.StatusBadge.*` styles when [trailing] is
-     *   [Trailing.BADGE]; ignored otherwise.
+     *   [Trailing.BADGE]; both its text colour and its container tint are applied. Ignored otherwise.
      */
     fun bind(
         row: View,
@@ -262,7 +266,7 @@ object ListRowBinder {
         badge?.apply {
             visibility = if (trailing == Trailing.BADGE) View.VISIBLE else View.GONE
             text = trailingText
-            badgeStyle?.let { setTextAppearance(it) }
+            badgeStyle?.let { applyBadgeTone(this, it) }
         }
 
         val container = row.findViewById<View>(R.id.listRowContainer)
@@ -272,5 +276,29 @@ object ListRowBinder {
         row.findViewById<View>(R.id.listRowDivider)?.visibility =
             if (showDivider) View.VISIBLE else View.GONE
     }
+
+    /**
+     * Applies a `Widget.EventQR.Ui.StatusBadge.*` tone to [badge].
+     *
+     * `setTextAppearance` alone ignores `android:backgroundTint` (a text appearance never tints the
+     * background), so a Warning badge kept the layout's Success fill. Both tone colours are resolved
+     * from the style and set directly instead.
+     */
+    private fun applyBadgeTone(badge: TextView, @StyleRes style: Int) {
+        badge.setTextAppearance(style)
+        val tone = badge.context.theme.obtainStyledAttributes(
+            style,
+            intArrayOf(android.R.attr.textColor, android.R.attr.backgroundTint),
+        )
+        try {
+            tone.getColorStateList(TONE_TEXT_COLOR)?.let { badge.setTextColor(it) }
+            tone.getColorStateList(TONE_BACKGROUND_TINT)?.let { badge.backgroundTintList = it }
+        } finally {
+            tone.recycle()
+        }
+    }
+
+    private const val TONE_TEXT_COLOR = 0
+    private const val TONE_BACKGROUND_TINT = 1
 }
 

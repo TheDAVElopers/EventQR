@@ -11,26 +11,19 @@
     <string name="ui_admin_tab">Admin</string>
     <string name="ui_admin_title">Admin</string>
     <string name="ui_admin_stat_pending">Pending</string>
+    <string name="ui_admin_stat_active">Active</string>
     <string name="ui_admin_stat_accounts">Accounts</string>
-    <string name="ui_admin_stat_audit">Audit</string>
-    <string name="ui_admin_eyebrow_overview">Overview</string>
-    <string name="ui_admin_eyebrow_manage">Manage</string>
-    <string name="ui_admin_active_events">Active events</string>
-    <string name="ui_admin_total_accounts">Total accounts</string>
 
-    <!-- Alert row: a list row inside the content flow, never a banner in the header -->
-    <plurals name="ui_admin_pending_alert">
-        <item quantity="one">%1$d event request pending review</item>
-        <item quantity="other">%1$d event requests pending review</item>
-    </plurals>
-
-    <!-- Rows -->
-    <string name="ui_admin_row_event_requests">Event requests</string>
-    <string name="ui_admin_row_event_requests_meta">Review event creation requests</string>
-    <string name="ui_admin_row_accounts">Account management</string>
-    <string name="ui_admin_row_accounts_meta">Create, disable and remove accounts</string>
-    <string name="ui_admin_row_audit_logs">Audit logs</string>
-    <string name="ui_admin_row_audit_logs_meta">Activity across the system</string>
+    <!-- Dashboard body: a preview of the queue plus read-only recent activity -->
+    <string name="ui_admin_eyebrow_waiting">Waiting on you</string>
+    <string name="ui_admin_eyebrow_recent">Recent activity</string>
+    <string name="ui_admin_view_all_requests">View all requests</string>
+    <string name="ui_admin_pending_empty">No requests waiting</string>
+    <!-- Empty preview while the server still counts pending requests: never claim zero. -->
+    <string name="ui_admin_pending_not_listed">Pending requests aren\'t listed here.</string>
+    <string name="ui_admin_dashboard_error">Couldn\'t load the dashboard.</string>
+    <!-- Requester -> event + submitted date, used by the preview row and the request card. -->
+    <string name="ui_admin_pending_request_meta">%1$s, submitted %2$s</string>
 
     <!-- Event requests list -->
     <string name="ui_admin_requests_title">Event requests</string>

@@ -12,6 +12,7 @@ import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
 import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
 import com.thedavelopers.eventqr.ui.components.PassStat
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.async
@@ -25,8 +26,8 @@ class DashboardPresenter(
     private val attendeeRepository: AttendeeRepository,
     private val sessionManager: SessionManager,
     private val strings: UiStrings,
+    private val scope: CoroutineScope = MainScope(),
 ) {
-    private val scope = MainScope()
     private var dashboardJob: Job? = null
 
     fun attach(view: DashboardContract.View) {
@@ -35,7 +36,6 @@ class DashboardPresenter(
 
     fun detach() {
         dashboardJob?.cancel()
-        scope.cancel()
         view = null
     }
 
@@ -185,28 +185,28 @@ class DashboardPresenter(
             // Same definitions as the Registered tab chips: Registered = live registrations whose event
             // has not ended; Completed = live registrations whose event has ended.
             val tabCounts = DashboardStats.registrationCounts(registrations, now)
-            // When /registrations failed, derive from the summary: counted registrations minus completed ones
-            // (so ended events are not counted as Registered). Without a completed count the value is unknown.
-            val summaryCompleted: Long? = (summaryResult as? NetworkResult.Success)?.data?.completedEventsCount
-            val summaryTotalRegs: Long? = (summaryResult as? NetworkResult.Success)?.data?.totalRegistrations
-            val registeredCount: Long? = if (registrationsResult is NetworkResult.Success) {
-                tabCounts.registered.toLong()
-            } else if (summaryTotalRegs != null && summaryCompleted != null) {
-                (summaryTotalRegs - summaryCompleted).coerceAtLeast(0L)
+            // Every pass-head cell needs the per-registration rows. When /registrations fails the whole
+            // stub reads "--": a summary-only count is not comparable with the normal path, because the
+            // server's completedEventsCount also counts attended ongoing events.
+            // shortcut: counts over the capped /my registrations page walk (MAX_PAGES * PAGE_SIZE), upgrade to a server-side count
+            val attendeeCounts: AttendeeCounts? = if (registrationsResult is NetworkResult.Success) {
+                DashboardStats.attendeeCounts(registrations, now)
             } else {
                 null
             }
+            val registeredCount: Long? = attendeeCounts?.registered?.toLong()
+            val checkInsCount: Long? = attendeeCounts?.checkIns?.toLong()
+            val lifetimeRegistrationsCount: Long? = attendeeCounts?.events?.toLong()
 
-            val completedCount: Long? = if (registrationsResult is NetworkResult.Success) {
-                tabCounts.completed.toLong()
-            } else {
-                summaryCompleted
-            }
+            val completedCount: Long? =
+                if (attendeeCounts != null) tabCounts.completed.toLong() else null
 
             if (summaryResult is NetworkResult.Success) {
                 val summary = summaryResult.data.copy(
                     totalRegistrations = registeredCount,
                     completedEventsCount = completedCount,
+                    checkInsCount = checkInsCount,
+                    lifetimeRegistrationsCount = lifetimeRegistrationsCount,
                     upcomingEvents = nextEventList,
                     discoverEvents = discoverEvents,
                 )
@@ -218,6 +218,8 @@ class DashboardPresenter(
                     totalTransactions = 0L,
                     totalPoints = 0L,
                     completedEventsCount = completedCount,
+                    checkInsCount = checkInsCount,
+                    lifetimeRegistrationsCount = lifetimeRegistrationsCount,
                     totalNotifications = 0L,
                     fullName = sessionManager.getFullName(),
                     upcomingEvents = nextEventList,
@@ -260,6 +262,8 @@ class DashboardPresenter(
 
 data class RegistrationCounts(val registered: Int, val completed: Int)
 
+data class AttendeeCounts(val registered: Int, val checkIns: Int, val events: Int)
+
 /** Pure dashboard tile math, kept free of Android types so it can be unit tested. */
 object DashboardStats {
     fun isLive(status: RegistrationStatus): Boolean =
@@ -275,21 +279,40 @@ object DashboardStats {
     }
 
     /**
-     * The three pass-head cells, in order: points, registered events, check-ins.
+     * The three pass-head cells: ahead of me, showed up, lifetime sign-ups.
      *
-     * The middle cell is the attendee's own registration count, never the event catalogue size.
-     * A null [summary] means the dashboard failed to load, so every value stays unknown and
-     * [format] renders "--" instead of a fake zero.
+     * [registered] is live registrations whose event has not ended, [checkIns] is every
+     * non-cancelled registration with an attendance timestamp (attendedAt, else the legacy
+     * enteredAt; ongoing events included), and [events] is every non-cancelled registration
+     * including ended and no-show ones. So checkIns <= events.
+     */
+    fun attendeeCounts(
+        registrations: List<com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse>,
+        now: Instant,
+    ): AttendeeCounts = AttendeeCounts(
+        registered = registrationCounts(registrations, now).registered,
+        checkIns = registrations.count {
+            it.status != RegistrationStatus.CANCELLED && (it.attendedAt != null || it.enteredAt != null)
+        },
+        events = registrations.count { it.status != RegistrationStatus.CANCELLED },
+    )
+
+    /**
+     * The three pass-head cells, in order: registered, check-ins, events.
+     *
+     * Every value is the attendee's own, never the event catalogue size. A null [summary] means
+     * the dashboard failed to load, so every value stays unknown and [format] renders "--"
+     * instead of a fake zero.
      */
     fun passHeadStats(
         summary: DashboardSummary?,
-        pointsLabel: String,
         registeredLabel: String,
         checkInsLabel: String,
+        eventsLabel: String,
         format: (Long?) -> String,
     ): List<PassStat> = listOf(
-        PassStat(format(summary?.totalPoints), pointsLabel),
         PassStat(format(summary?.totalRegistrations), registeredLabel),
-        PassStat(format(summary?.completedEventsCount), checkInsLabel),
+        PassStat(format(summary?.checkInsCount), checkInsLabel),
+        PassStat(format(summary?.lifetimeRegistrationsCount), eventsLabel),
     )
 }

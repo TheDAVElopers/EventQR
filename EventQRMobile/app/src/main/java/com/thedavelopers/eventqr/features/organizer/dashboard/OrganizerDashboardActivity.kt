@@ -18,7 +18,6 @@ import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.EventCardPresenter
 import com.thedavelopers.eventqr.core.util.PortalSwitcher
 import com.thedavelopers.eventqr.core.util.RoleMapper
-import com.thedavelopers.eventqr.core.util.firstNameOnly
 import com.thedavelopers.eventqr.features.auth.AuthRepository
 import com.thedavelopers.eventqr.features.organizer.NAV_DASHBOARD
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpDataSource
@@ -28,7 +27,6 @@ import com.thedavelopers.eventqr.features.organizer.OrganizerRepository
 import com.thedavelopers.eventqr.features.organizer.approvedOnly
 import com.thedavelopers.eventqr.features.organizer.bottomNav
 import com.thedavelopers.eventqr.features.organizer.lifecycleStatus
-import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDashboardDto
 import com.thedavelopers.eventqr.features.organizer.openOrganizerPage
 import com.thedavelopers.eventqr.features.organizer.resolveSelectedEvent
 import com.thedavelopers.eventqr.features.organizer.selectedEventId
@@ -58,8 +56,9 @@ import java.util.Locale
  * Organizer dashboard (§6.4).
  *
  * The pass head is the header - ORGANIZER tab (plus whatever portals the account may enter), the
- * title, and a three-cell stub. Below it: three metric rows, the next event as one date row and
- * the active events as hairline rows. There is no stat-card grid, no chip row and no gradient.
+ * title, and a three-cell stub (REGISTERED / ATTENDED / LIVE NOW). Below it: three metric rows,
+ * the next event as one date row and the active events as hairline rows. There is no stat-card
+ * grid, no chip row and no gradient.
  */
 open class OrganizerDashboardActivity : AppCompatActivity() {
     private val TAG = "OrganizerDashboardActivity"
@@ -81,9 +80,8 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
     private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH)
 
     private var headBell: Int = 0
-    private var headApproved: String? = null
-    private var headRegistrations: String? = null
-    private var headRedeemed: String? = null
+    // All null until the load answers: unknown prints `--`, never a fake 0.
+    private var numbers = OrganizerDashboardNumbers()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -101,9 +99,7 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
         nextEventHost = findViewById(R.id.nextEventHost)
         emptyEvents = findViewById(R.id.layoutEventsEmpty)
 
-        emptyEvents.setAction(getString(R.string.ui_organizer_create_event), primary = true) {
-            openOrganizerPage(ManageEventsActivity::class.java, selectedEventId().takeIf { it.isNotBlank() })
-        }
+        bindCreateEventAction()
 
         swipeRefreshLayout.setOnRefreshListener {
             isSwipeRefreshing = true
@@ -133,6 +129,12 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
         loadedOnce = true
     }
 
+    private fun bindCreateEventAction() {
+        emptyEvents.setAction(getString(R.string.ui_organizer_create_event), primary = true) {
+            openOrganizerPage(ManageEventsActivity::class.java, selectedEventId().takeIf { it.isNotBlank() })
+        }
+    }
+
     // ── Pass head ────────────────────────────────────────────────────────────
 
     private fun bindPassHead() {
@@ -147,14 +149,13 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
             PassHeadModel(
                 title = getString(R.string.ui_organizer_events),
                 eyebrow = if (hasTabs) null else getString(R.string.ui_organizer_role),
-                subtitle = null,
                 tabs = if (hasTabs) roleNames else emptyList(),
                 selectedTabIndex = portals.indexOf(PortalSwitcher.PORTAL_ORGANIZER).coerceAtLeast(0),
                 bellCount = headBell,
                 stats = listOf(
-                    PassStat(headApproved ?: getString(R.string.ui_organizer_value_unavailable), getString(R.string.ui_organizer_approved)),
-                    PassStat(headRegistrations ?: getString(R.string.ui_organizer_value_unavailable), getString(R.string.ui_organizer_registrations)),
-                    PassStat(headRedeemed ?: getString(R.string.ui_organizer_value_unavailable), getString(R.string.ui_organizer_redeemed)),
+                    PassStat(numberText(numbers.registered), getString(R.string.ui_organizer_registrations)),
+                    PassStat(numberText(numbers.attended), getString(R.string.ui_organizer_attended)),
+                    PassStat(numberText(numbers.liveNow), getString(R.string.ui_organizer_live_now)),
                 ),
                 onTabSelected = { index -> portals.getOrNull(index)?.let(::switchToPortal) },
                 onBellClick = {
@@ -213,9 +214,8 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
         findViewById<View>(R.id.layoutDashboardError).visibility = View.GONE
         lifecycleScope.launch {
             try {
-                val dashboard = repository.loadDashboardForMvp()
                 val load = repository.loadEventsForMvp()
-                renderDashboard(load, dashboard)
+                renderDashboard(load)
                 updateNotificationBadge(repository.getMyNotifications())
             } catch (error: Exception) {
                 skeletonLoading.visibility = View.GONE
@@ -229,34 +229,28 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
         }
     }
 
-    private fun renderDashboard(
+    internal fun renderDashboard(
         load: OrganizerMvpLoad<List<OrganizerMvpEvent>>,
-        dashboard: OrganizerMvpLoad<OrganizerDashboardDto?>? = null,
     ) {
         skeletonLoading.visibility = View.GONE
-        val dashboardData = dashboard?.data
 
+        val hasError = load.source == OrganizerMvpDataSource.ERROR
         val events = load.data.approvedOnly()
         val activeEvents = events.filter { it.lifecycleStatus() == "Active" }
-        val upcoming = events.count { it.lifecycleStatus() == "Upcoming" }
-        val ended = events.count { it.lifecycleStatus() == "Completed" || it.lifecycleStatus() == "Ended" }
-        val selected = repository.resolveSelectedEvent(events, selectedEventId())
+        // A transient failure must not overwrite the saved selection.
+        val selected = if (hasError) null else repository.resolveSelectedEvent(events, selectedEventId())
 
-        headApproved = formatCount(events.size.toLong())
-        headRegistrations = formatCount(
-            dashboardData?.totalRegistrations ?: dashboardData?.totalAttendees
-                ?: events.sumOf { it.registeredCount },
-        )
-        headRedeemed = formatCount(
-            dashboardData?.rewardRedemptions ?: events.sumOf { it.rewardRedemptions },
+        // One source for all six cells: a failed events load leaves every number unknown (`--`).
+        numbers = OrganizerDashboardNumbers.of(
+            events = events.takeIf { !hasError },
         )
         bindPassHead()
 
         // Secondary numbers: one metric row each, no cards and no icon tiles (§5.9).
         metricRowsContainer.removeAllViews()
-        metricRowsContainer.addView(summaryCard(getString(R.string.ui_organizer_active_events), formatCount(activeEvents.size.toLong())))
-        metricRowsContainer.addView(summaryCard(getString(R.string.ui_organizer_metrics_upcoming), formatCount(upcoming.toLong())))
-        metricRowsContainer.addView(summaryCard(getString(R.string.ui_organizer_metrics_ended), formatCount(ended.toLong())))
+        metricRowsContainer.addView(summaryCard(getString(R.string.ui_organizer_metrics_upcoming), numberText(numbers.upcoming)))
+        metricRowsContainer.addView(summaryCard(getString(R.string.ui_organizer_metrics_ended), numberText(numbers.ended)))
+        metricRowsContainer.addView(summaryCard(getString(R.string.ui_organizer_redeemed), numberText(numbers.redeemed)))
 
         // Next event: one 96dp date row.
         nextEventHost.removeAllViews()
@@ -272,19 +266,22 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
 
         // Active events: hairline rows, no per-row card.
         activeEventsContainer.removeAllViews()
-        val hasError = load.source == OrganizerMvpDataSource.ERROR
         findViewById<View>(R.id.layoutDashboardError).visibility =
             if (hasError && events.isEmpty()) View.VISIBLE else View.GONE
         findViewById<TextView>(R.id.txtDashboardError).text =
             load.message ?: getString(R.string.organizer_dashboard_events_load_failed)
 
-        if (activeEvents.isEmpty()) {
+        if (hasError) {
+            // The error card is the whole story; an empty state here would contradict it.
+            emptyEvents.visibility = View.GONE
+        } else if (activeEvents.isEmpty()) {
             emptyEvents.visibility = View.VISIBLE
             if (events.isEmpty()) {
                 emptyEvents.show(
                     getString(R.string.ui_organizer_no_events),
                     getString(R.string.ui_organizer_no_events_body),
                 )
+                bindCreateEventAction()
             } else {
                 emptyEvents.show(
                     getString(R.string.ui_organizer_no_active_events),
@@ -306,6 +303,10 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
 
     private fun formatCount(value: Long): String =
         NumberFormat.getIntegerInstance(Locale.getDefault()).format(value)
+
+    /** Unknown prints the pass head's `--`; a known zero prints `0` (§6.4). */
+    private fun numberText(value: Long?): String =
+        value?.let(::formatCount) ?: getString(R.string.ui_organizer_value_unavailable)
 
     /**
      * One event as a `list_row_date` (§5.5): neutral date block, title, time + venue, one status

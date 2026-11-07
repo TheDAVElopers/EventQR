@@ -452,8 +452,6 @@
     <string name="common_value_unavailable">--</string>
     <string name="event_registrations_assigned_event_fallback">Assigned Event</string>
     <string name="staff_dashboard_stats_unavailable">Could not load your scan counts for today. Pull down to retry.</string>
-    <string name="admin_dashboard_pending_unavailable">Unable to refresh pending requests right now.</string>
-    <string name="admin_dashboard_stats_unavailable">Dashboard totals are currently unavailable.</string>
     <string name="audit_filter_all">All</string>
     <string name="audit_filter_event_requests">Event requests</string>
     <string name="audit_filter_account">Account</string>
@@ -668,9 +666,6 @@
     <string name="auth_label_confirm_password">Confirm password</string>
     <string name="auth_hint_email">name@example.com</string>
     <string name="auth_hint_confirm_password">Repeat your password</string>
-    <string name="organizer_dashboard_total_registrations">Total registrations</string>
-    <string name="organizer_dashboard_rewards_redeemed">Rewards redeemed</string>
-    <string name="organizer_dashboard_no_events_happening_now">No events are happening right now.</string>
     <string name="staff_attendee_details_print_id">Print ID</string>
     <string name="staff_attendee_details_reprint_id">Reprint ID</string>
     <string name="staff_transaction_logs_total_scans">My scans</string>

@@ -107,16 +107,34 @@ class EventRequestCardComposeTest {
         composeTestRule.onNodeWithText("Approved").assertIsDisplayed()
     }
 
+    @Test
+    fun showRequester_leadsWithTheRequester_andKeepsTheEventInTheMeta() {
+        setCard(showRequester = true, requesterName = "Maria Santos")
+
+        composeTestRule.onNodeWithText("Maria Santos").assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText("Tech Fest 2026, submitted ${DateFormatters.formatEventDate(fixedInstant)}")
+            .assertIsDisplayed()
+    }
+
     private fun setCard(
         eventName: String = "Tech Fest 2026",
         status: EventRequestStatus = EventRequestStatus.PENDING,
         createdAt: Instant? = fixedInstant,
+        showRequester: Boolean = false,
+        requesterName: String? = null,
     ) {
         composeTestRule.setContent {
             EventQrTheme {
                 EventRequestCard(
-                    request = request(eventName = eventName, status = status, createdAt = createdAt),
+                    request = request(
+                        eventName = eventName,
+                        status = status,
+                        createdAt = createdAt,
+                        requesterName = requesterName,
+                    ),
                     onClick = {},
+                    showRequester = showRequester,
                 )
             }
         }
@@ -126,11 +144,13 @@ class EventRequestCardComposeTest {
         eventName: String,
         status: EventRequestStatus,
         createdAt: Instant? = fixedInstant,
+        requesterName: String? = null,
     ): EventRequestResponse = EventRequestResponse(
         eventRequestId = UUID.fromString("00000000-0000-0000-0000-000000000001"),
         requesterUserId = UUID.fromString("00000000-0000-0000-0000-000000000002"),
         eventName = eventName,
         status = status,
         createdAt = createdAt,
+        requesterName = requesterName,
     )
 }

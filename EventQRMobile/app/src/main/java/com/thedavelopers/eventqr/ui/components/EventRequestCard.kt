@@ -27,6 +27,7 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.features.events.eventRequestBadgeStatus
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse
+import com.thedavelopers.eventqr.features.events.requesterDisplay
 import com.thedavelopers.eventqr.ui.theme.EventQrRowTheme
 import com.thedavelopers.eventqr.ui.theme.LocalGrid
 import com.thedavelopers.eventqr.ui.theme.LocalType
@@ -43,7 +44,10 @@ import com.thedavelopers.eventqr.ui.theme.UiTextSecondary
  * quiet 4dp gap rhythm of the new list language. No accent stripe, no shadow.
  */
 
-class EventRequestHolder(context: Context) {
+class EventRequestHolder(
+    context: Context,
+    private val showRequester: Boolean = false,
+) {
 
     val view = ComposeView(context).apply {
         layoutParams = ViewGroup.LayoutParams(
@@ -60,7 +64,11 @@ class EventRequestHolder(context: Context) {
         view.setContent {
             EventQrRowTheme {
                 state.value?.let { request ->
-                    EventRequestCard(request = request, onClick = { onClick(request) })
+                    EventRequestCard(
+                        request = request,
+                        onClick = { onClick(request) },
+                        showRequester = showRequester,
+                    )
                 }
             }
         }
@@ -71,15 +79,22 @@ class EventRequestHolder(context: Context) {
     }
 }
 
+/**
+ * @param showRequester the admin queue leads with the person who asked: requester as title, event
+ *   and submitted date in the meta. The attendee's own request list keeps the event name, because
+ *   every row there is the same requester.
+ */
 @Composable
 fun EventRequestCard(
     request: EventRequestResponse,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    showRequester: Boolean = false,
 ) {
     val grid = LocalGrid.current
     val type = LocalType.current
     val shape = RoundedCornerShape(grid.radiusCard)
+    val eventName = request.eventName.ifBlank { stringResource(R.string.common_untitled_event) }
 
     Column(
         modifier = modifier
@@ -93,7 +108,11 @@ fun EventRequestCard(
     ) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = request.eventName.ifBlank { stringResource(R.string.common_untitled_event) },
+                text = if (showRequester) {
+                    requesterDisplay(request.requesterName, request.contactEmail, request.requesterUserId)
+                } else {
+                    eventName
+                },
                 style = type.title,
                 color = UiTextPrimary,
                 maxLines = 1,
@@ -107,10 +126,18 @@ fun EventRequestCard(
         Spacer(modifier = Modifier.height(grid.s4))
 
         Text(
-            text = stringResource(
-                R.string.event_request_card_submitted_submitted_1_s,
-                DateFormatters.formatEventDate(request.createdAt),
-            ),
+            text = if (showRequester) {
+                stringResource(
+                    R.string.ui_admin_pending_request_meta,
+                    eventName,
+                    DateFormatters.formatEventDate(request.createdAt),
+                )
+            } else {
+                stringResource(
+                    R.string.event_request_card_submitted_submitted_1_s,
+                    DateFormatters.formatEventDate(request.createdAt),
+                )
+            },
             style = type.bodyS,
             color = UiTextSecondary,
         )

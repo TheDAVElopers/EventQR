@@ -100,6 +100,7 @@ class EventQrEmptyState @JvmOverloads constructor(
             }
         }
         actionView = TextView(context).apply {
+            id = R.id.emptyAction
             setTextAppearance(R.style.TextAppearance_EventQR_Type_Label)
             setTextColor(ContextCompat.getColor(context, R.color.ui_primary))
             setBackgroundResource(R.drawable.bg_ui_button_ghost)

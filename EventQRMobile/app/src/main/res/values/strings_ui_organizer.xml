@@ -16,10 +16,10 @@
     <string name="ui_organizer_value_unavailable">--</string>
 
     <!-- Organizer dashboard -->
-    <string name="ui_organizer_approved">Approved</string>
     <string name="ui_organizer_registrations">Registered</string>
+    <string name="ui_organizer_attended">Attended</string>
+    <string name="ui_organizer_live_now">Live now</string>
     <string name="ui_organizer_redeemed">Redeemed</string>
-    <string name="ui_organizer_this_week">This week</string>
     <string name="ui_organizer_next_event">Next event</string>
     <string name="ui_organizer_active_events">Active events</string>
     <string name="ui_organizer_metrics_upcoming">Upcoming</string>

@@ -2,8 +2,9 @@
 <!--
     ORGANIZER DASHBOARD (6.4) - retires Gen A.
 
-        Pass head   ORGANIZER tab, title Events, stub APPROVED / REGISTRATIONS / REDEEMED
-        THIS WEEK   3 metric rows - no cards, no icon tiles, no 2x2 grid
+        Pass head   ORGANIZER tab, title Events,
+                    stub REGISTERED / ATTENDED / LIVE NOW
+        EVENTS      3 metric rows - Upcoming / Ended / Redeemed; unknown when the load failed
         NEXT EVENT  one 96dp date row
         ACTIVE      hairline rows on the page (one grouped card at most)
 
@@ -47,7 +48,7 @@
                 android:orientation="vertical"
                 android:paddingBottom="@dimen/space_32">
 
-                <!-- THIS WEEK - secondary metrics as rows -->
+                <!-- EVENTS - secondary metrics as rows -->
                 <TextView
                     style="@style/TextAppearance.EventQR.Type.Eyebrow"
                     android:layout_width="match_parent"
@@ -55,7 +56,7 @@
                     android:layout_marginStart="@dimen/ui_gutter"
                     android:layout_marginTop="@dimen/space_24"
                     android:layout_marginEnd="@dimen/ui_gutter"
-                    android:text="@string/ui_organizer_this_week" />
+                    android:text="@string/ui_organizer_events" />
 
                 <LinearLayout
                     android:id="@+id/metricRowsContainer"

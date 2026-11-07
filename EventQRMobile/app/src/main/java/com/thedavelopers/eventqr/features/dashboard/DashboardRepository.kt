@@ -6,10 +6,10 @@ import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.features.dashboard.model.dto.DashboardSummary
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
 
-class DashboardRepository(private val context: Context) {
+open class DashboardRepository(private val context: Context) {
     private val apiService = ApiClient.getService(context)
 
-    suspend fun getSummary(): NetworkResult<DashboardSummary> {
+    open suspend fun getSummary(): NetworkResult<DashboardSummary> {
         return runCatching {
             apiService.getDashboard()
         }.fold(
@@ -26,7 +26,7 @@ class DashboardRepository(private val context: Context) {
         )
     }
 
-    suspend fun getCurrentUser(): NetworkResult<UserResponse> {
+    open suspend fun getCurrentUser(): NetworkResult<UserResponse> {
         return runCatching {
             apiService.getUsersMe()
         }.fold(

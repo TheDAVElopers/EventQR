@@ -10,7 +10,6 @@ import com.thedavelopers.eventqr.core.api.sharedGson
 import com.thedavelopers.eventqr.features.ShadowEncryptedSharedPreferences
 import com.thedavelopers.eventqr.features.ShadowMasterKeys
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerAttendeeDto
-import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDashboardDto
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -34,32 +33,27 @@ class OrganizerLabelsTest {
 
     @Test
     fun dashboardLabels_areAccurate() {
-        assertEquals("Total registrations", context.getString(R.string.organizer_dashboard_total_registrations))
-        assertEquals("Rewards redeemed", context.getString(R.string.organizer_dashboard_rewards_redeemed))
-        assertEquals("No events are happening right now.", context.getString(R.string.organizer_dashboard_no_events_happening_now))
+        assertEquals("Registered", context.getString(R.string.ui_organizer_registrations))
+        assertEquals("Attended", context.getString(R.string.ui_organizer_attended))
+        assertEquals("Live now", context.getString(R.string.ui_organizer_live_now))
+        assertEquals("Redeemed", context.getString(R.string.ui_organizer_redeemed))
     }
 
     @Test
     fun dashboardScreen_usesNewLabels_andNoApproveCopy() {
         val activity = Robolectric.buildActivity(OrganizerDashboardActivity::class.java).create().get()
-        val all = texts(activity.window.decorView)
-        // §6.4: the stub is APPROVED / REGISTRATIONS / REDEEMED, and the metric rows are
-        // Active events / Upcoming / Ended. The old "Total registrations" cards are deleted.
-        assertTrue(all.toString(), all.contains("Registered"))
-        assertTrue(all.toString(), all.contains("Redeemed"))
-        assertTrue(all.toString(), all.contains("No events yet"))
-        assertFalse(all.toString(), all.contains("Total Attendees"))
-        assertFalse(all.toString(), all.contains("Rewards Given"))
-        assertFalse(all.toString(), all.any { it.contains("Approve or create") })
-    }
-
-    @Test
-    fun dashboardDto_readsTotalRegistrationsAndRedemptions() {
-        val json = """{"totalAttendees":12,"totalRegistrations":12,"rewardRedemptions":4,"totalPointsAwarded":900}"""
-        val dto = sharedGson().fromJson(json, OrganizerDashboardDto::class.java)
-        assertEquals(12L, dto.totalRegistrations)
-        assertEquals(4L, dto.rewardRedemptions)
-        assertEquals(900L, dto.totalPointsAwarded)
+        val all = texts(activity.window.decorView).toString()
+        // §6.4: the stub is REGISTERED / ATTENDED / LIVE NOW; the pass head has no subtitle.
+        // Before the first load every cell is the unavailable token, never a fake 0.
+        assertTrue(all, all.contains("Registered"))
+        assertTrue(all, all.contains("Attended"))
+        assertTrue(all, all.contains("Live now"))
+        assertTrue(all, all.contains("--"))
+        assertTrue(all, all.contains("No events yet"))
+        assertFalse(all, all.contains("Approved"))
+        assertFalse(all, all.contains("Total Attendees"))
+        assertFalse(all, all.contains("Rewards Given"))
+        assertFalse(all, all.contains("Approve or create"))
     }
 
     @Test

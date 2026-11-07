@@ -56,7 +56,7 @@ open class AttendeeRepository(context: Context) {
     }
     suspend fun getStoredFile(fileId: String) = safeApiCall { apiService.getStoredFile(fileId) }
     open suspend fun createRegistration(request: RegistrationRequest) = safeApiCall { apiService.createRegistration(request) }
-    suspend fun getMyRegistrations(): NetworkResult<List<RegistrationResponse>> =
+    open suspend fun getMyRegistrations(): NetworkResult<List<RegistrationResponse>> =
         when (val result = loadAllPages(MAX_PAGES, sortKey = { it.eventStartAt }) { page -> apiService.getMyRegistrations(page = page, size = PAGE_SIZE) }) {
             is NetworkResult.Success -> result.also { RegistrationsCache.set(it.data) }
             is NetworkResult.Error -> result

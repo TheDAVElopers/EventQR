@@ -16,7 +16,6 @@ import com.thedavelopers.eventqr.features.events.model.dto.EventResponse
 import com.thedavelopers.eventqr.core.api.dto.NotificationType
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerAttendeeDto
-import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDashboardDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerEventDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerScanPurposeDto
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerScanPurposeRequestDto
@@ -123,14 +122,6 @@ class OrganizerRepository(private val context: Context) {
     suspend fun loadEventForMvp(eventId: String): OrganizerMvpLoad<OrganizerMvpEvent?> {
         return when (val result = fetchOrganizerEvent(eventId)) {
             is NetworkResult.Success -> OrganizerMvpLoad(result.data.toMvpEvent(context), OrganizerMvpDataSource.BACKEND)
-            is NetworkResult.Error -> OrganizerMvpLoad(null, OrganizerMvpDataSource.ERROR, result.message)
-            NetworkResult.Loading -> OrganizerMvpLoad(null, OrganizerMvpDataSource.ERROR, null)
-        }
-    }
-
-    suspend fun loadDashboardForMvp(): OrganizerMvpLoad<OrganizerDashboardDto?> {
-        return when (val result = fetchOrganizerDashboardSummary()) {
-            is NetworkResult.Success -> OrganizerMvpLoad(result.data, OrganizerMvpDataSource.BACKEND)
             is NetworkResult.Error -> OrganizerMvpLoad(null, OrganizerMvpDataSource.ERROR, result.message)
             NetworkResult.Loading -> OrganizerMvpLoad(null, OrganizerMvpDataSource.ERROR, null)
         }
@@ -271,8 +262,6 @@ class OrganizerRepository(private val context: Context) {
         apiService.uploadEventLogo(part)
     }
     suspend fun getStoredFile(fileId: String) = safeApiCall { apiService.getStoredFile(fileId) }
-    suspend fun fetchOrganizerDashboardSummary() = safeApiCall { apiService.getOrganizerDashboardSummary() }
-    suspend fun fetchOrganizerDashboard(eventId: String) = safeApiCall { apiService.getOrganizerDashboard(eventId) }
     suspend fun fetchOrganizerAttendees(eventId: String) = safeApiCall { apiService.getOrganizerAttendees(eventId) }
     suspend fun fetchOrganizerTransactions(eventId: String) = safeApiCall { apiService.getOrganizerTransactions(eventId) }
     suspend fun fetchOrganizerStaff(eventId: String) = safeApiCall { apiService.getOrganizerStaff(eventId) }
