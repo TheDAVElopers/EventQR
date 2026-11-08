@@ -90,6 +90,47 @@
             android:textColor="@color/ui_text_secondary" />
     </LinearLayout>
 
+    <!-- Refresh failure with readable rows: the rows stay and the error is in the flow, directly
+         under the filter, with Retry beside the sentence (§5.7 line 642). No Snackbar/toast; the
+         strip is a polite live region so a repeated failure is announced without a manual call. -->
+    <LinearLayout
+        android:id="@+id/errorTransactions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/ui_gutter"
+        android:layout_marginEnd="@dimen/ui_gutter"
+        android:accessibilityLiveRegion="polite"
+        android:background="@drawable/bg_ui_block_r4"
+        android:backgroundTint="@color/ui_error_container"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/ui_touch_min"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_lg"
+        android:paddingTop="@dimen/space_sm"
+        android:paddingEnd="@dimen/space_sm"
+        android:paddingBottom="@dimen/space_sm"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/txtTransactionsError"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/user_transaction_history_unable_to_load_transactions"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+            android:textColor="@color/ui_on_error_container" />
+
+        <TextView
+            android:id="@+id/btnTransactionsRetry"
+            style="@style/Widget.EventQR.Ui.Button.Ghost"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:minHeight="@dimen/ui_button_height_inline"
+            android:text="@string/ui_attendee_retry"
+            android:textColor="@color/ui_on_error_container" />
+    </LinearLayout>
+
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshTransactions"
         android:layout_width="match_parent"
@@ -123,30 +164,6 @@
                 android:layout_height="wrap_content"
                 android:visibility="gone"
                 app:gutter="false" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/txtTransactionsError"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/user_transaction_history_unable_to_load_transactions"
-                    android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
-                    android:textColor="@color/ui_error"
-                    android:visibility="gone" />
-
-                <TextView
-                    android:id="@+id/btnTransactionsRetry"
-                    style="@style/Widget.EventQR.Ui.Button.Ghost"
-                    android:layout_width="wrap_content"
-                    android:layout_height="@dimen/ui_button_height_inline"
-                    android:text="@string/ui_attendee_retry"
-                    android:visibility="gone" />
-            </LinearLayout>
         </FrameLayout>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 

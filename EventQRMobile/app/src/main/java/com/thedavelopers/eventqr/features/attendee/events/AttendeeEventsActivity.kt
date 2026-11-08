@@ -30,14 +30,17 @@ import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.temporal.ChronoUnit
+import java.util.UUID
 
 /**
- * Discover (§6.2). Compact pass head + 48dp search + an optional date-filter chip + a chip row; the
- * list is EventCard rows on the flat page. The old radial-glow header, TextInputLayout search box
- * and pill chips are gone.
+ * Discover (§6.2). Compact pass head + 48dp search + an optional date-filter chip + a chip row
+ * (`All`, `This week`, `Registered`); the list is `list_row_date` rows on the flat page. The old
+ * radial-glow header, TextInputLayout search box, pill chips and card rows are gone.
  *
- * Status is required (All by default); the date filter is optional. They AND with the search text,
- * and the sort order is never touched by a filter.
+ * `This week` is `eventStartAt` in `[now, now + 7 days]`. `Registered`
+ * is a live registration (`DashboardStats.isLive`), never merely any registration record. The chips
+ * AND with the search text and the date filter, and the sort order is never touched by a filter.
  */
 open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
     @VisibleForTesting
@@ -46,9 +49,8 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
     private lateinit var emptyState: EventQrEmptyState
     private lateinit var skeletonLoading: View
     private lateinit var chipAll: TextView
-    private lateinit var chipUpcoming: TextView
-    private lateinit var chipActive: TextView
-    private lateinit var chipCompleted: TextView
+    private lateinit var chipThisWeek: TextView
+    private lateinit var chipRegistered: TextView
     private lateinit var chipDateFilter: TextView
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var countView: TextView
@@ -57,6 +59,11 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
     private var selectedFilter: EventFilter = EventFilter.ALL
     private var isFirstResume = true
     private var searchQuery: String = ""
+    private var hasRenderedEvents = false
+
+    /** Event ids with a live registration; null until the first successful answer. */
+    private var registeredEventIds: Set<UUID>? = null
+    private var registeredLoadFailed = false
 
     /**
      * The applied date filter, or null for Any date. Restored across a refresh, rotation, and
@@ -70,7 +77,7 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
     internal var dateSheet: DateFilterSheet? = null
     private var pendingSheetDraft: DateFilterDraft? = null
 
-    enum class EventFilter { ALL, UPCOMING, ACTIVE, COMPLETED }
+    enum class EventFilter { ALL, THIS_WEEK, REGISTERED }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,9 +92,8 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
         emptyState = findViewById(R.id.txtEventsEmpty)
         skeletonLoading = findViewById(R.id.skeletonLoading)
         chipAll = findViewById(R.id.chipAll)
-        chipUpcoming = findViewById(R.id.chipUpcoming)
-        chipActive = findViewById(R.id.chipActive)
-        chipCompleted = findViewById(R.id.chipCompleted)
+        chipThisWeek = findViewById(R.id.chipThisWeek)
+        chipRegistered = findViewById(R.id.chipRegistered)
         chipDateFilter = findViewById(R.id.chipDateFilter)
         adapter = AttendeeEventAdapter { event -> openEventDetail(event) }
 
@@ -104,9 +110,8 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
 
         swipeRefresh.setOnRefreshListener { presenter.loadEvents() }
         chipAll.setOnClickListener { selectFilter(EventFilter.ALL) }
-        chipUpcoming.setOnClickListener { selectFilter(EventFilter.UPCOMING) }
-        chipActive.setOnClickListener { selectFilter(EventFilter.ACTIVE) }
-        chipCompleted.setOnClickListener { selectFilter(EventFilter.COMPLETED) }
+        chipThisWeek.setOnClickListener { selectFilter(EventFilter.THIS_WEEK) }
+        chipRegistered.setOnClickListener { selectFilter(EventFilter.REGISTERED) }
         chipDateFilter.setOnClickListener { openDateSheet(draftFromApplied()) }
         restoreFilterState(savedInstanceState)
         updateTabs()
@@ -152,24 +157,27 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
         }
     }
 
-    private fun statusMatches(item: AttendeeEventResponse): Boolean = when (selectedFilter) {
+    private fun statusMatches(item: AttendeeEventResponse, now: Instant): Boolean = when (selectedFilter) {
         EventFilter.ALL -> true
-        EventFilter.UPCOMING -> item.eventStartAt?.isAfter(Instant.now()) == true
-        EventFilter.ACTIVE -> isOngoingEvent(item)
-        EventFilter.COMPLETED -> isPastEvent(item)
+        EventFilter.THIS_WEEK -> isThisWeek(item, now)
+        EventFilter.REGISTERED -> registeredEventIds?.contains(item.eventId) == true
     }
 
-    private fun getFilteredByStatus(): List<AttendeeEventResponse> {
+    /** `eventStartAt` in `[now, now + 7 days]`; an event with no start instant matches nothing. */
+    private fun isThisWeek(item: AttendeeEventResponse, now: Instant): Boolean {
+        val start = item.eventStartAt ?: return false
+        return !start.isBefore(now) && !start.isAfter(now.plus(THIS_WEEK_DAYS, ChronoUnit.DAYS))
+    }
+
+    private fun getFilteredByStatus(now: Instant): List<AttendeeEventResponse> {
         return when (selectedFilter) {
-            EventFilter.ALL -> sortAll(allEvents)
-            EventFilter.UPCOMING -> allEvents.filter { statusMatches(it) }.sortedBy { it.eventStartAt }
-            EventFilter.ACTIVE -> allEvents.filter { statusMatches(it) }.sortedBy { it.eventStartAt }
-            EventFilter.COMPLETED -> allEvents.filter { statusMatches(it) }.sortedByDescending { it.eventEndAt }
+            EventFilter.ALL -> sortAll(allEvents, now)
+            EventFilter.THIS_WEEK -> allEvents.filter { statusMatches(it, now) }.sortedBy { it.eventStartAt }
+            EventFilter.REGISTERED -> sortAll(allEvents.filter { statusMatches(it, now) }, now)
         }
     }
 
-    private fun isOngoingEvent(item: AttendeeEventResponse): Boolean {
-        val now = Instant.now()
+    private fun isOngoingEvent(item: AttendeeEventResponse, now: Instant): Boolean {
         return item.eventStartAt != null &&
                 !item.eventStartAt.isAfter(now) &&
                 item.eventEndAt?.isBefore(now) != true
@@ -276,12 +284,14 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
     }
 
     override fun showLoading(isLoading: Boolean) {
+        val hasRows = adapter.itemCount > 0
         if (!swipeRefresh.isRefreshing) {
-            skeletonLoading.visibility = if (isLoading) View.VISIBLE else View.GONE
+            // A refresh over readable rows keeps them on screen; the skeleton is a first-load state.
+            skeletonLoading.visibility = if (isLoading && !hasRows) View.VISIBLE else View.GONE
         }
         if (isLoading) {
             emptyState.visibility = View.GONE
-            recyclerView.visibility = View.GONE
+            if (!hasRows) recyclerView.visibility = View.GONE
         } else {
             swipeRefresh.isRefreshing = false
         }
@@ -291,8 +301,16 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
+    override fun showRegisteredEventIds(ids: Set<UUID>?) {
+        // Keep the last good set on a refresh failure; only a first-ever failure leaves it null.
+        if (ids != null) registeredEventIds = ids
+        registeredLoadFailed = ids == null
+        if (hasRenderedEvents && selectedFilter == EventFilter.REGISTERED) renderFilteredEvents()
+    }
+
     override fun showEvents(items: List<AttendeeEventResponse>) {
         swipeRefresh.isRefreshing = false
+        hasRenderedEvents = true
         allEvents = items
         renderFilteredEvents()
     }
@@ -308,7 +326,6 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
             getString(R.string.ui_attendee_no_events_body),
         )
         emptyState.setAction(getString(R.string.ui_attendee_retry)) { presenter.loadEvents() }
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
     private fun selectFilter(filter: EventFilter) {
@@ -320,9 +337,8 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
     private fun updateTabs() {
         val chips = mapOf(
             EventFilter.ALL to chipAll,
-            EventFilter.UPCOMING to chipUpcoming,
-            EventFilter.ACTIVE to chipActive,
-            EventFilter.COMPLETED to chipCompleted,
+            EventFilter.THIS_WEEK to chipThisWeek,
+            EventFilter.REGISTERED to chipRegistered,
         )
         for ((filter, chip) in chips) {
             val isSelected = filter == selectedFilter
@@ -345,7 +361,8 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
      * rows, and the date rows prove whether the window itself is what emptied the list.
      */
     private fun renderFilteredEvents() {
-        val statusRows = getFilteredByStatus()
+        val now = Instant.now()
+        val statusRows = getFilteredByStatus(now)
         val appliedDate = dateFilter
         val inDateRows = appliedDate
             ?.let { filter -> statusRows.filter { DateFilterRanges.matches(filter, it.eventStartAt) } }
@@ -358,14 +375,34 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
             inDateRows.filter { it.title.contains(searchQuery, ignoreCase = true) }
         }
         adapter.submitItems(filtered)
+        updateDateChip()
+        // The Registered chip can be restored before the registrations answer arrives. Until one
+        // exists, painting "no registered events" and 0 EVENTS would be a lie: keep the first-load
+        // skeleton and let showRegisteredEventIds() finish the render.
+        if (isCheckingRegistrations()) {
+            countView.text = getString(R.string.common_value_unavailable)
+            recyclerView.visibility = View.GONE
+            emptyState.visibility = View.GONE
+            skeletonLoading.visibility = View.VISIBLE
+            return
+        }
+        if (hasRenderedEvents) skeletonLoading.visibility = View.GONE
         countView.text = CountLabel.format(filtered.size.toLong(), getString(R.string.ui_attendee_events_count))
         recyclerView.visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
-        updateDateChip()
         // Date-specific copy only when the window is what emptied the list AND clearing the date
         // actually reveals rows; a search with no match keeps the ordinary copy.
         val dateEmpty = appliedDate != null && inDateRows.isEmpty() && clearReveals
         showEmptyState(filtered.isEmpty(), appliedDate, dateEmpty)
     }
+
+    /**
+     * The Registered chip is active but no registration answer exists yet (first load in flight).
+     * Neither the empty state nor the error state may paint until success or first failure.
+     */
+    private fun isCheckingRegistrations(): Boolean =
+        selectedFilter == EventFilter.REGISTERED &&
+            registeredEventIds == null &&
+            !registeredLoadFailed
 
     /** Applies (or clears) the date filter and re-renders. The only write path for the chip. */
     @VisibleForTesting
@@ -449,6 +486,18 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
             emptyState.visibility = View.GONE
             return
         }
+        // A failed registration load must never read as "no registrations": the Registered chip
+        // owns an honest retry state instead (§6.2).
+        if (selectedFilter == EventFilter.REGISTERED && registeredLoadFailed) {
+            emptyState.setIcon(AppIcons.Warning)
+            emptyState.show(
+                getString(R.string.ui_attendee_registrations_error_title),
+                getString(R.string.ui_attendee_load_error_body),
+            )
+            emptyState.setAction(getString(R.string.ui_attendee_retry)) { presenter.loadEvents() }
+            emptyState.visibility = View.VISIBLE
+            return
+        }
         // Date-specific copy only earns its "Clear date" action when clearing really reveals rows.
         if (dateEmpty && appliedDate != null) {
             val title = when (appliedDate) {
@@ -470,17 +519,15 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
                 title = R.string.attendee_events_no_events_available_yet
                 body = R.string.ui_attendee_discover_empty_body
             }
-            EventFilter.UPCOMING -> {
-                title = R.string.attendee_events_no_upcoming_events
+            EventFilter.THIS_WEEK -> {
+                title = R.string.ui_attendee_no_events_this_week
                 body = R.string.ui_attendee_discover_empty_body
             }
-            EventFilter.ACTIVE -> {
-                title = R.string.organizer_dashboard_no_active_events
-                body = R.string.ui_attendee_discover_empty_body
-            }
-            EventFilter.COMPLETED -> {
-                title = R.string.attendee_events_no_completed_events
-                body = R.string.ui_attendee_discover_empty_body
+            EventFilter.REGISTERED -> {
+                // Registered means a live registration, so the copy never claims the attendee
+                // has no registrations at all - only that none are live.
+                title = R.string.ui_attendee_no_registered_events_to_show
+                body = R.string.ui_attendee_no_registered_events_body
             }
         }
         emptyState.setIcon(AppIcons.Event)
@@ -489,23 +536,23 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
         emptyState.visibility = View.VISIBLE
     }
 
-    private fun sortAll(items: List<AttendeeEventResponse>): List<AttendeeEventResponse> {
-        val ongoing = items.filter { isOngoingEvent(it) }.sortedBy { it.eventStartAt }
-        val upcoming = items.filter { it.eventStartAt?.isAfter(Instant.now()) == true }.sortedBy { it.eventStartAt }
-        val completed = items.filter { isPastEvent(it) }.sortedByDescending { it.eventEndAt }
+    private fun sortAll(items: List<AttendeeEventResponse>, now: Instant): List<AttendeeEventResponse> {
+        val ongoing = items.filter { isOngoingEvent(it, now) }.sortedBy { it.eventStartAt }
+        val upcoming = items.filter { it.eventStartAt?.isAfter(now) == true }.sortedBy { it.eventStartAt }
+        val completed = items.filter { isPastEvent(it, now) }.sortedByDescending { it.eventEndAt }
         val bucketed = (ongoing + upcoming + completed).toSet()
         // Events with null start/end dates fall in no bucket; keep them at the end instead of dropping them.
         val undated = items.filter { it !in bucketed }
         return ongoing + upcoming + completed + undated
     }
 
-    private fun isPastEvent(item: AttendeeEventResponse): Boolean {
-        val now = Instant.now()
+    private fun isPastEvent(item: AttendeeEventResponse, now: Instant): Boolean {
         return item.eventEndAt?.isBefore(now) == true
     }
 
     private companion object {
         const val SEARCH_ROW_REFLOW_FONT_SCALE = 1.3f
+        const val THIS_WEEK_DAYS = 7L
         const val STATE_FILTER_STATUS = "discover.filter.status"
         const val STATE_FILTER_MODE = "discover.dateFilter.mode"
         const val STATE_FILTER_YEAR = "discover.dateFilter.year"

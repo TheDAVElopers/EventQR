@@ -19,32 +19,38 @@ import com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse
 import com.thedavelopers.eventqr.ui.components.EventRequestHolder
 import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.time.Instant
 
 class MyEventRequestsActivity : AppCompatActivity() {
+    /** Tests set this before the first load to replace the network repository. */
+    internal var repositoryOverride: AttendeeRepository? = null
+
     private lateinit var repository: AttendeeRepository
     private lateinit var btnBack: ImageButton
     private lateinit var recyclerRequests: RecyclerView
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var skeletonLoading: View
     private lateinit var txtEmpty: EventQrEmptyState
-    private lateinit var txtError: TextView
+    private lateinit var errorStrip: View
     private lateinit var btnRetry: TextView
     private lateinit var adapter: MyEventRequestsAdapter
+    private var loadJob: Job? = null
+    private var isFirstResume = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_my_event_requests)
         applyEventQrSystemBarAppearance()
-        repository = AttendeeRepository(this)
+        repository = repositoryOverride ?: AttendeeRepository(this)
 
         btnBack = findViewById(R.id.nav_header_back)
         swipeRefresh = findViewById(R.id.swipeRefreshMyEventRequests)
         recyclerRequests = findViewById(R.id.recyclerMyEventRequests)
         skeletonLoading = findViewById(R.id.skeletonLoading)
         txtEmpty = findViewById(R.id.txtMyRequestsEmpty)
-        txtError = findViewById(R.id.txtMyRequestsError)
+        errorStrip = findViewById(R.id.errorMyRequests)
         btnRetry = findViewById(R.id.btnMyRequestsRetry)
 
         adapter = MyEventRequestsAdapter(
@@ -69,14 +75,23 @@ class MyEventRequestsActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (::adapter.isInitialized) {
-            loadRequests()
+        // onCreate already loads; later resumes (e.g. back from a request detail) refresh the list.
+        if (isFirstResume) {
+            isFirstResume = false
+            return
         }
+        loadRequests()
+    }
+
+    override fun onDestroy() {
+        loadJob?.cancel()
+        super.onDestroy()
     }
 
     private fun loadRequests() {
+        loadJob?.cancel()
         showLoadingState()
-        lifecycleScope.launch {
+        loadJob = lifecycleScope.launch {
             when (val result = repository.getMyEventRequests()) {
                 is NetworkResult.Success -> showDataState(result.data)
                 is NetworkResult.Error -> {
@@ -88,24 +103,28 @@ class MyEventRequestsActivity : AppCompatActivity() {
     }
 
     private fun showLoadingState() {
+        val hasRows = ::adapter.isInitialized && adapter.itemCount > 0
         if (!swipeRefresh.isRefreshing) {
-            skeletonLoading.visibility = View.VISIBLE
+            // A refresh over readable rows keeps them on screen; the skeleton is a first-load state.
+            skeletonLoading.visibility = if (!hasRows) View.VISIBLE else View.GONE
         }
-        txtEmpty.visibility = View.GONE
-        txtError.visibility = View.GONE
-        btnRetry.visibility = View.GONE
-        recyclerRequests.visibility = View.GONE
+        errorStrip.visibility = View.GONE
+        if (!hasRows) {
+            txtEmpty.visibility = View.GONE
+            recyclerRequests.visibility = View.GONE
+        }
     }
 
     private fun showDataState(requests: List<EventRequestResponse>) {
         swipeRefresh.isRefreshing = false
         skeletonLoading.visibility = View.GONE
-        txtError.visibility = View.GONE
-        btnRetry.visibility = View.GONE
+        errorStrip.visibility = View.GONE
 
         if (requests.isEmpty()) {
             txtEmpty.visibility = View.VISIBLE
             recyclerRequests.visibility = View.GONE
+            txtEmpty.setIcon(AppIcons.Request)
+            txtEmpty.setAction(null)
             txtEmpty.show(
                 getString(R.string.my_event_requests_no_event_requests_yet),
                 getString(R.string.ui_attendee_no_requests_body),
@@ -122,12 +141,28 @@ class MyEventRequestsActivity : AppCompatActivity() {
     private fun showErrorState(message: String) {
         swipeRefresh.isRefreshing = false
         skeletonLoading.visibility = View.GONE
-        recyclerRequests.visibility = View.GONE
-        txtEmpty.visibility = View.GONE
 
-        txtError.visibility = View.VISIBLE
-        btnRetry.visibility = View.VISIBLE
-        txtError.text = message
+        if (adapter.itemCount > 0) {
+            // The rows are still readable: keep them and report the failed refresh in the flow,
+            // under the header, with Retry beside the sentence (§5.7 line 642).
+            errorStrip.visibility = View.VISIBLE
+            txtEmpty.visibility = View.GONE
+            recyclerRequests.visibility = View.VISIBLE
+        } else {
+            // Zero-row failure keeps the empty-state slot, with the same in-flow Retry.
+            errorStrip.visibility = View.GONE
+            txtEmpty.setIcon(AppIcons.Warning)
+            txtEmpty.setContent(
+                getString(R.string.my_event_requests_unable_to_load_event_requests),
+                message.ifBlank { getString(R.string.ui_attendee_load_error_body) },
+            )
+            txtEmpty.setAction(getString(R.string.ui_attendee_retry)) { loadRequests() }
+            recyclerRequests.visibility = View.GONE
+            txtEmpty.visibility = View.VISIBLE
+            txtEmpty.announceForAccessibility(
+                getString(R.string.my_event_requests_unable_to_load_event_requests),
+            )
+        }
     }
 
     private fun onRequestTapped(request: EventRequestResponse) {

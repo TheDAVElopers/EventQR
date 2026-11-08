@@ -4,12 +4,12 @@
 
         Compact pass head (Block A + tear) - "Discover" with the result count in the end slot
         48dp filled search field, no label, with the optional date-filter chip trailing it
-        36dp chips in a 48dp row: All / Upcoming / Active / Completed
-        EventCard rows on the flat page background
+        36dp chips in a 48dp row: All / This week / Registered
+        list_row_date rows at 96dp on the flat page: one badge trailing, hairline dividers
 
     Deleted: the 280dp radial purple glow, the 26sp + 13sp tab header, the 54dp outlined search
     box, the 38dp pill chips, the per-card status + progress + coloured date-badge stack, and the
-    copy-pasted skeleton block.
+    card skeleton.
 
     Empty/error state is the shared EventQrEmptyState (left aligned, one action).
 -->
@@ -89,28 +89,20 @@
                 android:text="@string/ui_attendee_all" />
 
             <TextView
-                android:id="@+id/chipUpcoming"
+                android:id="@+id/chipThisWeek"
                 style="@style/Widget.EventQR.Ui.Chip"
                 android:layout_width="wrap_content"
                 android:layout_height="@dimen/ui_chip_height"
                 android:layout_marginStart="@dimen/ui_chip_gap"
-                android:text="@string/ui_attendee_upcoming" />
+                android:text="@string/ui_attendee_this_week" />
 
             <TextView
-                android:id="@+id/chipActive"
+                android:id="@+id/chipRegistered"
                 style="@style/Widget.EventQR.Ui.Chip"
                 android:layout_width="wrap_content"
                 android:layout_height="@dimen/ui_chip_height"
                 android:layout_marginStart="@dimen/ui_chip_gap"
-                android:text="@string/ui_attendee_active" />
-
-            <TextView
-                android:id="@+id/chipCompleted"
-                style="@style/Widget.EventQR.Ui.Chip"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_chip_height"
-                android:layout_marginStart="@dimen/ui_chip_gap"
-                android:text="@string/ui_attendee_completed" />
+                android:text="@string/ui_attendee_registered" />
         </LinearLayout>
     </HorizontalScrollView>
 
@@ -125,24 +117,90 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
+            <!-- Rows carry the 20dp gutter themselves, like every other list_row_* host. -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerEvents"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
                 android:nestedScrollingEnabled="true"
-                android:paddingStart="@dimen/ui_gutter"
-                android:paddingEnd="@dimen/ui_gutter"
                 android:paddingBottom="@dimen/space_24" />
 
-            <include
+            <!-- First load: six rows at the loaded 96dp geometry (§5.11, §9.6 #13). The CLOSED
+                 container announces "Loading"; every bar is hidden from TalkBack (§9.5). -->
+            <LinearLayout
                 android:id="@+id/skeletonLoading"
-                layout="@layout/include_skeleton_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/ui_gutter"
-                android:layout_marginTop="@dimen/space_sm"
-                android:layout_marginEnd="@dimen/ui_gutter" />
+                android:contentDescription="@string/ui_skeleton_loading"
+                android:focusable="true"
+                android:orientation="vertical">
+
+                <include
+                    layout="@layout/include_skeleton_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/ui_row_height_date" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline"
+                    android:importantForAccessibility="no" />
+
+                <include
+                    layout="@layout/include_skeleton_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/ui_row_height_date" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline"
+                    android:importantForAccessibility="no" />
+
+                <include
+                    layout="@layout/include_skeleton_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/ui_row_height_date" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline"
+                    android:importantForAccessibility="no" />
+
+                <include
+                    layout="@layout/include_skeleton_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/ui_row_height_date" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline"
+                    android:importantForAccessibility="no" />
+
+                <include
+                    layout="@layout/include_skeleton_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/ui_row_height_date" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline"
+                    android:importantForAccessibility="no" />
+
+                <include
+                    layout="@layout/include_skeleton_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/ui_row_height_date" />
+            </LinearLayout>
 
             <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
                 android:id="@+id/txtEventsEmpty"

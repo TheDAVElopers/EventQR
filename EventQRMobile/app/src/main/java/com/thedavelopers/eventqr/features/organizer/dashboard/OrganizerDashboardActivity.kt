@@ -36,6 +36,7 @@ import com.thedavelopers.eventqr.features.organizer.events.ManageEventsActivity
 import com.thedavelopers.eventqr.features.organizer.notifications.NotificationManagementActivity
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+import com.thedavelopers.eventqr.ui.components.ListRowBinder
 import com.thedavelopers.eventqr.ui.components.PassHeadBinder
 import com.thedavelopers.eventqr.ui.components.PassHeadModel
 import com.thedavelopers.eventqr.ui.components.PassStat
@@ -324,18 +325,24 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
             parsedDate?.format(dayFormatter) ?: EventCardPresenter.UNKNOWN_DAY
         row.findViewById<TextView>(R.id.listRowMonth).text =
             parsedDate?.format(monthFormatter)?.uppercase(Locale.ENGLISH) ?: EventCardPresenter.UNKNOWN_MONTH
-        row.findViewById<TextView>(R.id.listRowTitle).text = event.title
         val time = parsedStart?.format(timeFormatter) ?: EventCardPresenter.UNKNOWN_TIME
         val location = event.venue.takeIf { it.isNotBlank() && it != "Venue not set" }
             ?: EventCardPresenter.UNKNOWN_LOCATION
-        row.findViewById<TextView>(R.id.listRowMeta).text = listOf(time, location)
-            .filter { it != EventCardPresenter.UNKNOWN_TIME && it != EventCardPresenter.UNKNOWN_LOCATION }
-            .joinToString(" - ")
-            .ifBlank { getString(R.string.ui_organizer_none_scheduled) }
+        val status = event.lifecycleStatus()
+        ListRowBinder.bind(
+            row,
+            title = event.title,
+            meta = listOf(time, location)
+                .filter { it != EventCardPresenter.UNKNOWN_TIME && it != EventCardPresenter.UNKNOWN_LOCATION }
+                .joinToString(" - ")
+                .ifBlank { getString(R.string.ui_organizer_none_scheduled) },
+            trailing = ListRowBinder.Trailing.BADGE,
+            trailingText = status,
+            showDivider = showDivider,
+            onClick = onClick,
+        )
 
         val badge = row.findViewById<TextView>(R.id.listRowBadge)
-        val status = event.lifecycleStatus()
-        badge.text = status
         val (bg, fg) = when (status) {
             "Active" -> R.color.ui_accent to R.color.ui_on_accent
             "Upcoming" -> R.color.ui_info_container to R.color.ui_on_info_container
@@ -345,10 +352,6 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
         }
         badge.backgroundTintList = android.content.res.ColorStateList.valueOf(color(bg))
         badge.setTextColor(ContextCompat.getColor(this, fg))
-
-        row.findViewById<View>(R.id.listRowContainer).setOnClickListener { onClick() }
-        row.findViewById<View>(R.id.listRowDivider).visibility =
-            if (showDivider) View.VISIBLE else View.GONE
         return row
     }
 

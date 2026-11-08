@@ -28,12 +28,18 @@ import com.thedavelopers.eventqr.features.transactions.TransactionAdapter
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
 
 open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistoryContract.View {
+    /** Tests set this before the first load to replace the network repository. */
+    internal var repositoryOverride: AttendeeRepository? = null
+
     private lateinit var presenter: TransactionHistoryPresenter
+    private val repository: AttendeeRepository by lazy {
+        repositoryOverride ?: AttendeeRepository(this)
+    }
     private lateinit var adapter: TransactionAdapter
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var skeletonLoading: View
     private lateinit var emptyText: EventQrEmptyState
-    private lateinit var errorText: TextView
+    private lateinit var errorStrip: View
     private lateinit var retryButton: TextView
     private lateinit var filterSpinner: Spinner
     private lateinit var summaryCountText: TextView
@@ -54,12 +60,12 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
         setContentView(R.layout.activity_user_transaction_history)
         configureAttendeeBottomNav(AttendeeBottomNavItem.PROFILE)
 
-        presenter = TransactionHistoryPresenter(this, AttendeeRepository(this))
+        presenter = TransactionHistoryPresenter(this, repository)
 
         swipeRefresh = findViewById(R.id.swipeRefreshTransactions)
         skeletonLoading = findViewById(R.id.skeletonLoading)
         emptyText = findViewById(R.id.txtTransactionsEmpty)
-        errorText = findViewById(R.id.txtTransactionsError)
+        errorStrip = findViewById(R.id.errorTransactions)
         retryButton = findViewById(R.id.btnTransactionsRetry)
         filterSpinner = findViewById(R.id.spinnerEventFilter)
         cardSelectedEvent = findViewById(R.id.cardSelectedEvent)
@@ -93,14 +99,17 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
     }
 
     override fun showLoading(isLoading: Boolean) {
+        val hasRows = adapter.itemCount > 0
         if (!swipeRefresh.isRefreshing) {
-            skeletonLoading.visibility = if (isLoading) View.VISIBLE else View.GONE
+            // A refresh over readable rows keeps them on screen; the skeleton is a first-load state.
+            skeletonLoading.visibility = if (isLoading && !hasRows) View.VISIBLE else View.GONE
         }
         if (isLoading) {
-            retryButton.visibility = View.GONE
-            errorText.visibility = View.GONE
-            emptyText.visibility = View.GONE
-            recyclerView.visibility = View.GONE
+            errorStrip.visibility = View.GONE
+            if (!hasRows) {
+                emptyText.visibility = View.GONE
+                recyclerView.visibility = View.GONE
+            }
         } else {
             swipeRefresh.isRefreshing = false
         }
@@ -114,19 +123,38 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
         swipeRefresh.isRefreshing = false
         skeletonLoading.visibility = View.GONE
 
+        if (adapter.itemCount > 0) {
+            // The rows are still readable: keep them and report the failed refresh in the flow,
+            // under the filter, with Retry beside the sentence (§5.7 line 642).
+            errorStrip.visibility = View.VISIBLE
+            emptyText.visibility = View.GONE
+            recyclerView.visibility = View.VISIBLE
+        } else {
+            showErrorState(message)
+        }
+    }
+
+    /** A zero-row failure replaces the list with the empty-state slot. */
+    private fun showErrorState(message: String) {
+        errorStrip.visibility = View.GONE
         summaryCountText.text = getString(R.string.user_transaction_history_0_transactions)
-        errorText.text = message.ifBlank { "Unable to load transactions." }
-        errorText.visibility = View.VISIBLE
-        retryButton.visibility = View.VISIBLE
-        emptyText.visibility = View.GONE
+        emptyText.setIcon(AppIcons.Warning)
+        emptyText.setContent(
+            getString(R.string.user_transaction_history_unable_to_load_transactions),
+            message.ifBlank { getString(R.string.ui_attendee_load_error_body) },
+        )
+        emptyText.setAction(getString(R.string.ui_attendee_retry)) { presenter.load(null) }
         recyclerView.visibility = View.GONE
+        emptyText.visibility = View.VISIBLE
+        emptyText.announceForAccessibility(
+            getString(R.string.user_transaction_history_unable_to_load_transactions),
+        )
     }
 
     override fun renderTransactions(items: List<TransactionResponse>) {
         swipeRefresh.isRefreshing = false
         skeletonLoading.visibility = View.GONE
-        retryButton.visibility = View.GONE
-        errorText.visibility = View.GONE
+        errorStrip.visibility = View.GONE
         allTransactions = items
         updateFilterOptions(items)
         applySelectedFilter()
@@ -244,6 +272,8 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
         }
 
         adapter.submitItems(filtered)
+        emptyText.setIcon(AppIcons.Logs)
+        emptyText.setAction(null)
         emptyText.setContent(
             getString(R.string.attendee_transactions_no_transactions_found_for_the_select),
             getString(R.string.ui_attendee_no_transactions_body),

@@ -28,6 +28,7 @@ import com.thedavelopers.eventqr.features.organizer.lifecycleStatus
 import com.thedavelopers.eventqr.features.organizer.openOrganizerPage
 import com.thedavelopers.eventqr.ui.components.CountLabel
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+import com.thedavelopers.eventqr.ui.components.ListRowBinder
 import com.thedavelopers.eventqr.ui.components.PassHeadBinder
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
@@ -298,19 +299,25 @@ open class ManageEventsActivity : AppCompatActivity() {
                     parsedDate?.format(dayFormatter) ?: EventCardPresenter.UNKNOWN_DAY
                 row.findViewById<TextView>(R.id.listRowMonth).text =
                     parsedDate?.format(monthFormatter)?.uppercase(Locale.ENGLISH) ?: EventCardPresenter.UNKNOWN_MONTH
-                row.findViewById<TextView>(R.id.listRowTitle).text = event.title
                 val time = parsedStart?.format(timeFormatter) ?: EventCardPresenter.UNKNOWN_TIME
                 val location = event.venue.takeIf { it.isNotBlank() && it != "Venue not set" }
                     ?: EventCardPresenter.UNKNOWN_LOCATION
-                row.findViewById<TextView>(R.id.listRowMeta).text = listOf(time, location)
-                    .filter {
-                        it != EventCardPresenter.UNKNOWN_TIME && it != EventCardPresenter.UNKNOWN_LOCATION
-                    }
-                    .joinToString(" - ")
+                val status = event.lifecycleStatus()
+                ListRowBinder.bind(
+                    row,
+                    title = event.title,
+                    meta = listOf(time, location)
+                        .filter {
+                            it != EventCardPresenter.UNKNOWN_TIME && it != EventCardPresenter.UNKNOWN_LOCATION
+                        }
+                        .joinToString(" - "),
+                    trailing = ListRowBinder.Trailing.BADGE,
+                    trailingText = status,
+                    showDivider = !isLast,
+                    onClick = { onClick(event) },
+                )
 
                 val badge = row.findViewById<TextView>(R.id.listRowBadge)
-                val status = event.lifecycleStatus()
-                badge.text = status
                 val (bg, fg) = when (status) {
                     "Active" -> R.color.ui_accent to R.color.ui_on_accent
                     "Upcoming" -> R.color.ui_info_container to R.color.ui_on_info_container
@@ -321,10 +328,6 @@ open class ManageEventsActivity : AppCompatActivity() {
                 badge.backgroundTintList =
                     android.content.res.ColorStateList.valueOf(ContextCompat.getColor(row.context, bg))
                 badge.setTextColor(ContextCompat.getColor(row.context, fg))
-
-                row.findViewById<View>(R.id.listRowContainer).setOnClickListener { onClick(event) }
-                row.findViewById<View>(R.id.listRowDivider).visibility =
-                    if (isLast) View.GONE else View.VISIBLE
             }
         }
     }

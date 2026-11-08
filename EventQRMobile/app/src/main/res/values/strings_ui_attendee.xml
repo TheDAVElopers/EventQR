@@ -39,6 +39,12 @@
     <!-- Unit only: CountLabel.format() prefixes the compact number and uppercases the noun. -->
     <string name="ui_attendee_events_count">event</string>
     <string name="ui_attendee_discover_empty_body">Browse events and register to get a pass.</string>
+    <string name="ui_attendee_this_week">This week</string>
+    <string name="ui_attendee_no_events_this_week">No events this week</string>
+    <string name="ui_attendee_no_registered_events_to_show">No registered events to show</string>
+    <string name="ui_attendee_no_registered_events_body">Events you register for show up here.</string>
+    <string name="ui_attendee_registrations_error_title">Couldn\'t load your registrations</string>
+    <string name="ui_attendee_load_error_body">Check your connection and try again.</string>
 
     <!-- ═════════ Discover date filter (§6.2 amendment) ═════════ -->
     <string name="ui_attendee_filter_date">Filter by date</string>

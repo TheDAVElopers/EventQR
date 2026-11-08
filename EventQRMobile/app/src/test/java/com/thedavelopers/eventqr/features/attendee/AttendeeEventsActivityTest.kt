@@ -15,12 +15,16 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import android.widget.TextView
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.core.api.dto.RegistrationStatus
 import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.features.ShadowEncryptedSharedPreferences
 import com.thedavelopers.eventqr.features.ShadowMasterKeys
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
+import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
+import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.ui.components.CountLabel
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+import kotlinx.coroutines.CompletableDeferred
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -65,18 +69,56 @@ class AttendeeEventsActivityTest {
     private fun at(month: YearMonth, day: Int): Instant =
         month.atDay(day).atTime(9, 0).atZone(DateFilterRanges.ZONE).toInstant()
 
-    private class CountingRepo(var result: List<AttendeeEventResponse>) :
-        AttendeeRepository(ApplicationProvider.getApplicationContext()) {
+    private fun registration(eventId: UUID, status: RegistrationStatus) = RegistrationResponse(
+        registrationId = UUID.randomUUID(),
+        eventId = eventId,
+        attendeeUserId = UUID.randomUUID(),
+        attendeeEmail = "attendee@example.com",
+        attendeeName = "Attendee",
+        status = status,
+    )
+
+    private class CountingRepo(
+        var result: List<AttendeeEventResponse>,
+        var registrations: NetworkResult<List<RegistrationResponse>> =
+            NetworkResult.Success(emptyList()),
+    ) : AttendeeRepository(ApplicationProvider.getApplicationContext()) {
         var calls = 0
         override suspend fun getBrowseEvents(): NetworkResult<List<AttendeeEventResponse>> {
             calls++
             return NetworkResult.Success(result)
         }
+
+        override suspend fun getMyRegistrations(): NetworkResult<List<RegistrationResponse>> =
+            registrations
+    }
+
+    /** First browse call suspends until the test completes it, so the skeleton can be inspected. */
+    private class DeferredRepo(
+        private val firstCall: CompletableDeferred<NetworkResult<List<AttendeeEventResponse>>>,
+    ) : AttendeeRepository(ApplicationProvider.getApplicationContext()) {
+        override suspend fun getBrowseEvents(): NetworkResult<List<AttendeeEventResponse>> =
+            firstCall.await()
+
+        override suspend fun getMyRegistrations(): NetworkResult<List<RegistrationResponse>> =
+            NetworkResult.Success(emptyList())
+    }
+
+    /** Events answer immediately; registrations stay in flight so the Registered chip's first render is observable. */
+    private class DeferredRegistrationsRepo(
+        private val events: List<AttendeeEventResponse>,
+        private val registrations: CompletableDeferred<NetworkResult<List<RegistrationResponse>>>,
+    ) : AttendeeRepository(ApplicationProvider.getApplicationContext()) {
+        override suspend fun getBrowseEvents(): NetworkResult<List<AttendeeEventResponse>> =
+            NetworkResult.Success(events)
+
+        override suspend fun getMyRegistrations(): NetworkResult<List<RegistrationResponse>> =
+            registrations.await()
     }
 
     /** Creates the screen with its presenter swapped for one backed by [repo], then shows the first page. */
     private fun launch(
-        repo: CountingRepo,
+        repo: AttendeeRepository,
         state: Bundle? = null,
     ): ActivityController<AttendeeEventsActivity> {
         val controller = Robolectric.buildActivity(AttendeeEventsActivity::class.java).create(state)
@@ -128,6 +170,7 @@ class AttendeeEventsActivityTest {
             if (dialog.isShowing) dialog.dismiss()
         }
         shadowOf(Looper.getMainLooper()).idle()
+        RegistrationsCache.clear()
     }
 
     @Test
@@ -149,17 +192,208 @@ class AttendeeEventsActivityTest {
         assertEquals(1, activity.cardCount())
     }
 
+    /** First load hides the list behind the flat 96dp skeleton until the events arrive. */
+    @Test
+    fun firstLoad_showsTheFlatSkeletonAndHidesTheList() {
+        val deferred = CompletableDeferred<NetworkResult<List<AttendeeEventResponse>>>()
+        val activity = launch(DeferredRepo(deferred)).get()
+
+        val skeleton = activity.findViewById<ViewGroup>(R.id.skeletonLoading)
+        assertEquals(View.VISIBLE, skeleton.visibility)
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.recyclerEvents).visibility)
+        assertEquals(
+            "six 96dp rows plus five hairlines",
+            11,
+            skeleton.childCount,
+        )
+
+        deferred.complete(NetworkResult.Success(listOf(event("Night Market", 0))))
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals(View.GONE, skeleton.visibility)
+        assertEquals(1, activity.cardCount())
+    }
+
     @Test
     fun filterChip_keepsTheTypedSearch() {
         val repo = CountingRepo(listOf(event("Night Market", 0), event("Day Fair", 0)))
         val activity = launch(repo).get()
 
         activity.findViewById<EditText>(R.id.inputEventSearch).setText("fair")
-        activity.findViewById<TextView>(R.id.chipUpcoming).performClick()
+        activity.findViewById<TextView>(R.id.chipThisWeek).performClick()
         assertEquals(1, activity.cardCount())
 
         activity.findViewById<TextView>(R.id.chipAll).performClick()
         assertEquals(1, activity.cardCount())
+    }
+
+    /** `This week` is a start instant in [now, now + 7 days]; a past or undated event never matches. */
+    @Test
+    fun thisWeekChip_keepsOnlyStartsInsideTheSevenDayWindow() {
+        val now = Instant.now()
+        val repo = CountingRepo(
+            listOf(
+                eventAt("Just Started", now.minus(1, ChronoUnit.HOURS)),
+                eventAt("Tomorrow", now.plus(1, ChronoUnit.DAYS)),
+                eventAt("Next Week", now.plus(8, ChronoUnit.DAYS)),
+                AttendeeEventResponse(
+                    eventId = UUID.randomUUID(),
+                    title = "Date TBD",
+                    capacity = 12,
+                    currentAttendeeCount = 0,
+                ),
+            ),
+        )
+        val activity = launch(repo).get()
+        assertEquals(4, activity.cardCount())
+
+        activity.findViewById<TextView>(R.id.chipThisWeek).performClick()
+
+        assertEquals(1, activity.cardCount())
+        assertEquals(activity.countLabel(1), activity.passCount())
+    }
+
+    /** An empty week uses the week's own copy, not the generic "no events" line. */
+    @Test
+    fun thisWeekChip_emptyWindowUsesItsOwnCopy() {
+        val repo = CountingRepo(listOf(eventAt("Next Month", Instant.now().plus(30, ChronoUnit.DAYS))))
+        val activity = launch(repo).get()
+
+        activity.findViewById<TextView>(R.id.chipThisWeek).performClick()
+
+        assertEquals(0, activity.cardCount())
+        assertEquals(
+            activity.getString(R.string.ui_attendee_no_events_this_week),
+            activity.emptyTitle(),
+        )
+        assertEquals(View.GONE, activity.emptyAction().visibility)
+    }
+
+    /** `Registered` is a live registration: cancelled and no-show rows never appear. */
+    @Test
+    fun registeredChip_keepsOnlyLiveRegistrations() {
+        val live = event("Live Pass", 0)
+        val entered = event("Already In", 0)
+        val cancelled = event("Cancelled Pass", 0)
+        val noShow = event("No Show", 0)
+        val repo = CountingRepo(
+            result = listOf(live, entered, cancelled, noShow),
+            registrations = NetworkResult.Success(
+                listOf(
+                    registration(live.eventId, RegistrationStatus.REGISTERED),
+                    registration(entered.eventId, RegistrationStatus.ENTERED),
+                    registration(cancelled.eventId, RegistrationStatus.CANCELLED),
+                    registration(noShow.eventId, RegistrationStatus.NO_SHOW),
+                ),
+            ),
+        )
+        val activity = launch(repo).get()
+
+        activity.findViewById<TextView>(R.id.chipRegistered).performClick()
+
+        assertEquals(2, activity.cardCount())
+        assertEquals(activity.countLabel(2), activity.passCount())
+        assertTrue(activity.findViewById<TextView>(R.id.chipRegistered).isSelected)
+    }
+
+    /** A failed registration load offers Retry, never the "no registrations" claim (§6.2). */
+    @Test
+    fun registeredChip_failedRegistrationLoadOffersRetry() {
+        val repo = CountingRepo(
+            result = listOf(event("Night Market", 0)),
+            registrations = NetworkResult.Error("Offline"),
+        )
+        val activity = launch(repo).get()
+
+        activity.findViewById<TextView>(R.id.chipRegistered).performClick()
+
+        assertEquals(0, activity.cardCount())
+        assertEquals(
+            activity.getString(R.string.ui_attendee_registrations_error_title),
+            activity.emptyTitle(),
+        )
+        assertEquals(
+            activity.getString(R.string.ui_attendee_retry),
+            activity.emptyAction().text.toString(),
+        )
+    }
+
+    /** A failed pull-to-refresh keeps the rows and the last live-registration set; it never wipes them. */
+    @Test
+    fun registeredChip_refreshFailureKeepsRowsAndTheLiveSet() {
+        val live = event("Live Pass", 0)
+        val repo = CountingRepo(
+            result = listOf(live),
+            registrations = NetworkResult.Success(
+                listOf(registration(live.eventId, RegistrationStatus.REGISTERED)),
+            ),
+        )
+        val controller = launch(repo)
+        val activity = controller.get()
+        activity.findViewById<TextView>(R.id.chipRegistered).performClick()
+        assertEquals(1, activity.cardCount())
+
+        repo.registrations = NetworkResult.Error("Offline")
+        // The real refresh trigger: returning to the list runs the silent reload.
+        controller.pause().resume()
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals("a failed refresh must not delete the Registered rows", 1, activity.cardCount())
+        assertEquals(View.GONE, activity.emptyState().visibility)
+        assertTrue(activity.findViewById<TextView>(R.id.chipRegistered).isSelected)
+    }
+
+    /**
+     * A restored Registered chip renders before the registrations answer exists. It must keep the
+     * skeleton (and no result count) instead of claiming "no registered events" and 0 EVENTS.
+     */
+    @Test
+    fun registeredChip_waitsForTheFirstAnswerInsteadOfPaintingEmpty() {
+        val live = event("Live Pass", 0)
+        val registrations = CompletableDeferred<NetworkResult<List<RegistrationResponse>>>()
+        val state = Bundle().apply { putString("discover.filter.status", "REGISTERED") }
+        val activity = launch(DeferredRegistrationsRepo(listOf(live), registrations), state).get()
+
+        assertTrue(activity.findViewById<TextView>(R.id.chipRegistered).isSelected)
+        assertEquals(
+            "the skeleton stays while the answer is in flight",
+            View.VISIBLE,
+            activity.findViewById<ViewGroup>(R.id.skeletonLoading).visibility,
+        )
+        assertEquals(
+            "no empty state may paint without an answer",
+            View.GONE,
+            activity.emptyState().visibility,
+        )
+        assertEquals(
+            activity.getString(R.string.common_value_unavailable),
+            activity.passCount(),
+        )
+
+        registrations.complete(
+            NetworkResult.Success(listOf(registration(live.eventId, RegistrationStatus.REGISTERED))),
+        )
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals(View.GONE, activity.findViewById<ViewGroup>(R.id.skeletonLoading).visibility)
+        assertEquals(View.GONE, activity.emptyState().visibility)
+        assertEquals(1, activity.cardCount())
+        assertEquals(activity.countLabel(1), activity.passCount())
+    }
+
+    /** Success with nothing live still reads as "no live registrations", not an error. */
+    @Test
+    fun registeredChip_noLiveRegistrationUsesTheHonestEmptyCopy() {
+        val activity = launch(CountingRepo(listOf(event("Night Market", 0)))).get()
+
+        activity.findViewById<TextView>(R.id.chipRegistered).performClick()
+
+        assertEquals(0, activity.cardCount())
+        assertEquals(
+            activity.getString(R.string.ui_attendee_no_registered_events_to_show),
+            activity.emptyTitle(),
+        )
+        assertEquals(View.GONE, activity.emptyAction().visibility)
     }
 
     /** Status -> date -> search, all ANDed; a status tap never drops the date or the query. */
@@ -188,7 +422,7 @@ class AttendeeEventsActivityTest {
         assertEquals(1, activity.cardCount())
         assertEquals(activity.countLabel(1), activity.passCount())
 
-        activity.findViewById<TextView>(R.id.chipCompleted).performClick()
+        activity.findViewById<TextView>(R.id.chipRegistered).performClick()
         assertEquals(0, activity.cardCount())
         assertEquals(activity.countLabel(0), activity.passCount())
         assertTrue("a status tap must not clear the date", chip.isSelected)
@@ -422,8 +656,8 @@ class AttendeeEventsActivityTest {
     fun savedState_restoresTheStatusChip() {
         val repo = CountingRepo(listOf(event("Night Market", 0), event("Day Fair", 0)))
         val controller = launch(repo)
-        controller.get().findViewById<TextView>(R.id.chipUpcoming).performClick()
-        assertTrue(controller.get().findViewById<TextView>(R.id.chipUpcoming).isSelected)
+        controller.get().findViewById<TextView>(R.id.chipThisWeek).performClick()
+        assertTrue(controller.get().findViewById<TextView>(R.id.chipThisWeek).isSelected)
 
         val state = Bundle()
         controller.saveInstanceState(state)
@@ -432,7 +666,7 @@ class AttendeeEventsActivityTest {
         val recreated = launch(repo, state).get()
         assertTrue(
             "the status chip must be selected again, not reset to All",
-            recreated.findViewById<TextView>(R.id.chipUpcoming).isSelected,
+            recreated.findViewById<TextView>(R.id.chipThisWeek).isSelected,
         )
         assertFalse(recreated.findViewById<TextView>(R.id.chipAll).isSelected)
         assertEquals(2, recreated.cardCount())

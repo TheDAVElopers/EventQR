@@ -93,7 +93,6 @@
     <string name="organizer_dashboard_organizer_portal">Organizer Portal</string>
     <string name="organizer_dashboard_organizer">Organizer</string>
     <string name="common_notifications">Notifications</string>
-    <string name="organizer_dashboard_no_active_events">No active events</string>
     <string name="common_search_events">Search events...</string>
     <string name="common_upcoming">Upcoming</string>
     <string name="common_active">Active</string>
@@ -203,8 +202,6 @@
     <string name="attendee_profile_access_denied">Access Denied</string>
     <string name="attendee_profile_are_you_sure_you_want_to_sign_out">Are you sure you want to sign out?</string>
     <string name="attendee_events_no_events_available_yet">No events available yet</string>
-    <string name="attendee_events_no_upcoming_events">No upcoming events</string>
-    <string name="attendee_events_no_completed_events">No completed events</string>
     <string name="event_detail_missing_event_information">Missing event information.</string>
     <string name="event_detail_already_registered">Already Registered</string>
     <string name="event_detail_cancel_registration">Cancel Registration</string>

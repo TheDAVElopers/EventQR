@@ -27,11 +27,16 @@ object RegistrationsCache {
         fetchedAt = Instant.now()
     }
 
+    /**
+     * Merges one changed registration (register/cancel) into the list without ever marking it
+     * fresh: a merge into a null cache seeds a partial list that is missing the attendee's other
+     * registrations, so the next reader must still refetch. Only [set] receives a full answer and
+     * may stamp [fetchedAt].
+     */
     @Synchronized
     fun addRegistration(registration: RegistrationResponse) {
         registrations = (registrations ?: emptyList())
             .filter { it.registrationId != registration.registrationId } + registration
-        fetchedAt = Instant.now()
     }
 
     fun clear() {

@@ -275,6 +275,41 @@ object ListRowBinder {
 
         row.findViewById<View>(R.id.listRowDivider)?.visibility =
             if (showDivider) View.VISIBLE else View.GONE
+
+        bindDateBlock(row)
+    }
+
+    /**
+     * `list_row_date` only. Its 44dp date block grows past the min width at large font scales, so
+     * the hairline follows the block's measured width instead of the fixed [R.dimen.ui_divider_inset].
+     * Bound here so every host (Discover, both dashboards, Manage events) aligns on its own; the
+     * listener is re-attached rather than stacked, because rows are recycled.
+     */
+    private fun bindDateBlock(row: View) {
+        val block = row.findViewById<View>(R.id.listRowDateBlock) ?: return
+        val previous = block.getTag(R.id.list_row_date_listener)
+        if (previous is View.OnLayoutChangeListener) {
+            block.removeOnLayoutChangeListener(previous)
+        }
+        val listener = View.OnLayoutChangeListener { view, _, _, _, _, _, _, _, _ ->
+            alignDividerToDateBlock(row, view.width)
+        }
+        block.setTag(R.id.list_row_date_listener, listener)
+        block.addOnLayoutChangeListener(listener)
+        alignDividerToDateBlock(row, block.width)
+    }
+
+    /** 20dp row start + the measured block + the 16dp gap to the text column. */
+    private fun alignDividerToDateBlock(row: View, blockWidth: Int) {
+        if (blockWidth <= 0) return
+        val divider = row.findViewById<View>(R.id.listRowDivider) ?: return
+        val params = divider.layoutParams as? android.view.ViewGroup.MarginLayoutParams ?: return
+        val inset = row.resources.getDimensionPixelSize(R.dimen.ui_row_start) +
+            blockWidth + row.resources.getDimensionPixelSize(R.dimen.space_lg)
+        if (params.marginStart != inset) {
+            params.marginStart = inset
+            divider.layoutParams = params
+        }
     }
 
     /**

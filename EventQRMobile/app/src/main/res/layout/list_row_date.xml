@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    LIST ROW - date (§5.5). 96dp. The primary object row: a 44dp date block (day numeric_m over
-    month overline, surface_sunken, 10dp radius), title + meta, one badge on the right.
+    LIST ROW - date (§5.5). 96dp. The primary object row: a 44dp-min date block (day numeric_m over
+    month overline, surface_sunken, 10dp radius; grows at large font scales so neither line clips),
+    title + meta, one badge on the right.
 
     Replaces the per-card "coloured date badge + badge + progress bar" stack: the date block is
     neutral here, because colour is meaning and a date has none.
@@ -30,11 +31,15 @@
 
         <LinearLayout
             android:id="@+id/listRowDateBlock"
-            android:layout_width="@dimen/ui_row_date_block"
-            android:layout_height="@dimen/ui_row_date_block"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="@dimen/ui_row_date_block"
+            android:minHeight="@dimen/ui_row_date_block"
             android:background="@drawable/bg_ui_date_block"
             android:gravity="center"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingStart="@dimen/space_2"
+            android:paddingEnd="@dimen/space_2">
 
             <TextView
                 android:id="@+id/listRowDay"
@@ -76,12 +81,15 @@
                 tools:text="9:00 AM - PICC, Pasay" />
         </LinearLayout>
 
+        <!-- wrap_content + minHeight, never a fixed height: an 11sp label at fontScale 2.0
+             grows the badge instead of clipping (§5.4). -->
         <TextView
             android:id="@+id/listRowBadge"
             style="@style/Widget.EventQR.Ui.StatusBadge.Info"
             android:layout_width="wrap_content"
-            android:layout_height="@dimen/ui_badge_height"
+            android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/space_sm"
+            android:minHeight="@dimen/ui_badge_height"
             tools:text="Upcoming" />
     </LinearLayout>
 

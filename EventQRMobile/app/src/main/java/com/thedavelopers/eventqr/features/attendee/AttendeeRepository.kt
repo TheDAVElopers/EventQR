@@ -41,7 +41,7 @@ open class AttendeeRepository(context: Context) {
         safeApiCall { apiService.getEventAvailability(eventId) }
     suspend fun getOrganizerEvents(): NetworkResult<List<OrganizerEventDto>> = safeApiCall { apiService.getOrganizerEvents() }
     open suspend fun createEventRequest(request: EventCreationRequestDto) = safeApiCall { apiService.createEventRequest(request) }
-    suspend fun getMyEventRequests() = safeApiCall { apiService.getMyEventRequests() }
+    open suspend fun getMyEventRequests() = safeApiCall { apiService.getMyEventRequests() }
     suspend fun getEventRequest(requestId: String) = safeApiCall { apiService.getEventRequest(requestId) }
     suspend fun getMyProfile() = safeApiCall { apiService.getUsersMe() }
     suspend fun updateProfile(fullName: String, phoneNumber: String?) = safeApiCall {
@@ -63,7 +63,7 @@ open class AttendeeRepository(context: Context) {
             NetworkResult.Loading -> NetworkResult.Loading
         }
     suspend fun getMyEventTransactions(eventId: String) = safeApiCall { apiService.getMyEventTransactions(eventId) }
-    suspend fun getMyTransactions() = safeApiCall { apiService.getMyTransactions() }
+    open suspend fun getMyTransactions() = safeApiCall { apiService.getMyTransactions() }
     suspend fun createQrCredential(registrationId: String) = safeApiCall { apiService.createQrCredential(registrationId) }
     suspend fun linkQrCredential(registrationId: String) = safeApiCall { apiService.linkQrCredential(registrationId) }
     suspend fun getQrCredentialById(qrCredentialId: String) = safeApiCall { apiService.getQrCredentialById(qrCredentialId) }

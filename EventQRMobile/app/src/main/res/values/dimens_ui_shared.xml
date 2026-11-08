@@ -71,7 +71,10 @@
     <dimen name="ui_row_end">16dp</dimen>
     <dimen name="ui_row_tile">40dp</dimen>
     <dimen name="ui_row_date_block">44dp</dimen>
-    <dimen name="ui_divider_inset">76dp</dimen>              <!-- 20 + 40 + 16: aligns to the text edge -->
+    <!-- 20 + 40 + 16: aligns to the text edge of a fixed 40dp leading tile. `list_row_date` cannot
+         use it as a constant because its 44dp date block grows with fontScale; ListRowBinder
+         measures the block and overrides the inset at runtime. -->
+    <dimen name="ui_divider_inset">76dp</dimen>
     <dimen name="ui_chevron">16dp</dimen>
 
     <!-- ═════════ Status badge (§5.4) ═════════ -->

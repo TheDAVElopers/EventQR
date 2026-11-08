@@ -22,6 +22,7 @@ class TransactionHistoryPresenter(
 
     fun load(eventId: String? = null) {
         view?.showLoading(true)
+        job?.cancel()
         job = scope.launch {
             val result = if (eventId.isNullOrBlank()) {
                 repository.getMyTransactions()

@@ -6,6 +6,9 @@
     <!-- EventQrEmptyState: its exactly-one action, so hosts and tests never index children. -->
     <item name="emptyAction" type="id" />
 
+    <!-- list_row_date: the layout listener ListRowBinder reuses so a recycled row never stacks them. -->
+    <item name="list_row_date_listener" type="id" />
+
     <!-- Shared (organizerShell / organizerRefreshShell) -->
     <item name="nav_header_title" type="id" />
     <item name="nav_header_action" type="id" />
