@@ -85,12 +85,12 @@ open class AttendeeRepository(context: Context) {
     suspend fun markMyQrDownloaded(qrCredentialId: String) = safeApiCall { apiService.markMyQrDownloaded(qrCredentialId) }
     suspend fun getTransactionsByEvent(eventId: String) = safeApiCall { apiService.getTransactionsByEvent(eventId) }
     /** [includeUnavailable] = true also returns inactive/sold-out rewards (used for claim-history name lookups). */
-    suspend fun getRewardsByEvent(eventId: String, includeUnavailable: Boolean = false) =
+    open suspend fun getRewardsByEvent(eventId: String, includeUnavailable: Boolean = false) =
         safeApiCall { apiService.getAttendeeRewards(eventId, includeUnavailable) }
     suspend fun getRewardBalance(eventId: String, attendeeUserId: String) = safeApiCall { apiService.getRewardBalance(eventId, attendeeUserId) }
     suspend fun redeemReward(request: RewardRedemptionRequest) = safeApiCall { apiService.redeemReward(request) }
     suspend fun getRewardRedemptions(eventId: String) = safeApiCall { apiService.getRewardRedemptions(eventId) }
-    suspend fun getMyRewardRedemptions(eventId: String) = safeApiCall { apiService.getMyClaimedRewards(eventId) }
+    open suspend fun getMyRewardRedemptions(eventId: String) = safeApiCall { apiService.getMyClaimedRewards(eventId) }
     suspend fun getDashboardSummary() = safeApiCall { apiService.getDashboard() }
     suspend fun parseUuid(value: String?): UUID? = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
         runCatching { UUID.fromString(value.orEmpty()) }.getOrNull()

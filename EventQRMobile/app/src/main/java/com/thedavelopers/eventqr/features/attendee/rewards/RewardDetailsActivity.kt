@@ -119,8 +119,8 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
         }
         status?.text = getString(statusRes)
         status?.let {
-            val container = if (blocked) R.color.ui_error_container else R.color.ui_accent
-            val content = if (blocked) R.color.ui_on_error_container else R.color.ui_on_accent
+            val container = if (blocked) R.color.ui_error_container else R.color.ui_info_container
+            val content = if (blocked) R.color.ui_on_error_container else R.color.ui_on_info_container
             ViewCompat.setBackgroundTintList(it, ContextCompat.getColorStateList(this, container))
             it.setTextColor(ContextCompat.getColor(this, content))
             // The tone is the state; the badge never grows an icon (§5.4).

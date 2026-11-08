@@ -240,7 +240,6 @@
     <string name="request_event_registration_end_cannot_be_in_the_pa">Registration end cannot be in the past</string>
     <string name="request_event_registration_end_must_not_be_after_e">Registration end must not be after event end</string>
     <string name="attendee_rewards_select_a_registered_event_first">Select a registered event first.</string>
-    <string name="claimed_rewards_no_claimed_rewards_yet">No claimed rewards yet.</string>
     <string name="reward_details_unavailable">Unavailable</string>
     <string name="reward_details_this_reward_is_currently_unavailable">This reward is currently unavailable.</string>
     <string name="reward_details_out_of_stock">Out of Stock</string>
@@ -432,7 +431,6 @@
 
     <!-- Screen headers and empty states (app:title / app:subtitle). -->
     <string name="attendee_management_attendees">Attendees</string>
-    <string name="claimed_rewards_no_claimed_rewards_yet_2">No claimed rewards yet</string>
     <string name="event_registration_register_for_event">Register for Event</string>
     <string name="common_no_attendees_found">No attendees found</string>
     <string name="organizer_notifications_no_notifications_yet">No notifications yet</string>

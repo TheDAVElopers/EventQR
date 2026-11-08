@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Skeleton icon tile (§5.11): the loaded row's 40dp tile geometry, 10dp radius, sunken fill. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/ui_surface_sunken" />
+    <corners android:radius="@dimen/ui_radius_card" />
+</shape>

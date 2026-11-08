@@ -101,7 +101,7 @@ fun SkeletonBlock(
     )
 }
 
-/** Row geometry identical to list_row_icon: 40dp circle + title bar + meta bar. */
+/** Row geometry identical to list_row_icon: 40dp rounded tile + title bar + meta bar. */
 @Composable
 fun SkeletonRow(modifier: Modifier = Modifier) {
     val grid = LocalGrid.current
@@ -118,7 +118,7 @@ fun SkeletonRow(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .size(dimensionResource(R.dimen.ui_skeleton_avatar))
                 .alpha(alpha)
-                .clip(RoundedCornerShape(grid.radiusBadge))
+                .clip(RoundedCornerShape(grid.radiusCard))
                 .background(UiSurfaceSunken),
         )
         Spacer(modifier = Modifier.width(grid.s16))

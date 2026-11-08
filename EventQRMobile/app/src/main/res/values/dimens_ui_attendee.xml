@@ -20,7 +20,8 @@
     <!-- Quick-action chip row: 48dp touch row around a 36dp chip (§9.2). -->
     <dimen name="ui_attendee_chip_row">48dp</dimen>
 
-    <!-- Reward row: 88dp (§6.2). -->
+    <!-- Reward row: 88dp (§6.2). Also the claimed-rewards skeleton height, so the list does not
+         jump when the first page lands (§5.11, §9.6 #13). -->
     <dimen name="ui_attendee_reward_row">88dp</dimen>
 
     <!-- Credential screens: 40dp above the pass (§6.2). -->

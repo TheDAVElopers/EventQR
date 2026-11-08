@@ -2,6 +2,7 @@ package com.thedavelopers.eventqr.core.util
 
 import java.time.Instant
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -42,6 +43,10 @@ object DateFormatters {
     val timeFormatter: DateTimeFormatter =
         DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH).withZone(ZONE)
 
+    /** Month and year: `MMM yyyy` (`Nov 2026`). Used by the Discover date filter. */
+    val monthYearFormatter: DateTimeFormatter =
+        DateTimeFormatter.ofPattern("MMM yyyy", Locale.ENGLISH)
+
     /** `d MMM yyyy, h:mm a`; `--` when there is no value. */
     fun formatInstant(instant: Instant?): String =
         instant?.let { displayFormatter.format(it) } ?: PLACEHOLDER
@@ -69,6 +74,9 @@ object DateFormatters {
     /** Time only: `h:mm a`. */
     fun formatTime(instant: Instant?): String =
         instant?.let { timeFormatter.format(it) } ?: PLACEHOLDER
+
+    /** Month and year: `Nov 2026`. */
+    fun formatMonthYear(month: YearMonth): String = monthYearFormatter.format(month)
 
     // ── Audit log (§6.5) ────────────────────────────────────────────────────────────────────────
     // Three calls, one audit zone. The adapter owns no formatter, no zone and no pattern string.

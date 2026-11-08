@@ -51,7 +51,7 @@ class EventQrEmptyStateContractTest {
         val state = EventQrEmptyState(context)
         state.setAction("Retry") {}
 
-        val action = state.getChildAt(3)
+        val action = state.findViewById<View>(R.id.emptyAction)
         val floor = (48 * context.resources.displayMetrics.density).toInt()
         val children = (0 until state.childCount).joinToString { "${state.getChildAt(it)::class.java.simpleName}:${state.getChildAt(it).minimumHeight}" }
         org.junit.Assert.assertTrue(
@@ -87,7 +87,6 @@ class EventQrEmptyStateContractTest {
 
         // The four hosts that pad their list container opt out, so the copy keeps one 20dp edge.
         val hosted = listOf(
-            R.layout.activity_claimed_rewards to R.id.txtClaimedRewardsEmpty,
             R.layout.activity_my_event_requests to R.id.txtMyRequestsEmpty,
             R.layout.activity_user_transaction_history to R.id.txtTransactionsEmpty,
             R.layout.activity_user_rewards to R.id.layoutNoRegisteredEvents,
@@ -97,6 +96,11 @@ class EventQrEmptyStateContractTest {
             val state = LayoutInflater.from(context).inflate(layout, null, false).findViewById<EventQrEmptyState>(id)
             assertEquals("${context.resources.getResourceEntryName(id)} must not add a second gutter", 0, state.paddingLeft)
         }
+
+        // Claimed rewards owns its gutter: the list rows carry the 20dp inset, so the host does not pad.
+        val claimed = LayoutInflater.from(context).inflate(R.layout.activity_claimed_rewards, null, false)
+            .findViewById<EventQrEmptyState>(R.id.txtClaimedRewardsEmpty)
+        assertEquals("claimed rewards empty state owns the gutter", gutter, claimed.paddingLeft)
     }
 
     @Test

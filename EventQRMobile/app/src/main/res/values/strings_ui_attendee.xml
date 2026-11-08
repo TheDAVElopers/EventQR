@@ -40,6 +40,21 @@
     <string name="ui_attendee_events_count">event</string>
     <string name="ui_attendee_discover_empty_body">Browse events and register to get a pass.</string>
 
+    <!-- ═════════ Discover date filter (§6.2 amendment) ═════════ -->
+    <string name="ui_attendee_filter_date">Filter by date</string>
+    <string name="ui_attendee_filter_date_value">Filter by date, %1$s</string>
+    <string name="ui_attendee_filter_any_date">Any date</string>
+    <string name="ui_attendee_filter_exact_day">Exact day</string>
+    <string name="ui_attendee_month">Month</string>
+    <string name="ui_attendee_year">Year</string>
+    <string name="ui_attendee_filter_pick_day">Choose a day</string>
+    <string name="ui_attendee_filter_apply">Apply</string>
+    <string name="ui_attendee_filter_reset">Reset</string>
+    <string name="ui_attendee_filter_clear_date">Clear date</string>
+    <string name="ui_attendee_filter_empty_month">No events in %1$s</string>
+    <string name="ui_attendee_filter_empty_day">No events on %1$s</string>
+    <string name="ui_attendee_filter_empty_body">Choose another date, or clear it.</string>
+
     <!-- ═════════ Event detail (§6.2) ═════════ -->
     <string name="ui_attendee_about">About</string>
     <string name="ui_attendee_event_details">Event details</string>
@@ -88,6 +103,11 @@
     <string name="ui_attendee_reward_details">Reward details</string>
     <string name="ui_attendee_register_for_event">Register for event</string>
     <string name="ui_attendee_how_to_redeem">Show your pass at the rewards desk and staff deduct the points.</string>
+    <string name="ui_attendee_no_claimed_title">No claimed rewards yet</string>
+    <string name="ui_attendee_browse_rewards">Browse rewards</string>
+    <string name="ui_attendee_claims_error_title">Couldn\'t load claims</string>
+    <string name="ui_attendee_claims_error_body">Check your connection and try again.</string>
+    <string name="ui_attendee_claims_refresh_failed">Couldn\'t refresh claims.</string>
     <string name="ui_attendee_redeemed">Approved</string>
     <string name="ui_attendee_pending">Pending</string>
     <string name="ui_attendee_rejected">Rejected</string>

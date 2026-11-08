@@ -5,6 +5,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import java.time.Instant
+import java.time.YearMonth
 import java.util.Locale
 
 /**
@@ -78,5 +79,11 @@ class DateFormattersTest {
     @Test
     fun formatEventDateShort_nullReturnsPlaceholder() {
         assertEquals("--", DateFormatters.formatEventDateShort(null))
+    }
+
+    @Test
+    fun formatMonthYear_carriesTheYearAndIgnoresTheDeviceLocale() {
+        Locale.setDefault(Locale.forLanguageTag("tr-TR"))
+        assertEquals("Nov 2026", DateFormatters.formatMonthYear(YearMonth.of(2026, 11)))
     }
 }

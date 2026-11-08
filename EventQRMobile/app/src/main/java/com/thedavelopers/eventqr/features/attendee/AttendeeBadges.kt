@@ -80,7 +80,8 @@ object AttendeeBadges {
     // ── Rewards (Available / Unavailable) ────────────────────────────────────
 
     fun tone(status: RewardStatus): Tone = when (status) {
-        RewardStatus.ACTIVE -> valid
+        // Available is inventory, not a confirmation: lime is credential-only (§5.4 line 597).
+        RewardStatus.ACTIVE -> info
         RewardStatus.INACTIVE -> neutral
     }
 

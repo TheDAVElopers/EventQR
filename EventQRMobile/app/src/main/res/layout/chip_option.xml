@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One picker chip (month or year) in the date filter sheet. The chip style owns the 36dp visual
+    fill; the view itself is a 48dp touch target (§9.2), with the inset background keeping the
+    painted chip at its 36dp height. The host supplies the layout params - months share the row
+    width four-up, years stay at wrap_content inside their scroller.
+
+    The 8dp vertical padding matches the action-chip recipe and the inset: a label that wraps at
+    fontScale 2.0 grows the view, and the fill has to grow with it instead of cutting the label
+    (§9.6 #11).
+-->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/chipOption"
+    style="@style/Widget.EventQR.Ui.Chip"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_ui_chip_inset"
+    android:minHeight="@dimen/ui_touch_min"
+    android:paddingTop="@dimen/space_sm"
+    android:paddingBottom="@dimen/space_sm" />

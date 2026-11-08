@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Trailing glyph on a selector chip (`Widget.EventQR.Ui.Chip.Selector`). Selected = white on
+     the primary fill, resting = secondary ink. The fill carries the state; the glyph only says
+     that the chip opens a choice. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true" android:color="@color/ui_on_primary" />
+    <item android:color="@color/ui_text_secondary" />
+</selector>

@@ -453,6 +453,29 @@ class ComponentInflationTest {
         val context = themedContext()
         assertNotNull(LayoutInflater.from(context).inflate(R.layout.dialog_base, FrameLayout(context), false))
         assertNotNull(LayoutInflater.from(context).inflate(R.layout.sheet_bottom_base, FrameLayout(context), false))
+        assertNotNull(
+            LayoutInflater.from(context).inflate(R.layout.view_date_filter_content, FrameLayout(context), false),
+        )
+    }
+
+    /** Sheet actions are floors, not fixed heights: a two-line label at fontScale 2.0 must not clip. */
+    @Test
+    fun sheetActions_areMinimumHeightsNotFixedHeights() {
+        val context = themedContext()
+        val sheet = LayoutInflater.from(context).inflate(R.layout.sheet_bottom_base, FrameLayout(context), false)
+        val primary = sheet.findViewById<View>(R.id.sheetPrimaryAction)
+        val secondary = sheet.findViewById<View>(R.id.sheetSecondaryAction)
+
+        assertEquals(ViewGroup.LayoutParams.WRAP_CONTENT, primary.layoutParams.height)
+        assertEquals(
+            context.resources.getDimensionPixelSize(R.dimen.ui_button_height),
+            primary.minimumHeight,
+        )
+        assertEquals(ViewGroup.LayoutParams.WRAP_CONTENT, secondary.layoutParams.height)
+        assertEquals(
+            context.resources.getDimensionPixelSize(R.dimen.ui_button_height_inline),
+            secondary.minimumHeight,
+        )
     }
 
     /**

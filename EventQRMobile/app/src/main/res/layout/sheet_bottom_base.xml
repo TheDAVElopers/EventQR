@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
     BOTTOM SHEET BASE (§5.12). 16dp top radius, ui_surface, drag handle 32x4 at 8dp, title_l at
-    the 20dp gutter, a content slot and an action stack (primary 52dp then ghost 44dp).
+    the 20dp gutter, a content slot and an action stack (primary 52dp then ghost 48dp).
 
     Host it in a BottomSheetDialogFragment / BottomSheetDialog; the sheet window owns the 8dp
     elevation, the scrim (@color/ui_scrim) and the 90% max height. Nothing here casts.
@@ -53,15 +53,17 @@
             android:id="@+id/sheetPrimaryAction"
             style="@style/Widget.EventQR.Ui.Button.Primary"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/ui_button_height"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/ui_button_height"
             tools:text="Apply" />
 
         <Button
             android:id="@+id/sheetSecondaryAction"
             style="@style/Widget.EventQR.Ui.Button.Ghost"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/ui_button_height_inline"
+            android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_4"
+            android:minHeight="@dimen/ui_button_height_inline"
             tools:text="Reset" />
     </LinearLayout>
 

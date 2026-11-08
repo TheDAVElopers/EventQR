@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    SKELETON ROW (§5.11) - the same geometry as list_row_icon: 72dp, 40dp circle, two bars
-    (title 12dp, meta 12dp at 60% width). No divider, so a stack of them reads as one block.
+    SKELETON ROW (§5.11) - the same geometry as list_row_icon: 72dp by default, 40dp rounded tile,
+    two bars (title 12dp, meta 12dp at 60% width). A caller may override the include height where
+    the loaded row is taller (claimed rewards: ui_attendee_reward_row, 88dp). No divider, so a
+    stack of them reads as one block.
 
     Reduced motion / TalkBack contract is on the container, as in include_skeleton_block.
 -->
@@ -17,7 +19,7 @@
     <View
         android:layout_width="@dimen/ui_skeleton_avatar"
         android:layout_height="@dimen/ui_skeleton_avatar"
-        android:background="@drawable/bg_ui_skeleton_circle"
+        android:background="@drawable/bg_ui_skeleton_tile"
         android:importantForAccessibility="no" />
 
     <LinearLayout

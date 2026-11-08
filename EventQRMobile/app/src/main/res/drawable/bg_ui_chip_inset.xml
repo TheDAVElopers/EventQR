@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Picker chip (§9.2): the view carries a 48dp touch target while the chip's fill keeps its
+     36dp visual height. The inset is vertical only - the label and the hit area share one width.
+     shortcut: the 6dp inset is coupled to space_6 and to the 36dp visual / 48dp target pairing, so
+     a chip that changes either number must change this inset. Chip padding must stay >= the 6dp
+     inset, or the label paints outside the fill. Upgrade when chips move off 36/48. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/bg_ui_chip"
+    android:insetTop="@dimen/space_6"
+    android:insetBottom="@dimen/space_6" />

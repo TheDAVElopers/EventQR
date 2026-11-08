@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Claimed reward row (§6.2) - 88dp, no card: 40dp icon tile, reward name, event, date, the ONE
-    status badge and the points spent in numeric_s. Divider inset to the text edge.
+    Claimed reward row (§6.2) - no card, 88dp minimum and 112dp once the event name wraps: 40dp
+    icon tile, reward name, event, date, the ONE trailing stack (the points spent in numeric_s over
+    the status badge) and, for a rejected claim, the note after it. Above 1.3 fontScale that stack
+    moves under the date, into trailingHostLarge, and the note stays last. Divider inset to the
+    text edge.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -11,6 +14,7 @@
     android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/claimedRewardRowContent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:minHeight="@dimen/ui_attendee_reward_row"
@@ -48,6 +52,8 @@
                 style="@style/Widget.EventQR.Ui.ListRow.Title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
                 tools:text="Event shirt" />
 
             <TextView
@@ -62,13 +68,39 @@
                 android:id="@+id/txtClaimedDate"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:ellipsize="end"
                 android:maxLines="1"
                 android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
                 android:textColor="@color/ui_text_secondary"
                 tools:text="12 Oct 2026, 9:41 AM" />
+
+            <!-- > 1.3 fontScale host (§4.6 reflow): the trailing value + badge move under the
+                 date here, so they stop taking a third of the row from the title. It stays ahead
+                 of the rejection note so the reflowed row reads date, amount, badge, then note. -->
+            <LinearLayout
+                android:id="@+id/trailingHostLarge"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:gravity="end"
+                android:orientation="horizontal"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/txtClaimedReason"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_2"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                android:textColor="@color/ui_error"
+                android:visibility="gone"
+                tools:text="Already claimed this reward" />
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/claimedTrailingStack"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/space_sm"
@@ -76,24 +108,25 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/txtClaimedStatus"
-                style="@style/Widget.EventQR.Ui.StatusBadge.Success"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_badge_height"
-                tools:text="Approved" />
-
-            <TextView
                 android:id="@+id/txtClaimedPoints"
                 style="@style/Widget.EventQR.Ui.ListRow.Value"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_4"
-                android:textColor="@color/ui_error"
                 tools:text="-120 pts" />
+
+            <TextView
+                android:id="@+id/txtClaimedStatus"
+                style="@style/Widget.EventQR.Ui.StatusBadge.Success"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:minHeight="@dimen/ui_badge_height"
+                tools:text="Approved" />
         </LinearLayout>
     </LinearLayout>
 
     <View
+        android:id="@+id/claimedRewardDivider"
         android:layout_width="match_parent"
         android:layout_height="@dimen/stroke_hairline"
         android:layout_marginStart="@dimen/ui_divider_inset"
