@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.drawable.ColorDrawable
 import android.graphics.Matrix
+import android.graphics.Outline
 import android.graphics.SurfaceTexture
 import android.hardware.Camera
 import android.net.Uri
@@ -16,6 +17,7 @@ import android.util.Log
 import android.view.Gravity
 import android.view.TextureView
 import android.view.View
+import android.view.ViewOutlineProvider
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.EditText
@@ -205,6 +207,17 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
         inlineCameraPreview = preview.findViewById(R.id.textureInlineCameraPreview)
         scannerIcon = preview.findViewById(R.id.imgScannerIcon)
         cameraContainer = preview.findViewById(R.id.frameCameraContainer)
+
+        // The 240dp preview square is a rounded frame (bg_ui_scan_frame, ui_radius_card §5.13), so
+        // the camera surface must not paint into the corner pockets outside that 10dp arc. Clip only
+        // the camera well: the hairline and the corner brackets stay above it and stay unclipped.
+        val previewRadius = resources.getDimension(R.dimen.ui_radius_card)
+        cameraContainer.clipToOutline = true
+        cameraContainer.outlineProvider = object : ViewOutlineProvider() {
+            override fun getOutline(view: View, outline: Outline) {
+                outline.setRoundRect(0, 0, view.width, view.height, previewRadius)
+            }
+        }
 
         purposeDropdown.visibility = View.GONE
         resultStrip.visibility = View.GONE
