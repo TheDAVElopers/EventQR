@@ -81,6 +81,13 @@
                         android:layout_height="wrap_content"
                         android:visibility="gone"
                         app:gutter="false" />
+
+                    <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+                        android:id="@+id/layoutNotRegisteredForEvent"
+                        android:layout_width="@dimen/ui_empty_max_width"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        app:gutter="false" />
                 </FrameLayout>
 
                 <LinearLayout
@@ -130,13 +137,9 @@
 
                             <ImageView
                                 android:id="@+id/spinnerArrow"
-                                android:layout_width="@dimen/icon_md"
-                                android:layout_height="@dimen/icon_md"
+                                style="@style/Widget.EventQR.Ui.Selector.Caret"
                                 android:layout_marginStart="@dimen/space_sm"
-                                android:contentDescription="@string/common_dropdown"
-                                android:importantForAccessibility="no"
-                                android:src="@drawable/ic_ui_expand_more"
-                                android:tint="@color/ui_text_secondary" />
+                                android:importantForAccessibility="no" />
                         </LinearLayout>
 
                         <View

@@ -81,6 +81,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
     private lateinit var stateHost: android.widget.FrameLayout
     private lateinit var rewardsEnabledSwitch: SwitchCompat
     private lateinit var rewardHost: LinearLayout
+    private lateinit var addRewardChip: TextView
     private lateinit var refreshLayout: androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 
     /** Tests set this before the first rewards call to replace the network service. */
@@ -104,6 +105,8 @@ open class ManageRewardsActivity : AppCompatActivity() {
         stateHost = findViewById(R.id.manageRewardsStateHost)
         refreshLayout = findViewById(R.id.swipeRefreshRewards)
         rewardHost = findViewById(R.id.mrw_reward_host)
+        addRewardChip = findViewById(R.id.mrw_add_reward)
+        addRewardChip.setOnClickListener { showRewardDialog(null) }
         rewardsEnabledSwitch = findViewById(R.id.mrw_rewards_switch)
         findViewById<LinearLayout>(R.id.bottomNavHost).addView(bottomNav(NAV_REWARDS))
 
@@ -188,6 +191,8 @@ open class ManageRewardsActivity : AppCompatActivity() {
         rewardsEnabledSwitch.isChecked = rewardsEnabled
         rewardsEnabledSwitch.setOnCheckedChangeListener { _, checked -> setRewardsEnabled(checked) }
         rewardHost.removeAllViews()
+        // renderRewards() owns the reveal; a switch must not keep the previous event's chip.
+        addRewardChip.visibility = View.GONE
     }
 
 
@@ -290,6 +295,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
         }
         if (showInitialLoading && !refreshLayout.isRefreshing) {
             rewardHost.removeAllViews()
+            addRewardChip.visibility = View.GONE
             rewardHost.addView(styledText(getString(R.string.manage_rewards_loading), R.dimen.type_body_medium, false, orgColors.muted).apply {
                 gravity = Gravity.CENTER
                 setPadding(0, dimenPx(R.dimen.space_xl), 0, dimenPx(R.dimen.space_xl))
@@ -316,6 +322,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
                 if (selectedEvent.id != eventId) return@launch
                 refreshLayout.isRefreshing = false
                 rewardHost.removeAllViews()
+                addRewardChip.visibility = View.GONE
                 rewardHost.addView(errorState(error.message ?: getString(R.string.manage_rewards_load_failed)) { loadRewards() })
                 Toast.makeText(this@ManageRewardsActivity, error.message ?: getString(R.string.manage_rewards_load_failed), Toast.LENGTH_SHORT).show()
             }
@@ -325,6 +332,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
     private fun renderRewards() {
         bindEventSummary()
         rewardHost.removeAllViews()
+        addRewardChip.visibility = if (rewards.isEmpty()) View.GONE else View.VISIBLE
         val enabled = rewardsEnabled
         if (rewards.isEmpty()) {
             rewardHost.addView(
@@ -334,6 +342,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
                     subtext = getString(R.string.manage_rewards_empty_subtext),
                     actionLabel = getString(R.string.manage_rewards_add_reward),
                     onAction = { showRewardDialog(null) },
+                    primary = true,
                 ),
             )
             return
@@ -424,6 +433,8 @@ open class ManageRewardsActivity : AppCompatActivity() {
 
     @VisibleForTesting
     internal fun showRewardDialog(reward: RewardResponse?) {
+        // No event resolved yet (event list still loading or failed): there is no event to create against.
+        if (!::selectedEvent.isInitialized) return
         val isEdit = reward != null
         val form = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL

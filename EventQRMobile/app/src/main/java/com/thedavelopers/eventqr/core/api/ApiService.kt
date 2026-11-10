@@ -47,6 +47,7 @@ import com.thedavelopers.eventqr.features.reports.model.dto.EventReportFilterSta
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportSummaryDto
 import com.thedavelopers.eventqr.features.reports.model.dto.EventReportType
 import com.thedavelopers.eventqr.features.rewards.model.dto.PointBalanceResponse
+import com.thedavelopers.eventqr.features.rewards.model.dto.PointTransactionResponse
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionRequest
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResponse
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionGrantRequest
@@ -326,6 +327,9 @@ interface ApiService {
 
     @GET("attendees/me/events/{eventId}/transactions")
     suspend fun getMyEventTransactions(@Path("eventId") eventId: String): ApiResponse<List<TransactionResponse>>
+
+    @GET("attendees/me/events/{eventId}/point-transactions")
+    suspend fun getMyPointTransactions(@Path("eventId") eventId: String): ApiResponse<List<PointTransactionResponse>>
 
     @GET("attendees/me/transactions")
     suspend fun getMyTransactions(): ApiResponse<List<TransactionResponse>>

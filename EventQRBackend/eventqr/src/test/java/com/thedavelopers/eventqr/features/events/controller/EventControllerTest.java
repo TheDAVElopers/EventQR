@@ -187,7 +187,7 @@ class EventControllerTest {
 
     @Test
     void availabilityIsPublicAndReportsTheRules() throws Exception {
-        when(eventService.availability(eventId)).thenReturn(new EventAvailabilityResponse(eventId, 10, 10, false, true,
+        when(eventService.availability(eq(eventId), any(), any())).thenReturn(new EventAvailabilityResponse(eventId, 10, 10, false, true,
                 false, "Event is at capacity", Instant.now(), null, null));
 
         mvc.perform(get("/api/v1/events/{id}/availability", eventId))
@@ -198,8 +198,17 @@ class EventControllerTest {
     }
 
     @Test
+    void unpublishedEventAvailabilityIsA404() throws Exception {
+        when(eventService.availability(eq(eventId), any(), any()))
+                .thenThrow(new com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException("Event not found: " + eventId));
+
+        mvc.perform(get("/api/v1/events/{id}/availability", eventId).header("Authorization", AUTH))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void anUnknownEventIsA404() throws Exception {
-        when(eventService.findAttendeeEvent(eq(eventId), any()))
+        when(eventService.findAttendeeEvent(eq(eventId), any(), any()))
                 .thenThrow(new com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException("Event not found: " + eventId));
 
         mvc.perform(get("/api/v1/events/{id}", eventId).header("Authorization", AUTH))
@@ -210,6 +219,6 @@ class EventControllerTest {
     void theAttendeeViewIsBuiltForTheCallersOwnId() throws Exception {
         mvc.perform(get("/api/v1/events/{id}", eventId).header("Authorization", AUTH)).andExpect(status().isOk());
 
-        verify(eventService).findAttendeeEvent(eventId, userId);
+        verify(eventService).findAttendeeEvent(eventId, userId, AccountRole.ORGANIZER);
     }
 }

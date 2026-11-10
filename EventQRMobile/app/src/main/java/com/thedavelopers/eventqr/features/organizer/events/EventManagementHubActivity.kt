@@ -110,14 +110,21 @@ open class EventManagementHubActivity : AppCompatActivity() {
 
             val registeredCount = event.currentAttendeeCount.coerceAtLeast(0)
             val capacity = event.capacity.coerceAtLeast(0)
-            val available = (capacity - registeredCount).coerceAtLeast(0)
+            // capacity <= 0 means no cap was recorded (legacy/unlimited). Printing 0 would read as a
+            // full event, which is false; match the event details screen's unavailable treatment.
+            val capacityText = if (capacity > 0) formatCount(capacity) else getString(R.string.ui_organizer_value_unavailable)
+            val availableText = if (capacity > 0) {
+                formatCount((capacity - registeredCount).coerceAtLeast(0))
+            } else {
+                getString(R.string.ui_organizer_value_unavailable)
+            }
 
             findViewById<TextView>(R.id.emh_event_title).text = event.title.ifBlank {
                 getString(R.string.organizer_untitled_event)
             }
             findViewById<TextView>(R.id.emh_stat_registered).text = formatCount(registeredCount)
-            findViewById<TextView>(R.id.emh_stat_capacity).text = formatCount(capacity)
-            findViewById<TextView>(R.id.emh_stat_available).text = formatCount(available)
+            findViewById<TextView>(R.id.emh_stat_capacity).text = capacityText
+            findViewById<TextView>(R.id.emh_stat_available).text = availableText
 
             // "Upcoming" is a display state derived from the event window; the backend enum has no
             // UPCOMING. Resolve once so the badge and the routing rule always agree.

@@ -102,7 +102,6 @@
     <string name="organizer_notifications_mark_all_read">Mark all read</string>
     <string name="organizer_notifications_calendar">Calendar</string>
     <string name="organizer_notifications_all_events">All events</string>
-    <string name="common_dropdown">Dropdown</string>
     <string name="organizer_notifications_all_types">All types</string>
     <string name="organizer_notifications_error_loading_notifications">Error loading notifications</string>
     <string name="common_attendee">Attendee</string>
@@ -439,6 +438,8 @@
     <string name="user_registered_events_events_you_register_for_will_show_up">Events you register for will show up here.</string>
     <string name="user_rewards_register_for_an_event_to_start_earni">Register for an event to start earning rewards</string>
     <string name="user_rewards_no_rewards_available_yet">No rewards available yet</string>
+    <string name="user_rewards_not_registered_for_this_event">Not registered for this event</string>
+    <string name="user_rewards_register_for_this_event_to_see_its_re">Register for this event to see and spend its rewards.</string>
     <string name="user_rewards_check_back_later_for_rewards_for_thi">Check back later for rewards for this event</string>
     <string name="transaction_no_points">No points</string>
     <string name="registered_events_none_upcoming">No upcoming registered events</string>
@@ -459,7 +460,7 @@
     <string name="manage_rewards_no_events_subtext">Create an event in the Events tab to manage reward redemptions.</string>
     <string name="manage_rewards_event_rewards">Event Rewards</string>
     <string name="manage_rewards_event_rewards_desc">Enable or disable reward redemption for this event.</string>
-    <string name="manage_rewards_add_reward">Add Reward</string>
+    <string name="manage_rewards_add_reward">Add reward</string>
     <string name="manage_rewards_badge_disabled">Disabled</string>
     <string name="manage_rewards_badge_available">Available</string>
     <string name="manage_rewards_duplicate_claims_note">Attendees may claim this reward more than once</string>
@@ -626,29 +627,29 @@
     <string name="auth_create_account">Create account</string>
 
     <!-- Landing -->
-    <string name="auth_landing_hero">One QR code. Every event.</string>
+    <string name="auth_landing_hero">Every event. Its own pass.</string>
     <string name="auth_landing_sub">A pass, a scanner and the points you earned, in one place.</string>
     <string name="auth_landing_why">Why EventQR</string>
     <string name="auth_feature_number_1">01</string>
     <string name="auth_feature_number_2">02</string>
     <string name="auth_feature_number_3">03</string>
-    <string name="auth_feature_1_title">One pass</string>
-    <string name="auth_feature_1_body">Register once and the same pass works at every event.</string>
+    <string name="auth_feature_1_title">Per-event pass</string>
+    <string name="auth_feature_1_body">Register for an event and its pass is created for you.</string>
     <string name="auth_feature_2_title">Instant check-in</string>
     <string name="auth_feature_2_body">Staff scan the pass and the door clears in under a second.</string>
     <string name="auth_feature_3_title">Points that post</string>
     <string name="auth_feature_3_body">Every check-in credits points you can spend on rewards.</string>
-    <string name="auth_minipass_title">Your pass to every event</string>
+    <string name="auth_minipass_title">Your event pass</string>
     <string name="auth_minipass_serial">REG. #001</string>
 
     <!-- Sign in -->
     <string name="auth_signin_sub">Use the email you registered with.</string>
-    <string name="auth_signin_helper">One pass covers every event you register for.</string>
+    <string name="auth_signin_helper">Each event you register for gets its own pass.</string>
     <string name="auth_forgot_password">Forgot password?</string>
     <string name="auth_new_here">New here?</string>
 
     <!-- Sign up -->
-    <string name="auth_signup_sub">Your pass is created with your account.</string>
+    <string name="auth_signup_sub">Your first pass is created when you register for an event.</string>
     <string name="auth_section_details">Your details</string>
     <string name="auth_section_contact">Contact</string>
     <string name="auth_section_security">Security</string>

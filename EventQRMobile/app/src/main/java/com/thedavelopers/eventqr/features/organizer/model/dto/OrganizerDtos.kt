@@ -66,6 +66,7 @@ data class OrganizerAttendeeDto(
     val recentTransactions: List<JsonElement> = emptyList(),
     val recentRejectedScans: List<String> = emptyList(),
     val countedAsRegistered: Boolean? = null,
+    val registrationNumber: Int? = null,
 )
 
 data class OrganizerTransactionDto(

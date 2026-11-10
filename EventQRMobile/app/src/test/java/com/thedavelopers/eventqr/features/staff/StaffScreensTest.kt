@@ -8,6 +8,8 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
+import com.thedavelopers.eventqr.core.api.dto.TransactionResult
+import com.thedavelopers.eventqr.core.api.dto.TransactionType
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.features.ShadowEncryptedSharedPreferences
 import com.thedavelopers.eventqr.features.ShadowMasterKeys
@@ -18,6 +20,7 @@ import com.thedavelopers.eventqr.features.organizer.allTexts
 import com.thedavelopers.eventqr.features.staff.model.dto.StaffTransactionSummary
 import com.thedavelopers.eventqr.features.staff.result.StaffScanResultActivity
 import com.thedavelopers.eventqr.features.staff.result.StaffTransactionResultActivity
+import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -28,6 +31,7 @@ import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.Shadows
 import org.robolectric.annotation.Config
+import java.util.UUID
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [35], shadows = [ShadowMasterKeys::class, ShadowEncryptedSharedPreferences::class])
@@ -50,6 +54,7 @@ class StaffScreensTest {
         assertEquals("340", activity.findViewById<TextView>(R.id.txtTotalScans).text.toString())
         assertEquals("300", activity.findViewById<TextView>(R.id.txtSuccessfulScans).text.toString())
         assertEquals("40", activity.findViewById<TextView>(R.id.txtRejectedScans).text.toString())
+        assertEquals("My scans", context.getString(R.string.ui_staff_logs))
         assertEquals("My scans", context.getString(R.string.staff_transaction_logs_total_scans))
     }
 
@@ -90,6 +95,29 @@ class StaffScreensTest {
 
         assertEquals("Scans", context.getString(R.string.ui_staff_scans))
         assertEquals("Check-ins", context.getString(R.string.ui_staff_check_ins))
+    }
+
+    @Test
+    fun dashboardRecentCount_usesServerSummaryNotTheTruncatedFiveRowList() {
+        val activity = Robolectric.buildActivity(StaffDashboardActivity::class.java).create().get()
+        val rows = (1..5).map {
+            TransactionResponse(
+                transactionId = UUID.randomUUID(),
+                eventId = UUID.randomUUID(),
+                attendeeUserId = UUID.randomUUID(),
+                registrationId = UUID.randomUUID(),
+                qrCredentialId = UUID.randomUUID(),
+                scanPurposeId = UUID.randomUUID(),
+                transactionType = TransactionType.ENTRY,
+                transactionResult = TransactionResult.APPROVED,
+                pointsDelta = 0,
+            )
+        }
+
+        activity.renderRecentScans(rows)
+        activity.updateStats(scans = 42, checkins = 17)
+
+        assertEquals("42 today", activity.findViewById<TextView>(R.id.txtRecentCount).text.toString())
     }
 
     // ---- admin dashboard tiles
@@ -307,11 +335,13 @@ class StaffScreensTest {
     fun txResult_pointsLineShownOnlyForPositivePoints() {
         val withPoints = txResult("APPROVED", 5)
         assertEquals(View.VISIBLE, withPoints.findViewById<View>(R.id.layoutTransactionApproved).visibility)
+        assertEquals("Points credited", withPoints.findViewById<TextView>(R.id.txtTransactionState).text.toString())
         assertEquals("Points awarded to attendee", withPoints.findViewById<TextView>(R.id.txtTransactionStateHint).text.toString())
 
         val noPoints = txResult("APPROVED", 0)
         assertEquals(View.GONE, noPoints.findViewById<View>(R.id.layoutTransactionApproved).visibility)
-        assertEquals("Scan recorded", noPoints.findViewById<TextView>(R.id.txtTransactionStateHint).text.toString())
+        assertEquals("Scan recorded", noPoints.findViewById<TextView>(R.id.txtTransactionState).text.toString())
+        assertEquals("The transaction was recorded.", noPoints.findViewById<TextView>(R.id.txtTransactionStateHint).text.toString())
     }
 
     @Test

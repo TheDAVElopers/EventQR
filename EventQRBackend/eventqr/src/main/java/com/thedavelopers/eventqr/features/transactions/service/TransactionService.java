@@ -403,8 +403,8 @@ public class TransactionService {
 
     @Transactional(readOnly = true)
     public List<TransactionResponse> findByEventAndAttendee(UUID eventId, UUID attendeeUserId) {
-        return transactionLogRepository.findByEventId(eventId).stream()
-                .filter(log -> log.getAttendeeUserId().equals(attendeeUserId))
+        return transactionLogRepository.findByEventIdAndAttendeeUserIdOrderByScannedAtDesc(eventId, attendeeUserId)
+                .stream()
                 .map(this::toResponse)
                 .toList();
     }

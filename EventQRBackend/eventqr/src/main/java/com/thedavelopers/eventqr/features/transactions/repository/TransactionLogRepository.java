@@ -43,6 +43,7 @@ public interface TransactionLogRepository extends JpaRepository<TransactionLog, 
     List<TransactionLog> findByEventIdOrderByScannedAtDesc(UUID eventId);
     List<TransactionLog> findByRegistrationIdAndScanPurposeIdOrderByScannedAtDesc(UUID registrationId, UUID scanPurposeId);
     List<TransactionLog> findByAttendeeUserId(UUID attendeeUserId);
+    List<TransactionLog> findByEventIdAndAttendeeUserIdOrderByScannedAtDesc(UUID eventId, UUID attendeeUserId);
     List<TransactionLog> findByStaffUserIdOrderByScannedAtDesc(UUID staffUserId);
     List<TransactionLog> findByStaffUserIdAndScannedAtGreaterThanEqual(UUID staffUserId, Instant scannedAt);
     List<TransactionLog> findByStaffUserIdAndEventIdOrderByScannedAtDesc(UUID staffUserId, UUID eventId);

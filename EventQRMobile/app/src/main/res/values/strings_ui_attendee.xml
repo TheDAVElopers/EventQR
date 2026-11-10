@@ -89,9 +89,15 @@
     <!-- ═════════ Rewards (§6.2) ═════════ -->
     <string name="ui_attendee_available">Available</string>
     <string name="ui_attendee_claimed">Claimed</string>
+    <string name="ui_attendee_reward_already_claimed">You already claimed this reward.</string>
+    <string name="ui_attendee_rewards_all_claimed_title">All rewards claimed</string>
+    <string name="ui_attendee_rewards_all_claimed_body">You\'ve claimed every reward for this event.</string>
     <string name="ui_attendee_history">History</string>
     <string name="ui_attendee_points_cost">%1$s pts</string>
     <string name="ui_attendee_points_spent">-%1$d pts</string>
+    <string name="ui_attendee_points_added">Points added</string>
+    <string name="ui_attendee_points_deducted">Points deducted</string>
+    <string name="ui_attendee_reward_redemption">Reward redemption</string>
     <string name="ui_attendee_points_required">pts required</string>
     <string name="ui_attendee_available_rewards">Available rewards</string>
     <string name="ui_attendee_registered_event">Registered event</string>
@@ -114,6 +120,8 @@
     <string name="ui_attendee_claims_error_title">Couldn\'t load claims</string>
     <string name="ui_attendee_claims_error_body">Check your connection and try again.</string>
     <string name="ui_attendee_claims_refresh_failed">Couldn\'t refresh claims.</string>
+    <string name="ui_attendee_claim_state_unknown">Couldn\'t check</string>
+    <string name="ui_attendee_claim_state_unknown_body">Check your connection and reopen this reward.</string>
     <string name="ui_attendee_redeemed">Approved</string>
     <string name="ui_attendee_pending">Pending</string>
     <string name="ui_attendee_rejected">Rejected</string>
@@ -132,6 +140,7 @@
     <string name="ui_attendee_save_changes">Save changes</string>
     <string name="ui_attendee_saving">Saving…</string>
     <string name="ui_attendee_full_name">Full name</string>
+    <string name="ui_attendee_registration_details_from_profile">These details come from your profile. Edit them in Profile.</string>
     <string name="ui_attendee_email_locked">Email is set at registration and cannot be changed.</string>
     <string name="ui_attendee_phone_hint">10 digits, without the +63 prefix</string>
     <string name="ui_attendee_phone_required">Enter your mobile number.</string>

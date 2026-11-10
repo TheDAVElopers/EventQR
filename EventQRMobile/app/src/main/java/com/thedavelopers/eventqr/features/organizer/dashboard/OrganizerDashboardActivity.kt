@@ -19,6 +19,7 @@ import com.thedavelopers.eventqr.core.util.EventCardPresenter
 import com.thedavelopers.eventqr.core.util.PortalSwitcher
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.auth.AuthRepository
+import com.thedavelopers.eventqr.features.attendee.RequestEventActivity
 import com.thedavelopers.eventqr.features.organizer.NAV_DASHBOARD
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpDataSource
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpEvent
@@ -131,8 +132,10 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
     }
 
     private fun bindCreateEventAction() {
+        // Creation only exists as the event request form; the dashboard action opens it directly
+        // instead of dead-ending on the managed-events list.
         emptyEvents.setAction(getString(R.string.ui_organizer_create_event), primary = true) {
-            openOrganizerPage(ManageEventsActivity::class.java, selectedEventId().takeIf { it.isNotBlank() })
+            startActivity(Intent(this, RequestEventActivity::class.java))
         }
     }
 

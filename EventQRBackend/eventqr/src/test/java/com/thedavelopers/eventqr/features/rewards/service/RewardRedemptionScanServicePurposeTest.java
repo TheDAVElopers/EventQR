@@ -13,6 +13,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse;
+import com.thedavelopers.eventqr.features.rewards.model.entity.Reward;
+import com.thedavelopers.eventqr.features.rewards.model.entity.RewardRedemption;
+import com.thedavelopers.eventqr.shared.constants.RedemptionStatus;
+import com.thedavelopers.eventqr.shared.constants.RewardStatus;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -43,14 +49,16 @@ class RewardRedemptionScanServicePurposeTest {
     private final UUID attendeeId = UUID.randomUUID();
     private TransactionService transactionService;
     private ScanPurposePort scanPurposePort;
+    private RewardRepository rewards;
+    private RewardRedemptionRepository redemptions;
     private RewardRedemptionScanService service;
 
     @BeforeEach
     void setUp() {
         transactionService = mock(TransactionService.class);
         AttendeePointBalanceRepository balances = mock(AttendeePointBalanceRepository.class);
-        RewardRepository rewards = mock(RewardRepository.class);
-        RewardRedemptionRepository redemptions = mock(RewardRedemptionRepository.class);
+        rewards = mock(RewardRepository.class);
+        redemptions = mock(RewardRedemptionRepository.class);
         when(balances.findByEventIdAndAttendeeUserId(any(), any())).thenReturn(Optional.empty());
         when(rewards.findByEventId(eventId)).thenReturn(List.of());
         when(redemptions.countByEventIdAndStatusGroupedByReward(any(), any())).thenReturn(List.of());
@@ -99,6 +107,42 @@ class RewardRedemptionScanServicePurposeTest {
         ArgumentCaptor<TransactionRequest> captor = ArgumentCaptor.forClass(TransactionRequest.class);
         verify(transactionService).record(captor.capture());
         assertThat(captor.getValue().staffUserId()).isEqualTo(staffId);
+    }
+
+    @Test
+    void alreadyRedeemedRewardIsExcludedUnlessDuplicatesAreAllowed() {
+        verifiedAs(ScanPurposeCode.REWARD_REDEMPTION_SCAN);
+        when(transactionService.record(any())).thenReturn(new TransactionResponse(UUID.randomUUID(), eventId,
+                attendeeId, UUID.randomUUID(), UUID.randomUUID(), purposeId, TransactionType.REWARD_REDEMPTION_SCAN,
+                TransactionResult.APPROVED, 0, null, Instant.now(), "Expo"));
+
+        Reward claimedReward = reward(false);
+        Reward duplicateFriendlyReward = reward(true);
+        when(rewards.findByEventId(eventId)).thenReturn(List.of(claimedReward, duplicateFriendlyReward));
+
+        RewardRedemption redeemed = new RewardRedemption();
+        redeemed.setEventId(eventId);
+        redeemed.setAttendeeUserId(attendeeId);
+        redeemed.setRewardId(claimedReward.getId());
+        redeemed.setStatus(RedemptionStatus.REDEEMED);
+        when(redemptions.findByEventIdAndAttendeeUserId(eventId, attendeeId)).thenReturn(List.of(redeemed));
+
+        var response = service.scan(request());
+
+        assertThat(response.eligibleRewards())
+                .extracting(RewardResponse::rewardId)
+                .containsExactly(duplicateFriendlyReward.getId());
+    }
+
+    private Reward reward(boolean allowDuplicateClaims) {
+        Reward reward = new Reward();
+        reward.setId(UUID.randomUUID());
+        reward.setEventId(eventId);
+        reward.setName("Sticker");
+        reward.setPointsRequired(0);
+        reward.setStatus(RewardStatus.ACTIVE);
+        reward.setAllowDuplicateClaims(allowDuplicateClaims);
+        return reward;
     }
 
     @Test

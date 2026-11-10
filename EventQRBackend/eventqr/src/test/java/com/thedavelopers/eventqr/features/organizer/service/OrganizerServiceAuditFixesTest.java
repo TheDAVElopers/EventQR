@@ -24,6 +24,7 @@ import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.Orga
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.OrganizerStaffResponse;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.StaffAssignmentRequest;
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.StaffAssignmentUpdateRequest;
+import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerDtos.UserSearchResponse;
 import com.thedavelopers.eventqr.features.organizer.model.entity.EventStaffAssignment;
 import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignmentRepository;
 import com.thedavelopers.eventqr.features.registrations.model.entity.EventRegistration;
@@ -199,6 +200,42 @@ class OrganizerServiceAuditFixesTest {
     }
 
     @Test
+    void searchUsersExcludesAdminAccounts() {
+        UserProfile attendee = user(UUID.randomUUID(), AccountRole.ATTENDEE);
+        UserProfile admin = user(UUID.randomUUID(), AccountRole.ADMIN);
+        UserProfile superAdmin = user(UUID.randomUUID(), AccountRole.SUPER_ADMIN);
+        when(users.findTop20ByEmailContainingIgnoreCaseOrFullNameContainingIgnoreCase("u", "u"))
+                .thenReturn(List.of(attendee, admin, superAdmin));
+
+        List<UserSearchResponse> result = service.searchUsers(organizerId, "u");
+
+        assertThat(result).extracting(UserSearchResponse::userId).containsExactly(attendee.getId());
+    }
+
+    @Test
+    void addStaffRejectsAdminTargets() {
+        UserProfile admin = user(UUID.randomUUID(), AccountRole.ADMIN);
+        when(users.findById(admin.getId())).thenReturn(Optional.of(admin));
+
+        assertThatThrownBy(() -> service.addStaff(organizerId, eventId, AccountRole.ORGANIZER,
+                new StaffAssignmentRequest(admin.getId(), null, null, null, null, null, null, null, null)))
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessage("Administrator accounts cannot be assigned as event staff");
+        org.mockito.Mockito.verify(staffRepo, org.mockito.Mockito.never()).save(any(EventStaffAssignment.class));
+    }
+
+    @Test
+    void attendeeExposesTheRealRegistrationNumber() {
+        EventRegistration r = reg(RegistrationStatus.REGISTERED, false);
+        r.setRegistrationNumber(42);
+        when(registrations.findByEventId(eventId)).thenReturn(List.of(r));
+
+        List<OrganizerAttendeeResponse> result = service.attendees(organizerId, eventId, AccountRole.ORGANIZER);
+
+        assertThat(result).extracting(OrganizerAttendeeResponse::registrationNumber).containsExactly(42);
+    }
+
+    @Test
     void updateStaffPermissionsAllowedForOwnerAndForbiddenForOtherOrganizer() {
         UUID assignmentId = UUID.randomUUID();
         EventStaffAssignment assignment = new EventStaffAssignment();
@@ -219,6 +256,43 @@ class OrganizerServiceAuditFixesTest {
         assertThatThrownBy(() -> service.updateStaff(strangerId, eventId, AccountRole.ORGANIZER, assignmentId,
                 new StaffAssignmentUpdateRequest(null, null, null, false, false, false, null)))
                 .isInstanceOf(ForbiddenException.class);
+    }
+
+    private EventStaffAssignment legacyAdminAssignment(UUID assignmentId, UserProfile admin, boolean active) {
+        EventStaffAssignment assignment = new EventStaffAssignment();
+        assignment.setId(assignmentId);
+        assignment.setEventId(eventId);
+        assignment.setStaffUserId(admin.getId());
+        assignment.setActive(active);
+        when(staffRepo.findById(assignmentId)).thenReturn(Optional.of(assignment));
+        when(staffRepo.save(any(EventStaffAssignment.class))).thenAnswer(inv -> inv.getArgument(0));
+        return assignment;
+    }
+
+    @Test
+    void updateStaffCannotReactivateALegacyAdminAssignment() {
+        UserProfile admin = user(UUID.randomUUID(), AccountRole.ADMIN);
+        when(users.findById(admin.getId())).thenReturn(Optional.of(admin));
+        EventStaffAssignment assignment = legacyAdminAssignment(UUID.randomUUID(), admin, false);
+
+        assertThatThrownBy(() -> service.updateStaff(organizerId, eventId, AccountRole.ORGANIZER, assignment.getId(),
+                new StaffAssignmentUpdateRequest(true, null, null, null, null, null, null)))
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessage("Administrator accounts cannot be assigned as event staff");
+        assertThat(assignment.isActive()).isFalse();
+        org.mockito.Mockito.verify(staffRepo, org.mockito.Mockito.never()).save(any(EventStaffAssignment.class));
+    }
+
+    @Test
+    void updateStaffCanDeactivateALegacyAdminAssignment() {
+        UserProfile admin = user(UUID.randomUUID(), AccountRole.SUPER_ADMIN);
+        when(users.findById(admin.getId())).thenReturn(Optional.of(admin));
+        EventStaffAssignment assignment = legacyAdminAssignment(UUID.randomUUID(), admin, true);
+
+        service.updateStaff(organizerId, eventId, AccountRole.ORGANIZER, assignment.getId(),
+                new StaffAssignmentUpdateRequest(false, null, null, null, null, null, null));
+
+        assertThat(assignment.isActive()).isFalse();
     }
 
     private EventStaffAssignment existingAssignment(UUID assignmentId) {

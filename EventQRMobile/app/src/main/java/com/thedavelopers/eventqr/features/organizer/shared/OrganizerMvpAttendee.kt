@@ -21,4 +21,6 @@ data class OrganizerMvpAttendee(
     val recentRejectedScans: List<String>,
     /** Backend `countedAsRegistered`: false for Cancelled / No Show registrations. */
     val countedAsRegistered: Boolean = true,
+    /** Server registration serial; null when the registration has no number yet. */
+    val registrationNumber: Int? = null,
 )

@@ -3,7 +3,7 @@
     SCANNER VIEWPORT (§5.13) - the camera is the only large dark surface in the app, and it is
     FLAT. No gradient, no glow, no translucent cards.
 
-        48dp context bar   event name (title) left, scan purpose (label) right, secondary
+        48dp context field  one control: event name (title) over scan purpose (label), caret
         320x256dp panel    flat ui_scan_panel, radius 16
         240x240dp preview  1px ui_scan_frame + four 24dp brackets at 3dp, white 80%
         torch              44dp target, 20dp icon, 16dp inset in the panel corner
@@ -19,8 +19,8 @@
         bg_ui_scan_strip) under the panel - NEVER a toast
       * brackets tint to ui_accent only while a decode is confirmed; that is the only lime here
 
-    ids: scanRoot, scanContext, scanContextEvent, scanContextPurpose, scanPanel, scanPreview,
-         scanBracketTl/Tr/Bl/Br, scanTorch, scanGuidance.
+    ids: scanRoot, scanContext, scanContextEvent, scanContextPurpose, scanContextCaret, scanPanel,
+         scanPreview, scanBracketTl/Tr/Bl/Br, scanTorch, scanGuidance.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -32,34 +32,53 @@
     android:paddingStart="@dimen/ui_gutter"
     android:paddingEnd="@dimen/ui_gutter">
 
+    <!-- Context field (§5.13): ONE control, not two labels. Event name over scan purpose, one
+         caret. A tap opens the scan context sheet (event group, then purpose group).
+         minHeight, never a fixed height, so title + label grow at fontScale 2.0 (§9.3, §9.6:17).
+         ScannerActivity owns clickability, the caret's visibility and the combined description. -->
     <LinearLayout
         android:id="@+id/scanContext"
         style="@style/Widget.EventQR.Ui.Scan.Context"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/ui_scan_context_height"
+        android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/scanContextEvent"
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textAppearance="@style/TextAppearance.EventQR.Type.Title"
-            android:textColor="@color/ui_text_primary"
-            tools:text="DevFest Manila 2026" />
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/scanContextPurpose"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/space_lg"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textAppearance="@style/TextAppearance.EventQR.Type.Label"
-            android:textColor="@color/ui_text_secondary"
-            tools:text="Entry" />
+            <TextView
+                android:id="@+id/scanContextEvent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:importantForAccessibility="no"
+                android:maxLines="1"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Title"
+                android:textColor="@color/ui_text_primary"
+                tools:text="DevFest Manila 2026" />
+
+            <TextView
+                android:id="@+id/scanContextPurpose"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_2"
+                android:ellipsize="end"
+                android:importantForAccessibility="no"
+                android:maxLines="1"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Label"
+                android:textColor="@color/ui_text_secondary"
+                tools:text="Entry" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/scanContextCaret"
+            style="@style/Widget.EventQR.Ui.Selector.Caret"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="@dimen/space_8"
+            android:importantForAccessibility="no" />
     </LinearLayout>
 
     <FrameLayout
@@ -67,6 +86,7 @@
         style="@style/Widget.EventQR.Ui.Scan.Panel"
         android:layout_width="@dimen/ui_scan_panel_width"
         android:layout_height="@dimen/ui_scan_panel_height"
+        android:layout_marginTop="@dimen/space_16"
         android:contentDescription="@string/ui_scan_panel_description">
 
         <FrameLayout

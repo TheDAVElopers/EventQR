@@ -40,6 +40,7 @@ public class AuditLogController {
 
     @PostMapping("/audit-logs")
     public ResponseEntity<ApiResponse<Void>> createAuditLog(HttpServletRequest request, @Valid @RequestBody AuditLogRequest body) {
+        requireAdmin(request);
         UUID userId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
         auditLogService.log(body, userId, "System User");
         return ResponseEntity.ok(ApiResponse.success("Audit log created", null));

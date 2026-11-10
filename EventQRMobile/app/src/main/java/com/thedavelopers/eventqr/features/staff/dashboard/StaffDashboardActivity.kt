@@ -51,6 +51,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
     private var headBell: Int = 0
     private var headScans: Int? = null
     private var headCheckIns: Int? = null
+    private var recentScanCount: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -160,17 +161,25 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
     override fun renderRecentScans(items: List<TransactionResponse>) {
         skeletonLoading.visibility = View.GONE
         adapter.submitItems(items)
+        recentScanCount = items.size
         val empty = items.isEmpty()
         recyclerRecentScans.visibility = if (empty) View.GONE else View.VISIBLE
         emptyRecentScans.visibility = if (empty) View.VISIBLE else View.GONE
+        updateRecentCount()
+    }
+
+    /** "N today" is the server summary count, never the truncated five-row list. Summary failure falls back to the loaded rows. */
+    private fun updateRecentCount() {
+        val count = headScans ?: recentScanCount
         findViewById<TextView>(R.id.txtRecentCount).text =
-            if (empty) "" else getString(R.string.ui_staff_today_count, items.size)
+            if (recentScanCount == 0) "" else getString(R.string.ui_staff_today_count, count)
     }
 
     override fun updateStats(scans: Int?, checkins: Int?) {
         headScans = scans
         headCheckIns = checkins
         bindPassHead()
+        updateRecentCount()
     }
 
     override fun showMessage(message: String) {

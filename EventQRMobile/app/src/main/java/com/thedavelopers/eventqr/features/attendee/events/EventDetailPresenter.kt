@@ -5,11 +5,14 @@ import com.thedavelopers.eventqr.core.util.UiStrings
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import com.thedavelopers.eventqr.core.api.dto.RegistrationStatus
+import com.thedavelopers.eventqr.core.api.dto.TransactionResult
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
 import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
+import com.thedavelopers.eventqr.features.rewards.model.dto.PointTransactionResponse
+import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -22,10 +25,14 @@ class EventDetailPresenter(
 ) {
     private val scope = kotlinx.coroutines.MainScope()
     private var job: Job? = null
+    private var activityJob: Job? = null
     private var cancelling = false
+    /** The registration id whose activity check passed; null while unverified. */
+    private var verifiedCancellableId: String? = null
 
     fun detach() {
         job?.cancel()
+        activityJob?.cancel()
         scope.cancel()
         view = null
     }
@@ -63,7 +70,7 @@ class EventDetailPresenter(
         val cached = RegistrationsCache.get()
         if (cached != null) {
             view?.updateRegistrationStatus(isRegisteredIn(cached, eventId))
-            view?.setCancellableRegistration(cancellableIdIn(cached, eventId))
+            applyCancellableRegistration(cached, eventId)
         }
         if (cached != null && RegistrationsCache.isFresh()) {
             return
@@ -71,7 +78,6 @@ class EventDetailPresenter(
 
         scope.launch {
             val cachedRegistered = cached?.let { isRegisteredIn(it, eventId) }
-            val cachedCancellableId = cached?.let { cancellableIdIn(it, eventId) }
             val result = repository.getMyRegistrations()
             when (result) {
                 is NetworkResult.Success -> {
@@ -79,10 +85,7 @@ class EventDetailPresenter(
                     if (cachedRegistered != freshRegistered) {
                         view?.updateRegistrationStatus(freshRegistered)
                     }
-                    val freshCancellableId = cancellableIdIn(result.data, eventId)
-                    if (cachedCancellableId != freshCancellableId) {
-                        view?.setCancellableRegistration(freshCancellableId)
-                    }
+                    applyCancellableRegistration(result.data, eventId)
                 }
                 is NetworkResult.Error -> {
                     if (cached == null) {
@@ -91,6 +94,39 @@ class EventDetailPresenter(
                 }
                 NetworkResult.Loading -> Unit
             }
+        }
+    }
+
+    /**
+     * Only a REGISTERED registration can be cancelled, and the backend refuses the cancel once any
+     * point transaction or APPROVED scan exists for it. Offer the action only after both activity
+     * reads pass; an unverifiable registration hides it rather than leading to a guaranteed error.
+     */
+    private fun applyCancellableRegistration(items: List<RegistrationResponse>, eventId: String) {
+        val registrationId = cancellableIdIn(items, eventId)
+        activityJob?.cancel()
+        if (registrationId == null) {
+            verifiedCancellableId = null
+            view?.setCancellableRegistration(null)
+            return
+        }
+        if (registrationId != verifiedCancellableId) {
+            // Never offer an action the server may reject while the rule is still unknown.
+            view?.setCancellableRegistration(null)
+        } else {
+            // This exact registration already passed both activity reads: keep the button and skip
+            // repeating the two calls on every resume.
+            view?.setCancellableRegistration(registrationId)
+            return
+        }
+        activityJob = scope.launch {
+            val pointTransactions = repository.getMyPointTransactions(eventId)
+            val scans = repository.getMyEventTransactions(eventId)
+            val eligible = pointTransactions is NetworkResult.Success &&
+                scans is NetworkResult.Success &&
+                !hasRecordedActivity(registrationId, pointTransactions.data, scans.data)
+            verifiedCancellableId = if (eligible) registrationId else null
+            view?.setCancellableRegistration(verifiedCancellableId)
         }
     }
 
@@ -131,6 +167,9 @@ class EventDetailPresenter(
                         val message = result.serverMessage?.takeIf { it.isNotBlank() }
                             ?: result.message.takeIf { it.isNotBlank() }
                             ?: strings.get(R.string.event_detail_cancel_registration_failed)
+                        // The server refused (e.g. a scan landed): the earlier activity check no longer
+                        // proves the cancel is allowed, so the next resume must re-read it.
+                        verifiedCancellableId = null
                         view?.showCancelFailure(message)
                     }
                     NetworkResult.Loading -> Unit
@@ -175,5 +214,20 @@ class EventDetailPresenter(
                 event.status == EventStatus.CANCELLED
             return !registrationClosed && !started && !blocked
         }
+
+        /**
+         * Mirrors the backend's activity rules for an attendee self-cancel: any point transaction
+         * for the event (earned, spent or manually adjusted) blocks it, as does any APPROVED scan
+         * of this registration (including a 0-point tracking scan). Rejected scans do not.
+         */
+        fun hasRecordedActivity(
+            registrationId: String,
+            pointTransactions: List<PointTransactionResponse>,
+            scans: List<TransactionResponse>,
+        ): Boolean = pointTransactions.isNotEmpty() ||
+            scans.any {
+                it.registrationId.toString() == registrationId &&
+                    it.transactionResult == TransactionResult.APPROVED
+            }
     }
 }

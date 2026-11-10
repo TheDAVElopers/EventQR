@@ -315,6 +315,17 @@
         <item name="android:importantForAccessibility">no</item>
     </style>
 
+    <!-- Trailing caret on a control that opens a choice in place (§icon table: down-caret =
+         ic_ui_expand_more, 16dp trailing). Never use ListRow.Chevron here: that one navigates. -->
+    <style name="Widget.EventQR.Ui.Selector.Caret" parent="">
+        <item name="android:layout_width">@dimen/ui_chevron</item>
+        <item name="android:layout_height">@dimen/ui_chevron</item>
+        <item name="android:src">@drawable/ic_ui_expand_more</item>
+        <item name="android:tint">@color/ui_text_secondary</item>
+        <item name="android:contentDescription">@null</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <!--  METRIC ROW (§5.9 form 2) - 56dp, label left / value right, hairline     -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
@@ -442,6 +453,8 @@
              to ui_accent_deep while the torch is on; both states must stay readable here. -->
         <item name="android:tint">@color/ui_text_primary</item>
         <item name="android:contentDescription">@string/ui_scan_torch</item>
+        <!-- 12dp padding inside the 44dp target leaves the 24dp glyph at 20dp (§5.13). -->
+        <item name="android:padding">@dimen/space_12</item>
     </style>
 
     <style name="Widget.EventQR.Ui.Scan.Guidance" parent="">
@@ -449,10 +462,22 @@
         <item name="android:textColor">@color/ui_text_secondary</item>
     </style>
 
+    <!-- One control, not two labels (§5.13). Field surface + 48dp minimum + vertical padding so
+         the title and label grow together instead of clipping. The activity sets clickability,
+         the caret's visibility and the combined contentDescription; bg_ui_field supplies the
+         2dp ui_primary focus ring for keyboard and d-pad (§9.6:9). -->
     <style name="Widget.EventQR.Ui.Scan.Context" parent="">
-        <item name="android:layout_height">@dimen/ui_scan_context_height</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">@dimen/ui_scan_context_height</item>
+        <item name="android:background">@drawable/bg_ui_field</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:orientation">horizontal</item>
+        <item name="android:paddingStart">@dimen/space_16</item>
+        <item name="android:paddingTop">@dimen/space_8</item>
+        <item name="android:paddingEnd">@dimen/space_12</item>
+        <item name="android:paddingBottom">@dimen/space_8</item>
     </style>
 
     <style name="Widget.EventQR.Ui.Scan.StatusStrip" parent="">

@@ -178,15 +178,14 @@ open class AttendeeManagementActivity : AppCompatActivity() {
         formatOrganizerEventDate(rawDate).ifBlank { "-" }
 
     private fun setupEventSelector(events: List<OrganizerMvpEvent>) {
-        val approvedEvents = events.filter { it.status.equals("APPROVED", ignoreCase = true) || it.status.isBlank() }
-        val selectableEvents = approvedEvents.ifEmpty { events }
-
-        eventSelectorHost.isClickable = selectableEvents.isNotEmpty()
-        eventSelectorHost.isFocusable = selectableEvents.isNotEmpty()
+        // `events` is already the manageable set (Approved / Active / Completed), which is exactly
+        // what the server accepts for attendee management - do not narrow it to Approved only.
+        eventSelectorHost.isClickable = events.isNotEmpty()
+        eventSelectorHost.isFocusable = events.isNotEmpty()
 
         eventSelectorHost.setOnClickListener { anchor ->
-            if (selectableEvents.isEmpty()) return@setOnClickListener
-            showEventDropdownPopup(anchor, selectableEvents)
+            if (events.isEmpty()) return@setOnClickListener
+            showEventDropdownPopup(anchor, events)
         }
     }
 

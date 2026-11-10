@@ -19,6 +19,9 @@ import com.thedavelopers.eventqr.features.events.model.dto.EventRequest;
 import com.thedavelopers.eventqr.features.events.model.dto.EventResponse;
 import com.thedavelopers.eventqr.features.events.model.entity.Event;
 import com.thedavelopers.eventqr.features.events.repository.EventRepository;
+import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignmentRepository;
+import com.thedavelopers.eventqr.features.registrations.repository.EventRegistrationRepository;
+import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.EventStatus;
 import com.thedavelopers.eventqr.shared.exceptions.ConflictException;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
@@ -32,10 +35,20 @@ public class EventService implements EventLookupPort {
 
     private static final List<EventStatus> ATTENDEE_BROWSE_STATUSES = List.of(EventStatus.APPROVED, EventStatus.ACTIVE, EventStatus.ENDED);
 
-    private final EventRepository eventRepository;
+    /** Statuses that are not public: readable only by the owner, an admin, or active event staff. */
+    private static final List<EventStatus> RESTRICTED_EVENT_STATUSES = List.of(EventStatus.DRAFT, EventStatus.PENDING_REVIEW,
+            EventStatus.REJECTED, EventStatus.CANCELLED);
 
-    public EventService(EventRepository eventRepository) {
+    private final EventRepository eventRepository;
+    private final EventStaffAssignmentRepository eventStaffAssignmentRepository;
+    private final EventRegistrationRepository eventRegistrationRepository;
+
+    public EventService(EventRepository eventRepository,
+                        EventStaffAssignmentRepository eventStaffAssignmentRepository,
+                        EventRegistrationRepository eventRegistrationRepository) {
         this.eventRepository = eventRepository;
+        this.eventStaffAssignmentRepository = eventStaffAssignmentRepository;
+        this.eventRegistrationRepository = eventRegistrationRepository;
     }
 
     public EventResponse create(UUID organizerUserId, EventRequest request) {
@@ -94,15 +107,41 @@ public class EventService implements EventLookupPort {
             .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId)));
     }
 
-    public AttendeeEventResponse findAttendeeEvent(UUID eventId, UUID currentUserId) {
+    public AttendeeEventResponse findAttendeeEvent(UUID eventId, UUID currentUserId, AccountRole role) {
         Event event = eventRepository.findById(eventId)
             .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
+        if (RESTRICTED_EVENT_STATUSES.contains(event.getStatus()) && !canViewRestrictedEvent(event, currentUserId, role)) {
+            // 404, not 403: a caller without visibility must not learn that an unpublished event exists.
+            throw new ResourceNotFoundException("Event not found: " + eventId);
+        }
         return toAttendeeResponse(event, currentUserId);
     }
 
-    public EventAvailabilityResponse availability(UUID eventId) {
+    private boolean canViewRestrictedEvent(Event event, UUID currentUserId, AccountRole role) {
+        if (currentUserId != null && currentUserId.equals(event.getOrganizerUserId())) {
+            return true;
+        }
+        if (role == AccountRole.ADMIN || role == AccountRole.SUPER_ADMIN) {
+            return true;
+        }
+        if (currentUserId == null) {
+            return false;
+        }
+        if (eventStaffAssignmentRepository.existsByEventIdAndStaffUserIdAndActiveTrue(event.getId(), currentUserId)) {
+            return true;
+        }
+        // Anyone holding a registration row for the event already sees it in their own lists
+        // (e.g. a CANCELLED registration), so the detail must not 404 for them.
+        return eventRegistrationRepository.existsByEventIdAndAttendeeUserId(event.getId(), currentUserId);
+    }
+
+    public EventAvailabilityResponse availability(UUID eventId, UUID currentUserId, AccountRole role) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
+        if (RESTRICTED_EVENT_STATUSES.contains(event.getStatus()) && !canViewRestrictedEvent(event, currentUserId, role)) {
+            // Same visibility rule as the detail view: unpublished events must not leak through availability.
+            throw new ResourceNotFoundException("Event not found: " + eventId);
+        }
         int capacity = safeCount(event.getCapacity());
         int attendeeCount = safeCount(event.getCurrentAttendeeCount());
         Instant now = Instant.now();

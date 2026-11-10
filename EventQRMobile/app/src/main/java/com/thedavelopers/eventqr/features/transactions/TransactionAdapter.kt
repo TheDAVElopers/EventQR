@@ -15,6 +15,11 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+/** One date format for every transaction row, attendee history and staff scan results alike. */
+internal val transactionDisplayFormatter: DateTimeFormatter = DateTimeFormatter
+    .ofPattern("d MMM yyyy, h:mm a", Locale.ENGLISH)
+    .withZone(ZoneId.of("Asia/Manila"))
+
 /**
  * The attendee transaction-history row (§5.5, item_transaction.xml). Hierarchy comes from size and
  * weight, not from tinted icon backgrounds; only a rejected scan uses the error colour, and the
@@ -23,9 +28,6 @@ import java.util.Locale
 class TransactionAdapter : RecyclerView.Adapter<TransactionAdapter.ViewHolder>() {
 
     private val items = mutableListOf<TransactionResponse>()
-    private val displayFormatter: DateTimeFormatter = DateTimeFormatter
-        .ofPattern("d MMM yyyy, h:mm a", Locale.ENGLISH)
-        .withZone(ZoneId.of("Asia/Manila"))
 
     fun submitItems(newItems: List<TransactionResponse>) {
         items.clear()
@@ -47,61 +49,65 @@ class TransactionAdapter : RecyclerView.Adapter<TransactionAdapter.ViewHolder>()
     override fun getItemCount(): Int = items.size
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val titleView: TextView = itemView.findViewById(R.id.txtTransactionTitle)
-        private val eventView: TextView = itemView.findViewById(R.id.txtTransactionEvent)
-        private val timeView: TextView = itemView.findViewById(R.id.txtTransactionTime)
-        private val pointsView: TextView = itemView.findViewById(R.id.txtTransactionPoints)
-        private val trendIcon: ImageView = itemView.findViewById(R.id.imgTransactionTrend)
+        fun bind(item: TransactionResponse) = bindScanTransactionRow(itemView, item)
+    }
+}
 
-        fun bind(item: TransactionResponse) {
-            val context = itemView.context
-            val isApproved = item.transactionResult.name == "APPROVED"
-            val isEarned = item.pointsDelta >= 0
+/** Binds a scan row; shared with the attendee history adapter that mixes scans and point rows. */
+internal fun bindScanTransactionRow(itemView: View, item: TransactionResponse) {
+    val context = itemView.context
+    val titleView: TextView = itemView.findViewById(R.id.txtTransactionTitle)
+    val eventView: TextView = itemView.findViewById(R.id.txtTransactionEvent)
+    val timeView: TextView = itemView.findViewById(R.id.txtTransactionTime)
+    val pointsView: TextView = itemView.findViewById(R.id.txtTransactionPoints)
+    val trendIcon: ImageView = itemView.findViewById(R.id.imgTransactionTrend)
 
-            titleView.text = mapTransactionTitle(item.transactionType)
-            eventView.text = item.eventTitle.orEmpty()
-            timeView.text = item.scannedAt?.let { displayFormatter.format(it) } ?: context.getString(R.string.dashboard_value_unavailable)
+    val isApproved = item.transactionResult.name == "APPROVED"
+    val isEarned = item.pointsDelta >= 0
 
-            trendIcon.setImageResource(if (isEarned) AppIcons.TrendUp else AppIcons.TrendDown)
-            trendIcon.setColorFilter(
-                ContextCompat.getColor(context, if (isApproved) R.color.ui_primary else R.color.ui_error),
-            )
+    titleView.text = mapTransactionTitle(titleView, item.transactionType)
+    eventView.text = item.eventTitle.orEmpty()
+    timeView.text = item.scannedAt?.let { transactionDisplayFormatter.format(it) }
+        ?: context.getString(R.string.dashboard_value_unavailable)
 
-            when {
-                !isApproved -> {
-                    // A rejected scan awards nothing; never render it as a green "+0 pts".
-                    pointsView.text = context.getString(R.string.common_rejected)
-                    pointsView.setTextColor(ContextCompat.getColor(context, R.color.ui_error))
-                }
-                item.pointsDelta == 0 -> {
-                    pointsView.text = context.getString(R.string.transaction_no_points)
-                    pointsView.setTextColor(ContextCompat.getColor(context, R.color.ui_text_secondary))
-                }
-                else -> {
-                    val deltaPrefix = if (isEarned) "+" else ""
-                    pointsView.text = "$deltaPrefix${item.pointsDelta} pts"
-                    pointsView.setTextColor(
-                        ContextCompat.getColor(
-                            context,
-                            if (isEarned) R.color.ui_text_primary else R.color.ui_error,
-                        ),
-                    )
-                }
-            }
+    trendIcon.setImageResource(if (isEarned) AppIcons.TrendUp else AppIcons.TrendDown)
+    trendIcon.setColorFilter(
+        ContextCompat.getColor(context, if (isApproved) R.color.ui_primary else R.color.ui_error),
+    )
+
+    when {
+        !isApproved -> {
+            // A rejected scan awards nothing; never render it as a green "+0 pts".
+            pointsView.text = context.getString(R.string.common_rejected)
+            pointsView.setTextColor(ContextCompat.getColor(context, R.color.ui_error))
         }
-
-        private fun mapTransactionTitle(type: TransactionType): String = when (type) {
-            TransactionType.ENTRY -> itemView.context.getString(R.string.item_transaction_log_entry)
-            TransactionType.ATTENDANCE -> itemView.context.getString(R.string.scan_purpose_type_session_attendance)
-            TransactionType.BOOTH_VISIT -> itemView.context.getString(R.string.scan_purpose_type_booth_visit)
-            TransactionType.REWARD_REDEMPTION_SCAN, TransactionType.REWARD_REDEMPTION ->
-                itemView.context.getString(R.string.scan_purpose_type_reward_redemption)
-            TransactionType.EXIT -> itemView.context.getString(R.string.scan_purpose_type_event_exit)
-            else -> type.name
-                .lowercase(Locale.US)
-                .replace('_', ' ')
-                .split(' ')
-                .joinToString(" ") { word -> word.replaceFirstChar { it.uppercase(Locale.US) } }
+        item.pointsDelta == 0 -> {
+            pointsView.text = context.getString(R.string.transaction_no_points)
+            pointsView.setTextColor(ContextCompat.getColor(context, R.color.ui_text_secondary))
+        }
+        else -> {
+            val deltaPrefix = if (isEarned) "+" else ""
+            pointsView.text = "$deltaPrefix${item.pointsDelta} pts"
+            pointsView.setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    if (isEarned) R.color.ui_text_primary else R.color.ui_error,
+                ),
+            )
         }
     }
+}
+
+internal fun mapTransactionTitle(view: TextView, type: TransactionType): String = when (type) {
+    TransactionType.ENTRY -> view.context.getString(R.string.item_transaction_log_entry)
+    TransactionType.ATTENDANCE -> view.context.getString(R.string.scan_purpose_type_session_attendance)
+    TransactionType.BOOTH_VISIT -> view.context.getString(R.string.scan_purpose_type_booth_visit)
+    TransactionType.REWARD_REDEMPTION_SCAN, TransactionType.REWARD_REDEMPTION ->
+        view.context.getString(R.string.scan_purpose_type_reward_redemption)
+    TransactionType.EXIT -> view.context.getString(R.string.scan_purpose_type_event_exit)
+    else -> type.name
+        .lowercase(Locale.US)
+        .replace('_', ' ')
+        .split(' ')
+        .joinToString(" ") { word -> word.replaceFirstChar { it.uppercase(Locale.US) } }
 }

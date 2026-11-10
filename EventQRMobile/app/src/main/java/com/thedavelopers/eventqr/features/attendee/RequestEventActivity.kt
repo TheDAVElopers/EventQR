@@ -32,8 +32,10 @@ import com.thedavelopers.eventqr.ui.theme.dimenOffset
 import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
 import com.thedavelopers.eventqr.ui.theme.strong
 import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.PhoneInput
+import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.events.model.dto.EventCreationRequestDto
 import com.thedavelopers.eventqr.ui.theme.applyEventQrBottomInsetPadding
@@ -133,6 +135,7 @@ class RequestEventActivity : AppCompatActivity() {
         sessionManager = SessionManager(this)
         bindViews()
         prefillRequester()
+        applyPosterVisibility()
         findViewById<View>(R.id.layoutSubmitBar).applyEventQrBottomInsetPadding()
 
         findViewById<View>(R.id.nav_header_back).setOnClickListener { finish() }
@@ -224,6 +227,13 @@ class RequestEventActivity : AppCompatActivity() {
         submitProgress = findViewById(R.id.submitProgress)
         submitButton = findViewById(R.id.submitRequestButton)
         formScrollView = findViewById(R.id.formScrollView)
+    }
+
+    // The poster upload endpoint is ORGANIZER/ADMIN/SUPER_ADMIN only: an attendee who picks a
+    // poster gets a 403 that aborts the whole request, so the block is hidden below that floor.
+    private fun applyPosterVisibility() {
+        val allowed = RoleMapper.isAtLeast(sessionManager.getUserRole(), AccountRole.ORGANIZER)
+        findViewById<View>(R.id.layoutPosterSection).visibility = if (allowed) View.VISIBLE else View.GONE
     }
 
     private fun prefillRequester() {

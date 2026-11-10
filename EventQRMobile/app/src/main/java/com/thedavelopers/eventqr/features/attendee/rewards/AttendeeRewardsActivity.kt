@@ -55,7 +55,8 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
     private lateinit var errorText: TextView
     private lateinit var retryButton: TextView
     private lateinit var emptyEventsText: View
-    private lateinit var emptyRewardsText: View
+    private lateinit var emptyNotRegisteredText: View
+    private lateinit var emptyRewardsText: EventQrEmptyState
     private lateinit var eventSpinner: Spinner
     private lateinit var balanceText: TextView
     private lateinit var rewardsSectionTitle: TextView
@@ -97,6 +98,13 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
                 getString(R.string.user_rewards_register_for_an_event_to_start_earni),
             )
         }
+        findViewById<EventQrEmptyState>(R.id.layoutNotRegisteredForEvent).apply {
+            setIcon(AppIcons.Reward)
+            setContent(
+                getString(R.string.user_rewards_not_registered_for_this_event),
+                getString(R.string.user_rewards_register_for_this_event_to_see_its_re),
+            )
+        }
         findViewById<EventQrEmptyState>(R.id.layoutRewardsEmpty).apply {
             setIcon(AppIcons.Reward)
             setContent(
@@ -135,6 +143,7 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         errorText = findViewById(R.id.txtRewardsError)
         retryButton = findViewById(R.id.btnRewardsRetry)
         emptyEventsText = findViewById(R.id.layoutNoRegisteredEvents)
+        emptyNotRegisteredText = findViewById(R.id.layoutNotRegisteredForEvent)
         emptyRewardsText = findViewById(R.id.layoutRewardsEmpty)
         eventSpinner = findViewById(R.id.spinnerRegisteredEvents)
         cardSelectedEvent = findViewById(R.id.cardSelectedEvent)
@@ -158,11 +167,7 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
             adapter = this@AttendeeRewardsActivity.adapter
         }
 
-        claimsAction.setOnClickListener {
-            val intent = Intent(this, ClaimedRewardsActivity::class.java)
-            selectedEventId?.takeIf { it.isNotBlank() }?.let { intent.putExtra(EXTRA_EVENT_ID, it) }
-            startActivity(intent)
-        }
+        claimsAction.setOnClickListener { openClaimedRewards() }
 
         // The chip row is the section switcher (§6.2): Available (this screen), Claimed, History.
         findViewById<View>(R.id.txtRewardsHistory).setOnClickListener {
@@ -248,7 +253,7 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         balanceText.text = balance.pointsBalance.toString()
     }
 
-    override fun renderRewards(items: List<RewardResponse>) {
+    override fun renderRewards(items: List<RewardResponse>, claimedRewardIds: Set<String>) {
         swipeRefresh.isRefreshing = false
         adapter.submitItems(items)
         errorContainer.visibility = View.GONE
@@ -266,6 +271,33 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         layoutRewardsSkeleton.visibility = View.GONE
         emptyRewardsText.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
         rewardsRecycler.visibility = if (items.isEmpty()) View.GONE else View.VISIBLE
+        renderRewardsEmptyCopy(allClaimed = items.isEmpty() && claimedRewardIds.isNotEmpty())
+    }
+
+    /**
+     * A list emptied only by claims must not read "No rewards available yet": the rewards exist,
+     * this attendee holds them. Point that state at the Claimed tab instead.
+     */
+    private fun renderRewardsEmptyCopy(allClaimed: Boolean) {
+        if (allClaimed) {
+            emptyRewardsText.setContent(
+                getString(R.string.ui_attendee_rewards_all_claimed_title),
+                getString(R.string.ui_attendee_rewards_all_claimed_body),
+            )
+            emptyRewardsText.setAction(getString(R.string.ui_attendee_claimed_rewards)) { openClaimedRewards() }
+        } else {
+            emptyRewardsText.setContent(
+                getString(R.string.user_rewards_no_rewards_available_yet),
+                getString(R.string.user_rewards_check_back_later_for_rewards_for_thi),
+            )
+            emptyRewardsText.setAction(null, null)
+        }
+    }
+
+    private fun openClaimedRewards() {
+        val intent = Intent(this, ClaimedRewardsActivity::class.java)
+        selectedEventId?.takeIf { it.isNotBlank() }?.let { intent.putExtra(EXTRA_EVENT_ID, it) }
+        startActivity(intent)
     }
 
     private fun refreshRewardsPreservingSelection() {
@@ -302,6 +334,7 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         balanceText.visibility = View.VISIBLE
         layoutRewardsSkeleton.visibility = if (showSkeleton) View.VISIBLE else View.GONE
         layoutRewardsContent.visibility = if (cacheSaysNoRegistrations) View.GONE else View.VISIBLE
+        emptyNotRegisteredText.visibility = View.GONE
 
         if (cacheSaysNoRegistrations) {
             swipeRefresh.isRefreshing = false
@@ -349,9 +382,17 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
                     ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
                     eventSpinner.adapter = spinnerAdapter
 
-                    val initialIndex = eventOptions.indexOfFirst { it.eventId == preferredEventId }
-                        .takeIf { it >= 0 }
-                        ?: 0
+                    val initialIndex = resolveRewardsEventIndex(
+                        eventOptions.map { it.eventId },
+                        preferredEventId,
+                        requestedEventId = intent.getStringExtra(EXTRA_EVENT_ID),
+                    )
+                    if (initialIndex == null) {
+                        // An explicit event was requested but the attendee has no live registration for
+                        // it: never fall back to another event's rewards and balance.
+                        showNotRegisteredEventState()
+                        return@launch
+                    }
 
                     eventSpinner.setSelection(initialIndex, false)
                     bindSelectedEventHeader()
@@ -433,10 +474,41 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         }
     }
 
+    /**
+     * Explicit event id with no live registration for it: no balance, rewards or claims for that
+     * event, but the event selector stays usable so the attendee can open one they are registered
+     * for. Never picks another event on its own.
+     */
+    private fun showNotRegisteredEventState() {
+        swipeRefresh.isRefreshing = false
+        selectedEventId = null
+        selectedEventTitle = ""
+        layoutRewardsContent.visibility = View.VISIBLE
+        layoutDropdownContent.visibility = View.VISIBLE
+        skeletonDropdown.visibility = View.GONE
+        skeletonEventName.visibility = View.GONE
+        layoutRewardsSkeleton.visibility = View.GONE
+        emptyEventsText.visibility = View.GONE
+        emptyRewardsText.visibility = View.GONE
+        rewardsRecycler.visibility = View.GONE
+        rewardsBalanceCard.visibility = View.GONE
+        rewardsSectionTitle.visibility = View.GONE
+        claimsAction.visibility = View.GONE
+        findViewById<View>(R.id.chipAvailable).visibility = View.GONE
+        findViewById<View>(R.id.txtRewardsHistory).visibility = View.GONE
+        txtSelectedEventTitle.text = getString(R.string.common_select_event)
+        emptyNotRegisteredText.visibility = View.VISIBLE
+    }
+
     private fun loadSelectedEventRewards(option: RegisteredEventOption) {
         selectedEventId = option.eventId
         selectedEventTitle = option.title
         skeletonEventName.visibility = View.GONE
+        emptyNotRegisteredText.visibility = View.GONE
+        rewardsSectionTitle.visibility = View.VISIBLE
+        claimsAction.visibility = View.VISIBLE
+        findViewById<View>(R.id.chipAvailable).visibility = View.VISIBLE
+        findViewById<View>(R.id.txtRewardsHistory).visibility = View.VISIBLE
         presenter.load(option.eventId, attendeeUserId)
     }
 

@@ -325,7 +325,7 @@ public class RewardService {
 
         return new RewardRedemptionResponse(redemption.getId(), redemption.getEventId(), redemption.getAttendeeUserId(),
                 redemption.getRewardId(), redemption.getPointsSpent(), redemption.getStatus(), redemption.getRedeemedAt(),
-                redemption.getReason());
+                redemption.getReason(), redemption.getRedemptionScanLogId());
     }
 
     public List<RewardResponse> findRewards(UUID eventId) {
@@ -348,13 +348,15 @@ public class RewardService {
     public List<RewardRedemptionResponse> findRedemptions(UUID eventId) {
         return rewardRedemptionRepository.findByEventId(eventId).stream().map(redemption -> new RewardRedemptionResponse(
                 redemption.getId(), redemption.getEventId(), redemption.getAttendeeUserId(), redemption.getRewardId(),
-                redemption.getPointsSpent(), redemption.getStatus(), redemption.getRedeemedAt(), redemption.getReason())).toList();
+                redemption.getPointsSpent(), redemption.getStatus(), redemption.getRedeemedAt(), redemption.getReason(),
+                redemption.getRedemptionScanLogId())).toList();
     }
 
     public List<RewardRedemptionResponse> findRedemptions(UUID eventId, UUID attendeeUserId) {
         return rewardRedemptionRepository.findByEventIdAndAttendeeUserId(eventId, attendeeUserId).stream().map(redemption -> new RewardRedemptionResponse(
                 redemption.getId(), redemption.getEventId(), redemption.getAttendeeUserId(), redemption.getRewardId(),
-                redemption.getPointsSpent(), redemption.getStatus(), redemption.getRedeemedAt(), redemption.getReason())).toList();
+                redemption.getPointsSpent(), redemption.getStatus(), redemption.getRedeemedAt(), redemption.getReason(),
+                redemption.getRedemptionScanLogId())).toList();
     }
 
     public List<PointTransaction> findPointTransactions(UUID eventId) {

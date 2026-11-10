@@ -17,6 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
@@ -81,7 +82,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         findViewById<Button>(R.id.btnCancelRegistration).setOnClickListener { confirmCancelRegistration() }
 
         findViewById<Button>(R.id.btnRegisterForEvent).setOnClickListener {
-            if (isOwnedByCurrentOrganizer) {
+            if (canManageEvent()) {
                 openOrganizerEventManagement()
                 return@setOnClickListener
             }
@@ -110,7 +111,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         presenter.refreshRegistrationStatus(eventId)
         // Returning from registration/QR: the availability call also carries the live registered count,
         // so the capacity line is redrawn instead of keeping the count from when the screen opened.
-        currentEvent?.takeIf { !isOwnedByCurrentOrganizer }?.let { loadEventAvailability(it) }
+        currentEvent?.takeIf { !canManageEvent() }?.let { loadEventAvailability(it) }
     }
 
     override fun renderEvent(event: AttendeeEventResponse) {
@@ -269,7 +270,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     private fun checkOwnedEventThenAvailability(event: AttendeeEventResponse) {
         // Ownership is decided by the backend flag regardless of the current role.
         isOwnedByCurrentOrganizer = event.isOwnedByCurrentUser == true
-        if (isOwnedByCurrentOrganizer) {
+        if (canManageEvent()) {
             setOwnedEventState()
         } else {
             loadEventAvailability(event)
@@ -297,7 +298,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         reapplyAvailability = { updateRegisterButtonFromAvailability(event, availability) }
         // The availability response is fresher than the launch snapshot or the loaded event.
         updateRegistrationStatusUI(availability.currentAttendeeCount, availability.capacity)
-        if (isOwnedByCurrentOrganizer) {
+        if (canManageEvent()) {
             setOwnedEventState()
             return
         }
@@ -331,7 +332,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
 
     private fun updateRegisterButtonWithFallback(event: AttendeeEventResponse, message: String) {
         reapplyAvailability = { updateRegisterButtonWithFallback(event, message) }
-        if (isOwnedByCurrentOrganizer) {
+        if (canManageEvent()) {
             setOwnedEventState()
             return
         }
@@ -358,7 +359,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     override fun updateRegistrationStatus(isRegistered: Boolean) {
         isAlreadyRegistered = isRegistered
         registrationStatusCheckFailed = false
-        if (isOwnedByCurrentOrganizer) {
+        if (canManageEvent()) {
             setOwnedEventState()
             return
         }
@@ -381,7 +382,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     // Hidden for organizers on their own event and once the server would always refuse (event started/ended).
     private fun updateCancelButtonVisibility() {
         val visible = cancellableRegistrationId != null &&
-            !isOwnedByCurrentOrganizer &&
+            !canManageEvent() &&
             EventDetailPresenter.isCancelWindowOpen(currentEvent)
         findViewById<Button>(R.id.btnCancelRegistration).visibility = if (visible) View.VISIBLE else View.GONE
     }
@@ -442,7 +443,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
 
     override fun onRegistrationStatusCheckFailed() {
         registrationStatusCheckFailed = true
-        if (isOwnedByCurrentOrganizer) {
+        if (canManageEvent()) {
             setOwnedEventState()
             return
         }
@@ -463,7 +464,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     }
 
     override fun openRegistration(eventId: String, eventTitle: String, email: String, fullName: String, phoneNumber: String) {
-        if (isOwnedByCurrentOrganizer) {
+        if (canManageEvent()) {
             openOrganizerEventManagement()
             return
         }
@@ -519,6 +520,15 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
             text = getString(R.string.event_detail_manage_event)
         }
     }
+
+    /**
+     * The management hub and every endpoint behind it require ORGANIZER/ADMIN/SUPER_ADMIN, while an
+     * approved event request leaves the requester's account role untouched. An attendee who owns an
+     * event therefore gets no "Manage Event": it would only lead to a 403 hub.
+     */
+    private fun canManageEvent(): Boolean =
+        isOwnedByCurrentOrganizer &&
+            RoleMapper.isAtLeast(SessionManager(this).getUserRole(), AccountRole.ORGANIZER)
 
     private fun openOrganizerEventManagement() {
         val event = currentEvent

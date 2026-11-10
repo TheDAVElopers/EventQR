@@ -153,7 +153,7 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:text="@string/ui_staff_total"
+                android:text="@string/staff_transaction_logs_total_scans"
                 android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
         </LinearLayout>
 

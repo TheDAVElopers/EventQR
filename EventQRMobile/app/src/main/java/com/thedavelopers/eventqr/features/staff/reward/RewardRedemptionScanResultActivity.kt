@@ -43,6 +43,7 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
     private var attendeeUserId: String = ""
     private var attendeeName: String = ""
     private var pointsBalance: Int = 0
+    private var eligibleRewardIds: Set<String>? = null
     private var redemptionScanLogId: String = ""
     private var staffUserId: String = ""
     private var scanRejected: Boolean = false
@@ -59,6 +60,7 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
         attendeeUserId = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_ID).orEmpty()
         attendeeName = intent.getStringExtra(StaffScreenExtras.EXTRA_ATTENDEE_NAME).orEmpty()
         pointsBalance = intent.getIntExtra(AppRewardExtras.EXTRA_POINTS_BALANCE, 0)
+        eligibleRewardIds = intent.getStringArrayListExtra(AppRewardExtras.EXTRA_ELIGIBLE_REWARD_IDS)?.toSet()
         redemptionScanLogId = intent.getStringExtra(AppRewardExtras.EXTRA_REDEMPTION_SCAN_LOG_ID).orEmpty()
         staffUserId = intent.getStringExtra(StaffScreenExtras.EXTRA_STAFF_USER_ID).orEmpty()
         scanRejected = intent.getBooleanExtra(StaffScreenExtras.EXTRA_SCAN_REJECTED, false)
@@ -213,8 +215,12 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
     }
 
     private fun renderRewards(rewards: List<RewardResponse>) {
+        // The scan response already excludes rewards this attendee cannot claim (duplicate claims,
+        // stock, affordability); intersect with it so the re-fetched list cannot reintroduce one.
+        val eligibleIds = eligibleRewardIds
         val list = rewards.filter {
-            it.status == RewardStatus.ACTIVE &&
+            (eligibleIds == null || it.rewardId.toString() in eligibleIds) &&
+                it.status == RewardStatus.ACTIVE &&
                 it.pointsRequired <= pointsBalance &&
                 (it.stockQuantity == null || it.stockQuantity > 0)
         }

@@ -90,6 +90,10 @@ class EditEventDetailsActivity : AppCompatActivity() {
     private var loadedEvent: OrganizerEventDto? = null
     private var selectedBannerFile: File? = null
 
+    /** Echoed back on save so the PATCH never clears the category; see [loadCategory]. */
+    private var eventCategory: String? = null
+    private var categoryLoaded = false
+
     /** Values as the server sent them; dirty is a plain comparison against this. */
     private var original = Draft("", "", "", "")
     private var bannerDirty = false
@@ -210,13 +214,31 @@ class EditEventDetailsActivity : AppCompatActivity() {
     private fun loadEvent() {
         lifecycleScope.launch {
             when (val result = repository.fetchOrganizerEvent(eventId)) {
-                is NetworkResult.Success -> result.data?.let { populate(it) }
+                is NetworkResult.Success -> result.data?.let {
+                    populate(it)
+                    loadCategory()
+                }
                 is NetworkResult.Error -> showMissingEventScreen(
                     getString(R.string.ui_organizer_edit_title),
                     result.message ?: getString(R.string.event_management_hub_details_load_failed),
                 )
                 NetworkResult.Loading -> Unit
             }
+        }
+    }
+
+    /**
+     * `OrganizerEventResponse` carries no category and the PATCH replaces it, so the current value is
+     * read from the event detail and echoed back. A failed read blocks the save instead of writing null.
+     */
+    private suspend fun loadCategory() {
+        when (val result = repository.fetchEventDetail(eventId)) {
+            is NetworkResult.Success -> {
+                eventCategory = result.data?.category
+                categoryLoaded = true
+            }
+            is NetworkResult.Error -> Unit
+            NetworkResult.Loading -> Unit
         }
     }
 
@@ -542,6 +564,14 @@ class EditEventDetailsActivity : AppCompatActivity() {
             }
             val bannerFileId = uploadResult ?: current.eventLogoUrl
 
+            if (!categoryLoaded) loadCategory()
+            if (!categoryLoaded) {
+                // Unknown category would go back as null and silently clear it.
+                setSaving(false)
+                showSaveFailure(null)
+                return@launch
+            }
+
             val request = buildRequest(current, bannerFileId)
             when (
                 val result = withContext(NonCancellable) {
@@ -573,6 +603,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
         description = descriptionInput.text.toString().trim().ifBlank { null },
         location = venueInput.text.toString().trim().ifBlank { null },
         eventLogoUrl = bannerFileId,
+        category = eventCategory,
         registrationOpenAt = current.registrationOpenAt,
         registrationCloseAt = current.registrationCloseAt,
         eventStartAt = requireNotNull(current.eventStartAt),

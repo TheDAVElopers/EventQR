@@ -91,13 +91,9 @@
 
             <ImageView
                 android:id="@+id/arrowEventFilter"
-                android:layout_width="@dimen/icon_md"
-                android:layout_height="@dimen/icon_md"
+                style="@style/Widget.EventQR.Ui.Selector.Caret"
                 android:layout_marginStart="@dimen/space_4"
-                android:contentDescription="@string/common_dropdown"
-                android:importantForAccessibility="no"
-                android:src="@drawable/ic_ui_expand_more"
-                android:tint="@color/ui_text_secondary" />
+                android:importantForAccessibility="no" />
         </LinearLayout>
 
         <LinearLayout
@@ -127,13 +123,9 @@
 
             <ImageView
                 android:id="@+id/arrowTypeFilter"
-                android:layout_width="@dimen/icon_md"
-                android:layout_height="@dimen/icon_md"
+                style="@style/Widget.EventQR.Ui.Selector.Caret"
                 android:layout_marginStart="@dimen/space_4"
-                android:contentDescription="@string/common_dropdown"
-                android:importantForAccessibility="no"
-                android:src="@drawable/ic_ui_expand_more"
-                android:tint="@color/ui_text_secondary" />
+                android:importantForAccessibility="no" />
         </LinearLayout>
 
         <Spinner

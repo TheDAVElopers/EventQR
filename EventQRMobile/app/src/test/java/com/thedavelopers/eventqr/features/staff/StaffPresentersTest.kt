@@ -166,14 +166,14 @@ class StaffPresentersTest {
     }
 
     @Test
-    fun registrations_countsUseServerStatusTotalsNotAFullFetch() {
+    fun registrations_totalIsTheUnfilteredListSizeAndStatusTilesCountServerTotals() {
         val view = RecordingRegistrationsView()
         val all = serverRegistrations() + reg("Gone", RegistrationStatus.EXITED) + reg("Cancelled", RegistrationStatus.CANCELLED) + reg("NoShow", RegistrationStatus.NO_SHOW)
         val repo = FakeRegistrations(all)
         val presenter = EventRegistrationsPresenter(view, repo, UiStrings(context), scope())
         presenter.load("e1")
 
-        assertEquals(46L, view.counts.total) // Registered 35 + Checked In 11
+        assertEquals(48L, view.counts.total) // every status the list can show
         assertEquals(11L, view.counts.checkedIn) // ENTERED 10 + EXITED 1
         assertEquals(35L, view.counts.registered)
         assertTrue(repo.countCalls.containsAll(listOf(RegistrationStatus.ENTERED, RegistrationStatus.EXITED, RegistrationStatus.REGISTERED)))
@@ -186,7 +186,7 @@ class StaffPresentersTest {
         val presenter = EventRegistrationsPresenter(view, repo, UiStrings(context), scope())
         presenter.load("e1")
 
-        assertNull(view.counts.total)
+        assertEquals(45L, view.counts.total)
         assertNull(view.counts.checkedIn)
         assertEquals(35L, view.counts.registered)
     }

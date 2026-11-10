@@ -1,12 +1,15 @@
 package com.thedavelopers.eventqr.features.staff
 
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.api.dto.EventStatus
+import com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResponse
 import com.thedavelopers.eventqr.features.staff.result.ScanResultState
 import com.thedavelopers.eventqr.features.staff.result.TransactionResultCopy
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.UUID
 
 class ScanAndResultCopyTest {
     @Test
@@ -49,7 +52,24 @@ class ScanAndResultCopyTest {
     @Test
     fun hintCopyMatchesOutcome() {
         assertEquals(R.string.staff_transaction_result_points_awarded_to_attendee, TransactionResultCopy.hintRes(true, 10))
-        assertEquals(R.string.staff_transaction_result_scan_recorded, TransactionResultCopy.hintRes(true, 0))
+        assertEquals(R.string.ui_staff_tx_approved_hint, TransactionResultCopy.hintRes(true, 0))
         assertEquals(R.string.staff_transaction_result_scan_rejected_and_logged, TransactionResultCopy.hintRes(false, 0))
+    }
+
+    @Test
+    fun scanAllowedOnlyWithPermissionAndAScannableStatus() {
+        fun event(canScan: Boolean, status: EventStatus) = StaffAssignedEventResponse(
+            assignmentId = UUID.randomUUID(),
+            eventId = UUID.randomUUID(),
+            title = "Event",
+            status = status,
+            canScan = canScan,
+        )
+
+        assertTrue(event(true, EventStatus.ACTIVE).canStartScan)
+        assertFalse(event(false, EventStatus.ACTIVE).canStartScan)
+        assertFalse(event(true, EventStatus.ENDED).canStartScan)
+        assertFalse(event(true, EventStatus.REJECTED).canStartScan)
+        assertFalse(event(true, EventStatus.CANCELLED).canStartScan)
     }
 }

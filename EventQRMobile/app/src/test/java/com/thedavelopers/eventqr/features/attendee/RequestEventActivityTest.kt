@@ -1,12 +1,15 @@
 package com.thedavelopers.eventqr.features.attendee
 
 import android.os.Looper
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.core.api.dto.AccountRole
+import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.features.events.model.dto.EventCreationRequestDto
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse
 import java.time.LocalDateTime
@@ -92,6 +95,28 @@ class RequestEventActivityTest {
         shadowOf(Looper.getMainLooper()).idle()
 
         assertEquals(listOf("+639123456789"), repo.requests.map { it.contactNumber })
+    }
+
+    // ---- Audit X5: the poster block is ORGANIZER/ADMIN/SUPER_ADMIN only (upload endpoint 403s below)
+
+    @Test
+    fun posterBlock_isHiddenForAttendeeAndStaff() {
+        listOf(AccountRole.ATTENDEE, AccountRole.STAFF).forEach { role ->
+            SessionManager(ApplicationProvider.getApplicationContext()).saveRole(role)
+            val activity = build()
+
+            assertEquals(role.name, View.GONE, activity.findViewById<View>(R.id.layoutPosterSection).visibility)
+        }
+    }
+
+    @Test
+    fun posterBlock_isShownFromOrganizerUp() {
+        listOf(AccountRole.ORGANIZER, AccountRole.ADMIN, AccountRole.SUPER_ADMIN).forEach { role ->
+            SessionManager(ApplicationProvider.getApplicationContext()).saveRole(role)
+            val activity = build()
+
+            assertEquals(role.name, View.VISIBLE, activity.findViewById<View>(R.id.layoutPosterSection).visibility)
+        }
     }
 
     private class CapturingRepo : AttendeeRepository(ApplicationProvider.getApplicationContext()) {

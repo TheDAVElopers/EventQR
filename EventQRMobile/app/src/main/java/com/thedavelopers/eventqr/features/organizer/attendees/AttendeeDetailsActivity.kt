@@ -148,7 +148,8 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
 
     private fun renderDetails() {
         findViewById<TextView>(R.id.txtDetailEventValue).text = selectedEvent.title
-        findViewById<TextView>(R.id.txtDetailRegistrationIdValue).text = formatRegistrationId(attendee.id)
+        findViewById<TextView>(R.id.txtDetailRegistrationIdValue).text =
+            attendee.registrationNumber?.toString() ?: getString(R.string.ui_organizer_value_unavailable)
         findViewById<TextView>(R.id.txtDetailStatusValue).apply {
             attendee.bindStatusBadge(this)
         }
@@ -261,13 +262,6 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
         val cleaned = value?.trim().orEmpty()
         if (cleaned.isBlank() || cleaned == "-") return null
         return parseToLocalDateTime(cleaned)?.format(lastActivityFormatter)?.uppercase(Locale.ENGLISH) ?: cleaned
-    }
-
-    private fun formatRegistrationId(value: String): String {
-        val cleaned = value.trim()
-        if (cleaned.isBlank()) return "-"
-        if (cleaned.length <= 12) return cleaned
-        return "REG-${cleaned.take(8).uppercase(Locale.ENGLISH)}"
     }
 
     private fun formatLastActivity(value: String): String {

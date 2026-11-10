@@ -106,8 +106,9 @@ class EventRegistrationsPresenter(
             when (val result = repository.getRegistrationsPage(eventId, requestedQuery, ticket.page)) {
                 is NetworkResult.Success -> {
                     if (pages.onSuccess(ticket, result.data)) {
-                        if (requestedQuery.isEmpty() && eventTotal == null) {
+                        if (requestedQuery.isEmpty()) {
                             eventTotal = result.data.totalElements
+                            publishCounts(counts.copy(total = eventTotal))
                         }
                         view?.renderRegistrations(pages.items, requestedQuery.isNotEmpty())
                     }
@@ -136,11 +137,10 @@ class EventRegistrationsPresenter(
             val exitedValue = (exited.await() as? NetworkResult.Success)?.data
             val registeredValue = (registered.await() as? NetworkResult.Success)?.data
             val checkedIn = if (enteredValue != null && exitedValue != null) enteredValue + exitedValue else null
-            // Total counts only registrations that count as registered (excludes CANCELLED / NO_SHOW),
-            // so it is always Registered + Checked In.
+            // Total is the unfiltered list size (every status), so the tile always agrees with the rows.
             publishCounts(
                 RegistrationCounts(
-                    total = if (checkedIn != null && registeredValue != null) checkedIn + registeredValue else null,
+                    total = eventTotal,
                     checkedIn = checkedIn,
                     registered = registeredValue,
                 )

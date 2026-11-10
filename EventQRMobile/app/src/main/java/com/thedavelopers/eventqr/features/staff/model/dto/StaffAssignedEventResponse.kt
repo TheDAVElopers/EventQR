@@ -17,4 +17,8 @@ data class StaffAssignedEventResponse(
     val canPrintId: Boolean = false,
     val canViewLogs: Boolean = false,
     val canManageRewards: Boolean = false,
-)
+) {
+    /** Mirrors the server's scan guard: assignment permission plus a status that accepts scans. */
+    val canStartScan: Boolean
+        get() = canScan && status != EventStatus.ENDED && status != EventStatus.REJECTED && status != EventStatus.CANCELLED
+}

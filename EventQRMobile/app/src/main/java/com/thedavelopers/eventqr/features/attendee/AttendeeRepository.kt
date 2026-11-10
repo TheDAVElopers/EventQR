@@ -62,7 +62,8 @@ open class AttendeeRepository(context: Context) {
             is NetworkResult.Error -> result
             NetworkResult.Loading -> NetworkResult.Loading
         }
-    suspend fun getMyEventTransactions(eventId: String) = safeApiCall { apiService.getMyEventTransactions(eventId) }
+    open suspend fun getMyEventTransactions(eventId: String) = safeApiCall { apiService.getMyEventTransactions(eventId) }
+    open suspend fun getMyPointTransactions(eventId: String) = safeApiCall { apiService.getMyPointTransactions(eventId) }
     open suspend fun getMyTransactions() = safeApiCall { apiService.getMyTransactions() }
     suspend fun createQrCredential(registrationId: String) = safeApiCall { apiService.createQrCredential(registrationId) }
     suspend fun linkQrCredential(registrationId: String) = safeApiCall { apiService.linkQrCredential(registrationId) }

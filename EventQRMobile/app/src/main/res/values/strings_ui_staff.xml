@@ -33,6 +33,9 @@
     <string name="staff_torch_on">Torch on</string>
     <string name="staff_torch_off">Torch off</string>
     <string name="staff_torch_unavailable">This camera has no torch.</string>
+    <string name="scanner_context_event">Event</string>
+    <string name="scanner_context_purpose">Purpose</string>
+    <string name="scanner_context_a11y">Event %1$s. Purpose %2$s.</string>
 
     <!-- ═════════ Scan result (§6.3) ═════════ -->
     <string name="ui_staff_result_valid">Checked in</string>
@@ -117,8 +120,8 @@
     <string name="ui_staff_no_attendees">No attendees found</string>
     <string name="ui_staff_no_attendees_body">Registered attendees will show up here.</string>
 
-    <!-- ═════════ Transaction logs (§6.3) ═════════ -->
-    <string name="ui_staff_logs">Transaction logs</string>
+    <!-- ═════════ My scans (§6.3) ═════════ -->
+    <string name="ui_staff_logs">My scans</string>
     <string name="ui_staff_total">Total</string>
     <string name="ui_staff_successful">Successful</string>
     <string name="ui_staff_rejected">Rejected</string>
@@ -126,9 +129,9 @@
     <string name="ui_staff_filter_purpose">Purpose</string>
     <string name="ui_staff_select_event">Select event</string>
     <string name="ui_staff_all_purposes">All purposes</string>
-    <string name="ui_staff_no_logs">No transactions logged</string>
+    <string name="ui_staff_no_logs">No scans yet</string>
     <string name="ui_staff_no_logs_body">Scans you perform will show up here.</string>
-    <string name="ui_staff_no_logs_prompt">Select an event to view its transactions.</string>
+    <string name="ui_staff_no_logs_prompt">Select an event to view your scans.</string>
     <string name="ui_staff_no_purposes">No scan purposes found for this filter.</string>
     <string name="ui_staff_logs_attendee_fallback">Attendee</string>
 

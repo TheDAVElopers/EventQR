@@ -2,23 +2,28 @@ package com.thedavelopers.eventqr.features.attendee
 
 import android.content.Intent
 import android.os.Looper
+import android.view.View
 import android.widget.TextView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.core.api.dto.AccountRole
+import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.features.ShadowEncryptedSharedPreferences
 import com.thedavelopers.eventqr.features.ShadowMasterKeys
 import com.thedavelopers.eventqr.features.attendee.EXTRA_EVENT_TITLE
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
 import com.thedavelopers.eventqr.features.events.model.dto.EventAvailabilityResponse
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import kotlinx.coroutines.CompletableDeferred
 import org.junit.Test
 import org.robolectric.Shadows.shadowOf
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.annotation.Config
+import java.time.Instant
 import java.util.UUID
 
 /** The header is a fixed "Event details"; the event name belongs on the banner above the description. */
@@ -134,6 +139,65 @@ class EventDetailActivityTest {
         val fest = event("Fest").copy(capacity = 12, currentAttendeeCount = 1)
         activity.updateRegisterButtonFromAvailability(fest, availability(fest, count = 0, capacity = 12))
         assertEquals(activity.getString(R.string.event_detail_capacity_registered, 0, 12), capacityView.text.toString())
+    }
+
+    // Audit X6: an approved attendee-owned event must not offer "Manage Event" — every organizer
+    // management endpoint rejects an ATTENDEE, so the hub would only show a 403 error state.
+    @Test
+    fun attendeeOwnedEvent_offersRegisterNotManageEvent() {
+        SessionManager(ApplicationProvider.getApplicationContext()).saveRole(AccountRole.ATTENDEE)
+        val activity = build(null)
+        activity.repository = QueuedAvailabilityRepo()
+        val button = activity.findViewById<android.widget.Button>(R.id.btnRegisterForEvent)
+
+        activity.renderEvent(event("Owned by me").copy(isOwnedByCurrentUser = true))
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertNotEquals(activity.getString(R.string.event_detail_manage_event), button.text.toString())
+    }
+
+    @Test
+    fun organizerOwnedEvent_stillOffersManageEvent() {
+        SessionManager(ApplicationProvider.getApplicationContext()).saveRole(AccountRole.ORGANIZER)
+        val activity = build(null)
+        val button = activity.findViewById<android.widget.Button>(R.id.btnRegisterForEvent)
+
+        activity.renderEvent(event("Owned by me").copy(isOwnedByCurrentUser = true))
+
+        assertEquals(activity.getString(R.string.event_detail_manage_event), button.text.toString())
+    }
+
+    // An attendee-owned event offers Register, so it must also offer Cancel once registered,
+    // otherwise the attendee is stuck in a registration they cannot drop.
+    @Test
+    fun attendeeOwnedEvent_showsCancelRegistrationOnceRegistered() {
+        SessionManager(ApplicationProvider.getApplicationContext()).saveRole(AccountRole.ATTENDEE)
+        val activity = build(null)
+        activity.repository = QueuedAvailabilityRepo()
+        val future = event("Owned by me").copy(
+            isOwnedByCurrentUser = true,
+            eventStartAt = Instant.now().plusSeconds(86_400),
+        )
+
+        activity.renderEvent(future)
+        activity.setCancellableRegistration("registration-1")
+
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.btnCancelRegistration).visibility)
+    }
+
+    @Test
+    fun organizerOwnedEvent_hidesCancelRegistration() {
+        SessionManager(ApplicationProvider.getApplicationContext()).saveRole(AccountRole.ORGANIZER)
+        val activity = build(null)
+        val future = event("Owned by me").copy(
+            isOwnedByCurrentUser = true,
+            eventStartAt = Instant.now().plusSeconds(86_400),
+        )
+
+        activity.renderEvent(future)
+        activity.setCancellableRegistration("registration-1")
+
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.btnCancelRegistration).visibility)
     }
 
     /** Each availability call suspends on its own deferred, so tests decide the order responses land in. */

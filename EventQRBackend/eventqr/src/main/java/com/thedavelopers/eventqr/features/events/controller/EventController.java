@@ -77,12 +77,16 @@ public class EventController {
     @GetMapping("/{eventId}")
     public ResponseEntity<ApiResponse<AttendeeEventResponse>> findOne(HttpServletRequest request, @PathVariable UUID eventId) {
         UUID userId = currentUserId(request);
-        return ResponseEntity.ok(ApiResponse.success(eventService.findAttendeeEvent(eventId, userId)));
+        AccountRole role = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
+        return ResponseEntity.ok(ApiResponse.success(eventService.findAttendeeEvent(eventId, userId, role)));
     }
 
     @GetMapping("/{eventId}/availability")
-    public ResponseEntity<ApiResponse<EventAvailabilityResponse>> availability(@PathVariable UUID eventId) {
-        return ResponseEntity.ok(ApiResponse.success(eventService.availability(eventId)));
+    public ResponseEntity<ApiResponse<EventAvailabilityResponse>> availability(HttpServletRequest request,
+                                                                               @PathVariable UUID eventId) {
+        UUID userId = currentUserId(request);
+        AccountRole role = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
+        return ResponseEntity.ok(ApiResponse.success(eventService.availability(eventId, userId, role)));
     }
 
     @PostMapping("/{eventId}/registrations")

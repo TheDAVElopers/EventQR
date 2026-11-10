@@ -24,8 +24,8 @@ import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.ui.theme.dimenOffset
 import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
 import com.thedavelopers.eventqr.ui.theme.strong
-import com.thedavelopers.eventqr.features.transactions.TransactionAdapter
-import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
+import com.thedavelopers.eventqr.features.transactions.TransactionHistoryAdapter
+import com.thedavelopers.eventqr.features.transactions.TransactionHistoryRow
 
 open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistoryContract.View {
     /** Tests set this before the first load to replace the network repository. */
@@ -35,7 +35,7 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
     private val repository: AttendeeRepository by lazy {
         repositoryOverride ?: AttendeeRepository(this)
     }
-    private lateinit var adapter: TransactionAdapter
+    private lateinit var adapter: TransactionHistoryAdapter
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var skeletonLoading: View
     private lateinit var emptyText: EventQrEmptyState
@@ -48,7 +48,7 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
     private lateinit var cardSelectedEvent: View
     private lateinit var txtSelectedEventTitle: TextView
 
-    private var allTransactions: List<TransactionResponse> = emptyList()
+    private var allTransactions: List<TransactionHistoryRow> = emptyList()
     private var eventFilterOptions: List<Pair<String?, String>> = emptyList()
     private var selectedEventId: String? = null
     private var pendingInitialEventId: String? = null
@@ -75,21 +75,21 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
         recyclerView = findViewById(R.id.recyclerTransactions)
 
         findViewById<View>(R.id.nav_header_back).setOnClickListener { finish() }
-        retryButton.setOnClickListener { presenter.load(null) }
-        swipeRefresh.setOnRefreshListener { presenter.load(null) }
+        retryButton.setOnClickListener { presenter.load() }
+        swipeRefresh.setOnRefreshListener { presenter.load() }
         cardSelectedEvent.setOnClickListener { setEventDropdownOpen(!isEventDropdownOpen) }
 
         pendingInitialEventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty().ifBlank { null }
 
         emptyText.setIcon(AppIcons.Logs)
 
-        adapter = TransactionAdapter()
+        adapter = TransactionHistoryAdapter()
         recyclerView.apply {
             layoutManager = LinearLayoutManager(this@AttendeeTransactionsActivity)
             adapter = this@AttendeeTransactionsActivity.adapter
         }
 
-        presenter.load(null)
+        presenter.load()
     }
 
     override fun onDestroy() {
@@ -143,7 +143,7 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
             getString(R.string.user_transaction_history_unable_to_load_transactions),
             message.ifBlank { getString(R.string.ui_attendee_load_error_body) },
         )
-        emptyText.setAction(getString(R.string.ui_attendee_retry)) { presenter.load(null) }
+        emptyText.setAction(getString(R.string.ui_attendee_retry)) { presenter.load() }
         recyclerView.visibility = View.GONE
         emptyText.visibility = View.VISIBLE
         emptyText.announceForAccessibility(
@@ -151,7 +151,7 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
         )
     }
 
-    override fun renderTransactions(items: List<TransactionResponse>) {
+    override fun renderTransactions(items: List<TransactionHistoryRow>) {
         swipeRefresh.isRefreshing = false
         skeletonLoading.visibility = View.GONE
         errorStrip.visibility = View.GONE
@@ -160,17 +160,18 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
         applySelectedFilter()
     }
 
-    private fun updateFilterOptions(items: List<TransactionResponse>) {
+    private fun updateFilterOptions(items: List<TransactionHistoryRow>) {
         val groupedEvents = items
-            .groupBy { it.eventId.toString() }
-            .toSortedMap(compareBy<String> { key ->
-                items.firstOrNull { it.eventId.toString() == key }?.eventTitle.orEmpty().lowercase()
-            })
+            .groupBy { it.eventId }
+            .entries
+            .sortedBy { (_, rows) ->
+                rows.firstNotNullOfOrNull { it.eventTitle?.takeIf(String::isNotBlank) }.orEmpty().lowercase()
+            }
 
         val options = mutableListOf<Pair<String?, String>>()
         options += null to "All Events"
         groupedEvents.forEach { (eventId, eventItems) ->
-            val title = eventItems.firstOrNull()?.eventTitle?.takeIf { it.isNotBlank() } ?: "Event"
+            val title = eventItems.firstNotNullOfOrNull { it.eventTitle?.takeIf(String::isNotBlank) } ?: "Event"
             options += eventId to title
         }
         eventFilterOptions = options
@@ -268,7 +269,7 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
         val filtered = if (selectedEventId.isNullOrBlank()) {
             allTransactions
         } else {
-            allTransactions.filter { it.eventId.toString() == selectedEventId }
+            allTransactions.filter { it.eventId == selectedEventId }
         }
 
         adapter.submitItems(filtered)

@@ -31,6 +31,7 @@ data class StaffAssignedEventCardState(
     val month: String = EventCardPresenter.UNKNOWN_MONTH,
     val time: String = EventCardPresenter.UNKNOWN_TIME,
     val location: String = EventCardPresenter.UNKNOWN_LOCATION,
+    val canScan: Boolean = false,
 )
 
 class StaffAssignedEventAdapter(
@@ -97,6 +98,7 @@ class StaffAssignedEventAdapter(
                 month = date.month,
                 time = date.time,
                 location = EventCardPresenter.location(event.location),
+                canScan = event.canStartScan,
             )
         }
     }
@@ -132,6 +134,7 @@ private fun StaffAssignedEventCard(
                     modifier = Modifier.weight(1f),
                     tone = UiButtonTone.PRIMARY,
                     inline = true,
+                    enabled = state.canScan,
                 )
                 UiButton(
                     text = stringResource(R.string.attendee_management_attendees),

@@ -3,6 +3,7 @@ package com.thedavelopers.eventqr.features.organizer.rewards
 import android.app.AlertDialog
 import android.os.Looper
 import com.thedavelopers.eventqr.core.api.dto.ApiResponse
+import com.thedavelopers.eventqr.core.api.dto.RewardStatus
 import com.thedavelopers.eventqr.features.events.model.dto.EventResponse
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpDataSource
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpEvent
@@ -88,8 +89,20 @@ class ManageRewardsActivityTest {
     // ---- O-9: invalid reward input keeps the dialog open with inline errors
 
     private fun openDialog(activity: ManageRewardsActivity): AlertDialog {
+        // The form creates against an event, so the screen must have one before the dialog opens.
+        activity.selectedEvent = mvpEvent()
         activity.showRewardDialog(null)
         return ShadowAlertDialog.getLatestAlertDialog() as AlertDialog
+    }
+
+    @Test
+    fun addRewardBeforeAnEventResolves_doesNotOpenTheDialogOrCrash() {
+        val activity = build()
+
+        // Create reads selectedEvent.id; the guard must stop the dialog before that point.
+        activity.showRewardDialog(null)
+
+        assertNull(ShadowAlertDialog.getLatestAlertDialog())
     }
 
     @Test
@@ -140,7 +153,10 @@ class ManageRewardsActivityTest {
     private class FakeRewardsService : OrganizerRewardsService {
         val createResult = CompletableDeferred<ApiResponse<RewardResponse>>()
         var createCalls = 0
-        override suspend fun getRewards(eventId: String) = ApiResponse<List<RewardResponse>>(success = true, data = emptyList())
+        var rewards: List<RewardResponse> = emptyList()
+        var rewardsSucceed = true
+        override suspend fun getRewards(eventId: String): ApiResponse<List<RewardResponse>> =
+            ApiResponse(success = rewardsSucceed, message = if (rewardsSucceed) null else "Rewards unavailable", data = rewards)
         override suspend fun getRewardSettings(eventId: String) = ApiResponse(success = true, data = true)
         override suspend fun updateRewardSettings(eventId: String, request: RewardSettingsRequest) =
             ApiResponse<EventResponse>(success = false)
@@ -291,5 +307,72 @@ class ManageRewardsActivityTest {
 
         assertTrue(activity.window.decorView.allTexts().contains(activity.getString(R.string.manage_rewards_no_events_title)))
         assertFalse(activity.window.decorView.findSwipeRefresh()!!.isEnabled)
+    }
+
+    // ---- review: the create action stays reachable once rewards exist
+
+    private fun loadedScreen(service: FakeRewardsService): ManageRewardsActivity {
+        val activity = build()
+        activity.rewardsServiceOverride = service
+        activity.selectedEvent = mvpEvent()
+        activity.buildScreen()
+        activity.loadRewards()
+        shadowOf(Looper.getMainLooper()).idle()
+        return activity
+    }
+
+    private fun activeReward() = RewardResponse(
+        rewardId = UUID.randomUUID(),
+        eventId = UUID.randomUUID(),
+        name = "Free T-shirt",
+        pointsRequired = 50,
+        status = RewardStatus.ACTIVE,
+    )
+
+    @Test
+    fun nonEmptyRewardList_showsTheEyebrowAddRewardChip() {
+        val service = FakeRewardsService().apply { rewards = listOf(activeReward()) }
+        val activity = loadedScreen(service)
+        val addReward = activity.getString(R.string.manage_rewards_add_reward)
+
+        assertTrue(activity.window.decorView.allTexts().contains(addReward))
+        assertTrue(activity.window.decorView.clickText(addReward))
+        assertEquals(
+            activity.getString(R.string.manage_rewards_create_reward),
+            shadowOf(ShadowAlertDialog.getLatestAlertDialog()).title?.toString(),
+        )
+    }
+
+    @Test
+    fun emptyRewardList_showsOnlyTheEmptyStateAction() {
+        val activity = loadedScreen(FakeRewardsService())
+        val addReward = activity.getString(R.string.manage_rewards_add_reward)
+
+        // The chip is GONE while the list is empty: the empty state is the only control.
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.mrw_add_reward).visibility)
+        assertEquals(1, activity.window.decorView.allTexts().count { it == addReward })
+        activity.findViewById<View>(R.id.emptyAction).performClick()
+        assertEquals(
+            activity.getString(R.string.manage_rewards_create_reward),
+            shadowOf(ShadowAlertDialog.getLatestAlertDialog()).title?.toString(),
+        )
+    }
+
+    // ---- review: the create action is list-driven, never shown before an event resolves
+
+    @Test
+    fun addRewardChip_isHiddenBeforeRewardsLoad() {
+        val activity = build()
+
+        // Used to render on the first frame, before selectedEvent existed (Create then crashed).
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.mrw_add_reward).visibility)
+    }
+
+    @Test
+    fun rewardsLoadFailure_showsTheErrorStateAndHidesTheChip() {
+        val activity = loadedScreen(FakeRewardsService().apply { rewardsSucceed = false })
+
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.mrw_add_reward).visibility)
+        assertTrue(activity.window.decorView.allTexts().contains("Rewards unavailable"))
     }
 }

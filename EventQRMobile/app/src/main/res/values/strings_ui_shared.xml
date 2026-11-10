@@ -20,6 +20,8 @@
 
     <!-- Scanner (§5.13) -->
     <string name="ui_scan_panel_description">Camera preview. Point at the attendee\'s pass.</string>
+    <!-- §9.5: the panel speaks the context, so the bar and the preview are one reading order. -->
+    <string name="ui_scan_panel_description_context">Camera preview. Point at the attendee\'s pass. Scanning for %1$s, purpose %2$s.</string>
     <string name="ui_scan_guidance">Point the camera at the attendee\'s pass.</string>
     <string name="ui_scan_torch">Torch</string>
 

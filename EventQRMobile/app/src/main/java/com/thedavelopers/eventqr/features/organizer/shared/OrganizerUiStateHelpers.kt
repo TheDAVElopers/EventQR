@@ -40,6 +40,7 @@ internal fun AppCompatActivity.emptyState(
     subtext: String,
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
+    primary: Boolean = false,
 ): View = EventQrEmptyState(this).apply {
     layoutParams = LinearLayout.LayoutParams(
         ViewGroup.LayoutParams.MATCH_PARENT,
@@ -48,7 +49,7 @@ internal fun AppCompatActivity.emptyState(
     setIcon(iconRes)
     show(title, subtext)
     if (!actionLabel.isNullOrBlank() && onAction != null) {
-        setAction(actionLabel, primary = false, onClick = onAction)
+        setAction(actionLabel, primary = primary, onClick = onAction)
     }
 }
 
@@ -102,7 +103,7 @@ internal fun <T> AppCompatActivity.dataSourceBanner(load: OrganizerMvpLoad<T>): 
 }
 
 /**
- * Event selector as a 56dp field row (§6.4 Reports): title + date, one 20dp chevron. The dropdown
+ * Event selector as a 56dp field row (§6.4 Reports): title + date, one 16dp caret. The dropdown
  * is a plain surface popup - it is not a card wrapping a hidden spinner.
  */
 internal fun AppCompatActivity.eventSelector(
@@ -122,10 +123,9 @@ internal fun AppCompatActivity.eventSelector(
         orgColors.text,
     )
     val arrow = ImageView(this).apply {
-        layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md))
-        setImageResource(AppIcons.Chevron)
+        layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.ui_chevron), dimenPx(R.dimen.ui_chevron))
+        setImageResource(AppIcons.Expand)
         imageTintList = android.content.res.ColorStateList.valueOf(color(R.color.ui_text_secondary))
-        contentDescription = getString(R.string.organizer_select_event_description)
         importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
     }
     val field = LinearLayout(this).apply {
@@ -145,7 +145,7 @@ internal fun AppCompatActivity.eventSelector(
             maxLines = 1
             ellipsize = android.text.TextUtils.TruncateAt.END
         })
-        addView(arrow.apply { layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md)) })
+        addView(arrow.apply { layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.ui_chevron), dimenPx(R.dimen.ui_chevron)) })
     }
 
     var popup: PopupWindow? = null

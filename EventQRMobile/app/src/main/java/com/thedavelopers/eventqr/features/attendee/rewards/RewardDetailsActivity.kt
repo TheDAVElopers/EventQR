@@ -13,6 +13,9 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.session.SessionManager
 
 open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
+    /** Tests set this before the first load to replace the network repository. */
+    internal var repositoryOverride: AttendeeRepository? = null
+
     private lateinit var presenter: RewardsPresenter
     private var eventId: String = ""
     private var rewardId: String = ""
@@ -25,12 +28,21 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
     private var rewardActive: Boolean? = null
     private var balanceLoaded: Boolean = false
     private var balanceLoading: Boolean = false
+    /** True when this attendee already redeemed this reward and duplicates are not allowed. */
+    private var alreadyClaimed: Boolean = false
+    /**
+     * False until the claim read succeeds. A failed claim read leaves this false, so availability
+     * stays CHECKING and never promises a claim the backend may refuse.
+     */
+    private var claimStateKnown: Boolean = false
+    /** A read that carries the claim state failed: the badge shows a terminal error, never CHECKING. */
+    private var claimStateFailed: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_reward_details)
 
-        presenter = RewardsPresenter(this, AttendeeRepository(this), UiStrings(this))
+        presenter = RewardsPresenter(this, repositoryOverride ?: AttendeeRepository(this), UiStrings(this))
         eventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty()
         rewardId = intent.getStringExtra(EXTRA_REWARD_ID).orEmpty()
         pointsRequired = intent.getIntExtra(EXTRA_REWARD_POINTS, 0)
@@ -57,8 +69,14 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
         balanceLoading = willLoadBalance
         updateAvailabilityUi()
         if (willLoadBalance) {
-            presenter.load(eventId, userId)
+            // The reward itself may be sold out or inactive; only the unfiltered read can say so.
+            presenter.load(eventId, userId, includeUnavailable = true)
         }
+    }
+
+    override fun onClaimStateCheckFailed() {
+        claimStateFailed = true
+        updateAvailabilityUi()
     }
 
     override fun showLoading(isLoading: Boolean) {
@@ -86,9 +104,28 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
         updateAvailabilityUi()
     }
 
-    override fun renderRewards(items: List<com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse>) {
-        // The freshly loaded reward is the source of truth for status and stock.
-        val reward = items.firstOrNull { it.rewardId.toString() == rewardId } ?: return
+    override fun renderRewards(items: List<com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse>, claimedRewardIds: Set<String>) {
+        // Reaching this callback means the claim read succeeded: only now may the screen say
+        // Available.
+        claimStateKnown = true
+        // The freshly loaded reward is the source of truth for status and stock; a reward missing
+        // from the claimable list but present in the claim set was already redeemed.
+        val reward = items.firstOrNull { it.rewardId.toString() == rewardId }
+        if (reward == null) {
+            if (rewardId in claimedRewardIds) {
+                alreadyClaimed = true
+                updateAvailabilityUi()
+            } else {
+                // The unfiltered read succeeded and still does not hold this reward: it is gone or
+                // unknown. Never keep the intent's stale AVAILABLE badge and stock.
+                rewardActive = false
+                stockKnown = false
+                renderRemainingStock()
+                updateAvailabilityUi()
+            }
+            return
+        }
+        alreadyClaimed = false
         rewardActive = reward.status != com.thedavelopers.eventqr.core.api.dto.RewardStatus.INACTIVE
         stockQuantity = reward.stockQuantity
         stockKnown = true
@@ -105,22 +142,36 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
             pointsRequired = pointsRequired,
             balance = if (balanceLoaded) currentBalance else null,
             balanceLoading = balanceLoading,
+            alreadyClaimed = alreadyClaimed,
+            claimStateKnown = claimStateKnown,
+            claimStateFailed = claimStateFailed,
         )
 
         val blocked = state == RewardAvailability.State.UNAVAILABLE ||
             state == RewardAvailability.State.OUT_OF_STOCK ||
-            state == RewardAvailability.State.NEEDS_POINTS
+            state == RewardAvailability.State.NEEDS_POINTS ||
+            state == RewardAvailability.State.CLAIM_ERROR
         val statusRes = when (state) {
             RewardAvailability.State.UNAVAILABLE -> R.string.reward_details_unavailable
             RewardAvailability.State.OUT_OF_STOCK -> R.string.reward_details_out_of_stock
             RewardAvailability.State.NEEDS_POINTS -> R.string.reward_details_not_enough_points
             RewardAvailability.State.CHECKING -> R.string.reward_checking_availability
+            RewardAvailability.State.CLAIM_ERROR -> R.string.ui_attendee_claim_state_unknown
+            RewardAvailability.State.CLAIMED -> R.string.ui_attendee_claimed
             RewardAvailability.State.AVAILABLE -> R.string.user_reward_details_available
         }
         status?.text = getString(statusRes)
         status?.let {
-            val container = if (blocked) R.color.ui_error_container else R.color.ui_info_container
-            val content = if (blocked) R.color.ui_on_error_container else R.color.ui_on_info_container
+            val container = when {
+                state == RewardAvailability.State.CLAIMED -> R.color.ui_surface_sunken
+                blocked -> R.color.ui_error_container
+                else -> R.color.ui_info_container
+            }
+            val content = when {
+                state == RewardAvailability.State.CLAIMED -> R.color.ui_text_secondary
+                blocked -> R.color.ui_on_error_container
+                else -> R.color.ui_on_info_container
+            }
             ViewCompat.setBackgroundTintList(it, ContextCompat.getColorStateList(this, container))
             it.setTextColor(ContextCompat.getColor(this, content))
             // The tone is the state; the badge never grows an icon (§5.4).
@@ -131,6 +182,8 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
             RewardAvailability.State.UNAVAILABLE -> R.string.reward_details_this_reward_is_currently_unavailable
             RewardAvailability.State.OUT_OF_STOCK -> R.string.reward_details_this_reward_is_currently_out_of_stoc
             RewardAvailability.State.NEEDS_POINTS -> R.string.user_reward_details_you_need_more_points_to_redeem_this
+            RewardAvailability.State.CLAIMED -> R.string.ui_attendee_reward_already_claimed
+            RewardAvailability.State.CLAIM_ERROR -> R.string.ui_attendee_claim_state_unknown_body
             else -> null
         }
         if (warningRes != null) {
@@ -141,7 +194,8 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
         }
 
         val hintVisible = state != RewardAvailability.State.UNAVAILABLE &&
-            state != RewardAvailability.State.OUT_OF_STOCK
+            state != RewardAvailability.State.OUT_OF_STOCK &&
+            state != RewardAvailability.State.CLAIMED
         findViewById<View>(R.id.cardHowToRedeem)?.visibility = if (hintVisible) View.VISIBLE else View.GONE
 
         renderAffordability(state)
@@ -178,7 +232,9 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
         progressText.text = progress.orEmpty()
 
         val gap: String? = when {
-            state == RewardAvailability.State.UNAVAILABLE || state == RewardAvailability.State.OUT_OF_STOCK -> null
+            state == RewardAvailability.State.UNAVAILABLE ||
+                state == RewardAvailability.State.OUT_OF_STOCK ||
+                state == RewardAvailability.State.CLAIMED -> null
             free -> getString(R.string.reward_details_no_points_needed)
             currentBalance < pointsRequired ->
                 getString(R.string.reward_details_points_to_go, pointsRequired - currentBalance)
@@ -212,12 +268,15 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
 
 
 /**
- * Derives reward availability from status (null = unknown, not blocking), stock (null = unlimited) and the attendee's balance.
- * While the balance is still loading the result is CHECKING (unless status/stock already decide it);
- * if it failed to load ([balance] null, not loading) only status and stock are considered.
+ * Derives reward availability from status (null = unknown, not blocking), stock (null = unlimited),
+ * the attendee's balance and whether they already claimed it. While the balance is still loading the
+ * result is CHECKING (unless status/stock/claim already decide it); if it failed to load ([balance]
+ * null, not loading) only status, stock and claim are considered. [claimStateKnown] = false with
+ * [claimStateFailed] = false is the claim read in flight (CHECKING); with [claimStateFailed] = true
+ * the read failed and the state is the terminal CLAIM_ERROR, never AVAILABLE.
  */
 object RewardAvailability {
-    enum class State { CHECKING, AVAILABLE, UNAVAILABLE, OUT_OF_STOCK, NEEDS_POINTS }
+    enum class State { CHECKING, AVAILABLE, UNAVAILABLE, OUT_OF_STOCK, NEEDS_POINTS, CLAIMED, CLAIM_ERROR }
 
     fun evaluate(
         active: Boolean?,
@@ -225,9 +284,15 @@ object RewardAvailability {
         pointsRequired: Int,
         balance: Int?,
         balanceLoading: Boolean = false,
+        alreadyClaimed: Boolean = false,
+        claimStateKnown: Boolean = true,
+        claimStateFailed: Boolean = false,
     ): State = when {
         active == false -> State.UNAVAILABLE
+        alreadyClaimed -> State.CLAIMED
         stockQuantity != null && stockQuantity <= 0 -> State.OUT_OF_STOCK
+        !claimStateKnown && claimStateFailed -> State.CLAIM_ERROR
+        !claimStateKnown -> State.CHECKING
         balance != null && balance < pointsRequired -> State.NEEDS_POINTS
         balance == null && balanceLoading -> State.CHECKING
         else -> State.AVAILABLE

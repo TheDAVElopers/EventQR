@@ -16,7 +16,6 @@ import android.util.Log
 import android.view.Gravity
 import android.view.TextureView
 import android.view.View
-import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.EditText
@@ -24,6 +23,7 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupWindow
+import android.widget.ScrollView
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
@@ -65,6 +65,7 @@ import com.thedavelopers.eventqr.features.staff.reward.RewardRedemptionScanResul
 import com.thedavelopers.eventqr.features.transactions.TransactionAdapter
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
 import com.thedavelopers.eventqr.ui.components.PassHeadBinder
+import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import com.thedavelopers.eventqr.ui.theme.color
@@ -95,6 +96,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
     private lateinit var contextBar: View
     private lateinit var contextEvent: TextView
     private lateinit var contextPurpose: TextView
+    private lateinit var contextCaret: ImageView
     private lateinit var purposeNote: TextView
     private lateinit var purposeDropdown: LinearLayout
     private lateinit var emptyEvents: View
@@ -112,10 +114,8 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
     private var lastSubmittedSignature: String? = null
     private var lastSubmittedAtMs: Long = 0L
     private var submitInFlight: Boolean = false
-    private var isPurposeDropdownOpen = false
-    private var isEventDropdownOpen = false
-    private var purposePopup: PopupWindow? = null
-    private var eventPopup: PopupWindow? = null
+    private var isContextSheetOpen = false
+    private var contextPopup: PopupWindow? = null
     private var camera: Camera? = null
     private var torchOn = false
     private val decoding = AtomicBoolean(false)
@@ -188,6 +188,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
         contextBar = findViewById(R.id.scanContext)
         contextEvent = findViewById(R.id.scanContextEvent)
         contextPurpose = findViewById(R.id.scanContextPurpose)
+        contextCaret = findViewById(R.id.scanContextCaret)
         purposeNote = findViewById(R.id.txtSelectedPurposePoints)
         purposeDropdown = findViewById(R.id.layoutPurposeDropdown)
         emptyEvents = findViewById(R.id.txtScannerEmptyState)
@@ -209,8 +210,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
         resultStrip.visibility = View.GONE
         inlineCameraPreview.surfaceTextureListener = this
 
-        contextEvent.setOnClickListener { setEventDropdownOpen(!isEventDropdownOpen) }
-        contextPurpose.setOnClickListener { setPurposeDropdownOpen(!isPurposeDropdownOpen) }
+        contextBar.setOnClickListener { setContextSheetOpen(!isContextSheetOpen) }
         torchButton.setOnClickListener { toggleTorch() }
 
         configureStaffBottomNav(StaffBottomNavItem.SCANNER, selectedEvent()?.id)
@@ -226,13 +226,13 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
     }
 
     override fun onResume() { super.onResume(); requestInlineCameraStart(userInitiated = false) }
-    override fun onPause() { releaseInlineCamera(); eventPopup?.dismiss(); purposePopup?.dismiss(); super.onPause() }
+    override fun onPause() { releaseInlineCamera(); contextPopup?.dismiss(); super.onPause() }
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putBoolean(STATE_CAMERA_PERMISSION_REQUESTED, cameraPermissionAutoRequested)
         outState.putBoolean(STATE_CAMERA_PERMISSION_DENIED, cameraPermissionDenied)
     }
-    override fun onDestroy() { cameraPermissionDialog?.dismiss(); presenter.detach(); eventPopup?.dismiss(); purposePopup?.dismiss(); releaseInlineCamera(); decoderExecutor.shutdownNow(); super.onDestroy() }
+    override fun onDestroy() { cameraPermissionDialog?.dismiss(); presenter.detach(); contextPopup?.dismiss(); releaseInlineCamera(); decoderExecutor.shutdownNow(); super.onDestroy() }
 
     override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
         startInlineCameraIfReady()
@@ -273,7 +273,6 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
         eventSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 bindSelectedEventHeader()
-                renderEventDropdown()
                 loadSelectedPurposes()
             }
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
@@ -283,7 +282,6 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
             if (index >= 0) eventSpinner.setSelection(index)
         }
         bindSelectedEventHeader()
-        renderEventDropdown()
         loadSelectedPurposes()
         emptyEvents.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
     }
@@ -293,11 +291,11 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
         val activePurposes = items.filter { it.active && isPurposeAllowed(it) }
         purposeOptions.clear()
         purposeOptions.addAll(activePurposes)
-        setPurposeDropdownOpen(false)
         if (activePurposes.isEmpty()) {
             purposeSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listOf(getString(R.string.scanner_no_scan_purposes_enabled_for_this_ev)))
             purposeSpinner.isEnabled = false
             contextPurpose.text = getString(R.string.scanner_no_scan_purposes_enabled)
+            contextPurpose.visibility = View.VISIBLE
             purposeNote.text = getString(
                 if (items.any { it.active && it.code == ScanPurposeCode.ID_PRINT }) {
                     R.string.staff_print_id_permission_required
@@ -306,12 +304,12 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
                 },
             )
             purposeNote.visibility = View.VISIBLE
+            bindContextAffordance()
         } else {
             purposeSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, activePurposes.map { it.name })
             purposeSpinner.isEnabled = true
             purposeSpinner.setSelection(0, false)
             bindSelectedPurposeHeader()
-            renderPurposeDropdown()
         }
     }
 
@@ -611,59 +609,117 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
 
     private fun bindSelectedEventHeader() {
         val event = selectedEvent()
-        contextEvent.text = event?.label ?: getString(R.string.scanner_no_assigned_event)
+        contextEvent.text = event?.label ?: getString(R.string.ui_staff_no_events)
+        contextPurpose.visibility = if (event == null) View.GONE else View.VISIBLE
+        bindContextAffordance()
     }
 
     private fun bindSelectedPurposeHeader() {
         val purpose = purposeOptions.getOrNull(purposeSpinner.selectedItemPosition)
         if (purpose == null) {
-            contextPurpose.text = getString(R.string.staff_scanner_select_purpose)
+            contextPurpose.text = ""
+            contextPurpose.visibility = View.GONE
             purposeNote.visibility = View.GONE
+            bindContextAffordance()
             return
         }
         contextPurpose.text = purpose.displayName()
+        contextPurpose.visibility = View.VISIBLE
         if (purpose.trackingOnly) {
             purposeNote.visibility = View.GONE
         } else {
             purposeNote.text = purpose.defaultDescription()
             purposeNote.visibility = View.VISIBLE
         }
+        bindContextAffordance()
     }
 
-    // ── Dropdowns (shared surface, no card stack) ────────────────────────────
+    /** One node for one control: the bar speaks both values, including the ellipsized event name. */
+    private fun bindContextAffordance() {
+        val eventLabel = selectedEvent()?.label.orEmpty()
+        val purpose = contextPurpose.text
+        val scanningFor = eventLabel.isNotBlank() && purposeOptions.isNotEmpty() && purpose.isNotBlank()
+        val interactive = scanningFor && (eventOptions.size > 1 || purposeOptions.size > 1)
+        contextBar.isClickable = interactive
+        contextBar.isFocusable = interactive
+        contextCaret.visibility = if (interactive) View.VISIBLE else View.GONE
+        contextBar.contentDescription = if (scanningFor) getString(
+            R.string.scanner_context_a11y,
+            eventLabel,
+            purpose,
+        ) else contextEvent.text
+        scanPanel.contentDescription = if (scanningFor) getString(
+            R.string.ui_scan_panel_description_context,
+            eventLabel,
+            purpose,
+        ) else getString(R.string.ui_scan_panel_description)
+    }
 
-    private fun renderEventDropdown() {
-        eventPopup?.dismiss()
-        eventPopup = PopupWindow(
-            buildEventDropdownView(),
-            contextBar.width.takeIf { it > 0 } ?: ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            true,
-        ).apply {
+    // ── Context sheet (one control, one sheet - §5.13) ───────────────────────
+
+    private fun setContextSheetOpen(open: Boolean) {
+        if (open && eventOptions.isEmpty() && purposeOptions.isEmpty()) return
+        if (!open) {
+            contextPopup?.dismiss()
+            isContextSheetOpen = false
+            return
+        }
+        renderContextSheet()
+        isContextSheetOpen = true
+        contextPopup?.showAsDropDown(contextBar, 0, dimenOffset(R.dimen.space_4))
+    }
+
+    private fun renderContextSheet() {
+        contextPopup?.dismiss()
+        val width = contextBar.width.takeIf { it > 0 }
+            ?: (resources.displayMetrics.widthPixels - 2 * dimenOffset(R.dimen.ui_gutter))
+        val content = ScrollView(this).apply {
+            isFillViewport = false
+            addView(buildContextSheetView())
+        }
+        content.measure(
+            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.AT_MOST),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+        )
+        val cap = (resources.displayMetrics.heightPixels * CONTEXT_SHEET_MAX_SCREEN_FRACTION).toInt()
+        contextPopup = PopupWindow(content, width, minOf(content.measuredHeight, cap), true).apply {
             isOutsideTouchable = true
             elevation = dimenOffset(R.dimen.ui_sheet_elevation).toFloat()
             setBackgroundDrawable(ColorDrawable(color(R.color.ui_surface)))
-            setOnDismissListener { isEventDropdownOpen = false }
+            setOnDismissListener { isContextSheetOpen = false }
         }
+    }
+
+    private fun buildContextSheetView(): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        setBackgroundResource(R.drawable.bg_ui_card)
+        addView(sectionLabel(R.string.scanner_context_event))
+        addView(buildEventDropdownView())
+        addView(sectionLabel(R.string.scanner_context_purpose))
+        addView(buildPurposeDropdownView())
+    }
+
+    private fun sectionLabel(resId: Int): TextView = TextView(this).apply {
+        setText(resId)
+        setTextAppearance(R.style.TextAppearance_EventQR_Type_Overline)
+        setTextColor(color(R.color.ui_text_secondary))
+        setPaddingRelative(
+            dimenOffset(R.dimen.ui_gutter),
+            dimenOffset(R.dimen.space_12),
+            dimenOffset(R.dimen.ui_gutter),
+            dimenOffset(R.dimen.space_4),
+        )
     }
 
     private fun buildEventDropdownView(): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-        setBackgroundResource(R.drawable.bg_ui_card)
         eventOptions.forEachIndexed { index, event ->
-            val selected = index == eventSpinner.selectedItemPosition
-            addView(LinearLayout(this@ScannerActivity).apply {
-                orientation = LinearLayout.VERTICAL
-                minimumHeight = dimenOffset(R.dimen.ui_touch_min)
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(
-                    dimenOffset(R.dimen.ui_gutter),
-                    dimenOffset(R.dimen.space_md),
-                    dimenOffset(R.dimen.ui_gutter),
-                    dimenOffset(R.dimen.space_md),
-                )
-                setBackgroundColor(color(if (selected) R.color.ui_primary_wash else R.color.ui_surface))
-                setOnClickListener {
+            addView(buildContextRow(
+                titleText = event.label,
+                subtitleText = event.eventStartAt?.atZone(manilaZone)?.format(dateFormatter).orEmpty()
+                    .ifBlank { getString(R.string.scanner_assigned_event_fallback) },
+                selected = index == eventSpinner.selectedItemPosition,
+                onCommit = {
                     eventSpinner.setSelection(index, false)
                     qrInput.setText("")
                     notesInput.setText("")
@@ -672,101 +728,79 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
                     resultStrip.visibility = View.GONE
                     resetBracketTint()
                     bindSelectedEventHeader()
-                    renderEventDropdown()
                     loadSelectedPurposes()
-                    setEventDropdownOpen(false)
-                }
-                addView(TextView(this@ScannerActivity).apply {
-                    text = event.label
-                    setTextAppearance(R.style.TextAppearance_EventQR_Type_Title)
-                    setTextColor(color(R.color.ui_text_primary))
-                })
-                addView(TextView(this@ScannerActivity).apply {
-                    text = event.eventStartAt?.atZone(manilaZone)?.format(dateFormatter).orEmpty()
-                        .ifBlank { getString(R.string.scanner_assigned_event_fallback) }
-                    setTextAppearance(R.style.TextAppearance_EventQR_Type_BodySmall)
-                    setTextColor(color(R.color.ui_text_secondary))
-                })
-            })
-        }
-    }
-
-    private fun setEventDropdownOpen(open: Boolean) {
-        if (open && eventOptions.isEmpty()) return
-        if (open) {
-            setPurposeDropdownOpen(false)
-            if (eventPopup == null || contextBar.width > 0 && eventPopup?.width != contextBar.width) renderEventDropdown()
-            isEventDropdownOpen = true
-            eventPopup?.showAsDropDown(contextBar, 0, 0)
-        } else {
-            eventPopup?.dismiss()
-            isEventDropdownOpen = false
-        }
-    }
-
-    private fun renderPurposeDropdown() {
-        purposeDropdown.visibility = View.GONE
-        purposePopup?.dismiss()
-        purposePopup = PopupWindow(
-            buildPurposeDropdownView(),
-            contextBar.width.takeIf { it > 0 } ?: ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            true,
-        ).apply {
-            isOutsideTouchable = true
-            elevation = dimenOffset(R.dimen.ui_sheet_elevation).toFloat()
-            setBackgroundDrawable(ColorDrawable(color(R.color.ui_surface)))
-            setOnDismissListener { isPurposeDropdownOpen = false }
+                    setContextSheetOpen(false)
+                    announceContext()
+                },
+            ))
         }
     }
 
     private fun buildPurposeDropdownView(): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-        setBackgroundResource(R.drawable.bg_ui_card)
         purposeOptions.forEachIndexed { index, purpose ->
-            val selected = index == purposeSpinner.selectedItemPosition
-            addView(LinearLayout(this@ScannerActivity).apply {
-                orientation = LinearLayout.VERTICAL
-                minimumHeight = dimenOffset(R.dimen.ui_touch_min)
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(
-                    dimenOffset(R.dimen.ui_gutter),
-                    dimenOffset(R.dimen.space_md),
-                    dimenOffset(R.dimen.ui_gutter),
-                    dimenOffset(R.dimen.space_md),
-                )
-                setBackgroundColor(color(if (selected) R.color.ui_primary_wash else R.color.ui_surface))
-                setOnClickListener {
+            addView(buildContextRow(
+                titleText = purpose.displayName(),
+                subtitleText = purpose.description?.takeIf { it.isNotBlank() } ?: purpose.defaultDescription(),
+                selected = index == purposeSpinner.selectedItemPosition,
+                onCommit = {
                     purposeSpinner.setSelection(index, false)
                     bindSelectedPurposeHeader()
-                    renderPurposeDropdown()
-                    setPurposeDropdownOpen(false)
-                }
-                addView(TextView(this@ScannerActivity).apply {
-                    text = purpose.displayName()
-                    setTextAppearance(R.style.TextAppearance_EventQR_Type_Title)
-                    setTextColor(color(R.color.ui_text_primary))
-                })
-                addView(TextView(this@ScannerActivity).apply {
-                    text = purpose.description?.takeIf { it.isNotBlank() } ?: purpose.defaultDescription()
-                    setTextAppearance(R.style.TextAppearance_EventQR_Type_BodySmall)
-                    setTextColor(color(R.color.ui_text_secondary))
-                })
-            })
+                    setContextSheetOpen(false)
+                    announceContext()
+                },
+            ))
         }
     }
 
-    private fun setPurposeDropdownOpen(open: Boolean) {
-        if (open && purposeOptions.isEmpty()) return
-        if (open) {
-            setEventDropdownOpen(false)
-            if (purposePopup == null || contextBar.width > 0 && purposePopup?.width != contextBar.width) renderPurposeDropdown()
-            isPurposeDropdownOpen = true
-            purposePopup?.showAsDropDown(contextBar, 0, 0)
-        } else {
-            purposePopup?.dismiss()
-            isPurposeDropdownOpen = false
-        }
+    /** One sheet row (§5.13): title over subtitle, trailing 16dp check when current. */
+    private fun buildContextRow(
+        titleText: String,
+        subtitleText: String,
+        selected: Boolean,
+        onCommit: () -> Unit,
+    ): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.HORIZONTAL
+        gravity = Gravity.CENTER_VERTICAL
+        minimumHeight = dimenOffset(R.dimen.ui_touch_min)
+        isSelected = selected
+        setPadding(
+            dimenOffset(R.dimen.ui_gutter),
+            dimenOffset(R.dimen.space_md),
+            dimenOffset(R.dimen.ui_gutter),
+            dimenOffset(R.dimen.space_md),
+        )
+        setBackgroundColor(color(if (selected) R.color.ui_primary_wash else R.color.ui_surface))
+        setOnClickListener { onCommit() }
+        addView(LinearLayout(this@ScannerActivity).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            addView(TextView(this@ScannerActivity).apply {
+                text = titleText
+                setTextAppearance(R.style.TextAppearance_EventQR_Type_Title)
+                setTextColor(color(R.color.ui_text_primary))
+            })
+            addView(TextView(this@ScannerActivity).apply {
+                text = subtitleText
+                setTextAppearance(R.style.TextAppearance_EventQR_Type_BodySmall)
+                setTextColor(color(R.color.ui_text_secondary))
+            })
+        })
+        addView(ImageView(this@ScannerActivity).apply {
+            setImageResource(AppIcons.Check)
+            ImageViewCompat.setImageTintList(this, ColorStateList.valueOf(color(R.color.ui_primary)))
+            contentDescription = null
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            visibility = if (selected) View.VISIBLE else View.GONE
+            layoutParams = LinearLayout.LayoutParams(
+                dimenOffset(R.dimen.ui_chevron),
+                dimenOffset(R.dimen.ui_chevron),
+            ).apply { marginStart = dimenOffset(R.dimen.space_8) }
+        })
+    }
+
+    private fun announceContext() {
+        contextBar.contentDescription?.let { contextBar.announceForAccessibility(it) }
     }
 
     private fun ScanPurposeResponse.displayName(): String = when (code) {
@@ -823,6 +857,10 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
             putExtra(StaffScreenExtras.EXTRA_SCAN_PURPOSE_ID, result.scanPurposeId.toString())
             putExtra(AppRewardExtras.EXTRA_REDEMPTION_SCAN_LOG_ID, result.redemptionScanLogId.toString())
             putExtra(AppRewardExtras.EXTRA_POINTS_BALANCE, result.pointsBalance)
+            putStringArrayListExtra(
+                AppRewardExtras.EXTRA_ELIGIBLE_REWARD_IDS,
+                ArrayList(result.eligibleRewards.map { it.rewardId.toString() }),
+            )
             putExtra(StaffScreenExtras.EXTRA_STAFF_USER_ID, staffUserId.orEmpty())
             putExtra(StaffScreenExtras.EXTRA_SCAN_REJECTED, result.rejected)
             putExtra(StaffScreenExtras.EXTRA_SCAN_REJECTION_REASON, result.rejectionReason.orEmpty())
@@ -890,6 +928,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
         const val STATE_CAMERA_PERMISSION_REQUESTED = "scanner_camera_permission_requested"
         const val STATE_CAMERA_PERMISSION_DENIED = "scanner_camera_permission_denied"
         const val BRACKET_FLASH_MS = 600L
+        const val CONTEXT_SHEET_MAX_SCREEN_FRACTION = 0.6f
         val BRACKET_IDS = intArrayOf(
             R.id.scanBracketTl,
             R.id.scanBracketTr,

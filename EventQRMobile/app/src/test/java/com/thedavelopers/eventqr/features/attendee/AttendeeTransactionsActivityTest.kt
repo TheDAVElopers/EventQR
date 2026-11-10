@@ -13,6 +13,8 @@ import com.thedavelopers.eventqr.core.api.dto.TransactionResult
 import com.thedavelopers.eventqr.core.api.dto.TransactionType
 import com.thedavelopers.eventqr.features.ShadowEncryptedSharedPreferences
 import com.thedavelopers.eventqr.features.ShadowMasterKeys
+import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
+import com.thedavelopers.eventqr.features.rewards.model.dto.PointTransactionResponse
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import org.junit.Assert.assertEquals
@@ -46,6 +48,10 @@ class AttendeeTransactionsActivityTest {
     private class FakeRepo(context: Context) : AttendeeRepository(context) {
         var transactions: NetworkResult<List<TransactionResponse>> = NetworkResult.Success(emptyList())
         override suspend fun getMyTransactions() = transactions
+        override suspend fun getMyRegistrations(): NetworkResult<List<RegistrationResponse>> =
+            NetworkResult.Success(emptyList())
+        override suspend fun getMyPointTransactions(eventId: String): NetworkResult<List<PointTransactionResponse>> =
+            NetworkResult.Success(emptyList())
     }
 
     private fun build(repo: FakeRepo): AttendeeTransactionsActivity {

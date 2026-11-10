@@ -445,6 +445,9 @@ public class OrganizerService {
         Event event = requireOrganizerEvent(organizerUserId, eventId, role);
         validatePermissionTokens(request.permissions());
         UserProfile staffUser = resolveStaffUser(request);
+        if (staffUser.getRole() == AccountRole.ADMIN || staffUser.getRole() == AccountRole.SUPER_ADMIN) {
+            throw new ForbiddenException("Administrator accounts cannot be assigned as event staff");
+        }
         log.debug(
                 "Organizer staff add request eventId={} staffUserId={} email={}",
                 eventId,
@@ -557,6 +560,14 @@ public class OrganizerService {
         requireOrganizerEvent(organizerUserId, eventId, role);
         validatePermissionTokens(request.permissions());
         EventStaffAssignment assignment = requireAssignment(eventId, assignmentId);
+        if (Boolean.TRUE.equals(request.active())) {
+            // Legacy admin/staff assignments may exist; they can be passivated but never re-enabled.
+            userProfileRepository.findById(assignment.getStaffUserId())
+                    .filter(user -> user.getRole() == AccountRole.ADMIN || user.getRole() == AccountRole.SUPER_ADMIN)
+                    .ifPresent(user -> {
+                        throw new ForbiddenException("Administrator accounts cannot be assigned as event staff");
+                    });
+        }
         if (request.active() != null) {
             assignment.setActive(request.active());
         }
@@ -641,6 +652,8 @@ public class OrganizerService {
         }
         return userProfileRepository.findTop20ByEmailContainingIgnoreCaseOrFullNameContainingIgnoreCase(safeQuery, safeQuery)
                 .stream()
+                // Admin accounts are never valid staff targets; hide them from organizer search.
+                .filter(user -> user.getRole() != AccountRole.ADMIN && user.getRole() != AccountRole.SUPER_ADMIN)
                 .map(user -> new UserSearchResponse(user.getId(), user.getFullName(), user.getEmail(),
                         user.getRole().name(), user.getStatus().name()))
                 .toList();
@@ -933,7 +946,8 @@ public class OrganizerService {
                         .limit(5).toList(),
                 attendeeLogs.stream().filter(log -> log.getTransactionResult() == TransactionResult.REJECTED)
                         .map(TransactionLog::getReason).limit(5).toList(),
-                registration.getStatus().isCountedAsRegistered());
+                registration.getStatus().isCountedAsRegistered(),
+                registration.getRegistrationNumber());
     }
 
     private OrganizerTransactionResponse toTransaction(Event event, TransactionLog log, List<EventRegistration> registrations,

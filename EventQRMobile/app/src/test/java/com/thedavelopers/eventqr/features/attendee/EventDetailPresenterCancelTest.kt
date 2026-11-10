@@ -5,12 +5,16 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.RegistrationStatus
+import com.thedavelopers.eventqr.core.api.dto.TransactionResult
+import com.thedavelopers.eventqr.core.api.dto.TransactionType
 import com.thedavelopers.eventqr.core.util.UiStrings
 import com.thedavelopers.eventqr.features.ShadowEncryptedSharedPreferences
 import com.thedavelopers.eventqr.features.ShadowMasterKeys
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
 import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
+import com.thedavelopers.eventqr.features.rewards.model.dto.PointTransactionResponse
+import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -109,28 +113,183 @@ class EventDetailPresenterCancelTest {
         val registered = registration(RegistrationStatus.REGISTERED)
         RegistrationsCache.set(listOf(registered))
         val view = RecordingView(userId = "u1")
-        presenter(view, FakeRepo(NetworkResult.Error("x"))).refreshRegistrationStatus(eventId.toString())
-        assertEquals(registered.registrationId.toString(), view.cancellable.first())
+        presenter(view, FakeRepo()).refreshRegistrationStatus(eventId.toString())
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(registered.registrationId.toString(), view.cancellable.last())
 
         for (status in listOf(RegistrationStatus.ENTERED, RegistrationStatus.EXITED, RegistrationStatus.CANCELLED, RegistrationStatus.NO_SHOW)) {
             RegistrationsCache.set(listOf(registration(status)))
             val v = RecordingView(userId = "u1")
-            presenter(v, FakeRepo(NetworkResult.Error("x"))).refreshRegistrationStatus(eventId.toString())
-            assertNull("status $status", v.cancellable.first())
+            presenter(v, FakeRepo()).refreshRegistrationStatus(eventId.toString())
+            shadowOf(Looper.getMainLooper()).idle()
+            assertNull("status $status", v.cancellable.last())
         }
         // CANCELLED is not shown as an active registration.
         RegistrationsCache.set(listOf(registration(RegistrationStatus.CANCELLED)))
         val v = RecordingView(userId = "u1")
-        presenter(v, FakeRepo(NetworkResult.Error("x"))).refreshRegistrationStatus(eventId.toString())
+        presenter(v, FakeRepo()).refreshRegistrationStatus(eventId.toString())
         assertFalse(v.registered.first())
     }
 
-    private class FakeRepo(private val result: NetworkResult<RegistrationResponse>) :
-        AttendeeRepository(ApplicationProvider.getApplicationContext()) {
+    @Test
+    fun recordedPointActivity_hidesCancel() {
+        val registered = registration(RegistrationStatus.REGISTERED)
+        RegistrationsCache.set(listOf(registered))
+        val repo = FakeRepo().apply {
+            pointTransactions = NetworkResult.Success(listOf(pointTransaction()))
+        }
+        val view = RecordingView(userId = "u1")
+
+        presenter(view, repo).refreshRegistrationStatus(eventId.toString())
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertTrue(view.cancellable.isNotEmpty())
+        assertTrue(view.cancellable.all { it == null })
+    }
+
+    @Test
+    fun failedPointRead_failsClosedAndHidesCancel() {
+        val registered = registration(RegistrationStatus.REGISTERED)
+        RegistrationsCache.set(listOf(registered))
+        val repo = FakeRepo().apply {
+            pointTransactions = NetworkResult.Error("offline")
+        }
+        val view = RecordingView(userId = "u1")
+
+        presenter(view, repo).refreshRegistrationStatus(eventId.toString())
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertTrue(view.cancellable.isNotEmpty())
+        assertTrue(view.cancellable.all { it == null })
+    }
+
+    @Test
+    fun failedScanRead_failsClosedAndHidesCancel() {
+        val registered = registration(RegistrationStatus.REGISTERED)
+        RegistrationsCache.set(listOf(registered))
+        val repo = FakeRepo().apply {
+            scans = NetworkResult.Error("offline")
+        }
+        val view = RecordingView(userId = "u1")
+
+        presenter(view, repo).refreshRegistrationStatus(eventId.toString())
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertTrue(view.cancellable.isNotEmpty())
+        assertTrue(view.cancellable.all { it == null })
+    }
+
+    @Test
+    fun failedCancel_reverifiesActivityOnTheNextResume() {
+        val registered = registration(RegistrationStatus.REGISTERED)
+        // A stale cache forces the registration read, so the refresh really reaches the activity check.
+        RegistrationsCache.clear()
+        RegistrationsCache.addRegistration(registered)
+        val repo = FakeRepo(NetworkResult.Error("Conflict", serverMessage = "already checked in")).apply {
+            registrations = NetworkResult.Success(listOf(registered))
+        }
+        val view = RecordingView(userId = "u1")
+        val presenter = presenter(view, repo)
+
+        presenter.refreshRegistrationStatus(eventId.toString())
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(1, repo.pointReads)
+        assertEquals(1, repo.scanReads)
+        assertEquals(registered.registrationId.toString(), view.cancellable.last())
+
+        presenter.cancelRegistration(registered.registrationId.toString())
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(listOf("already checked in"), view.failures)
+
+        // The server refused, so the old verification is stale: the next resume re-reads activity.
+        presenter.refreshRegistrationStatus(eventId.toString())
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(2, repo.pointReads)
+        assertEquals(2, repo.scanReads)
+        assertEquals(registered.registrationId.toString(), view.cancellable.last())
+    }
+
+    @Test
+    fun verifiedRegistration_isNotRecheckedOnTheNextResume() {
+        val registered = registration(RegistrationStatus.REGISTERED)
+        // A stale cache (no fetchedAt) forces the registration read on every refresh, so only the
+        // short-circuit inside applyCancellableRegistration keeps the activity calls at one.
+        RegistrationsCache.clear()
+        RegistrationsCache.addRegistration(registered)
+        val repo = FakeRepo().apply { registrations = NetworkResult.Success(listOf(registered)) }
+        val view = RecordingView(userId = "u1")
+        val presenter = presenter(view, repo)
+
+        presenter.refreshRegistrationStatus(eventId.toString())
+        shadowOf(Looper.getMainLooper()).idle()
+        presenter.refreshRegistrationStatus(eventId.toString())
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals(1, repo.pointReads)
+        assertEquals(1, repo.scanReads)
+        assertEquals(registered.registrationId.toString(), view.cancellable.last())
+    }
+
+    @Test
+    fun approvedScan_hidesCancel_butRejectedScanDoesNot() {
+        val registered = registration(RegistrationStatus.REGISTERED)
+        RegistrationsCache.set(listOf(registered))
+        val repo = FakeRepo().apply {
+            scans = NetworkResult.Success(listOf(scan(registered.registrationId.toString(), TransactionResult.APPROVED)))
+        }
+        val blocked = RecordingView(userId = "u1")
+        presenter(blocked, repo).refreshRegistrationStatus(eventId.toString())
+        shadowOf(Looper.getMainLooper()).idle()
+        assertTrue(blocked.cancellable.isNotEmpty())
+        assertTrue(blocked.cancellable.all { it == null })
+
+        repo.scans = NetworkResult.Success(listOf(scan(registered.registrationId.toString(), TransactionResult.REJECTED)))
+        val allowed = RecordingView(userId = "u1")
+        presenter(allowed, repo).refreshRegistrationStatus(eventId.toString())
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(registered.registrationId.toString(), allowed.cancellable.last())
+    }
+
+    private fun pointTransaction() = PointTransactionResponse(
+        eventId = eventId,
+        attendeeUserId = UUID.randomUUID(),
+        sourceTransactionId = UUID.randomUUID(),
+        pointsChanged = 10,
+    )
+
+    private fun scan(registrationId: String, result: TransactionResult) = TransactionResponse(
+        transactionId = UUID.randomUUID(),
+        eventId = eventId,
+        attendeeUserId = UUID.randomUUID(),
+        registrationId = UUID.fromString(registrationId),
+        qrCredentialId = UUID.randomUUID(),
+        scanPurposeId = UUID.randomUUID(),
+        transactionType = TransactionType.ENTRY,
+        transactionResult = result,
+        pointsDelta = 10,
+    )
+
+    private class FakeRepo(
+        private val result: NetworkResult<RegistrationResponse> = NetworkResult.Error("x"),
+    ) : AttendeeRepository(ApplicationProvider.getApplicationContext()) {
         val cancelledIds = mutableListOf<String>()
+        var registrations: NetworkResult<List<RegistrationResponse>> = NetworkResult.Error("x")
+        var pointTransactions: NetworkResult<List<PointTransactionResponse>> = NetworkResult.Success(emptyList())
+        var scans: NetworkResult<List<TransactionResponse>> = NetworkResult.Success(emptyList())
+        var pointReads = 0
+        var scanReads = 0
         override suspend fun cancelRegistration(registrationId: String): NetworkResult<RegistrationResponse> {
             cancelledIds += registrationId
             return result
+        }
+        override suspend fun getMyRegistrations() = registrations
+        override suspend fun getMyPointTransactions(eventId: String): NetworkResult<List<PointTransactionResponse>> {
+            pointReads++
+            return pointTransactions
+        }
+        override suspend fun getMyEventTransactions(eventId: String): NetworkResult<List<TransactionResponse>> {
+            scanReads++
+            return scans
         }
     }
 
@@ -203,5 +362,55 @@ class EventDetailCancelWindowTest {
         }
         assertFalse(EventDetailPresenter.isEventCancelled(event(future, null)))
         assertFalse(EventDetailPresenter.isEventCancelled(null))
+    }
+}
+
+class EventDetailCancelActivityTest {
+    private val registrationId = UUID.randomUUID()
+    private val eventId = UUID.randomUUID()
+
+    private fun pointTransaction() = PointTransactionResponse(
+        eventId = eventId,
+        attendeeUserId = UUID.randomUUID(),
+        sourceTransactionId = UUID.randomUUID(),
+        pointsChanged = 5,
+    )
+
+    private fun scan(result: TransactionResult, registration: UUID = registrationId) = TransactionResponse(
+        transactionId = UUID.randomUUID(),
+        eventId = eventId,
+        attendeeUserId = UUID.randomUUID(),
+        registrationId = registration,
+        qrCredentialId = UUID.randomUUID(),
+        scanPurposeId = UUID.randomUUID(),
+        transactionType = TransactionType.ENTRY,
+        transactionResult = result,
+        pointsDelta = 0,
+    )
+
+    @Test
+    fun anyPointTransactionBlocks() {
+        assertTrue(
+            EventDetailPresenter.hasRecordedActivity(
+                registrationId.toString(),
+                listOf(pointTransaction()),
+                emptyList(),
+            ),
+        )
+    }
+
+    @Test
+    fun onlyApprovedScanOfThisRegistrationBlocks() {
+        val id = registrationId.toString()
+        assertTrue(EventDetailPresenter.hasRecordedActivity(id, emptyList(), listOf(scan(TransactionResult.APPROVED))))
+        assertFalse(EventDetailPresenter.hasRecordedActivity(id, emptyList(), listOf(scan(TransactionResult.REJECTED))))
+        assertFalse(
+            EventDetailPresenter.hasRecordedActivity(
+                id,
+                emptyList(),
+                listOf(scan(TransactionResult.APPROVED, registration = UUID.randomUUID())),
+            ),
+        )
+        assertFalse(EventDetailPresenter.hasRecordedActivity(id, emptyList(), emptyList()))
     }
 }

@@ -24,6 +24,9 @@ import com.thedavelopers.eventqr.features.events.model.dto.EventRequest;
 import com.thedavelopers.eventqr.features.events.model.dto.EventResponse;
 import com.thedavelopers.eventqr.features.events.model.entity.Event;
 import com.thedavelopers.eventqr.features.events.repository.EventRepository;
+import com.thedavelopers.eventqr.features.organizer.repository.EventStaffAssignmentRepository;
+import com.thedavelopers.eventqr.features.registrations.repository.EventRegistrationRepository;
+import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.EventStatus;
 import com.thedavelopers.eventqr.shared.exceptions.ConflictException;
 import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
@@ -31,6 +34,8 @@ import com.thedavelopers.eventqr.shared.exceptions.ResourceNotFoundException;
 class EventServiceTest {
 
     private EventRepository repository;
+    private EventStaffAssignmentRepository staffAssignments;
+    private EventRegistrationRepository registrations;
     private EventService service;
     private final UUID organizerId = UUID.randomUUID();
     private final UUID eventId = UUID.randomUUID();
@@ -38,7 +43,9 @@ class EventServiceTest {
     @BeforeEach
     void setUp() {
         repository = mock(EventRepository.class);
-        service = new EventService(repository);
+        staffAssignments = mock(EventStaffAssignmentRepository.class);
+        registrations = mock(EventRegistrationRepository.class);
+        service = new EventService(repository, staffAssignments, registrations);
         when(repository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
@@ -160,7 +167,7 @@ class EventServiceTest {
     void anOpenEventWithRoomCanAcceptRegistrations() {
         event(EventStatus.APPROVED, ago(60), ahead(60), 10, 3);
 
-        EventAvailabilityResponse a = service.availability(eventId);
+        EventAvailabilityResponse a = service.availability(eventId, null, null);
 
         assertThat(a.available()).isTrue();
         assertThat(a.registrationOpen()).isTrue();
@@ -172,7 +179,7 @@ class EventServiceTest {
     void aFullEventIsNotAvailableAndSaysSo() {
         event(EventStatus.ACTIVE, ago(60), ahead(60), 10, 10);
 
-        EventAvailabilityResponse a = service.availability(eventId);
+        EventAvailabilityResponse a = service.availability(eventId, null, null);
 
         assertThat(a.full()).isTrue();
         assertThat(a.available()).isFalse();
@@ -183,37 +190,57 @@ class EventServiceTest {
     void capacityZeroMeansUnlimited() {
         event(EventStatus.ACTIVE, ago(60), ahead(60), 0, 5_000);
 
-        assertThat(service.availability(eventId).full()).isFalse();
-        assertThat(service.availability(eventId).available()).isTrue();
+        assertThat(service.availability(eventId, null, null).full()).isFalse();
+        assertThat(service.availability(eventId, null, null).available()).isTrue();
     }
 
     @Test
     void registrationNotYetOpenAndAlreadyClosedHaveDistinctMessages() {
         event(EventStatus.APPROVED, ahead(3_600), ahead(7_200), 10, 0);
-        assertThat(service.availability(eventId).message()).isEqualTo("Registration not open yet");
+        assertThat(service.availability(eventId, null, null).message()).isEqualTo("Registration not open yet");
 
         event(EventStatus.APPROVED, ago(7_200), ago(60), 10, 0);
-        assertThat(service.availability(eventId).message()).isEqualTo("Registration is closed");
+        assertThat(service.availability(eventId, null, null).message()).isEqualTo("Registration is closed");
     }
 
     @Test
-    void anEventThatIsNotPublicIsNotOpenForRegistration() {
+    void anEndedEventIsNotOpenForRegistration() {
+        event(EventStatus.ENDED, ago(60), ahead(60), 10, 0);
+
+        EventAvailabilityResponse a = service.availability(eventId, null, null);
+
+        assertThat(a.registrationOpen()).isFalse();
+        assertThat(a.message()).isEqualTo("Event is not open for registration");
+    }
+
+    @Test
+    void unpublishedEventAvailabilityIsNotFoundForAStranger() {
         for (EventStatus status : List.of(EventStatus.DRAFT, EventStatus.PENDING_REVIEW, EventStatus.REJECTED,
-                EventStatus.ENDED, EventStatus.CANCELLED)) {
+                EventStatus.CANCELLED)) {
             event(status, ago(60), ahead(60), 10, 0);
 
-            EventAvailabilityResponse a = service.availability(eventId);
-
-            assertThat(a.registrationOpen()).as("%s", status).isFalse();
-            assertThat(a.message()).isEqualTo("Event is not open for registration");
+            assertThatThrownBy(() -> service.availability(eventId, UUID.randomUUID(), AccountRole.ATTENDEE))
+                    .as("%s", status)
+                    .isInstanceOf(ResourceNotFoundException.class)
+                    .hasMessage("Event not found: " + eventId);
         }
+    }
+
+    @Test
+    void unpublishedEventAvailabilityIsVisibleToTheOwner() {
+        event(EventStatus.PENDING_REVIEW, ago(60), ahead(60), 10, 0);
+
+        EventAvailabilityResponse a = service.availability(eventId, organizerId, AccountRole.ORGANIZER);
+
+        assertThat(a.registrationOpen()).isFalse();
+        assertThat(a.message()).isEqualTo("Event is not open for registration");
     }
 
     @Test
     void missingCountsAreTreatedAsZero() {
         event(EventStatus.APPROVED, null, null, null, null);
 
-        EventAvailabilityResponse a = service.availability(eventId);
+        EventAvailabilityResponse a = service.availability(eventId, null, null);
 
         assertThat(a.capacity()).isZero();
         assertThat(a.currentAttendeeCount()).isZero();
@@ -226,11 +253,88 @@ class EventServiceTest {
     void theAttendeeViewFlagsAnEventTheCallerOwns() {
         event(EventStatus.APPROVED, null, null, 10, 0);
 
-        AttendeeEventResponse mine = service.findAttendeeEvent(eventId, organizerId);
-        AttendeeEventResponse someoneElses = service.findAttendeeEvent(eventId, UUID.randomUUID());
+        AttendeeEventResponse mine = service.findAttendeeEvent(eventId, organizerId, AccountRole.ORGANIZER);
+        AttendeeEventResponse someoneElses = service.findAttendeeEvent(eventId, UUID.randomUUID(), AccountRole.ATTENDEE);
 
         assertThat(mine.isOwnedByCurrentUser()).isTrue();
         assertThat(someoneElses.isOwnedByCurrentUser()).isFalse();
+    }
+
+    @Test
+    void unpublishedEventIsNotFoundForAStranger() {
+        for (EventStatus status : List.of(EventStatus.DRAFT, EventStatus.PENDING_REVIEW, EventStatus.REJECTED,
+                EventStatus.CANCELLED)) {
+            event(status, null, null, 10, 0);
+            assertThatThrownBy(() -> service.findAttendeeEvent(eventId, UUID.randomUUID(), AccountRole.ATTENDEE))
+                    .as("%s", status)
+                    .isInstanceOf(ResourceNotFoundException.class)
+                    .hasMessage("Event not found: " + eventId);
+        }
+    }
+
+    @Test
+    void unpublishedEventIsVisibleToTheOwner() {
+        event(EventStatus.PENDING_REVIEW, null, null, 10, 0);
+
+        assertThat(service.findAttendeeEvent(eventId, organizerId, AccountRole.ORGANIZER).status())
+                .isEqualTo(EventStatus.PENDING_REVIEW);
+    }
+
+    @Test
+    void unpublishedEventIsVisibleToAdmins() {
+        event(EventStatus.REJECTED, null, null, 10, 0);
+
+        assertThat(service.findAttendeeEvent(eventId, UUID.randomUUID(), AccountRole.ADMIN).status())
+                .isEqualTo(EventStatus.REJECTED);
+        assertThat(service.findAttendeeEvent(eventId, UUID.randomUUID(), AccountRole.SUPER_ADMIN).status())
+                .isEqualTo(EventStatus.REJECTED);
+    }
+
+    @Test
+    void unpublishedEventIsVisibleToActivelyAssignedStaff() {
+        event(EventStatus.CANCELLED, null, null, 10, 0);
+        UUID staffId = UUID.randomUUID();
+        when(staffAssignments.existsByEventIdAndStaffUserIdAndActiveTrue(eventId, staffId)).thenReturn(true);
+
+        assertThat(service.findAttendeeEvent(eventId, staffId, AccountRole.STAFF).status())
+                .isEqualTo(EventStatus.CANCELLED);
+    }
+
+    @Test
+    void unpublishedEventIsNotFoundForInactiveStaff() {
+        event(EventStatus.CANCELLED, null, null, 10, 0);
+        UUID staffId = UUID.randomUUID();
+        when(staffAssignments.existsByEventIdAndStaffUserIdAndActiveTrue(eventId, staffId)).thenReturn(false);
+
+        assertThatThrownBy(() -> service.findAttendeeEvent(eventId, staffId, AccountRole.STAFF))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void cancelledEventIsVisibleToACallerHoldingARegistration() {
+        event(EventStatus.CANCELLED, null, null, 10, 0);
+        UUID attendeeId = UUID.randomUUID();
+        when(registrations.existsByEventIdAndAttendeeUserId(eventId, attendeeId)).thenReturn(true);
+
+        assertThat(service.findAttendeeEvent(eventId, attendeeId, AccountRole.ATTENDEE).status())
+                .isEqualTo(EventStatus.CANCELLED);
+    }
+
+    @Test
+    void cancelledEventIsNotFoundForACallerWithoutARegistration() {
+        event(EventStatus.CANCELLED, null, null, 10, 0);
+        when(registrations.existsByEventIdAndAttendeeUserId(any(), any())).thenReturn(false);
+
+        assertThatThrownBy(() -> service.findAttendeeEvent(eventId, UUID.randomUUID(), AccountRole.ATTENDEE))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void approvedEventIsVisibleToAnyAuthenticatedCaller() {
+        event(EventStatus.APPROVED, null, null, 10, 0);
+
+        assertThat(service.findAttendeeEvent(eventId, UUID.randomUUID(), AccountRole.ATTENDEE).status())
+                .isEqualTo(EventStatus.APPROVED);
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.events
 
+import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -17,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.EventCardPresenter
+import com.thedavelopers.eventqr.features.attendee.RequestEventActivity
 import com.thedavelopers.eventqr.features.organizer.NAV_EVENTS
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpDataSource
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpEvent
@@ -92,7 +94,6 @@ open class ManageEventsActivity : AppCompatActivity() {
         recyclerView.adapter = adapter
 
         swipeRefresh.setOnRefreshListener { loadEvents() }
-        emptyState.setAction(getString(R.string.common_retry)) { loadEvents() }
         findViewById<View>(R.id.chipAll).setOnClickListener { selectFilter(FILTER_ALL) }
         findViewById<View>(R.id.chipUpcoming).setOnClickListener { selectFilter("Upcoming") }
         findViewById<View>(R.id.chipActive).setOnClickListener { selectFilter("Active") }
@@ -217,11 +218,22 @@ open class ManageEventsActivity : AppCompatActivity() {
                 eventsSource.message ?: getString(R.string.organizer_dashboard_events_load_failed),
                 getString(R.string.ui_organizer_no_events_body),
             )
+            emptyState.setAction(getString(R.string.common_retry)) { loadEvents() }
+        } else if (allEvents.approvedOnly().isEmpty()) {
+            // Nothing to manage yet: the only useful action is the event request form.
+            emptyState.show(
+                getString(R.string.ui_organizer_no_events),
+                getString(R.string.ui_organizer_no_events_body),
+            )
+            emptyState.setAction(getString(R.string.ui_organizer_create_event), primary = true) {
+                startActivity(Intent(this, RequestEventActivity::class.java))
+            }
         } else {
             emptyState.show(
                 getString(R.string.organizer_events_no_events_available_for_the_selected),
                 getString(R.string.common_try_adjusting_your_search_or_filters),
             )
+            emptyState.setAction(getString(R.string.common_retry)) { loadEvents() }
         }
     }
 

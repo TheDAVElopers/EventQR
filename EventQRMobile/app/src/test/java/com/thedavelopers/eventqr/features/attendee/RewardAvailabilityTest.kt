@@ -43,6 +43,33 @@ class RewardAvailabilityTest {
     }
 
     @Test
+    fun alreadyClaimed_outranksStockBalanceAndLoading() {
+        assertEquals(State.CLAIMED, RewardAvailability.evaluate(true, null, 50, 100, alreadyClaimed = true))
+        assertEquals(State.CLAIMED, RewardAvailability.evaluate(true, 0, 50, 0, balanceLoading = true, alreadyClaimed = true))
+        // A status the screen cannot read still blocks: the claim is the stronger truth.
+        assertEquals(State.CLAIMED, RewardAvailability.evaluate(null, null, 50, null, alreadyClaimed = true))
+        // An inactive reward is unavailable before it is claimed.
+        assertEquals(State.UNAVAILABLE, RewardAvailability.evaluate(false, null, 50, 100, alreadyClaimed = true))
+    }
+
+    @Test
+    fun unknownClaimState_isCheckingNeverAvailable() {
+        // The claim read failed: status/stock/balance may all look fine, but a claim the backend
+        // would refuse must not read as Available.
+        assertEquals(
+            State.CLAIM_ERROR,
+            RewardAvailability.evaluate(true, 4, 50, 100, claimStateFailed = true, claimStateKnown = false),
+        )
+        // Still in flight (not failed) is the only indeterminate state.
+        assertEquals(State.CHECKING, RewardAvailability.evaluate(true, 4, 50, 100, claimStateKnown = false))
+        // Status and stock are read from other data and still decide immediately.
+        assertEquals(State.UNAVAILABLE, RewardAvailability.evaluate(false, 4, 50, 100, claimStateFailed = true, claimStateKnown = false))
+        assertEquals(State.OUT_OF_STOCK, RewardAvailability.evaluate(true, 0, 50, 100, claimStateFailed = true, claimStateKnown = false))
+        // A successful claim read may say Available again.
+        assertEquals(State.AVAILABLE, RewardAvailability.evaluate(true, 4, 50, 100, claimStateKnown = true))
+    }
+
+    @Test
     fun remainingLabel_unlimitedOnlyForKnownNullStock() {
         assertEquals("Unlimited", RewardAvailability.remainingLabel(stockKnown = true, stockQuantity = null))
         assertNull(RewardAvailability.remainingLabel(stockKnown = false, stockQuantity = null))

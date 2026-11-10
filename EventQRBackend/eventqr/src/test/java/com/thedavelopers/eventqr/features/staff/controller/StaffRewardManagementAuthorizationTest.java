@@ -86,7 +86,7 @@ class StaffRewardManagementAuthorizationTest {
         given(rewardService.deductPoints(any(), any(), anyInt(), any(), any()))
                 .willReturn(new PointBalanceResponse(eventId, attendeeId, 0));
         given(rewardService.redeem(any())).willReturn(new RewardRedemptionResponse(UUID.randomUUID(), eventId,
-                attendeeId, rewardId, 10, RedemptionStatus.REDEEMED, Instant.now(), null));
+                attendeeId, rewardId, 10, RedemptionStatus.REDEEMED, Instant.now(), null, null));
         eventOwnedBy(UUID.randomUUID());
         given(eventStaffAssignmentRepository.findByEventIdAndStaffUserIdAndActiveTrue(any(), any()))
                 .willReturn(Optional.empty());

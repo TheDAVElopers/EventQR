@@ -6,7 +6,6 @@
     <string name="attendee_details_no_activity_yet">No activity yet</string>
     <string name="organizer_untitled_event">Untitled Event</string>
     <string name="organizer_select_event">Select Event</string>
-    <string name="organizer_select_event_description">Select event</string>
     <string name="organizer_choose_an_event">Choose an Event</string>
     <string name="organizer_try_again_later">Please try again later.</string>
     <string name="organizer_selected_event">Selected Event</string>

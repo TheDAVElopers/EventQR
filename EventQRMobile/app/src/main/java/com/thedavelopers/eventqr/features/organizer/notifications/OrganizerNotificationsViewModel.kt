@@ -97,13 +97,19 @@ class OrganizerNotificationsViewModel(private val repo: OrganizerRepository, pri
         }
     }
 
-    fun markRead(item: NotificationResponse, onRequest: suspend (NotificationResponse) -> Unit) {
+    fun markRead(item: NotificationResponse, onRequest: suspend (NotificationResponse) -> NetworkResult<*>) {
         viewModelScope.launch {
-            onRequest(item)
-            val updated = (_list.value ?: emptyList()).map {
-                if (it.notificationId == item.notificationId) it.copy(status = NotificationStatus.READ, readAt = null) else it
+            when (val result = onRequest(item)) {
+                is NetworkResult.Success -> {
+                    _error.value = null
+                    val updated = (_list.value ?: emptyList()).map {
+                        if (it.notificationId == item.notificationId) it.copy(status = NotificationStatus.READ, readAt = null) else it
+                    }
+                    _list.value = updated
+                }
+                is NetworkResult.Error -> _error.value = result.message
+                NetworkResult.Loading -> Unit
             }
-            _list.value = updated
         }
     }
 

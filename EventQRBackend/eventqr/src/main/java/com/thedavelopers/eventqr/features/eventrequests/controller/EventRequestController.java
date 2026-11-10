@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.thedavelopers.eventqr.features.eventrequests.model.dto.EventCreationRequestDto;
 import com.thedavelopers.eventqr.features.eventrequests.model.dto.EventRequestResponse;
 import com.thedavelopers.eventqr.features.eventrequests.service.EventCreationRequestService;
+import com.thedavelopers.eventqr.shared.constants.AccountRole;
+import com.thedavelopers.eventqr.shared.constants.AccountRoles;
+import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 import com.thedavelopers.eventqr.shared.response.ApiResponse;
 import com.thedavelopers.eventqr.shared.security.JwtService;
 
@@ -35,6 +38,10 @@ public class EventRequestController {
     public ResponseEntity<ApiResponse<EventRequestResponse>> create(HttpServletRequest servletRequest,
                                                                     @Valid @RequestBody EventCreationRequestDto request) {
         UUID userId = jwtService.extractUserIdFromBearer(servletRequest.getHeader("Authorization"));
+        AccountRole role = jwtService.extractRoleFromBearer(servletRequest.getHeader("Authorization"));
+        if (!AccountRoles.isAnyOf(role, AccountRole.ATTENDEE, AccountRole.STAFF, AccountRole.ORGANIZER)) {
+            throw new ForbiddenException("Only attendees, staff and organizers can request an event");
+        }
         return ResponseEntity.ok(ApiResponse.success("Event request submitted",
                 eventCreationRequestService.create(userId, request)));
     }

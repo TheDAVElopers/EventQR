@@ -252,6 +252,12 @@ class OrganizerRepository(private val context: Context) {
         }
     suspend fun fetchOrganizerEvents() = safeApiCall { apiService.getOrganizerEvents() }
     suspend fun fetchOrganizerEvent(eventId: String) = safeApiCall { apiService.getOrganizerEvent(eventId) }
+
+    /**
+     * Event detail for the editor's PATCH echo: `OrganizerEventResponse` has no category, but the PATCH
+     * replaces it, so the current value has to come from the event detail.
+     */
+    suspend fun fetchEventDetail(eventId: String) = safeApiCall { apiService.getEventById(eventId) }
     suspend fun updateOrganizerEvent(eventId: String, request: com.thedavelopers.eventqr.features.events.model.dto.EventRequest) =
         safeApiCall { apiService.updateOrganizerEvent(eventId, request) }
     suspend fun uploadEventBanner(file: File): NetworkResult<com.thedavelopers.eventqr.features.uploads.model.dto.StoredFileResponse> = safeApiCall {
@@ -408,6 +414,7 @@ private fun OrganizerAttendeeDto.toMvpAttendee(context: Context): OrganizerMvpAt
         currentEventStatus.equals("Cancelled", ignoreCase = true) ||
             currentEventStatus.equals("No Show", ignoreCase = true)
         ),
+    registrationNumber = registrationNumber,
 )
 
 private fun JsonElement.toMvpTransactionEntry(): OrganizerMvpTransactionEntry? = when {

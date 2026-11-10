@@ -111,6 +111,7 @@ public class EventCreationRequestService {
     @CacheEvict(cacheNames = "events", allEntries = true)
     public EventRequestResponse approve(UUID requestId, UUID adminUserId, String adminFullName, String remarks) {
         EventCreationRequest request = requireRequest(requestId);
+        rejectSelfReview(request, adminUserId);
         requirePending(request, "approved");
         request.setStatus(EventRequestStatus.APPROVED);
         request.setAdminRemarks(trimToNull(remarks));
@@ -138,6 +139,7 @@ public class EventCreationRequestService {
 
     public EventRequestResponse reject(UUID requestId, UUID adminUserId, String adminFullName, String remarks) {
         EventCreationRequest request = requireRequest(requestId);
+        rejectSelfReview(request, adminUserId);
         requirePending(request, "rejected");
         request.setStatus(EventRequestStatus.REJECTED);
         request.setAdminRemarks(trimToNull(remarks));
@@ -170,6 +172,12 @@ public class EventCreationRequestService {
                 request.getEventId(),
                 request.getRequesterUserId());
         return toResponse(request);
+    }
+
+    private void rejectSelfReview(EventCreationRequest request, UUID reviewerUserId) {
+        if (request.getRequesterUserId() != null && request.getRequesterUserId().equals(reviewerUserId)) {
+            throw new ForbiddenException("You cannot approve or reject your own event request");
+        }
     }
 
     private void requirePending(EventCreationRequest request, String action) {

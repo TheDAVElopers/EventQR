@@ -48,7 +48,7 @@
                 layout="@layout/include_scan_viewport"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_12" />
+                android:layout_marginTop="@dimen/space_16" />
 
             <!-- Purpose detail (+10 pts, "one claim only", ...) under the guidance line. -->
             <TextView
@@ -92,7 +92,7 @@
                 android:id="@+id/btnSubmitScan"
                 style="@style/Widget.EventQR.Ui.Button.Primary"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/ui_button_height"
+                android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/ui_gutter"
                 android:layout_marginTop="@dimen/space_12"
                 android:layout_marginEnd="@dimen/ui_gutter"

@@ -75,6 +75,14 @@
                 android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
 
             <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:text="@string/ui_attendee_registration_details_from_profile"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                android:textColor="@color/ui_text_secondary" />
+
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_md"

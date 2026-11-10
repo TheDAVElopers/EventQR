@@ -26,6 +26,8 @@ data class RewardRedemptionResponse(
     val status: RedemptionStatus,
     val redeemedAt: Instant? = null,
     val reason: String? = null,
+    /** Scan log that triggered this redemption; null for a direct (scan-less) claim. */
+    val redemptionScanLogId: UUID? = null,
 )
 
 data class RewardRequest(
@@ -56,4 +58,15 @@ data class RewardResponse(
     val claimedCount: Long = 0L,
     /** Total supply configured by the organizer; null = unlimited. */
     val totalQuantity: Int? = null,
+)
+
+/** One row of `GET attendees/me/events/{eventId}/point-transactions`. */
+data class PointTransactionResponse(
+    val eventId: UUID,
+    val attendeeUserId: UUID,
+    /** The scan log or redemption that produced this change; a manual adjustment has its own id. */
+    val sourceTransactionId: UUID,
+    val pointsChanged: Int,
+    val occurredAt: Instant? = null,
+    val reason: String? = null,
 )

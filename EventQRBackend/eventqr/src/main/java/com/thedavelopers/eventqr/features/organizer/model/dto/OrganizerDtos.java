@@ -47,7 +47,7 @@ public final class OrganizerDtos {
                                             String currentEventStatus, int points, String lastTransactionTime,
                                             String registeredDate, String qrCredentialStatus,
                                             List<TransactionEntry> recentTransactions, List<String> recentRejectedScans,
-                                            boolean countedAsRegistered) {
+                                            boolean countedAsRegistered, Integer registrationNumber) {
     }
 
     public record TransactionEntry(String type, String timestamp) {

@@ -464,7 +464,7 @@ class RewardAuthorizationTest {
 
     @Test
     void findRewards_attendee_isAllowed() throws Exception {
-        given(rewardService.findRewards(eventId)).willReturn(List.of());
+        given(rewardService.findClaimableRewards(eventId)).willReturn(List.of());
         actingAs(callerId, AccountRole.ATTENDEE);
 
         mockMvc.perform(get("/api/v1/rewards/event/{eventId}", eventId)
@@ -474,7 +474,7 @@ class RewardAuthorizationTest {
 
     @Test
     void findRewards_organizerRegisteredButNotOwner_isAllowed() throws Exception {
-        given(rewardService.findRewards(eventId)).willReturn(List.of());
+        given(rewardService.findClaimableRewards(eventId)).willReturn(List.of());
         actingAs(callerId, AccountRole.ORGANIZER);
 
         mockMvc.perform(get("/api/v1/rewards/event/{eventId}", eventId)
@@ -486,7 +486,7 @@ class RewardAuthorizationTest {
 
     @Test
     void findRewards_staffUnassigned_isAllowed() throws Exception {
-        given(rewardService.findRewards(eventId)).willReturn(List.of());
+        given(rewardService.findClaimableRewards(eventId)).willReturn(List.of());
         actingAs(callerId, AccountRole.STAFF);
         callerAssignedToEvent(false);
 
@@ -497,12 +497,24 @@ class RewardAuthorizationTest {
 
     @Test
     void findRewards_admin_isAllowed() throws Exception {
-        given(rewardService.findRewards(eventId)).willReturn(List.of());
+        given(rewardService.findClaimableRewards(eventId)).willReturn(List.of());
         actingAs(callerId, AccountRole.ADMIN);
 
         mockMvc.perform(get("/api/v1/rewards/event/{eventId}", eventId)
                         .header("Authorization", "Bearer token"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void findRewards_returnsOnlyClaimableRewards() throws Exception {
+        given(rewardService.findClaimableRewards(eventId)).willReturn(List.of());
+        actingAs(callerId, AccountRole.ATTENDEE);
+
+        mockMvc.perform(get("/api/v1/rewards/event/{eventId}", eventId)
+                        .header("Authorization", "Bearer token"))
+                .andExpect(status().isOk());
+
+        verify(rewardService).findClaimableRewards(eventId);
     }
 
     // --- GET /api/v1/rewards/redemptions/{eventId} -------------------------

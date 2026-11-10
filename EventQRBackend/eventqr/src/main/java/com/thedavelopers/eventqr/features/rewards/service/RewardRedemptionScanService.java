@@ -3,7 +3,9 @@ package com.thedavelopers.eventqr.features.rewards.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +14,7 @@ import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionScan
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionScanResponse;
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse;
 import com.thedavelopers.eventqr.features.rewards.model.entity.AttendeePointBalance;
+import com.thedavelopers.eventqr.features.rewards.model.entity.RewardRedemption;
 import com.thedavelopers.eventqr.features.rewards.repository.AttendeePointBalanceRepository;
 import com.thedavelopers.eventqr.features.rewards.repository.RewardRedemptionRepository;
 import com.thedavelopers.eventqr.features.rewards.repository.RewardRepository;
@@ -79,10 +82,17 @@ public class RewardRedemptionScanService {
         for (var row : rewardRedemptionRepository.countByEventIdAndStatusGroupedByReward(request.eventId(), RedemptionStatus.REDEEMED)) {
             claimed.put(row.getRewardId(), row.getTotal() == null ? 0L : row.getTotal());
         }
+        // A reward this attendee already redeemed is not eligible again unless duplicates are allowed.
+        Set<UUID> claimedByAttendee = rewardRedemptionRepository
+                .findByEventIdAndAttendeeUserId(request.eventId(), verification.attendeeUserId()).stream()
+                .filter(redemption -> redemption.getStatus() == RedemptionStatus.REDEEMED)
+                .map(RewardRedemption::getRewardId)
+                .collect(Collectors.toSet());
         List<RewardResponse> eligibleRewards = rewardRepository.findByEventId(request.eventId()).stream()
                 .filter(reward -> reward.getStatus() == RewardStatus.ACTIVE)
                 .filter(reward -> reward.getPointsRequired() <= pointsBalance)
                 .filter(reward -> reward.getStockQuantity() == null || reward.getStockQuantity() > 0)
+                .filter(reward -> reward.isAllowDuplicateClaims() || !claimedByAttendee.contains(reward.getId()))
                 .map(reward -> RewardResponse.of(reward, claimed.getOrDefault(reward.getId(), 0L)))
                 .toList();
 
