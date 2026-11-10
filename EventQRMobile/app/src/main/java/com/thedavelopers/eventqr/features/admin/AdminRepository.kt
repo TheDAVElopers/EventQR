@@ -18,9 +18,9 @@ import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
 open class AdminRepository(private val context: Context) {
     private val apiService = ApiClient.getService(context)
 
-    suspend fun getCurrentUser(): NetworkResult<UserResponse> = safeApiCall { apiService.getAuthMe() }
+    open suspend fun getCurrentUser(): NetworkResult<UserResponse> = safeApiCall { apiService.getAuthMe() }
 
-    suspend fun loadAllEventRequests(): NetworkResult<List<EventRequestResponse>> =
+    open suspend fun loadAllEventRequests(): NetworkResult<List<EventRequestResponse>> =
         safeApiCall { apiService.getAdminEventRequests() }
 
     suspend fun getEventRequest(requestId: String): NetworkResult<EventRequestResponse> =
@@ -76,7 +76,7 @@ open class AdminRepository(private val context: Context) {
             NetworkResult.Loading -> NetworkResult.Loading
         }
 
-    suspend fun loadAuditLogsPage(page: Int, size: Int = AUDIT_PAGE_SIZE, actionPrefix: String? = null): NetworkResult<PageResponse<AuditLogResponse>> =
+    open suspend fun loadAuditLogsPage(page: Int, size: Int = AUDIT_PAGE_SIZE, actionPrefix: String? = null): NetworkResult<PageResponse<AuditLogResponse>> =
         when (val result = safeApiCall { apiService.getAdminAuditLogs(page, size, actionPrefix?.takeIf { it.isNotBlank() }) }) {
             is NetworkResult.Success -> NetworkResult.Success(parseAuditLogPage(result.data, sharedGson()))
             is NetworkResult.Error -> result

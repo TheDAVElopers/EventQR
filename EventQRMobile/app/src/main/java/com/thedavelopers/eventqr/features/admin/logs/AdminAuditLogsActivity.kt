@@ -6,7 +6,9 @@ import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.os.Bundle
 import android.view.View
+import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -23,6 +25,7 @@ import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.admin.AdminBottomNavItem
 import com.thedavelopers.eventqr.features.admin.AdminRepository
+import com.thedavelopers.eventqr.features.admin.AdminRoleLabels
 import com.thedavelopers.eventqr.features.admin.AuditCategory
 import com.thedavelopers.eventqr.features.admin.actionPrefix
 import com.thedavelopers.eventqr.features.admin.auditDayGroups
@@ -38,7 +41,14 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 
 class AdminAuditLogsActivity : AppCompatActivity() {
-    private lateinit var repository: AdminRepository
+    /** Tests set this before the first load to replace the network repository. */
+    @VisibleForTesting
+    internal var repositoryOverride: AdminRepository? = null
+
+    private val repository: AdminRepository by lazy {
+        repositoryOverride ?: AdminRepository(this)
+    }
+
     private lateinit var adapter: AdminAuditLogAdapter
     private lateinit var dayHeaders: AuditDayHeaderDecoration
     private lateinit var swipeRefresh: SwipeRefreshLayout
@@ -64,22 +74,34 @@ class AdminAuditLogsActivity : AppCompatActivity() {
             return
         }
 
-        repository = AdminRepository(this)
         adapter = AdminAuditLogAdapter()
-        bindHeader()
+        bindHeader(normalizedRole)
         bindViews()
         bindFilterChips()
         bindNav()
         loadLogs()
     }
 
-    private fun bindHeader() {
+    override fun onResume() {
+        super.onResume()
+        // The token refresher persists a role change before it announces it, so re-reading the cached
+        // role keeps a screen left open current without another network call.
+        bindRoleEyebrow(SessionManager(this).getUserRole())
+    }
+
+    /** Paints the eyebrow from a role; the header's title and insets are bound once in [bindHeader]. */
+    private fun bindRoleEyebrow(role: String?) {
+        findViewById<TextView>(R.id.passHeadEyebrow)?.text =
+            getString(AdminRoleLabels.eyebrowRes(role))
+    }
+
+    private fun bindHeader(role: String?) {
         val head = findViewById<View>(R.id.passHead)
         head.findViewById<View>(R.id.passHeadIdentity).applyEventQrTopInsetPadding()
         PassHeadBinder.bindCompact(
             root = head,
             title = getString(R.string.ui_admin_logs_title),
-            eyebrow = getString(R.string.ui_admin_tab),
+            eyebrow = getString(AdminRoleLabels.eyebrowRes(role)),
         )
     }
 

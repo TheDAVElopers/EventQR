@@ -8,6 +8,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -17,6 +18,7 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.api.dto.EventRequestStatus
+import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.ui.components.CountLabel
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import com.thedavelopers.eventqr.ui.components.PassHeadBinder
@@ -31,7 +33,14 @@ import kotlinx.coroutines.launch
  */
 class AdminEventApprovalBackendActivity : AppCompatActivity() {
 
-    private lateinit var repository: AdminRepository
+    /** Tests set this before the first load to replace the network repository. */
+    @VisibleForTesting
+    internal var repositoryOverride: AdminRepository? = null
+
+    private val repository: AdminRepository by lazy {
+        repositoryOverride ?: AdminRepository(this)
+    }
+
     private lateinit var adapter: AdminEventRequestAdapter
 
     private lateinit var swipeRefresh: SwipeRefreshLayout
@@ -59,7 +68,6 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
         setContentView(R.layout.activity_admin_event_requests)
         applyEventQrSystemBarAppearance(lightStatusBars = false)
 
-        repository = AdminRepository(this)
         bindViews()
         bindHeader()
         bindNavigation()
@@ -100,11 +108,17 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
         PassHeadBinder.bindCompact(
             root = head,
             title = getString(R.string.ui_admin_requests_title),
-            eyebrow = getString(R.string.ui_admin_tab),
+            eyebrow = getString(AdminRoleLabels.eyebrowRes(SessionManager(this).getUserRole())),
         )
         textCount = head.findViewById<TextView>(R.id.passHeadTitleCount).apply {
             visibility = View.VISIBLE
         }
+    }
+
+    /** Paints the eyebrow from a role. Prefs paint first; the auth/me role replaces it once it lands. */
+    private fun bindRoleEyebrow(role: String?) {
+        findViewById<TextView>(R.id.passHeadEyebrow)?.text =
+            getString(AdminRoleLabels.eyebrowRes(role))
     }
 
     private fun bindNavigation() {
@@ -128,6 +142,7 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
                         showError(getString(R.string.admin_event_approval_backend_admin_access_required), showRetry = false)
                         Toast.makeText(this@AdminEventApprovalBackendActivity, this@AdminEventApprovalBackendActivity.getString(R.string.admin_event_approval_backend_admin_access_required), Toast.LENGTH_SHORT).show()
                     } else {
+                        bindRoleEyebrow(result.data.role.name)
                         loadRequests(showLoading = true)
                     }
                 }

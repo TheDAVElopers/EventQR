@@ -7,6 +7,7 @@ import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.platform.ComposeView
@@ -26,6 +27,7 @@ import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.core.util.addNearEndListener
 import com.thedavelopers.eventqr.features.admin.AdminBottomNavItem
 import com.thedavelopers.eventqr.features.admin.AdminRepository
+import com.thedavelopers.eventqr.features.admin.AdminRoleLabels
 import com.thedavelopers.eventqr.features.admin.configureAdminBottomNav
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
 import com.thedavelopers.eventqr.ui.components.CountLabel
@@ -48,7 +50,14 @@ import kotlinx.coroutines.launch
  * and the raised "create account" card are gone.
  */
 class AdminAccountManagementActivity : AppCompatActivity() {
-    private lateinit var repository: AdminRepository
+    /** Tests set this before the first load to replace the network repository. */
+    @VisibleForTesting
+    internal var repositoryOverride: AdminRepository? = null
+
+    private val repository: AdminRepository by lazy {
+        repositoryOverride ?: AdminRepository(this)
+    }
+
     private lateinit var sessionManager: SessionManager
     private lateinit var adapter: AdminAccountAdapter
     private lateinit var searchInput: EditText
@@ -78,7 +87,6 @@ class AdminAccountManagementActivity : AppCompatActivity() {
         setContentView(R.layout.activity_admin_account_management)
         applyEventQrSystemBarAppearance()
 
-        repository = AdminRepository(this)
         sessionManager = SessionManager(this)
         adapter = AdminAccountAdapter(onActionClick = ::onAccountActionClick)
         bindViews()
@@ -91,6 +99,9 @@ class AdminAccountManagementActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        // The token refresher persists a role change before it announces it, so re-reading the cached
+        // role keeps a screen left open current without another network call.
+        bindRoleEyebrow(sessionManager.getUserRole())
         loadAccounts()
     }
 
@@ -110,9 +121,15 @@ class AdminAccountManagementActivity : AppCompatActivity() {
         PassHeadBinder.bindCompact(
             root = head,
             title = getString(R.string.ui_admin_accounts_title),
-            eyebrow = getString(R.string.ui_admin_tab),
+            eyebrow = getString(AdminRoleLabels.eyebrowRes(sessionManager.getUserRole())),
         )
         countView = head.findViewById<TextView>(R.id.passHeadTitleCount)
+    }
+
+    /** Paints the eyebrow from a role; the header's title and insets are bound once in [bindHeader]. */
+    private fun bindRoleEyebrow(role: String?) {
+        findViewById<TextView>(R.id.passHeadEyebrow)?.text =
+            getString(AdminRoleLabels.eyebrowRes(role))
     }
 
     private fun bindCreateRow() {
