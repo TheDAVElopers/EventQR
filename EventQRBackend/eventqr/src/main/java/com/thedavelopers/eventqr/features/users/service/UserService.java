@@ -35,6 +35,10 @@ import com.thedavelopers.eventqr.shared.interfaces.AttendeeDirectoryPort.Attende
 public class UserService implements AttendeeDirectoryPort {
 
     private static final String UNUSABLE_HASH_PREFIX = "{UNUSABLE}";
+    /** A value longer than its column is client input, never evidence that the email is taken. */
+    private static final String VALUE_TOO_LONG_MESSAGE = "One or more fields are too long (maximum 255 characters)";
+    private static final String VALUE_TOO_LONG_SQL_STATE = "22001";
+    private static final String DUPLICATE_KEY_SQL_STATE = "23505";
 
     private final UserProfileRepository userProfileRepository;
     private final EventRegistrationRepository eventRegistrationRepository;
@@ -82,8 +86,14 @@ public class UserService implements AttendeeDirectoryPort {
             return toResponse(userProfileRepository.saveAndFlush(newUser));
         } catch (DataIntegrityViolationException e) {
             // saveAndFlush forces the INSERT here (a UUID id defers it to commit), so the race surfaces in this catch.
-            // Lost a race with a concurrent signup / ghost creation for the same email: never claim it.
-            throw new ConflictException("User already exists for email " + email);
+            // Only the unique email violation is a 409: a too-long value (Postgres 22001) is bad input, and any other
+            // constraint failure (NOT NULL, CHECK, FK, flush listener) is rethrown untouched instead of being
+            // misreported as a duplicate email.
+            RuntimeException translated = classifyInsertFailure(e, email);
+            if (translated != null) {
+                throw translated;
+            }
+            throw e;
         }
     }
 
@@ -131,11 +141,9 @@ public class UserService implements AttendeeDirectoryPort {
             // Another request created this email between the lookup and the insert. The failed flush leaves this
             // transaction rollback-only, so retrying inside it cannot succeed: report the duplicate and let the
             // caller retry (the next attempt sees the committed row and takes the normal path).
-            Throwable root = e.getRootCause();
-            String rootMessage = root == null ? "" : String.valueOf(root.getMessage());
-            if (rootMessage.contains("user_profiles_email_key") || rootMessage.contains("duplicate key")
-                    || rootMessage.contains("Unique index")) {
-                throw new ConflictException("User already exists for email " + email);
+            RuntimeException translated = classifyInsertFailure(e, email);
+            if (translated != null) {
+                throw translated;
             }
             throw e;
         }
@@ -143,6 +151,49 @@ public class UserService implements AttendeeDirectoryPort {
 
     private static void requireStrongPassword(String password) {
         PasswordValidator.requireValid(password);
+    }
+
+    /**
+     * One classification for every user_profiles INSERT, so {@link #register} and {@link #create} cannot disagree:
+     * Postgres 22001 is bad input, a real 23505 duplicate is a conflict, and anything else is not this service's to
+     * reinterpret. A {@code null} result means "rethrow the original" for {@code GlobalExceptionHandler}.
+     */
+    private static RuntimeException classifyInsertFailure(DataIntegrityViolationException exception, String email) {
+        if (isValueTooLong(exception)) {
+            return new BadRequestException(VALUE_TOO_LONG_MESSAGE);
+        }
+        if (isDuplicateKey(exception)) {
+            return new ConflictException("User already exists for email " + email);
+        }
+        return null;
+    }
+
+    /**
+     * Postgres 22001 ({@code value too long for type character varying}). Checked on the SQLState of the most
+     * specific cause, with a message fallback for drivers/wrappers that drop the state.
+     */
+    private static boolean isValueTooLong(DataIntegrityViolationException exception) {
+        // getMostSpecificCause never returns null: it returns the exception itself when it has no cause.
+        Throwable root = exception.getMostSpecificCause();
+        if (root instanceof java.sql.SQLException sqlException
+                && VALUE_TOO_LONG_SQL_STATE.equals(sqlException.getSQLState())) {
+            return true;
+        }
+        return root.getMessage() != null
+                && root.getMessage().contains("value too long for type character varying");
+    }
+
+    /**
+     * Postgres 23505 (unique violation) is the only trusted duplicate signal. The message fallback applies only when
+     * the driver drops the SQLState, so a stated non-23505 state is never re-labelled as a duplicate by its text.
+     */
+    private static boolean isDuplicateKey(DataIntegrityViolationException exception) {
+        Throwable root = exception.getMostSpecificCause();
+        if (root instanceof java.sql.SQLException sqlException && sqlException.getSQLState() != null) {
+            return DUPLICATE_KEY_SQL_STATE.equals(sqlException.getSQLState());
+        }
+        String message = root.getMessage();
+        return message != null && (message.contains("duplicate key") || message.contains("Unique index"));
     }
 
     public Page<UserResponse> findAllUsers(Pageable pageable) {

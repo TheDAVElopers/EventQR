@@ -17,6 +17,11 @@ class RegistrationPresenter(
     private val scope = kotlinx.coroutines.MainScope()
     private var registrationJob: Job? = null
 
+    private companion object {
+        /** The API rejects a fullName over 255 characters with HTTP 400. */
+        const val MAX_FULL_NAME_LENGTH = 255
+    }
+
     fun attach(view: RegistrationContract.View) {
         this.view = view
     }
@@ -42,6 +47,8 @@ class RegistrationPresenter(
         // Passwords are never trimmed: leading/trailing spaces are part of the secret.
         val passwordValue = password
         val confirmValue = confirmPassword
+        // Same value the request sends: the trimmed names joined by one space.
+        val fullNameValue = listOf(firstNameValue, lastNameValue).filter { it.isNotBlank() }.joinToString(" ")
 
         var valid = true
         if (!Validators.isNonEmpty(firstNameValue)) {
@@ -55,6 +62,14 @@ class RegistrationPresenter(
             valid = false
         } else {
             view?.showFieldError("lastName", null)
+        }
+        // Combined length is what the API caps, so it can only be judged once both names exist.
+        if (Validators.isNonEmpty(firstNameValue) && Validators.isNonEmpty(lastNameValue)) {
+            val nameTooLong = fullNameValue.length > MAX_FULL_NAME_LENGTH
+            view?.showFieldError("fullName", if (nameTooLong) strings.get(R.string.register_full_name_too_long) else null)
+            if (nameTooLong) {
+                valid = false
+            }
         }
         if (!Validators.isValidEmail(emailValue)) {
             view?.showFieldError("email", strings.get(R.string.create_admin_account_enter_a_valid_email_address))
@@ -88,7 +103,6 @@ class RegistrationPresenter(
 
         view?.showLoading(true)
         registrationJob = scope.launch {
-            val fullNameValue = listOf(firstNameValue, lastNameValue).filter { it.isNotBlank() }.joinToString(" ").trim()
             when (val result = repository.createUser(fullNameValue, emailValue, phoneValue, passwordValue)) {
                 is NetworkResult.Success -> {
                     view?.showLoading(false)

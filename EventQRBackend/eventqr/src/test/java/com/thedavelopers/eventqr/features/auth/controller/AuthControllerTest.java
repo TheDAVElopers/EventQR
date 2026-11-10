@@ -34,6 +34,7 @@ import com.thedavelopers.eventqr.features.users.service.UserService;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.AccountStatus;
 import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
+import com.thedavelopers.eventqr.shared.exceptions.ConflictException;
 import com.thedavelopers.eventqr.shared.exceptions.GlobalExceptionHandler;
 import com.thedavelopers.eventqr.shared.exceptions.UnauthorizedException;
 import com.thedavelopers.eventqr.shared.security.ForgotPasswordRateLimiter;
@@ -135,6 +136,111 @@ class AuthControllerTest {
                 .andExpect(status().isBadRequest());
 
         verify(userService, never()).create(any());
+    }
+
+    private UserResponse activeAttendee() {
+        return new UserResponse(userId, "jane@example.com", "Jane Doe", null,
+                AccountRole.ATTENDEE, AccountStatus.ACTIVE);
+    }
+
+    @Test
+    void a256CharacterFullNameIsA400ThatNamesTheLimitAndNeverReachesTheService() throws Exception {
+        String tooLong = "N".repeat(256);
+
+        mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'email':'jane@example.com','fullName':'" + tooLong + "',"
+                                + "'password':'Passw0rd!!'}")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Full name must be at most 255 characters"))
+                .andExpect(jsonPath("$.fieldErrors.fullName").value("Full name must be at most 255 characters"));
+
+        // Bean validation rejects before the controller calls the service: no row can be inserted.
+        verify(userService, never()).register(any());
+    }
+
+    @Test
+    void a255CharacterFullNamePassesValidation() throws Exception {
+        when(userService.register(any())).thenReturn(activeAttendee());
+
+        mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'email':'jane@example.com','fullName':'" + "N".repeat(255) + "',"
+                                + "'password':'Passw0rd!!'}")))
+                .andExpect(status().isOk());
+
+        verify(userService).register(any());
+    }
+
+    @Test
+    void a255CharacterFullNameWithATrailingSpaceIsAcceptedAndStoredTrimmed() throws Exception {
+        when(userService.register(any())).thenReturn(activeAttendee());
+        String name = "N".repeat(255);
+
+        mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'email':'jane@example.com','fullName':'" + name + " ',"
+                                + "'password':'Passw0rd!!'}")))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<UserRequest> captured = ArgumentCaptor.forClass(UserRequest.class);
+        verify(userService).register(captured.capture());
+        org.assertj.core.api.Assertions.assertThat(captured.getValue().fullName()).isEqualTo(name);
+    }
+
+    @Test
+    void aNameThatIsStillTooLongAfterTrimIsA400ThatNamesTheLimit() throws Exception {
+        String tooLong = "N".repeat(256);
+
+        mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'email':'jane@example.com','fullName':'" + tooLong + "   ',"
+                                + "'password':'Passw0rd!!'}")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Full name must be at most 255 characters"))
+                .andExpect(jsonPath("$.fieldErrors.fullName").value("Full name must be at most 255 characters"));
+
+        verify(userService, never()).register(any());
+    }
+
+    @Test
+    void a256CharacterEmailIsA400ThatNamesTheEmailLimitNotTheGenericMessage() throws Exception {
+        // 256 characters that still satisfy @Email: 64-char local part, three 63-char domain labels.
+        String tooLong = "a".repeat(64) + "@" + "b".repeat(63) + "." + "b".repeat(63) + "." + "b".repeat(63);
+        org.assertj.core.api.Assertions.assertThat(tooLong).hasSize(256);
+
+        mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'email':'" + tooLong + "','fullName':'Jane Doe',"
+                                + "'password':'Passw0rd!!'}")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Email must be at most 255 characters"))
+                .andExpect(jsonPath("$.fieldErrors.email").value("Email must be at most 255 characters"));
+
+        verify(userService, never()).register(any());
+    }
+
+    @Test
+    void digitsInTheFullNameAreAccepted() throws Exception {
+        when(userService.register(any())).thenReturn(activeAttendee());
+
+        mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'email':'jane@example.com','fullName':'Test Attendee 1',"
+                                + "'password':'Passw0rd!!'}")))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<UserRequest> captured = ArgumentCaptor.forClass(UserRequest.class);
+        verify(userService).register(captured.capture());
+        org.assertj.core.api.Assertions.assertThat(captured.getValue().fullName()).isEqualTo("Test Attendee 1");
+    }
+
+    @Test
+    void aGenuineDuplicateEmailOnAValidRegistrationIsStillA409() throws Exception {
+        when(userService.register(any()))
+                .thenThrow(new ConflictException("User already exists for email jane@example.com"));
+
+        mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
+                        .content(json("{'email':'jane@example.com','fullName':'Jane Doe','password':'Passw0rd!!'}")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("User already exists for email jane@example.com"));
     }
 
     // ----- refresh -----

@@ -196,6 +196,7 @@
     <string name="create_admin_account_only_super_admin_can_create_admin_ac">Only Super Admin can create admin accounts.</string>
     <string name="create_admin_account_first_name_is_required">First name is required</string>
     <string name="create_admin_account_last_name_is_required">Last name is required</string>
+    <string name="register_full_name_too_long">First and last name together must be at most 255 characters.</string>
     <string name="create_admin_account_enter_a_valid_email_address">Enter a valid email address</string>
     <string name="attendee_edit_profile_profile_updated_successfully">Profile updated successfully.</string>
     <string name="attendee_profile_access_denied">Access Denied</string>

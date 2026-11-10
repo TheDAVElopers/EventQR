@@ -29,6 +29,7 @@ import com.thedavelopers.eventqr.features.users.repository.UserProfileRepository
 import com.thedavelopers.eventqr.features.users.repository.UserTokenRevocationRepository;
 import com.thedavelopers.eventqr.shared.constants.AccountRole;
 import com.thedavelopers.eventqr.shared.constants.AccountStatus;
+import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
 import com.thedavelopers.eventqr.shared.exceptions.ConflictException;
 
 /**
@@ -130,6 +131,45 @@ class UserServiceRegisterTest {
         assertThat(race.getClass()).isEqualTo(duplicate.getClass());
         assertThat(race.getMessage()).isEqualTo(duplicate.getMessage());
         verify(repository, never()).save(any());
+    }
+
+    @Test
+    void aTooLongValueAtFlushIsABadRequestNotADuplicateEmail() {
+        when(repository.findByEmailIgnoreCase("victim@example.com")).thenReturn(Optional.empty());
+        // Postgres 22001: a fullName (or phone) longer than its varchar(255) column.
+        java.sql.SQLException tooLong =
+                new java.sql.SQLException("value too long for type character varying(255)", "22001");
+        when(repository.saveAndFlush(any(UserProfile.class)))
+                .thenThrow(new DataIntegrityViolationException("could not execute statement", tooLong));
+
+        assertThatThrownBy(() -> service.register(signup("victim@example.com", AccountRole.ATTENDEE)))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("One or more fields are too long (maximum 255 characters)");
+    }
+
+    @Test
+    void aUniqueViolationWithSqlState23505IsStillTheStandard409() {
+        when(repository.findByEmailIgnoreCase("victim@example.com")).thenReturn(Optional.empty());
+        java.sql.SQLException duplicateKey = new java.sql.SQLException(
+                "duplicate key value violates unique constraint \"user_profiles_email_key\"", "23505");
+        when(repository.saveAndFlush(any(UserProfile.class)))
+                .thenThrow(new DataIntegrityViolationException("could not execute statement", duplicateKey));
+
+        assertThatThrownBy(() -> service.register(signup("victim@example.com", AccountRole.ATTENDEE)))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage("User already exists for email victim@example.com");
+    }
+
+    @Test
+    void aNotNullViolationWithSqlState23502IsRethrownInsteadOfBlamingTheEmail() {
+        when(repository.findByEmailIgnoreCase("victim@example.com")).thenReturn(Optional.empty());
+        // Postgres 23502: a NOT NULL constraint, not a duplicate email. It must reach GlobalExceptionHandler as-is.
+        DataIntegrityViolationException notNull = new DataIntegrityViolationException("could not execute statement",
+                new java.sql.SQLException("null value in column \"full_name\" violates not-null constraint", "23502"));
+        when(repository.saveAndFlush(any(UserProfile.class))).thenThrow(notNull);
+
+        assertThatThrownBy(() -> service.register(signup("victim@example.com", AccountRole.ATTENDEE)))
+                .isSameAs(notNull);
     }
 
     @Test

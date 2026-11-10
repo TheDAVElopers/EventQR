@@ -178,6 +178,62 @@ class RegistrationPresenterTest {
         assertTrue(view.loadingStates.isEmpty())
     }
 
+    // -- Combined full-name length (the API rejects fullName over 255 chars) ------
+
+    @Test
+    fun submitRegistration_combinedNameOver255_showsNameErrorAndSkipsNetwork() {
+        // 150 + 1 + 150 = 301: the value that used to reach the API and surface a bogus
+        // "user already exists" toast now fails validation before the request.
+        presenter.submitRegistration(
+            "a".repeat(150), "b".repeat(150), "user@example.com", "+639171234567", "Strong1!Pass", "Strong1!Pass",
+        )
+
+        assertEquals(
+            listOf("First and last name together must be at most 255 characters."),
+            view.fieldErrors["fullName"],
+        )
+        assertEquals(listOf(null), view.fieldErrors["firstName"])
+        assertEquals(listOf(null), view.fieldErrors["lastName"])
+        // No showLoading and no message: the create-account call never started.
+        assertTrue(view.loadingStates.isEmpty())
+        assertTrue(view.messages.isEmpty())
+    }
+
+    @Test
+    fun submitRegistration_combinedNameExactly255_isAllowed() {
+        // 127 + 1 + 127 = 255, the largest value the API accepts.
+        presenter.submitRegistration(
+            "a".repeat(127), "b".repeat(127), "user@example.com", "+639171234567", "Strong1!Pass", "Strong1!Pass",
+        )
+
+        assertEquals(listOf(null), view.fieldErrors["fullName"])
+        assertEquals(listOf(null), view.fieldErrors["firstName"])
+        assertEquals(listOf(null), view.fieldErrors["lastName"])
+    }
+
+    @Test
+    fun submitRegistration_trailingSpacesTrimBeforeLengthCheck() {
+        // Raw 100 + 1 + 155 = 256 would fail, but the trailing spaces are not part of
+        // the value sent, so the trimmed 251 is accepted.
+        presenter.submitRegistration(
+            "a".repeat(100), "b".repeat(150) + " ".repeat(5), "user@example.com", "+639171234567", "Strong1!Pass", "Strong1!Pass",
+        )
+
+        assertEquals(listOf(null), view.fieldErrors["fullName"])
+    }
+
+    @Test
+    fun submitRegistration_nameWithDigits_isAllowed() {
+        // Names keep digits; this is not a character-class rule.
+        presenter.submitRegistration(
+            "Test Attendee 1", "Smith", "user@example.com", "+639171234567", "Strong1!Pass", "Strong1!Pass",
+        )
+
+        assertEquals(listOf(null), view.fieldErrors["fullName"])
+        assertEquals(listOf(null), view.fieldErrors["firstName"])
+        assertEquals(listOf(null), view.fieldErrors["lastName"])
+    }
+
     private class RecordingRegistrationView : RegistrationContract.View {
         val loadingStates = mutableListOf<Boolean>()
         val fieldErrors = mutableMapOf<String, MutableList<String?>>()
