@@ -123,14 +123,10 @@
     <string name="ui_request_detail_submitted_on">Submitted %1$s</string>
     <string name="ui_request_detail_approve">Approve</string>
     <string name="ui_request_detail_reject">Reject</string>
-    <string name="ui_request_detail_upgrade">Upgrade to organizer</string>
-    <string name="ui_request_detail_upgraded">Upgraded to organizer</string>
     <string name="ui_request_detail_confirm_approve">Approve request?</string>
     <string name="ui_request_detail_confirm_reject">Reject request?</string>
-    <string name="ui_request_detail_confirm_upgrade">Upgrade to organizer?</string>
     <string name="ui_request_detail_confirm_approve_body">The requester is notified and the event becomes live.</string>
     <string name="ui_request_detail_confirm_reject_body">The requester is notified. This cannot be undone.</string>
-    <string name="ui_request_detail_confirm_upgrade_body">This upgrades the requester\'s account to the organizer role.</string>
     <string name="ui_request_detail_remarks">Remarks (optional)</string>
 
     <string name="auth_wordmark_description">EventQR</string>

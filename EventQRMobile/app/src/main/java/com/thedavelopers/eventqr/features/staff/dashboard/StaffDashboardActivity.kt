@@ -48,6 +48,10 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
     private var isSwipeRefreshing = false
     private var isFirstResume = true
 
+    // False until the role guard passed and the presenter exists. A denied session finishes in
+    // onCreate before anything is built, so the lifecycle callbacks must not touch them.
+    private var uiReady = false
+
     private var headBell: Int = 0
     private var headScans: Int? = null
     private var headCheckIns: Int? = null
@@ -90,11 +94,13 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
         }
 
         bindPassHead()
+        uiReady = true
         presenter.loadData()
     }
 
     override fun onResume() {
         super.onResume()
+        if (!uiReady) return
         if (isFirstResume) {
             isFirstResume = false
             return
@@ -103,7 +109,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
     }
 
     override fun onDestroy() {
-        presenter.detach()
+        if (uiReady) presenter.detach()
         super.onDestroy()
     }
 

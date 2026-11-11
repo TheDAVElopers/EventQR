@@ -1,52 +1,32 @@
 package com.thedavelopers.eventqr.features.registrations
 
-import android.content.Context
-import android.content.Intent
+import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.res.stringResource
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.EventCardPresenter
-import com.thedavelopers.eventqr.features.attendee.EXTRA_EVENT_ID
-import com.thedavelopers.eventqr.features.attendee.EXTRA_EVENT_TITLE
-import com.thedavelopers.eventqr.features.attendee.EXTRA_QR_CREDENTIAL_ID
-import com.thedavelopers.eventqr.features.attendee.EXTRA_REGISTRATION_ID
-import com.thedavelopers.eventqr.features.attendee.EventDetailActivity
-import com.thedavelopers.eventqr.features.attendee.QrDisplayActivity
+import com.thedavelopers.eventqr.features.attendee.AttendeeBadges
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
-import com.thedavelopers.eventqr.ui.components.EventCard
-import com.thedavelopers.eventqr.ui.components.UiButton
-import com.thedavelopers.eventqr.ui.components.parseBadgeStatus
-import com.thedavelopers.eventqr.ui.theme.EventQrRowTheme
-import com.thedavelopers.eventqr.ui.theme.LocalGrid
-import com.thedavelopers.eventqr.ui.theme.LocalSpacing
+import com.thedavelopers.eventqr.ui.components.ListRowBinder
 
-data class RegisteredEventCardState(
-    val title: String = "",
-    val badgeLabel: String = "",
-    val badgeStatusRaw: String = "",
-    val day: String = EventCardPresenter.UNKNOWN_DAY,
-    val month: String = EventCardPresenter.UNKNOWN_MONTH,
-    val time: String = EventCardPresenter.UNKNOWN_TIME,
-    val location: String = EventCardPresenter.UNKNOWN_LOCATION,
-    val eventId: String = "",
-    val registrationId: String = "",
-    val qrCredentialId: String = "",
-)
-
-class RegisteredEventAdapter : RecyclerView.Adapter<RegisteredEventAdapter.ViewHolder>() {
+/**
+ * My passes rows are `list_row_date` (§5.11) at the Discover density: a 44dp neutral date block,
+ * title + "time - venue" meta, one trailing badge derived from the event window, hairline
+ * divider. The row opens the event detail; the pass lives on the detail's primary action, so there
+ * is no per-row button and no card.
+ */
+class RegisteredEventAdapter(
+    private val onClick: (RegistrationResponse) -> Unit,
+) : RecyclerView.Adapter<RegisteredEventAdapter.ViewHolder>() {
 
     private val items = mutableListOf<RegistrationResponse>()
+
+    init {
+        setHasStableIds(true)
+    }
 
     fun submitItems(newItems: List<RegistrationResponse>) {
         items.clear()
@@ -54,14 +34,16 @@ class RegisteredEventAdapter : RecyclerView.Adapter<RegisteredEventAdapter.ViewH
         notifyDataSetChanged()
     }
 
+    override fun getItemId(position: Int): Long {
+        // Guarded for the pre-layout pass; the namespace keeps the id stable against other adapters.
+        if (position !in items.indices) return RecyclerView.NO_ID
+        return ("reg:${items[position].registrationId}").hashCode().toLong()
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val composeView = ComposeView(parent.context).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            )
-        }
-        return ViewHolder(composeView)
+        val row = LayoutInflater.from(parent.context)
+            .inflate(R.layout.list_row_date, parent, false)
+        return ViewHolder(row)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -70,86 +52,38 @@ class RegisteredEventAdapter : RecyclerView.Adapter<RegisteredEventAdapter.ViewH
 
     override fun getItemCount(): Int = items.size
 
-    inner class ViewHolder(private val composeView: ComposeView) :
-        RecyclerView.ViewHolder(composeView) {
+    inner class ViewHolder(private val row: View) : RecyclerView.ViewHolder(row) {
 
-        private val state = mutableStateOf(RegisteredEventCardState())
+        fun bind(item: RegistrationResponse) {
+            val date = EventCardPresenter.dateParts(item.eventStartAt)
+            row.findViewById<TextView>(R.id.listRowDay).text = date.day
+            row.findViewById<TextView>(R.id.listRowMonth).text = date.month
 
-        init {
-            composeView.setContent {
-                EventQrRowTheme {
-                    RegisteredEventCard(state.value, composeView.context)
-                }
+            ListRowBinder.bind(
+                row,
+                title = item.eventTitle?.takeIf { it.isNotBlank() }
+                    ?: row.context.getString(R.string.common_untitled_event),
+                meta = metaFor(item, date.time),
+                trailing = ListRowBinder.Trailing.BADGE,
+                onClick = { onClick(item) },
+            )
+            // Same three states as the filter chips: Upcoming / Active / Completed.
+            AttendeeBadges.bind(
+                row.findViewById(R.id.listRowBadge),
+                EventStatusBadgeStyler.resolve(null, item.eventStartAt, item.eventEndAt),
+            )
+        }
+
+        /** Time then venue, with the unknown sentinels dropped; both missing names the gap. */
+        private fun metaFor(item: RegistrationResponse, time: String): String {
+            val location = EventCardPresenter.location(item.eventLocation)
+            val parts = listOf(time, location)
+                .filter { it != EventCardPresenter.UNKNOWN_TIME && it != EventCardPresenter.UNKNOWN_LOCATION }
+            return if (parts.isEmpty()) {
+                row.context.getString(R.string.ui_attendee_date_tbd)
+            } else {
+                parts.joinToString(" - ")
             }
         }
-
-        fun bind(registration: RegistrationResponse) {
-            val status = EventStatusBadgeStyler.resolve(
-                null,
-                registration.eventStartAt,
-                registration.eventEndAt,
-            )
-            val date = EventCardPresenter.dateParts(registration.eventStartAt)
-
-            state.value = RegisteredEventCardState(
-                title = registration.eventTitle.orEmpty(),
-                badgeLabel = EventStatusBadgeStyler.displayLabel(status),
-                badgeStatusRaw = status.name,
-                day = date.day,
-                month = date.month,
-                time = date.time,
-                location = EventCardPresenter.location(registration.eventLocation),
-                eventId = registration.eventId.toString(),
-                registrationId = registration.registrationId.toString(),
-                qrCredentialId = registration.qrCredentialId?.toString().orEmpty(),
-            )
-        }
-    }
-}
-
-@Composable
-private fun RegisteredEventCard(state: RegisteredEventCardState, context: Context) {
-    val spacing = LocalSpacing.current
-    val grid = LocalGrid.current
-    val shape = RoundedCornerShape(grid.radiusButton)
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = spacing.mediumSmall),
-    ) {
-        EventCard(
-            title = state.title,
-            status = parseBadgeStatus(state.badgeStatusRaw),
-            statusLabel = state.badgeLabel,
-            day = state.day,
-            month = state.month,
-            time = state.time,
-            location = state.location,
-            onClick = {
-                context.startActivity(
-                    Intent(context, EventDetailActivity::class.java).apply {
-                        putExtra(EXTRA_EVENT_ID, state.eventId)
-                        putExtra(EXTRA_EVENT_TITLE, state.title)
-                    },
-                )
-            },
-            // Inside the card, not a separate row underneath it. 52dp, radius 4, no elevation and
-            // no leading icon: a button label is words (§5.1).
-            footer = {
-                UiButton(
-                    text = stringResource(R.string.ui_attendee_view_pass),
-                    onClick = {
-                        context.startActivity(
-                            Intent(context, QrDisplayActivity::class.java).apply {
-                                putExtra(EXTRA_REGISTRATION_ID, state.registrationId)
-                                putExtra(EXTRA_QR_CREDENTIAL_ID, state.qrCredentialId)
-                            },
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            },
-        )
     }
 }

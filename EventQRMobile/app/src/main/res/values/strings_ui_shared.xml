@@ -13,9 +13,15 @@
     <string name="ui_pass_head_bell">Notifications</string>
     <string name="ui_pass_head_stat_event">Event</string>
 
+    <!-- System notification channel (created on the first post) -->
+    <string name="notification_channel_decisions_name">Event decisions</string>
+    <string name="notification_channel_decisions_description">Sent when an admin approves or rejects an event request.</string>
+
     <!-- Credential (§5.14) -->
     <string name="ui_credential_brand" translatable="false">EVENTQR</string>
     <string name="ui_credential_valid">Valid</string>
+    <!-- A pass restored from disk is not confirmed live, so it never wears the lime Valid badge. -->
+    <string name="ui_credential_saved_copy">Saved copy</string>
     <string name="ui_credential_description">Pass for %1$s, registration %2$s. Double tap to enlarge.</string>
 
     <!-- Scanner (§5.13) -->

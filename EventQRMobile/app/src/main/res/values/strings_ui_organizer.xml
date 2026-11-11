@@ -25,11 +25,13 @@
     <string name="ui_organizer_metrics_upcoming">Upcoming</string>
     <string name="ui_organizer_metrics_ended">Ended</string>
     <string name="ui_organizer_see_all">See all</string>
+    <string name="ui_organizer_all_events">All events</string>
     <string name="ui_organizer_no_events">No events yet</string>
-    <string name="ui_organizer_no_events_body">Create an event to start taking registrations.</string>
+    <string name="ui_organizer_no_events_body">Request an event to start taking registrations.</string>
     <string name="ui_organizer_no_active_events">No active events</string>
     <string name="ui_organizer_no_active_events_body">Active events show up here once they start.</string>
-    <string name="ui_organizer_create_event">Create event</string>
+    <string name="ui_organizer_request_event">Request event</string>
+    <string name="ui_organizer_dashboard_error_title">Couldn\'t load your dashboard</string>
     <!-- Unit only: CountLabel.format() prefixes the compact number and uppercases the noun. -->
     <string name="ui_organizer_events_count">event</string>
     <string name="ui_organizer_none_scheduled">Nothing scheduled</string>

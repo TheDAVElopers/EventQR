@@ -108,6 +108,10 @@ class SessionManager(context: Context) : TokenStore {
             Thread({ runCatching { sharedPrefsFor(appContext) } }, "session-warmup").start()
         }
 
+        /** The same encrypted store the session uses, so `clearSession()` also drops every cached pass. */
+        internal fun encryptedPrefs(context: Context): SharedPreferences =
+            sharedPrefsFor(context.applicationContext ?: context)
+
         private fun create(context: Context): SharedPreferences {
             // Stable security-crypto 1.0.0 API. getOrCreate(AES256_GCM_SPEC) uses the same
             // Keystore alias as the alpha MasterKey.Builder default, so sessions saved by

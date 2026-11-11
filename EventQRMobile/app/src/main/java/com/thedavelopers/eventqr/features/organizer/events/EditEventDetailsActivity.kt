@@ -25,6 +25,7 @@ import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequest
@@ -244,12 +245,12 @@ class EditEventDetailsActivity : AppCompatActivity() {
 
     private fun populate(event: OrganizerEventDto) {
         loadedEvent = event
-        locked = isLocked(event)
         val status = EventStatusBadgeStyler.resolve(
             EventStatusBadgeStyler.fromLabel(event.status),
             event.eventStartAt,
             event.eventEndAt,
         )
+        locked = !status.isEventEditable()
         OrganizerEventHeadBinder.bind(
             root = head,
             title = event.title?.takeIf { it.isNotBlank() }
@@ -273,17 +274,13 @@ class EditEventDetailsActivity : AppCompatActivity() {
         bannerDirty = false
         selectedBannerFile = null
         loadBannerPreview(event)
-        if (locked) applyLock(event) else renderDirty()
+        if (locked) applyLock(status) else renderDirty()
     }
 
-    private fun isLocked(event: OrganizerEventDto): Boolean =
-        event.status.equals("Active", ignoreCase = true) ||
-            event.status.equals("Completed", ignoreCase = true)
-
     /** The one locked state that survives: no fields, no bar, one line that says why. */
-    private fun applyLock(event: OrganizerEventDto) {
+    private fun applyLock(status: EventStatus) {
         val reason = getString(
-            if (event.status.equals("Active", ignoreCase = true)) {
+            if (status == EventStatus.ACTIVE) {
                 R.string.edit_event_details_ongoing
             } else {
                 R.string.edit_event_details_completed
@@ -629,3 +626,13 @@ class EditEventDetailsActivity : AppCompatActivity() {
         private const val MAX_BANNER_BYTES = 5L * 1024L * 1024L
     }
 }
+
+/**
+ * The edit lock both organizer screens share, keyed on the date-derived status: editable while the
+ * event is still Upcoming (APPROVED), Draft or Pending review, locked once it is Ongoing or
+ * Completed. Never key this off the raw backend label: an upcoming event can already be ACTIVE
+ * (admin "activate" or an early status sweep), and locking on that label hid editing for a future
+ * event. Cancelled and Rejected never reach this screen - the hub routes them to read-only details.
+ */
+internal fun EventStatus.isEventEditable(): Boolean =
+    this == EventStatus.APPROVED || this == EventStatus.DRAFT || this == EventStatus.PENDING_REVIEW

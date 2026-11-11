@@ -191,7 +191,8 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
     override fun onDestroy() {
         retrySnackbar?.dismiss()
         permissionSnackbar?.dismiss()
-        presenter.detach()
+        // A denied session finishes in onCreate before the presenter exists.
+        if (::presenter.isInitialized) presenter.detach()
         super.onDestroy()
     }
 

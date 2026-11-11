@@ -66,6 +66,7 @@ fun NotificationsScreen(
     errorMessage: String?,
     onNotificationClick: (NotificationResponse) -> Unit,
     onRetryClick: () -> Unit,
+    navigatesOnTap: (NotificationResponse) -> Boolean,
     modifier: Modifier = Modifier,
 ) {
     val grid = LocalGrid.current
@@ -111,6 +112,7 @@ fun NotificationsScreen(
                     items(notifications, key = { it.notificationId }) { item ->
                         NotificationRow(
                             item = item,
+                            navigable = navigatesOnTap(item),
                             onClick = { onNotificationClick(item) },
                         )
                     }
@@ -123,6 +125,7 @@ fun NotificationsScreen(
 @Composable
 fun NotificationRow(
     item: NotificationResponse,
+    navigable: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -216,6 +219,16 @@ fun NotificationRow(
                     color = UiTextSecondary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
+                )
+            }
+
+            if (navigable) {
+                Spacer(modifier = Modifier.width(grid.s8))
+                Icon(
+                    painter = painterResource(AppIcons.Chevron),
+                    contentDescription = null,
+                    tint = UiTextSecondary,
+                    modifier = Modifier.size(dimensionResource(R.dimen.icon_sm)),
                 )
             }
         }

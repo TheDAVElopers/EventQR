@@ -36,6 +36,23 @@ internal fun attendeeNavDestination(id: String): Class<out AppCompatActivity>? =
 }
 
 /**
+ * Only the Home tab is a root: returning to it clears the tab history above it. Every other
+ * destination is reordered to the front when it is already on the stack - pushing it again would
+ * leave duplicate instances behind, so Back would need one press per visit - and pushed when it is
+ * not, so Back still walks the tabs and exits from Home.
+ */
+internal fun attendeeTabFlags(destination: Class<out AppCompatActivity>): Int =
+    if (destination == DashboardActivity::class.java) {
+        Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+    } else {
+        Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+    }
+
+internal fun AppCompatActivity.openAttendeeDestination(destination: Class<out AppCompatActivity>) {
+    startActivity(Intent(this, destination).addFlags(attendeeTabFlags(destination)))
+}
+
+/**
  * Binds the shared Compose bottom navbar into the screen's [R.id.composeBottomNav] host.
  * Item set and destinations mirror the legacy XML nav: Home, Events, Registered, Rewards, Profile.
  */
@@ -45,10 +62,6 @@ fun AppCompatActivity.configureAttendeeBottomNav(selectedItem: AttendeeBottomNav
     bindComposeBottomNav(view, AttendeeNavItems, selectedId) { id ->
         if (id == selectedId) return@bindComposeBottomNav
         val destination = attendeeNavDestination(id) ?: return@bindComposeBottomNav
-        startActivity(
-            Intent(this, destination)
-                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP),
-        )
-        finish()
+        openAttendeeDestination(destination)
     }
 }

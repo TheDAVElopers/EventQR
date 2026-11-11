@@ -144,6 +144,7 @@
     <!-- Torch lives in the guidance row: a 44dp control inside the panel corner overlapped the
          24dp bottom-right bracket by 20dp, so it moved out of the bracket's zone. -->
     <LinearLayout
+        android:id="@+id/scanGuidanceRow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/space_8"

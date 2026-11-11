@@ -85,6 +85,13 @@ class NotificationsScreenComposeTest {
     }
 
     @Test
+    fun rejectionWithoutAnEventId_stillComposesARow() {
+        setCard(item = notification(eventId = null, type = NotificationType.EVENT_REJECTED))
+
+        composeTestRule.onNode(hasClickAction()).assertHasClickAction()
+    }
+
+    @Test
     fun approvedNotifications_useTheCheckMarkIcon() {
         var eventApprovedIcon = 0
         var scanApprovedIcon = 0
@@ -102,22 +109,24 @@ class NotificationsScreenComposeTest {
     private fun notification(
         status: NotificationStatus = NotificationStatus.PENDING,
         readAt: Instant? = null,
+        eventId: UUID? = UUID.randomUUID(),
+        type: NotificationType = NotificationType.REGISTRATION_NEW,
     ) = NotificationResponse(
         notificationId = UUID.randomUUID(),
-        eventId = UUID.randomUUID(),
+        eventId = eventId,
         recipientUserId = UUID.randomUUID(),
         title = "Registration confirmed",
         message = "Your QR code is ready.",
         status = status,
         readAt = readAt,
         createdAt = Instant.now(),
-        notificationType = NotificationType.REGISTRATION_NEW,
+        notificationType = type,
     )
 
     private fun setCard(item: NotificationResponse, onClick: () -> Unit = {}) {
         composeTestRule.setContent {
             EventQrTheme {
-                NotificationRow(item = item, onClick = onClick)
+                NotificationRow(item = item, navigable = true, onClick = onClick)
             }
         }
     }

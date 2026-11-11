@@ -38,7 +38,8 @@ class NotificationControllerTest {
         mockMvc = MockMvcBuilders.standaloneSetup(new NotificationController(notificationService, jwtService)).build();
         when(jwtService.extractUserIdFromBearer(org.mockito.ArgumentMatchers.any())).thenReturn(UUID.randomUUID());
         when(notificationService.findByRecipientFiltered(org.mockito.ArgumentMatchers.any(),
-                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.anyBoolean()))
                 .thenReturn(List.of());
         when(notificationService.findByRecipient(org.mockito.ArgumentMatchers.any())).thenReturn(List.of());
     }
@@ -65,6 +66,17 @@ class NotificationControllerTest {
                 .param("notificationType", "REGISTRATION_NEW")
                 .header("Authorization", "Bearer token"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void mine_withUnreadOnly_passesUnreadFilterToService() throws Exception {
+        UUID userId = UUID.randomUUID();
+        when(jwtService.extractUserIdFromBearer(org.mockito.ArgumentMatchers.any())).thenReturn(userId);
+        mockMvc.perform(get("/api/v1/notifications")
+                .param("unreadOnly", "true")
+                .header("Authorization", "Bearer token"))
+                .andExpect(status().isOk());
+        org.mockito.Mockito.verify(notificationService).findByRecipientFiltered(userId, null, null, null, true);
     }
 
     @Test

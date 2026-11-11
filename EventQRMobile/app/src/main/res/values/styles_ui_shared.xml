@@ -530,6 +530,13 @@
         <item name="android:ellipsize">end</item>
     </style>
 
+    <style name="Widget.EventQR.Ui.Credential.Name" parent="">
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.Title</item>
+        <item name="android:textColor">@color/ui_text_on_dark</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
     <style name="Widget.EventQR.Ui.Credential.Meta" parent="">
         <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.BodySmall</item>
         <item name="android:textColor">@color/ui_text_on_dark_muted</item>

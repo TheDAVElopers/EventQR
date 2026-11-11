@@ -68,7 +68,8 @@ class RegistrationPresenter(
                     val qrCredentialId = submission.qrCredential.qrCredentialId.toString()
 
                     view?.showLoading(false)
-                    view?.showMessage(strings.get(R.string.attendee_registration_registration_successful))
+                    // No success copy: this screen navigates straight to the pass, and the only
+                    // message slot it owns is the inline error line.
                     view?.openQr(registrationId, qrCredentialId)
                 }
                 is NetworkResult.Error -> {

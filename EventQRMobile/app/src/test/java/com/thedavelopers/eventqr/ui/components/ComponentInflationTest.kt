@@ -169,6 +169,41 @@ class ComponentInflationTest {
         }
     }
 
+    /**
+     * Item 2: the create/request entry point belongs to the screen, not to the empty state. Both
+     * organizer screens carry the same chip outside `EventQrEmptyState`, so it survives a
+     * populated, empty and failed list.
+     */
+    @Test
+    fun organizerScreens_carryTheRequestActionOutsideTheEmptyState() {
+        val context = themedContext()
+        val layouts = intArrayOf(
+            R.layout.activity_organizer_dashboard,
+            R.layout.activity_organizer_events,
+        )
+        for (layoutRes in layouts) {
+            val host = context.resources.getResourceEntryName(layoutRes)
+            val root = LayoutInflater.from(context).inflate(layoutRes, null, false)
+            val action = root.findViewById<android.widget.TextView>(R.id.btnRequestEvent)
+            assertNotNull("$host has no request action", action)
+            assertEquals(
+                "$host must use the one Request event label",
+                context.getString(R.string.ui_organizer_request_event),
+                action.text.toString(),
+            )
+            assertEquals("$host starts with the action visible", View.VISIBLE, action.visibility)
+
+            var node: View? = action
+            while (node != null) {
+                assertFalse(
+                    "$host nests the request action inside the empty state",
+                    node is EventQrEmptyState,
+                )
+                node = node.parent as? View
+            }
+        }
+    }
+
     private fun boundsIn(root: ViewGroup, view: View): Rect =
         Rect(0, 0, view.width, view.height)
             .also { root.offsetDescendantRectToMyCoords(view, it) }
@@ -542,8 +577,53 @@ class ComponentInflationTest {
     fun qrCredential_inflates() {
         val root = inflate(R.layout.include_qr_credential, FrameLayout(themedContext()))
         assertNotNull(root.findViewById<View>(R.id.qrCredentialRoot))
+        assertNotNull(root.findViewById<View>(R.id.qrAttendeeName))
         assertNotNull(root.findViewById<View>(R.id.qrPlate))
         assertNotNull(root.findViewById<View>(R.id.qrSerial))
+    }
+
+    /**
+     * §5.14 one object, one anatomy: the QR display is the shared pass plus the save/brightness
+     * controls. The duplicate details card and the never-visible registration-id load plumbing are
+     * deleted, not hidden.
+     */
+    @Test
+    fun qrDisplay_inflatesTheSharedPassWithoutTheDuplicateCardOrPlumbing() {
+        val context = themedContext()
+        val root = inflate(R.layout.activity_qr_display, LinearLayout(context))
+
+        assertNotNull(root.findViewById<View>(R.id.qrCredential))
+        assertNotNull(root.findViewById<View>(R.id.btnMarkQrDownloaded))
+        assertNotNull(root.findViewById<View>(R.id.switchKeepBright))
+        listOf(
+            "txtQrAttendeeName",
+            "txtQrAttendeeEmail",
+            "txtQrCredentialValue",
+        ).forEach { gone ->
+            assertEquals(
+                "$gone must be deleted from the QR display",
+                0,
+                context.resources.getIdentifier(gone, "id", context.packageName),
+            )
+        }
+        // The hidden registration-id load plumbing is deleted with the views it served: neither the
+        // QR display nor the post-registration screen carries it any more.
+        listOf("edtQrRegistrationId", "btnLoadQr", "txtQrValue").forEach { gone ->
+            assertEquals(
+                "$gone must be deleted from the layout and from R",
+                0,
+                context.resources.getIdentifier(gone, "id", context.packageName),
+            )
+        }
+    }
+
+    /** The off-scale 10dp step is retired; the closed 4dp scale covers every former use. */
+    @Test
+    fun theOffScaleTenDpTokenIsGone() {
+        val context = themedContext()
+
+        assertEquals(0, context.resources.getIdentifier("space_10", "dimen", context.packageName))
+        assertTrue(context.resources.getIdentifier("space_md", "dimen", context.packageName) != 0)
     }
     /** Phase 6 screens: every layout the cleanup touched must still inflate under the app theme. */
     @Test

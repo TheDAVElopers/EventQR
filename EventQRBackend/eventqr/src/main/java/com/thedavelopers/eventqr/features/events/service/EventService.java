@@ -39,6 +39,9 @@ public class EventService implements EventLookupPort {
     private static final List<EventStatus> RESTRICTED_EVENT_STATUSES = List.of(EventStatus.DRAFT, EventStatus.PENDING_REVIEW,
             EventStatus.REJECTED, EventStatus.CANCELLED);
 
+    /** Client-facing contract: the admin events screen shows this text verbatim on the 409. */
+    public static final String ACTIVATE_BEFORE_START_MESSAGE = "This event cannot be activated until its start date.";
+
     private final EventRepository eventRepository;
     private final EventStaffAssignmentRepository eventStaffAssignmentRepository;
     private final EventRegistrationRepository eventRegistrationRepository;
@@ -89,8 +92,22 @@ public class EventService implements EventLookupPort {
         if (event.getStatus() != EventStatus.APPROVED) {
             throw new ConflictException("Only approved events can be activated");
         }
+        requireStartReached(event);
         event.setStatus(EventStatus.ACTIVE);
         return toResponse(eventRepository.save(event));
+    }
+
+    /**
+     * An event may only go ACTIVE once its start time has been reached. Without this gate admin
+     * activation stamps a future event ACTIVE and the lifecycle stops matching the wall clock.
+     * A missing start can never be "reached", so a startless event is rejected too: the nullable
+     * column would otherwise let an undated event go ACTIVE and silently bypass the gate.
+     */
+    public static void requireStartReached(Event event) {
+        Instant eventStartAt = event.getEventStartAt();
+        if (eventStartAt == null || eventStartAt.isAfter(Instant.now())) {
+            throw new ConflictException(ACTIVATE_BEFORE_START_MESSAGE);
+        }
     }
 
     public List<EventResponse> findAllEvents() {
@@ -187,6 +204,9 @@ public class EventService implements EventLookupPort {
     public EventResponse updateStatus(UUID eventId, EventStatus status) {
         Event event = eventRepository.findById(eventId)
             .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
+        if (status == EventStatus.ACTIVE) {
+            requireStartReached(event);
+        }
         event.setStatus(status);
         return toResponse(eventRepository.save(event));
     }

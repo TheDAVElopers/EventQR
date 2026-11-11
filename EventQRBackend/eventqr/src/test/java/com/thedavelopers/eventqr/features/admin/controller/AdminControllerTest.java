@@ -292,4 +292,12 @@ class AdminControllerTest {
 
         verify(eventCreationRequestService).reject(eq(requestId), eq(adminId), anyString(), eq(null));
     }
+
+    @Test
+    void theSeparateUpgradeToOrganizerEndpointNoLongerExists() throws Exception {
+        UUID requestId = UUID.randomUUID();
+
+        mvc.perform(patch("/api/v1/admin/event-requests/{id}/upgrade-organizer", requestId).header("Authorization", ADMIN))
+                .andExpect(status().isNotFound());
+    }
 }

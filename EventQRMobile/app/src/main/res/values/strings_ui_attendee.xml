@@ -34,6 +34,7 @@
     <string name="ui_attendee_dashboard_empty_next_body">Events you register for appear here.</string>
     <string name="ui_attendee_dashboard_empty_activity">No activity yet</string>
     <string name="ui_attendee_dashboard_empty_activity_body">Check-ins and points show up here.</string>
+    <string name="ui_attendee_dashboard_error_title">Couldn\'t load your dashboard</string>
 
     <!-- ═════════ Discover (§6.2) ═════════ -->
     <!-- Unit only: CountLabel.format() prefixes the compact number and uppercases the noun. -->
@@ -85,6 +86,11 @@
     <string name="ui_attendee_saving_pass">Saving pass to gallery</string>
     <string name="ui_attendee_pass">Pass</string>
     <string name="ui_attendee_keep_screen_bright">Keep screen bright</string>
+    <string name="ui_attendee_pass_error_title">Couldn\'t load your pass</string>
+    <string name="ui_attendee_pass_unreadable_body">This pass can\'t be shown right now.</string>
+    <string name="ui_attendee_pass_last_updated">Last updated %1$s</string>
+    <string name="ui_attendee_pass_revoked_title">This pass is no longer valid</string>
+    <string name="ui_attendee_pass_revoked_body">Ask the organizer if you think this is a mistake.</string>
 
     <!-- ═════════ Rewards (§6.2) ═════════ -->
     <string name="ui_attendee_available">Available</string>
@@ -140,7 +146,8 @@
     <string name="ui_attendee_save_changes">Save changes</string>
     <string name="ui_attendee_saving">Saving…</string>
     <string name="ui_attendee_full_name">Full name</string>
-    <string name="ui_attendee_registration_details_from_profile">These details come from your profile. Edit them in Profile.</string>
+    <string name="ui_attendee_edit_in_profile">Edit in profile</string>
+    <string name="ui_attendee_not_set">Not set</string>
     <string name="ui_attendee_email_locked">Email is set at registration and cannot be changed.</string>
     <string name="ui_attendee_phone_hint">10 digits, without the +63 prefix</string>
     <string name="ui_attendee_phone_required">Enter your mobile number.</string>
@@ -164,6 +171,14 @@
     <string name="ui_attendee_new">New</string>
     <string name="ui_attendee_select">Select</string>
 
+    <!-- Event decision notifications (POST_NOTIFICATIONS rationale, shown after a request is submitted) -->
+    <string name="ui_attendee_decisions_permission_title">Turn on event decisions</string>
+    <string name="ui_attendee_decisions_permission_body">EventQR sends one notification when an admin approves or rejects an event request. Your notifications list works without it.</string>
+    <string name="ui_attendee_decisions_permission_allow">Allow</string>
+    <string name="ui_attendee_decisions_permission_not_now">Not now</string>
+    <string name="ui_attendee_decisions_permission_off_body">System notifications are off. Enable them in App settings to be told when a decision is made, or check this list.</string>
+    <string name="ui_attendee_decisions_permission_open_settings">Open settings</string>
+
     <!-- ═════════ Status vocabulary (§5.4 mapping, sentence case per §7.2) ═════════ -->
     <string name="ui_attendee_upcoming">Upcoming</string>
     <string name="ui_attendee_active">Active</string>
@@ -183,6 +198,11 @@
 
     <!-- ═════════ Shared ═════════ -->
     <string name="ui_attendee_retry">Retry</string>
+    <string name="ui_attendee_required">Required</string>
+    <string name="ui_attendee_add_name_to_continue">Add your name to continue.</string>
+    <string name="ui_attendee_add_email_to_continue">Add an email address to continue.</string>
+    <string name="ui_attendee_add_phone_to_continue">Add a phone number in your profile to continue.</string>
+    <string name="ui_attendee_agree_terms_to_continue">Agree to the terms to continue.</string>
     <string name="ui_attendee_pass_description">Pass for %1$s, registration %2$s.</string>
 
 </resources>

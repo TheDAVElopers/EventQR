@@ -6,5 +6,8 @@ import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationRe
 interface QrCredentialContract {
     interface View : AttendeeView {
         fun renderQr(snapshot: QrCredentialSnapshot, registration: RegistrationResponse?, eventTitle: String?)
+
+        /** Load failed: show the cached pass when there is one, otherwise an inline error with Retry. */
+        fun showLoadError(message: String)
     }
 }

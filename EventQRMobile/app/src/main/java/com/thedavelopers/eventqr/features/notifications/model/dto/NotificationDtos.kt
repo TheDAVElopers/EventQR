@@ -7,7 +7,8 @@ import java.util.UUID
 
 data class NotificationResponse(
     val notificationId: UUID,
-    val eventId: UUID,
+    /** Null for a decision that has no event row yet, e.g. a pending request rejected by an admin. */
+    val eventId: UUID? = null,
     val recipientUserId: UUID,
     val title: String,
     val message: String,

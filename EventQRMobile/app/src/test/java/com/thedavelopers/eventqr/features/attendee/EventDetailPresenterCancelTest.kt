@@ -250,6 +250,36 @@ class EventDetailPresenterCancelTest {
         assertEquals(registered.registrationId.toString(), allowed.cancellable.last())
     }
 
+    @Test
+    fun passIdIsIndependentOfCancelEligibility() {
+        // ENTERED and EXITED rows are still live registrations: the pass must stay reachable even
+        // though the backend refuses to cancel them (§6.2).
+        for (status in listOf(RegistrationStatus.ENTERED, RegistrationStatus.EXITED)) {
+            val reg = registration(status)
+            RegistrationsCache.set(listOf(reg))
+            val view = RecordingView(userId = "u1")
+            presenter(view, FakeRepo()).refreshRegistrationStatus(eventId.toString())
+            shadowOf(Looper.getMainLooper()).idle()
+            assertEquals("status $status", reg.registrationId.toString(), view.registeredIds.last())
+            assertNull("status $status", view.cancellable.last())
+        }
+    }
+
+    @Test
+    fun pointsBlockingCancelKeepThePassId() {
+        val registered = registration(RegistrationStatus.REGISTERED)
+        RegistrationsCache.set(listOf(registered))
+        val repo = FakeRepo().apply { pointTransactions = NetworkResult.Success(listOf(pointTransaction())) }
+        val view = RecordingView(userId = "u1")
+
+        presenter(view, repo).refreshRegistrationStatus(eventId.toString())
+        shadowOf(Looper.getMainLooper()).idle()
+
+        // The activity check hides the cancel action, never the pass.
+        assertEquals(registered.registrationId.toString(), view.registeredIds.last())
+        assertNull(view.cancellable.last())
+    }
+
     private fun pointTransaction() = PointTransactionResponse(
         eventId = eventId,
         attendeeUserId = UUID.randomUUID(),
@@ -297,12 +327,14 @@ class EventDetailPresenterCancelTest {
         val messages = mutableListOf<String>()
         val cancellingStates = mutableListOf<Boolean>()
         val cancellable = mutableListOf<String?>()
+        val registeredIds = mutableListOf<String?>()
         val registered = mutableListOf<Boolean>()
         val cancelledMessages = mutableListOf<String>()
         val failures = mutableListOf<String>()
         override fun renderEvent(event: AttendeeEventResponse) = Unit
         override fun updateRegistrationStatus(isRegistered: Boolean) { registered += isRegistered }
         override fun onRegistrationStatusCheckFailed() = Unit
+        override fun setRegisteredId(registrationId: String?) { registeredIds += registrationId }
         override fun setCancellableRegistration(registrationId: String?) { cancellable += registrationId }
         override fun showCancelling(isCancelling: Boolean) { cancellingStates += isCancelling }
         override fun onRegistrationCancelled(message: String) { cancelledMessages += message }

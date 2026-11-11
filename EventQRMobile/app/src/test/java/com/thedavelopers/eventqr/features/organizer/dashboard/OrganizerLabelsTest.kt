@@ -50,6 +50,8 @@ class OrganizerLabelsTest {
         assertTrue(all, all.contains("Live now"))
         assertTrue(all, all.contains("--"))
         assertTrue(all, all.contains("No events yet"))
+        assertTrue(all, all.contains("All events"))
+        assertTrue(all, all.contains("Request event"))
         assertFalse(all, all.contains("Approved"))
         assertFalse(all, all.contains("Total Attendees"))
         assertFalse(all, all.contains("Rewards Given"))

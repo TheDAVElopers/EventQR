@@ -73,13 +73,13 @@ open class StaffRepository internal constructor(
 
     suspend fun getEventById(eventId: String) = safeApiCall { apiService.getStaffEventById(eventId) }
 
-    suspend fun getScanPurposesByEvent(eventId: String) = safeApiCall { apiService.getStaffScanPurposes(eventId) }
+    open suspend fun getScanPurposesByEvent(eventId: String) = safeApiCall { apiService.getStaffScanPurposes(eventId) }
 
-    suspend fun verifyScan(request: TransactionRequest): NetworkResult<ScanVerificationResponse> = safeApiCall {
+    open suspend fun verifyScan(request: TransactionRequest): NetworkResult<ScanVerificationResponse> = safeApiCall {
         apiService.verifyScan(request.eventId.toString(), request)
     }
 
-    suspend fun createTransaction(request: TransactionRequest, purposeCode: ScanPurposeCode) = safeApiCall {
+    open suspend fun createTransaction(request: TransactionRequest, purposeCode: ScanPurposeCode) = safeApiCall {
         when (purposeCode) {
             ScanPurposeCode.ENTRY -> apiService.logEntry(request.eventId.toString(), request)
             ScanPurposeCode.ATTENDANCE -> apiService.logAttendance(request.eventId.toString(), request)
@@ -134,7 +134,7 @@ open class StaffRepository internal constructor(
         apiService.getRewardsByEvent(eventId)
     }
 
-    suspend fun rewardRedemptionScan(request: RewardRedemptionScanRequest) = safeApiCall {
+    open suspend fun rewardRedemptionScan(request: RewardRedemptionScanRequest) = safeApiCall {
         apiService.rewardRedemptionScan(request)
     }
 

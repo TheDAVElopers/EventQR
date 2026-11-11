@@ -1,13 +1,17 @@
 package com.thedavelopers.eventqr.features.attendee
 
+import android.Manifest
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Rect
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -25,6 +29,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.ui.theme.color
@@ -38,6 +43,7 @@ import com.thedavelopers.eventqr.core.util.PhoneInput
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.events.model.dto.EventCreationRequestDto
+import com.thedavelopers.eventqr.features.notifications.EventDecisionNotifier
 import com.thedavelopers.eventqr.ui.theme.applyEventQrBottomInsetPadding
 import com.yalantis.ucrop.UCrop
 import kotlinx.coroutines.launch
@@ -86,11 +92,16 @@ class RequestEventActivity : AppCompatActivity() {
     private lateinit var formScrollView: ScrollView
     private var successDialog: AlertDialog? = null
     private var isSubmitting = false
+    // Once the request is stored a recreation must not offer the form again; a second tap would
+    // post the same request twice.
+    private var submitted = false
     private var selectedPosterFile: File? = null
 
     private companion object {
         val ALLOWED_POSTER_MIME_TYPES = setOf("image/jpeg", "image/jpg", "image/png")
         val MAX_POSTER_BYTES = 5L * 1024L * 1024L
+        const val STATE_SUBMITTED = "request_event_submitted"
+        const val STATE_IN_FLIGHT = "request_event_in_flight"
     }
 
     private val displayDateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a")
@@ -105,6 +116,20 @@ class RequestEventActivity : AppCompatActivity() {
     private val posterPicker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let { launchPosterCrop(it) }
     }
+
+    // The rationale's Allow is the only path to the system prompt. The exit runs on the prompt's
+    // result, so no navigation or finish happens while the prompt is visible.
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+            val next = afterNotificationFlow
+            afterNotificationFlow = null
+            // A recreation during the prompt loses the continuation; the request is already
+            // submitted, so close rather than leave a stale filled form.
+            if (next != null) next.invoke() else finish()
+        }
+
+    // Set while the system prompt is up, so the rationale's dismissal does not fire the exit first.
+    private var afterNotificationFlow: (() -> Unit)? = null
 
     // SCOPE ADDITION (beyond SRS/SDD Module 3 - event management): FB-style crop-before-upload
     // flow for the event poster. The picked image is opened in uCrop with a locked 16:9 frame so
@@ -195,6 +220,31 @@ class RequestEventActivity : AppCompatActivity() {
                 registrationEndDateTimeInput.error = getString(R.string.request_event_registration_end_must_be_before_even)
             }
         }
+
+        submitted = savedInstanceState?.getBoolean(STATE_SUBMITTED) == true
+        if (submitted) {
+            restoreSubmittedState()
+        } else if (savedInstanceState?.getBoolean(STATE_IN_FLIGHT) == true) {
+            // The upload coroutine does not survive recreation, so the request may or may not have
+            // landed: keep the form non-submittable instead of risking a duplicate POST.
+            setLoading(true)
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(STATE_SUBMITTED, submitted)
+        outState.putBoolean(STATE_IN_FLIGHT, isSubmitting)
+    }
+
+    /**
+     * A rotation after a successful submit re-renders the submitted state, never a filled editable
+     * form: the request is already stored and a second tap on Submit would create it again.
+     */
+    private fun restoreSubmittedState() {
+        setLoading(false)
+        submitButton.isEnabled = false
+        showSuccessDialog()
     }
 
     private fun bindViews() {
@@ -304,7 +354,7 @@ class RequestEventActivity : AppCompatActivity() {
     }
 
     private fun submitRequest() {
-        if (isSubmitting) return
+        if (isSubmitting || submitted) return
         hideMessage()
         buildValidatedRequest(eventPosterFileId = null) ?: return
         setLoading(true)
@@ -329,6 +379,7 @@ class RequestEventActivity : AppCompatActivity() {
 
             when (val result = repository.createEventRequest(request)) {
                 is NetworkResult.Success -> {
+                    submitted = true
                     setLoading(false)
                     showSuccessDialog()
                 }
@@ -506,7 +557,8 @@ class RequestEventActivity : AppCompatActivity() {
         submitButton.text = getString(if (loading) R.string.ui_attendee_submitting else R.string.ui_attendee_submit_request)
     }
 
-    private fun showSuccessDialog() {
+    @VisibleForTesting
+    internal fun showSuccessDialog() {
         if (isFinishing || isDestroyed) return
         successDialog?.dismiss()
 
@@ -519,21 +571,88 @@ class RequestEventActivity : AppCompatActivity() {
         dialog.setCanceledOnTouchOutside(false)
         dialog.window?.setBackgroundDrawable(ColorDrawable(color(R.color.transparent)))
 
+        // Each action dismisses this dialog first, then runs the permission flow, then leaves. The
+        // success dialog is never on screen beside the rationale, and nothing navigates under one.
         dialogView.findViewById<Button>(R.id.successViewRequestsButton).setOnClickListener {
             dialog.dismiss()
-            startActivity(Intent(this, MyEventRequestsActivity::class.java))
-            finish()
+            askForDecisionNotifications {
+                startActivity(Intent(this, MyEventRequestsActivity::class.java))
+                finish()
+            }
         }
         dialogView.findViewById<Button>(R.id.successDashboardButton).setOnClickListener {
             dialog.dismiss()
-            startActivity(
-                Intent(this, com.thedavelopers.eventqr.features.dashboard.DashboardActivity::class.java)
-                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP),
-            )
-            finish()
+            askForDecisionNotifications {
+                startActivity(
+                    Intent(this, com.thedavelopers.eventqr.features.dashboard.DashboardActivity::class.java)
+                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                )
+                finish()
+            }
         }
 
         successDialog = dialog
+        dialog.show()
+    }
+
+    /**
+     * Runs the decision-permission flow and then [onResolved], which performs the screen's exit.
+     * A dialog that is already showing is finished before this is called, and the exit waits for
+     * every dialog in the flow to be dismissed.
+     */
+    private fun askForDecisionNotifications(onResolved: () -> Unit) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        ) {
+            onResolved()
+            return
+        }
+        val canAskAgain = !EventDecisionNotifier.hasAskedForPermission(this) ||
+            shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)
+        if (canAskAgain) showDecisionRationaleDialog(onResolved) else showDecisionSettingsDialog(onResolved)
+    }
+
+    private fun showDecisionRationaleDialog(onResolved: () -> Unit) {
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(R.string.ui_attendee_decisions_permission_title)
+            .setMessage(R.string.ui_attendee_decisions_permission_body)
+            .setPositiveButton(R.string.ui_attendee_decisions_permission_allow) { _, _ ->
+                EventDecisionNotifier.markAskedForPermission(this)
+                afterNotificationFlow = onResolved
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+            .setNegativeButton(R.string.ui_attendee_decisions_permission_not_now, null)
+            .create()
+        // Allow hands the exit to the system prompt's result; every other dismissal resumes it here.
+        // A destroyed activity never resumes it, so an exit can never run from a dead window.
+        dialog.setOnDismissListener {
+            if (afterNotificationFlow == null && !isFinishing && !isDestroyed) onResolved()
+        }
+        dialog.show()
+    }
+
+    private fun showDecisionSettingsDialog(onResolved: () -> Unit) {
+        var openSettings = false
+        val dialog = AlertDialog.Builder(this)
+            .setMessage(R.string.ui_attendee_decisions_permission_off_body)
+            .setPositiveButton(R.string.ui_attendee_decisions_permission_open_settings) { _, _ ->
+                openSettings = true
+            }
+            .setNegativeButton(R.string.ui_attendee_decisions_permission_not_now, null)
+            .create()
+        // Settings opens and the screen closes only after this dialog is gone; the list destination
+        // is skipped because the user chose settings instead.
+        dialog.setOnDismissListener {
+            if (isFinishing || isDestroyed) return@setOnDismissListener
+            if (openSettings) {
+                startActivity(
+                    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null)),
+                )
+                finish()
+            } else {
+                onResolved()
+            }
+        }
         dialog.show()
     }
 

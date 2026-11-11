@@ -8,7 +8,17 @@
 -->
 <resources>
 
-    <!-- ═════════ Shared staff vocabulary (§7.7: pass, event, check in) ═════════ -->
+    <!-- ═════════ Shared staff vocabulary (§7.7) ═════════
+         One table, every staff surface (scan, my scans, transactions, organizer views):
+
+             pass          the attendee's QR credential - never "QR code", never "ticket"
+             check in      accepting a pass at the door; "checked in" is the accepted state
+             not valid     a pass that cannot be used for this scan - never "rejected by backend"
+             scan          one pass presented at the door - the unit a report counts
+             event         the organizer's event - never "session"
+             points        the reward currency - never "credits"
+
+         A server reason is shown verbatim as a detail line; it is never pattern-matched. -->
     <string name="ui_staff_role">Staff</string>
     <string name="ui_staff_today">Today</string>
     <string name="ui_staff_scans">Scans</string>
@@ -27,9 +37,13 @@
     <!-- ═════════ Scanner (§5.13) ═════════ -->
     <string name="ui_staff_scan_label">Attendee ID</string>
     <string name="ui_staff_scan_hint">e.g. 001</string>
-    <string name="ui_staff_verify">Verify</string>
+    <string name="ui_staff_scan_no_matching_pass">No pass matches that ID.</string>
+    <string name="ui_staff_scan_lookup_unavailable">Couldn\'t check that pass. Try again.</string>
+    <string name="ui_staff_verify">Check pass</string>
     <string name="ui_staff_no_events">No assigned events</string>
     <string name="ui_staff_no_events_body">Ask your organizer to assign you to an event.</string>
+    <!-- §5.10 error variant: same slot, same left edge, one inline Retry, the server reason as body. -->
+    <string name="ui_staff_events_error_title">Couldn\'t load your events</string>
     <string name="staff_torch_on">Torch on</string>
     <string name="staff_torch_off">Torch off</string>
     <string name="staff_torch_unavailable">This camera has no torch.</string>
@@ -39,46 +53,52 @@
 
     <!-- ═════════ Scan result (§6.3) ═════════ -->
     <string name="ui_staff_result_valid">Checked in</string>
-    <string name="ui_staff_result_valid_hint">The pass was verified for this event.</string>
+    <string name="ui_staff_result_valid_hint">The pass was accepted for this event.</string>
+    <!-- ID printing verifies the pass without recording an ENTRY: the panel says what happened
+         ("verified"), never the check-in state a recorded scan earns. -->
+    <string name="ui_staff_result_verified">Pass verified</string>
+    <string name="ui_staff_result_verified_hint">The pass is ready to print.</string>
+    <!-- One term per action: an exit is not a check-in, and a booth visit is not a claim. -->
+    <string name="ui_staff_result_checked_in_hint">The pass was accepted for entry.</string>
+    <string name="ui_staff_result_checked_out">Checked out</string>
+    <string name="ui_staff_result_checked_out_hint">The pass was accepted for exit.</string>
+    <string name="ui_staff_result_booth_visit">Booth visit logged</string>
+    <string name="ui_staff_result_booth_visit_hint">The visit was recorded for this event.</string>
+    <string name="ui_staff_result_session_visit">Session visit logged</string>
+    <string name="ui_staff_result_benefit_claimed">Benefit claimed</string>
+    <string name="ui_staff_result_benefit_claimed_hint">The claim was recorded for this event.</string>
+    <string name="ui_staff_result_attendance_logged">Attendance logged</string>
+    <string name="ui_staff_result_attendance_logged_hint">The pass was accepted for this event.</string>
+    <string name="ui_staff_result_redemption_hint">The redemption was recorded for this event.</string>
+    <string name="ui_staff_result_print_id_hint">The pass was accepted for ID printing.</string>
+    <string name="ui_staff_result_registration_hint">The registration was recorded for this event.</string>
     <string name="ui_staff_result_rejected">Not valid</string>
-    <string name="ui_staff_result_rejected_hint">This pass could not be used.</string>
     <string name="ui_staff_result_inactive">Pass inactive</string>
     <string name="ui_staff_result_inactive_hint">This pass is no longer active.</string>
     <string name="ui_staff_result_not_allowed">Not allowed</string>
-    <string name="ui_staff_result_not_allowed_hint">This scan is not allowed.</string>
+    <string name="ui_staff_result_not_allowed_hint">This pass can\'t be used for this scan.</string>
     <string name="ui_staff_result_print_failed">Print failed</string>
     <string name="ui_staff_result_print_failed_hint">The pass is valid, but the ID did not print.</string>
     <string name="ui_staff_result_attendee">Attendee</string>
     <string name="ui_staff_result_registration">Registration</string>
-    <string name="ui_staff_result_event">Event</string>
-    <string name="ui_staff_result_purpose">Scan purpose</string>
-    <string name="ui_staff_result_verified_at">Verified at</string>
-    <string name="ui_staff_result_reason">Reason</string>
-    <string name="ui_staff_result_title">Verification result</string>
-    <string name="ui_staff_result_no_reason">No reason supplied.</string>
-    <string name="ui_staff_result_just_now">Just now</string>
-    <string name="ui_staff_result_log_transaction">Log transaction</string>
     <string name="ui_staff_result_print_id">Print ID</string>
-    <string name="ui_staff_result_logging">Logging…</string>
+    <string name="ui_staff_result_logging">Saving scan…</string>
     <string name="ui_staff_result_printing">Printing…</string>
-    <string name="ui_staff_result_scan_again">Scan again</string>
-    <string name="ui_staff_result_view_attendee">View attendee</string>
-    <string name="ui_staff_result_attendee_unavailable">This scan has no attendee on record.</string>
+    <string name="ui_staff_result_scan_next">Scan next</string>
+    <string name="ui_staff_result_try_again">Try again</string>
+    <string name="ui_staff_result_not_saved">Scan not saved</string>
+    <string name="ui_staff_result_not_saved_hint">The scan did not reach the server. Check the connection, then try again.</string>
+    <string name="ui_staff_result_points_value">+%1$d points</string>
+    <!-- Captured scan scope (§6.3 v1.11): label/value rows. Sentence case here; the Eyebrow type
+         role supplies the caps. Each a11y string is the row's whole announcement. -->
+    <string name="ui_staff_scope_event">Event name</string>
+    <string name="ui_staff_scope_purpose">Scan purpose</string>
+    <string name="ui_staff_scope_event_a11y">Event name: %1$s</string>
+    <string name="ui_staff_scope_purpose_a11y">Scan purpose: %1$s</string>
 
     <!-- ═════════ Transaction result (§6.3) ═════════ -->
-    <string name="ui_staff_tx_approved">Points credited</string>
     <string name="ui_staff_tx_approved_hint">The transaction was recorded.</string>
-    <string name="ui_staff_tx_rejected">Not credited</string>
-    <string name="ui_staff_tx_rejected_hint">The scan was recorded, but no points were credited.</string>
-    <string name="ui_staff_tx_type">Scan type</string>
-    <string name="ui_staff_tx_attendee">Attendee</string>
-    <string name="ui_staff_tx_time">Scanned at</string>
     <string name="ui_staff_tx_points">Points</string>
-    <string name="ui_staff_tx_credited">Credited</string>
-    <string name="ui_staff_tx_scan_next">Scan next attendee</string>
-    <string name="ui_staff_tx_dashboard">Back to dashboard</string>
-    <string name="ui_staff_tx_title">Transaction result</string>
-    <string name="ui_staff_tx_attendee_unavailable">Attendee details are unavailable for this transaction.</string>
 
     <!-- ═════════ Attendee details (§6.3) ═════════ -->
     <string name="ui_staff_attendee_details">Attendee details</string>

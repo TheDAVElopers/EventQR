@@ -20,7 +20,6 @@ import com.thedavelopers.eventqr.features.idprinting.PrintPermissionLoad
 import com.thedavelopers.eventqr.features.idprinting.model.dto.IdPrintResponse
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.features.staff.details.StaffAttendeeDetailsActivity
-import com.thedavelopers.eventqr.features.staff.result.StaffScanResultActivity
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionResponse
 import kotlinx.coroutines.CompletableDeferred
 import okhttp3.MediaType.Companion.toMediaType
@@ -97,26 +96,6 @@ class StaffPrintPermissionUiTest {
             lastMessage = message
             cancelCompletedWhenMessaged = (injectedRepository as? FakeRepository)?.cancelCompleted
             super.showMessage(message)
-        }
-
-        companion object {
-            var injectedRepository: StaffRepository? = null
-        }
-    }
-
-    /** Records the ID_PRINT hand-off from the scan-result screen instead of opening the system dialog. */
-    class RecordingScanResultActivity : StaffScanResultActivity() {
-        val openedCards = mutableListOf<AndroidIdPrinter.CardData>()
-
-        override fun newRepository(): StaffRepository = injectedRepository ?: super.newRepository()
-
-        override fun openSystemPrintDialog(
-            eventId: String,
-            cardData: AndroidIdPrinter.CardData,
-            printLogId: UUID,
-            serverMessage: String,
-        ) {
-            openedCards += cardData
         }
 
         companion object {
@@ -237,7 +216,6 @@ class StaffPrintPermissionUiTest {
         SessionManager(context).apply { clearSession(); saveRole(AccountRole.STAFF) }
         RecordingDetailsActivity.injectedRepository = null
         RecordingRegistrationsActivity.injectedRepository = null
-        RecordingScanResultActivity.injectedRepository = null
     }
 
     /** Coroutines post back to the main looper (this thread); pump it until [condition] holds. */
@@ -264,20 +242,6 @@ class StaffPrintPermissionUiTest {
         RecordingRegistrationsActivity.injectedRepository = fake
         val intent = Intent().apply { putExtra(StaffScreenExtras.EXTRA_EVENT_ID, eventId.toString()) }
         return Robolectric.buildActivity(RecordingRegistrationsActivity::class.java, intent).create().get()
-    }
-
-    private fun scanResultActivity(fake: StaffRepository): RecordingScanResultActivity {
-        RecordingScanResultActivity.injectedRepository = fake
-        val intent = Intent().apply {
-            putExtra(StaffScreenExtras.EXTRA_EVENT_ID, eventId.toString())
-            putExtra(StaffScreenExtras.EXTRA_ATTENDEE_ID, attendeeId.toString())
-            putExtra(StaffScreenExtras.EXTRA_ATTENDEE_NAME, "Jane Dela Cruz")
-            putExtra(StaffScreenExtras.EXTRA_EVENT_TITLE, "Test Event")
-            putExtra(StaffScreenExtras.EXTRA_IS_VALID, true)
-            putExtra(StaffScreenExtras.EXTRA_QR_ACTIVE, true)
-            putExtra(StaffScreenExtras.EXTRA_SCAN_PURPOSE_CODE, "ID_PRINT")
-        }
-        return Robolectric.buildActivity(RecordingScanResultActivity::class.java, intent).create().get()
     }
 
     private fun printButton(activity: StaffAttendeeDetailsActivity) = activity.findViewById<View>(R.id.btnPrintOrReprintId)
@@ -511,38 +475,6 @@ class StaffPrintPermissionUiTest {
         assertEquals(3, fake.batchCalls)
         assertEquals(1, activity.openedBatches.size)
         assertEquals(3, activity.openedBatches.single().size)
-    }
-
-    // ---- the scan-result screen (reachable without the scanner's filtered purpose picker)
-
-    @Test
-    fun idPrintRefusedWith403OnTheScanResultScreen_showsThePermissionCopyWithoutPrinting() {
-        val fake = FakeRepository(printResult = httpError(403, denialMessage))
-        val activity = scanResultActivity(fake)
-
-        activity.findViewById<View>(R.id.btnContinueTransaction).performClick()
-        awaitMain { fake.printCalls > 0 }
-
-        assertEquals(1, fake.printCalls)
-        assertTrue(activity.openedCards.isEmpty())
-        assertEquals(
-            context.getString(R.string.staff_print_id_permission_required),
-            ShadowToast.getTextOfLatestToast(),
-        )
-        // Not the generic ID-print-failed panel: the print was refused, the scan itself still stands.
-        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.headerApproved).visibility)
-        assertEquals(View.GONE, activity.findViewById<View>(R.id.headerRejected).visibility)
-    }
-
-    @Test
-    fun idPrintAllowedOnTheScanResultScreen_opensThePrintDialog() {
-        val fake = FakeRepository(printResult = NetworkResult.Success(printResponse()))
-        val activity = scanResultActivity(fake)
-
-        activity.findViewById<View>(R.id.btnContinueTransaction).performClick()
-        awaitMain { activity.openedCards.isNotEmpty() }
-
-        assertEquals(1, activity.openedCards.size)
     }
 
     private fun card() = AndroidIdPrinter.CardData(attendeeName = "Jane Dela Cruz")

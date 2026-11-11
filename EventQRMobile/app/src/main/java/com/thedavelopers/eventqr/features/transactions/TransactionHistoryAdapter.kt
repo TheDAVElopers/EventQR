@@ -53,7 +53,8 @@ class TransactionHistoryAdapter : RecyclerView.Adapter<TransactionHistoryAdapter
             val isEarned = item.pointsDelta >= 0
 
             titleView.text = pointReasonLabel(context, item.reason, item.pointsDelta)
-            eventView.text = item.eventTitle.orEmpty()
+            eventView.text = item.eventTitle?.takeIf { it.isNotBlank() }
+                ?: context.getString(R.string.common_untitled_event)
             timeView.text = item.occurredAt?.let { transactionDisplayFormatter.format(it) }
                 ?: context.getString(R.string.dashboard_value_unavailable)
 

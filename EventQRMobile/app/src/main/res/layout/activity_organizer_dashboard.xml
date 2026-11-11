@@ -5,6 +5,7 @@
         Pass head   ORGANIZER tab, title Events,
                     stub REGISTERED / ATTENDED / LIVE NOW
         EVENTS      3 metric rows - Upcoming / Ended / Redeemed; unknown when the load failed
+                    eyebrow row also carries the one Request event action
         NEXT EVENT  one 96dp date row
         ACTIVE      hairline rows on the page (one grouped card at most)
 
@@ -48,15 +49,37 @@
                 android:orientation="vertical"
                 android:paddingBottom="@dimen/space_32">
 
-                <!-- EVENTS - secondary metrics as rows -->
-                <TextView
-                    style="@style/TextAppearance.EventQR.Type.Eyebrow"
+                <!-- ALL EVENTS - secondary metrics as rows; the request action rides this
+                     eyebrow row, so it survives populated, empty and failed loads (§6.4). -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/ui_gutter"
                     android:layout_marginTop="@dimen/space_24"
                     android:layout_marginEnd="@dimen/ui_gutter"
-                    android:text="@string/ui_organizer_events" />
+                    android:gravity="center_vertical"
+                    android:minHeight="@dimen/ui_touch_min"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="@string/ui_organizer_all_events"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+
+                    <TextView
+                        android:id="@+id/btnRequestEvent"
+                        style="@style/Widget.EventQR.Ui.Chip.Action"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_8"
+                        android:minHeight="@dimen/ui_touch_min"
+                        android:text="@string/ui_organizer_request_event"
+                        app:drawableStartCompat="@drawable/ic_ui_add" />
+                </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/metricRowsContainer"
@@ -65,15 +88,26 @@
                     android:layout_marginTop="@dimen/space_4"
                     android:orientation="vertical" />
 
-                <!-- NEXT EVENT - one date row -->
+                <!-- Failed load: the in-flow error replaces the list area's content, sits under the
+                     ALL EVENTS header (not below the fold), and owns the Retry (§5.10 item 6). -->
+                <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+                    android:id="@+id/layoutDashboardError"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    app:icon="@drawable/ic_ui_warning" />
+
+                <!-- NEXT EVENT - one date row; the eyebrow only exists when the row does. -->
                 <TextView
+                    android:id="@+id/txtNextEventEyebrow"
                     style="@style/TextAppearance.EventQR.Type.Eyebrow"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/ui_gutter"
                     android:layout_marginTop="@dimen/space_32"
                     android:layout_marginEnd="@dimen/ui_gutter"
-                    android:text="@string/ui_organizer_next_event" />
+                    android:text="@string/ui_organizer_next_event"
+                    android:visibility="gone" />
 
                 <FrameLayout
                     android:id="@+id/nextEventHost"
@@ -131,43 +165,46 @@
                         app:subtitle="@string/ui_organizer_no_events_body"
                         app:title="@string/ui_organizer_no_events" />
 
-                    <include
+                    <!-- Loading: the loaded active rows are 96dp date rows on the page, so the
+                         skeleton is the same row stack, not a card. -->
+                    <LinearLayout
                         android:id="@+id/skeletonLoading"
-                        layout="@layout/include_skeleton_card"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_8" />
+                        android:contentDescription="@string/ui_skeleton_loading"
+                        android:focusable="true"
+                        android:orientation="vertical">
+
+                        <include
+                            layout="@layout/include_skeleton_row"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/ui_row_height_date" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/stroke_hairline"
+                            android:layout_marginStart="@dimen/ui_divider_inset"
+                            android:background="@color/ui_hairline"
+                            android:importantForAccessibility="no" />
+
+                        <include
+                            layout="@layout/include_skeleton_row"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/ui_row_height_date" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/stroke_hairline"
+                            android:layout_marginStart="@dimen/ui_divider_inset"
+                            android:background="@color/ui_hairline"
+                            android:importantForAccessibility="no" />
+
+                        <include
+                            layout="@layout/include_skeleton_row"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/ui_row_height_date" />
+                    </LinearLayout>
                 </FrameLayout>
-
-                <!-- Error state: a card with a Retry action, not a centred block. -->
-                <LinearLayout
-                    android:id="@+id/layoutDashboardError"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/ui_gutter"
-                    android:layout_marginTop="@dimen/space_8"
-                    android:layout_marginEnd="@dimen/ui_gutter"
-                    android:background="@drawable/bg_ui_card"
-                    android:orientation="vertical"
-                    android:padding="@dimen/ui_card_padding"
-                    android:visibility="gone">
-
-                    <TextView
-                        android:id="@+id/txtDashboardError"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
-                        android:textColor="@color/ui_text_secondary" />
-
-                    <Button
-                        android:id="@+id/btnDashboardRetry"
-                        style="@style/Widget.EventQR.Ui.Button.Ghost"
-                        android:layout_width="wrap_content"
-                        android:layout_height="@dimen/ui_button_height_inline"
-                        android:layout_marginTop="@dimen/space_8"
-                        android:minWidth="@dimen/ui_touch_min"
-                        android:text="@string/common_retry" />
-                </LinearLayout>
             </LinearLayout>
         </ScrollView>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>

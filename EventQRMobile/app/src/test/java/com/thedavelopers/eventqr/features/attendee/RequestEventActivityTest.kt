@@ -1,9 +1,12 @@
 package com.thedavelopers.eventqr.features.attendee
 
 import android.os.Looper
+import android.content.DialogInterface
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.thedavelopers.eventqr.R
@@ -17,13 +20,16 @@ import java.time.ZoneId
 import org.robolectric.Shadows.shadowOf
 import com.thedavelopers.eventqr.features.ShadowEncryptedSharedPreferences
 import com.thedavelopers.eventqr.features.ShadowMasterKeys
+import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowDialog
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [35], shadows = [ShadowMasterKeys::class, ShadowEncryptedSharedPreferences::class])
@@ -36,6 +42,14 @@ class RequestEventActivityTest {
         activity.findViewById<Button>(R.id.submitRequestButton).performClick()
 
     private fun contact(activity: RequestEventActivity): EditText = activity.findViewById(R.id.contactNumberInput)
+
+    /** Dialogs outlive their test otherwise; the next test would inherit a stale surface. */
+    @After
+    fun dismissOpenSurfaces() {
+        ShadowDialog.getShownDialogs().toList().forEach { dialog ->
+            if (dialog.isShowing) dialog.dismiss()
+        }
+    }
 
     // ---- RQ-3: contact number uses the shared phone rule
 
@@ -144,6 +158,39 @@ class RequestEventActivityTest {
         assertTrue(
             "name target should sit above the contact target",
             activity.scrollTargetFor(nameField) < contactTarget,
+        )
+    }
+
+    // ---- POST_NOTIFICATIONS priming must not stack on the success dialog or exit underneath a dialog
+
+    @Test
+    fun decisionRationale_neverStacksOnTheSuccessDialog_andTheExitWaitsForIt() {
+        val activity = build()
+        assertEquals("no prompt on screen open", 0, ShadowDialog.getShownDialogs().count { it.isShowing })
+
+        activity.showSuccessDialog()
+        val success = ShadowDialog.getLatestDialog()
+        assertTrue(success.isShowing)
+
+        success.findViewById<Button>(R.id.successViewRequestsButton).performClick()
+
+        val rationale = ShadowDialog.getLatestDialog() as AlertDialog
+        assertFalse("the success dialog must close before the rationale shows", success.isShowing)
+        assertEquals("never two dialogs at once", 1, ShadowDialog.getShownDialogs().count { it.isShowing })
+        assertTrue(rationale.isShowing)
+        assertEquals(
+            activity.getString(R.string.ui_attendee_decisions_permission_body),
+            rationale.findViewById<TextView>(android.R.id.message)?.text?.toString(),
+        )
+        assertFalse("finish() must wait for the permission flow", activity.isFinishing)
+
+        rationale.getButton(DialogInterface.BUTTON_NEGATIVE).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertTrue("the exit runs once the rationale is resolved", activity.isFinishing)
+        assertEquals(
+            MyEventRequestsActivity::class.java.name,
+            shadowOf(activity).nextStartedActivity?.component?.className,
         )
     }
 }

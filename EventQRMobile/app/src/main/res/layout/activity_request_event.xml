@@ -44,7 +44,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/request_event_submit_the_event_details_for_admin_r"
+                android:text="@string/request_event_admin_review_note"
                 android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
                 android:textColor="@color/ui_text_secondary" />
 
@@ -519,9 +519,9 @@
         android:background="@color/ui_surface"
         android:orientation="vertical"
         android:paddingStart="@dimen/ui_gutter"
-        android:paddingTop="@dimen/space_10"
+        android:paddingTop="@dimen/space_md"
         android:paddingEnd="@dimen/ui_gutter"
-        android:paddingBottom="@dimen/space_10">
+        android:paddingBottom="@dimen/space_md">
 
         <Button
             android:id="@+id/submitRequestButton"

@@ -149,14 +149,69 @@
                         app:subtitle="@string/ui_staff_no_scans_body"
                         app:title="@string/ui_staff_no_scans" />
 
-                    <include
+                    <!-- Loading: the loaded scan rows are flat hairline rows on the page, so the
+                         skeleton is the same 72dp row stack, not a card. -->
+                    <LinearLayout
                         android:id="@+id/skeletonLoading"
-                        layout="@layout/include_skeleton_card"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/ui_gutter"
-                        android:layout_marginTop="@dimen/space_sm"
-                        android:layout_marginEnd="@dimen/ui_gutter" />
+                        android:contentDescription="@string/ui_skeleton_loading"
+                        android:focusable="true"
+                        android:orientation="vertical">
+
+                        <include
+                            layout="@layout/include_skeleton_row"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/ui_row_height" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/stroke_hairline"
+                            android:layout_marginStart="@dimen/ui_divider_inset"
+                            android:background="@color/ui_hairline"
+                            android:importantForAccessibility="no" />
+
+                        <include
+                            layout="@layout/include_skeleton_row"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/ui_row_height" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/stroke_hairline"
+                            android:layout_marginStart="@dimen/ui_divider_inset"
+                            android:background="@color/ui_hairline"
+                            android:importantForAccessibility="no" />
+
+                        <include
+                            layout="@layout/include_skeleton_row"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/ui_row_height" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/stroke_hairline"
+                            android:layout_marginStart="@dimen/ui_divider_inset"
+                            android:background="@color/ui_hairline"
+                            android:importantForAccessibility="no" />
+
+                        <include
+                            layout="@layout/include_skeleton_row"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/ui_row_height" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/stroke_hairline"
+                            android:layout_marginStart="@dimen/ui_divider_inset"
+                            android:background="@color/ui_hairline"
+                            android:importantForAccessibility="no" />
+
+                        <include
+                            layout="@layout/include_skeleton_row"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/ui_row_height" />
+                    </LinearLayout>
                 </FrameLayout>
             </LinearLayout>
         </ScrollView>

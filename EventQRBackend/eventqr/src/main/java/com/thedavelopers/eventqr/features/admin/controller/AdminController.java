@@ -205,14 +205,6 @@ public class AdminController {
                 eventCreationRequestService.reject(requestId, adminUserId, currentAdminName(adminUserId), remarks)));
     }
 
-    @PatchMapping("/event-requests/{requestId}/upgrade-organizer")
-    public ResponseEntity<ApiResponse<EventRequestResponse>> upgradeOrganizer(HttpServletRequest request, @PathVariable UUID requestId) {
-        requireAdmin(request);
-        UUID adminUserId = currentAdminId(request);
-        return ResponseEntity.ok(ApiResponse.success("Requester upgraded to organizer",
-                eventCreationRequestService.upgradeOrganizer(requestId, adminUserId, currentAdminName(adminUserId))));
-    }
-
     private void requireAdmin(HttpServletRequest request) {
         AccountRole role = jwtService.extractRoleFromBearer(request.getHeader("Authorization"));
         if (role != AccountRole.ADMIN && role != AccountRole.SUPER_ADMIN) {

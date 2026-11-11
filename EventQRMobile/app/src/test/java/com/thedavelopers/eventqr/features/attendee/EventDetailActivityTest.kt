@@ -15,6 +15,7 @@ import com.thedavelopers.eventqr.features.ShadowMasterKeys
 import com.thedavelopers.eventqr.features.attendee.EXTRA_EVENT_TITLE
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
 import com.thedavelopers.eventqr.features.events.model.dto.EventAvailabilityResponse
+import com.thedavelopers.eventqr.features.organizer.events.EventManagementHubActivity
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import kotlinx.coroutines.CompletableDeferred
@@ -120,6 +121,64 @@ class EventDetailActivityTest {
         assertEquals(true, button.isEnabled)
     }
 
+    // A registered attendee's primary action is the pass (§6.2). The pass moved here when the
+    // registered-events list stopped carrying a per-row button.
+    @Test
+    fun registeredAttendee_opensThePassFromThePrimaryAction() {
+        val activity = build(null)
+        val button = activity.findViewById<android.widget.Button>(R.id.btnRegisterForEvent)
+
+        activity.updateRegistrationStatus(true)
+        assertEquals(activity.getString(R.string.event_detail_already_registered), button.text.toString())
+
+        activity.setRegisteredId("registration-1")
+
+        assertEquals(activity.getString(R.string.ui_attendee_view_pass), button.text.toString())
+        assertEquals(true, button.isEnabled)
+
+        button.performClick()
+        assertEquals(
+            QrDisplayActivity::class.java.name,
+            shadowOf(activity).nextStartedActivity.component?.className,
+        )
+    }
+
+    // A checked-in (ENTERED) attendee still owns a pass: the pass id is the live registration id,
+    // not the stricter cancellable id, which only a REGISTERED row with no recorded activity yields.
+    @Test
+    fun checkedInAttendee_stillGetsAnEnabledViewPass() {
+        val activity = build(null)
+        val future = event("Checked in").copy(eventStartAt = Instant.now().plusSeconds(86_400))
+        val button = activity.findViewById<android.widget.Button>(R.id.btnRegisterForEvent)
+
+        activity.renderEvent(future)
+        activity.updateRegistrationStatus(true)
+        activity.setRegisteredId("registration-entered")
+
+        assertEquals(activity.getString(R.string.ui_attendee_view_pass), button.text.toString())
+        assertEquals(true, button.isEnabled)
+
+        button.performClick()
+        assertEquals(
+            QrDisplayActivity::class.java.name,
+            shadowOf(activity).nextStartedActivity.component?.className,
+        )
+        // Cancel keeps its own gate: no verified cancellable id, no cancel action.
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.btnCancelRegistration).visibility)
+    }
+
+    @Test
+    fun cancellableIdAlone_neverDrivesThePassLabel() {
+        val activity = build(null)
+        val button = activity.findViewById<android.widget.Button>(R.id.btnRegisterForEvent)
+
+        activity.updateRegistrationStatus(true)
+        activity.setCancellableRegistration("registration-1")
+
+        assertEquals(activity.getString(R.string.event_detail_already_registered), button.text.toString())
+        assertEquals(false, button.isEnabled)
+    }
+
     @Test
     fun unregisteredStatusBeforeAnyAvailability_leavesTheButtonForTheAvailabilityCall() {
         val activity = build(null)
@@ -165,6 +224,27 @@ class EventDetailActivityTest {
         activity.renderEvent(event("Owned by me").copy(isOwnedByCurrentUser = true))
 
         assertEquals(activity.getString(R.string.event_detail_manage_event), button.text.toString())
+    }
+
+    // Precedence: an organizer who also holds a live registration (role promotion, ownership
+    // transfer) manages the event. The registration status and its id must not repaint the label
+    // or redirect the click to an attendee pass.
+    @Test
+    fun managerWithALiveRegistration_keepsManageEventAndItsDestination() {
+        SessionManager(ApplicationProvider.getApplicationContext()).saveRole(AccountRole.ORGANIZER)
+        val activity = build(null)
+        val button = activity.findViewById<android.widget.Button>(R.id.btnRegisterForEvent)
+
+        activity.renderEvent(event("Owned by me").copy(isOwnedByCurrentUser = true))
+        activity.updateRegistrationStatus(true)
+        activity.setRegisteredId("registration-1")
+
+        assertEquals(activity.getString(R.string.event_detail_manage_event), button.text.toString())
+        button.performClick()
+        assertEquals(
+            EventManagementHubActivity::class.java.name,
+            shadowOf(activity).nextStartedActivity.component?.className,
+        )
     }
 
     // An attendee-owned event offers Register, so it must also offer Cancel once registered,

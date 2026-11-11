@@ -27,11 +27,6 @@
     <!-- Reward rows on the redemption screen (§6.2 reward row language, 88dp). -->
     <dimen name="ui_staff_reward_row">88dp</dimen>
 
-    <!-- Divider inset for a row that starts at x = 0 because its host supplies the 20dp gutter
-         (40dp tile + 16dp gap = 56dp). The staff lists with their own 20dp row inset use the
-         shared ui_divider_inset (76dp) instead. -->
-    <dimen name="ui_staff_divider_inset_compact">56dp</dimen>
-
     <!-- Placeholder glyph inside the empty camera well. -->
     <dimen name="ui_staff_scan_preview_icon">32dp</dimen>
 

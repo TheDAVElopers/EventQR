@@ -5,6 +5,7 @@
         Compact pass head   eyebrow ORGANIZER, title Events, count in the trailing slot
         48dp search         filled field, no label, 20dp leading search icon
         chip row            All / Upcoming / Active / Completed - 36dp, radius 4, no pills
+        list head           ALL EVENTS eyebrow + the one Request event action
         rows                96dp date rows on the page, hairline dividers, one badge
 
     Deleted: bg_organizer_events_screen, the tab header with a radial glow, the 54dp outlined
@@ -85,6 +86,38 @@
                 android:text="@string/common_completed" />
         </LinearLayout>
     </HorizontalScrollView>
+
+    <!-- ALL EVENTS - list head. The request action lives here and only here, so it is present
+         in every state; the empty state carries no second control (§6.4). -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/ui_gutter"
+        android:layout_marginTop="@dimen/space_16"
+        android:layout_marginEnd="@dimen/ui_gutter"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/ui_touch_min"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@string/ui_organizer_all_events"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+
+        <TextView
+            android:id="@+id/btnRequestEvent"
+            style="@style/Widget.EventQR.Ui.Chip.Action"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_8"
+            android:minHeight="@dimen/ui_touch_min"
+            android:text="@string/ui_organizer_request_event"
+            app:drawableStartCompat="@drawable/ic_ui_add" />
+    </LinearLayout>
 
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshEvents"

@@ -14,17 +14,22 @@ class QrCredentialPresenter(
     private val strings: UiStrings,
 ) {
     private val scope = kotlinx.coroutines.MainScope()
-    private var job: Job? = null
+    private var loadJob: Job? = null
+    private var downloadJob: Job? = null
 
     fun detach() {
-        job?.cancel()
+        loadJob?.cancel()
+        downloadJob?.cancel()
         scope.cancel()
         view = null
     }
 
     fun load(registrationId: String, qrCredentialId: String? = null) {
+        // The newest load owns the screen: a retry or a rotation must not let an older response
+        // land last and overwrite the cache with stale data.
+        loadJob?.cancel()
         view?.showLoading(true)
-        job = scope.launch {
+        loadJob = scope.launch {
             val qrResult = when {
                 !qrCredentialId.isNullOrBlank() -> repository.getMyQrCredentialById(qrCredentialId)
                 registrationId.isNotBlank() -> repository.getMyQrCredentialByRegistration(registrationId)
@@ -51,12 +56,14 @@ class QrCredentialPresenter(
                 qrCredential.qrCredentialId.toString().also { repository.markMyQrDisplayed(it) }
             } else if (qrResult is NetworkResult.Error) {
                 view?.showLoading(false)
-                view?.showMessage(toFriendlyQrError(qrResult.message))
+                view?.showLoadError(toFriendlyQrError(qrResult.message))
             }
         }
     }
 
     fun markDownloaded(qrCredentialId: String) {
-        job = scope.launch { repository.markMyQrDownloaded(qrCredentialId) }
+        // Its own job: marking a download must not stop tracking the load the screen is showing.
+        downloadJob?.cancel()
+        downloadJob = scope.launch { repository.markMyQrDownloaded(qrCredentialId) }
     }
 }

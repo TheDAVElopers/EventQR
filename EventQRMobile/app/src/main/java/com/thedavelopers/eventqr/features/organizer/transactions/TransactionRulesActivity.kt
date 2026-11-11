@@ -186,7 +186,7 @@ open class TransactionRulesActivity : AppCompatActivity() {
         ) { cooldownMinutes = it.toIntOrNull() ?: 0 }
         card2.addView(cooldownInput)
         card2.addView(styledText(getString(R.string.transaction_rules_cooldown_helper), R.dimen.type_caption, false, orgColors.muted).apply {
-            setPadding(0, dimenPx(R.dimen.space_6), 0, dimenPx(R.dimen.space_10))
+            setPadding(0, dimenPx(R.dimen.space_6), 0, dimenPx(R.dimen.space_md))
         })
 
         val maxScansInput = labeledInput(

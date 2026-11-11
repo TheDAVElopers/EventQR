@@ -121,6 +121,7 @@ public class EventCreationRequestService {
         request.setEventId(linkedEvent.getId());
         EventCreationRequest savedRequest = eventRequestRepository.saveAndFlush(request);
         entityManager.refresh(savedRequest);
+        grantOrganizerRole(savedRequest, adminUserId, adminFullName, linkedEvent.getId());
         auditLogService.log(
                 "EVENT_REQUEST_APPROVED",
                 savedRequest.getEventName(),
@@ -158,10 +159,14 @@ public class EventCreationRequestService {
         return toResponse(savedRequest);
     }
 
-    public EventRequestResponse upgradeOrganizer(UUID requestId, UUID adminUserId, String adminFullName) {
-        EventCreationRequest request = requireRequest(requestId);
-        if (request.getStatus() != EventRequestStatus.APPROVED) {
-            throw new BadRequestException("Only approved requests can upgrade an attendee to organizer");
+    private void grantOrganizerRole(EventCreationRequest request, UUID adminUserId, String adminFullName, UUID eventId) {
+        AccountRole currentRole = attendeeDirectoryPort.findById(request.getRequesterUserId())
+                .map(attendee -> attendee.role())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Requester account not found: " + request.getRequesterUserId()));
+        if (currentRole != AccountRole.ATTENDEE) {
+            // Already an organizer or an elevated role: never downgrade on approval.
+            return;
         }
         attendeeDirectoryPort.changeRole(request.getRequesterUserId(), AccountRole.ORGANIZER);
         auditLogService.log(
@@ -169,9 +174,8 @@ public class EventCreationRequestService {
                 request.getRequesterName(),
                 adminUserId,
                 adminFullName,
-                request.getEventId(),
+                eventId,
                 request.getRequesterUserId());
-        return toResponse(request);
     }
 
     private void rejectSelfReview(EventCreationRequest request, UUID reviewerUserId) {
@@ -222,10 +226,6 @@ public class EventCreationRequestService {
     }
 
     private EventRequestResponse toResponse(EventCreationRequest entity) {
-        boolean organizerUpgraded = attendeeDirectoryPort.findById(entity.getRequesterUserId())
-                .map(attendee -> attendee.role() == AccountRole.ORGANIZER)
-                .orElse(false);
-
         return new EventRequestResponse(
                 entity.getId(),
                 entity.getRequesterUserId(),
@@ -252,8 +252,7 @@ public class EventCreationRequestService {
                 entity.getReviewedByUserId(),
                 entity.getReviewedAt(),
                 entity.getCreatedAt(),
-                entity.getUpdatedAt(),
-                organizerUpgraded);
+                entity.getUpdatedAt());
     }
 
     private Event createOrUpdateEventFromApprovedRequest(EventCreationRequest request) {

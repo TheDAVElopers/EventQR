@@ -98,6 +98,11 @@ open class ManageEventsActivity : AppCompatActivity() {
         findViewById<View>(R.id.chipUpcoming).setOnClickListener { selectFilter("Upcoming") }
         findViewById<View>(R.id.chipActive).setOnClickListener { selectFilter("Active") }
         findViewById<View>(R.id.chipCompleted).setOnClickListener { selectFilter("Completed") }
+        // One request action on the ALL EVENTS list head, present in every state. The empty state
+        // carries no second control.
+        findViewById<View>(R.id.btnRequestEvent).setOnClickListener {
+            startActivity(Intent(this, RequestEventActivity::class.java))
+        }
 
         findViewById<EditText>(R.id.inputEventSearch).addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -198,6 +203,11 @@ open class ManageEventsActivity : AppCompatActivity() {
     }
 
     private fun showLoading() {
+        // A reload over readable rows stays on screen; the skeleton is a first-load state.
+        if (adapter.itemCount > 0) {
+            skeletonLoading.visibility = View.GONE
+            return
+        }
         recyclerView.visibility = View.GONE
         emptyState.visibility = View.GONE
         if (!swipeRefresh.isRefreshing) {
@@ -220,14 +230,12 @@ open class ManageEventsActivity : AppCompatActivity() {
             )
             emptyState.setAction(getString(R.string.common_retry)) { loadEvents() }
         } else if (allEvents.approvedOnly().isEmpty()) {
-            // Nothing to manage yet: the only useful action is the event request form.
+            // Nothing to manage yet: the Request event chip on the list head is the one control.
             emptyState.show(
                 getString(R.string.ui_organizer_no_events),
                 getString(R.string.ui_organizer_no_events_body),
             )
-            emptyState.setAction(getString(R.string.ui_organizer_create_event), primary = true) {
-                startActivity(Intent(this, RequestEventActivity::class.java))
-            }
+            emptyState.setAction(null, primary = false, onClick = null)
         } else {
             emptyState.show(
                 getString(R.string.organizer_events_no_events_available_for_the_selected),
@@ -317,7 +325,7 @@ open class ManageEventsActivity : AppCompatActivity() {
                 val status = event.lifecycleStatus()
                 ListRowBinder.bind(
                     row,
-                    title = event.title,
+                    title = event.title.ifBlank { getString(R.string.common_untitled_event) },
                     meta = listOf(time, location)
                         .filter {
                             it != EventCardPresenter.UNKNOWN_TIME && it != EventCardPresenter.UNKNOWN_LOCATION

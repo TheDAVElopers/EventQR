@@ -77,7 +77,7 @@ class NotificationServiceTest {
     void findByRecipientFiltered_byStatus() {
         UUID user = UUID.randomUUID();
         when(notificationRepository.findByRecipientUserIdOrderByCreatedAtDesc(user)).thenReturn(List.of());
-        var result = notificationService.findByRecipientFiltered(user, NotificationStatus.PENDING, null, null);
+        var result = notificationService.findByRecipientFiltered(user, NotificationStatus.PENDING, null, null, false);
         assertThat(result).isEmpty();
     }
 
@@ -93,8 +93,48 @@ class NotificationServiceTest {
         n.setMessage("m");
         n.setRecipientUserId(user);
         when(notificationRepository.findByRecipientUserIdOrderByCreatedAtDesc(user)).thenReturn(List.of(n));
-        var result = notificationService.findByRecipientFiltered(user, null, event, NotificationType.REGISTRATION_NEW);
+        var result = notificationService.findByRecipientFiltered(user, null, event, NotificationType.REGISTRATION_NEW, false);
         assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void findByRecipientFiltered_unreadOnly_excludesRead() {
+        UUID user = UUID.randomUUID();
+        Notification unread = new Notification();
+        unread.setStatus(NotificationStatus.SENT);
+        unread.setTitle("t");
+        unread.setMessage("m");
+        unread.setRecipientUserId(user);
+        // READ exclusion happens in SQL, so the repository returns non-READ rows only.
+        when(notificationRepository.findByRecipientUserIdAndStatusNotOrderByCreatedAtDesc(user, NotificationStatus.READ))
+                .thenReturn(List.of(unread));
+        var result = notificationService.findByRecipientFiltered(user, null, null, null, true);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).status()).isEqualTo(NotificationStatus.SENT);
+        verify(notificationRepository).findByRecipientUserIdAndStatusNotOrderByCreatedAtDesc(user, NotificationStatus.READ);
+        verify(notificationRepository, times(0)).findByRecipientUserIdOrderByCreatedAtDesc(user);
+    }
+
+    @Test
+    void findByRecipientFiltered_unreadOnly_respectsNotificationType() {
+        UUID user = UUID.randomUUID();
+        Notification registration = new Notification();
+        registration.setNotificationType(NotificationType.REGISTRATION_NEW);
+        registration.setStatus(NotificationStatus.SENT);
+        registration.setTitle("t");
+        registration.setMessage("m");
+        registration.setRecipientUserId(user);
+        Notification general = new Notification();
+        general.setNotificationType(NotificationType.GENERAL);
+        general.setStatus(NotificationStatus.SENT);
+        general.setTitle("t");
+        general.setMessage("m");
+        general.setRecipientUserId(user);
+        when(notificationRepository.findByRecipientUserIdAndStatusNotOrderByCreatedAtDesc(user, NotificationStatus.READ))
+                .thenReturn(List.of(registration, general));
+        var result = notificationService.findByRecipientFiltered(user, null, null, NotificationType.REGISTRATION_NEW, true);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).notificationType()).isEqualTo(NotificationType.REGISTRATION_NEW);
     }
 
     @Test
@@ -152,5 +192,23 @@ class NotificationServiceTest {
         verify(notificationRepository, times(2)).save(captor.capture());
         assertThat(captor.getAllValues()).anySatisfy(n ->
                 assertThat(n.getRecipientUserId()).isEqualTo(assignedStaff));
+    }
+
+    @Test
+    void createEventApprovedNotification_namesTheEventAndExplainsOrganizerAccess() {
+        UUID eventId = UUID.randomUUID();
+        UUID requester = UUID.randomUUID();
+
+        notificationService.createEventApprovedNotification(eventId, requester, "Tech Talk");
+
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository).save(captor.capture());
+        Notification n = captor.getValue();
+        assertThat(n.getEventId()).isEqualTo(eventId);
+        assertThat(n.getRecipientUserId()).isEqualTo(requester);
+        assertThat(n.getNotificationType()).isEqualTo(NotificationType.EVENT_APPROVED);
+        assertThat(n.getTitle()).isEqualTo("Event approved: Tech Talk");
+        assertThat(n.getMessage()).isEqualTo("Your event is live. You can now manage it as an organizer.");
+        assertThat(n.getStatus()).isEqualTo(NotificationStatus.SENT);
     }
 }

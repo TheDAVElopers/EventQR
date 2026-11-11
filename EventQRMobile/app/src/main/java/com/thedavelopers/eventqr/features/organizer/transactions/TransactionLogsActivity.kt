@@ -133,7 +133,7 @@ open class TransactionLogsActivity : AppCompatActivity() {
         val card = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_10))
+            setPadding(dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_md))
             minimumHeight = dimenPx(R.dimen.button_primary_height)
             isClickable = approvedEvents.isNotEmpty()
             isFocusable = approvedEvents.isNotEmpty()
@@ -311,7 +311,7 @@ open class TransactionLogsActivity : AppCompatActivity() {
                 val statusBadge = LinearLayout(this@TransactionLogsActivity).apply {
                     orientation = LinearLayout.HORIZONTAL
                     gravity = Gravity.CENTER_VERTICAL
-                    setPadding(dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_xs), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_xs))
+                    setPadding(dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_xs), dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_xs))
                     tintBlockArgb(badgeBgColor, R.drawable.bg_ui_block_r10)
 
                     addView(ImageView(this@TransactionLogsActivity).apply {
@@ -406,13 +406,13 @@ open class TransactionLogsActivity : AppCompatActivity() {
                     val reasonBanner = LinearLayout(this@TransactionLogsActivity).apply {
                         orientation = LinearLayout.HORIZONTAL
                         gravity = Gravity.CENTER_VERTICAL
-                        setPadding(dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_6), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_6))
+                        setPadding(dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_6), dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_6))
                         // the old FEE2E2 hairline vanished into the merged error_container fill: no stroke
                         tintBlock(R.color.ui_error_container, R.drawable.bg_ui_block_r4)
                         layoutParams = LinearLayout.LayoutParams(
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ).apply { topMargin = dimenPx(R.dimen.space_10) }
+                        ).apply { topMargin = dimenPx(R.dimen.space_md) }
 
                         addView(ImageView(this@TransactionLogsActivity).apply {
                             layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_sm), dimenPx(R.dimen.icon_sm))

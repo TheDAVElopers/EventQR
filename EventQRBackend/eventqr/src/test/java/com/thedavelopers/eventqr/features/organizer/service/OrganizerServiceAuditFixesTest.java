@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequest;
+import com.thedavelopers.eventqr.features.events.model.dto.EventResponse;
 import com.thedavelopers.eventqr.features.events.model.entity.Event;
 import com.thedavelopers.eventqr.features.events.repository.EventRepository;
 import com.thedavelopers.eventqr.features.idprinting.repository.IdTemplateRepository;
@@ -42,6 +43,7 @@ import com.thedavelopers.eventqr.shared.constants.EventStatus;
 import com.thedavelopers.eventqr.shared.constants.RedemptionStatus;
 import com.thedavelopers.eventqr.shared.constants.RegistrationStatus;
 import com.thedavelopers.eventqr.shared.exceptions.BadRequestException;
+import com.thedavelopers.eventqr.shared.exceptions.ConflictException;
 import com.thedavelopers.eventqr.shared.exceptions.ForbiddenException;
 
 class OrganizerServiceAuditFixesTest {
@@ -112,6 +114,108 @@ class OrganizerServiceAuditFixesTest {
 
     private EventRequest capacityRequest(int capacity) {
         return new EventRequest("Expo", null, null, null, null, null, null, start, null, capacity, false);
+    }
+
+    @Test
+    void upcomingApprovedEventStaysEditableForItsOwner() {
+        Instant approvedAt = Instant.parse("2029-12-01T00:00:00Z");
+        UUID approverId = UUID.randomUUID();
+        event.setApprovedAt(approvedAt);
+        event.setApprovedByUserId(approverId);
+        when(registrations.findByEventId(eventId)).thenReturn(List.of());
+
+        EventResponse response = service.updateEvent(organizerId, eventId, AccountRole.ORGANIZER,
+                new EventRequest("Expo renamed", null, null, "Hall B", null, null, null, start, null, 10, false));
+
+        assertThat(response.title()).isEqualTo("Expo renamed");
+        assertThat(response.location()).isEqualTo("Hall B");
+        // Editing details must not rewrite the lifecycle, the approval, or the schedule it echoed back.
+        assertThat(event.getStatus()).isEqualTo(EventStatus.APPROVED);
+        assertThat(event.getApprovedByUserId()).isEqualTo(approverId);
+        assertThat(event.getApprovedAt()).isEqualTo(approvedAt);
+        assertThat(event.getEventStartAt()).isEqualTo(start);
+    }
+
+    @Test
+    void upcomingActiveEventStaysEditableForItsOwner() {
+        // A future event can already carry ACTIVE (admin "activate", or a sweep that ran early), so
+        // the edit lock has to follow the event window, not the status label, or a future event
+        // could never be edited.
+        event.setStatus(EventStatus.ACTIVE);
+        when(registrations.findByEventId(eventId)).thenReturn(List.of());
+
+        EventResponse response = service.updateEvent(organizerId, eventId, AccountRole.ORGANIZER,
+                new EventRequest("Expo renamed", null, null, "Hall B", null, null, null, start, null, 10, false));
+
+        assertThat(response.title()).isEqualTo("Expo renamed");
+        assertThat(response.location()).isEqualTo("Hall B");
+        // Editing details must not rewrite the lifecycle or the schedule it echoed back.
+        assertThat(event.getStatus()).isEqualTo(EventStatus.ACTIVE);
+        assertThat(event.getEventStartAt()).isEqualTo(start);
+        assertThat(event.getApprovedByUserId()).isNull();
+    }
+
+    @Test
+    void upcomingActiveEventIsStillForbiddenToANonOwner() {
+        event.setStatus(EventStatus.ACTIVE);
+
+        assertThatThrownBy(() -> service.updateEvent(strangerId, eventId, AccountRole.ORGANIZER, capacityRequest(10)))
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessage("Organizer is not assigned to this event");
+        assertThat(event.getTitle()).isEqualTo("Expo");
+    }
+
+    @Test
+    void anOrganizerCannotActivateAFutureEvent() {
+        assertThatThrownBy(() -> service.updateStatus(organizerId, eventId, AccountRole.ORGANIZER, EventStatus.ACTIVE))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage("This event cannot be activated until its start date.");
+        assertThat(event.getStatus()).isEqualTo(EventStatus.APPROVED);
+    }
+
+    @Test
+    void anOrganizerCannotActivateAnEventWithoutAStartDate() {
+        event.setEventStartAt(null);
+
+        assertThatThrownBy(() -> service.updateStatus(organizerId, eventId, AccountRole.ORGANIZER, EventStatus.ACTIVE))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage("This event cannot be activated until its start date.");
+        assertThat(event.getStatus()).isEqualTo(EventStatus.APPROVED);
+    }
+
+    @Test
+    void anOrganizerCanActivateAnEventWhoseStartHasPassed() {
+        event.setEventStartAt(Instant.now().minusSeconds(60));
+
+        assertThat(service.updateStatus(organizerId, eventId, AccountRole.ORGANIZER, EventStatus.ACTIVE).status())
+                .isEqualTo(EventStatus.ACTIVE);
+    }
+
+    @Test
+    void ongoingEventStaysLocked() {
+        // The window boundary: once the start time has passed, editing is closed even though the
+        // stored status is still ACTIVE rather than ENDED.
+        event.setEventStartAt(Instant.now().minusSeconds(3_600));
+
+        assertThatThrownBy(() -> service.updateEvent(organizerId, eventId, AccountRole.ORGANIZER,
+                new EventRequest("Expo renamed", null, null, null, null, null, null,
+                        event.getEventStartAt(), null, 10, false)))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage("Cannot edit an event that is ongoing or completed");
+        assertThat(event.getTitle()).isEqualTo("Expo");
+    }
+
+    @Test
+    void endedEventStaysLocked() {
+        // A future date must not unlock an event whose lifecycle already ended: only a non-ENDED
+        // status may be edited based on the window.
+        event.setStatus(EventStatus.ENDED);
+
+        assertThatThrownBy(() -> service.updateEvent(organizerId, eventId, AccountRole.ORGANIZER,
+                new EventRequest("Expo renamed", null, null, null, null, null, null, start, null, 10, false)))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage("Cannot edit an event that is ongoing or completed");
+        assertThat(event.getTitle()).isEqualTo("Expo");
     }
 
     @Test

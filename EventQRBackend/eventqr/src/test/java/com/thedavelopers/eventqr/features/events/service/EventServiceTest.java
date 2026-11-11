@@ -135,7 +135,8 @@ class EventServiceTest {
 
     @Test
     void onlyAnApprovedEventCanBeActivated() {
-        event(EventStatus.APPROVED, null, null, 10, 0);
+        Event approved = event(EventStatus.APPROVED, null, null, 10, 0);
+        approved.setEventStartAt(ago(60));
         assertThat(service.activate(eventId).status()).isEqualTo(EventStatus.ACTIVE);
 
         for (EventStatus status : List.of(EventStatus.DRAFT, EventStatus.PENDING_REVIEW, EventStatus.REJECTED,
@@ -159,6 +160,66 @@ class EventServiceTest {
         when(repository.findById(eventId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.activate(eventId)).isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void aFutureEventCannotBeActivatedYet() {
+        Event e = event(EventStatus.APPROVED, null, null, 10, 0);
+        e.setEventStartAt(ahead(3_600));
+
+        assertThatThrownBy(() -> service.activate(eventId))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage("This event cannot be activated until its start date.");
+        assertThat(e.getStatus()).isEqualTo(EventStatus.APPROVED);
+    }
+
+    @Test
+    void anEventWithoutAStartDateCannotBeActivated() {
+        Event e = event(EventStatus.APPROVED, null, null, 10, 0);
+        assertThat(e.getEventStartAt()).isNull();
+
+        assertThatThrownBy(() -> service.activate(eventId))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage("This event cannot be activated until its start date.");
+        assertThat(e.getStatus()).isEqualTo(EventStatus.APPROVED);
+
+        assertThatThrownBy(() -> service.updateStatus(eventId, EventStatus.ACTIVE))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage("This event cannot be activated until its start date.");
+        assertThat(e.getStatus()).isEqualTo(EventStatus.APPROVED);
+    }
+
+    @Test
+    void anEventWhoseStartHasPassedCanBeActivated() {
+        Event e = event(EventStatus.APPROVED, null, null, 10, 0);
+        e.setEventStartAt(ago(60));
+
+        assertThat(service.activate(eventId).status()).isEqualTo(EventStatus.ACTIVE);
+    }
+
+    @Test
+    void endedOrCancelledEventsStayUnactivatableAfterTheirStart() {
+        for (EventStatus status : List.of(EventStatus.ENDED, EventStatus.CANCELLED)) {
+            Event e = event(status, null, null, 10, 0);
+            e.setEventStartAt(ago(3_600));
+
+            assertThatThrownBy(() -> service.activate(eventId))
+                    .as("%s", status)
+                    .isInstanceOf(ConflictException.class)
+                    .hasMessage("Only approved events can be activated");
+            assertThat(e.getStatus()).isEqualTo(status);
+        }
+    }
+
+    @Test
+    void theStatusSetterCannotStampAFutureEventActive() {
+        Event e = event(EventStatus.APPROVED, null, null, 10, 0);
+        e.setEventStartAt(ahead(60));
+
+        assertThatThrownBy(() -> service.updateStatus(eventId, EventStatus.ACTIVE))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage("This event cannot be activated until its start date.");
+        assertThat(e.getStatus()).isEqualTo(EventStatus.APPROVED);
     }
 
     // ----- availability: the registration rules the app shows -----

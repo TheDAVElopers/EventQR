@@ -7,6 +7,11 @@ interface EventDetailContract {
         fun renderEvent(event: AttendeeEventResponse)
         fun updateRegistrationStatus(isRegistered: Boolean)
         fun onRegistrationStatusCheckFailed()
+        /**
+         * The id of the user's live registration for this event (any status but CANCELLED / NO_SHOW),
+         * or null when there is none. This is the pass's id: it is independent of cancel eligibility.
+         */
+        fun setRegisteredId(registrationId: String?)
         /** The id of the user's cancellable (REGISTERED) registration for this event, or null when there is none. */
         fun setCancellableRegistration(registrationId: String?)
         fun showCancelling(isCancelling: Boolean)

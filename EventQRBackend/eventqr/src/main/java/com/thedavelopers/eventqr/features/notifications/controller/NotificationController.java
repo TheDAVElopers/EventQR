@@ -37,10 +37,12 @@ public class NotificationController {
     public ResponseEntity<ApiResponse<List<NotificationResponse>>> mine(HttpServletRequest request,
                                                                         @RequestParam(required = false) NotificationStatus status,
                                                                         @RequestParam(required = false) UUID eventId,
-                                                                        @RequestParam(required = false) NotificationType notificationType) {
+                                                                        @RequestParam(required = false) NotificationType notificationType,
+                                                                        @RequestParam(required = false) Boolean unreadOnly) {
         UUID userId = jwtService.extractUserIdFromBearer(request.getHeader("Authorization"));
-        if (status != null || eventId != null || notificationType != null) {
-            return ResponseEntity.ok(ApiResponse.success(notificationService.findByRecipientFiltered(userId, status, eventId, notificationType)));
+        if (status != null || eventId != null || notificationType != null || Boolean.TRUE.equals(unreadOnly)) {
+            return ResponseEntity.ok(ApiResponse.success(notificationService.findByRecipientFiltered(
+                    userId, status, eventId, notificationType, Boolean.TRUE.equals(unreadOnly))));
         }
         return ResponseEntity.ok(ApiResponse.success(notificationService.findByRecipient(userId)));
     }

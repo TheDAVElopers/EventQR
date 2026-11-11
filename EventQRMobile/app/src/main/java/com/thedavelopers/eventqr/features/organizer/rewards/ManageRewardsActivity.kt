@@ -401,7 +401,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
         return LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
-            setPadding(dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_10))
+            setPadding(dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_md))
             // A destructive trigger keeps a 1dp ui_error boundary at radius 4; everything else is
             // a flat tinted block (§5.1).
             background = androidx.core.content.ContextCompat.getDrawable(

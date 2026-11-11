@@ -27,6 +27,7 @@ import java.io.File
 import java.util.UUID
 
 open class AttendeeRepository(context: Context) {
+    private val appContext = context.applicationContext ?: context
     private val apiService = ApiClient.getService(context)
     suspend fun getEvents(): NetworkResult<List<AttendeeEventResponse>> =
         when (val result = safeApiCall { apiService.getAttendeeVisibleEvents() }) {
@@ -58,7 +59,10 @@ open class AttendeeRepository(context: Context) {
     open suspend fun createRegistration(request: RegistrationRequest) = safeApiCall { apiService.createRegistration(request) }
     open suspend fun getMyRegistrations(): NetworkResult<List<RegistrationResponse>> =
         when (val result = loadAllPages(MAX_PAGES, sortKey = { it.eventStartAt }) { page -> apiService.getMyRegistrations(page = page, size = PAGE_SIZE) }) {
-            is NetworkResult.Success -> result.also { RegistrationsCache.set(it.data) }
+            is NetworkResult.Success -> result.also {
+                RegistrationsCache.set(it.data)
+                QrPassCache.clearCancelled(appContext, it.data)
+            }
             is NetworkResult.Error -> result
             NetworkResult.Loading -> NetworkResult.Loading
         }
@@ -69,7 +73,9 @@ open class AttendeeRepository(context: Context) {
     suspend fun linkQrCredential(registrationId: String) = safeApiCall { apiService.linkQrCredential(registrationId) }
     suspend fun getQrCredentialById(qrCredentialId: String) = safeApiCall { apiService.getQrCredentialById(qrCredentialId) }
     open suspend fun cancelRegistration(registrationId: String): NetworkResult<RegistrationResponse> =
-        safeApiCall { apiService.cancelRegistration(registrationId) }
+        safeApiCall { apiService.cancelRegistration(registrationId) }.also { result ->
+            if (result is NetworkResult.Success) QrPassCache.clear(appContext, registrationId)
+        }
     suspend fun getRegistration(registrationId: String) = safeApiCall { apiService.getRegistration(registrationId) }
     suspend fun getRegistrationsByEvent(eventId: String): NetworkResult<List<RegistrationResponse>> =
         when (val result = safeApiCall { apiService.getRegistrationsByEvent(eventId) }) {

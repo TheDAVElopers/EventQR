@@ -234,7 +234,7 @@ class EventQrThemeComposeTest {
         navElevation = 8.dp,
         cardContentPadding = 16.dp,
         cardContentGap = 14.dp,
-        badgeHorizontalPadding = 10.dp,
+        badgeHorizontalPadding = 8.dp,
         badgeContentPadding = 4.dp,
         dateBadgeSize = 54.dp,
         iconSizeSmall = 14.dp,

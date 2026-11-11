@@ -32,6 +32,10 @@ class AttendeeProfileActivity : AppCompatActivity() {
     private lateinit var txtProfileError: TextView
     private lateinit var btnProfileRetry: TextView
 
+    // False until the role guard passed and every view above is inflated. A denied session
+    // finishes in onCreate without inflating anything, so onResume must not touch them.
+    private var uiReady = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         sessionManager = SessionManager(this)
@@ -75,6 +79,7 @@ class AttendeeProfileActivity : AppCompatActivity() {
         }
 
         configureAttendeeBottomNav(AttendeeBottomNavItem.PROFILE)
+        uiReady = true
     }
 
     private fun showSignOutConfirmation() {
@@ -103,6 +108,7 @@ class AttendeeProfileActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        if (!uiReady) return
         loadProfile()
     }
 

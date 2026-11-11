@@ -222,7 +222,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
                 tintBlock(R.color.ui_surface_sunken, R.drawable.bg_ui_block_r10)
-                setPadding(dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_xs), dimenPx(R.dimen.space_10), dimenPx(R.dimen.space_xs))
+                setPadding(dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_xs), dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_xs))
 
                 addView(ImageView(this@IdTemplateSettingsActivity).apply {
                     setImageResource(AppIcons.Lock)
@@ -376,7 +376,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply { setMargins(0, 0, 0, dimenPx(R.dimen.space_10)) }
+            ).apply { setMargins(0, 0, 0, dimenPx(R.dimen.space_md)) }
 
             addView(styledText("QR CODE", R.dimen.type_micro, true, color(R.color.chart_5), align = Gravity.CENTER_HORIZONTAL).apply {
                 includeFontPadding = false

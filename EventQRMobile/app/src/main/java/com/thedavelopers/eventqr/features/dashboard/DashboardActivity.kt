@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.lifecycle.lifecycleScope
@@ -36,6 +37,7 @@ import com.thedavelopers.eventqr.features.auth.AuthRepository
 import com.thedavelopers.eventqr.features.dashboard.model.dto.DashboardSummary
 import com.thedavelopers.eventqr.features.dashboard.model.dto.DashboardUpcomingEvent
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import com.thedavelopers.eventqr.ui.components.ListRowBinder
 import com.thedavelopers.eventqr.ui.components.PassHeadBinder
 import com.thedavelopers.eventqr.ui.components.PassHeadModel
@@ -63,7 +65,13 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     private lateinit var discoverEventsLayout: LinearLayout
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private var isSwipeRefreshing = false
-    private var refreshBadgeOnResume = false
+    private var isFirstResume = true
+    private var hasRenderedContent = false
+
+    /** Every load goes through [reload], so a resume can prove it issues exactly one request. */
+    @VisibleForTesting
+    internal var loadRequests = 0
+        private set
 
     // The pass head is re-bound on every summary / role change, so keep the last values it must
     // show rather than reading them back out of the view tree.
@@ -97,12 +105,12 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
 
         swipeRefreshLayout.setOnRefreshListener {
             isSwipeRefreshing = true
-            presenter.loadDashboard()
+            reload()
         }
 
         bindPassHead()
         configureActions()
-        presenter.loadDashboard()
+        reload()
     }
 
     override fun onDestroy() {
@@ -112,10 +120,11 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
 
     override fun onResume() {
         super.onResume()
-        if (refreshBadgeOnResume) {
-            refreshBadgeOnResume = false
-            presenter.loadDashboard()
-        }
+        // The nav reorders this instance to the front, so returning from a detail screen must
+        // reload the rows it may have changed (registration, cancellation). The first resume is
+        // the onCreate load: one request per resume, never two racing summaries.
+        if (!isFirstResume) reload()
+        isFirstResume = false
         // Re-issue the access token so a role change (e.g. upgraded to organizer after an
         // event request approval) is reflected without requiring a logout/login.
         lifecycleScope.launch {
@@ -131,6 +140,12 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
             return
         }
 
+        // Once rows are on screen a reload refreshes in place: no skeleton over readable content,
+        // no layout jump on return from a detail screen.
+        if (hasRenderedContent) {
+            skeletonLoading.visibility = View.GONE
+            return
+        }
         skeletonLoading.visibility = if (isLoading) View.VISIBLE else View.GONE
         upcomingEventsLayout.visibility = if (isLoading) View.GONE else View.VISIBLE
         discoverEventsLayout.visibility = if (isLoading) View.GONE else View.VISIBLE
@@ -138,6 +153,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
 
     override fun showSummary(summary: DashboardSummary) {
         stopSwipeRefresh()
+        hasRenderedContent = true
         skeletonLoading.visibility = View.GONE
         upcomingEventsLayout.visibility = View.VISIBLE
         discoverEventsLayout.visibility = View.VISIBLE
@@ -155,12 +171,20 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     override fun showError(message: String) {
         stopSwipeRefresh()
         skeletonLoading.visibility = View.GONE
-        upcomingEventsLayout.visibility = View.VISIBLE
-        discoverEventsLayout.visibility = View.VISIBLE
-        bindPassHead()
-        renderUpcomingEvents(emptyList())
-        renderDiscoverEvents(emptyList())
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        // A failed refresh over readable rows keeps them; a failed first load owns the body. The
+        // empty-list copy is never rendered here - it would claim there is nothing to show when the
+        // request simply did not answer.
+        if (!hasRenderedContent) {
+            upcomingEventsLayout.visibility = View.VISIBLE
+            // One request feeds both blocks, so one error block carries the failure and its Retry;
+            // an identical block under DISCOVER would be a second control for the same request.
+            discoverEventsLayout.visibility = View.GONE
+            bindPassHead()
+            renderUpcomingError()
+        } else {
+            // The rows stay readable; the failure is a background notice.
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun showMessage(message: String) {
@@ -207,7 +231,6 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
                 stats = stats,
                 onTabSelected = { index -> portals.getOrNull(index)?.let(::switchToPortal) },
                 onBellClick = {
-                    refreshBadgeOnResume = true
                     startActivity(
                         Intent(
                             this,
@@ -313,6 +336,36 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
             text = getString(bodyRes)
         })
         return block
+    }
+
+    /**
+     * The first-load failure owns the body: one honest error with the Retry for the one request
+     * that feeds both blocks. It replaces the "no events" copy, which would claim the list is
+     * empty when the request simply did not answer.
+     */
+    private fun renderUpcomingError() {
+        replaceRows(upcomingEventsLayout) {
+            addView(
+                EventQrEmptyState(this@DashboardActivity).apply {
+                    setIcon(AppIcons.Warning)
+                    show(
+                        getString(R.string.ui_attendee_dashboard_error_title),
+                        getString(R.string.ui_attendee_load_error_body),
+                    )
+                    setAction(getString(R.string.common_retry)) { reload() }
+                },
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                ),
+            )
+        }
+    }
+
+    /** Every load path counts here, so a resume cannot quietly issue a second request. */
+    private fun reload() {
+        loadRequests++
+        presenter.loadDashboard()
     }
 
     private fun metaFor(event: DashboardUpcomingEvent, time: String): String =

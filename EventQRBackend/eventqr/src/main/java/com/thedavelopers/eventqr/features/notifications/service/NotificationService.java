@@ -191,7 +191,7 @@ n.setMessage((credited ? "Credits: +" : "Deduction: -") + points + " points for 
         n.setRecipientUserId(requesterUserId);
         n.setNotificationType(NotificationType.EVENT_APPROVED);
         n.setTitle("Event approved: " + eventName);
-n.setMessage("Your event request '" + eventName + "' has been approved.");
+n.setMessage("Your event is live. You can now manage it as an organizer.");
         n.setStatus(NotificationStatus.SENT);
         notificationRepository.save(n);
     }
@@ -309,8 +309,10 @@ public void createEventStartingSoonNotifications(List<com.thedavelopers.eventqr.
         notificationRepository.save(n);
     }
 
-    public List<NotificationResponse> findByRecipientFiltered(UUID recipientUserId, NotificationStatus status, UUID eventId, NotificationType notificationType) {
-        List<Notification> results = notificationRepository.findByRecipientUserIdOrderByCreatedAtDesc(recipientUserId);
+    public List<NotificationResponse> findByRecipientFiltered(UUID recipientUserId, NotificationStatus status, UUID eventId, NotificationType notificationType, boolean unreadOnly) {
+        List<Notification> results = unreadOnly
+                ? notificationRepository.findByRecipientUserIdAndStatusNotOrderByCreatedAtDesc(recipientUserId, NotificationStatus.READ)
+                : notificationRepository.findByRecipientUserIdOrderByCreatedAtDesc(recipientUserId);
         if (status != null) {
             results = results.stream().filter(n -> n.getStatus() == status).toList();
         }

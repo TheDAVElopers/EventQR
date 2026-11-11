@@ -57,7 +57,7 @@ class AttendeeEventAdapter(
 
             ListRowBinder.bind(
                 row,
-                title = item.title,
+                title = item.title.ifBlank { row.context.getString(R.string.common_untitled_event) },
                 meta = metaFor(item, date.time),
                 trailing = ListRowBinder.Trailing.BADGE,
                 onClick = { onClick(item) },

@@ -65,11 +65,14 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
+            <!-- Two lines so a real event name fits beside the badge at 360dp; maxLines keeps a
+                 long title from growing the row without bound (§5.5 amendment). -->
             <TextView
                 android:id="@+id/listRowTitle"
                 style="@style/Widget.EventQR.Ui.ListRow.Title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:maxLines="2"
                 tools:text="DevFest Manila 2026" />
 
             <TextView

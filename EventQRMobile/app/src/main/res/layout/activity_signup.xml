@@ -475,7 +475,7 @@
         android:background="@color/ui_surface"
         android:orientation="vertical">
 
-        <!-- 52dp button + 10dp either side = the 72dp footer; the navigation-bar inset is added
+        <!-- 52dp button + 12dp either side = the 76dp footer; the navigation-bar inset is added
              below it as padding, so the footer's fill runs behind the gesture bar. -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -483,7 +483,7 @@
             android:minHeight="@dimen/ui_footer_height"
             android:orientation="vertical"
             android:paddingHorizontal="@dimen/ui_gutter"
-            android:paddingVertical="@dimen/space_10">
+            android:paddingVertical="@dimen/space_md">
 
             <Button
                 android:id="@+id/btnRegister"

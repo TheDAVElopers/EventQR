@@ -21,8 +21,6 @@ import com.thedavelopers.eventqr.features.staff.StaffScreenExtras
 import com.thedavelopers.eventqr.features.staff.StaffTransactionsActivity
 import com.thedavelopers.eventqr.features.staff.details.StaffAttendeeDetailsActivity
 import com.thedavelopers.eventqr.features.staff.notifications.StaffNotificationsActivity
-import com.thedavelopers.eventqr.features.staff.result.StaffScanResultActivity
-import com.thedavelopers.eventqr.features.staff.result.StaffTransactionResultActivity
 import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -47,8 +45,6 @@ class RoleGuardMatrixTest {
         EventRegistrationsActivity::class.java,
         StaffAssignedEventsActivity::class.java,
         StaffAttendeeDetailsActivity::class.java,
-        StaffTransactionResultActivity::class.java,
-        StaffScanResultActivity::class.java,
     )
 
     @Before
@@ -77,8 +73,33 @@ class RoleGuardMatrixTest {
             .get()
     }
 
+    /**
+     * Runs the whole visible lifecycle, not just `create`: a denied activity finishes in `onCreate`
+     * without inflating its views, so `onResume` / `onDestroy` must survive the missing state too.
+     * Stopping at `create` would let a null-view crash there pass unnoticed.
+     */
     private fun denies(activity: Class<out Activity>, role: AccountRole?): Boolean {
-        return launch(activity, role).isFinishing
+        if (role == null) {
+            sessionManager.clearSession()
+        } else {
+            sessionManager.saveRole(role)
+        }
+        val controller = Robolectric.buildActivity(activity, intentFor(activity)).create()
+        val denied = controller.get().isFinishing
+        // A denied activity is already finishing, so it cannot be started. Its own onDestroy still
+        // has to run: that is where the uninitialized-view guard lives. Robolectric's FragmentActivity
+        // teardown can throw after that onDestroy, from the fragment manager, for an activity that
+        // never started; only that teardown artefact is tolerated.
+        if (denied) {
+            try {
+                controller.destroy()
+            } catch (error: IllegalStateException) {
+                if (error.message?.contains("FragmentManager") != true) throw error
+            }
+        } else {
+            controller.start().resume().pause().stop().destroy()
+        }
+        return denied
     }
 
     @Test

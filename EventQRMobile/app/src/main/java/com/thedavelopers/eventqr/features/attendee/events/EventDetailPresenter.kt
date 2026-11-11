@@ -103,6 +103,9 @@ class EventDetailPresenter(
      * reads pass; an unverifiable registration hides it rather than leading to a guaranteed error.
      */
     private fun applyCancellableRegistration(items: List<RegistrationResponse>, eventId: String) {
+        // The pass id is every live registration, independent of the stricter cancel rules below:
+        // a checked-in or exited attendee still owns a pass (§6.2).
+        view?.setRegisteredId(registeredIdIn(items, eventId))
         val registrationId = cancellableIdIn(items, eventId)
         activityJob?.cancel()
         if (registrationId == null) {
@@ -143,6 +146,14 @@ class EventDetailPresenter(
         items.firstOrNull { it.eventId.toString() == eventId && it.status == RegistrationStatus.REGISTERED }
             ?.registrationId?.toString()
 
+    /** The pass id: the same live rows [isRegisteredIn] counts, in any status. */
+    private fun registeredIdIn(items: List<RegistrationResponse>, eventId: String): String? =
+        items.firstOrNull {
+            it.eventId.toString() == eventId &&
+                it.status != RegistrationStatus.CANCELLED &&
+                it.status != RegistrationStatus.NO_SHOW
+        }?.registrationId?.toString()
+
     fun cancelRegistration(registrationId: String) {
         if (cancelling) return
         cancelling = true
@@ -159,6 +170,8 @@ class EventDetailPresenter(
                         // Keep the shared cache in step so other screens do not briefly show the stale registration.
                         RegistrationsCache.addRegistration(result.data)
                         view?.setCancellableRegistration(null)
+                        // The cancelled row is no longer a live registration, so its pass is gone too.
+                        view?.setRegisteredId(null)
                         view?.updateRegistrationStatus(false)
                         view?.onRegistrationCancelled(strings.get(R.string.event_detail_registration_cancelled))
                     }

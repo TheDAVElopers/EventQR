@@ -57,7 +57,6 @@ import java.util.UUID
 private enum class ConfirmAction {
     APPROVE,
     REJECT,
-    UPGRADE,
 }
 
 internal fun eventRequestBadgeStatus(status: EventRequestStatus): EventBadgeStatus = when (status) {
@@ -93,7 +92,6 @@ fun EventRequestDetailScreen(
     onRetryClick: () -> Unit,
     onApproveClick: ((remarks: String?) -> Unit)? = null,
     onRejectClick: ((remarks: String?) -> Unit)? = null,
-    onUpgradeClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val grid = LocalGrid.current
@@ -259,20 +257,6 @@ fun EventRequestDetailScreen(
                                 inline = true,
                             )
                         }
-                    } else if (request.status == EventRequestStatus.APPROVED) {
-                        UiButton(
-                            text = stringResource(
-                                if (request.organizerUpgraded) R.string.ui_request_detail_upgraded
-                                else R.string.ui_request_detail_upgrade,
-                            ),
-                            onClick = {
-                                if (!request.organizerUpgraded && onUpgradeClick != null) {
-                                    showConfirmDialog = ConfirmAction.UPGRADE
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            enabled = !request.organizerUpgraded && onUpgradeClick != null,
-                        )
                     }
                 }
 
@@ -293,7 +277,6 @@ fun EventRequestDetailScreen(
                 when (act) {
                     ConfirmAction.APPROVE -> onApproveClick?.invoke(remarksText.ifBlank { null })
                     ConfirmAction.REJECT -> onRejectClick?.invoke(remarksText.ifBlank { null })
-                    ConfirmAction.UPGRADE -> onUpgradeClick?.invoke()
                     null -> Unit
                 }
             },
@@ -410,14 +393,12 @@ private fun ConfirmDialog(
         when (action) {
             ConfirmAction.APPROVE -> R.string.ui_request_detail_confirm_approve
             ConfirmAction.REJECT -> R.string.ui_request_detail_confirm_reject
-            ConfirmAction.UPGRADE -> R.string.ui_request_detail_confirm_upgrade
         },
     )
     val body = stringResource(
         when (action) {
             ConfirmAction.APPROVE -> R.string.ui_request_detail_confirm_approve_body
             ConfirmAction.REJECT -> R.string.ui_request_detail_confirm_reject_body
-            ConfirmAction.UPGRADE -> R.string.ui_request_detail_confirm_upgrade_body
         },
     )
     val confirmsRemarks = action == ConfirmAction.APPROVE || action == ConfirmAction.REJECT

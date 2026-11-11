@@ -85,10 +85,9 @@ class EventQrEmptyStateContractTest {
             .findViewById<EventQrEmptyState>(R.id.layoutEventsEmpty)
         assertEquals(gutter, owned.paddingLeft)
 
-        // The four hosts that pad their list container opt out, so the copy keeps one 20dp edge.
+        // The hosts that pad their list container opt out, so the copy keeps one 20dp edge.
         val hosted = listOf(
             R.layout.activity_my_event_requests to R.id.txtMyRequestsEmpty,
-            R.layout.activity_user_transaction_history to R.id.txtTransactionsEmpty,
             R.layout.activity_user_rewards to R.id.layoutNoRegisteredEvents,
             R.layout.activity_user_rewards to R.id.layoutRewardsEmpty,
         )
@@ -97,10 +96,16 @@ class EventQrEmptyStateContractTest {
             assertEquals("${context.resources.getResourceEntryName(id)} must not add a second gutter", 0, state.paddingLeft)
         }
 
-        // Claimed rewards owns its gutter: the list rows carry the 20dp inset, so the host does not pad.
-        val claimed = LayoutInflater.from(context).inflate(R.layout.activity_claimed_rewards, null, false)
-            .findViewById<EventQrEmptyState>(R.id.txtClaimedRewardsEmpty)
-        assertEquals("claimed rewards empty state owns the gutter", gutter, claimed.paddingLeft)
+        // These lists own their gutter: the rows carry the 20dp inset, so the host does not pad
+        // and the empty state supplies the edge itself.
+        val rowsCarryTheGutter = listOf(
+            R.layout.activity_claimed_rewards to R.id.txtClaimedRewardsEmpty,
+            R.layout.activity_user_transaction_history to R.id.txtTransactionsEmpty,
+        )
+        for ((layout, id) in rowsCarryTheGutter) {
+            val state = LayoutInflater.from(context).inflate(layout, null, false).findViewById<EventQrEmptyState>(id)
+            assertEquals("${context.resources.getResourceEntryName(id)} owns the gutter", gutter, state.paddingLeft)
+        }
     }
 
     @Test

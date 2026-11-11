@@ -14,6 +14,7 @@ import com.thedavelopers.eventqr.core.session.SessionEvents
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.features.dashboard.DashboardRouter
 import com.thedavelopers.eventqr.features.dashboard.RoleReroutePolicy
+import com.thedavelopers.eventqr.features.notifications.EventDecisionNotifier
 import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
 import com.thedavelopers.eventqr.features.auth.login.LoginActivity
 import com.thedavelopers.eventqr.features.auth.register.RegistrationActivity
@@ -30,6 +31,7 @@ class EventQrApplication : Application() {
         super.onCreate()
         // Start the slow Keystore/EncryptedSharedPreferences init now, in parallel with activity creation.
         SessionManager.warmUp(this)
+        EventDecisionNotifier.schedule(this)
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
                 // Pre-35 devices only draw behind the status bar once asked to; 35+ enforces it.
@@ -50,6 +52,10 @@ class EventQrApplication : Application() {
                         pendingRole = null
                         rerouteIfNeeded(activity, role)
                     }
+                }
+                if (activity::class.java in DashboardRouter.dashboardClasses) {
+                    // Foreground sweep for decisions that arrived while the app was closed or idle.
+                    EventDecisionNotifier.sweepInBackground(activity)
                 }
             }
 

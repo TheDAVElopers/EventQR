@@ -167,7 +167,7 @@ internal fun AppCompatActivity.chip(label: String, active: Boolean = false, colo
         setPadding(dimenPx(R.dimen.ui_chip_pad_h), dimenPx(R.dimen.space_8), dimenPx(R.dimen.ui_chip_pad_h), dimenPx(R.dimen.space_8))
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
-            dimenPx(R.dimen.ui_touch_min),
+            ViewGroup.LayoutParams.WRAP_CONTENT,
         ).apply { setMargins(0, 0, dimenPx(R.dimen.ui_chip_gap), 0) }
     }
 
@@ -218,7 +218,8 @@ internal fun AppCompatActivity.summaryCard(title: String, value: String, accent:
             LinearLayout(this@summaryCard).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
-                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dimenPx(R.dimen.ui_metric_row_height))
+                minimumHeight = dimenPx(R.dimen.ui_metric_row_height)
+                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                 setPadding(dimenPx(R.dimen.ui_gutter), 0, dimenPx(R.dimen.ui_gutter), 0)
                 addView(styledText(title, R.dimen.ui_type_overline, false, orgColors.muted).apply {
                     layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
@@ -462,7 +463,7 @@ internal fun AppCompatActivity.organizerHeader(
                 action,
                 LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT,
-                    dimenPx(R.dimen.ui_touch_min),
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
                 ).apply { marginEnd = dimenPx(R.dimen.space_8) },
             )
         }

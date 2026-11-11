@@ -50,7 +50,6 @@ class AdminEventRequestDetailActivity : AppCompatActivity() {
                     onRetryClick = { verifyAdminAndLoad() },
                     onApproveClick = { remarks -> approveRequest(remarks) },
                     onRejectClick = { remarks -> rejectRequest(remarks) },
-                    onUpgradeClick = { upgradeRequester() },
                 )
             }
         }
@@ -135,23 +134,6 @@ class AdminEventRequestDetailActivity : AppCompatActivity() {
             when (val result = repository.rejectEvent(requestId, remarks)) {
                 is NetworkResult.Success -> {
                     Toast.makeText(this@AdminEventRequestDetailActivity, this@AdminEventRequestDetailActivity.getString(R.string.admin_event_request_detail_request_rejected), Toast.LENGTH_SHORT).show()
-                    loadRequest()
-                }
-                is NetworkResult.Error -> {
-                    _isLoading.value = false
-                    Toast.makeText(this@AdminEventRequestDetailActivity, toFriendlyError(result.message), Toast.LENGTH_LONG).show()
-                }
-                NetworkResult.Loading -> Unit
-            }
-        }
-    }
-
-    private fun upgradeRequester() {
-        _isLoading.value = true
-        lifecycleScope.launch {
-            when (val result = repository.upgradeOrganizer(requestId)) {
-                is NetworkResult.Success -> {
-                    Toast.makeText(this@AdminEventRequestDetailActivity, this@AdminEventRequestDetailActivity.getString(R.string.admin_event_request_detail_requester_upgraded_to_organizer), Toast.LENGTH_SHORT).show()
                     loadRequest()
                 }
                 is NetworkResult.Error -> {

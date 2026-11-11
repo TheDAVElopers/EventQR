@@ -201,9 +201,6 @@ interface ApiService {
         @Body request: EventRequestDecisionRequest? = null,
     ): ApiResponse<EventRequestResponse>
 
-    @PATCH("admin/event-requests/{requestId}/upgrade-organizer")
-    suspend fun upgradeOrganizerFromEventRequest(@Path("requestId") requestId: String): ApiResponse<EventRequestResponse>
-
     @GET("organizer/events")
     suspend fun getOrganizerEvents(): ApiResponse<List<OrganizerEventDto>>
 
@@ -546,6 +543,7 @@ interface ApiService {
         @Query("status") status: String? = null,
         @Query("eventId") eventId: java.util.UUID? = null,
         @Query("notificationType") notificationType: com.thedavelopers.eventqr.core.api.dto.NotificationType? = null,
+        @Query("unreadOnly") unreadOnly: Boolean? = null,
     ): ApiResponse<List<NotificationResponse>>
 
     @PATCH("notifications/{notificationId}/read")

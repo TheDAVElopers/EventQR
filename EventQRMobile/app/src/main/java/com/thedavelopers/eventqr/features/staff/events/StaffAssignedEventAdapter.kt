@@ -92,7 +92,9 @@ class StaffAssignedEventAdapter(
             val date = EventCardPresenter.dateParts(event.eventStartAt)
 
             state.value = StaffAssignedEventCardState(
-                title = event.title,
+                title = event.title.ifBlank {
+                    composeView.context.getString(R.string.common_untitled_event)
+                },
                 badgeStatusRaw = EventStatusBadgeStyler.displayLabel(resolvedStatus),
                 day = date.day,
                 month = date.month,

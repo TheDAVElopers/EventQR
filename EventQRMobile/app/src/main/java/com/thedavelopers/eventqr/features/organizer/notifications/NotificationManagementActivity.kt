@@ -24,6 +24,7 @@ import com.thedavelopers.eventqr.core.api.dto.NotificationStatus
 import com.thedavelopers.eventqr.core.api.dto.NotificationType
 import com.thedavelopers.eventqr.core.util.ScreenInsets
 import com.thedavelopers.eventqr.core.util.UiStrings
+import com.thedavelopers.eventqr.features.notifications.EventDecisionNotifier
 import com.thedavelopers.eventqr.features.notifications.NotificationAdapter
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpDataSource
@@ -82,7 +83,10 @@ class NotificationManagementActivity : AppCompatActivity() {
 
     private fun setupMarkAllRead(repo: OrganizerRepository) {
         findViewById<TextView>(R.id.txtMarkAllRead).setOnClickListener {
-            viewModel.markAllRead { repo.markAllNotificationsRead() }
+            viewModel.markAllRead {
+                val ids = viewModel.list.value.orEmpty().map { it.notificationId.toString() }
+                EventDecisionNotifier.markRead(this, ids) { repo.markAllNotificationsRead() }
+            }
         }
     }
 
@@ -245,7 +249,11 @@ class NotificationManagementActivity : AppCompatActivity() {
         val recycler = findViewById<RecyclerView>(R.id.recyclerNotifications)
         adapter = NotificationAdapter { item ->
             if (item.status != NotificationStatus.READ) {
-                viewModel.markRead(item) { target -> repo.markNotificationRead(target.notificationId.toString()) }
+                viewModel.markRead(item) { target ->
+                    val id = target.notificationId.toString()
+                    // Read decisions leave the shade too, but only once the server accepted them.
+                    EventDecisionNotifier.markRead(this, listOf(id)) { repo.markNotificationRead(id) }
+                }
             }
         }
         recycler.layoutManager = LinearLayoutManager(this)

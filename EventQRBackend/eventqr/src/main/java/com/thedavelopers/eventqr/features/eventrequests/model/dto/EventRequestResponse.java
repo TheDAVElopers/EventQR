@@ -32,6 +32,5 @@ public record EventRequestResponse(
         UUID reviewedByUserId,
         Instant reviewedAt,
         Instant createdAt,
-        Instant updatedAt,
-        Boolean organizerUpgraded) {
+        Instant updatedAt) {
 }

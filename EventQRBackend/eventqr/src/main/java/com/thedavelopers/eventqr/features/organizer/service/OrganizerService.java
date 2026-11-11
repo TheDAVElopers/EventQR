@@ -22,6 +22,7 @@ import com.thedavelopers.eventqr.features.events.model.dto.EventRequest;
 import com.thedavelopers.eventqr.features.events.model.dto.EventResponse;
 import com.thedavelopers.eventqr.features.events.model.entity.Event;
 import com.thedavelopers.eventqr.features.events.repository.EventRepository;
+import com.thedavelopers.eventqr.features.events.service.EventService;
 import com.thedavelopers.eventqr.features.idprinting.repository.IdTemplateRepository;
 import com.thedavelopers.eventqr.shared.security.UserTokenRevocationChecker;
 import com.thedavelopers.eventqr.features.notifications.service.NotificationService;
@@ -165,9 +166,14 @@ public class OrganizerService {
     @CacheEvict(cacheNames = EVENTS_CACHE, allEntries = true)
     public EventResponse updateEvent(UUID organizerUserId, UUID eventId, AccountRole role, EventRequest request) {
         Event event = requireOrganizerEvent(organizerUserId, eventId, role);
-        // SDD 3.5 / UC-20 edit lock: once an event is Active (Ongoing) or Completed the
-        // Organizer can no longer edit its details — editable only while Upcoming (APPROVED).
-        if (event.getStatus() == EventStatus.ACTIVE || event.getStatus() == EventStatus.ENDED) {
+        // SDD 3.5 / UC-20 edit lock: once an event is Ongoing or Completed the Organizer can no
+        // longer edit its details. The lock follows the event window, not the stored status:
+        // an upcoming event can already be ACTIVE (admin "activate" or an early status sweep),
+        // and locking on that label alone refused edits for a future event. Ownership and the
+        // approved-only gate stay in requireOrganizerEvent above.
+        boolean started = event.getEventStartAt() != null
+                && !event.getEventStartAt().isAfter(Instant.now());
+        if (started || event.getStatus() == EventStatus.ENDED) {
             throw new ConflictException("Cannot edit an event that is ongoing or completed");
         }
         if (request.title() == null || request.title().isBlank()) {
@@ -221,6 +227,10 @@ public class OrganizerService {
             if (!allowed.contains(status)) {
                 throw new BadRequestException("Cannot change event status from " + event.getStatus() + " to " + status
                         + (allowed.isEmpty() ? "" : ". Allowed: " + allowed));
+            }
+            if (status == EventStatus.ACTIVE) {
+                // Same rule as admin activation: no ACTIVE before the start time.
+                EventService.requireStartReached(event);
             }
         }
         event.setStatus(status);

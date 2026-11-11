@@ -66,7 +66,8 @@ internal fun bindScanTransactionRow(itemView: View, item: TransactionResponse) {
     val isEarned = item.pointsDelta >= 0
 
     titleView.text = mapTransactionTitle(titleView, item.transactionType)
-    eventView.text = item.eventTitle.orEmpty()
+    eventView.text = item.eventTitle?.takeIf { it.isNotBlank() }
+        ?: context.getString(R.string.common_untitled_event)
     timeView.text = item.scannedAt?.let { transactionDisplayFormatter.format(it) }
         ?: context.getString(R.string.dashboard_value_unavailable)
 
@@ -98,16 +99,16 @@ internal fun bindScanTransactionRow(itemView: View, item: TransactionResponse) {
     }
 }
 
+// One label per scan purpose, so a row never falls back to a raw enum name ("Id print").
 internal fun mapTransactionTitle(view: TextView, type: TransactionType): String = when (type) {
     TransactionType.ENTRY -> view.context.getString(R.string.item_transaction_log_entry)
     TransactionType.ATTENDANCE -> view.context.getString(R.string.scan_purpose_type_session_attendance)
     TransactionType.BOOTH_VISIT -> view.context.getString(R.string.scan_purpose_type_booth_visit)
+    TransactionType.SESSION_VISIT -> view.context.getString(R.string.scan_purpose_type_session_visit)
+    TransactionType.BENEFIT_CLAIM -> view.context.getString(R.string.scan_purpose_type_benefit_claim)
     TransactionType.REWARD_REDEMPTION_SCAN, TransactionType.REWARD_REDEMPTION ->
         view.context.getString(R.string.scan_purpose_type_reward_redemption)
     TransactionType.EXIT -> view.context.getString(R.string.scan_purpose_type_event_exit)
-    else -> type.name
-        .lowercase(Locale.US)
-        .replace('_', ' ')
-        .split(' ')
-        .joinToString(" ") { word -> word.replaceFirstChar { it.uppercase(Locale.US) } }
+    TransactionType.ID_PRINT -> view.context.getString(R.string.scan_purpose_type_id_print)
+    TransactionType.REGISTRATION -> view.context.getString(R.string.ui_staff_result_registration)
 }

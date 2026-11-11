@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features
 
+import android.content.Intent
 import com.thedavelopers.eventqr.features.admin.AdminEventApprovalBackendActivity
 import com.thedavelopers.eventqr.features.admin.adminNavDestination
 import com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity
@@ -8,6 +9,7 @@ import com.thedavelopers.eventqr.features.attendee.AttendeeEventsActivity
 import com.thedavelopers.eventqr.features.attendee.AttendeeRewardsActivity
 import com.thedavelopers.eventqr.features.attendee.RegisteredEventsActivity
 import com.thedavelopers.eventqr.features.attendee.attendeeNavDestination
+import com.thedavelopers.eventqr.features.attendee.attendeeTabFlags
 import com.thedavelopers.eventqr.features.dashboard.DashboardActivity
 import com.thedavelopers.eventqr.features.organizer.attendees.AttendeeManagementActivity
 import com.thedavelopers.eventqr.features.organizer.dashboard.OrganizerDashboardActivity
@@ -59,6 +61,41 @@ class BottomNavMappingTest {
     @Test
     fun attendeeNavDestination_unknownIdResolvesToNull() {
         assertNull(attendeeNavDestination("bogus"))
+    }
+
+    /**
+     * Item 6: only the Home tab is a root. Pushing Home with CLEAR_TOP pops the tabs above it;
+     * every other tab is reordered to the front instead of pushed again, so repeated travel between
+     * two tabs cannot stack duplicates and Back still walks the tabs instead of exiting the app.
+     */
+    @Test
+    fun attendeeTabFlags_onlyHomeClearsTheTabStack() {
+        assertEquals(
+            Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP,
+            attendeeTabFlags(DashboardActivity::class.java),
+        )
+    }
+
+    @Test
+    fun attendeeTabFlags_nonHomeTabsReorderToFrontWithoutClearing() {
+        listOf(
+            AttendeeEventsActivity::class.java,
+            RegisteredEventsActivity::class.java,
+            AttendeeRewardsActivity::class.java,
+            com.thedavelopers.eventqr.features.attendee.AttendeeProfileActivity::class.java,
+        ).forEach { destination ->
+            val flags = attendeeTabFlags(destination)
+            assertEquals(
+                "${destination.simpleName} must reuse its instance instead of stacking a duplicate",
+                Intent.FLAG_ACTIVITY_REORDER_TO_FRONT,
+                flags,
+            )
+            assertEquals(
+                "${destination.simpleName} must keep the tab stack",
+                0,
+                flags and Intent.FLAG_ACTIVITY_CLEAR_TOP,
+            )
+        }
     }
 
     @Test

@@ -6,7 +6,6 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import com.thedavelopers.eventqr.core.util.ScreenInsets
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpDataSource
@@ -135,12 +134,10 @@ open class EventManagementHubActivity : AppCompatActivity() {
             )
             findViewById<TextView>(R.id.emh_status_badge).bindEventBadge(status)
 
-            // The editor locks itself for Active/Completed; Cancelled and Rejected have no editable
-            // content either, so only these three lifecycle states open the form.
-            val canEdit = when (status) {
-                EventStatus.APPROVED, EventStatus.DRAFT, EventStatus.PENDING_REVIEW -> true
-                else -> false
-            }
+            // Editing ends when the event starts or completes. Cancelled and Rejected have no
+            // editable content either; the shared rule keys all of it on the date-derived status,
+            // so this row and the editor can never disagree.
+            val canEdit = status.isEventEditable()
             bindRow(
                 R.id.emh_menu_edit,
                 title = getString(if (canEdit) R.string.event_management_hub_edit_event_details else R.string.event_management_hub_view_event_details),

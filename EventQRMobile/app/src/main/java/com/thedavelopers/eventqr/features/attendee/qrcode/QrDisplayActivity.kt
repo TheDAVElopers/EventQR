@@ -1,11 +1,11 @@
 package com.thedavelopers.eventqr.features.attendee
 
 import com.thedavelopers.eventqr.core.util.UiStrings
+import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
-import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -17,14 +17,19 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.ui.theme.color
+import com.thedavelopers.eventqr.core.api.dto.QrDisplayStatus
 import com.thedavelopers.eventqr.core.util.BitmapSaver
+import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.features.qrcredential.model.dto.QrCredentialSnapshot
 import com.thedavelopers.eventqr.features.registrations.RegistrationNumberFormatter
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+import com.thedavelopers.eventqr.ui.components.asCredentialHolderName
 import com.thedavelopers.eventqr.ui.theme.applyEventQrBottomInsetPadding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.Instant
 
 /**
  * Dedicated QR display screen for attendees opening their credential
@@ -41,20 +46,21 @@ private val PASS_DATE_FORMATTER: java.time.format.DateTimeFormatter =
 class QrDisplayActivity : AppCompatActivity(), QrCredentialContract.View {
     private lateinit var presenter: QrCredentialPresenter
     private lateinit var qrImage: ImageView
-    private lateinit var qrText: TextView
     private lateinit var loadingText: TextView
     private lateinit var markDownloadedButton: Button
     private lateinit var downloadController: QrDownloadButtonController
-    private lateinit var attendeeNameText: TextView
-    private lateinit var attendeeEmailText: TextView
-    private lateinit var credentialIdText: TextView
     private lateinit var eventNameText: TextView
+    private lateinit var attendeeNameText: TextView
     private lateinit var eventMetaText: TextView
     private lateinit var serialText: TextView
+    private lateinit var savedCopyText: TextView
+    private lateinit var emptyState: EventQrEmptyState
     private var currentQrCredentialId: String? = null
     private var currentQrBitmap: Bitmap? = null
     private var currentEventTitle: String? = null
     private var currentRegistrationId: String? = null
+    private var showingSavedCopy = false
+    private var loadGeneration = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,7 +68,6 @@ class QrDisplayActivity : AppCompatActivity(), QrCredentialContract.View {
 
         presenter = QrCredentialPresenter(this, AttendeeRepository(this), UiStrings(this))
         qrImage = findViewById(R.id.qrImage)
-        qrText = findViewById(R.id.txtQrValue)
         loadingText = findViewById(R.id.txtQrLoading)
         markDownloadedButton = findViewById(R.id.btnMarkQrDownloaded)
         downloadController = QrDownloadButtonController(
@@ -70,36 +75,50 @@ class QrDisplayActivity : AppCompatActivity(), QrCredentialContract.View {
             findViewById(R.id.progressQrDownload),
             findViewById(R.id.imgQrDownloadCheck)
         )
-        attendeeNameText = findViewById(R.id.txtQrAttendeeName)
-        attendeeEmailText = findViewById(R.id.txtQrAttendeeEmail)
-        credentialIdText = findViewById(R.id.txtQrCredentialValue)
         eventNameText = findViewById(R.id.qrEventName)
+        attendeeNameText = findViewById(R.id.qrAttendeeName)
         eventMetaText = findViewById(R.id.qrMeta)
         serialText = findViewById(R.id.qrSerial)
+        savedCopyText = findViewById(R.id.txtQrSavedCopy)
+        emptyState = findViewById(R.id.emptyQrPassState)
         findViewById<TextView>(R.id.qrRole).text = getString(R.string.ui_attendee_attendee)
 
         findViewById<View>(R.id.nav_header_back).setOnClickListener { finish() }
         findViewById<View>(R.id.layoutQrPassContent).applyEventQrBottomInsetPadding()
         KeepScreenBright.bind(this, findViewById(R.id.switchKeepBright))
 
-        findViewById<Button>(R.id.btnLoadQr).setOnClickListener {
-            presenter.load(
-                findViewById<EditText>(R.id.edtQrRegistrationId).text.toString(),
-                intent.getStringExtra(EXTRA_QR_CREDENTIAL_ID)
-            )
-        }
-
-        val registrationId = intent.getStringExtra(EXTRA_REGISTRATION_ID).orEmpty()
-        val qrCredentialId = intent.getStringExtra(EXTRA_QR_CREDENTIAL_ID).orEmpty()
-        if (registrationId.isNotBlank()) {
-            findViewById<EditText>(R.id.edtQrRegistrationId).setText(registrationId)
-            presenter.load(registrationId, qrCredentialId.ifBlank { null })
-        } else if (qrCredentialId.isNotBlank()) {
-            presenter.load("", qrCredentialId)
-        }
+        loadPass()
 
         markDownloadedButton.setOnClickListener { handleDownloadClick() }
     }
+
+    /**
+     * Cache first, network second: the saved pass paints as soon as it loads, and the live
+     * response replaces it when it lands. A refresh that fails leaves the saved pass untouched.
+     */
+    private fun loadPass() {
+        emptyState.visibility = View.GONE
+        val registrationId = intent.getStringExtra(EXTRA_REGISTRATION_ID).orEmpty()
+        val qrCredentialId = intent.getStringExtra(EXTRA_QR_CREDENTIAL_ID).orEmpty()
+        if (registrationId.isBlank() && qrCredentialId.isBlank()) return
+        val generation = ++loadGeneration
+        lifecycleScope.launch {
+            val cached = withContext(Dispatchers.IO) {
+                // Once per process, independent of the cancelled-only sweep: a revoked pass or a
+                // finished event must not keep its QR value on disk. Runs before the read below.
+                QrPassCache.sweepExpired(this@QrDisplayActivity)
+                QrPassCache.load(this@QrDisplayActivity, cacheKey())
+            }
+            if (generation != loadGeneration) return@launch
+            if (cached != null && !showingSavedCopy) bindSavedCopy(cached)
+            presenter.load(registrationId, qrCredentialId.ifBlank { null })
+        }
+    }
+
+    /** The id this screen opened with, so a credential-id-only open still gets an offline copy. */
+    private fun cacheKey(): String =
+        intent.getStringExtra(EXTRA_REGISTRATION_ID).orEmpty()
+            .ifBlank { intent.getStringExtra(EXTRA_QR_CREDENTIAL_ID).orEmpty() }
 
     /**
      * Saves the QR bitmap off the main thread. While the save is in flight the
@@ -145,41 +164,154 @@ class QrDisplayActivity : AppCompatActivity(), QrCredentialContract.View {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
+    override fun showLoadError(message: String) {
+        // The saved pass is already on screen and says so; a failed refresh must not replace it.
+        if (showingSavedCopy) return
+        showUnavailable(R.string.ui_attendee_pass_error_title, message) { loadPass() }
+    }
+
     override fun renderQr(snapshot: QrCredentialSnapshot, registration: RegistrationResponse?, eventTitle: String?) {
-        currentQrCredentialId = snapshot.qrCredentialId.toString()
-        currentRegistrationId = snapshot.registrationId.toString()
-        currentEventTitle = eventTitle
+        if (!snapshot.active || snapshot.displayStatus == QrDisplayStatus.REVOKED) {
+            clearCachedPass(snapshot.registrationId.toString())
+            showUnavailable(
+                R.string.ui_attendee_pass_revoked_title,
+                getString(R.string.ui_attendee_pass_revoked_body),
+            )
+            return
+        }
 
-        qrText.text = snapshot.qrValue
-        val bitmap = renderQrBitmap(snapshot.qrValue)
-        currentQrBitmap = bitmap
-        qrImage.setImageBitmap(bitmap)
-
+        // The pass prints the serial once, inside the credential (§5.14); the card that repeated
+        // attendee, email and serial is gone.
         val serial = RegistrationNumberFormatter.format(registration?.registrationNumber) ?: "-"
-        credentialIdText.text = serial
-        serialText.text = serial
-        attendeeNameText.text = registration?.attendeeName?.takeIf { it.isNotBlank() }
-            ?: getString(R.string.ui_attendee_role)
-        attendeeEmailText.text = registration?.attendeeEmail?.takeIf { it.isNotBlank() } ?: "-"
-        eventNameText.text = eventTitle?.takeIf { it.isNotBlank() } ?: getString(R.string.common_event)
-
+        val name = eventTitle?.takeIf { it.isNotBlank() } ?: getString(R.string.common_event)
+        val holderName = registration?.attendeeName.asCredentialHolderName()
         val meta = listOfNotNull(
             registration?.eventStartAt?.let { PASS_DATE_FORMATTER.format(it) },
             registration?.eventLocation?.takeIf { it.isNotBlank() },
         ).joinToString(" - ")
+
+        // A blank value is the unavailable state, never a cached one: the encode would throw, and
+        // the copy it used to write first made every later offline open crash again.
+        if (!bindPass(snapshot.qrValue, name, serial, meta, attendeeName = holderName)) {
+            if (!showingSavedCopy) {
+                showUnavailable(
+                    R.string.ui_attendee_pass_error_title,
+                    getString(R.string.ui_attendee_pass_unreadable_body),
+                ) { loadPass() }
+            }
+            return
+        }
+
+        currentQrCredentialId = snapshot.qrCredentialId.toString()
+        currentRegistrationId = snapshot.registrationId.toString()
+        currentEventTitle = eventTitle
+
+        val eventEndAtMillis = registration?.eventEndAt?.toEpochMilli()
+        // Without an end time there is no expiry, so an offline copy could outlive the event.
+        if (eventEndAtMillis != null) {
+            val pass = CachedQrPass(
+                qrValue = snapshot.qrValue,
+                eventName = name,
+                serial = serial,
+                meta = meta,
+                eventEndAtMillis = eventEndAtMillis,
+                savedAtMillis = System.currentTimeMillis(),
+                attendeeName = holderName,
+            )
+            val key = cacheKey().ifBlank { snapshot.registrationId.toString() }
+            lifecycleScope.launch(Dispatchers.IO) { QrPassCache.save(this@QrDisplayActivity, key, pass) }
+        }
+    }
+
+    private fun bindSavedCopy(cached: CachedQrPass) {
+        currentQrCredentialId = intent.getStringExtra(EXTRA_QR_CREDENTIAL_ID)?.takeIf { it.isNotBlank() }
+        currentRegistrationId = intent.getStringExtra(EXTRA_REGISTRATION_ID)?.takeIf { it.isNotBlank() }
+        currentEventTitle = cached.eventName
+        if (!bindPass(cached.qrValue, cached.eventName, cached.serial, cached.meta, attendeeName = cached.attendeeName, savedCopy = true)) {
+            // A stored value that cannot encode is worthless; drop it so the next open starts clean.
+            clearCachedPass()
+            return
+        }
+        savedCopyText.text = getString(
+            R.string.ui_attendee_pass_last_updated,
+            DateFormatters.displayFormatter.format(Instant.ofEpochMilli(cached.savedAtMillis)),
+        )
+        savedCopyText.visibility = View.VISIBLE
+    }
+
+    private fun bindPass(
+        qrValue: String,
+        eventName: String,
+        serial: String,
+        meta: String,
+        attendeeName: String? = null,
+        savedCopy: Boolean = false,
+    ): Boolean {
+        val bitmap = renderQrBitmap(qrValue) ?: return false
+        currentQrBitmap = bitmap
+        qrImage.setImageBitmap(bitmap)
+
+        serialText.text = serial
+        eventNameText.text = eventName
+        val holder = attendeeName.asCredentialHolderName()
+        attendeeNameText.text = holder.orEmpty()
+        // No name is no line: never an empty 24dp slot, never the email, never "Guest".
+        attendeeNameText.visibility = if (holder == null) View.GONE else View.VISIBLE
         eventMetaText.text = meta
         eventMetaText.visibility = if (meta.isBlank()) View.GONE else View.VISIBLE
 
-        findViewById<View>(R.id.qrCredential).contentDescription = getString(
-            R.string.ui_attendee_pass_description,
-            eventNameText.text,
-            serial,
-        )
+        findViewById<View>(R.id.qrCredential).apply {
+            visibility = View.VISIBLE
+            contentDescription = getString(R.string.ui_attendee_pass_description, eventName, serial)
+        }
+        bindBadge(savedCopy)
+        findViewById<View>(R.id.groupSavePass).visibility = View.VISIBLE
+        findViewById<View>(R.id.rowKeepBright).visibility = View.VISIBLE
+        savedCopyText.visibility = View.GONE
+        emptyState.visibility = View.GONE
+        emptyState.setAction(null)
+        showingSavedCopy = savedCopy
+        return true
     }
 
-    private fun renderQrBitmap(value: String): Bitmap {
+    /** Lime is confirmation only: a pass restored from disk is neutral, never "Valid". */
+    private fun bindBadge(savedCopy: Boolean) {
+        val badge = findViewById<TextView>(R.id.qrValidBadge)
+        badge.setText(if (savedCopy) R.string.ui_credential_saved_copy else R.string.ui_credential_valid)
+        badge.backgroundTintList = ColorStateList.valueOf(
+            color(if (savedCopy) R.color.ui_surface_sunken else R.color.ui_accent),
+        )
+        badge.setTextColor(color(if (savedCopy) R.color.ui_text_secondary else R.color.ui_on_accent))
+    }
+
+    /** No live and no cached pass: the plate is gone, and one state names what to do next. */
+    private fun showUnavailable(titleRes: Int, body: String, onRetry: (() -> Unit)? = null) {
+        currentQrBitmap = null
+        qrImage.setImageDrawable(null)
+        findViewById<View>(R.id.qrCredential).visibility = View.GONE
+        findViewById<View>(R.id.groupSavePass).visibility = View.GONE
+        findViewById<View>(R.id.rowKeepBright).visibility = View.GONE
+        savedCopyText.visibility = View.GONE
+        showingSavedCopy = false
+        emptyState.show(getString(titleRes), body)
+        // Retry only where another attempt can change the answer; a revoked pass cannot.
+        emptyState.setAction(onRetry?.let { getString(R.string.ui_attendee_retry) }, onRetry)
+    }
+
+    /** Drops the saved copy off the main thread, under this screen's key and [registrationId]. */
+    private fun clearCachedPass(registrationId: String? = null) {
+        val keys = listOf(cacheKey(), registrationId.orEmpty()).filter { it.isNotBlank() }.distinct()
+        if (keys.isEmpty()) return
+        lifecycleScope.launch(Dispatchers.IO) { keys.forEach { QrPassCache.clear(this@QrDisplayActivity, it) } }
+    }
+
+    private fun renderQrBitmap(value: String): Bitmap? {
+        if (value.isBlank()) return null
         val hints = mapOf(EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.Q)
-        val matrix = QRCodeWriter().encode(value, BarcodeFormat.QR_CODE, 512, 512, hints)
+        // A writer that rejects the payload must not take the screen down with it.
+        val matrix = runCatching {
+            QRCodeWriter().encode(value, BarcodeFormat.QR_CODE, 512, 512, hints)
+        }.getOrNull() ?: return null
         val bitmap = Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888)
         val dark = color(R.color.qr_dark)
         val light = color(R.color.qr_light)

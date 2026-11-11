@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -163,8 +164,20 @@ class EventControllerTest {
         verify(registrationService, never()).registerAs(any(), any(), any(), any());
     }
 
-    // ----- reading -----
+    // ----- activate -----
 
+    @Test
+    void activatingAFutureEventIsA409WithTheStartDateMessage() throws Exception {
+        when(jwtService.extractRoleFromBearer(AUTH)).thenReturn(AccountRole.ADMIN);
+        when(eventService.activate(eventId))
+                .thenThrow(new ConflictException("This event cannot be activated until its start date."));
+
+        mvc.perform(put("/api/v1/events/{eventId}/activate", eventId).header("Authorization", AUTH))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("This event cannot be activated until its start date."));
+    }
+
+    // ----- reading -----
     @Test
     void theListIsPagedWithSensibleDefaults() throws Exception {
         when(eventService.findAllEvents(any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(eventResponse()), PageRequest.of(0, 20), 1));

@@ -51,12 +51,17 @@ import com.thedavelopers.eventqr.ui.theme.UiTextOnDarkMuted
  * the pass is read once (§9.5).
  */
 
+/** The holder line: trimmed, inner whitespace collapsed, null when blank (§5.14). */
+internal fun String?.asCredentialHolderName(): String? =
+    this?.trim()?.replace(Regex("\\s+"), " ")?.takeIf { it.isNotBlank() }
+
 @Composable
 fun QrCredentialCard(
     eventName: String,
     meta: String,
     serial: String,
     roleLabel: String,
+    attendeeName: String? = null,
     modifier: Modifier = Modifier,
     valid: Boolean = true,
     qrContentDescription: String? = null,
@@ -113,13 +118,25 @@ fun QrCredentialCard(
                 modifier = Modifier.padding(top = grid.s20),
             )
 
+            val holder = attendeeName.asCredentialHolderName()
+            if (holder != null) {
+                Text(
+                    text = holder,
+                    style = type.title,
+                    color = UiTextOnDark,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = grid.s8),
+                )
+            }
+
             Text(
                 text = meta,
                 style = type.bodyS,
                 color = UiTextOnDarkMuted,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = grid.s8),
+                modifier = Modifier.padding(top = grid.s4),
             )
         }
 

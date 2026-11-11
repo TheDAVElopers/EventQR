@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.notifications
 
 import android.os.Bundle
+import android.content.Intent
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import android.view.View
@@ -12,13 +13,26 @@ import com.thedavelopers.eventqr.ui.components.setContentWithDetailHeader
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.api.dto.NotificationStatus
+import com.thedavelopers.eventqr.core.api.dto.NotificationType
+import com.thedavelopers.eventqr.core.session.SessionManager
+import com.thedavelopers.eventqr.core.session.SessionRefresher
+import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.features.attendee.EXTRA_EVENT_ID
+import com.thedavelopers.eventqr.features.attendee.EventDetailActivity
+import com.thedavelopers.eventqr.features.attendee.MyEventRequestsActivity
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
+import com.thedavelopers.eventqr.features.organizer.EXTRA_EVENT_ID as ORGANIZER_EVENT_ID
+import com.thedavelopers.eventqr.features.organizer.events.EventManagementHubActivity
+import com.thedavelopers.eventqr.features.organizer.events.OrganizerEventDetailsActivity
+import com.thedavelopers.eventqr.features.organizer.openOrganizerPage
 import com.thedavelopers.eventqr.ui.theme.EventQrTheme
 import com.thedavelopers.eventqr.ui.theme.dimenOffset
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.time.Instant
+import java.util.UUID
 
 open class UnifiedNotificationsActivity : AppCompatActivity() {
 
@@ -43,10 +57,14 @@ open class UnifiedNotificationsActivity : AppCompatActivity() {
                     errorMessage = errorMessage,
                     onNotificationClick = { notification ->
                         if (notification.status != NotificationStatus.READ && notification.readAt == null) {
-                            markRead(notification.notificationId.toString())
+                            markRead(notification.notificationId)
                         }
+                        openNotification(notification)
                     },
                     onRetryClick = { loadNotifications() },
+                    navigatesOnTap = { notification ->
+                        notificationDestinationFor(notification.notificationType, notification.eventId?.toString()) != null
+                    },
                 )
             }
         }
@@ -92,11 +110,15 @@ open class UnifiedNotificationsActivity : AppCompatActivity() {
         }
     }
 
-    private fun markRead(notificationId: String) {
+    private fun markRead(notificationId: UUID) {
         val previous = _notifications.value
-        applyLocalReadState(previous, setOf(notificationId))
+        _notifications.value = withReadState(previous, setOf(notificationId))
         lifecycleScope.launch {
-            when (val result = repository.markNotificationRead(notificationId)) {
+            // The shade copy only leaves once the server stored the read, so a failed mark keeps it.
+            val result = EventDecisionNotifier.markRead(this@UnifiedNotificationsActivity, listOf(notificationId.toString())) {
+                repository.markNotificationRead(notificationId.toString())
+            }
+            when (result) {
                 is NetworkResult.Success -> Unit
                 is NetworkResult.Error -> {
                     _notifications.value = previous
@@ -109,9 +131,13 @@ open class UnifiedNotificationsActivity : AppCompatActivity() {
 
     private fun markAllRead() {
         val previous = _notifications.value
-        applyLocalReadState(previous, previous.map { it.notificationId }.toSet())
+        _notifications.value = withReadState(previous, previous.map { it.notificationId }.toSet())
+        val ids = previous.map { it.notificationId.toString() }
         lifecycleScope.launch {
-            when (val result = repository.markAllNotificationsRead()) {
+            val result = EventDecisionNotifier.markRead(this@UnifiedNotificationsActivity, ids) {
+                repository.markAllNotificationsRead()
+            }
+            when (result) {
                 is NetworkResult.Success -> Unit
                 is NetworkResult.Error -> {
                     _notifications.value = previous
@@ -122,17 +148,59 @@ open class UnifiedNotificationsActivity : AppCompatActivity() {
         }
     }
 
-    private fun applyLocalReadState(
-        source: List<NotificationResponse>,
-        readIds: Set<Any>,
-    ) {
-        val readAt = Instant.now()
-        _notifications.value = source.map { notification ->
-            if (notification.notificationId in readIds) {
-                notification.copy(status = NotificationStatus.READ, readAt = readAt)
+    private fun openNotification(notification: NotificationResponse) {
+        val eventId = notification.eventId?.toString()
+        if (notification.notificationType == NotificationType.EVENT_APPROVED) {
+            openApprovedRequest(eventId)
+            return
+        }
+        when (resolvedDestination(this, notification.notificationType, eventId)) {
+            NotificationDestination.ORGANIZER_HUB -> openOrganizerPage(EventManagementHubActivity::class.java, eventId)
+            NotificationDestination.ORGANIZER_EVENT_DETAILS -> startActivity(
+                Intent(this, OrganizerEventDetailsActivity::class.java).putExtra(ORGANIZER_EVENT_ID, eventId),
+            )
+            NotificationDestination.ATTENDEE_EVENT_DETAIL -> startActivity(
+                Intent(this, EventDetailActivity::class.java).putExtra(EXTRA_EVENT_ID, eventId),
+            )
+            NotificationDestination.ATTENDEE_REQUESTS -> startActivity(Intent(this, MyEventRequestsActivity::class.java))
+            null -> Unit
+        }
+    }
+
+    /**
+     * Approval grants the organizer role in the same admin action, so the cached role can lag one
+     * refresh behind. Refresh once here; a failed refresh keeps the cached role's fallback.
+     */
+    private fun openApprovedRequest(eventId: String?) {
+        if (eventId == null) return
+        val session = SessionManager(this)
+        if (RoleMapper.isAtLeast(session.getUserRole(), AccountRole.ORGANIZER)) {
+            openOrganizerPage(EventManagementHubActivity::class.java, eventId)
+            return
+        }
+        lifecycleScope.launch {
+            runCatching { SessionRefresher.refreshNow(this@UnifiedNotificationsActivity) }
+            if (RoleMapper.isAtLeast(session.getUserRole(), AccountRole.ORGANIZER)) {
+                openOrganizerPage(EventManagementHubActivity::class.java, eventId)
             } else {
-                notification
+                startActivity(Intent(this@UnifiedNotificationsActivity, EventDetailActivity::class.java).putExtra(EXTRA_EVENT_ID, eventId))
             }
         }
+    }
+}
+
+/**
+ * Local read state for the rows. Ids compare as UUIDs, so a differently-typed id can never silently
+ * miss and leave a tapped row looking unread.
+ */
+internal fun withReadState(
+    source: List<NotificationResponse>,
+    readIds: Set<UUID>,
+    readAt: Instant = Instant.now(),
+): List<NotificationResponse> = source.map { notification ->
+    if (notification.notificationId in readIds) {
+        notification.copy(status = NotificationStatus.READ, readAt = readAt)
+    } else {
+        notification
     }
 }

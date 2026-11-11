@@ -355,7 +355,7 @@
         android:minHeight="@dimen/ui_footer_height"
         android:orientation="vertical"
         android:paddingHorizontal="@dimen/ui_gutter"
-        android:paddingVertical="@dimen/space_10">
+        android:paddingVertical="@dimen/space_md">
 
         <Button
             android:id="@+id/btnCreateAdminAccount"

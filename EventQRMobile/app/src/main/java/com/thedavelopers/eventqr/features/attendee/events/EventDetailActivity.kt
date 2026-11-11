@@ -40,6 +40,9 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     private var isFirstResume = true
     private var registrationStatusCheckFailed = false
     private var cancellableRegistrationId: String? = null
+    // The live registration's id, any status: this is what the pass opens (§6.2). Cancelling stays
+    // gated on cancellableRegistrationId, which additionally requires REGISTERED + no recorded activity.
+    private var registeredRegistrationId: String? = null
     private var cancelDialog: androidx.appcompat.app.AlertDialog? = null
     private var failureDialog: androidx.appcompat.app.AlertDialog? = null
     private var availabilityJob: kotlinx.coroutines.Job? = null
@@ -82,8 +85,16 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         findViewById<Button>(R.id.btnCancelRegistration).setOnClickListener { confirmCancelRegistration() }
 
         findViewById<Button>(R.id.btnRegisterForEvent).setOnClickListener {
+            // The organizer label outranks the pass: an owner or manager who also holds a live
+            // registration manages the event, never opens an attendee pass.
             if (canManageEvent()) {
                 openOrganizerEventManagement()
+                return@setOnClickListener
+            }
+            // The registered attendee's one action is the pass (§6.2); the id arrives with the
+            // status check, so the button is inert until it is known.
+            if (isAlreadyRegistered) {
+                registeredRegistrationId?.let { openPass(it) }
                 return@setOnClickListener
             }
             currentEvent?.let { event ->
@@ -374,6 +385,15 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         }
     }
 
+    override fun setRegisteredId(registrationId: String?) {
+        registeredRegistrationId = registrationId
+        // The id may land after the status check: re-draw the pass label now that it is known.
+        // The organizer label is never overwritten (same precedence as the click listener).
+        if (isAlreadyRegistered && !canManageEvent()) {
+            setAlreadyRegisteredState(findViewById(R.id.btnRegisterForEvent))
+        }
+    }
+
     override fun setCancellableRegistration(registrationId: String?) {
         cancellableRegistrationId = registrationId
         updateCancelButtonVisibility()
@@ -495,8 +515,25 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     override fun getSessionPhone(): String = SessionManager(this).getPhone().orEmpty()
 
     private fun setAlreadyRegisteredState(button: Button) {
-        button.isEnabled = false
-        button.text = getString(R.string.event_detail_already_registered)
+        // With the live registration id the primary action opens the pass, whatever the row's status
+        // (a checked-in or exited attendee still owns a pass, §6.2). Without it (status known, id
+        // still loading) the label stays inert instead of opening nothing.
+        val passRegistrationId = registeredRegistrationId
+        button.isEnabled = passRegistrationId != null
+        button.text = getString(
+            if (passRegistrationId != null) {
+                R.string.ui_attendee_view_pass
+            } else {
+                R.string.event_detail_already_registered
+            },
+        )
+    }
+
+    private fun openPass(registrationId: String) {
+        startActivity(
+            Intent(this, QrDisplayActivity::class.java)
+                .putExtra(EXTRA_REGISTRATION_ID, registrationId),
+        )
     }
 
     private fun setUnverifiableState(button: Button) {

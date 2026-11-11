@@ -257,10 +257,8 @@ res/layout/activity_staff_assigned_events.xml,layout,WP3,0,0,12,1,0,0,0,0,0,0,0,
 res/layout/activity_staff_assignment.xml,layout,WP4a,0,0,4,0,0,0,0,0,1,0,0,0,0,listed in spec I
 res/layout/activity_staff_attendee_details.xml,layout,WP3,0,0,14,4,0,0,0,0,1,1,0,0,0,listed in spec I
 res/layout/activity_staff_dashboard.xml,layout,WP3,0,0,6,3,0,0,1,0,2,5,0,0,0,listed in spec I
-res/layout/activity_staff_scan_result.xml,layout,WP3,0,0,33,1,0,3,0,0,3,0,0,0,0,listed in spec I
 res/layout/activity_staff_scanner.xml,layout,WP3,0,0,34,0,0,2,0,0,1,2,0,0,0,listed in spec I
 res/layout/activity_staff_transaction_logs.xml,layout,WP3,0,0,21,1,0,0,0,0,0,5,0,0,0,listed in spec I
-res/layout/activity_staff_transaction_result.xml,layout,WP3,0,0,43,0,0,3,0,0,1,0,0,0,0,listed in spec I
 res/layout/activity_terms.xml,layout,WP1,0,0,0,0,0,1,0,0,0,0,0,0,0,listed in spec I
 res/layout/activity_user_dashboard.xml,layout,WP2,0,0,19,1,0,0,5,0,2,6,0,0,0,listed in spec I
 res/layout/activity_user_events.xml,layout,WP2,0,0,16,0,0,0,0,0,0,0,0,0,0,listed in spec I
@@ -319,7 +317,6 @@ java/com/thedavelopers/eventqr/features/organizer/transactions/TransactionRulesA
 java/com/thedavelopers/eventqr/features/rewards/ClaimedRewardAdapter.kt,kotlin,WP2,0,0,0,0,0,0,0,0,0,0,1,1,0,
 java/com/thedavelopers/eventqr/features/staff/events/EventRegistrationsActivity.kt,kotlin,WP3,0,0,0,0,0,0,0,0,0,0,17,7,0,
 java/com/thedavelopers/eventqr/features/staff/events/StaffAssignedEventsActivity.kt,kotlin,WP3,0,0,0,0,0,0,0,0,0,0,1,0,0,
-java/com/thedavelopers/eventqr/features/staff/result/StaffScanResultActivity.kt,kotlin,WP3,0,0,0,0,0,0,0,0,0,0,7,2,0,
 java/com/thedavelopers/eventqr/features/staff/reward/RedemptionResultActivity.kt,kotlin,WP3,0,0,0,0,0,0,0,0,0,0,29,12,0,
 java/com/thedavelopers/eventqr/features/staff/reward/RewardRedemptionScanResultActivity.kt,kotlin,WP3,0,0,0,0,0,0,0,0,0,0,44,23,0,
 java/com/thedavelopers/eventqr/features/staff/scanner/ScannerActivity.kt,kotlin,WP3,0,0,0,0,0,0,0,0,0,0,12,6,0,

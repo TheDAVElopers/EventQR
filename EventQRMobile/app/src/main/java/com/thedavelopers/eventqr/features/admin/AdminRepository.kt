@@ -91,9 +91,6 @@ open class AdminRepository(private val context: Context) {
         return safeApiCall { apiService.rejectEventRequest(eventId, EventRequestDecisionRequest(remarks)) }
     }
 
-    suspend fun upgradeOrganizer(eventId: String): NetworkResult<EventRequestResponse> =
-        safeApiCall { apiService.upgradeOrganizerFromEventRequest(eventId) }
-
     companion object {
         const val USERS_PAGE_SIZE = 20
         const val AUDIT_PAGE_SIZE = 50

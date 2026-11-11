@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.ui.components
 
 import android.content.Context
+import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -62,6 +63,15 @@ class ListRowDateBinderTest {
     private fun View.expectedInset(): Int {
         return resources.getDimensionPixelSize(R.dimen.ui_row_start) +
             dateBlockWidth() + resources.getDimensionPixelSize(R.dimen.space_lg)
+    }
+
+    /** Item 7: a real event name fits beside the badge on two lines before it ellipsizes. */
+    @Test
+    fun titleAllowsTwoLinesBeforeItEllipsizes() {
+        val title = row().findViewById<TextView>(R.id.listRowTitle)
+
+        assertEquals(2, title.maxLines)
+        assertEquals(TextUtils.TruncateAt.END, title.ellipsize)
     }
 
     /** A long date grows the block; rebinding the same row to a short date must shrink and realign it. */
