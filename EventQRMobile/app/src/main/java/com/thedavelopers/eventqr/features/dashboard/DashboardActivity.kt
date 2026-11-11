@@ -42,6 +42,7 @@ import com.thedavelopers.eventqr.ui.components.ListRowBinder
 import com.thedavelopers.eventqr.ui.components.PassHeadBinder
 import com.thedavelopers.eventqr.ui.components.PassHeadModel
 import com.thedavelopers.eventqr.ui.icons.AppIcons
+import com.thedavelopers.eventqr.ui.icons.FieldIcons
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import kotlinx.coroutines.launch
@@ -99,6 +100,11 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         skeletonLoading = findViewById(R.id.skeletonLoading)
         organizerCard = findViewById(R.id.btnTransactionHistory)
         requestEventCard = findViewById(R.id.btnRequestEventCard)
+        // The quick-action chips carry a 20dp glyph; a compound drawable would otherwise lay out at
+        // the vector's 24dp intrinsic size (§5.6).
+        listOf(R.id.btnTransactionHistory, R.id.btnRequestEventCard).forEach {
+            FieldIcons.apply(findViewById(it))
+        }
         upcomingEventsLayout = findViewById(R.id.layoutUpcomingEvents)
         discoverEventsLayout = findViewById(R.id.layoutDiscoverEvents)
         swipeRefreshLayout = findViewById(R.id.swipeRefreshDashboard)

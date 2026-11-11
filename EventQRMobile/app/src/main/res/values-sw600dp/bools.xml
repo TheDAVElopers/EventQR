@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tablet: the combined report keeps its charts in one capped column (§6.4). -->
+    <bool name="report_combined_charts">true</bool>
+</resources>

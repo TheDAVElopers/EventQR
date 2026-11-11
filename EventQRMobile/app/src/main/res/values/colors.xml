@@ -85,13 +85,26 @@
     <!-- ═════════════════════════ Icon tints ═════════════════════════ -->
 
     <!-- ═════════════════════════ Charts (reports) ═════════════════════════ -->
-    <color name="chart_1">@color/accent</color>
-    <color name="chart_2">@color/p_chart_cyan</color>
-    <color name="chart_3">@color/p_chart_violet</color>
+    <!-- Three series plus Other (§3.2). Every value clears 3:1 on surface, the WCAG 1.4.11 floor
+         for a non-text graphic, so a 10dp split segment and an 8dp ranked bar stay legible.
+         chart_4..chart_7 are not series: the report catalogue reuses them as icon-tile tints.
+         chart_unmapped is not a series either: it is the loud fallback for a server label this
+         build does not know, kept distinct from chart_other so a rename cannot hide inside Other. -->
+    <color name="chart_1">@color/p_brand_700</color>
+    <color name="chart_2">@color/p_lime_800</color>
+    <color name="chart_3">@color/p_ink_500</color>
+    <color name="chart_other">@color/p_ink_400</color>
+    <color name="chart_unmapped">@color/p_info_ink</color>
     <color name="chart_4">@color/p_chart_sky</color>
     <color name="chart_5">@color/p_chart_indigo</color>
     <color name="chart_6">@color/success</color>
     <color name="chart_7">@color/warning</color>
+
+    <!-- Report catalogue icon tints for the two tiles that used to borrow a series token
+         (entry logs, points). Also not series: the catalogue is decoration, so a chart-ramp
+         retune must never move a tile. -->
+    <color name="catalog_tint_violet">@color/p_chart_violet</color>
+    <color name="catalog_tint_cyan">@color/p_chart_cyan</color>
 
     <!-- ═════════════════════════ Domain roles (kept; values come from roles above) ═════════════════════════ -->
     <!-- Registration / attendance badges -->
@@ -164,9 +177,10 @@
     <color name="ui_surface_pressed">@color/p_ink_25</color>
     <color name="ui_scrim">#66000000</color>
 
-    <!-- Lines: hairline is decorative only, outline_interactive is the 3:1 control border -->
+    <!-- Lines: hairline is decorative only, outline_interactive is the 3:1 control border.
+         Measured on both surfaces a control sits on: 3.34:1 on background, 3.69:1 on surface. -->
     <color name="ui_hairline">@color/p_ink_200</color>
-    <color name="ui_outline_interactive">@color/p_ink_400</color>
+    <color name="ui_outline_interactive">@color/p_ink_450</color>
     <color name="ui_disabled_fill">@color/p_ink_200</color>
 
     <!-- Text: exactly two greys. A third level comes from size and weight. -->

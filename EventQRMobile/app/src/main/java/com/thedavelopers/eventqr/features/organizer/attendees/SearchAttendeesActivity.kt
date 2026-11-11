@@ -29,6 +29,7 @@ import com.thedavelopers.eventqr.features.organizer.selectedEventId
 import com.thedavelopers.eventqr.features.organizer.showEventsLoadErrorScreen
 import com.thedavelopers.eventqr.features.organizer.showMissingEventScreen
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+import com.thedavelopers.eventqr.ui.icons.FieldIcons
 import com.thedavelopers.eventqr.ui.theme.color
 import kotlinx.coroutines.launch
 
@@ -78,6 +79,7 @@ open class SearchAttendeesActivity : AppCompatActivity() {
             findViewById<TextView>(R.id.txtSearchSubtitle).text = selectedEvent.title.ifBlank { getString(R.string.organizer_selected_event) }
 
             searchInput = findViewById(R.id.edtSearchAttendees)
+            FieldIcons.apply(searchInput)
             emptyState = findViewById(R.id.txtSearchEmpty)
 
             adapter = SearchAttendeesAdapter { openDetails(it) }

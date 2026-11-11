@@ -32,6 +32,7 @@ import com.thedavelopers.eventqr.ui.components.CountLabel
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import com.thedavelopers.eventqr.ui.components.ListRowBinder
 import com.thedavelopers.eventqr.ui.components.PassHeadBinder
+import com.thedavelopers.eventqr.ui.icons.FieldIcons
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import kotlinx.coroutines.launch
@@ -73,6 +74,7 @@ open class ManageEventsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_organizer_events)
         applyEventQrSystemBarAppearance(lightStatusBars = false)
         findViewById<View>(R.id.passHeadIdentity).applyEventQrTopInsetPadding()
+        FieldIcons.apply(findViewById(R.id.inputEventSearch))
 
         swipeRefresh = findViewById(R.id.swipeRefreshEvents)
         skeletonLoading = findViewById(R.id.skeletonLoading)

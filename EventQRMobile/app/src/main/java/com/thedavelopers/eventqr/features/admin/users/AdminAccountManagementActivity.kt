@@ -36,6 +36,7 @@ import com.thedavelopers.eventqr.ui.components.FilterChipRow
 import com.thedavelopers.eventqr.ui.components.ListRowBinder
 import com.thedavelopers.eventqr.ui.components.PassHeadBinder
 import com.thedavelopers.eventqr.ui.icons.AppIcons
+import com.thedavelopers.eventqr.ui.icons.FieldIcons
 import com.thedavelopers.eventqr.ui.theme.EventQrTheme
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
@@ -107,6 +108,7 @@ class AdminAccountManagementActivity : AppCompatActivity() {
 
     private fun bindViews() {
         searchInput = findViewById(R.id.inputAccountSearch)
+        FieldIcons.apply(searchInput)
         recyclerAccounts = findViewById(R.id.recyclerAdminAccounts)
         progressLoading = findViewById(R.id.progressAccountsLoading)
         textPlaceholder = findViewById(R.id.textAccountsPlaceholder)

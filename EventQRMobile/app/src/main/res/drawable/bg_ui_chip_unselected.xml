@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Filter chip at rest (§5.6): surface fill, 1dp ui_outline_interactive (3.12:1 - a control
-     boundary must be perceivable), radius 4dp. Never a pill. -->
+<!-- Filter chip at rest (§5.6): surface fill, 1dp ui_outline_interactive (3.69:1 on this
+     ui_surface fill, 3.34:1 on ui_background - a control boundary must be perceivable),
+     radius 4dp. Never a pill. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
     <solid android:color="@color/ui_surface" />

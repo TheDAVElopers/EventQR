@@ -110,13 +110,13 @@
 
         <TextView
             android:id="@+id/btnRequestEvent"
-            style="@style/Widget.EventQR.Ui.Chip.Action"
+            style="@style/Widget.EventQR.Ui.SectionAction"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/space_8"
+            android:gravity="center_vertical|end"
             android:minHeight="@dimen/ui_touch_min"
-            android:text="@string/ui_organizer_request_event"
-            app:drawableStartCompat="@drawable/ic_ui_add" />
+            android:text="@string/ui_organizer_request_event" />
     </LinearLayout>
 
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout

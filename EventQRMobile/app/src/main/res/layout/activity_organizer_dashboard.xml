@@ -72,13 +72,13 @@
 
                     <TextView
                         android:id="@+id/btnRequestEvent"
-                        style="@style/Widget.EventQR.Ui.Chip.Action"
+                        style="@style/Widget.EventQR.Ui.SectionAction"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/space_8"
+                        android:gravity="center_vertical|end"
                         android:minHeight="@dimen/ui_touch_min"
-                        android:text="@string/ui_organizer_request_event"
-                        app:drawableStartCompat="@drawable/ic_ui_add" />
+                        android:text="@string/ui_organizer_request_event" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -134,16 +134,11 @@
 
                     <TextView
                         android:id="@+id/btnSeeAllEvents"
+                        style="@style/Widget.EventQR.Ui.SectionAction"
                         android:layout_width="wrap_content"
-                        android:layout_height="@dimen/ui_touch_min"
-                        android:background="?attr/selectableItemBackground"
-                        android:clickable="true"
-                        android:focusable="true"
+                        android:layout_height="wrap_content"
                         android:gravity="center_vertical|end"
-                        android:minWidth="@dimen/ui_touch_min"
-                        android:text="@string/ui_organizer_see_all"
-                        android:textAppearance="@style/TextAppearance.EventQR.Type.Label"
-                        android:textColor="@color/ui_primary" />
+                        android:text="@string/ui_organizer_see_all" />
                 </LinearLayout>
 
                 <FrameLayout

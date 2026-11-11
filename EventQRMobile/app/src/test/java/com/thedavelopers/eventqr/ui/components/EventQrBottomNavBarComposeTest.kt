@@ -1,16 +1,26 @@
 package com.thedavelopers.eventqr.ui.components
 
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.thedavelopers.eventqr.ui.theme.EventQrTheme
@@ -20,9 +30,16 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
+/**
+ * Width is the 360dp design target and graphics mode is NATIVE so text measurement is real: the
+ * label guard measures glyphs, and the legacy Robolectric font reports "Dashboard" at ~43dp instead
+ * of 55dp, which would let the rule pass in the wrong state.
+ */
 @RunWith(AndroidJUnit4::class)
-@Config(sdk = [35])
+@Config(sdk = [35], qualifiers = "w360dp-h640dp")
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class EventQrBottomNavBarComposeTest {
 
     @get:Rule
@@ -200,6 +217,81 @@ class EventQrBottomNavBarComposeTest {
         }
     }
 
+    @Test
+    fun width360_fontScaleOne_showsLabels() {
+        setNavBar(items = OrganizerNavItems, selectedId = "dashboard", fontScale = 1f)
+
+        OrganizerNavItems.forEach { item ->
+            composeTestRule.onNodeWithText(item.label).assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun width360_fontScaleOnePointThree_dropsLabelsButKeepsTheItemUsable() {
+        var selected: String? = null
+        setNavBar(
+            items = OrganizerNavItems,
+            selectedId = "dashboard",
+            onItemSelected = { selected = it },
+            fontScale = 1.3f,
+        )
+
+        // One long label drops every label: icon-only, never a half-word ("Dashboa").
+        composeTestRule.onAllNodesWithText("Dashboard").assertCountEquals(0)
+        OrganizerNavItems.forEach { item ->
+            val node = composeTestRule.onNodeWithContentDescription(item.label)
+            node.assertIsDisplayed()
+            assertEquals(
+                Role.Tab,
+                node.fetchSemanticsNode().config.getOrNull(SemanticsProperties.Role),
+            )
+            node.assertHeightIsAtLeast(48.dp)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Reports").performClick()
+        composeTestRule.waitForIdle()
+
+        assertEquals("reports", selected)
+
+        // The selected item stays clickable too: icon-only must not turn a tab into a label.
+        composeTestRule.onNodeWithContentDescription("Dashboard").performClick()
+        composeTestRule.waitForIdle()
+
+        assertEquals("dashboard", selected)
+    }
+
+    @Test
+    fun unboundedWidth_hidesLabels() {
+        // A horizontally scrolling parent gives an infinite max width: every slot is "infinite",
+        // so the measured guard must fall back to the icon-only state instead of showing labels.
+        composeTestRule.setContent {
+            EventQrTheme {
+                Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                    EventQrBottomNavBar(
+                        items = OrganizerNavItems,
+                        selectedId = "dashboard",
+                        onItemSelected = {},
+                    )
+                }
+            }
+        }
+
+        composeTestRule.onAllNodesWithText("Dashboard").assertCountEquals(0)
+        OrganizerNavItems.forEach { item ->
+            composeTestRule.onNodeWithContentDescription(item.label).assertExists()
+        }
+    }
+
+    @Test
+    fun fontScaleTwo_hidesLabels_andKeepsThemAsContentDescriptions() {
+        setNavBar(items = OrganizerNavItems, selectedId = "dashboard", fontScale = 2f)
+
+        OrganizerNavItems.forEach { item ->
+            composeTestRule.onNodeWithContentDescription(item.label).assertExists()
+        }
+        composeTestRule.onAllNodesWithText("Dashboard").assertCountEquals(0)
+    }
+
     private fun roleOf(label: String): Role? =
         composeTestRule.onNode(hasText(label))
             .fetchSemanticsNode()
@@ -210,14 +302,19 @@ class EventQrBottomNavBarComposeTest {
         items: List<NavItem>,
         selectedId: String,
         onItemSelected: (String) -> Unit = {},
+        fontScale: Float = 1f,
     ) {
         composeTestRule.setContent {
             EventQrTheme {
-                EventQrBottomNavBar(
-                    items = items,
-                    selectedId = selectedId,
-                    onItemSelected = onItemSelected,
-                )
+                CompositionLocalProvider(
+                    LocalDensity provides Density(LocalDensity.current.density, fontScale),
+                ) {
+                    EventQrBottomNavBar(
+                        items = items,
+                        selectedId = selectedId,
+                        onItemSelected = onItemSelected,
+                    )
+                }
             }
         }
     }

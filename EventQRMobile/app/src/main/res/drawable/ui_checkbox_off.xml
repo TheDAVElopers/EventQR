@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Unchecked box: 1.5dp ui_outline_interactive (3.12:1 - a border the user must perceive
-     to operate the control may never be the decorative hairline). -->
+<!-- Unchecked box: 1.5dp ui_outline_interactive (3.34:1 on ui_background, 3.69:1 on
+     ui_surface - a border the user must perceive to operate the control may never be the
+     decorative hairline). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="@dimen/ui_checkbox_size"
     android:height="@dimen/ui_checkbox_size"

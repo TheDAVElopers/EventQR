@@ -29,6 +29,7 @@ import com.thedavelopers.eventqr.features.organizer.showEventsLoadingScreen
 import com.thedavelopers.eventqr.features.organizer.showMissingEventScreen
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import com.thedavelopers.eventqr.ui.icons.AppIcons
+import com.thedavelopers.eventqr.ui.icons.FieldIcons
 import kotlinx.coroutines.launch
 
 open class ManageUsersActivity : AppCompatActivity() {
@@ -79,6 +80,7 @@ open class ManageUsersActivity : AppCompatActivity() {
         recyclerStaff = findViewById(R.id.recyclerStaffAssignment)
         emptyStateText = findViewById(R.id.txtEmptyStaff)
         findViewById<TextView>(R.id.eventStripTitle).text = selectedEvent.title
+        FieldIcons.apply(findViewById(R.id.eventStripAction))
         swipeRefresh.setOnRefreshListener { loadAssigned() }
     }
 

@@ -25,6 +25,7 @@ import com.thedavelopers.eventqr.ui.components.CountLabel
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import com.thedavelopers.eventqr.ui.components.PassHeadBinder
 import com.thedavelopers.eventqr.ui.icons.AppIcons
+import com.thedavelopers.eventqr.ui.icons.FieldIcons
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import java.time.Instant
@@ -95,6 +96,9 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
         chipThisWeek = findViewById(R.id.chipThisWeek)
         chipRegistered = findViewById(R.id.chipRegistered)
         chipDateFilter = findViewById(R.id.chipDateFilter)
+        // 20dp field glyph on the search box, 16dp caret on the selector chip (§3.6/§5.6).
+        FieldIcons.apply(findViewById(R.id.inputEventSearch))
+        FieldIcons.apply(chipDateFilter, R.dimen.ui_chevron)
         adapter = AttendeeEventAdapter { event -> openEventDetail(event) }
 
         reflowSearchRowForFontScale()

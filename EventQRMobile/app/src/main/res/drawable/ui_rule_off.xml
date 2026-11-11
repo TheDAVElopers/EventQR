@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Password rule not met: neutral ring in ui_outline_interactive (3.12:1 - the mark has
-     to be perceivable, so it is never the decorative hairline). -->
+<!-- Password rule not met: neutral ring in ui_outline_interactive (3.34:1 on ui_background,
+     3.69:1 on ui_surface - the mark has to be perceivable, so it is never the decorative
+     hairline). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="@dimen/ui_rule_mark"
     android:height="@dimen/ui_rule_mark"

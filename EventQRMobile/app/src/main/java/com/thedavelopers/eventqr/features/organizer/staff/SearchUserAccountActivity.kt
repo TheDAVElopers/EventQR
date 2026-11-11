@@ -23,6 +23,7 @@ import com.thedavelopers.eventqr.features.organizer.showEventsLoadingScreen
 import com.thedavelopers.eventqr.features.organizer.showMissingEventScreen
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import com.thedavelopers.eventqr.ui.icons.AppIcons
+import com.thedavelopers.eventqr.ui.icons.FieldIcons
 import kotlinx.coroutines.launch
 
 /**
@@ -87,6 +88,7 @@ class SearchUserAccountActivity : AppCompatActivity() {
 
     private fun bindViews() {
         searchField = findViewById(R.id.edtSearchUser)
+        FieldIcons.apply(searchField)
         recyclerUsers = findViewById(R.id.recyclerSearchUsers)
         emptyStateText = findViewById(R.id.txtSearchEmpty)
         assignButton = findViewById(R.id.btnAssignStaff)

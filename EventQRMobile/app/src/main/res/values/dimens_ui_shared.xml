@@ -94,7 +94,6 @@
     <dimen name="ui_nav_icon">24dp</dimen>
     <dimen name="ui_nav_indicator_width">24dp</dimen>
     <dimen name="ui_nav_indicator_height">3dp</dimen>
-    <dimen name="ui_nav_pad_vertical">12dp</dimen>
 
     <!-- ═════════ Top app bar (§5.8) ═════════ -->
     <dimen name="ui_top_bar_height">56dp</dimen>
@@ -124,10 +123,14 @@
     <!-- Loading indicator: one size everywhere; the InlineProgress style sets the stroke -->
     <dimen name="ui_loading_indicator">24dp</dimen>
 
-    <!-- Report preview chart block: the donut and the ranked bars share one frame -->
-    <dimen name="ui_chart_donut_height">150dp</dimen>
-    <dimen name="ui_chart_stroke">20dp</dimen>
-    <dimen name="ui_chart_bar_height">6dp</dimen>
+    <!-- Report preview charts (§6.4): one split bar for distributions, one ranked bar per row.
+         10dp bar, 2dp gap between spans, 4dp floor so a 0.7% category stays visible. -->
+    <dimen name="ui_chart_split_height">10dp</dimen>
+    <dimen name="ui_chart_split_min_segment">4dp</dimen>
+    <dimen name="ui_chart_split_gap">2dp</dimen>
+    <dimen name="ui_chart_bar_height">8dp</dimen>
+    <!-- Wide windows cap the report column here; phones are narrower than the cap, so it is a no-op. -->
+    <dimen name="ui_report_content_max_width">640dp</dimen>
     <dimen name="ui_table_row_pad_v">12dp</dimen>
 
     <!-- Audit log row (§6.5): fixed timestamp column, sticky day header, meta dot -->

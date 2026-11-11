@@ -2,6 +2,8 @@
 <resources>
     <item name="eventqr_light_status_bars" type="id" />
     <item name="eventqr_status_bar_adaptive" type="id" />
+    <!-- Tag: UCrop's screen already had its inset listener installed. -->
+    <item name="eventqr_crop_insets_applied" type="id" />
 
     <!-- EventQrEmptyState: its exactly-one action, so hosts and tests never index children. -->
     <item name="emptyAction" type="id" />

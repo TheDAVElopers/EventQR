@@ -99,10 +99,15 @@
     <string name="report_preview_combined_contains">Combined report containing all available sections</string>
     <string name="report_preview_filter_start">Start</string>
     <string name="report_preview_filter_end">End</string>
-    <string name="report_preview_chip_date">%1$s - %2$s</string>
-    <string name="report_preview_chip_attendee">Attendee: %1$s</string>
-    <string name="report_preview_chip_status">Status: %1$s</string>
-    <string name="report_preview_chip_no_filters">No filters applied</string>
+    <string name="report_preview_filter_date">%1$s - %2$s</string>
+    <string name="report_preview_filter_attendee">Attendee: %1$s</string>
+    <string name="report_preview_filter_status">Status: %1$s</string>
+    <string name="report_preview_filters_none">No filters applied</string>
+    <!-- Applied filters are provenance text, not controls (§6.4): one line, counted 1..3. -->
+    <plurals name="report_preview_filters_count">
+        <item quantity="one">%1$d filter</item>
+        <item quantity="other">%1$d filters</item>
+    </plurals>
     <string name="report_preview_section">Section</string>
     <string name="report_preview_records_count">%1$d records</string>
     <string name="report_preview_no_matching_title">No matching records</string>
@@ -123,7 +128,31 @@
     <string name="report_preview_chart_subtitle_no_shows">Proportion of checked-in vs not checked-in attendees</string>
     <string name="report_preview_chart_subtitle_entry_logs">Approved vs rejected entry scans</string>
     <string name="report_preview_chart_subtitle_exit_logs">Approved vs rejected exit scans</string>
-    <string name="report_preview_chart_subtitle_points">Points earned and redeemed breakdown</string>
+    <string name="report_preview_chart_subtitle_points">Points awarded per activity</string>
+    <!-- Split bar and ranked rows (§6.4). A two-series bar is labelled directly beneath it with
+         both categories ("132 Approved · 8 Rejected"), so colour is never the only key; it wraps
+         to two lines, never truncates. -->
+    <string name="report_preview_split_label">%1$s %2$s · %3$s %4$s</string>
+    <string name="report_preview_split_label_single">%1$s %2$s</string>
+    <string name="report_preview_ranked_value">%1$s · %2$s%%</string>
+    <!-- Quoted: AAPT trims leading and trailing whitespace, so an unquoted space renders "120(37.6%)". -->
+    <string name="report_preview_legend_percent">" (%1$s%%)"</string>
+    <plurals name="report_preview_points_value">
+        <item quantity="one">%1$d pt</item>
+        <item quantity="other">%1$d pts</item>
+    </plurals>
+    <plurals name="report_preview_points_total">
+        <item quantity="one">%1$d pt</item>
+        <item quantity="other">%1$d pts</item>
+    </plurals>
+    <!-- TalkBack: the chart card is the one node (title, what it counts, total, then every span);
+         the rows and the badge under it are hidden so nothing is read twice. -->
+    <string name="report_preview_chart_a11y">%1$s. %2$s. %3$s. %4$s</string>
+    <string name="report_preview_chart_segment_a11y">%1$s, %2$s, %3$s%%</string>
+    <plurals name="report_preview_combined_summary">
+        <item quantity="one">%1$d category · %2$d total</item>
+        <item quantity="other">%1$d categories · %2$d total</item>
+    </plurals>
     <string name="report_preview_detailed_records">Detailed Records</string>
     <string name="report_preview_no_data_available_export">No report data available to export.</string>
     <string name="report_preview_no_data_export">No report data to export.</string>
@@ -145,9 +174,7 @@
     <string name="report_preview_save_failed">Failed to save report: %1$s</string>
     <string name="report_preview_saved_opened">Report saved and opened.</string>
     <string name="report_preview_saved_app_storage">Report saved to app storage: %1$s</string>
-    <string name="report_preview_total_caps">TOTAL</string>
     <string name="report_preview_items_count">%1$d items</string>
-    <string name="report_preview_no_activity">No activity recorded yet.</string>
 
     <!-- Manage Rewards -->
     <string name="manage_rewards_loading">Loading rewards...</string>

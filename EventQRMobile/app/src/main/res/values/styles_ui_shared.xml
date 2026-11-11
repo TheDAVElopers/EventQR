@@ -80,6 +80,31 @@
         <item name="android:tint">@color/ui_text_primary</item>
     </style>
 
+    <!-- Section action (§5.1): the text-only control that rides a section-header row (See all,
+         Request event). NOT a chip - a chip draws a control boundary around a choice - and NOT
+         Button.Ghost, which is a 44dp block action. Transparent at rest; bg_ui_button_ghost
+         supplies the press wash and the 2dp focus ring. 48dp minimum, zero horizontal padding so
+         the label lands on the gutter, no glyph. gravity start; a trailing instance sets
+         center_vertical|end at the call site. -->
+    <style name="Widget.EventQR.Ui.SectionAction" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minWidth">@dimen/ui_touch_min</item>
+        <item name="android:minHeight">@dimen/ui_touch_min</item>
+        <item name="android:background">@drawable/bg_ui_button_ghost</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center_vertical|start</item>
+        <item name="android:paddingStart">0dp</item>
+        <item name="android:paddingEnd">0dp</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.Label</item>
+        <item name="android:textColor">@color/ui_primary</item>
+    </style>
+
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <!--  TEXT FIELDS (§5.2) - variants of Widget.EventQR.Ui.TextField           -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->

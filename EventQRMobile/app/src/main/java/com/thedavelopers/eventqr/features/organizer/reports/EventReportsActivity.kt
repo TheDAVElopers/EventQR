@@ -444,12 +444,12 @@ open class EventReportsActivity : AppCompatActivity() {
     private fun reportCatalog(): List<EventReportCatalogItem> = listOf(
         EventReportCatalogItem(EventReportType.ROSTER, getString(R.string.event_reports_title_roster), AppIcons.People, color(R.color.chart_5), color(R.color.accent_container)),
         EventReportCatalogItem(EventReportType.NO_SHOWS, getString(R.string.event_reports_title_no_shows), AppIcons.Profile, color(R.color.danger), color(R.color.error_container)),
-        EventReportCatalogItem(EventReportType.ENTRY_LOGS, getString(R.string.event_reports_title_entry_logs), AppIcons.Scan, color(R.color.chart_3), color(R.color.tile_violet)),
+        EventReportCatalogItem(EventReportType.ENTRY_LOGS, getString(R.string.event_reports_title_entry_logs), AppIcons.Scan, color(R.color.catalog_tint_violet), color(R.color.tile_violet)),
         EventReportCatalogItem(EventReportType.ATTENDANCE, getString(R.string.event_reports_title_attendance), AppIcons.Report, color(R.color.chart_1), color(R.color.accent_container)),
         EventReportCatalogItem(EventReportType.CLAIMS, getString(R.string.event_reports_title_claims), AppIcons.Reward, color(R.color.chart_7), color(R.color.warning_container)),
         EventReportCatalogItem(EventReportType.BOOTH_VISITS, getString(R.string.event_reports_title_booth_visits), AppIcons.Event, color(R.color.chart_6), color(R.color.success_container)),
         EventReportCatalogItem(EventReportType.EXIT_LOGS, getString(R.string.event_reports_title_exit_logs), AppIcons.Chevron, color(R.color.chart_4), color(R.color.info_container)),
-        EventReportCatalogItem(EventReportType.POINTS, getString(R.string.event_reports_title_points), AppIcons.Report, color(R.color.chart_2), color(R.color.tile_cyan)),
+        EventReportCatalogItem(EventReportType.POINTS, getString(R.string.event_reports_title_points), AppIcons.Report, color(R.color.catalog_tint_cyan), color(R.color.tile_cyan)),
     )
 
     private data class DateInputHolder(val wrapper: LinearLayout, val valueView: TextView)

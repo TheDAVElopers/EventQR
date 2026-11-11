@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.session.SessionManager
+import com.thedavelopers.eventqr.ui.icons.FieldIcons
 
 open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
     /** Tests set this before the first load to replace the network repository. */
@@ -41,6 +42,7 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_reward_details)
+        FieldIcons.apply(findViewById(R.id.warningBox))
 
         presenter = RewardsPresenter(this, repositoryOverride ?: AttendeeRepository(this), UiStrings(this))
         eventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty()

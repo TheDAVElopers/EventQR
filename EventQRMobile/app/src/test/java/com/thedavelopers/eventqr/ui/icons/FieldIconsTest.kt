@@ -41,4 +41,27 @@ class FieldIconsTest {
         assertEquals(glyphPx, field.compoundDrawablesRelative[0].bounds.width())
         assertEquals(glyphPx, field.compoundDrawablesRelative[2].bounds.width())
     }
+
+    /** A site with a chevron passes `ui_chevron` (16dp); the default stays the 20dp field glyph. */
+    @Test
+    fun apply_pinsTheCallSiteSizeOnEverySlot() {
+        val chevronPx = context.resources.getDimensionPixelSize(R.dimen.ui_chevron)
+        val field = EditText(context).apply {
+            setCompoundDrawablesRelativeWithIntrinsicBounds(
+                AppIcons.Chevron,
+                AppIcons.Chevron,
+                AppIcons.Chevron,
+                AppIcons.Chevron,
+            )
+        }
+
+        FieldIcons.apply(field, R.dimen.ui_chevron)
+
+        assertEquals(16 * context.resources.displayMetrics.density, chevronPx.toFloat(), 0.001f)
+        field.compoundDrawablesRelative.forEach { assertEquals(chevronPx, it.bounds.width()) }
+
+        FieldIcons.apply(field)
+
+        field.compoundDrawablesRelative.forEach { assertEquals(glyphPx, it.bounds.width()) }
+    }
 }

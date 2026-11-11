@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.organizer.rewards
 
 import com.thedavelopers.eventqr.ui.icons.AppIcons
+import com.thedavelopers.eventqr.ui.icons.FieldIcons
 import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.ui.theme.dimenFloat
 import com.thedavelopers.eventqr.ui.theme.dimenPx
@@ -106,6 +107,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
         refreshLayout = findViewById(R.id.swipeRefreshRewards)
         rewardHost = findViewById(R.id.mrw_reward_host)
         addRewardChip = findViewById(R.id.mrw_add_reward)
+        FieldIcons.apply(addRewardChip)
         addRewardChip.setOnClickListener { showRewardDialog(null) }
         rewardsEnabledSwitch = findViewById(R.id.mrw_rewards_switch)
         findViewById<LinearLayout>(R.id.bottomNavHost).addView(bottomNav(NAV_REWARDS))

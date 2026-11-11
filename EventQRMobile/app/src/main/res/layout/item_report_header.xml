@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
     REPORT PREVIEW header (§6.4): title + record-count badge, event name, generated line, the
-    applied filter chips. No card, no tinted tile, no ALL-CAPS heading.
+    applied-filter provenance line. No card, no tinted tile, no ALL-CAPS heading.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -50,11 +50,15 @@
         android:textColor="@color/ui_text_secondary"
         tools:text="Generated 12 Oct 2026, 9:41 AM" />
 
-    <LinearLayout
-        android:id="@+id/filterChips"
+    <!-- Provenance, not a control (§6.4): the applied filters as one plain micro line. No chip, no
+         border, no minHeight, no icon - a silhouette with no tap handler is a false affordance. -->
+    <TextView
+        android:id="@+id/txtReportFilters"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_8"
-        android:gravity="start|center_vertical"
-        android:orientation="horizontal" />
+        android:layout_marginTop="@dimen/space_2"
+        android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+        android:textColor="@color/ui_text_secondary"
+        android:focusable="false"
+        tools:text="2 filters · 1 Oct 2026 - 12 Oct 2026 · Status: CHECKED_IN" />
 </LinearLayout>

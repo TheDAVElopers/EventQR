@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Opaque dot for the report chart legend (§6.4). bg_ui_dot is text_secondary at 60%, so tinting
+     it with a chart colour would keep that alpha and paint a washed-out span. This one is opaque:
+     a tint replaces the colour, so the dot matches the bar beside it at full strength. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="@color/ui_text_primary" />
+</shape>

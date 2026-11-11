@@ -12,6 +12,7 @@ import androidx.core.view.WindowCompat
 import com.thedavelopers.eventqr.core.navigation.AppNavigator
 import com.thedavelopers.eventqr.core.session.SessionEvents
 import com.thedavelopers.eventqr.core.session.SessionManager
+import com.thedavelopers.eventqr.core.util.padUCropForSystemBars
 import com.thedavelopers.eventqr.features.dashboard.DashboardRouter
 import com.thedavelopers.eventqr.features.dashboard.RoleReroutePolicy
 import com.thedavelopers.eventqr.features.notifications.EventDecisionNotifier
@@ -19,6 +20,7 @@ import com.thedavelopers.eventqr.features.registrations.RegistrationsCache
 import com.thedavelopers.eventqr.features.auth.login.LoginActivity
 import com.thedavelopers.eventqr.features.auth.register.RegistrationActivity
 import com.thedavelopers.eventqr.ui.theme.applyRequestedEventQrSystemBarAppearance
+import com.yalantis.ucrop.UCropActivity
 
 class EventQrApplication : Application() {
     // The activity currently in the resumed state, or null while the app is backgrounded.
@@ -39,7 +41,21 @@ class EventQrApplication : Application() {
             }
 
             override fun onActivityStarted(activity: Activity) {
-                activity.applyRequestedEventQrSystemBarAppearance()
+                if (activity is UCropActivity) {
+                    // Inset hook lives here, not in onActivityCreated: Activity.onCreate dispatches
+                    // onActivityCreated from its super call, before UCropActivity calls setContentView, so the
+                    // crop views do not exist yet there. onStart always runs after onCreate.
+                    activity.padUCropForSystemBars()
+                    // UCrop paints a near-white status bar (#f5f5f5 / its white toolbar on 35+) and a dark
+                    // controls bar (#20242F), so its icons invert the app default. The shared pass is skipped:
+                    // it forces light navigation icons and resamples the decor, which the crop photo would flip.
+                    WindowCompat.getInsetsController(activity.window, activity.window.decorView).apply {
+                        isAppearanceLightStatusBars = true
+                        isAppearanceLightNavigationBars = false
+                    }
+                } else {
+                    activity.applyRequestedEventQrSystemBarAppearance()
+                }
             }
 
             override fun onActivityResumed(activity: Activity) {

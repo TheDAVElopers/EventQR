@@ -3,6 +3,7 @@ package com.thedavelopers.eventqr.features.staff
 import com.thedavelopers.eventqr.core.util.UiStrings
 import com.thedavelopers.eventqr.core.util.addNearEndListener
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+import com.thedavelopers.eventqr.ui.icons.FieldIcons
 import android.content.Intent
 import android.graphics.Typeface
 import android.os.Bundle
@@ -202,6 +203,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
     private fun bindViews() {
         swipeRefresh = findViewById(R.id.swipeRefreshEventRegistrations)
         searchInput = findViewById(R.id.edtRegistrationSearch)
+        FieldIcons.apply(searchInput)
         emptyState = findViewById(R.id.txtAssignedEventsEmpty)
         eventTitleView = findViewById(R.id.txtEventRegistrationsEventTitle)
         totalView = findViewById(R.id.txtAttendeeTotal)

@@ -116,7 +116,8 @@
     <color name="p_ink_100">#E9E7F1</color>    <!-- sunken surface, skeleton base -->
     <color name="p_ink_200">#DAD7E4</color>    <!-- hairline, decorative, 1.42:1 -->
     <color name="p_ink_300">#C0BCCC</color>    <!-- disabled fill, non-text -->
-    <color name="p_ink_400">#948FA6</color>    <!-- interactive outline, 3.12:1 on white -->
+    <color name="p_ink_400">#948FA6</color>    <!-- chart_other, 3.12:1 on white - not a control border -->
+    <color name="p_ink_450">#87829B</color>    <!-- interactive outline, 3.34:1 on background, 3.69:1 on surface -->
     <color name="p_ink_500">#5E5A70</color>    <!-- text_secondary, 6.0:1 on background -->
     <color name="p_ink_900">#14121F</color>    <!-- text_primary, 17.78:1 on paper -->
 

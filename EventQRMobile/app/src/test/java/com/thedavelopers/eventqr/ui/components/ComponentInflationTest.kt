@@ -1,6 +1,9 @@
 package com.thedavelopers.eventqr.ui.components
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Rect
 import android.view.LayoutInflater
 import android.view.View
@@ -23,11 +26,13 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 import androidx.appcompat.view.ContextThemeWrapper
 import kotlin.math.abs
 
@@ -171,12 +176,15 @@ class ComponentInflationTest {
 
     /**
      * Item 2: the create/request entry point belongs to the screen, not to the empty state. Both
-     * organizer screens carry the same chip outside `EventQrEmptyState`, so it survives a
-     * populated, empty and failed list.
+     * organizer screens carry the same section action outside `EventQrEmptyState`, so it survives
+     * a populated, empty and failed list.
      */
     @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     fun organizerScreens_carryTheRequestActionOutsideTheEmptyState() {
         val context = themedContext()
+        val touchMin = context.resources.getDimensionPixelSize(R.dimen.ui_touch_min)
+        val glyphSlots = arrayOf("start", "top", "end", "bottom")
         val layouts = intArrayOf(
             R.layout.activity_organizer_dashboard,
             R.layout.activity_organizer_events,
@@ -201,7 +209,64 @@ class ComponentInflationTest {
                 )
                 node = node.parent as? View
             }
+
+            // Section action, not a chip: text only, no glyph in any compound slot, zero horizontal
+            // padding (a chip pads its box by 8-12dp; the section action's zero padding is what puts
+            // the label on the gutter), and the 48dp floor that makes the label a touch target.
+            val actions = listOfNotNull(action, root.findViewById<android.widget.TextView>(R.id.btnSeeAllEvents))
+            for (view in actions) {
+                val name = context.resources.getResourceEntryName(view.id)
+                assertEquals(
+                    "$host/$name must stay a 48dp touch target",
+                    touchMin,
+                    view.minimumHeight,
+                )
+                assertEquals("$host/$name must not pad like a chip", 0, view.paddingStart)
+                assertEquals("$host/$name must not pad like a chip", 0, view.paddingEnd)
+                view.compoundDrawablesRelative.forEachIndexed { index, drawable ->
+                    assertNull(
+                        "$host/$name carries a glyph in the ${glyphSlots[index]} slot",
+                        drawable,
+                    )
+                }
+                // Painted boundary: at rest the section action paints nothing, while a chip fills
+                // its box with ui_surface and strokes a 1dp outline. Draw the real background at
+                // rest and read its centre pixel, so a chip drawable cannot hide here.
+                val background = requireNotNull(view.background) { "$host/$name has no press wash" }
+                val bitmap = Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888)
+                background.setState(view.drawableState)
+                background.setBounds(0, 0, 8, 8)
+                background.draw(Canvas(bitmap))
+                assertEquals(
+                    "$host/$name must paint no chip boundary",
+                    0,
+                    Color.alpha(bitmap.getPixel(4, 4)),
+                )
+            }
         }
+    }
+
+    /**
+     * §6.4: the per-event strip is a 48dp row, so its action chip carries `wrap_content` height
+     * over the 48dp floor and grows at fontScale 2.0 instead of clipping. The chip style's own
+     * 36dp height is a visual size, never a box the label has to fit inside.
+     */
+    @Test
+    fun eventStrip_chipGrowsWithItsLabel() {
+        val context = themedContext()
+        val root = inflate(R.layout.include_organizer_event_strip, LinearLayout(context))
+        val chip = root.findViewById<android.widget.TextView>(R.id.eventStripAction)
+        assertNotNull("the strip lost its action chip", chip)
+        assertEquals(
+            "the strip chip must not pin a fixed height",
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            chip.layoutParams.height,
+        )
+        assertEquals(
+            "the strip chip must clear the 48dp touch floor",
+            context.resources.getDimensionPixelSize(R.dimen.ui_touch_min),
+            chip.minimumHeight,
+        )
     }
 
     private fun boundsIn(root: ViewGroup, view: View): Rect =

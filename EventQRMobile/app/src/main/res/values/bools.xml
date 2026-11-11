@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Combined report on a phone: no chart, one summary line plus the table, which is the same
+         content the PDF/CSV export carries for that section (§6.4). Tablets flip this in
+         values-sw600dp. -->
+    <bool name="report_combined_charts">false</bool>
+</resources>

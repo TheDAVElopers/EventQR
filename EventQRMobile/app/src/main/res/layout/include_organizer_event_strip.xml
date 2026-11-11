@@ -42,8 +42,9 @@
         android:id="@+id/eventStripAction"
         style="@style/Widget.EventQR.Ui.Chip.Action"
         android:layout_width="wrap_content"
-        android:layout_height="@dimen/ui_chip_height"
+        android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/space_8"
+        android:minHeight="@dimen/ui_touch_min"
         android:text="@string/ui_organizer_add_staff"
         app:drawableStartCompat="@drawable/ic_ui_add" />
 </LinearLayout>
