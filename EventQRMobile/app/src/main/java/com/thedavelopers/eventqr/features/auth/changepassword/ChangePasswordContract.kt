@@ -6,7 +6,11 @@ interface ChangePasswordContract {
         fun showCurrentPasswordError(message: String?)
         fun showNewPasswordError(message: String?)
         fun showConfirmPasswordError(message: String?)
-        fun showMessage(message: String)
+        /**
+         * A failure of the whole request: one sentence in the §5.16 strip above the footer, never a `Retry`
+         * (a repeat after a lost answer would send a current password the server has already replaced).
+         */
+        fun showFormError(message: String)
         fun showSuccess()
         fun navigateBack()
     }

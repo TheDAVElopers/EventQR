@@ -48,7 +48,7 @@ class EventDetailPresenter(
                     view?.renderEvent(result.data)
                 }
                 is NetworkResult.Error -> {
-                    view?.showMessage(strings.get(R.string.event_detail_unable_to_load_event_details, result.message))
+                    view?.showLoadError(result.message)
                 }
                 else -> Unit
             }

@@ -31,6 +31,8 @@ class ResetPasswordPresenterTest {
         val loading = mutableListOf<Boolean>()
         val emails = mutableListOf<String>()
         val messages = mutableListOf<String>()
+        val formErrors = mutableListOf<Pair<String, Boolean>>()
+        val resendErrors = mutableListOf<Pair<String, Boolean>>()
         val cooldowns = mutableListOf<Int>()
         val newPasswordTargets = mutableListOf<Pair<String, String>>()
         var loginCount = 0
@@ -41,6 +43,8 @@ class ResetPasswordPresenterTest {
         override fun showCodeError(message: String?) { codeErrors += message }
         override fun showCodeExpired() { expiredCount++ }
         override fun showMessage(message: String) { messages += message }
+        override fun showFormError(message: String, retryable: Boolean) { formErrors += message to retryable }
+        override fun showResendError(message: String, retryable: Boolean) { resendErrors += message to retryable }
         override fun showResendCooldown(secondsLeft: Int) { cooldowns += secondsLeft }
         override fun showResendUnavailable() { resendUnavailableCount++ }
         override fun navigateToNewPassword(email: String, code: String) { newPasswordTargets += email to code }
@@ -119,25 +123,38 @@ class ResetPasswordPresenterTest {
     }
 
     @Test
-    fun submitCode_rateLimited429_showsRateLimitMessageNotFieldError() {
+    fun submitCode_rateLimited429_showsTheStripWithoutRetryNotAFieldError() {
         repo.verifyResult = httpFailure(429)
 
         presenter.submitCode("123456")
         idle()
 
-        assertEquals(listOf(context.getString(R.string.forgot_password_rate_limited)), view.messages)
+        assertEquals(listOf(context.getString(R.string.forgot_password_rate_limited) to false), view.formErrors)
+        assertTrue(view.messages.isEmpty())
         assertEquals(listOf<String?>(null), view.codeErrors)
         assertTrue(view.newPasswordTargets.isEmpty())
     }
 
     @Test
-    fun submitCode_networkFailure_showsMessageAndStays() {
+    fun submitCode_networkFailure_showsTheStripWithRetryAndStays() {
         repo.verifyResult = NetworkResult.Error("Network problem", java.io.IOException())
 
         presenter.submitCode("123456")
         idle()
 
-        assertEquals(listOf("Network problem"), view.messages)
+        assertEquals(listOf(context.getString(R.string.ui_auth_error_network) to true), view.formErrors)
+        assertTrue("no toast for a failure", view.messages.isEmpty())
+        assertTrue(view.newPasswordTargets.isEmpty())
+    }
+
+    @Test
+    fun submitCode_serverError500_showsAFixedSentenceWithRetry() {
+        repo.verifyResult = httpFailure(500, "{\"message\":\"java.lang.IllegalStateException: boom\"}")
+
+        presenter.submitCode("123456")
+        idle()
+
+        assertEquals(listOf(context.getString(R.string.ui_auth_code_verify_failed) to true), view.formErrors)
         assertTrue(view.newPasswordTargets.isEmpty())
     }
 
@@ -216,7 +233,9 @@ class ResetPasswordPresenterTest {
         presenter.resendCode()
         idle()
 
-        assertEquals(listOf(context.getString(R.string.forgot_password_rate_limited)), view.messages)
+        assertEquals(listOf(context.getString(R.string.forgot_password_rate_limited) to false), view.resendErrors)
+        assertTrue(view.messages.isEmpty())
+        assertTrue("a resend failure never lands on the verify strip", view.formErrors.isEmpty())
         assertEquals(0, presenter.resendsDone)
         assertEquals(30, view.cooldowns.last())
     }
@@ -230,5 +249,18 @@ class ResetPasswordPresenterTest {
 
         assertEquals(0, view.cooldowns.last())
         assertEquals(0, presenter.resendsDone)
+        assertEquals(listOf(context.getString(R.string.ui_auth_code_resend_failed) to true), view.resendErrors)
+        assertTrue(view.messages.isEmpty())
+    }
+
+    @Test
+    fun resend_networkFailure_releasesTheButtonAndOffersRetry() {
+        repo.forgotResult = NetworkResult.Error("Network problem", java.io.IOException())
+
+        presenter.resendCode()
+        idle()
+
+        assertEquals(0, view.cooldowns.last())
+        assertEquals(listOf(context.getString(R.string.ui_auth_error_network) to true), view.resendErrors)
     }
 }

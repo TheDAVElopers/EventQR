@@ -1,6 +1,16 @@
 package com.thedavelopers.eventqr.features.auth.register
 
+import android.os.Looper
+import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.core.api.safeApiCall
 import com.thedavelopers.eventqr.core.util.UiStrings
+import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
+import kotlinx.coroutines.runBlocking
+import okhttp3.ResponseBody.Companion.toResponseBody
+import org.robolectric.Shadows.shadowOf
+import retrofit2.HttpException
+import retrofit2.Response
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.thedavelopers.eventqr.features.ShadowEncryptedSharedPreferences
@@ -234,10 +244,99 @@ class RegistrationPresenterTest {
         assertEquals(listOf(null), view.fieldErrors["lastName"])
     }
 
+    // ---- §5.16: a failed create-account is one strip sentence; the API-named field stays a field error
+
+    private fun string(id: Int) =
+        ApplicationProvider.getApplicationContext<android.content.Context>().getString(id)
+
+    private class FakeRepo(private val result: NetworkResult<UserResponse>) :
+        AuthRepository(ApplicationProvider.getApplicationContext()) {
+        var calls = 0
+        override suspend fun createUser(
+            fullName: String,
+            email: String,
+            phoneNumber: String,
+            password: String,
+        ): NetworkResult<UserResponse> {
+            calls++
+            return result
+        }
+    }
+
+    private fun httpFailure(code: Int, body: String = ""): NetworkResult<UserResponse> = runBlocking {
+        safeApiCall<UserResponse> { throw HttpException(Response.error<Any>(code, body.toResponseBody())) }
+    }
+
+    private fun submitValid(result: NetworkResult<UserResponse>): FakeRepo {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val repo = FakeRepo(result)
+        val p = RegistrationPresenter(view, repo, UiStrings(context))
+        p.submitRegistration("John", "Doe", "user@example.com", "+639171234567", "Strong1!Pass", "Strong1!Pass")
+        shadowOf(Looper.getMainLooper()).idle()
+        return repo
+    }
+
+    @Test
+    fun submitRegistration_emailTaken409_isAFieldErrorOnEmailNotAStripOrToast() {
+        submitValid(httpFailure(409, "{\"message\":\"User already exists for email user@example.com\"}"))
+
+        assertEquals(
+            listOf("email" to string(R.string.ui_auth_register_email_taken)),
+            view.serverFieldErrors,
+        )
+        assertTrue(view.formErrors.isEmpty())
+        assertTrue(view.messages.isEmpty())
+        assertEquals(listOf(true, false), view.loadingStates)
+    }
+
+    @Test
+    fun submitRegistration_badRequest400_showsFixedStripCopyNotTheServerText() {
+        submitValid(httpFailure(400, "{\"message\":\"phoneNumber: must match pattern\"}"))
+
+        assertEquals(listOf(string(R.string.ui_auth_register_rejected)), view.formErrors)
+        assertTrue(view.serverFieldErrors.isEmpty())
+        assertTrue(view.messages.isEmpty())
+    }
+
+    @Test
+    fun submitRegistration_noConnection_showsTheNetworkSentence() {
+        submitValid(NetworkResult.Error("Can't reach the server.", java.net.UnknownHostException("host")))
+
+        assertEquals(listOf(string(R.string.ui_auth_error_network)), view.formErrors)
+        assertTrue(view.messages.isEmpty())
+    }
+
+    @Test
+    fun submitRegistration_serverError500_showsAFixedSentence() {
+        submitValid(httpFailure(500, "{\"message\":\"java.lang.IllegalStateException: boom\"}"))
+
+        assertEquals(listOf(string(R.string.ui_auth_register_failed)), view.formErrors)
+    }
+
+    @Test
+    fun submitRegistration_success_staysAToastAndLeavesNoStrip() {
+        submitValid(NetworkResult.Success(
+            UserResponse(
+                userId = java.util.UUID.randomUUID(),
+                email = "user@example.com",
+                fullName = "John Doe",
+                role = com.thedavelopers.eventqr.core.api.dto.AccountRole.ATTENDEE,
+                status = com.thedavelopers.eventqr.core.api.dto.AccountStatus.ACTIVE,
+            ),
+            "Account created",
+        ))
+
+        assertEquals(listOf("Account created"), view.messages)
+        assertTrue(view.formErrors.isEmpty())
+        assertEquals(1, view.navigateToSignInCount)
+    }
+
     private class RecordingRegistrationView : RegistrationContract.View {
         val loadingStates = mutableListOf<Boolean>()
         val fieldErrors = mutableMapOf<String, MutableList<String?>>()
         val messages = mutableListOf<String>()
+        val formErrors = mutableListOf<String>()
+        val serverFieldErrors = mutableListOf<Pair<String, String>>()
         var navigateToSignInCount = 0
 
         override fun showLoading(isLoading: Boolean) {
@@ -250,6 +349,14 @@ class RegistrationPresenterTest {
 
         override fun showMessage(message: String) {
             messages += message
+        }
+
+        override fun showFormError(message: String) {
+            formErrors += message
+        }
+
+        override fun showServerFieldError(field: String, message: String) {
+            serverFieldErrors += field to message
         }
 
         override fun navigateToSignIn() {

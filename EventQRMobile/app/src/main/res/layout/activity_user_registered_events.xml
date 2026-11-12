@@ -90,6 +90,17 @@
             android:text="@string/ui_attendee_completed" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <!-- §5.16: a failed refresh over readable passes reports here, under the filter row so the
+         filters stay reachable. Retry re-runs the presenter's load for the current filter. -->
+    <include
+        android:id="@+id/errorRegisteredEvents"
+        layout="@layout/include_error_strip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/ui_gutter"
+        android:layout_marginTop="@dimen/space_md"
+        android:layout_marginEnd="@dimen/ui_gutter" />
+
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshRegisteredEvents"
         android:layout_width="match_parent"

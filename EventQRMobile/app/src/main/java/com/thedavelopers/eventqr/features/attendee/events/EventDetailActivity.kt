@@ -27,6 +27,8 @@ import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
 import com.thedavelopers.eventqr.features.events.model.dto.EventAvailabilityResponse
 import com.thedavelopers.eventqr.features.organizer.events.EventManagementHubActivity
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+import com.thedavelopers.eventqr.ui.components.showInlineError
 import com.thedavelopers.eventqr.ui.theme.applyEventQrBottomInsetPadding
 import java.time.Instant
 import kotlinx.coroutines.launch
@@ -53,12 +55,30 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     private var availabilityJob: kotlinx.coroutines.Job? = null
     // Re-draws the button from the last availability outcome when the registration status changes afterwards.
     private var reapplyAvailability: (() -> Unit)? = null
+    private lateinit var errorStrip: View
+    private lateinit var emptyState: EventQrEmptyState
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_event_detail)
 
         findViewById<View>(R.id.layoutBottomBar)?.applyEventQrBottomInsetPadding()
+
+        errorStrip = findViewById(R.id.errorEventDetail)
+        // §5.16: Retry re-runs the same load; the strip is hidden until a retry also fails.
+        errorStrip.findViewById<View>(R.id.btnErrorStripRetry).setOnClickListener { retryLoad() }
+        emptyState = findViewById(R.id.emptyEventDetailState)
+        // §6.8 row 20: with no event yet, the spec table and About stay hidden, so a failed first
+        // load can never print "--" rows or a blank body under a half-empty page. A description the
+        // caller already holds is real content: it shows with its eyebrow while the load runs.
+        val launchDescription = intent.getStringExtra(EXTRA_EVENT_DESCRIPTION).orEmpty()
+        val hasLaunchDescription = launchDescription.isNotBlank()
+        findViewById<View>(R.id.layoutSpecTable).visibility = View.GONE
+        findViewById<View>(R.id.txtDetailAboutLabel).visibility = if (hasLaunchDescription) View.VISIBLE else View.GONE
+        findViewById<TextView>(R.id.txtDetailDescription).apply {
+            text = launchDescription
+            visibility = if (hasLaunchDescription) View.VISIBLE else View.GONE
+        }
 
         repository = AttendeeRepository(this)
         presenter = EventDetailPresenter(this, repository, UiStrings(this))
@@ -67,9 +87,10 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         findViewById<View>(R.id.nav_header_back).setOnClickListener { finish() }
 
         val launchTitle = intent.getStringExtra(EXTRA_EVENT_TITLE).orEmpty()
+        // A blank head cannot carry the failure sentence, so it stays hidden until an event arrives.
+        if (launchTitle.isBlank()) findViewById<View>(R.id.layoutEventHero).visibility = View.GONE
         findViewById<TextView>(R.id.txtDetailTitle).text = launchTitle
         findViewById<TextView>(R.id.txtDetailTitlePoster).text = launchTitle
-        findViewById<TextView>(R.id.txtDetailDescription).text = intent.getStringExtra(EXTRA_EVENT_DESCRIPTION).orEmpty()
         findViewById<TextView>(R.id.txtDetailVenue).text = intent.getStringExtra(EXTRA_EVENT_LOCATION).orEmpty().ifBlank { "Location not specified" }
         
         intent.getStringExtra(EXTRA_EVENT_COUNT)?.let { countStr ->
@@ -132,6 +153,13 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
 
     override fun renderEvent(event: AttendeeEventResponse) {
         currentEvent = event
+        // The event arrived: the body is readable again and no failure surface survives a success.
+        findViewById<View>(R.id.layoutEventHero).visibility = View.VISIBLE
+        errorStrip.visibility = View.GONE
+        emptyState.hide()
+        findViewById<View>(R.id.layoutSpecTable).visibility = View.VISIBLE
+        findViewById<View>(R.id.txtDetailAboutLabel).visibility = View.VISIBLE
+        findViewById<View>(R.id.txtDetailDescription).visibility = View.VISIBLE
         // The top bar keeps its fixed "Event details" title; the event name sits in the media head:
         // in the no-poster band, or on the page background under the poster.
         findViewById<TextView>(R.id.txtDetailTitle).text = event.title
@@ -495,6 +523,33 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
+    /**
+     * A failed load (§6.8 row 20): the sentence sits under the media head with its inline Retry.
+     * Only a page with no head to carry it falls back to the error empty state, so the screen is
+     * never a blank plate. Server text goes to the log, never into the UI (§7.5).
+     */
+    override fun showLoadError(message: String) {
+        Log.w(TAG, "event detail load failed: $message")
+        val sentence = getString(R.string.ui_event_detail_load_failed)
+        if (findViewById<TextView>(R.id.txtDetailTitle).text.isNullOrBlank()) {
+            errorStrip.visibility = View.GONE
+            emptyState.setContent(sentence, getString(R.string.ui_attendee_load_error_body))
+            emptyState.setAction(getString(R.string.ui_attendee_retry)) { retryLoad() }
+            emptyState.visibility = View.VISIBLE
+            // The copy never changes, so a live region would stay silent on a repeat failure.
+            emptyState.announceForAccessibility(sentence)
+        } else {
+            emptyState.hide()
+            errorStrip.showInlineError(sentence)
+        }
+    }
+
+    private fun retryLoad() {
+        errorStrip.visibility = View.GONE
+        emptyState.hide()
+        if (eventId.isNotBlank()) presenter.loadEventDetails(eventId)
+    }
+
     override fun openRegistration(eventId: String, eventTitle: String, email: String, fullName: String, phoneNumber: String) {
         if (canManageEvent()) {
             openOrganizerEventManagement()
@@ -607,5 +662,9 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
                 " available=${availability?.available}," +
                 " finalButtonEnabled=$finalButtonEnabled"
         )
+    }
+
+    private companion object {
+        const val TAG = "EventDetail"
     }
 }

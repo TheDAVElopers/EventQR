@@ -2,9 +2,9 @@ package com.thedavelopers.eventqr.features.attendee
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -15,6 +15,7 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.registrations.RegisteredEventAdapter
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.ui.components.PassHeadBinder
+import com.thedavelopers.eventqr.ui.components.showInlineError
 import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
@@ -34,6 +35,7 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
 
     private lateinit var emptyState: EventQrEmptyState
     private lateinit var defaultEmptyTitle: CharSequence
+    private lateinit var errorStrip: View
 
     private var allItems: List<RegistrationResponse> = emptyList()
     private var selectedFilter: RegisteredEventFilter = RegisteredEventFilter.ALL
@@ -70,6 +72,12 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
         chipActive = findViewById(R.id.chipActive)
         chipCompleted = findViewById(R.id.chipCompleted)
         chipRow = findViewById(R.id.chipRowRegisteredEvents)
+        errorStrip = findViewById(R.id.errorRegisteredEvents)
+        // §5.16: Retry re-runs the presenter's load; the current filter is re-applied on arrival.
+        findViewById<View>(R.id.btnErrorStripRetry).setOnClickListener {
+            errorStrip.visibility = View.GONE
+            presenter.load()
+        }
 
         chipAll.setOnClickListener { selectFilter(RegisteredEventFilter.ALL) }
         chipUpcoming.setOnClickListener { selectFilter(RegisteredEventFilter.UPCOMING) }
@@ -202,6 +210,8 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
             skeletonLoading.visibility = if (isLoading && !hasRows) View.VISIBLE else View.GONE
         }
         if (isLoading) {
+            // Every attempt clears the strip: a retry in flight is not a failure still on screen.
+            errorStrip.visibility = View.GONE
             emptyState.visibility = View.GONE
             if (!hasRows) recyclerView.visibility = View.GONE
         } else {
@@ -213,7 +223,6 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
         swipeRefresh.isRefreshing = false
         // A zero-row failure must not leave a blank list area under a transient toast: the
         // empty-state slot carries the error and its Retry (§5.10 item 6, delivery invariant 2).
-        // With rows on screen the previous list stays readable and the toast is the only notice.
         if (allItems.isEmpty()) {
             loadFailed = true
             emptyState.setIcon(AppIcons.Warning)
@@ -225,16 +234,22 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
             recyclerView.visibility = View.GONE
             chipRow.visibility = View.GONE
         } else {
-            // A refresh over readable rows keeps them; the failure is a background notice.
-            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+            // Rows that arrived stay readable; the failed refresh reports in the flow (§5.16).
+            Log.w(TAG, "registrations load failed: $message")
+            errorStrip.showInlineError(getString(R.string.ui_attendee_registrations_refresh_failed))
         }
     }
 
     override fun showRegisteredEvents(items: List<RegistrationResponse>) {
         swipeRefresh.isRefreshing = false
         skeletonLoading.visibility = View.GONE
+        errorStrip.visibility = View.GONE
         loadFailed = false
         allItems = items
         renderFilteredEvents()
+    }
+
+    private companion object {
+        const val TAG = "RegisteredEvents"
     }
 }

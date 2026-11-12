@@ -346,6 +346,7 @@ class EventDetailPresenterCancelTest {
         override fun getSessionPhone(): String = ""
         override fun showLoading(isLoading: Boolean) = Unit
         override fun showMessage(message: String) { messages += message }
+        override fun showLoadError(message: String) { messages += message }
     }
 }
 

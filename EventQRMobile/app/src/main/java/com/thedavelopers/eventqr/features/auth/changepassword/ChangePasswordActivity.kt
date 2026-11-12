@@ -14,7 +14,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.ScreenInsets
 import com.thedavelopers.eventqr.core.util.Validators
-import com.thedavelopers.eventqr.core.util.setInlineError
+import com.thedavelopers.eventqr.features.auth.AuthErrorStrip
+import com.thedavelopers.eventqr.features.auth.AuthFieldErrors
 import com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
 import com.thedavelopers.eventqr.ui.icons.FieldIcons
 import com.thedavelopers.eventqr.ui.icons.RuleMarks
@@ -28,6 +29,8 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
     private lateinit var newPasswordErrorText: TextView
     private lateinit var confirmPasswordErrorText: TextView
     private lateinit var changeButton: Button
+    private lateinit var formError: AuthErrorStrip
+    private val fieldErrors = AuthFieldErrors()
     private lateinit var progressBar: ProgressBar
     private lateinit var requirementsLayout: LinearLayout
     private lateinit var passwordLengthRequirement: TextView
@@ -54,6 +57,11 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
         newPasswordErrorText = findViewById(R.id.txtNewPasswordError)
         confirmPasswordErrorText = findViewById(R.id.txtConfirmPasswordError)
         changeButton = findViewById(R.id.btnChangePassword)
+        // No Retry on this screen (a repeat could send a replaced password), so the strip has no actions.
+        formError = AuthErrorStrip(findViewById(R.id.errorChangePassword))
+        fieldErrors.register(FIELD_CURRENT_PASSWORD, currentPasswordInput, currentPasswordErrorText)
+        fieldErrors.register(FIELD_NEW_PASSWORD, newPasswordInput, newPasswordErrorText)
+        fieldErrors.register(FIELD_CONFIRM_PASSWORD, confirmPasswordInput, confirmPasswordErrorText)
         progressBar = findViewById(R.id.progressChange)
         requirementsLayout = findViewById(R.id.layoutPasswordRequirements)
         passwordLengthRequirement = findViewById(R.id.txtPasswordLengthRequirement)
@@ -100,6 +108,7 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
         })
 
         changeButton.setOnClickListener {
+            formError.clear()
             presenter.submitChange(
                 currentPasswordInput.text.toString(),
                 newPasswordInput.text.toString(),
@@ -109,6 +118,19 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
 
         findViewById<EventQrDetailHeader>(R.id.toolbarChangePassword)
             .backButton.setOnClickListener { presenter.navigateBack() }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        fieldErrors.save(outState)
+        formError.save(outState)
+    }
+
+    // After super: restoring the typed text runs the edit watchers that clear an error.
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        fieldErrors.restore(savedInstanceState)
+        formError.restore(savedInstanceState)
     }
 
     override fun onDestroy() {
@@ -123,22 +145,23 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
     }
 
     override fun showCurrentPasswordError(message: String?) {
-        currentPasswordInput.setInlineError(message, currentPasswordErrorText)
+        fieldErrors.raise(FIELD_CURRENT_PASSWORD, message)
     }
 
     override fun showNewPasswordError(message: String?) {
-        newPasswordInput.setInlineError(
+        fieldErrors.raise(
+            FIELD_NEW_PASSWORD,
             if (message == Validators.PASSWORD_TOO_LONG_ERROR) getString(R.string.error_password_too_long) else message,
-            newPasswordErrorText
         )
     }
 
     override fun showConfirmPasswordError(message: String?) {
-        confirmPasswordInput.setInlineError(message, confirmPasswordErrorText)
+        fieldErrors.raise(FIELD_CONFIRM_PASSWORD, message)
     }
 
-    override fun showMessage(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    /** No Retry: a repeat after a lost answer would send a current password the server already replaced. */
+    override fun showFormError(message: String) {
+        formError.show(message, retryAction = null)
     }
 
     override fun showSuccess() {
@@ -159,10 +182,13 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
         updateRequirement(passwordLowercaseRequirement, getString(R.string.password_req_lowercase), requirements.hasLowercase)
         updateRequirement(passwordNumberRequirement, getString(R.string.password_req_number), requirements.hasNumber)
         updateRequirement(passwordSpecialRequirement, getString(R.string.password_req_special), requirements.hasSpecial)
-        newPasswordInput.setInlineError(
-            if (!requirements.withinMaxLength) getString(R.string.error_password_too_long) else null,
-            newPasswordErrorText
-        )
+        // Derived from the text on every keystroke: live, so the edit watcher leaves it to this check.
+        val tooLong = getString(R.string.error_password_too_long)
+        if (!requirements.withinMaxLength) {
+            fieldErrors.raise(FIELD_NEW_PASSWORD, tooLong, live = true)
+        } else if (fieldErrors.message(FIELD_NEW_PASSWORD) == tooLong) {
+            fieldErrors.set(FIELD_NEW_PASSWORD, null)
+        }
 
         validateButtonState()
     }
@@ -178,5 +204,10 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
     private fun updateRequirement(view: TextView, label: String, isMet: Boolean) {
         RuleMarks.apply(view, label, isMet)
     }
-}
 
+    private companion object {
+        const val FIELD_CURRENT_PASSWORD = "currentPassword"
+        const val FIELD_NEW_PASSWORD = "newPassword"
+        const val FIELD_CONFIRM_PASSWORD = "confirmPassword"
+    }
+}

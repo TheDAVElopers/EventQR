@@ -541,6 +541,39 @@ class ComponentInflationTest {
         assertNotNull(bar.findViewById<View>(R.id.topBarTitle))
     }
 
+    /**
+     * §5.16: the one in-flow error strip. Fixed ids are the host contract; the geometry is the
+     * spec's (48dp floor, ghost Retry at the inline floor). The host fills the sentence through
+     * [showInlineError], which also announces it - a live region would stay silent on a repeat.
+     */
+    @Test
+    fun errorStrip_inflatesAndShowsTheHostSentence() {
+        val context = themedContext()
+        val root = inflate(R.layout.include_error_strip, LinearLayout(context))
+        val message = root.findViewById<android.widget.TextView>(R.id.txtErrorStrip)
+        val retry = root.findViewById<android.widget.TextView>(R.id.btnErrorStripRetry)
+
+        assertEquals("the strip starts hidden", View.GONE, root.visibility)
+        assertEquals(
+            "the strip clears the 48dp touch floor",
+            context.resources.getDimensionPixelSize(R.dimen.ui_touch_min),
+            root.minimumHeight,
+        )
+        assertEquals(context.getString(R.string.ui_attendee_retry), retry.text.toString())
+        assertEquals(
+            context.resources.getDimensionPixelSize(R.dimen.ui_button_height_inline),
+            retry.minimumHeight,
+        )
+
+        root.showInlineError("Couldn't load.")
+        assertEquals(View.VISIBLE, root.visibility)
+        assertEquals("Couldn't load.", message.text.toString())
+        // TalkBack must hear a Button, matching the Compose mirror's Role.Button.
+        val info = android.view.accessibility.AccessibilityNodeInfo.obtain()
+        retry.onInitializeAccessibilityNodeInfo(info)
+        assertEquals(android.widget.Button::class.java.name, info.className.toString())
+    }
+
     @Test
     fun metricRow_inflates() {
         val row = inflate(R.layout.widget_metric_row, LinearLayout(themedContext()))

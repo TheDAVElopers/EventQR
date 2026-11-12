@@ -3,6 +3,7 @@ package com.thedavelopers.eventqr.features.auth.login
 import com.thedavelopers.eventqr.core.util.UiStrings
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
@@ -16,6 +17,8 @@ import com.thedavelopers.eventqr.core.session.RememberedEmailStore
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.core.util.ScreenInsets
 import com.thedavelopers.eventqr.core.util.Wordmark
+import com.thedavelopers.eventqr.features.auth.AuthErrorStrip
+import com.thedavelopers.eventqr.features.auth.AuthFieldErrors
 import com.thedavelopers.eventqr.features.auth.AuthRepository
 import com.thedavelopers.eventqr.features.auth.forgotpassword.ForgotPasswordActivity
 import com.thedavelopers.eventqr.features.auth.register.RegistrationActivity
@@ -31,6 +34,8 @@ open class LoginActivity : AppCompatActivity(), LoginContract.View {
     private lateinit var forgotPasswordLink: TextView
     private lateinit var rememberEmailCheckBox: CheckBox
     private lateinit var rememberedEmailStore: RememberedEmailStore
+    private lateinit var formError: AuthErrorStrip
+    private val fieldErrors = AuthFieldErrors()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,6 +58,9 @@ open class LoginActivity : AppCompatActivity(), LoginContract.View {
         forgotPasswordLink = findViewById(R.id.txtForgotPassword)
         rememberEmailCheckBox = findViewById(R.id.chkRememberMe)
         rememberedEmailStore = RememberedEmailStore.create(this)
+        formError = AuthErrorStrip(findViewById(R.id.errorLogin), mapOf(AuthErrorStrip.SUBMIT to ::submit))
+        fieldErrors.register(FIELD_EMAIL, emailInput, findViewById(R.id.txtEmailError))
+        fieldErrors.register(FIELD_PASSWORD, passwordInput, findViewById(R.id.txtPasswordError))
         rememberedEmailStore.get()?.let { remembered ->
             emailInput.setText(remembered)
             rememberEmailCheckBox.isChecked = true
@@ -62,9 +70,7 @@ open class LoginActivity : AppCompatActivity(), LoginContract.View {
         FieldIcons.apply(emailInput)
         FieldIcons.apply(passwordInput)
 
-        signInButton.setOnClickListener {
-            presenter.submitLogin(emailInput.text.toString(), passwordInput.text.toString())
-        }
+        signInButton.setOnClickListener { submit() }
 
         registerButton.setOnClickListener {
             presenter.openRegistration()
@@ -73,6 +79,25 @@ open class LoginActivity : AppCompatActivity(), LoginContract.View {
         forgotPasswordLink.setOnClickListener {
             presenter.openForgotPassword()
         }
+    }
+
+    /** Every attempt, including a strip `Retry`, starts from a clean strip and reads the fields as they are now. */
+    private fun submit() {
+        formError.clear()
+        presenter.submitLogin(emailInput.text.toString(), passwordInput.text.toString())
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        fieldErrors.save(outState)
+        formError.save(outState)
+    }
+
+    // After super: restoring the typed text runs the edit watchers that clear an error.
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        fieldErrors.restore(savedInstanceState)
+        formError.restore(savedInstanceState)
     }
 
     override fun onDestroy() {
@@ -86,19 +111,19 @@ open class LoginActivity : AppCompatActivity(), LoginContract.View {
     }
 
     override fun showEmailError(message: String?) {
-        emailInput.error = message
-        // bg_ui_field draws the 2dp error stroke from state_activated, so the box and the
-        // message never disagree about whether the field is in error.
-        emailInput.isActivated = message != null
+        fieldErrors.raise(FIELD_EMAIL, message)
     }
 
     override fun showPasswordError(message: String?) {
-        passwordInput.error = message
-        passwordInput.isActivated = message != null
+        fieldErrors.raise(FIELD_PASSWORD, message)
     }
 
     override fun showMessage(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
+    override fun showFormError(message: String, retryable: Boolean) {
+        formError.show(message, if (retryable) AuthErrorStrip.SUBMIT else null)
     }
 
     override fun onLoginSucceeded(email: String) {
@@ -115,11 +140,12 @@ open class LoginActivity : AppCompatActivity(), LoginContract.View {
                 com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity::class.java
             AccountRole.ATTENDEE.name -> DashboardActivity::class.java
             "" -> {
-                showMessage(getString(R.string.login_unable_to_determine_account_role))
+                showFormError(getString(R.string.ui_auth_login_role_unknown), retryable = true)
                 return
             }
             else -> {
-                showMessage(getString(R.string.login_unsupported_role, normalizedRole))
+                Log.w(TAG, "unsupported account role: $normalizedRole")
+                showFormError(getString(R.string.ui_auth_login_role_unknown), retryable = true)
                 return
             }
         }
@@ -140,5 +166,11 @@ open class LoginActivity : AppCompatActivity(), LoginContract.View {
 
     override fun navigateToForgotPassword() {
         startActivity(Intent(this, ForgotPasswordActivity::class.java))
+    }
+
+    private companion object {
+        const val TAG = "LoginActivity"
+        const val FIELD_EMAIL = "email"
+        const val FIELD_PASSWORD = "password"
     }
 }

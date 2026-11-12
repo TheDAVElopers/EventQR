@@ -1,11 +1,13 @@
 package com.thedavelopers.eventqr.features.auth.resetpassword
 
 import android.content.Context
+import android.util.Log
 import androidx.annotation.VisibleForTesting
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.auth.AuthRepository
+import com.thedavelopers.eventqr.features.auth.logSummary
 import com.thedavelopers.eventqr.features.auth.forgotpassword.ForgotPasswordOutcome
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
@@ -90,23 +92,27 @@ class NewPasswordPresenter() {
                 is NetworkResult.Error -> {
                     view?.showLoading(false)
                     val throwable = result.throwable
+                    Log.w(TAG, "reset password failed: ${result.logSummary()}")
                     when {
                         throwable is HttpException && throwable.code() == 400 &&
                             result.serverMessage == CODE_EXPIRED_MESSAGE ->
                             // The code expired (or was used up) since it was verified.
                             view?.navigateBackToExpiredCode(currentEmail)
-                        // Any other 400 (password policy, mismatch): stay and show why.
+                        // Any other 400 (password policy, mismatch): stay and say what to check. The server
+                        // text is logged above; the API does not name a field, so no field error either.
                         throwable is HttpException && throwable.code() == 400 ->
-                            view?.showMessage(result.serverMessage ?: result.message)
+                            view?.showFormError(string(R.string.ui_auth_new_password_rejected))
                         ForgotPasswordOutcome.classify(throwable) == ForgotPasswordOutcome.RateLimited ->
-                            view?.showMessage(string(R.string.forgot_password_rate_limited))
-                        else -> view?.showMessage(result.message)
+                            view?.showFormError(string(R.string.forgot_password_rate_limited))
+                        throwable is java.io.IOException ->
+                            view?.showFormError(string(R.string.ui_auth_error_network))
+                        else -> view?.showFormError(string(R.string.ui_auth_new_password_failed))
                     }
                 }
                 NetworkResult.Loading -> Unit
                 null -> {
                     view?.showLoading(false)
-                    view?.showMessage(string(R.string.reset_failed))
+                    view?.showFormError(string(R.string.ui_auth_new_password_failed))
                 }
             }
         }
@@ -115,6 +121,8 @@ class NewPasswordPresenter() {
     private fun string(resId: Int): String = appContext?.getString(resId).orEmpty()
 
     companion object {
+        private const val TAG = "NewPasswordPresenter"
+
         /** Backend 400 message meaning the reset code is wrong, expired, or already used. */
         const val CODE_EXPIRED_MESSAGE = "Reset code is invalid or expired"
     }

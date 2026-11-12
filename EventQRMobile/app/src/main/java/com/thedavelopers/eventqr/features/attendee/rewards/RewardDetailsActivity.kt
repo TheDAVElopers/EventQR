@@ -2,6 +2,7 @@ package com.thedavelopers.eventqr.features.attendee
 
 import com.thedavelopers.eventqr.core.util.UiStrings
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -11,6 +12,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.session.SessionManager
+import com.thedavelopers.eventqr.ui.components.showInlineError
 import com.thedavelopers.eventqr.ui.icons.FieldIcons
 
 open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
@@ -38,11 +40,15 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
     private var claimStateKnown: Boolean = false
     /** A read that carries the claim state failed: the badge shows a terminal error, never CHECKING. */
     private var claimStateFailed: Boolean = false
+    private lateinit var errorStrip: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_reward_details)
         FieldIcons.apply(findViewById(R.id.warningBox))
+        errorStrip = findViewById(R.id.errorRewardDetail)
+        // §5.16: Retry re-runs the same read that failed; the strip stays hidden until it fails again.
+        errorStrip.findViewById<View>(R.id.btnErrorStripRetry).setOnClickListener { retryLoad() }
 
         presenter = RewardsPresenter(this, repositoryOverride ?: AttendeeRepository(this), UiStrings(this))
         eventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty()
@@ -91,7 +97,29 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
     }
 
     override fun showError(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        // §5.16: one sentence for every failing read on this screen; server text stays in the log.
+        Log.w(TAG, "reward detail load failed: $message")
+        errorStrip.showInlineError(getString(R.string.ui_reward_detail_load_failed))
+    }
+
+    /** The reward body rendered and only the balance read failed: name that read, not the reward. */
+    override fun showBalanceError(message: String) {
+        Log.w(TAG, "reward balance load failed: $message")
+        errorStrip.showInlineError(getString(R.string.ui_reward_detail_balance_failed))
+    }
+
+    private fun retryLoad() {
+        val userId = SessionManager(this).getUserId()
+        // No account and no event id means no read to re-run: keep the strip and the claim state
+        // exactly as they are rather than clearing a failure nothing can resolve.
+        if (userId == null || eventId.isBlank()) return
+        errorStrip.visibility = View.GONE
+        // A retry re-asks both reads, so the claim state returns to in-flight rather than terminal.
+        claimStateKnown = false
+        claimStateFailed = false
+        balanceLoading = true
+        updateAvailabilityUi()
+        presenter.load(eventId, userId, includeUnavailable = true)
     }
 
     override fun showMessage(message: String) {
@@ -102,6 +130,7 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
         currentBalance = balance.pointsBalance
         balanceLoaded = true
         balanceLoading = false
+        errorStrip.visibility = View.GONE
         findViewById<TextView>(R.id.txtUserPoints)?.text = getString(R.string.common_points_short, balance.pointsBalance)
         updateAvailabilityUi()
     }
@@ -110,6 +139,7 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
         // Reaching this callback means the claim read succeeded: only now may the screen say
         // Available.
         claimStateKnown = true
+        errorStrip.visibility = View.GONE
         // The freshly loaded reward is the source of truth for status and stock; a reward missing
         // from the claimable list but present in the claim set was already redeemed.
         val reward = items.firstOrNull { it.rewardId.toString() == rewardId }
@@ -265,6 +295,10 @@ open class RewardDetailsActivity : AppCompatActivity(), RewardsContract.View {
         // Unknown stock: hide the whole wrapper (divider + row) rather than claim "Unlimited".
         (view.parent?.parent as? View)?.visibility = if (label == null) View.GONE else View.VISIBLE
         view.text = label.orEmpty()
+    }
+
+    private companion object {
+        const val TAG = "RewardDetail"
     }
 }
 

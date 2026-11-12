@@ -25,9 +25,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -41,6 +43,7 @@ import com.thedavelopers.eventqr.core.api.dto.NotificationType
 import com.thedavelopers.eventqr.core.util.RelativeTimeUtils
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 import com.thedavelopers.eventqr.ui.components.EmptyState
+import com.thedavelopers.eventqr.ui.components.InlineErrorStrip
 import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.LocalGrid
 import com.thedavelopers.eventqr.ui.theme.LocalType
@@ -64,12 +67,27 @@ fun NotificationsScreen(
     notifications: List<NotificationResponse>,
     isLoading: Boolean,
     errorMessage: String?,
+    actionFailureCount: Int,
     onNotificationClick: (NotificationResponse) -> Unit,
     onRetryClick: () -> Unit,
+    onActionRetry: () -> Unit,
     navigatesOnTap: (NotificationResponse) -> Boolean,
     modifier: Modifier = Modifier,
 ) {
     val grid = LocalGrid.current
+    val view = LocalView.current
+    // One sentence for both read and mark-read failures (§7.3); the counter says whether one failed.
+    val actionErrorMessage = if (actionFailureCount > 0) {
+        stringResource(R.string.ui_notifications_update_failed)
+    } else {
+        null
+    }
+
+    // The sentence never changes, so a live region would stay silent on a repeat failure; announce
+    // each new failure explicitly instead (§5.16). The count is the key: a repeated failure bumps it.
+    LaunchedEffect(actionFailureCount) {
+        actionErrorMessage?.let(view::announceForAccessibility)
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets.navigationBars,
@@ -105,16 +123,33 @@ fun NotificationsScreen(
                     description = stringResource(R.string.ui_notifications_empty_body),
                 )
 
-                else -> LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = grid.s24),
-                ) {
-                    items(notifications, key = { it.notificationId }) { item ->
-                        NotificationRow(
-                            item = item,
-                            navigable = navigatesOnTap(item),
-                            onClick = { onNotificationClick(item) },
+                else -> Column(modifier = Modifier.fillMaxSize()) {
+                    // §6.8 row 21: a failed read reports above the list; the rows keep their state.
+                    if (actionErrorMessage != null) {
+                        InlineErrorStrip(
+                            message = actionErrorMessage,
+                            onRetry = onActionRetry,
+                            modifier = Modifier.padding(
+                                start = grid.s20,
+                                top = grid.s12,
+                                end = grid.s20,
+                                bottom = grid.s8,
+                            ),
                         )
+                    }
+                    LazyColumn(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        contentPadding = PaddingValues(bottom = grid.s24),
+                    ) {
+                        items(notifications, key = { it.notificationId }) { item ->
+                            NotificationRow(
+                                item = item,
+                                navigable = navigatesOnTap(item),
+                                onClick = { onNotificationClick(item) },
+                            )
+                        }
                     }
                 }
             }

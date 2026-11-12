@@ -30,6 +30,14 @@ class ForgotPasswordOutcomeTest {
     }
 
     @Test
+    fun onlyA5xxIsAServerError_everyOther4xxStaysNeutral() {
+        for (code in listOf(400, 401, 403, 404, 405, 409, 415, 422, 499)) {
+            assertEquals("HTTP $code", ForgotPasswordOutcome.Neutral, ForgotPasswordOutcome.classify(http(code)))
+        }
+        assertEquals(ForgotPasswordOutcome.ServerError, ForgotPasswordOutcome.classify(http(500)))
+    }
+
+    @Test
     fun http4xxValidation_staysNeutral() {
         assertEquals(ForgotPasswordOutcome.Neutral, ForgotPasswordOutcome.classify(http(400)))
         assertEquals(ForgotPasswordOutcome.Neutral, ForgotPasswordOutcome.classify(http(404)))

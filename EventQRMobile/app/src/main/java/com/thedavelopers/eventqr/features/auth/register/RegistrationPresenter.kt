@@ -1,13 +1,16 @@
 package com.thedavelopers.eventqr.features.auth.register
 
+import android.util.Log
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.UiStrings
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.auth.AuthRepository
+import com.thedavelopers.eventqr.features.auth.logSummary
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 
 class RegistrationPresenter(
     private var view: RegistrationContract.View?,
@@ -20,6 +23,7 @@ class RegistrationPresenter(
     private companion object {
         /** The API rejects a fullName over 255 characters with HTTP 400. */
         const val MAX_FULL_NAME_LENGTH = 255
+        const val TAG = "RegistrationPresenter"
     }
 
     fun attach(view: RegistrationContract.View) {
@@ -111,10 +115,25 @@ class RegistrationPresenter(
                 }
                 is NetworkResult.Error -> {
                     view?.showLoading(false)
-                    view?.showMessage(result.message)
+                    // Server text stays in the log; the screen shows fixed copy (§7.5).
+                    Log.w(TAG, "registration failed: ${result.logSummary()}")
+                    when {
+                        // 409: the email already has an account. The API names the field, so it is a field error.
+                        statusCode(result) == 409 ->
+                            view?.showServerFieldError("email", strings.get(R.string.ui_auth_register_email_taken))
+                        statusCode(result) == 400 ->
+                            view?.showFormError(strings.get(R.string.ui_auth_register_rejected))
+                        statusCode(result) == 429 ->
+                            view?.showFormError(strings.get(R.string.ui_auth_error_rate_limited))
+                        result.throwable is java.io.IOException ->
+                            view?.showFormError(strings.get(R.string.ui_auth_error_network))
+                        else -> view?.showFormError(strings.get(R.string.ui_auth_register_failed))
+                    }
                 }
                 NetworkResult.Loading -> Unit
             }
         }
     }
+
+    private fun statusCode(result: NetworkResult.Error): Int? = (result.throwable as? HttpException)?.code()
 }

@@ -24,6 +24,7 @@ import com.thedavelopers.eventqr.features.qrcredential.model.dto.QrCredentialSna
 import com.thedavelopers.eventqr.features.registrations.RegistrationNumberFormatter
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+import com.thedavelopers.eventqr.ui.components.showInlineError
 import com.thedavelopers.eventqr.ui.theme.applyEventQrBottomInsetPadding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -46,6 +47,7 @@ open class AttendeeQrCredentialActivity : AppCompatActivity(), QrCredentialContr
     private lateinit var serialText: TextView
     private lateinit var savedCopyText: TextView
     private lateinit var emptyState: EventQrEmptyState
+    private lateinit var errorStrip: View
     private var currentQrCredentialId: String? = null
     private var currentQrBitmap: Bitmap? = null
     private var currentEventTitle: String? = null
@@ -72,6 +74,13 @@ open class AttendeeQrCredentialActivity : AppCompatActivity(), QrCredentialContr
         serialText = findViewById(R.id.qrSerial)
         savedCopyText = findViewById(R.id.txtQrSavedCopy)
         emptyState = findViewById(R.id.emptyQrPassState)
+        errorStrip = findViewById(R.id.errorQrPass)
+        // §6.8 row 22: a failed save re-runs the save. A pass that is not ready has nothing to save,
+        // so Retry re-runs the load that produces the bitmap instead of re-reporting "still loading".
+        errorStrip.findViewById<View>(R.id.btnErrorStripRetry).setOnClickListener {
+            errorStrip.visibility = View.GONE
+            if (currentQrBitmap == null) loadPass() else handleDownloadClick()
+        }
         findViewById<TextView>(R.id.qrRole).text = getString(R.string.ui_attendee_attendee)
 
         findViewById<View>(R.id.nav_header_back).setOnClickListener { finish() }
@@ -122,6 +131,7 @@ open class AttendeeQrCredentialActivity : AppCompatActivity(), QrCredentialContr
      */
     private fun handleDownloadClick() {
         if (downloadController.isSaving) return
+        errorStrip.visibility = View.GONE
         val bitmap = currentQrBitmap
         if (bitmap != null) {
             val fileName = "EventQR_${currentEventTitle?.replace(" ", "_") ?: "Event"}_${currentRegistrationId ?: "ID"}"
@@ -137,11 +147,11 @@ open class AttendeeQrCredentialActivity : AppCompatActivity(), QrCredentialContr
                     }
                 } else {
                     downloadController.resetToIdle()
-                    Toast.makeText(this@AttendeeQrCredentialActivity, this@AttendeeQrCredentialActivity.getString(R.string.attendee_qr_credential_failed_to_save_qr_image), Toast.LENGTH_SHORT).show()
+                    errorStrip.showInlineError(getString(R.string.ui_attendee_pass_save_failed))
                 }
             }
         } else {
-            Toast.makeText(this, this.getString(R.string.attendee_qr_credential_qr_image_not_ready), Toast.LENGTH_SHORT).show()
+            errorStrip.showInlineError(getString(R.string.ui_attendee_pass_not_ready))
         }
     }
 

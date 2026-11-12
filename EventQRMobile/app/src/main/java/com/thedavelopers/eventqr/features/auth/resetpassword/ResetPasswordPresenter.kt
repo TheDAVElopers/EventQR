@@ -1,10 +1,12 @@
 package com.thedavelopers.eventqr.features.auth.resetpassword
 
 import android.content.Context
+import android.util.Log
 import androidx.annotation.VisibleForTesting
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.features.auth.AuthRepository
+import com.thedavelopers.eventqr.features.auth.logSummary
 import com.thedavelopers.eventqr.features.auth.forgotpassword.ForgotPasswordOutcome
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
@@ -83,18 +85,22 @@ class ResetPasswordPresenter() {
                 }
                 is NetworkResult.Error -> {
                     view?.showLoading(false)
+                    Log.w(TAG, "verify code failed: ${result.logSummary()}")
                     when (ForgotPasswordOutcome.classify(result.throwable)) {
-                        ForgotPasswordOutcome.NetworkFailure -> view?.showMessage(result.message)
-                        ForgotPasswordOutcome.RateLimited -> view?.showMessage(string(R.string.forgot_password_rate_limited))
-                        ForgotPasswordOutcome.ServerError -> view?.showMessage(string(R.string.reset_failed))
-                        // 400: wrong, expired, or locked after too many attempts.
+                        // Verifying does not consume the code, so a transient failure is safe to repeat;
+                        // a 429 would be the same rejected request, so it offers no Retry.
+                        ForgotPasswordOutcome.NetworkFailure -> view?.showFormError(string(R.string.ui_auth_error_network), retryable = true)
+                        ForgotPasswordOutcome.RateLimited -> view?.showFormError(string(R.string.forgot_password_rate_limited), retryable = false)
+                        ForgotPasswordOutcome.ServerError -> view?.showFormError(string(R.string.ui_auth_code_verify_failed), retryable = true)
+                        // 400: wrong, expired, or locked after too many attempts. The API identifies the
+                        // field, so this stays a field error.
                         ForgotPasswordOutcome.Neutral -> view?.showCodeError(string(R.string.reset_password_code_incorrect))
                     }
                 }
                 NetworkResult.Loading -> Unit
                 null -> {
                     view?.showLoading(false)
-                    view?.showMessage(string(R.string.reset_failed))
+                    view?.showFormError(string(R.string.ui_auth_code_verify_failed), retryable = true)
                 }
             }
         }
@@ -114,18 +120,22 @@ class ResetPasswordPresenter() {
             when (val result = repository?.forgotPassword(currentEmail)) {
                 is NetworkResult.Error -> when (ForgotPasswordOutcome.classify(result.throwable)) {
                     ForgotPasswordOutcome.NetworkFailure -> {
+                        Log.w(TAG, "resend code failed: ${result.logSummary()}")
                         view?.showResendCooldown(0)
-                        view?.showMessage(result.message)
+                        view?.showResendError(string(R.string.ui_auth_error_network), retryable = true)
                     }
                     ForgotPasswordOutcome.RateLimited -> {
-                        view?.showMessage(string(R.string.forgot_password_rate_limited))
+                        Log.w(TAG, "resend code rate limited: ${result.logSummary()}")
+                        // The cooldown below already says when Resend returns, so no Retry here.
+                        view?.showResendError(string(R.string.forgot_password_rate_limited), retryable = false)
                         // Not a successful resend: don't count it, just back off (honouring Retry-After).
                         val retryAfter = result.retryAfterSeconds?.coerceAtMost(ResetResendPolicy.MAX_COOLDOWN_SECONDS.toLong())?.toInt() ?: 0
                         startCooldown(maxOf(ResetResendPolicy.cooldownSeconds(resendsDone), retryAfter))
                     }
                     ForgotPasswordOutcome.ServerError -> {
+                        Log.w(TAG, "resend code failed: ${result.logSummary()}")
                         view?.showResendCooldown(0)
-                        view?.showMessage(string(R.string.forgot_password_server_error))
+                        view?.showResendError(string(R.string.ui_auth_code_resend_failed), retryable = true)
                     }
                     // Neutral 4xx: behave as if sent so account existence isn't revealed.
                     ForgotPasswordOutcome.Neutral -> onResent()
@@ -177,6 +187,7 @@ class ResetPasswordPresenter() {
     private fun string(resId: Int): String = appContext?.getString(resId).orEmpty()
 
     private companion object {
+        const val TAG = "ResetPasswordPresenter"
         val CODE_REGEX = Regex("^\\d{6}$")
     }
 }

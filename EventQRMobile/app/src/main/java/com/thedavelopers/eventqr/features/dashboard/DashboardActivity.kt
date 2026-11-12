@@ -3,6 +3,7 @@ package com.thedavelopers.eventqr.features.dashboard
 import com.thedavelopers.eventqr.core.util.UiStrings
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -41,6 +42,7 @@ import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import com.thedavelopers.eventqr.ui.components.ListRowBinder
 import com.thedavelopers.eventqr.ui.components.PassHeadBinder
 import com.thedavelopers.eventqr.ui.components.PassHeadModel
+import com.thedavelopers.eventqr.ui.components.showInlineError
 import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.icons.FieldIcons
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
@@ -65,6 +67,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     private lateinit var upcomingEventsLayout: LinearLayout
     private lateinit var discoverEventsLayout: LinearLayout
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+    private lateinit var errorStrip: View
     private var isSwipeRefreshing = false
     private var isFirstResume = true
     private var hasRenderedContent = false
@@ -108,6 +111,11 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         upcomingEventsLayout = findViewById(R.id.layoutUpcomingEvents)
         discoverEventsLayout = findViewById(R.id.layoutDiscoverEvents)
         swipeRefreshLayout = findViewById(R.id.swipeRefreshDashboard)
+        errorStrip = findViewById(R.id.errorDashboard)
+        findViewById<View>(R.id.btnErrorStripRetry).setOnClickListener {
+            errorStrip.visibility = View.GONE
+            reload()
+        }
 
         swipeRefreshLayout.setOnRefreshListener {
             isSwipeRefreshing = true
@@ -161,6 +169,8 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         stopSwipeRefresh()
         hasRenderedContent = true
         skeletonLoading.visibility = View.GONE
+        // A successful load is the only thing that clears the failure strip (§5.16).
+        errorStrip.visibility = View.GONE
         upcomingEventsLayout.visibility = View.VISIBLE
         discoverEventsLayout.visibility = View.VISIBLE
 
@@ -188,9 +198,29 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
             bindPassHead()
             renderUpcomingError()
         } else {
-            // The rows stay readable; the failure is a background notice.
-            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+            // The rows stay readable; the failure reports in the flow (§5.16), never a toast.
+            Log.w(TAG, "dashboard load failed: $message")
+            showErrorStrip()
         }
+    }
+
+    /**
+     * One strip, one sentence for every failing source (§5.16). The real message goes to the log;
+     * the UI never prints server text or names a subsystem (§7.5).
+     */
+    override fun showPartialError(source: String, message: String) {
+        Log.w(TAG, "dashboard $source failed: $message")
+        // Zero rows after a failure is the error empty state (§6.8 row 3), never a strip: the
+        // first-load error already owns the body and its one Retry.
+        if (!hasRenderedContent) return
+        showErrorStrip()
+    }
+
+    private fun showErrorStrip() {
+        // One sentence, set by the shared helper. Announce only when the strip appears: a load
+        // that fails several sources reports once, not once per source.
+        val announce = errorStrip.visibility != View.VISIBLE
+        errorStrip.showInlineError(getString(R.string.ui_attendee_dashboard_partial_failed), announce)
     }
 
     override fun showMessage(message: String) {
@@ -436,5 +466,9 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
             swipeRefreshLayout.isRefreshing = false
             isSwipeRefreshing = false
         }
+    }
+
+    private companion object {
+        const val TAG = "Dashboard"
     }
 }

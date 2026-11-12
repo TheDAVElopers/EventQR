@@ -2,10 +2,13 @@ package com.thedavelopers.eventqr.features.auth.forgotpassword
 
 import com.thedavelopers.eventqr.core.util.UiStrings
 import android.content.Context
+import android.util.Log
+import androidx.annotation.VisibleForTesting
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.auth.AuthRepository
+import com.thedavelopers.eventqr.features.auth.logSummary
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -14,7 +17,8 @@ class ForgotPasswordPresenter() {
     private var view: ForgotPasswordContract.View? = null
     private val scope = MainScope()
     private var job: kotlinx.coroutines.Job? = null
-    private var repository: AuthRepository? = null
+    @VisibleForTesting
+    internal var repository: AuthRepository? = null
     private var appContext: Context? = null
 
     fun attach(view: ForgotPasswordContract.View, context: Context) {
@@ -48,13 +52,15 @@ class ForgotPasswordPresenter() {
                 }
                 is NetworkResult.Error -> {
                     view?.showLoading(false)
+                    Log.w(TAG, "forgot password failed: ${result.logSummary()}")
                     when (ForgotPasswordOutcome.classify(result.throwable)) {
                         // Offline or timed out: the request never got an answer, so don't tell
                         // the user an email is on its way.
-                        ForgotPasswordOutcome.NetworkFailure -> view?.showMessage(result.message)
-                        // Rate limited / server failure: the code was NOT sent, say so.
-                        ForgotPasswordOutcome.RateLimited -> appContext?.let { view?.showMessage(it.getString(R.string.forgot_password_rate_limited)) }
-                        ForgotPasswordOutcome.ServerError -> appContext?.let { view?.showMessage(it.getString(R.string.forgot_password_server_error)) }
+                        ForgotPasswordOutcome.NetworkFailure -> view?.showFormError(string(R.string.ui_auth_error_network), retryable = true)
+                        // Rate limited / server failure: the code was NOT sent, say so. Retry only
+                        // for the 5xx; a 429 would be the same rejected request.
+                        ForgotPasswordOutcome.RateLimited -> view?.showFormError(string(R.string.forgot_password_rate_limited), retryable = false)
+                        ForgotPasswordOutcome.ServerError -> view?.showFormError(string(R.string.ui_auth_forgot_failed), retryable = true)
                         // 4xx validation-type answer: keep the neutral flow (go on to the code screen) so the screen
                         // doesn't reveal whether an account exists.
                         ForgotPasswordOutcome.Neutral -> view?.navigateToResetPassword(emailValue)
@@ -71,6 +77,12 @@ class ForgotPasswordPresenter() {
 
     fun backToSignIn() {
         view?.navigateBackToSignIn()
+    }
+
+    private fun string(resId: Int): String = appContext?.getString(resId).orEmpty()
+
+    private companion object {
+        const val TAG = "ForgotPasswordPresenter"
     }
 }
 

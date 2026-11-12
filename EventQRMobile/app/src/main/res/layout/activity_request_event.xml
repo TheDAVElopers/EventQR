@@ -6,6 +6,8 @@
         56dp filled fields with static overline labels
         Poster picker as a flat media block
         72dp sticky footer: primary Submit request + ghost Cancel
+        Field errors: a micro ui_error line under the field (txt*Error) + the activated 2dp error stroke
+        Server failure: include_error_strip above the footer (errorRequestEvent)
 
     Deleted: the per-section CardView, the RequestEventInput 54dp outlined style, the full-width
     dark Cancel button under the submit, the flat black "card" wrapper and the tinted message box.
@@ -48,18 +50,6 @@
                 android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
                 android:textColor="@color/ui_text_secondary" />
 
-            <TextView
-                android:id="@+id/formMessageText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_lg"
-                android:background="@drawable/bg_ui_card"
-                android:backgroundTint="@color/ui_error_container"
-                android:padding="@dimen/ui_card_padding"
-                android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
-                android:textColor="@color/ui_on_error_container"
-                android:visibility="gone" />
-
             <!-- ═════════ EVENT INFORMATION ═════════ -->
             <TextView
                 android:layout_width="match_parent"
@@ -85,6 +75,15 @@
                 android:hint="@string/request_event_event_name_2"
                 android:inputType="textCapSentences"
                 android:maxLines="1" />
+
+            <TextView
+                android:id="@+id/txtEventNameError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -141,6 +140,15 @@
                 android:visibility="gone" />
 
             <TextView
+                android:id="@+id/txtEventCategoryError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
+
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_lg"
@@ -156,6 +164,15 @@
                 android:layout_marginTop="@dimen/space_sm"
                 android:hint="@string/request_event_describe_the_event"
                 android:inputType="textMultiLine" />
+
+            <TextView
+                android:id="@+id/txtEventDescriptionError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -176,6 +193,15 @@
                 android:maxLines="1" />
 
             <TextView
+                android:id="@+id/txtTargetAudienceError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
+
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_lg"
@@ -192,6 +218,15 @@
                 android:hint="@string/capacity_hint"
                 android:inputType="number"
                 android:maxLines="1" />
+
+            <TextView
+                android:id="@+id/txtCapacityError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
 
             <View
                 android:layout_width="match_parent"
@@ -227,6 +262,15 @@
                 android:maxLines="1" />
 
             <TextView
+                android:id="@+id/txtVenueError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
+
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_lg"
@@ -242,13 +286,22 @@
                 android:layout_marginTop="@dimen/space_sm"
                 android:clickable="true"
                 android:cursorVisible="false"
-                android:focusable="false"
+                android:focusable="true"
                 android:focusableInTouchMode="false"
                 android:hint="@string/request_event_tap_to_select_date_and_time"
                 android:inputType="none"
                 android:longClickable="false"
                 android:maxLines="1"
                 android:textIsSelectable="false" />
+
+            <TextView
+                android:id="@+id/txtStartDateTimeError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -266,13 +319,22 @@
                 android:layout_marginTop="@dimen/space_sm"
                 android:clickable="true"
                 android:cursorVisible="false"
-                android:focusable="false"
+                android:focusable="true"
                 android:focusableInTouchMode="false"
                 android:hint="@string/request_event_tap_to_select_date_and_time"
                 android:inputType="none"
                 android:longClickable="false"
                 android:maxLines="1"
                 android:textIsSelectable="false" />
+
+            <TextView
+                android:id="@+id/txtEndDateTimeError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -290,13 +352,22 @@
                 android:layout_marginTop="@dimen/space_sm"
                 android:clickable="true"
                 android:cursorVisible="false"
-                android:focusable="false"
+                android:focusable="true"
                 android:focusableInTouchMode="false"
                 android:hint="@string/request_event_tap_to_select_date_and_time"
                 android:inputType="none"
                 android:longClickable="false"
                 android:maxLines="1"
                 android:textIsSelectable="false" />
+
+            <TextView
+                android:id="@+id/txtRegistrationStartDateTimeError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -314,13 +385,22 @@
                 android:layout_marginTop="@dimen/space_sm"
                 android:clickable="true"
                 android:cursorVisible="false"
-                android:focusable="false"
+                android:focusable="true"
                 android:focusableInTouchMode="false"
                 android:hint="@string/request_event_tap_to_select_date_and_time"
                 android:inputType="none"
                 android:longClickable="false"
                 android:maxLines="1"
                 android:textIsSelectable="false" />
+
+            <TextView
+                android:id="@+id/txtRegistrationEndDateTimeError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
 
             <View
                 android:layout_width="match_parent"
@@ -356,6 +436,15 @@
                 android:maxLines="1" />
 
             <TextView
+                android:id="@+id/txtRequesterNameError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
+
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_lg"
@@ -374,6 +463,15 @@
                 android:maxLines="1" />
 
             <TextView
+                android:id="@+id/txtContactEmailError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
+
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_lg"
@@ -390,6 +488,15 @@
                 android:hint="@string/phone_hint_example"
                 android:inputType="phone"
                 android:maxLines="1" />
+
+            <TextView
+                android:id="@+id/txtContactNumberError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
 
             <View
                 android:layout_width="match_parent"
@@ -495,6 +602,15 @@
                 android:hint="@string/request_event_why_should_this_event_be_created"
                 android:inputType="textMultiLine" />
 
+            <TextView
+                android:id="@+id/txtReasonForRequestError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
+
             <ProgressBar
                 android:id="@+id/submitProgress"
                 android:layout_width="@dimen/icon_lg"
@@ -506,6 +622,18 @@
                 android:visibility="gone" />
         </LinearLayout>
     </ScrollView>
+
+    <!-- ═════════ Page failure (§5.16, §6.8 row 6): one in-flow strip above the footer with Retry,
+         values kept. Field validation never lands here - it renders under its own field. ═════════ -->
+    <include
+        android:id="@+id/errorRequestEvent"
+        layout="@layout/include_error_strip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/ui_gutter"
+        android:layout_marginTop="@dimen/space_md"
+        android:layout_marginEnd="@dimen/ui_gutter"
+        android:layout_marginBottom="@dimen/space_md" />
 
     <!-- ═════════ Sticky footer ═════════ -->
     <View

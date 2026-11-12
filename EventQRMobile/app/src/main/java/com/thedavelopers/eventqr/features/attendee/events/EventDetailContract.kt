@@ -19,6 +19,11 @@ interface EventDetailContract {
         /** Cancel failures carry a full-sentence reason (e.g. the 409 message), so they must not be shown as a truncating toast. */
         fun showCancelFailure(message: String)
         fun openRegistration(eventId: String, eventTitle: String, email: String, fullName: String, phoneNumber: String)
+        /**
+         * The event payload could not be loaded. The screen stays alive and reports this in the
+         * in-flow strip (§5.16) with a Retry, never as a toast.
+         */
+        fun showLoadError(message: String)
         fun getSessionUserId(): String?
         fun getSessionEmail(): String
         fun getSessionFullName(): String

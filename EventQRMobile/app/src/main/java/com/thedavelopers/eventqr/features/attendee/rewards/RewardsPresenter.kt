@@ -4,13 +4,11 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.UiStrings
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.RedemptionStatus
-import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionRequest
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionResponse
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import java.util.UUID
 
 class RewardsPresenter(
     private var view: RewardsContract.View?,
@@ -19,12 +17,9 @@ class RewardsPresenter(
 ) {
     private val scope = kotlinx.coroutines.MainScope()
     private var loadJob: Job? = null
-    /** Separate from [loadJob]: a refresh must never cancel an in-flight redeem POST. */
-    private var redeemJob: Job? = null
 
     fun detach() {
         loadJob?.cancel()
-        redeemJob?.cancel()
         scope.cancel()
         view = null
     }
@@ -78,40 +73,13 @@ class RewardsPresenter(
                 }
                 is NetworkResult.Error -> {
                     view?.showLoading(false)
-                    view?.showError(balanceResult.message)
+                    // The reward body already rendered; only the balance read failed.
+                    view?.showBalanceError(balanceResult.message)
                 }
                 NetworkResult.Loading, null -> {
                     view?.showLoading(false)
-                    view?.showError(strings.get(R.string.rewards_unable_to_load_reward_balance))
+                    view?.showBalanceError(strings.get(R.string.rewards_unable_to_load_reward_balance))
                 }
-            }
-        }
-    }
-
-    fun redeem(eventId: String, attendeeUserId: String?, rewardId: String) {
-        val userId = attendeeUserId.orEmpty()
-        if (userId.isBlank()) {
-            view?.showMessage(strings.get(R.string.rewards_attendee_user_id_required))
-            return
-        }
-        view?.showLoading(true)
-        redeemJob = scope.launch {
-            when (val result = repository.redeemReward(
-                RewardRedemptionRequest(
-                    eventId = UUID.fromString(eventId),
-                    attendeeUserId = UUID.fromString(userId),
-                    rewardId = UUID.fromString(rewardId),
-                )
-            )) {
-                is NetworkResult.Success -> {
-                    view?.showLoading(false)
-                    view?.showMessage(result.message ?: strings.get(R.string.rewards_reward_redeemed))
-                }
-                is NetworkResult.Error -> {
-                    view?.showLoading(false)
-                    view?.showMessage(result.message)
-                }
-                NetworkResult.Loading -> Unit
             }
         }
     }

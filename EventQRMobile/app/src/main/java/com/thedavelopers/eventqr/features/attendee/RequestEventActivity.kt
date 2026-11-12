@@ -12,9 +12,11 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
@@ -24,12 +26,13 @@ import android.widget.PopupWindow
 import android.widget.ScrollView
 import android.widget.Spinner
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.StringRes
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.ui.theme.color
@@ -44,6 +47,7 @@ import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.events.model.dto.EventCreationRequestDto
 import com.thedavelopers.eventqr.features.notifications.EventDecisionNotifier
+import com.thedavelopers.eventqr.ui.components.showInlineError
 import com.thedavelopers.eventqr.ui.theme.applyEventQrBottomInsetPadding
 import com.yalantis.ucrop.UCrop
 import kotlinx.coroutines.launch
@@ -86,7 +90,9 @@ class RequestEventActivity : AppCompatActivity() {
     private lateinit var eventPosterPlaceholder: View
     private lateinit var eventPosterStatusText: TextView
     private lateinit var reasonForRequestInput: EditText
-    private lateinit var formMessageText: TextView
+    // §5.16 page-failure strip (include_error_strip): server and upload failures only, never field validation.
+    private lateinit var errorStrip: View
+    private val errorStripRetry: View get() = errorStrip.findViewById(R.id.btnErrorStripRetry)
     private lateinit var submitProgress: ProgressBar
     private lateinit var submitButton: Button
     private lateinit var formScrollView: ScrollView
@@ -95,13 +101,28 @@ class RequestEventActivity : AppCompatActivity() {
     // Once the request is stored a recreation must not offer the form again; a second tap would
     // post the same request twice.
     private var submitted = false
-    private var selectedPosterFile: File? = null
+    @VisibleForTesting
+    internal var selectedPosterFile: File? = null
+
+    // §5.2 / §6.8 row 6: each field with the helper line that carries its error, in visual
+    // top-to-bottom order so the first invalid field is the first entry that has a message.
+    private val fieldHelpers = LinkedHashMap<View, TextView>()
 
     private companion object {
         val ALLOWED_POSTER_MIME_TYPES = setOf("image/jpeg", "image/jpg", "image/png")
         val MAX_POSTER_BYTES = 5L * 1024L * 1024L
         const val STATE_SUBMITTED = "request_event_submitted"
         const val STATE_IN_FLIGHT = "request_event_in_flight"
+        const val STATE_FIELD_ERRORS = "request_event_field_errors"
+        const val STATE_FOCUSED_FIELD = "request_event_focused_field"
+        const val STATE_ERROR_STRIP = "request_event_error_strip"
+        const val STATE_ERROR_STRIP_RETRY = "request_event_error_strip_retry"
+        const val STATE_CATEGORY = "request_event_category"
+        const val STATE_START = "request_event_start"
+        const val STATE_END = "request_event_end"
+        const val STATE_REGISTRATION_START = "request_event_registration_start"
+        const val STATE_REGISTRATION_END = "request_event_registration_end"
+        const val TAG = "RequestEvent"
     }
 
     private val displayDateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a")
@@ -142,12 +163,12 @@ class RequestEventActivity : AppCompatActivity() {
                     if (croppedUri != null) {
                         handleCroppedPoster(croppedUri)
                     } else {
-                        showMessage(getString(R.string.request_event_unable_to_process_cropped_poster_ple))
+                        renderPosterStatus(getString(R.string.request_event_unable_to_process_cropped_poster_ple))
                     }
                 }
                 result.resultCode == UCrop.RESULT_ERROR -> {
                     result.data?.let { UCrop.getError(it) }
-                    showMessage(getString(R.string.request_event_unable_to_crop_selected_poster_pleas))
+                    renderPosterStatus(getString(R.string.request_event_unable_to_crop_selected_poster_pleas))
                 }
             }
         }
@@ -168,56 +189,58 @@ class RequestEventActivity : AppCompatActivity() {
         findViewById<Button>(R.id.cancelButton).setOnClickListener { finish() }
         findViewById<View>(R.id.eventPosterPicker).setOnClickListener { posterPicker.launch("image/*") }
         submitButton.setOnClickListener { submitRequest() }
+        errorStripRetry.setOnClickListener { submitRequest() }
+        savedInstanceState?.let { restoreFormValues(it) }
 
         configureDateTimeField(startDateTimeInput, { startDateTimeValue }) { value ->
             startDateTimeValue = value
             startDateTimeInput.setText(formatForDisplay(value))
-            startDateTimeInput.error = null
+            setFieldError(startDateTimeInput, null)
             if (endDateTimeValue != null && !endDateTimeValue!!.isAfter(value)) {
                 endDateTimeValue = null
                 endDateTimeInput.text?.clear()
-                endDateTimeInput.error = getString(R.string.request_event_end_date_time_must_be_after_the_star)
+                setFieldError(endDateTimeInput, getString(R.string.request_event_end_date_time_must_be_after_the_star))
             }
             if (registrationEndDateTimeValue != null && !registrationEndDateTimeValue!!.isBefore(value)) {
                 registrationEndDateTimeValue = null
                 registrationEndDateTimeInput.text?.clear()
-                registrationEndDateTimeInput.error = getString(R.string.request_event_registration_end_must_be_before_even)
+                setFieldError(registrationEndDateTimeInput, getString(R.string.request_event_registration_end_must_be_before_even))
             }
         }
         configureDateTimeField(endDateTimeInput, { endDateTimeValue }) { value ->
             endDateTimeValue = value
             endDateTimeInput.setText(formatForDisplay(value))
-            endDateTimeInput.error = null
+            setFieldError(endDateTimeInput, null)
             if (startDateTimeValue != null && !value.isAfter(startDateTimeValue)) {
                 endDateTimeValue = null
                 endDateTimeInput.text?.clear()
-                endDateTimeInput.error = getString(R.string.request_event_end_date_time_must_be_after_the_star)
+                setFieldError(endDateTimeInput, getString(R.string.request_event_end_date_time_must_be_after_the_star))
             }
         }
         configureDateTimeField(registrationStartDateTimeInput, { registrationStartDateTimeValue }) { value ->
             registrationStartDateTimeValue = value
             registrationStartDateTimeInput.setText(formatForDisplay(value))
-            registrationStartDateTimeInput.error = null
+            setFieldError(registrationStartDateTimeInput, null)
             if (registrationEndDateTimeValue != null && !registrationEndDateTimeValue!!.isAfter(value)) {
                 registrationEndDateTimeValue = null
                 registrationEndDateTimeInput.text?.clear()
-                registrationEndDateTimeInput.error = getString(R.string.request_event_registration_end_must_be_after_regis)
+                setFieldError(registrationEndDateTimeInput, getString(R.string.request_event_registration_end_must_be_after_regis))
             }
         }
         configureDateTimeField(registrationEndDateTimeInput, { registrationEndDateTimeValue }) { value ->
             registrationEndDateTimeValue = value
             registrationEndDateTimeInput.setText(formatForDisplay(value))
-            registrationEndDateTimeInput.error = null
+            setFieldError(registrationEndDateTimeInput, null)
             if (registrationStartDateTimeValue != null && !value.isAfter(registrationStartDateTimeValue)) {
                 registrationEndDateTimeValue = null
                 registrationEndDateTimeInput.text?.clear()
-                registrationEndDateTimeInput.error = getString(R.string.request_event_registration_end_must_be_after_regis)
+                setFieldError(registrationEndDateTimeInput, getString(R.string.request_event_registration_end_must_be_after_regis))
                 return@configureDateTimeField
             }
             if (startDateTimeValue != null && !value.isBefore(startDateTimeValue)) {
                 registrationEndDateTimeValue = null
                 registrationEndDateTimeInput.text?.clear()
-                registrationEndDateTimeInput.error = getString(R.string.request_event_registration_end_must_be_before_even)
+                setFieldError(registrationEndDateTimeInput, getString(R.string.request_event_registration_end_must_be_before_even))
             }
         }
 
@@ -235,6 +258,64 @@ class RequestEventActivity : AppCompatActivity() {
         super.onSaveInstanceState(outState)
         outState.putBoolean(STATE_SUBMITTED, submitted)
         outState.putBoolean(STATE_IN_FLIGHT, isSubmitting)
+        val errors = Bundle()
+        fieldHelpers.forEach { (field, helper) ->
+            if (helper.visibility == View.VISIBLE) errors.putString(field.id.toString(), helper.text.toString())
+        }
+        outState.putBundle(STATE_FIELD_ERRORS, errors)
+        outState.putInt(STATE_FOCUSED_FIELD, window.decorView.findFocus()?.takeIf { fieldHelpers.containsKey(it) }?.id ?: View.NO_ID)
+        outState.putString(
+            STATE_ERROR_STRIP,
+            errorStrip.takeIf { it.visibility == View.VISIBLE }
+                ?.findViewById<TextView>(R.id.txtErrorStrip)?.text?.toString(),
+        )
+        outState.putBoolean(STATE_ERROR_STRIP_RETRY, errorStripRetry.visibility == View.VISIBLE)
+        outState.putString(STATE_CATEGORY, selectedEventCategory)
+        outState.putString(STATE_START, startDateTimeValue?.toString())
+        outState.putString(STATE_END, endDateTimeValue?.toString())
+        outState.putString(STATE_REGISTRATION_START, registrationStartDateTimeValue?.toString())
+        outState.putString(STATE_REGISTRATION_END, registrationEndDateTimeValue?.toString())
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        // Restoring the typed text runs the edit watchers that clear an error, so the errors, the
+        // strip and the focus go back after it, never before.
+        savedInstanceState.getBundle(STATE_FIELD_ERRORS)?.let { errors ->
+            fieldHelpers.keys.forEach { field ->
+                errors.getString(field.id.toString())?.let { setFieldError(field, it) }
+            }
+        }
+        savedInstanceState.getString(STATE_ERROR_STRIP)?.let {
+            errorStripRetry.visibility = if (savedInstanceState.getBoolean(STATE_ERROR_STRIP_RETRY, true)) View.VISIBLE else View.GONE
+            errorStrip.showInlineError(it, announce = false)
+        }
+        val focusedId = savedInstanceState.getInt(STATE_FOCUSED_FIELD, View.NO_ID)
+        if (focusedId != View.NO_ID) findViewById<View>(focusedId)?.let { focusField(it) }
+    }
+
+    /**
+     * The pickers and the category selector keep their value in fields, not in the view tree, so a
+     * rotation would otherwise leave a date shown in the box and `null` behind it: submit would then
+     * report a date the user can see as missing.
+     */
+    private fun restoreFormValues(state: Bundle) {
+        fun date(key: String) = state.getString(key)?.let { runCatching { LocalDateTime.parse(it) }.getOrNull() }
+        startDateTimeValue = date(STATE_START)
+        endDateTimeValue = date(STATE_END)
+        registrationStartDateTimeValue = date(STATE_REGISTRATION_START)
+        registrationEndDateTimeValue = date(STATE_REGISTRATION_END)
+        startDateTimeValue?.let { startDateTimeInput.setText(formatForDisplay(it)) }
+        endDateTimeValue?.let { endDateTimeInput.setText(formatForDisplay(it)) }
+        registrationStartDateTimeValue?.let { registrationStartDateTimeInput.setText(formatForDisplay(it)) }
+        registrationEndDateTimeValue?.let { registrationEndDateTimeInput.setText(formatForDisplay(it)) }
+        val category = state.getString(STATE_CATEGORY).orEmpty()
+        val index = categoryOptions.indexOf(category)
+        if (index >= 0) {
+            selectedEventCategory = category
+            txtSelectedEventCategory.text = category
+            spinnerEventCategory.setSelection(index, false)
+        }
     }
 
     /**
@@ -273,10 +354,51 @@ class RequestEventActivity : AppCompatActivity() {
         eventPosterPlaceholder = findViewById(R.id.eventPosterPlaceholder)
         eventPosterStatusText = findViewById(R.id.eventPosterStatusText)
         reasonForRequestInput = findViewById(R.id.reasonForRequestInput)
-        formMessageText = findViewById(R.id.formMessageText)
+        errorStrip = findViewById(R.id.errorRequestEvent)
         submitProgress = findViewById(R.id.submitProgress)
         submitButton = findViewById(R.id.submitRequestButton)
         formScrollView = findViewById(R.id.formScrollView)
+        bindFieldErrors()
+    }
+
+    /** Order here is the visual order of the form; focus lands on the first entry with an error. */
+    private fun bindFieldErrors() {
+        registerField(eventNameInput, R.id.txtEventNameError)
+        registerField(cardEventCategory, R.id.txtEventCategoryError)
+        registerField(eventDescriptionInput, R.id.txtEventDescriptionError)
+        registerField(targetAudienceInput, R.id.txtTargetAudienceError)
+        registerField(capacityInput, R.id.txtCapacityError)
+        registerField(venueInput, R.id.txtVenueError)
+        registerField(startDateTimeInput, R.id.txtStartDateTimeError)
+        registerField(endDateTimeInput, R.id.txtEndDateTimeError)
+        registerField(registrationStartDateTimeInput, R.id.txtRegistrationStartDateTimeError)
+        registerField(registrationEndDateTimeInput, R.id.txtRegistrationEndDateTimeError)
+        registerField(requesterNameInput, R.id.txtRequesterNameError)
+        registerField(contactEmailInput, R.id.txtContactEmailError)
+        registerField(contactNumberInput, R.id.txtContactNumberError)
+        registerField(reasonForRequestInput, R.id.txtReasonForRequestError)
+        // Typed fields drop their error on the first edit; the pickers and the category selector
+        // drop theirs when a value is chosen.
+        listOf(
+            eventNameInput, eventDescriptionInput, targetAudienceInput, capacityInput, venueInput,
+            requesterNameInput, contactEmailInput, contactNumberInput, reasonForRequestInput,
+        ).forEach { field -> field.doAfterTextChanged { setFieldError(field, null) } }
+    }
+
+    private fun registerField(field: View, helperId: Int) {
+        val helper = findViewById<TextView>(helperId)
+        fieldHelpers[field] = helper
+        // TalkBack reads the message with the field: the helper line is a separate node, and focus
+        // lands on the field, so the field itself reports itself as invalid.
+        field.accessibilityDelegate = object : View.AccessibilityDelegate() {
+            override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfo) {
+                super.onInitializeAccessibilityNodeInfo(host, info)
+                if (helper.visibility == View.VISIBLE) {
+                    info.isContentInvalid = true
+                    info.error = helper.text
+                }
+            }
+        }
     }
 
     // The poster upload endpoint is ORGANIZER/ADMIN/SUPER_ADMIN only: an attendee who picks a
@@ -304,7 +426,7 @@ class RequestEventActivity : AppCompatActivity() {
     }
 
     private fun launchPosterCrop(sourceUri: Uri) {
-        hideMessage()
+        renderPosterStatus()
         val destinationUri = Uri.fromFile(File(cacheDir, "event_poster_cropped_${System.currentTimeMillis()}.jpg"))
         val options = UCrop.Options().apply {
             setCompressionFormat(Bitmap.CompressFormat.JPEG)
@@ -321,12 +443,12 @@ class RequestEventActivity : AppCompatActivity() {
     }
 
     private fun handleCroppedPoster(croppedUri: Uri) {
-        hideMessage()
+        renderPosterStatus()
 
         // Crop output is forced to JPEG by UCrop options; still guard the type explicitly.
         val croppedType = contentResolver.getType(croppedUri)?.lowercase()
         if (croppedType != null && croppedType !in ALLOWED_POSTER_MIME_TYPES) {
-            showMessage(getString(R.string.request_event_only_jpg_and_png_posters_are_support))
+            renderPosterStatus(getString(R.string.request_event_only_jpg_and_png_posters_are_support))
             return
         }
 
@@ -338,7 +460,7 @@ class RequestEventActivity : AppCompatActivity() {
         }.onSuccess {
             if (posterFile.length() > MAX_POSTER_BYTES) {
                 posterFile.delete()
-                showMessage(getString(R.string.request_event_cropped_poster_must_not_exceed_5_mb))
+                renderPosterStatus(getString(R.string.request_event_cropped_poster_must_not_exceed_5_mb))
                 return
             }
             selectedPosterFile?.delete()
@@ -346,16 +468,15 @@ class RequestEventActivity : AppCompatActivity() {
             eventPosterPreview.setImageURI(croppedUri)
             eventPosterPreview.visibility = View.VISIBLE
             eventPosterPlaceholder.visibility = View.GONE
-            eventPosterStatusText.text = getString(R.string.request_event_poster_ready_16_9_tap_it_to_replace)
-            eventPosterStatusText.setTextColor(color(R.color.primary))
+            renderPosterStatus()
         }.onFailure {
-            showMessage(getString(R.string.request_event_unable_to_attach_cropped_poster_plea))
+            renderPosterStatus(getString(R.string.request_event_unable_to_attach_cropped_poster_plea))
         }
     }
 
     private fun submitRequest() {
         if (isSubmitting || submitted) return
-        hideMessage()
+        errorStrip.visibility = View.GONE
         buildValidatedRequest(eventPosterFileId = null) ?: return
         setLoading(true)
 
@@ -364,8 +485,10 @@ class RequestEventActivity : AppCompatActivity() {
                 when (val uploadResult = repository.uploadEventPoster(file)) {
                     is NetworkResult.Success -> uploadResult.data.fileId.toString()
                     is NetworkResult.Error -> {
+                        Log.w(TAG, "poster upload failed: ${uploadResult.message}")
                         setLoading(false)
-                        showMessage(uploadResult.message.ifBlank { "Could not upload event poster. Please try another image." })
+                        // Nothing was created yet, so repeating the submit is safe.
+                        showPageFailure(getString(R.string.ui_attendee_request_poster_upload_failed), retry = true)
                         return@launch
                     }
                     NetworkResult.Loading -> null
@@ -384,120 +507,111 @@ class RequestEventActivity : AppCompatActivity() {
                     showSuccessDialog()
                 }
                 is NetworkResult.Error -> {
+                    Log.w(TAG, "event request failed: ${result.message}")
                     setLoading(false)
-                    showMessage(result.message.ifBlank { "Could not submit request. Please try again." })
+                    // No Retry: the create is not idempotent and the client cannot tell a failure before the
+                    // request was stored from one after it (a timeout, a 502/504 behind a stored write, a lost
+                    // response). A one-tap repeat could post the same request twice; the next Submit press is
+                    // a deliberate act.
+                    showPageFailure(getString(R.string.ui_attendee_request_submit_failed), retry = false)
                 }
                 NetworkResult.Loading -> Unit
             }
         }
     }
 
-    // EventQR - scroll-to-error + specific toast, not explicit SRS/SDD spec (UX safeguard)
-    // Collect-all validation: every failing field gets its .error set simultaneously,
-    // checks run in visual/XML top-to-bottom order so the first failure is the topmost
-    // one, the form scrolls to it, and the Toast lists all issues (capped at 4).
+    // Collect-all validation: every failing field gets its helper line and error stroke at once.
+    // Checks run in visual top-to-bottom order, the first invalid field takes focus and scrolls
+    // into view, and nothing is toasted (§6.8 row 6).
     private fun buildValidatedRequest(eventPosterFileId: String?): EventCreationRequestDto? {
         clearFieldErrors()
-        val failures = mutableListOf<Pair<View, String>>()
 
-        fun EditText.requiredValue(message: String): String? {
+        fun EditText.requiredValue(@StringRes message: Int): String? {
             val value = text.toString().trim()
             if (value.isEmpty()) {
-                error = message
-                failures += this to message
+                setFieldError(this, getString(message))
                 return null
             }
             return value
         }
 
-        fun EditText.positiveIntValue(message: String): Int? {
+        fun EditText.positiveIntValue(@StringRes message: Int): Int? {
             val value = text.toString().trim().toIntOrNull()
             if (value == null || value <= 0) {
-                error = message
-                failures += this to message
+                setFieldError(this, getString(message))
                 return null
             }
             return value
         }
 
-        fun failIfNull(view: EditText, value: LocalDateTime?, message: String) {
-            if (value == null) {
-                view.error = message
-                failures += view to message
-            }
+        fun failIfNull(view: EditText, value: LocalDateTime?, @StringRes message: Int) {
+            if (value == null) setFieldError(view, getString(message))
         }
 
-        val eventName = eventNameInput.requiredValue("Event name is required")
+        val eventName = eventNameInput.requiredValue(R.string.ui_attendee_request_error_event_name)
         val eventCategory = selectedEventCategory.trim().takeIf { it.isNotEmpty() }
         if (eventCategory == null) {
-            failures += txtSelectedEventCategory to "Event category is required"
+            setFieldError(cardEventCategory, getString(R.string.ui_attendee_request_error_event_category))
         }
-        val eventDescription = eventDescriptionInput.requiredValue("Event description is required")
-        val targetAudience = targetAudienceInput.requiredValue("Target audience is required")
-        val capacity = capacityInput.positiveIntValue("Capacity must be a positive number")
-        val venue = venueInput.requiredValue("Venue/location is required")
+        val eventDescription = eventDescriptionInput.requiredValue(R.string.ui_attendee_request_error_event_description)
+        val targetAudience = targetAudienceInput.requiredValue(R.string.ui_attendee_request_error_target_audience)
+        val capacity = capacityInput.positiveIntValue(R.string.ui_attendee_request_error_capacity)
+        val venue = venueInput.requiredValue(R.string.ui_attendee_request_error_venue)
 
         val startDateTime = startDateTimeValue
-        failIfNull(startDateTimeInput, startDateTime, "Start date/time is required")
+        failIfNull(startDateTimeInput, startDateTime, R.string.ui_attendee_request_error_start_required)
         val endDateTime = endDateTimeValue
-        failIfNull(endDateTimeInput, endDateTime, "End date/time is required")
+        failIfNull(endDateTimeInput, endDateTime, R.string.ui_attendee_request_error_end_required)
 
         if (startDateTime != null && startDateTime.isBefore(currentLocalDateTime())) {
-            startDateTimeInput.error = getString(R.string.request_event_start_date_time_cannot_be_in_the_pas)
-            failures += startDateTimeInput to "Start date/time cannot be in the past"
+            setFieldError(startDateTimeInput, getString(R.string.request_event_start_date_time_cannot_be_in_the_pas))
         }
         if (startDateTime != null && endDateTime != null && !endDateTime.isAfter(startDateTime)) {
-            endDateTimeInput.error = getString(R.string.request_event_end_date_time_must_be_after_the_star)
-            failures += endDateTimeInput to "End date/time must be after the start"
+            setFieldError(endDateTimeInput, getString(R.string.request_event_end_date_time_must_be_after_the_star))
         }
 
         val registrationStart = registrationStartDateTimeValue
-        failIfNull(registrationStartDateTimeInput, registrationStart, "Registration start date/time is required")
+        failIfNull(registrationStartDateTimeInput, registrationStart, R.string.ui_attendee_request_error_registration_start_required)
         val registrationEnd = registrationEndDateTimeValue
-        failIfNull(registrationEndDateTimeInput, registrationEnd, "Registration end date/time is required")
+        failIfNull(registrationEndDateTimeInput, registrationEnd, R.string.ui_attendee_request_error_registration_end_required)
 
         if (registrationStart != null && registrationStart.isBefore(currentLocalDateTime())) {
-            registrationStartDateTimeInput.error = getString(R.string.request_event_registration_start_cannot_be_in_the)
-            failures += registrationStartDateTimeInput to "Registration start cannot be in the past"
+            setFieldError(registrationStartDateTimeInput, getString(R.string.request_event_registration_start_cannot_be_in_the))
         }
         if (registrationStart != null && registrationEnd != null && !registrationEnd.isAfter(registrationStart)) {
-            registrationEndDateTimeInput.error = getString(R.string.request_event_registration_end_must_be_after_regis)
-            failures += registrationEndDateTimeInput to "Registration end must be after registration start"
+            setFieldError(registrationEndDateTimeInput, getString(R.string.request_event_registration_end_must_be_after_regis))
         }
         if (registrationEnd != null && registrationEnd.isBefore(currentLocalDateTime())) {
-            registrationEndDateTimeInput.error = getString(R.string.request_event_registration_end_cannot_be_in_the_pa)
-            failures += registrationEndDateTimeInput to "Registration end cannot be in the past"
+            setFieldError(registrationEndDateTimeInput, getString(R.string.request_event_registration_end_cannot_be_in_the_pa))
         }
         if (registrationEnd != null && endDateTime != null && registrationEnd.isAfter(endDateTime)) {
-            registrationEndDateTimeInput.error = getString(R.string.request_event_registration_end_must_not_be_after_e)
-            failures += registrationEndDateTimeInput to "Registration end must not be after event end"
+            setFieldError(registrationEndDateTimeInput, getString(R.string.request_event_registration_end_must_not_be_after_e))
         }
         if (registrationEnd != null && startDateTime != null && !registrationEnd.isBefore(startDateTime)) {
-            registrationEndDateTimeInput.error = getString(R.string.request_event_registration_end_must_be_before_even)
-            failures += registrationEndDateTimeInput to "Registration end must be before event start"
+            setFieldError(registrationEndDateTimeInput, getString(R.string.request_event_registration_end_must_be_before_even))
         }
 
-        val requesterName = requesterNameInput.requiredValue("Requester name is required")
+        val requesterName = requesterNameInput.requiredValue(R.string.ui_attendee_request_error_requester_name)
 
-        val contactEmail = contactEmailInput.requiredValue("Contact email is required")
+        val contactEmail = contactEmailInput.requiredValue(R.string.ui_attendee_request_error_contact_email)
         if (contactEmail != null && !Validators.isValidEmail(contactEmail)) {
-            contactEmailInput.error = getString(R.string.create_admin_account_enter_a_valid_email_address)
-            failures += contactEmailInput to "Enter a valid email address"
+            setFieldError(contactEmailInput, getString(R.string.create_admin_account_enter_a_valid_email_address))
         }
         // Same rule as registration/profile (Validators.isValidPhoneNumber); the hint shows "+63 912 345 6789",
         // so spaces/dashes are dropped first and the normalized E.164 value is what gets sent.
-        val contactNumber = contactNumberInput.requiredValue("Contact number is required")?.let { typed ->
+        val contactNumber = contactNumberInput.requiredValue(R.string.ui_attendee_request_error_contact_number)?.let { typed ->
             PhoneInput.toE164OrNull(typed) ?: run {
                 val message = getString(R.string.request_event_invalid_contact_number)
-                contactNumberInput.error = message
-                failures += contactNumberInput to message
+                setFieldError(contactNumberInput, message)
                 null
             }
         }
-        val reason = reasonForRequestInput.requiredValue("Reason for request is required")
+        val reason = reasonForRequestInput.requiredValue(R.string.ui_attendee_request_error_reason)
 
-        if (failures.isNotEmpty()) {
-            reportValidationFailures(failures)
+        val invalid = fieldHelpers.values.filter { it.visibility == View.VISIBLE }
+        if (invalid.isNotEmpty()) {
+            focusFirstInvalidField()
+            announceInvalidFields(invalid)
             return null
         }
 
@@ -522,20 +636,37 @@ class RequestEventActivity : AppCompatActivity() {
         )
     }
 
-    private fun reportValidationFailures(failures: List<Pair<View, String>>) {
-        val firstFailingView = failures.first().first
-        formScrollView.smoothScrollTo(0, scrollTargetFor(firstFailingView))
-        firstFailingView.requestFocus()
+    /**
+     * One announcement per failed submit: the first message, plus how many more fields need attention.
+     * Focus lands on the first field, so TalkBack reads that one; the count is what it would not say.
+     */
+    private fun announceInvalidFields(invalid: List<TextView>) {
+        val message = invalid.first().text.toString()
+        val others = invalid.size - 1
+        val spoken = if (others == 0) message else
+            "$message. " + resources.getQuantityString(R.plurals.ui_attendee_request_more_fields_need_attention, others, others)
+        formScrollView.announceForAccessibility(spoken)
+    }
 
-        val maxShownMessages = 4
-        val shown = failures.take(maxShownMessages).joinToString("\n") { it.second }
-        val hiddenCount = failures.size - maxShownMessages
-        val message = if (hiddenCount > 0) {
-            "$shown\n" + resources.getQuantityString(R.plurals.request_event_more_issues, hiddenCount, hiddenCount)
-        } else {
-            shown
-        }
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    /** The page-failure strip (§5.16): [retry] false hides the control for a failure that is not safe to repeat. */
+    private fun showPageFailure(message: String, retry: Boolean) {
+        errorStripRetry.visibility = if (retry) View.VISIBLE else View.GONE
+        errorStrip.showInlineError(message)
+    }
+
+    private fun focusFirstInvalidField() {
+        val first = fieldHelpers.entries.firstOrNull { it.value.visibility == View.VISIBLE }?.key ?: return
+        focusField(first)
+        // Posted so the offset is read after the layout pass that shows the helper lines.
+        formScrollView.post { formScrollView.smoothScrollTo(0, scrollTargetFor(first)) }
+    }
+
+    /**
+     * The date pickers and the category selector take focus from the keyboard and from TalkBack,
+     * not from a touch, so a plain request fails for them while the screen is in touch mode.
+     */
+    private fun focusField(view: View) {
+        if (!view.requestFocus()) view.requestFocusFromTouch()
     }
 
     /**
@@ -666,24 +797,50 @@ class RequestEventActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    private fun showMessage(message: String) {
-        formMessageText.text = message
-        formMessageText.visibility = View.VISIBLE
+    /**
+     * Poster picking has its own status line under the picker (`micro`): a failed crop or an
+     * oversized image is a problem with that one control, not a page failure, so it never reaches
+     * the strip and its Retry (which re-runs the submit). [error] null restores the neutral line.
+     */
+    private fun renderPosterStatus(error: String? = null) {
+        val hasPoster = selectedPosterFile != null
+        eventPosterStatusText.text = error ?: getString(
+            if (hasPoster) R.string.request_event_poster_ready_16_9_tap_it_to_replace
+            else R.string.request_event_no_poster_selected_the_default_gradi,
+        )
+        eventPosterStatusText.setTextColor(
+            color(
+                when {
+                    error != null -> R.color.ui_error
+                    hasPoster -> R.color.primary
+                    else -> R.color.ui_text_secondary
+                },
+            ),
+        )
+        if (error != null) eventPosterStatusText.announceForAccessibility(error)
     }
 
-    private fun hideMessage() {
-        formMessageText.text = ""
-        formMessageText.visibility = View.GONE
+    /**
+     * Inline error under [field] (§5.2): the helper turns into a `micro` `ui_error` line and the
+     * box takes the 2dp error stroke through `isActivated`, which `bg_ui_field` already styles.
+     * A null [message] clears both. Never uses `EditText.error` (the balloon is banned, §6.8 row 6).
+     */
+    private fun setFieldError(field: View, message: String?) {
+        val helper = fieldHelpers[field] ?: return
+        if (message == null) {
+            if (helper.visibility != View.VISIBLE) return
+            helper.text = null
+            helper.visibility = View.GONE
+            field.isActivated = false
+        } else {
+            helper.text = message
+            helper.visibility = View.VISIBLE
+            field.isActivated = true
+        }
     }
 
     private fun clearFieldErrors() {
-        listOf(
-            eventNameInput, eventDescriptionInput, targetAudienceInput,
-            capacityInput, venueInput, startDateTimeInput, endDateTimeInput,
-            registrationStartDateTimeInput, registrationEndDateTimeInput,
-            requesterNameInput, contactEmailInput, contactNumberInput,
-            reasonForRequestInput,
-        ).forEach { it.error = null }
+        fieldHelpers.keys.forEach { setFieldError(it, null) }
     }
 
     private fun renderCategoryDropdown() {
@@ -717,6 +874,7 @@ class RequestEventActivity : AppCompatActivity() {
                     spinnerEventCategory.setSelection(index, false)
                     txtSelectedEventCategory.text = option
                     selectedEventCategory = option
+                    setFieldError(cardEventCategory, null)
                     renderCategoryDropdown()
                     setCategoryDropdownOpen(false)
                 }
@@ -759,20 +917,24 @@ class RequestEventActivity : AppCompatActivity() {
         getCurrentValue: () -> LocalDateTime?,
         onSelected: (LocalDateTime) -> Unit,
     ) {
-        field.isFocusable = false
-        field.isFocusableInTouchMode = false
         field.isCursorVisible = false
         field.isLongClickable = false
         field.setTextIsSelectable(false)
+        // Keyboard and TalkBack focusable so a failed submit can focus the field, but not focusable
+        // in touch mode: a first tap must open the picker, not just take focus. setTextIsSelectable
+        // resets both flags, so they are set after it.
+        field.isFocusable = true
+        field.isFocusableInTouchMode = false
         field.setOnClickListener {
             showDateTimePicker(
+                field = field,
                 initialValue = getCurrentValue() ?: currentLocalDateTime(),
                 onSelected = onSelected,
             )
         }
     }
 
-    private fun showDateTimePicker(initialValue: LocalDateTime, onSelected: (LocalDateTime) -> Unit) {
+    private fun showDateTimePicker(field: EditText, initialValue: LocalDateTime, onSelected: (LocalDateTime) -> Unit) {
         val now = currentLocalDateTime()
         DatePickerDialog(
             this,
@@ -792,7 +954,13 @@ class RequestEventActivity : AppCompatActivity() {
                     { _, hourOfDay, minute ->
                         val selectedDateTime = LocalDateTime.of(selectedDate, LocalTime.of(hourOfDay, minute))
                         if (selectedDateTime.isBefore(currentLocalDateTime())) {
-                            Toast.makeText(this, this.getString(R.string.request_event_selected_date_time_cannot_be_in_the), Toast.LENGTH_SHORT).show()
+                            val message = getString(R.string.request_event_selected_date_time_cannot_be_in_the)
+                            // The rejected pick must not leave the earlier value in the box under an error:
+                            // value, text and helper line all say "no value", like the other rejections.
+                            clearDateTimeValue(field)
+                            field.text?.clear()
+                            setFieldError(field, message)
+                            field.announceForAccessibility(message)
                             return@TimePickerDialog
                         }
                         onSelected(selectedDateTime)
@@ -821,6 +989,15 @@ class RequestEventActivity : AppCompatActivity() {
 
             datePicker.minDate = todayCal.timeInMillis
         }.show()
+    }
+
+    private fun clearDateTimeValue(field: EditText) {
+        when (field) {
+            startDateTimeInput -> startDateTimeValue = null
+            endDateTimeInput -> endDateTimeValue = null
+            registrationStartDateTimeInput -> registrationStartDateTimeValue = null
+            registrationEndDateTimeInput -> registrationEndDateTimeValue = null
+        }
     }
 
     private fun formatForDisplay(value: LocalDateTime): String = value.format(displayDateTimeFormatter)

@@ -130,6 +130,7 @@
     <string name="ui_notifications_unread">Unread</string>
     <string name="ui_notifications_read">Read</string>
     <string name="ui_notifications_item">%1$s notification. %2$s</string>
+    <string name="ui_notifications_update_failed">Couldn\'t update notifications.</string>
 
     <!-- Event request detail (§6.5, shared admin/attendee) -->
     <string name="ui_request_detail_error_title">Couldn\'t load request</string>
@@ -179,6 +180,25 @@
     <string name="ui_auth_step_1_of_3">Step 1 of 3</string>
     <string name="ui_auth_step_2_of_3">Step 2 of 3</string>
     <string name="ui_auth_step_3_of_3">Step 3 of 3</string>
+
+    <!-- Auth form failures (§5.16, §7.5): one sentence in the in-flow strip, what happened then what
+         to do. Server text and codes go to the log; none of these name whether an account exists. -->
+    <string name="ui_auth_error_network">Couldn\'t reach EventQR. Check your connection and try again.</string>
+    <string name="ui_auth_error_rate_limited">Too many attempts. Wait a moment, then try again.</string>
+    <string name="ui_auth_login_bad_credentials">Incorrect email or password. Check them and try again.</string>
+    <string name="ui_auth_login_failed">Couldn\'t sign you in. Try again in a moment.</string>
+    <string name="ui_auth_login_role_unknown">Couldn\'t open your account. Sign in again, or contact support if this keeps happening.</string>
+    <string name="ui_auth_forgot_failed">Couldn\'t send the code. Try again in a moment.</string>
+    <string name="ui_auth_code_verify_failed">Couldn\'t check the code. Try again in a moment.</string>
+    <string name="ui_auth_code_resend_failed">Couldn\'t send a new code. Try again in a moment.</string>
+    <string name="ui_auth_new_password_failed">Couldn\'t reset your password. Your entries are kept, so try again.</string>
+    <string name="ui_auth_new_password_rejected">Couldn\'t reset your password. Check the new password and try again.</string>
+    <string name="ui_auth_register_failed">Couldn\'t create your account. Your entries are kept, so try again.</string>
+    <string name="ui_auth_register_rejected">Couldn\'t create your account. Check your details and try again.</string>
+    <string name="ui_auth_register_email_taken">An account with this email already exists. Sign in or use a different email.</string>
+    <string name="ui_auth_change_password_failed">Couldn\'t change your password. Your entries are kept, so try again.</string>
+    <string name="ui_auth_change_password_rejected">Couldn\'t change your password. Check the new password and try again.</string>
+    <string name="ui_auth_current_password_incorrect">That isn\'t your current password. Check it and try again.</string>
 
     <!-- Manage rewards (§6.4) -->
     <string name="ui_rewards_select_event">Event</string>

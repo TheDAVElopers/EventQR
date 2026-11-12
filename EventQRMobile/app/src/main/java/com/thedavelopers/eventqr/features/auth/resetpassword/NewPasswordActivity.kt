@@ -16,7 +16,8 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.ScreenInsets
 import com.thedavelopers.eventqr.core.util.Wordmark
 import com.thedavelopers.eventqr.core.util.Validators
-import com.thedavelopers.eventqr.core.util.setInlineError
+import com.thedavelopers.eventqr.features.auth.AuthErrorStrip
+import com.thedavelopers.eventqr.features.auth.AuthFieldErrors
 import com.thedavelopers.eventqr.features.auth.login.LoginActivity
 import com.thedavelopers.eventqr.ui.icons.FieldIcons
 import com.thedavelopers.eventqr.ui.icons.RuleMarks
@@ -35,6 +36,8 @@ open class NewPasswordActivity : AppCompatActivity(), NewPasswordContract.View {
     private lateinit var passwordLowercaseRequirement: TextView
     private lateinit var passwordNumberRequirement: TextView
     private lateinit var passwordSpecialRequirement: TextView
+    private lateinit var formError: AuthErrorStrip
+    private val fieldErrors = AuthFieldErrors()
     private var isLoading = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,6 +56,10 @@ open class NewPasswordActivity : AppCompatActivity(), NewPasswordContract.View {
         newPasswordErrorText = findViewById(R.id.txtNewPasswordError)
         confirmPasswordErrorText = findViewById(R.id.txtConfirmPasswordError)
         resetButton = findViewById(R.id.btnResetPassword)
+        // No Retry on this screen (the reset code is one-time), so the strip has no actions to restore.
+        formError = AuthErrorStrip(findViewById(R.id.errorNewPassword))
+        fieldErrors.register(FIELD_NEW_PASSWORD, newPasswordInput, newPasswordErrorText)
+        fieldErrors.register(FIELD_CONFIRM_PASSWORD, confirmPasswordInput, confirmPasswordErrorText)
         requirementsLayout = findViewById(R.id.layoutPasswordRequirements)
         passwordLengthRequirement = findViewById(R.id.txtPasswordLengthRequirement)
         passwordCapitalRequirement = findViewById(R.id.txtPasswordCapitalRequirement)
@@ -74,6 +81,7 @@ open class NewPasswordActivity : AppCompatActivity(), NewPasswordContract.View {
         confirmPasswordInput.addTextChangedListener(watcher)
 
         resetButton.setOnClickListener {
+            formError.clear()
             presenter.submit(
                 newPasswordInput.text.toString(),
                 confirmPasswordInput.text.toString()
@@ -88,6 +96,19 @@ open class NewPasswordActivity : AppCompatActivity(), NewPasswordContract.View {
         presenter.start(intent.getStringExtra(EXTRA_EMAIL), intent.getStringExtra(EXTRA_CODE))
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        fieldErrors.save(outState)
+        formError.save(outState)
+    }
+
+    // After super: restoring the typed text runs the edit watchers that clear an error.
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        fieldErrors.restore(savedInstanceState)
+        formError.restore(savedInstanceState)
+    }
+
     override fun onDestroy() {
         presenter.detach()
         super.onDestroy()
@@ -100,18 +121,23 @@ open class NewPasswordActivity : AppCompatActivity(), NewPasswordContract.View {
     }
 
     override fun showPasswordError(message: String?) {
-        newPasswordInput.setInlineError(
+        fieldErrors.raise(
+            FIELD_NEW_PASSWORD,
             if (message == Validators.PASSWORD_TOO_LONG_ERROR) getString(R.string.error_password_too_long) else message,
-            newPasswordErrorText
         )
     }
 
     override fun showConfirmPasswordError(message: String?) {
-        confirmPasswordInput.setInlineError(message, confirmPasswordErrorText)
+        fieldErrors.raise(FIELD_CONFIRM_PASSWORD, message)
     }
 
     override fun showMessage(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
+    /** No Retry: the one-time reset code may already be spent, so the user re-presses Reset password. */
+    override fun showFormError(message: String) {
+        formError.show(message, retryAction = null)
     }
 
     override fun navigateBackToExpiredCode(email: String) {
@@ -145,10 +171,13 @@ open class NewPasswordActivity : AppCompatActivity(), NewPasswordContract.View {
         updateRequirement(passwordLowercaseRequirement, getString(R.string.password_req_lowercase), requirements.hasLowercase)
         updateRequirement(passwordNumberRequirement, getString(R.string.password_req_number), requirements.hasNumber)
         updateRequirement(passwordSpecialRequirement, getString(R.string.password_req_special), requirements.hasSpecial)
-        newPasswordInput.setInlineError(
-            if (!requirements.withinMaxLength) getString(R.string.error_password_too_long) else null,
-            newPasswordErrorText
-        )
+        // Derived from the text on every keystroke: live, so the edit watcher leaves it to this check.
+        val tooLong = getString(R.string.error_password_too_long)
+        if (!requirements.withinMaxLength) {
+            fieldErrors.raise(FIELD_NEW_PASSWORD, tooLong, live = true)
+        } else if (fieldErrors.message(FIELD_NEW_PASSWORD) == tooLong) {
+            fieldErrors.set(FIELD_NEW_PASSWORD, null)
+        }
 
         resetButton.isEnabled = !isLoading && requirements.isValid &&
             newPasswordInput.text.toString() == confirmPasswordInput.text.toString()
@@ -160,6 +189,9 @@ open class NewPasswordActivity : AppCompatActivity(), NewPasswordContract.View {
     }
 
     companion object {
+        private const val FIELD_NEW_PASSWORD = "newPassword"
+        private const val FIELD_CONFIRM_PASSWORD = "confirmPassword"
+
         const val EXTRA_EMAIL = "extra_email"
         const val EXTRA_CODE = "extra_code"
     }

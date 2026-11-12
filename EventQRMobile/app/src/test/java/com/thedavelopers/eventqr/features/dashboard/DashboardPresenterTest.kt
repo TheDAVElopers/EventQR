@@ -37,6 +37,7 @@ class DashboardPresenterTest {
 
         override fun showError(message: String) = Unit
         override fun showMessage(message: String) = Unit
+        override fun showPartialError(source: String, message: String) = Unit
         override fun openSection(title: String, message: String) = Unit
         override fun updateHeader(role: String?, name: String?) = Unit
     }

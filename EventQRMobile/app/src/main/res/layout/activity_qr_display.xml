@@ -106,6 +106,15 @@
                     android:visibility="gone" />
             </FrameLayout>
 
+            <!-- §5.16: a save or share failure reports under the save control; the success toast
+                 stays. The parent pads the gutter, so the strip carries no side margins. -->
+            <include
+                android:id="@+id/errorQrPass"
+                layout="@layout/include_error_strip"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_md" />
+
             <!-- ═════════ Keep screen bright ═════════ -->
             <LinearLayout
                 android:id="@+id/rowKeepBright"

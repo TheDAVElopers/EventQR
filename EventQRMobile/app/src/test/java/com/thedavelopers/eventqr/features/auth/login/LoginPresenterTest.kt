@@ -135,7 +135,7 @@ class LoginPresenterTest {
     }
 
     @Test
-    fun submitLogin_disabledAccount403_showsParsedServerMessageAndDoesNotRetry() {
+    fun submitLogin_disabledAccount403_showsTheFixedMessageNotTheServerTextAndDoesNotRetry() {
         val repo = FakeAuthRepository { _, _ -> httpFailure(403, """{"message":"Account suspended by admin"}""") }
         val p = LoginPresenter(view, repo, strings(), DISABLED, RATE_LIMITED)
 
@@ -143,7 +143,9 @@ class LoginPresenterTest {
         shadowOf(Looper.getMainLooper()).idle()
 
         assertEquals(listOf("  secret  "), repo.passwords)
-        assertEquals(listOf("Account suspended by admin"), view.messages)
+        // The server's own wording is logged, never shown (§7.5).
+        assertEquals(listOf(DISABLED to false), view.formErrors)
+        assertTrue(view.messages.isEmpty())
         assertEquals(listOf(true, false), view.loadingStates)
     }
 
@@ -155,7 +157,7 @@ class LoginPresenterTest {
         p.submitLogin("user@example.com", "secret")
         shadowOf(Looper.getMainLooper()).idle()
 
-        assertEquals(listOf(DISABLED), view.messages)
+        assertEquals(listOf(DISABLED to false), view.formErrors)
     }
 
     @Test
@@ -166,7 +168,7 @@ class LoginPresenterTest {
         p.submitLogin("user@example.com", "secret")
         shadowOf(Looper.getMainLooper()).idle()
 
-        assertEquals(listOf(DISABLED), view.messages)
+        assertEquals(listOf(DISABLED to false), view.formErrors)
     }
 
     @Test
@@ -177,7 +179,7 @@ class LoginPresenterTest {
         p.submitLogin("user@example.com", "secret")
         shadowOf(Looper.getMainLooper()).idle()
 
-        assertEquals(listOf(INVALID_REQUEST), view.messages)
+        assertEquals(listOf(INVALID_REQUEST to false), view.formErrors)
     }
 
     @Test
@@ -188,7 +190,7 @@ class LoginPresenterTest {
         p.submitLogin("user@example.com", "secret")
         shadowOf(Looper.getMainLooper()).idle()
 
-        assertEquals(listOf(INVALID_REQUEST), view.messages)
+        assertEquals(listOf(INVALID_REQUEST to false), view.formErrors)
     }
 
     @Test
@@ -201,18 +203,21 @@ class LoginPresenterTest {
 
         // Exactly one attempt reaches the server (one rate-limit hit); the password is never altered.
         assertEquals(listOf(" secret "), repo.passwords)
-        assertEquals(listOf(SPACES_HINT), view.messages)
+        assertEquals(listOf(SPACES_HINT to false), view.formErrors)
     }
 
     @Test
-    fun submitLogin_rejectedWithoutSurroundingSpaces_showsTheServerMessage() {
+    fun submitLogin_rejectedWithoutSurroundingSpaces_showsTheGenericCredentialsMessage() {
         val repo = FakeAuthRepository { _, _ -> httpFailure(401, """{"message":"Invalid email or password"}""") }
         val p = LoginPresenter(view, repo, strings(), DISABLED, RATE_LIMITED, INVALID_REQUEST, SPACES_HINT)
 
         p.submitLogin("user@example.com", "secret")
         shadowOf(Looper.getMainLooper()).idle()
 
-        assertEquals(listOf("Invalid email or password"), view.messages)
+        val expected = ApplicationProvider.getApplicationContext<android.content.Context>()
+            .getString(R.string.ui_auth_login_bad_credentials)
+        assertEquals(listOf(expected to false), view.formErrors)
+        assertTrue("no toast for a failure", view.messages.isEmpty())
     }
 
     @Test
@@ -253,7 +258,7 @@ class LoginPresenterTest {
         shadowOf(Looper.getMainLooper()).idle()
 
         assertEquals(listOf(" secret "), repo.passwords)
-        assertEquals(listOf(RATE_LIMITED), view.messages)
+        assertEquals(listOf(RATE_LIMITED to false), view.formErrors)
     }
 
     @Test
@@ -264,7 +269,7 @@ class LoginPresenterTest {
             val p = LoginPresenter(v, repo, strings(), DISABLED, RATE_LIMITED) { "mins=$it" }
             p.submitLogin("user@example.com", "secret")
             shadowOf(Looper.getMainLooper()).idle()
-            return v.messages.single()
+            return v.formErrors.single().first
         }
         assertEquals("mins=1", msgFor(1))
         assertEquals("mins=1", msgFor(60))
@@ -280,7 +285,7 @@ class LoginPresenterTest {
         p.submitLogin("user@example.com", "secret")
         shadowOf(Looper.getMainLooper()).idle()
 
-        assertEquals(listOf(RATE_LIMITED), view.messages)
+        assertEquals(listOf(RATE_LIMITED to false), view.formErrors)
     }
 
     private fun rateLimit() = HttpException(Response.error<Any>(429, "".toResponseBody()))
@@ -303,6 +308,113 @@ class LoginPresenterTest {
             passwords += password
             return handler(email, password)
         }
+
+        /** The role lookup after a role-less login; never the real network. */
+        override suspend fun getAuthMe(): NetworkResult<com.thedavelopers.eventqr.features.users.model.dto.UserResponse> =
+            NetworkResult.Error("no role lookup in tests")
+    }
+
+    // ---- §5.16: every failure is one strip sentence; only a transient one offers Retry
+
+    private fun string(id: Int) =
+        ApplicationProvider.getApplicationContext<android.content.Context>().getString(id)
+
+    @Test
+    fun submitLogin_noConnection_showsTheNetworkSentenceWithRetry() {
+        val repo = FakeAuthRepository { _, _ ->
+            NetworkResult.Error("Can't reach the server.", java.net.UnknownHostException("host"))
+        }
+        val p = LoginPresenter(view, repo, strings(), DISABLED, RATE_LIMITED)
+
+        p.submitLogin("user@example.com", "secret")
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals(listOf(string(R.string.ui_auth_error_network) to true), view.formErrors)
+        assertTrue(view.messages.isEmpty())
+        assertEquals(listOf(true, false), view.loadingStates)
+    }
+
+    @Test
+    fun submitLogin_serverError500_showsAFixedSentenceWithRetry() {
+        val repo = FakeAuthRepository { _, _ -> httpFailure(500, """{"message":"NullPointerException at Foo.java:12"}""") }
+        val p = LoginPresenter(view, repo, strings(), DISABLED, RATE_LIMITED)
+
+        p.submitLogin("user@example.com", "secret")
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals(listOf(string(R.string.ui_auth_login_failed) to true), view.formErrors)
+    }
+
+    @Test
+    fun submitLogin_unlistedClientErrors_haveNoRetry() {
+        // 404 / 405 / 415 / 422 are rejections: repeating the same request cannot succeed.
+        for (code in listOf(404, 405, 415, 422)) {
+            val repo = FakeAuthRepository { _, _ -> httpFailure(code, "") }
+            val recording = RecordingLoginView()
+            val p = LoginPresenter(recording, repo, strings(), DISABLED, RATE_LIMITED)
+
+            p.submitLogin("user@example.com", "secret")
+            shadowOf(Looper.getMainLooper()).idle()
+
+            assertEquals("HTTP $code", listOf(string(R.string.ui_auth_login_failed) to false), recording.formErrors)
+        }
+    }
+
+    @Test
+    fun submitLogin_nonHttpFailureWithoutAStatus_isTransient() {
+        val repo = FakeAuthRepository { _, _ -> NetworkResult.Error("Unexpected", IllegalStateException("boom")) }
+        val p = LoginPresenter(view, repo, strings(), DISABLED, RATE_LIMITED)
+
+        p.submitLogin("user@example.com", "secret")
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals(listOf(string(R.string.ui_auth_login_failed) to true), view.formErrors)
+    }
+
+    @Test
+    fun submitLogin_wrongCredentials_hasNoRetryAndSaysNothingAboutTheAccount() {
+        val repo = FakeAuthRepository { _, _ -> httpFailure(401, """{"message":"No account for that email"}""") }
+        val p = LoginPresenter(view, repo, strings(), DISABLED, RATE_LIMITED)
+
+        p.submitLogin("user@example.com", "secret")
+        shadowOf(Looper.getMainLooper()).idle()
+
+        val (message, retryable) = view.formErrors.single()
+        assertEquals(string(R.string.ui_auth_login_bad_credentials), message)
+        assertTrue("a wrong password would only repeat the rejected attempt", !retryable)
+        assertTrue(!message.contains("account", ignoreCase = true))
+    }
+
+    @Test
+    fun submitLogin_rateLimited_hasNoRetry() {
+        val repo = FakeAuthRepository { _, _ -> httpFailure(429, "") }
+        val p = LoginPresenter(view, repo, strings(), DISABLED, RATE_LIMITED)
+
+        p.submitLogin("user@example.com", "secret")
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals(listOf(RATE_LIMITED to false), view.formErrors)
+    }
+
+    @Test
+    fun submitLogin_signedInButRoleUnknown_showsTheStripAndDoesNotNavigateOrToastSuccess() {
+        val response = LoginResponse(
+            accessToken = "access",
+            userId = java.util.UUID.randomUUID(),
+            email = "user@example.com",
+            fullName = "User",
+            role = null,
+        )
+        val repo = FakeAuthRepository { _, _ -> NetworkResult.Success(response) }
+        val p = LoginPresenter(view, repo, strings(), DISABLED, RATE_LIMITED)
+
+        p.submitLogin("user@example.com", "secret")
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals(1, view.formErrors.size)
+        assertEquals(string(R.string.ui_auth_login_role_unknown), view.formErrors.single().first)
+        assertTrue(view.dashboardRoles.isEmpty())
+        assertTrue("no success toast next to a failure", view.messages.isEmpty())
     }
 
     @Test
@@ -344,6 +456,7 @@ class LoginPresenterTest {
         val emailErrors = mutableListOf<String?>()
         val passwordErrors = mutableListOf<String?>()
         val messages = mutableListOf<String>()
+        val formErrors = mutableListOf<Pair<String, Boolean>>()
         val dashboardRoles = mutableListOf<String?>()
         val succeededEmails = mutableListOf<String>()
         var registrationCount = 0
@@ -363,6 +476,10 @@ class LoginPresenterTest {
 
         override fun showMessage(message: String) {
             messages += message
+        }
+
+        override fun showFormError(message: String, retryable: Boolean) {
+            formErrors += message to retryable
         }
 
         override fun onLoginSucceeded(email: String) {

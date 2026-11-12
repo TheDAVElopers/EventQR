@@ -31,12 +31,14 @@ class NewPasswordPresenterTest {
         val confirmErrors = mutableListOf<String?>()
         val loading = mutableListOf<Boolean>()
         val messages = mutableListOf<String>()
+        val formErrors = mutableListOf<String>()
         var loginCount = 0
         val expiredEmails = mutableListOf<String>()
         override fun showLoading(isLoading: Boolean) { loading += isLoading }
         override fun showPasswordError(message: String?) { passwordErrors += message }
         override fun showConfirmPasswordError(message: String?) { confirmErrors += message }
         override fun showMessage(message: String) { messages += message }
+        override fun showFormError(message: String) { formErrors += message }
         override fun navigateBackToExpiredCode(email: String) { expiredEmails += email }
         override fun navigateToLogin() { loginCount++ }
     }
@@ -128,13 +130,14 @@ class NewPasswordPresenterTest {
     }
 
     @Test
-    fun submit_otherPolicy400_staysOnScreenWithServerMessage() {
+    fun submit_otherPolicy400_staysOnScreenWithFixedStripCopyNotTheServerText() {
         repo.result = httpFailure(400, "{\"message\":\"Password is too weak\"}")
 
         presenter.submit("Password1!", "Password1!")
         idle()
 
-        assertEquals(listOf("Password is too weak"), view.messages)
+        assertEquals(listOf(context.getString(R.string.ui_auth_new_password_rejected)), view.formErrors)
+        assertTrue(view.messages.isEmpty())
         assertTrue(view.expiredEmails.isEmpty())
         assertEquals(0, view.loginCount)
     }
@@ -146,7 +149,8 @@ class NewPasswordPresenterTest {
         presenter.submit("Password1!", "Password1!")
         idle()
 
-        assertEquals(listOf(context.getString(R.string.forgot_password_rate_limited)), view.messages)
+        assertEquals(listOf(context.getString(R.string.forgot_password_rate_limited)), view.formErrors)
+        assertTrue(view.messages.isEmpty())
         assertTrue(view.expiredEmails.isEmpty())
         assertEquals(0, view.loginCount)
     }
@@ -158,7 +162,20 @@ class NewPasswordPresenterTest {
         presenter.submit("Password1!", "Password1!")
         idle()
 
-        assertEquals(listOf("Network problem"), view.messages)
+        assertEquals(listOf(context.getString(R.string.ui_auth_error_network)), view.formErrors)
+        assertTrue("no toast for a failure", view.messages.isEmpty())
         assertTrue(view.expiredEmails.isEmpty())
+    }
+
+    @Test
+    fun submit_serverError500_staysOnScreenWithAFixedSentence() {
+        repo.result = httpFailure(500, "{\"message\":\"java.lang.IllegalStateException: boom\"}")
+
+        presenter.submit("Password1!", "Password1!")
+        idle()
+
+        assertEquals(listOf(context.getString(R.string.ui_auth_new_password_failed)), view.formErrors)
+        assertTrue(view.expiredEmails.isEmpty())
+        assertEquals(0, view.loginCount)
     }
 }

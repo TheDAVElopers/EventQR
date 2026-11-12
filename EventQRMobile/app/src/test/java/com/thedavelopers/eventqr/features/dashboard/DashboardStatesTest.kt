@@ -23,8 +23,8 @@ import java.util.UUID
 
 /**
  * The dashboard body has three exclusive states: first-load skeleton, honest first-load error with
- * one Retry, and rendered rows. A failed refresh over rendered rows is a toast, never a state swap.
- * Resume issues exactly one request.
+ * one Retry, and rendered rows. A failed refresh over rendered rows reports in the in-flow strip
+ * (§5.16), never a toast or a state swap. Resume issues exactly one request.
  */
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [35], shadows = [ShadowMasterKeys::class, ShadowEncryptedSharedPreferences::class])
@@ -114,7 +114,34 @@ class DashboardStatesTest {
     }
 
     @Test
-    fun failedRefresh_keepsTheRenderedRowAndOnlyToasts() {
+    fun firstLoadFailure_neverAddsThePartialErrorStrip() {
+        val activity = build()
+
+        activity.showError("Connection failed.")
+        // The presenter reports every failing source after a total failure; the empty state already
+        // owns the failure, so none of them may add the strip and a second Retry.
+        activity.showPartialError("account", "offline")
+        activity.showPartialError("events", "offline")
+        activity.showPartialError("registrations", "offline")
+
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.errorDashboard).visibility)
+        assertEquals(2, activity.upcoming().childCount)
+        assertTrue(activity.bodyBlock(activity.upcoming()) is EventQrEmptyState)
+    }
+
+    @Test
+    fun partialFailureWithRowsOnScreen_reportsInTheStrip() {
+        val activity = build()
+        activity.showSummary(summary(upcoming = listOf(event())))
+
+        activity.showPartialError("events", "offline")
+
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.errorDashboard).visibility)
+        assertTrue(activity.upcoming().getChildAt(1) !is EventQrEmptyState)
+    }
+
+    @Test
+    fun failedRefresh_keepsTheRenderedRowsAndReportsInTheStrip() {
         val activity = build()
         activity.showSummary(summary(upcoming = listOf(event("DevFest Manila")), discover = listOf(event())))
 
@@ -131,7 +158,9 @@ class DashboardStatesTest {
         assertEquals(View.VISIBLE, activity.discover().visibility)
         assertEquals(View.GONE, activity.skeleton().visibility)
         assertTrue(activity.upcoming().getChildAt(1) !is EventQrEmptyState)
-        assertEquals("Connection failed.", ShadowToast.getTextOfLatestToast())
+        // §5.16: the failure reports in the flow, never a toast.
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.errorDashboard).visibility)
+        assertEquals(null, ShadowToast.getTextOfLatestToast())
     }
 
     // One request per resume: the first resume is the onCreate load, the next resume is the second

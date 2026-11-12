@@ -20,6 +20,8 @@ import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import com.thedavelopers.eventqr.features.auth.AuthStripTestKit
+import org.robolectric.shadows.ShadowToast
 
 /**
  * Robolectric tests for the XML reverted RegistrationActivity: phone
@@ -191,13 +193,16 @@ class RegistrationActivityTest {
         // 4 + 69 = 73 ASCII bytes: meets every class but exceeds BCrypt's 72-byte limit.
         passwordInput.setText("Aa1!" + "a".repeat(69))
 
-        assertEquals(activity.getString(R.string.error_password_too_long), passwordInput.error.toString())
+        assertEquals(activity.getString(R.string.error_password_too_long), AuthStripTestKit.helper(activity, R.id.txtPasswordError))
+        assertNull("no platform balloon", passwordInput.error)
+        assertTrue(passwordInput.isActivated)
         assertFalse(registerButton.isEnabled)
 
         // Exactly 72 bytes is accepted again and the error clears.
         passwordInput.setText("Aa1!" + "a".repeat(68))
 
-        assertNull(passwordInput.error)
+        assertNull(AuthStripTestKit.helper(activity, R.id.txtPasswordError))
+        assertFalse(passwordInput.isActivated)
         assertTrue(registerButton.isEnabled)
     }
 
@@ -210,7 +215,7 @@ class RegistrationActivityTest {
         // "é" is 2 bytes in UTF-8: 4 + 40 characters = 84 bytes.
         passwordInput.setText("Aa1!" + "é".repeat(40))
 
-        assertEquals(activity.getString(R.string.error_password_too_long), passwordInput.error.toString())
+        assertEquals(activity.getString(R.string.error_password_too_long), AuthStripTestKit.helper(activity, R.id.txtPasswordError))
         assertFalse(activity.findViewById<Button>(R.id.btnRegister).isEnabled)
     }
 
@@ -258,8 +263,9 @@ class RegistrationActivityTest {
 
         assertEquals(
             activity.getString(R.string.error_invalid_phone_prefixed),
-            activity.findViewById<EditText>(R.id.edtPhoneNumber).error.toString(),
+            AuthStripTestKit.helper(activity, R.id.txtPhoneError),
         )
+        assertNull("no platform balloon", activity.findViewById<EditText>(R.id.edtPhoneNumber).error)
         assertNull(shadowOf(activity).peekNextStartedActivity())
     }
 
@@ -277,10 +283,9 @@ class RegistrationActivityTest {
         assertTrue(registerButton.isEnabled)
         registerButton.performClick()
 
-        assertEquals(
-            "First name is required",
-            activity.findViewById<EditText>(R.id.edtFirstName).error.toString(),
-        )
+        assertEquals("First name is required", AuthStripTestKit.helper(activity, R.id.txtFirstNameError))
+        assertNull("no platform balloon", activity.findViewById<EditText>(R.id.edtFirstName).error)
+        assertTrue(activity.findViewById<EditText>(R.id.edtFirstName).isActivated)
         assertNull(shadowOf(activity).peekNextStartedActivity())
     }
 
@@ -338,5 +343,160 @@ class RegistrationActivityTest {
             parent = parent.parent
         }
         throw AssertionError("password field has no TextInputLayout host")
+    }
+
+    // ---- §5.16 form failure strip (above the sticky footer; never a Retry: creating an account is not safe to repeat)
+
+    private fun strip(activity: RegistrationActivity) = AuthStripTestKit.strip(activity, R.id.errorRegister)
+
+    @Test
+    fun theStrip_isHiddenUntilAFailureAndSitsAboveTheFooter() {
+        val activity = buildActivity()
+        val strip = strip(activity)
+        val root = strip.parent as android.view.ViewGroup
+
+        assertEquals(View.GONE, strip.visibility)
+        assertTrue(
+            "the strip sits between the form and the footer",
+            root.indexOfChild(activity.findViewById(R.id.authScroll)) < root.indexOfChild(strip) &&
+                root.indexOfChild(strip) < root.indexOfChild(activity.findViewById(R.id.authFooter)),
+        )
+    }
+
+    @Test
+    fun aFailure_showsTheSentenceInTheStripWithoutRetryAndWithoutAToast() {
+        val activity = buildActivity()
+
+        activity.showFormError("Couldn't create your account. Your entries are kept, so try again.")
+
+        assertEquals(View.VISIBLE, strip(activity).visibility)
+        assertEquals(
+            "Couldn't create your account. Your entries are kept, so try again.",
+            AuthStripTestKit.message(strip(activity)),
+        )
+        assertEquals(View.GONE, AuthStripTestKit.retry(strip(activity)).visibility)
+        assertNull(ShadowToast.getLatestToast())
+    }
+
+    @Test
+    fun nextSubmit_clearsTheStrip() {
+        val activity = buildActivity()
+        activity.showFormError("Couldn't create your account. Your entries are kept, so try again.")
+
+        activity.findViewById<Button>(R.id.btnRegister).performClick()
+
+        assertEquals(View.GONE, strip(activity).visibility)
+    }
+
+    @Test
+    fun everyFailure_isAnnounced_includingAnIdenticalRepeat() {
+        AuthStripTestKit.enableAccessibility()
+        val activity = AuthStripTestKit.visible(RegistrationActivity::class.java)
+        val message = "Couldn't create your account. Your entries are kept, so try again."
+
+        activity.showFormError(message)
+        activity.findViewById<Button>(R.id.btnRegister).performClick()
+        activity.showFormError(message)
+
+        // The click also fails the phone check on the empty form, which is a failure of its own.
+        assertEquals(
+            listOf(message, activity.getString(R.string.error_invalid_phone_prefixed), message),
+            AuthStripTestKit.announcements(),
+        )
+    }
+
+    @Test
+    fun anApiNamedEmailConflict_isAFieldErrorThatIsFocusedAndAnnounced() {
+        AuthStripTestKit.enableAccessibility()
+        val activity = AuthStripTestKit.visible(RegistrationActivity::class.java)
+        val email = activity.findViewById<EditText>(R.id.edtEmail)
+        val message = "An account with this email already exists. Sign in or use a different email."
+
+        activity.showServerFieldError("email", message)
+
+        assertEquals(message, AuthStripTestKit.helper(activity, R.id.txtEmailError))
+        assertNull(email.error)
+        assertTrue(email.isActivated)
+        assertTrue(email.hasFocus())
+        assertEquals(View.GONE, strip(activity).visibility)
+        assertEquals(listOf(message), AuthStripTestKit.announcements())
+    }
+
+    // ---- Field errors: first invalid field takes focus, one announcement, clear on edit
+
+    @Test
+    fun severalInvalidFields_focusTheFirstAndAnnounceItOnce() {
+        AuthStripTestKit.enableAccessibility()
+        val activity = AuthStripTestKit.visible(RegistrationActivity::class.java)
+        enableSubmit(activity)
+        activity.findViewById<EditText>(R.id.edtPhoneNumber).setText("9171234567")
+
+        activity.findViewById<Button>(R.id.btnRegister).performClick()
+
+        assertEquals("First name is required", AuthStripTestKit.helper(activity, R.id.txtFirstNameError))
+        assertEquals("Last name is required", AuthStripTestKit.helper(activity, R.id.txtLastNameError))
+        assertEquals("Enter a valid email address", AuthStripTestKit.helper(activity, R.id.txtEmailError))
+        assertTrue(activity.findViewById<EditText>(R.id.edtFirstName).hasFocus())
+        assertEquals(listOf("First name is required"), AuthStripTestKit.announcements())
+    }
+
+    @Test
+    fun editingAField_clearsItsOwnErrorOnly() {
+        val activity = buildActivity()
+        enableSubmit(activity)
+        activity.findViewById<EditText>(R.id.edtPhoneNumber).setText("9171234567")
+        activity.findViewById<Button>(R.id.btnRegister).performClick()
+
+        activity.findViewById<EditText>(R.id.edtFirstName).setText("Jo")
+
+        assertNull(AuthStripTestKit.helper(activity, R.id.txtFirstNameError))
+        assertFalse(activity.findViewById<EditText>(R.id.edtFirstName).isActivated)
+        assertEquals("Last name is required", AuthStripTestKit.helper(activity, R.id.txtLastNameError))
+    }
+
+    // ---- Rotation
+
+    @Test
+    fun rotation_keepsFieldErrors_andTheyStaySilent() {
+        AuthStripTestKit.enableAccessibility()
+        val controller = AuthStripTestKit.visibleController(RegistrationActivity::class.java)
+        val before = controller.get()
+        enableSubmit(before)
+        before.findViewById<EditText>(R.id.edtPhoneNumber).setText("9171234567")
+        before.findViewById<Button>(R.id.btnRegister).performClick()
+        before.findViewById<EditText>(R.id.edtFirstName).setText("Jo")
+        val announced = AuthStripTestKit.announcements().size
+
+        val after = AuthStripTestKit.rotate(controller)
+
+        assertNull("an edited field stays clear", AuthStripTestKit.helper(after, R.id.txtFirstNameError))
+        assertEquals("Last name is required", AuthStripTestKit.helper(after, R.id.txtLastNameError))
+        assertEquals("Enter a valid email address", AuthStripTestKit.helper(after, R.id.txtEmailError))
+        assertTrue(after.findViewById<EditText>(R.id.edtLastName).isActivated)
+        assertNull(after.findViewById<EditText>(R.id.edtLastName).error)
+        assertEquals("a restore is not a new failure", announced, AuthStripTestKit.announcements().size)
+    }
+
+    @Test
+    fun rotation_keepsTheStrip_withoutRetry_andWithoutAnnouncingAgain() {
+        AuthStripTestKit.enableAccessibility()
+        val controller = AuthStripTestKit.visibleController(RegistrationActivity::class.java)
+        val message = "Couldn't create your account. Your entries are kept, so try again."
+        controller.get().showFormError(message)
+        val announced = AuthStripTestKit.announcements().size
+
+        val after = AuthStripTestKit.rotate(controller)
+
+        assertEquals(View.VISIBLE, strip(after).visibility)
+        assertEquals(message, AuthStripTestKit.message(strip(after)))
+        assertEquals(View.GONE, AuthStripTestKit.retry(strip(after)).visibility)
+        assertEquals(announced, AuthStripTestKit.announcements().size)
+    }
+
+    @Test
+    fun rotation_withNoFailure_keepsTheStripHidden() {
+        val after = AuthStripTestKit.rotate(AuthStripTestKit.visibleController(RegistrationActivity::class.java))
+
+        assertEquals(View.GONE, strip(after).visibility)
     }
 }

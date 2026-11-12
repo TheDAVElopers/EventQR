@@ -36,13 +36,13 @@ open class AuthRepository internal constructor(
     open suspend fun login(email: String, password: String): NetworkResult<LoginResponse> =
         safeApiCall { apiService.login(LoginRequest(email, password)) }
 
-        suspend fun getAuthMe(): NetworkResult<UserResponse> =
+    open suspend fun getAuthMe(): NetworkResult<UserResponse> =
         safeApiCall { apiService.getAuthMe() }
 
     suspend fun getUserProfile(): NetworkResult<UserResponse> =
         safeApiCall { apiService.getUsersMe() }
 
-    suspend fun createUser(
+    open suspend fun createUser(
         fullName: String,
         email: String,
         phoneNumber: String,
@@ -76,7 +76,7 @@ open class AuthRepository internal constructor(
      * Changes the password. The change revokes the old refresh tokens, so a fresh session in the response is
      * stored to keep the user signed in; an older server returns none and the stored session is left alone.
      */
-    suspend fun changePassword(currentPassword: String, newPassword: String, confirmPassword: String): NetworkResult<Unit> =
+    open suspend fun changePassword(currentPassword: String, newPassword: String, confirmPassword: String): NetworkResult<Unit> =
         // Guarded: a token refresh racing this request is rejected by the revocation, which must not log out.
         rotator.duringExternalRotation {
             when (val result = safeApiCall { apiService.changePassword(ChangePasswordRequest(currentPassword, newPassword, confirmPassword)) }) {

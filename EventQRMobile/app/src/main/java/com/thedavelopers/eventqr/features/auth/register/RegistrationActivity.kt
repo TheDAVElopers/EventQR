@@ -16,6 +16,8 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.ScreenInsets
 import com.thedavelopers.eventqr.core.util.Wordmark
 import com.thedavelopers.eventqr.core.util.Validators
+import com.thedavelopers.eventqr.features.auth.AuthErrorStrip
+import com.thedavelopers.eventqr.features.auth.AuthFieldErrors
 import com.thedavelopers.eventqr.features.auth.AuthRepository
 import com.thedavelopers.eventqr.features.auth.login.LoginActivity
 import com.thedavelopers.eventqr.features.terms.TermsLink
@@ -32,6 +34,8 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
     private lateinit var confirmPasswordInput: EditText
     private lateinit var termsCheckBox: CheckBox
     private lateinit var registerButton: Button
+    private lateinit var formError: AuthErrorStrip
+    private val fieldErrors = AuthFieldErrors()
     private lateinit var signInButton: android.view.View
     private lateinit var passwordLengthRequirement: TextView
     private lateinit var passwordCapitalRequirement: TextView
@@ -60,6 +64,15 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
         confirmPasswordInput = findViewById(R.id.edtConfirmPassword)
         termsCheckBox = findViewById(R.id.chkTerms)
         registerButton = findViewById(R.id.btnRegister)
+        // No Retry on this screen, so the strip has no actions to restore.
+        formError = AuthErrorStrip(findViewById(R.id.errorRegister))
+        // Registered in the form's top-to-bottom order: that order decides which error takes focus.
+        fieldErrors.register(FIELD_FIRST_NAME, firstNameInput, findViewById(R.id.txtFirstNameError))
+        fieldErrors.register(FIELD_LAST_NAME, lastNameInput, findViewById(R.id.txtLastNameError))
+        fieldErrors.register(FIELD_EMAIL, emailInput, findViewById(R.id.txtEmailError))
+        fieldErrors.register(FIELD_PHONE, phoneInput, findViewById(R.id.txtPhoneError))
+        fieldErrors.register(FIELD_PASSWORD, passwordInput, findViewById(R.id.txtPasswordError))
+        fieldErrors.register(FIELD_CONFIRM_PASSWORD, confirmPasswordInput, findViewById(R.id.txtConfirmPasswordError))
         signInButton = findViewById(R.id.btnSignIn)
         passwordLengthRequirement = findViewById(R.id.txtPasswordLengthRequirement)
         passwordCapitalRequirement = findViewById(R.id.txtPasswordCapitalRequirement)
@@ -92,12 +105,13 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
         TermsLink.apply(termsCheckBox, getString(R.string.terms_link_signup))
 
         registerButton.setOnClickListener {
+            formError.clear()
             // EventQR - UI validation deviation beyond SRS UC-01 field spec
             // Field holds 10 local digits under a fixed "+63" prefix; the full E.164 value
             // (+63 + digits, e.g. +639171234567) is assembled only here at submit time.
             val phoneDigits = phoneInput.text.toString()
             if (phoneDigits.length != 10) {
-                setFieldError(phoneInput, getString(R.string.error_invalid_phone_prefixed))
+                fieldErrors.raise(FIELD_PHONE, getString(R.string.error_invalid_phone_prefixed))
                 return@setOnClickListener
             }
             presenter.submitRegistration(
@@ -115,6 +129,19 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        fieldErrors.save(outState)
+        formError.save(outState)
+    }
+
+    // After super: restoring the typed text runs the edit watchers that clear an error.
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        fieldErrors.restore(savedInstanceState)
+        formError.restore(savedInstanceState)
+    }
+
     override fun onDestroy() {
         presenter.detach()
         super.onDestroy()
@@ -126,35 +153,39 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
     }
 
     override fun showFieldError(field: String, message: String?) {
-        // bg_ui_field draws its 2dp error stroke from state_activated, so every field that
-        // carries an error also shows one.
+        // Each field's helper line carries the message and bg_ui_field draws the 2dp error stroke.
         when (field) {
-            "firstName" -> setFieldError(firstNameInput, message)
-            "lastName" -> setFieldError(lastNameInput, message)
+            "firstName" -> fieldErrors.raise(FIELD_FIRST_NAME, message)
+            "lastName" -> fieldErrors.raise(FIELD_LAST_NAME, message)
             "fullName" -> {
-                setFieldError(firstNameInput, message)
-                setFieldError(lastNameInput, message)
+                fieldErrors.raise(FIELD_FIRST_NAME, message)
+                fieldErrors.raise(FIELD_LAST_NAME, message)
             }
-            "email" -> setFieldError(emailInput, message)
-            "phone" -> setFieldError(
-                phoneInput,
+            "email" -> fieldErrors.raise(FIELD_EMAIL, message)
+            "phone" -> fieldErrors.raise(
+                FIELD_PHONE,
                 if (message == Validators.PHONE_ERROR) getString(R.string.error_invalid_phone_prefixed) else message
             )
-            "password" -> setFieldError(
-                passwordInput,
+            "password" -> fieldErrors.raise(
+                FIELD_PASSWORD,
                 if (message == Validators.PASSWORD_TOO_LONG_ERROR) getString(R.string.error_password_too_long) else message
             )
-            "confirmPassword" -> setFieldError(confirmPasswordInput, message)
+            "confirmPassword" -> fieldErrors.raise(FIELD_CONFIRM_PASSWORD, message)
         }
-    }
-
-    private fun setFieldError(field: EditText, message: String?) {
-        field.error = message
-        field.isActivated = message != null
     }
 
     override fun showMessage(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
+    /** No Retry: account creation is not safe to repeat when the first answer was lost; the user re-presses Create account. */
+    override fun showFormError(message: String) {
+        formError.show(message, retryAction = null)
+    }
+
+    override fun showServerFieldError(field: String, message: String) {
+        // The field error takes focus and is announced by the shared helper.
+        showFieldError(field, message)
     }
 
     /** Replaces Sign Up with Sign In so the two never stack; Back from Sign In returns to Landing. */
@@ -177,8 +208,13 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
         updateRequirement(passwordLowercaseRequirement, getString(R.string.password_req_lowercase), requirements.hasLowercase)
         updateRequirement(passwordNumberRequirement, getString(R.string.password_req_number), requirements.hasNumber)
         updateRequirement(passwordSpecialRequirement, getString(R.string.password_req_special), requirements.hasSpecial)
-        passwordInput.error = if (!requirements.withinMaxLength) getString(R.string.error_password_too_long) else null
-        passwordInput.isActivated = !requirements.withinMaxLength
+        // Derived from the text on every keystroke: live, so the edit watcher leaves it to this check.
+        val tooLong = getString(R.string.error_password_too_long)
+        if (!requirements.withinMaxLength) {
+            fieldErrors.raise(FIELD_PASSWORD, tooLong, live = true)
+        } else if (fieldErrors.message(FIELD_PASSWORD) == tooLong) {
+            fieldErrors.set(FIELD_PASSWORD, null)
+        }
 
         updateRegisterButtonState()
     }
@@ -209,7 +245,6 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
                 val normalized = normalizePhoneDigits(current.toString())
                 if (normalized != current.toString()) {
                     current.replace(0, current.length, normalized)
-                    phoneInput.error = null
                 }
             }
         })
@@ -227,5 +262,14 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
             digits = digits.removePrefix("0")
         }
         return digits.take(10)
+    }
+
+    private companion object {
+        const val FIELD_FIRST_NAME = "firstName"
+        const val FIELD_LAST_NAME = "lastName"
+        const val FIELD_EMAIL = "email"
+        const val FIELD_PHONE = "phone"
+        const val FIELD_PASSWORD = "password"
+        const val FIELD_CONFIRM_PASSWORD = "confirmPassword"
     }
 }

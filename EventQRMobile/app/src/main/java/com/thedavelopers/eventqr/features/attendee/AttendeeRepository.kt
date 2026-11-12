@@ -48,7 +48,7 @@ open class AttendeeRepository(context: Context) {
     suspend fun updateProfile(fullName: String, phoneNumber: String?) = safeApiCall {
         apiService.updateUsersMe(com.thedavelopers.eventqr.features.users.model.dto.ProfileUpdateRequest(fullName, phoneNumber))
     }
-    suspend fun uploadEventPoster(file: File): NetworkResult<StoredFileResponse> = safeApiCall {
+    open suspend fun uploadEventPoster(file: File): NetworkResult<StoredFileResponse> = safeApiCall {
         val contentType = detectImageMediaType(file) ?: "image/jpeg"
         val requestBody = file.asRequestBody(contentType.toMediaTypeOrNull())
         val uploadName = ensureImageExtension(file.name, contentType)

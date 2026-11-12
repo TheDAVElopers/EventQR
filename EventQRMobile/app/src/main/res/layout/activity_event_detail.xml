@@ -101,8 +101,29 @@
                 android:textColor="@color/ui_text_primary"
                 android:visibility="gone" />
 
+            <!-- §5.16: a failed load reports under the media head; the spec table and About are
+                 hidden while there is no event, so the strip is the only failure surface. -->
+            <include
+                android:id="@+id/errorEventDetail"
+                layout="@layout/include_error_strip"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_md"
+                android:layout_marginEnd="@dimen/ui_gutter" />
+
+            <!-- §6.8 row 20: only when the head is blank too - a first load that failed with no
+                 title to carry means the empty-state slot owns the page. -->
+            <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+                android:id="@+id/emptyEventDetailState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:icon="@drawable/ic_ui_warning" />
+
             <!-- ═════════ Spec table ═════════ -->
             <LinearLayout
+                android:id="@+id/layoutSpecTable"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/ui_gutter"
@@ -395,6 +416,7 @@
             <!-- ═════════ Registration fill ═════════ -->
             <!-- ═════════ About ═════════ -->
             <TextView
+                android:id="@+id/txtDetailAboutLabel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/ui_gutter"

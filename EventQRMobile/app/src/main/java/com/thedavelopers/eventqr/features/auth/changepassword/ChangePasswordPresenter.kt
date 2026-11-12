@@ -1,10 +1,13 @@
 package com.thedavelopers.eventqr.features.auth.changepassword
 
 import android.content.Context
+import android.util.Log
+import androidx.annotation.VisibleForTesting
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.auth.AuthRepository
+import com.thedavelopers.eventqr.features.auth.logSummary
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -14,7 +17,8 @@ class ChangePasswordPresenter() {
     private var view: ChangePasswordContract.View? = null
     private val scope = MainScope()
     private var job: kotlinx.coroutines.Job? = null
-    private var repository: AuthRepository? = null
+    @VisibleForTesting
+    internal var repository: AuthRepository? = null
     private var appContext: Context? = null
 
     fun attach(view: ChangePasswordContract.View, context: Context) {
@@ -64,18 +68,25 @@ class ChangePasswordPresenter() {
                 }
                 is NetworkResult.Error -> {
                     view?.showLoading(false)
-                    // The endpoint's 400 is IncorrectCurrentPasswordException: the policy and mismatch checks
-                    // already ran client-side, so a rejected request means the current password is wrong.
-                    if ((result.throwable as? HttpException)?.code() == 400) {
-                        view?.showCurrentPasswordError(result.message)
-                    } else {
-                        view?.showMessage(result.message ?: string(R.string.change_password_failed))
+                    Log.w(TAG, "change password failed: ${result.logSummary()}")
+                    val status = (result.throwable as? HttpException)?.code()
+                    when {
+                        // The API names the field only for IncorrectCurrentPasswordException, so only that 400 is a
+                        // field error (fixed copy, not the server text).
+                        status == 400 && result.serverMessage == CURRENT_PASSWORD_INCORRECT_MESSAGE ->
+                            view?.showCurrentPasswordError(string(R.string.ui_auth_current_password_incorrect))
+                        // Any other 400 (the server's password policy, a mismatch) names no field: stay and say
+                        // what to check. The client-side checks ran first, so this is a rule they do not mirror.
+                        status == 400 -> view?.showFormError(string(R.string.ui_auth_change_password_rejected))
+                        status == 429 -> view?.showFormError(string(R.string.ui_auth_error_rate_limited))
+                        result.throwable is java.io.IOException -> view?.showFormError(string(R.string.ui_auth_error_network))
+                        else -> view?.showFormError(string(R.string.ui_auth_change_password_failed))
                     }
                 }
                 NetworkResult.Loading -> Unit
                 null -> {
                     view?.showLoading(false)
-                    view?.showMessage(string(R.string.change_password_failed))
+                    view?.showFormError(string(R.string.ui_auth_change_password_failed))
                 }
             }
         }
@@ -86,4 +97,11 @@ class ChangePasswordPresenter() {
     }
 
     private fun string(resId: Int): String = appContext?.getString(resId).orEmpty()
+
+    companion object {
+        private const val TAG = "ChangePasswordPresenter"
+
+        /** Backend 400 message meaning the current password is wrong. */
+        const val CURRENT_PASSWORD_INCORRECT_MESSAGE = "Current password is incorrect"
+    }
 }

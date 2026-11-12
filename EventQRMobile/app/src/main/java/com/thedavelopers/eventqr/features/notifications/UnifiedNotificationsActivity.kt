@@ -2,7 +2,7 @@ package com.thedavelopers.eventqr.features.notifications
 
 import android.os.Bundle
 import android.content.Intent
-import android.widget.Toast
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import android.view.View
 import android.widget.TextView
@@ -30,6 +30,8 @@ import com.thedavelopers.eventqr.features.organizer.openOrganizerPage
 import com.thedavelopers.eventqr.ui.theme.EventQrTheme
 import com.thedavelopers.eventqr.ui.theme.dimenOffset
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.util.UUID
@@ -40,6 +42,9 @@ open class UnifiedNotificationsActivity : AppCompatActivity() {
     private val _notifications = MutableStateFlow<List<NotificationResponse>>(emptyList())
     private val _isLoading = MutableStateFlow(false)
     private val _errorMessage = MutableStateFlow<String?>(null)
+    /** A failed read/write of the list itself (§6.8 row 21); Retry re-runs [lastFailedOp]. */
+    private val actionFailure = NotificationActionFailure()
+    private var lastFailedOp: (() -> Unit)? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,11 +55,13 @@ open class UnifiedNotificationsActivity : AppCompatActivity() {
                 val notifications = _notifications.collectAsStateWithLifecycle().value
                 val isLoading = _isLoading.collectAsStateWithLifecycle().value
                 val errorMessage = _errorMessage.collectAsStateWithLifecycle().value
+                val actionFailureCount = actionFailure.count.collectAsStateWithLifecycle().value
 
                 NotificationsScreen(
                     notifications = notifications,
                     isLoading = isLoading,
                     errorMessage = errorMessage,
+                    actionFailureCount = actionFailureCount,
                     onNotificationClick = { notification ->
                         if (notification.status != NotificationStatus.READ && notification.readAt == null) {
                             markRead(notification.notificationId)
@@ -62,6 +69,7 @@ open class UnifiedNotificationsActivity : AppCompatActivity() {
                         openNotification(notification)
                     },
                     onRetryClick = { loadNotifications() },
+                    onActionRetry = { lastFailedOp?.invoke() },
                     navigatesOnTap = { notification ->
                         notificationDestinationFor(notification.notificationType, notification.eventId?.toString()) != null
                     },
@@ -119,10 +127,10 @@ open class UnifiedNotificationsActivity : AppCompatActivity() {
                 repository.markNotificationRead(notificationId.toString())
             }
             when (result) {
-                is NetworkResult.Success -> Unit
+                is NetworkResult.Success -> clearActionFailure()
                 is NetworkResult.Error -> {
                     _notifications.value = previous
-                    Toast.makeText(this@UnifiedNotificationsActivity, result.message.ifBlank { getString(R.string.unified_notifications_unable_to_mark_notification_as_read) }, Toast.LENGTH_SHORT).show()
+                    showActionFailure(result.message) { markRead(notificationId) }
                 }
                 NetworkResult.Loading -> Unit
             }
@@ -138,14 +146,33 @@ open class UnifiedNotificationsActivity : AppCompatActivity() {
                 repository.markAllNotificationsRead()
             }
             when (result) {
-                is NetworkResult.Success -> Unit
+                is NetworkResult.Success -> clearActionFailure()
                 is NetworkResult.Error -> {
                     _notifications.value = previous
-                    Toast.makeText(this@UnifiedNotificationsActivity, result.message.ifBlank { getString(R.string.unified_notifications_unable_to_mark_notifications_as_read) }, Toast.LENGTH_SHORT).show()
+                    showActionFailure(result.message) { markAllRead() }
                 }
                 NetworkResult.Loading -> Unit
             }
         }
+    }
+
+    /**
+     * §6.8 row 21: a failed read reports in the strip above the list, and Retry re-runs the same
+     * read. The row state was already reverted, so the list never claims an optimistic write.
+     * The server text goes to the log, never into the strip (§7.5).
+     */
+    private fun showActionFailure(message: String, retry: () -> Unit) {
+        Log.w(TAG, "notification read failed: $message")
+        lastFailedOp = retry
+        // The screen announces the sentence from a LaunchedEffect on every new failure (§5.16). The
+        // sentence never changes, so the counter carries the repeat: an equal StateFlow value would
+        // be conflated and the strip would look dead after Retry.
+        actionFailure.fail()
+    }
+
+    private fun clearActionFailure() {
+        lastFailedOp = null
+        actionFailure.clear()
     }
 
     private fun openNotification(notification: NotificationResponse) {
@@ -187,6 +214,10 @@ open class UnifiedNotificationsActivity : AppCompatActivity() {
             }
         }
     }
+
+    private companion object {
+        const val TAG = "Notifications"
+    }
 }
 
 /**
@@ -202,5 +233,22 @@ internal fun withReadState(
         notification.copy(status = NotificationStatus.READ, readAt = readAt)
     } else {
         notification
+    }
+}
+
+/**
+ * §6.8 row 21 strip state. The sentence never changes, and a StateFlow conflates equal values, so a
+ * repeat failure after Retry must bump a counter - only that re-emits, re-renders and re-announces.
+ */
+internal class NotificationActionFailure {
+    private val _count = MutableStateFlow(0)
+    val count: StateFlow<Int> = _count.asStateFlow()
+
+    fun fail() {
+        _count.value += 1
+    }
+
+    fun clear() {
+        _count.value = 0
     }
 }

@@ -38,6 +38,7 @@
     <string name="ui_attendee_dashboard_empty_activity">No activity yet</string>
     <string name="ui_attendee_dashboard_empty_activity_body">Check-ins and points show up here.</string>
     <string name="ui_attendee_dashboard_error_title">Couldn\'t load your dashboard</string>
+    <string name="ui_attendee_dashboard_partial_failed">Couldn\'t load part of your dashboard.</string>
 
     <!-- ═════════ Discover (§6.2) ═════════ -->
     <!-- Unit only: CountLabel.format() prefixes the compact number and uppercases the noun. -->
@@ -48,6 +49,7 @@
     <string name="ui_attendee_no_registered_events_to_show">No registered events to show</string>
     <string name="ui_attendee_no_registered_events_body">Events you register for show up here.</string>
     <string name="ui_attendee_registrations_error_title">Couldn\'t load your registrations</string>
+    <string name="ui_attendee_registrations_refresh_failed">Couldn\'t refresh your registrations.</string>
     <string name="ui_attendee_load_error_body">Check your connection and try again.</string>
 
     <!-- ═════════ Discover date filter (§6.2 amendment) ═════════ -->
@@ -82,6 +84,7 @@
     <string name="ui_attendee_registration_closes">Closes %1$s</string>
     <string name="ui_attendee_capacity">Capacity</string>
     <string name="ui_attendee_event_rewards">Rewards</string>
+    <string name="ui_event_detail_load_failed">Couldn\'t load the event details.</string>
 
     <!-- ═════════ Registration (§6.2, §6.6) ═════════ -->
     <string name="ui_attendee_registrant_details">Your details</string>
@@ -96,6 +99,8 @@
     <string name="ui_attendee_pass_last_updated">Last updated %1$s</string>
     <string name="ui_attendee_pass_revoked_title">This pass is no longer valid</string>
     <string name="ui_attendee_pass_revoked_body">Ask the organizer if you think this is a mistake.</string>
+    <string name="ui_attendee_pass_save_failed">Couldn\'t save your pass.</string>
+    <string name="ui_attendee_pass_not_ready">Your pass is still loading.</string>
 
     <!-- ═════════ Rewards (§6.2) ═════════ -->
     <string name="ui_attendee_available">Available</string>
@@ -124,6 +129,8 @@
     <string name="ui_attendee_how_to_redeem_title">How to redeem</string>
     <string name="ui_attendee_reward">Reward</string>
     <string name="ui_attendee_reward_details">Reward details</string>
+    <string name="ui_reward_detail_load_failed">Couldn\'t load this reward.</string>
+    <string name="ui_reward_detail_balance_failed">Couldn\'t load your point balance.</string>
     <string name="ui_attendee_register_for_event">Register for event</string>
     <string name="ui_attendee_how_to_redeem">Show your pass at the rewards desk and staff deduct the points.</string>
     <string name="ui_attendee_no_claimed_title">No claimed rewards yet</string>
@@ -208,5 +215,28 @@
     <string name="ui_attendee_add_phone_to_continue">Add a phone number in your profile to continue.</string>
     <string name="ui_attendee_agree_terms_to_continue">Agree to the terms to continue.</string>
     <string name="ui_attendee_pass_description">Pass for %1$s, registration %2$s.</string>
+
+    <!-- Request event: inline field errors (§6.8 row 6). Wording is the pre-redesign validation copy, unchanged. -->
+    <string name="ui_attendee_request_error_event_name">Event name is required</string>
+    <string name="ui_attendee_request_error_event_category">Event category is required</string>
+    <string name="ui_attendee_request_error_event_description">Event description is required</string>
+    <string name="ui_attendee_request_error_target_audience">Target audience is required</string>
+    <string name="ui_attendee_request_error_capacity">Capacity must be a positive number</string>
+    <string name="ui_attendee_request_error_venue">Venue/location is required</string>
+    <string name="ui_attendee_request_error_start_required">Start date/time is required</string>
+    <string name="ui_attendee_request_error_end_required">End date/time is required</string>
+    <string name="ui_attendee_request_error_registration_start_required">Registration start date/time is required</string>
+    <string name="ui_attendee_request_error_registration_end_required">Registration end date/time is required</string>
+    <string name="ui_attendee_request_error_requester_name">Requester name is required</string>
+    <string name="ui_attendee_request_error_contact_email">Contact email is required</string>
+    <string name="ui_attendee_request_error_contact_number">Contact number is required</string>
+    <string name="ui_attendee_request_error_reason">Reason for request is required</string>
+    <!-- Request event: page failure strip (§5.16). One sentence each; server text goes to the log. -->
+    <string name="ui_attendee_request_submit_failed">Couldn\'t submit your request. Your entries are kept, so try again.</string>
+    <plurals name="ui_attendee_request_more_fields_need_attention">
+        <item quantity="one">%d more field needs attention.</item>
+        <item quantity="other">%d more fields need attention.</item>
+    </plurals>
+    <string name="ui_attendee_request_poster_upload_failed">Couldn\'t upload the poster. Try again, or choose another image.</string>
 
 </resources>

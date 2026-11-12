@@ -133,6 +133,15 @@
                         android:autoText="false"
                         android:inputType="textPersonName"
                         android:maxLines="1" />
+
+                        <TextView
+                            android:id="@+id/txtFirstNameError"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_4"
+                            android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                            android:textColor="@color/ui_error"
+                            android:visibility="gone" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -158,6 +167,15 @@
                         android:autoText="false"
                         android:inputType="textPersonName"
                         android:maxLines="1" />
+
+                        <TextView
+                            android:id="@+id/txtLastNameError"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_4"
+                            android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                            android:textColor="@color/ui_error"
+                            android:visibility="gone" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -194,6 +212,15 @@
                 android:hint="@string/auth_hint_email"
                 android:inputType="textEmailAddress"
                 android:maxLines="1" />
+
+            <TextView
+                android:id="@+id/txtEmailError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -244,6 +271,15 @@
                     android:textColorHint="@color/ui_text_secondary" />
             </LinearLayout>
 
+            <TextView
+                android:id="@+id/txtPhoneError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
+
             <View
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/stroke_hairline"
@@ -283,6 +319,15 @@
                     android:inputType="textPassword"
                     android:maxLines="1" />
             </com.thedavelopers.eventqr.ui.components.PasswordTextInputLayout>
+
+            <TextView
+                android:id="@+id/txtPasswordError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
 
             <!-- Rules: five rows, one per Validators rule. The 16dp leading slot is ic_ui_check
                  in accent_deep when met and empty at rest; the mark and the row's "met"/"not met"
@@ -377,6 +422,15 @@
                     android:maxLines="1" />
             </com.thedavelopers.eventqr.ui.components.PasswordTextInputLayout>
 
+            <TextView
+                android:id="@+id/txtConfirmPasswordError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
+
             <CheckBox
                 android:id="@+id/chkTerms"
                 style="@style/Widget.EventQR.Ui.CheckBox"
@@ -412,6 +466,18 @@
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
+
+    <!-- §5.16 form failure strip, between the form and the sticky footer so it never scrolls away;
+         hidden until a failure, and without Retry (account creation is not safe to repeat). -->
+    <include
+        android:id="@+id/errorRegister"
+        layout="@layout/include_error_strip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/ui_gutter"
+        android:layout_marginTop="@dimen/space_md"
+        android:layout_marginEnd="@dimen/ui_gutter"
+        android:layout_marginBottom="@dimen/space_md" />
 
     <!-- ═════════ Sticky footer: the primary action never scrolls away ═════════ -->
     <View

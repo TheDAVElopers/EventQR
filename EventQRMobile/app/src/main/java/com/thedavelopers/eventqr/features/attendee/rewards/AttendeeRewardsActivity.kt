@@ -14,7 +14,6 @@ import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.Spinner
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -118,7 +117,7 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         adapter = RewardAdapter { reward ->
             val currentEventId = selectedEventId.orEmpty()
             if (currentEventId.isBlank()) {
-                Toast.makeText(this, this.getString(R.string.attendee_rewards_select_a_registered_event_first), Toast.LENGTH_SHORT).show()
+                // Defensive only: rows render after an event is selected, so no toast can be reached.
                 return@RewardAdapter
             }
 
@@ -224,7 +223,8 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
     }
 
     override fun showMessage(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        // No rewards read reports here: failures arrive through showError(), which renders the
+        // in-flow error block. AttendeeView declares the member, so the screen keeps the override.
     }
 
     override fun showError(message: String) {

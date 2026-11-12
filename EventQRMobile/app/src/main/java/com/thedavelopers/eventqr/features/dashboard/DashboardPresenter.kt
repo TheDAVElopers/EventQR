@@ -227,20 +227,20 @@ class DashboardPresenter(
                 )
                 view?.showSummary(fallbackSummary)
                 if (summaryResult is NetworkResult.Error) {
-                    view?.showMessage(strings.get(R.string.dashboard_unable_to_load_latest_stats, summaryResult.message))
+                    view?.showPartialError("stats", summaryResult.message)
                 }
             } else if (summaryResult is NetworkResult.Error) {
                 view?.showError(summaryResult.message)
             }
 
             if (currentUserResult is NetworkResult.Error) {
-                view?.showMessage(strings.get(R.string.dashboard_unable_to_refresh_account_role, currentUserResult.message))
+                view?.showPartialError("account", currentUserResult.message)
             }
             if (eventsResult is NetworkResult.Error) {
-                view?.showMessage(strings.get(R.string.dashboard_unable_to_load_events, eventsResult.message))
+                view?.showPartialError("events", eventsResult.message)
             }
             if (registrationsResult is NetworkResult.Error) {
-                view?.showMessage(strings.get(R.string.dashboard_unable_to_load_registrations, registrationsResult.message))
+                view?.showPartialError("registrations", registrationsResult.message)
             }
         }
     }

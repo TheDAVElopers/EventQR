@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    §5.16 in-flow error strip. Extracted verbatim from activity_claimed_rewards.xml (lines 28-64).
+    Fixed ids: errorStrip / txtErrorStrip / btnErrorStripRetry. The host owns the margins, so this
+    root carries none. No live region: the message never changes, so a repeated failure would stay
+    silent - the host calls announceForAccessibility() when the strip appears instead.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/errorStrip"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_ui_block_r4"
+    android:backgroundTint="@color/ui_error_container"
+    android:gravity="center_vertical"
+    android:minHeight="@dimen/ui_touch_min"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/space_lg"
+    android:paddingTop="@dimen/space_sm"
+    android:paddingEnd="@dimen/space_sm"
+    android:paddingBottom="@dimen/space_sm"
+    android:visibility="gone">
+
+    <TextView
+        android:id="@+id/txtErrorStrip"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+        android:textColor="@color/ui_on_error_container"
+        tools:text="@string/ui_attendee_claims_refresh_failed" />
+
+    <TextView
+        android:id="@+id/btnErrorStripRetry"
+        style="@style/Widget.EventQR.Ui.Button.Ghost"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:focusable="true"
+        android:minHeight="@dimen/ui_button_height_inline"
+        android:text="@string/ui_attendee_retry"
+        android:textColor="@color/ui_on_error_container" />
+</LinearLayout>

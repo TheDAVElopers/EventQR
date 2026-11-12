@@ -34,6 +34,15 @@
             android:paddingEnd="@dimen/ui_gutter"
             android:paddingBottom="@dimen/space_24">
 
+            <!-- §5.16: the load failure reports in the flow, above the reward itself. The parent
+                 pads the gutter, so the strip carries no side margins. -->
+            <include
+                android:id="@+id/errorRewardDetail"
+                layout="@layout/include_error_strip"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/space_md" />
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

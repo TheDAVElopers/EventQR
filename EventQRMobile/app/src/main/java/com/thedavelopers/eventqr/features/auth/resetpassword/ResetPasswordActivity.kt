@@ -12,7 +12,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.ScreenInsets
 import com.thedavelopers.eventqr.core.util.Wordmark
-import com.thedavelopers.eventqr.core.util.setInlineError
+import com.thedavelopers.eventqr.features.auth.AuthErrorStrip
+import com.thedavelopers.eventqr.features.auth.AuthFieldErrors
 import com.thedavelopers.eventqr.features.auth.login.LoginActivity
 
 /** Code step of the reset flow; the password is chosen on [NewPasswordActivity] once the code checks out. */
@@ -24,6 +25,8 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
     private lateinit var codeSentToText: TextView
     private lateinit var codeErrorText: TextView
     private lateinit var codeExpiredText: TextView
+    private lateinit var formError: AuthErrorStrip
+    private val fieldErrors = AuthFieldErrors()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,18 +45,17 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
         codeSentToText = findViewById(R.id.txtCodeSentTo)
         codeErrorText = findViewById(R.id.txtCodeError)
         codeExpiredText = findViewById(R.id.txtCodeExpired)
+        // One strip, two actions: its Retry re-runs Verify or Resend, so the strip persists which.
+        formError = AuthErrorStrip(findViewById(R.id.errorResetCode), mapOf(ACTION_VERIFY to ::submit, ACTION_RESEND to ::resend))
+        fieldErrors.register(FIELD_CODE, codeInput, codeErrorText)
 
-        verifyButton.setOnClickListener {
-            presenter.submitCode(codeInput.text.toString())
-        }
+        verifyButton.setOnClickListener { submit() }
 
         findViewById<Button>(R.id.btnGoToLogin).setOnClickListener {
             presenter.navigateToLogin()
         }
 
-        resendButton.setOnClickListener {
-            presenter.resendCode()
-        }
+        resendButton.setOnClickListener { resend() }
 
         presenter.start(intent.getStringExtra(EXTRA_EMAIL))
         if (savedInstanceState == null && intent.getBooleanExtra(EXTRA_CODE_EXPIRED, false)) {
@@ -61,11 +63,41 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
         }
     }
 
+    /** Every verify attempt, including a strip `Retry`, starts from a clean strip. */
+    private fun submit() {
+        formError.clear()
+        presenter.submitCode(codeInput.text.toString())
+    }
+
+    private fun resend() {
+        formError.clear()
+        presenter.resendCode()
+    }
+
     /** Re-entered from the password step; keep this instance so the resend cooldown and cap survive. */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
         if (intent.getBooleanExtra(EXTRA_CODE_EXPIRED, false)) presenter.onCodeExpired()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        fieldErrors.save(outState)
+        outState.putBoolean(STATE_CODE_EXPIRED, codeExpiredText.visibility == View.VISIBLE)
+        formError.save(outState)
+    }
+
+    // After super: restoring the typed text runs the edit watchers that clear an error.
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        fieldErrors.restore(savedInstanceState)
+        // Silent: the notice was announced when the code expired.
+        if (savedInstanceState.getBoolean(STATE_CODE_EXPIRED)) {
+            codeExpiredText.text = getString(R.string.reset_password_code_expired_resend)
+            codeExpiredText.visibility = View.VISIBLE
+        }
+        formError.restore(savedInstanceState)
     }
 
     override fun onDestroy() {
@@ -84,14 +116,15 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
 
     override fun showCodeError(message: String?) {
         codeExpiredText.visibility = View.GONE
-        codeInput.setInlineError(message, codeErrorText)
+        fieldErrors.raise(FIELD_CODE, message)
     }
 
     override fun showCodeExpired() {
         codeInput.text.clear()
-        codeInput.setInlineError(null, codeErrorText)
+        fieldErrors.set(FIELD_CODE, null)
         codeExpiredText.text = getString(R.string.reset_password_code_expired_resend)
         codeExpiredText.visibility = View.VISIBLE
+        codeExpiredText.announceForAccessibility(codeExpiredText.text)
         // The presenter re-enables Resend before this, so it can take focus.
         resendButton.requestFocus()
     }
@@ -114,6 +147,14 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
+    override fun showFormError(message: String, retryable: Boolean) {
+        formError.show(message, if (retryable) ACTION_VERIFY else null)
+    }
+
+    override fun showResendError(message: String, retryable: Boolean) {
+        formError.show(message, if (retryable) ACTION_RESEND else null)
+    }
+
     override fun navigateToNewPassword(email: String, code: String) {
         startActivity(
             Intent(this, NewPasswordActivity::class.java)
@@ -130,6 +171,11 @@ open class ResetPasswordActivity : AppCompatActivity(), ResetPasswordContract.Vi
     }
 
     companion object {
+        private const val ACTION_VERIFY = "verify"
+        private const val ACTION_RESEND = "resend"
+        private const val FIELD_CODE = "code"
+        private const val STATE_CODE_EXPIRED = "reset_code_expired"
+
         const val EXTRA_EMAIL = "extra_email"
 
         /** Set when the password step bounced back because the code expired; never carries the code itself. */

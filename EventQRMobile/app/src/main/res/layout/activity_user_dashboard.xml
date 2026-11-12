@@ -34,6 +34,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
+    <!-- §5.16: a partial failure over readable rows reports here, not in a toast. One sentence for
+         all four dashboard sources; Retry re-runs the whole load. -->
+    <include
+        android:id="@+id/errorDashboard"
+        layout="@layout/include_error_strip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/ui_gutter"
+        android:layout_marginTop="@dimen/space_md"
+        android:layout_marginEnd="@dimen/ui_gutter" />
+
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshDashboard"
         android:layout_width="match_parent"

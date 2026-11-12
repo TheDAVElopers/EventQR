@@ -115,6 +115,15 @@
                 android:inputType="textEmailAddress"
                 android:maxLines="1" />
 
+            <TextView
+                android:id="@+id/txtEmailError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
+
             <!-- ═════════ Password, with the ghost link on the label row ═════════ -->
             <LinearLayout
                 android:layout_width="match_parent"
@@ -162,6 +171,15 @@
                     android:maxLines="1" />
             </com.thedavelopers.eventqr.ui.components.PasswordTextInputLayout>
 
+            <TextView
+                android:id="@+id/txtPasswordError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
+
             <CheckBox
                 android:id="@+id/chkRememberMe"
                 style="@style/Widget.EventQR.Ui.CheckBox"
@@ -169,6 +187,14 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_lg"
                 android:text="@string/signin_remember_email" />
+
+            <!-- §5.16 form failure strip, directly above the primary; hidden until a failure. -->
+            <include
+                android:id="@+id/errorLogin"
+                layout="@layout/include_error_strip"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_md" />
 
             <Button
                 android:id="@+id/btnSignIn"

@@ -7,6 +7,11 @@ interface RewardsContract {
     interface View : AttendeeView {
         fun showBalance(balance: PointBalanceResponse)
         fun showError(message: String)
+        /**
+         * The balance read failed after the reward rendered. The reward body is intact, so this names
+         * only the balance; screens that cannot tell the reads apart fall back to [showError].
+         */
+        fun showBalanceError(message: String) = showError(message)
         /** [items] are the rewards the attendee can still claim; [claimedRewardIds] are the ones already REDEEMED. */
         fun renderRewards(items: List<RewardResponse>, claimedRewardIds: Set<String>)
         /**
