@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.events
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,15 +10,17 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,8 +30,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -46,8 +56,12 @@ import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.LocalGrid
 import com.thedavelopers.eventqr.ui.theme.LocalType
 import com.thedavelopers.eventqr.ui.theme.UiError
+import com.thedavelopers.eventqr.ui.theme.UiErrorContainer
 import com.thedavelopers.eventqr.ui.theme.UiHairline
+import com.thedavelopers.eventqr.ui.theme.UiOnErrorContainer
+import com.thedavelopers.eventqr.ui.theme.UiOnSuccessContainer
 import com.thedavelopers.eventqr.ui.theme.UiPrimary
+import com.thedavelopers.eventqr.ui.theme.UiSuccessContainer
 import com.thedavelopers.eventqr.ui.theme.UiSurface
 import com.thedavelopers.eventqr.ui.theme.UiSurfaceSunken
 import com.thedavelopers.eventqr.ui.theme.UiTextPrimary
@@ -69,10 +83,11 @@ internal fun requesterDisplay(
     requesterName: String?,
     contactEmail: String?,
     requesterUserId: UUID?,
+    unknownLabel: String,
 ): String {
     requesterName?.takeIf { it.isNotBlank() }?.let { return it }
     contactEmail?.takeIf { it.isNotBlank() }?.let { return it }
-    return "Unknown requester"
+    return unknownLabel
 }
 
 /**
@@ -80,8 +95,9 @@ internal fun requesterDisplay(
  *
  * The host activity owns the top bar (§5.8) through `setContentWithDetailHeader`, so this screen
  * draws no header and no Scaffold. The request is a printed spec table: `overline` label left,
- * value right, 1dp hairlines, no icon rows, no nested cards, no elevation. Actions use the shared
- * `UiButton` family - approve is primary, reject is the outlined destructive trigger (§5.1).
+ * value right, 1dp hairlines, no icon rows, no nested cards, no elevation. For an admin on a
+ * pending request the decision pair is a 72dp sticky footer outside the scroll - primary Approve
+ * last, destructive-outline Reject (§5.1, §6.7).
  */
 @Composable
 fun EventRequestDetailScreen(
@@ -92,6 +108,8 @@ fun EventRequestDetailScreen(
     onRetryClick: () -> Unit,
     onApproveClick: ((remarks: String?) -> Unit)? = null,
     onRejectClick: ((remarks: String?) -> Unit)? = null,
+    decisionMessage: String? = null,
+    decisionIsError: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val grid = LocalGrid.current
@@ -105,12 +123,7 @@ fun EventRequestDetailScreen(
             .background(com.thedavelopers.eventqr.ui.theme.UiBackground),
     ) {
         when {
-            isLoading && request == null -> Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator(color = UiPrimary, strokeWidth = grid.s2)
-            }
+            isLoading && request == null -> DetailSkeleton()
 
             errorMessage != null && request == null -> EmptyState(
                 icon = AppIcons.Error,
@@ -121,146 +134,140 @@ fun EventRequestDetailScreen(
                 primaryAction = true,
             )
 
-            request != null -> Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = grid.gutter),
-            ) {
-                // ── Identity: name, status badge, who and when ──
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = grid.s20),
-                    verticalAlignment = Alignment.Top,
+            request != null -> Column(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = grid.gutter),
                 ) {
-                    Text(
-                        text = request.eventName.ifBlank { stringResource(R.string.common_untitled_event) },
-                        style = type.titleL,
-                        color = UiTextPrimary,
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Spacer(modifier = Modifier.size(grid.s8))
-                    StatusBadge(status = eventRequestBadgeStatus(request.status), showIcon = false)
-                }
+                    // ── Identity: name, status badge, who and when ──
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = grid.s20),
+                        verticalAlignment = Alignment.Top,
+                    ) {
+                        Text(
+                            text = request.eventName.ifBlank { stringResource(R.string.common_untitled_event) },
+                            style = type.titleL,
+                            color = UiTextPrimary,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Spacer(modifier = Modifier.size(grid.s8))
+                        StatusBadge(status = eventRequestBadgeStatus(request.status), showIcon = false)
+                    }
 
-                if (isAdmin) {
+                    if (isAdmin) {
+                        Text(
+                            text = stringResource(
+                                R.string.ui_request_detail_submitted_by,
+                                requesterDisplay(
+                                    request.requesterName,
+                                    request.contactEmail,
+                                    request.requesterUserId,
+                                    stringResource(R.string.ui_request_detail_unknown_requester),
+                                ),
+                            ),
+                            style = type.bodyS,
+                            color = UiTextSecondary,
+                            modifier = Modifier.padding(top = grid.s8),
+                        )
+                    }
+
                     Text(
                         text = stringResource(
-                            R.string.ui_request_detail_submitted_by,
-                            requesterDisplay(request.requesterName, request.contactEmail, request.requesterUserId),
+                            R.string.ui_request_detail_submitted_on,
+                            DateFormatters.formatEventDate(request.createdAt),
                         ),
-                        style = type.bodyS,
+                        style = type.micro,
                         color = UiTextSecondary,
-                        modifier = Modifier.padding(top = grid.s8),
+                        modifier = Modifier.padding(top = grid.s4),
                     )
-                }
 
-                Text(
-                    text = stringResource(
-                        R.string.ui_request_detail_submitted_on,
-                        DateFormatters.formatEventDate(request.createdAt),
-                    ),
-                    style = type.micro,
-                    color = UiTextSecondary,
-                    modifier = Modifier.padding(top = grid.s4),
-                )
-
-                if (request.status == EventRequestStatus.APPROVED || request.status == EventRequestStatus.REJECTED) {
-                    val approval = request.status == EventRequestStatus.APPROVED
-                    NoteBlock(
-                        title = stringResource(
-                            if (approval) R.string.ui_request_detail_approval_note else R.string.ui_request_detail_rejection_note,
-                        ),
-                        message = request.adminRemarks?.takeIf { it.isNotBlank() }
-                            ?: stringResource(R.string.ui_request_detail_no_note),
-                        tone = if (approval) NoteTone.INFO else NoteTone.ERROR,
-                        modifier = Modifier.padding(top = grid.s16),
-                    )
-                }
-
-                // ── Description ──
-                SectionEyebrow(stringResource(R.string.ui_request_detail_description))
-                Text(
-                    text = request.eventDescription?.takeIf { it.isNotBlank() }
-                        ?: stringResource(R.string.ui_request_detail_no_description),
-                    style = type.body,
-                    color = UiTextPrimary,
-                )
-
-                // ── The spec table: every row is label + value + hairline ──
-                SectionEyebrow(stringResource(R.string.ui_request_detail_duration))
-                SpecRow(
-                    label = stringResource(R.string.ui_request_detail_duration),
-                    value = listOf(request.startDateTime, request.endDateTime)
-                        .joinToString(" – ") { it?.let(DateFormatters::formatEventDateTime) ?: "—" },
-                    showLabel = false,
-                )
-                if (request.registrationStartDateTime != null || request.registrationEndDateTime != null) {
-                    SpecRow(
-                        label = stringResource(R.string.ui_request_detail_registration),
-                        value = listOf(request.registrationStartDateTime, request.registrationEndDateTime)
-                            .joinToString(" – ") { it?.let(DateFormatters::formatEventDateTime) ?: "—" },
-                    )
-                }
-                request.eventCategory?.takeIf { it.isNotBlank() }?.let { category ->
-                    SpecRow(label = stringResource(R.string.ui_request_detail_category), value = category)
-                }
-                request.targetAudience?.takeIf { it.isNotBlank() }?.let { audience ->
-                    SpecRow(label = stringResource(R.string.ui_request_detail_audience), value = audience)
-                }
-                SpecRow(
-                    label = stringResource(R.string.ui_request_detail_venue),
-                    value = request.venue?.takeIf { it.isNotBlank() }
-                        ?: stringResource(R.string.ui_request_detail_not_available),
-                )
-                SpecRow(
-                    label = stringResource(R.string.ui_request_detail_capacity),
-                    value = request.capacity.toString(),
-                )
-                if (isAdmin && !request.contactEmail.isNullOrBlank()) {
-                    SpecRow(label = stringResource(R.string.ui_request_detail_contact_email), value = request.contactEmail)
-                }
-                if (isAdmin && !request.contactNumber.isNullOrBlank()) {
-                    SpecRow(label = stringResource(R.string.ui_request_detail_contact_phone), value = request.contactNumber)
-                }
-                if (!request.reasonForRequest.isNullOrBlank()) {
-                    SectionEyebrow(stringResource(R.string.ui_request_detail_reason))
-                    Text(text = request.reasonForRequest, style = type.body, color = UiTextPrimary)
-                }
-
-                // ── Actions ──
-                if (isAdmin) {
-                    Spacer(modifier = Modifier.height(grid.s24))
-                    if (request.status == EventRequestStatus.PENDING) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(grid.s12),
-                        ) {
-                            UiButton(
-                                text = stringResource(R.string.ui_request_detail_reject),
-                                onClick = {
-                                    remarksText = ""
-                                    showConfirmDialog = ConfirmAction.REJECT
-                                },
-                                modifier = Modifier.weight(1f),
-                                tone = UiButtonTone.DESTRUCTIVE,
-                                inline = true,
-                            )
-                            UiButton(
-                                text = stringResource(R.string.ui_request_detail_approve),
-                                onClick = {
-                                    remarksText = ""
-                                    showConfirmDialog = ConfirmAction.APPROVE
-                                },
-                                modifier = Modifier.weight(1f),
-                                inline = true,
-                            )
-                        }
+                    // §6.8: a decision result stays in the flow; a toast would leave the screen silent.
+                    if (!decisionMessage.isNullOrBlank()) {
+                        DecisionStrip(message = decisionMessage, isError = decisionIsError)
                     }
+
+                    if (request.status == EventRequestStatus.APPROVED || request.status == EventRequestStatus.REJECTED) {
+                        val approval = request.status == EventRequestStatus.APPROVED
+                        NoteBlock(
+                            title = stringResource(
+                                if (approval) R.string.ui_request_detail_approval_note else R.string.ui_request_detail_rejection_note,
+                            ),
+                            message = request.adminRemarks?.takeIf { it.isNotBlank() }
+                                ?: stringResource(R.string.ui_request_detail_no_note),
+                            tone = if (approval) NoteTone.INFO else NoteTone.ERROR,
+                            modifier = Modifier.padding(top = grid.s16),
+                        )
+                    }
+
+                    // ── Description ──
+                    SectionEyebrow(stringResource(R.string.ui_request_detail_description))
+                    Text(
+                        text = request.eventDescription?.takeIf { it.isNotBlank() }
+                            ?: stringResource(R.string.ui_request_detail_no_description),
+                        style = type.body,
+                        color = UiTextPrimary,
+                    )
+
+                    // ── The spec table: every row is label + value + hairline ──
+                    SectionEyebrow(stringResource(R.string.ui_request_detail_duration))
+                    SpecRow(
+                        label = stringResource(R.string.ui_request_detail_duration),
+                        value = listOf(request.startDateTime, request.endDateTime)
+                            .joinToString(" – ") { it?.let(DateFormatters::formatEventDateTime) ?: "—" },
+                        showLabel = false,
+                    )
+                    if (request.registrationStartDateTime != null || request.registrationEndDateTime != null) {
+                        SpecRow(
+                            label = stringResource(R.string.ui_request_detail_registration),
+                            value = listOf(request.registrationStartDateTime, request.registrationEndDateTime)
+                                .joinToString(" – ") { it?.let(DateFormatters::formatEventDateTime) ?: "—" },
+                        )
+                    }
+                    request.eventCategory?.takeIf { it.isNotBlank() }?.let { category ->
+                        SpecRow(label = stringResource(R.string.ui_request_detail_category), value = category)
+                    }
+                    request.targetAudience?.takeIf { it.isNotBlank() }?.let { audience ->
+                        SpecRow(label = stringResource(R.string.ui_request_detail_audience), value = audience)
+                    }
+                    SpecRow(
+                        label = stringResource(R.string.ui_request_detail_venue),
+                        value = request.venue?.takeIf { it.isNotBlank() }
+                            ?: stringResource(R.string.ui_request_detail_not_available),
+                    )
+                    SpecRow(
+                        label = stringResource(R.string.ui_request_detail_capacity),
+                        value = request.capacity.toString(),
+                    )
+                    if (isAdmin && !request.contactEmail.isNullOrBlank()) {
+                        SpecRow(label = stringResource(R.string.ui_request_detail_contact_email), value = request.contactEmail)
+                    }
+                    if (isAdmin && !request.contactNumber.isNullOrBlank()) {
+                        SpecRow(label = stringResource(R.string.ui_request_detail_contact_phone), value = request.contactNumber)
+                    }
+                    if (!request.reasonForRequest.isNullOrBlank()) {
+                        SectionEyebrow(stringResource(R.string.ui_request_detail_reason))
+                        Text(text = request.reasonForRequest, style = type.body, color = UiTextPrimary)
+                    }
+
+                    Spacer(modifier = Modifier.height(grid.s32))
                 }
 
-                Spacer(modifier = Modifier.height(grid.s32))
+                if (isAdmin && request.status == EventRequestStatus.PENDING) {
+                    ApprovalFooter(
+                        onReject = {
+                            remarksText = ""
+                            showConfirmDialog = ConfirmAction.REJECT
+                        },
+                        onApprove = {
+                            remarksText = ""
+                            showConfirmDialog = ConfirmAction.APPROVE
+                        },
+                    )
+                }
             }
         }
     }
@@ -282,6 +289,119 @@ fun EventRequestDetailScreen(
             },
         )
     }
+}
+
+/**
+ * First load (§5.11): bars in the loaded geometry, never a centred spinner. One TalkBack node
+ * announces "Loading"; the bars themselves are decorative.
+ */
+@Composable
+private fun DetailSkeleton() {
+    val grid = LocalGrid.current
+    val loading = stringResource(R.string.ui_skeleton_loading)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .semantics(mergeDescendants = true) { contentDescription = loading }
+            .padding(horizontal = grid.gutter, vertical = grid.s20),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.7f)
+                .height(grid.skeletonBarHeight)
+                .background(UiSurfaceSunken),
+        )
+        Spacer(modifier = Modifier.height(grid.s12))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.4f)
+                .height(grid.skeletonBarHeight)
+                .background(UiSurfaceSunken),
+        )
+        Spacer(modifier = Modifier.height(grid.s24))
+        repeat(5) {
+            Row(
+                modifier = Modifier.fillMaxWidth().height(grid.metricRowHeight),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(0.35f)
+                        .height(grid.skeletonBarHeight)
+                        .background(UiSurfaceSunken),
+                )
+                Spacer(modifier = Modifier.weight(0.3f))
+                Box(
+                    modifier = Modifier
+                        .weight(0.35f)
+                        .height(grid.skeletonBarHeight)
+                        .background(UiSurfaceSunken),
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(dimensionResource(R.dimen.stroke_hairline))
+                    .background(UiHairline),
+            )
+        }
+    }
+}
+
+/** 72dp sticky footer (§6.7): destructive-outline Reject, 8dp gap, primary Approve last. */
+@Composable
+private fun ApprovalFooter(
+    onReject: () -> Unit,
+    onApprove: () -> Unit,
+) {
+    val grid = LocalGrid.current
+    Column(modifier = Modifier.fillMaxWidth().background(UiSurface)) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(dimensionResource(R.dimen.stroke_hairline))
+                .background(UiHairline),
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(dimensionResource(R.dimen.ui_footer_height))
+                .padding(horizontal = grid.gutter),
+            horizontalArrangement = Arrangement.spacedBy(grid.s8),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            UiButton(
+                text = stringResource(R.string.ui_request_detail_reject),
+                onClick = onReject,
+                modifier = Modifier.weight(1f),
+                tone = UiButtonTone.DESTRUCTIVE,
+            )
+            UiButton(
+                text = stringResource(R.string.ui_request_detail_approve),
+                onClick = onApprove,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+/** In-flow decision result with a polite live region, so the change is announced without a toast. */
+@Composable
+private fun DecisionStrip(message: String, isError: Boolean) {
+    val grid = LocalGrid.current
+    val type = LocalType.current
+    Text(
+        text = message,
+        style = type.bodyS,
+        color = if (isError) UiOnErrorContainer else UiOnSuccessContainer,
+        modifier = Modifier
+            .padding(top = grid.s16)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(grid.radiusCard))
+            .background(if (isError) UiErrorContainer else UiSuccessContainer)
+            .padding(grid.s12)
+            .semantics { liveRegion = LiveRegionMode.Polite },
+    )
 }
 
 @Composable
@@ -330,7 +450,7 @@ private fun SpecRow(label: String, value: String, showLabel: Boolean = true) {
                 modifier = Modifier.padding(start = grid.s16),
             )
         }
-        Box(modifier = Modifier.fillMaxWidth().height(androidx.compose.ui.res.dimensionResource(R.dimen.stroke_hairline)).background(UiHairline))
+        Box(modifier = Modifier.fillMaxWidth().height(dimensionResource(R.dimen.stroke_hairline)).background(UiHairline))
     }
 }
 
@@ -357,8 +477,8 @@ private fun NoteBlock(
             ink = com.thedavelopers.eventqr.ui.theme.UiOnInfoContainer
         }
         NoteTone.ERROR -> {
-            fill = com.thedavelopers.eventqr.ui.theme.UiErrorContainer
-            ink = com.thedavelopers.eventqr.ui.theme.UiOnErrorContainer
+            fill = UiErrorContainer
+            ink = UiOnErrorContainer
         }
     }
 
@@ -401,7 +521,13 @@ private fun ConfirmDialog(
             ConfirmAction.REJECT -> R.string.ui_request_detail_confirm_reject_body
         },
     )
-    val confirmsRemarks = action == ConfirmAction.APPROVE || action == ConfirmAction.REJECT
+    // The commit names its own verb; it never reuses the question as its label.
+    val commitLabel = stringResource(
+        when (action) {
+            ConfirmAction.APPROVE -> R.string.ui_request_detail_approve
+            ConfirmAction.REJECT -> R.string.ui_request_detail_reject
+        },
+    )
     val commitColor = if (action == ConfirmAction.REJECT) UiError else UiPrimary
 
     AlertDialog(
@@ -412,38 +538,14 @@ private fun ConfirmDialog(
         text = {
             Column {
                 Text(text = body, style = type.body, color = UiTextSecondary)
-                if (confirmsRemarks) {
-                    Spacer(modifier = Modifier.height(grid.s12))
-                    androidx.compose.material3.OutlinedTextField(
-                        value = remarks,
-                        onValueChange = onRemarksChange,
-                        singleLine = false,
-                        maxLines = 3,
-                        shape = RoundedCornerShape(grid.radiusButton),
-                        placeholder = {
-                            Text(
-                                text = stringResource(R.string.ui_request_detail_remarks),
-                                style = type.bodyS,
-                                color = UiTextSecondary,
-                            )
-                        },
-                        textStyle = type.body,
-                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = ImeAction.Done),
-                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = UiSurfaceSunken,
-                            unfocusedContainerColor = UiSurfaceSunken,
-                            focusedBorderColor = UiPrimary,
-                            unfocusedBorderColor = com.thedavelopers.eventqr.ui.theme.UiOutlineInteractive,
-                        ),
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
+                Spacer(modifier = Modifier.height(grid.s12))
+                RemarksField(value = remarks, onValueChange = onRemarksChange)
             }
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
                 Text(
-                    text = title.trimEnd('?'),
+                    text = commitLabel,
                     style = type.label,
                     color = commitColor,
                     fontWeight = FontWeight.SemiBold,
@@ -458,3 +560,55 @@ private fun ConfirmDialog(
     )
 }
 
+/** `bg_ui_field` language in Compose: sunken 4dp-radius box, no outline, 2dp focus stroke. */
+@Composable
+private fun RemarksField(
+    value: String,
+    onValueChange: (String) -> Unit,
+) {
+    val grid = LocalGrid.current
+    val type = LocalType.current
+    val shape = RoundedCornerShape(grid.radiusButton)
+    var focused by remember { mutableStateOf(false) }
+    val remarksLabel = stringResource(R.string.ui_request_detail_remarks)
+
+    BasicTextField(
+        value = value,
+        onValueChange = onValueChange,
+        textStyle = type.body.copy(color = UiTextPrimary),
+        cursorBrush = SolidColor(UiPrimary),
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        modifier = Modifier
+            .fillMaxWidth()
+            .onFocusChanged { focused = it.isFocused }
+            // The placeholder disappears once typed; the field still needs a spoken name.
+            .semantics { contentDescription = remarksLabel },
+        decorationBox = { innerTextField ->
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = dimensionResource(R.dimen.ui_field_multiline_height))
+                    .clip(shape)
+                    .background(UiSurfaceSunken)
+                    .then(
+                        if (focused) {
+                            Modifier.border(dimensionResource(R.dimen.stroke_focus), UiPrimary, shape)
+                        } else {
+                            Modifier
+                        },
+                    )
+                    .padding(grid.cardPadding),
+                contentAlignment = Alignment.TopStart,
+            ) {
+                if (value.isEmpty()) {
+                    Text(
+                        text = remarksLabel,
+                        style = type.bodyS,
+                        color = UiTextSecondary,
+                    )
+                }
+                innerTextField()
+            }
+        },
+    )
+}

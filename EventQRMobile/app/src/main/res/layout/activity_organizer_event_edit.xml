@@ -164,7 +164,7 @@
 
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/stroke_focus"
+                    android:layout_height="@dimen/stroke_hairline"
                     android:layout_marginTop="@dimen/space_24"
                     android:background="@drawable/divider_perforation_light"
                     android:importantForAccessibility="no"
@@ -231,7 +231,7 @@
 
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/stroke_focus"
+                    android:layout_height="@dimen/stroke_hairline"
                     android:layout_marginTop="@dimen/space_24"
                     android:background="@drawable/divider_perforation_light"
                     android:importantForAccessibility="no"
@@ -326,7 +326,7 @@
 
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/stroke_focus"
+                    android:layout_height="@dimen/stroke_hairline"
                     android:layout_marginTop="@dimen/space_24"
                     android:background="@drawable/divider_perforation_light"
                     android:importantForAccessibility="no"
@@ -373,7 +373,7 @@
 
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/stroke_focus"
+                    android:layout_height="@dimen/stroke_hairline"
                     android:layout_marginTop="@dimen/space_24"
                     android:background="@drawable/divider_perforation_light"
                     android:importantForAccessibility="no"

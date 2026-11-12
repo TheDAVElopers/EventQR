@@ -3,7 +3,6 @@ package com.thedavelopers.eventqr.features.staff.details
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.VisibleForTesting
@@ -29,6 +28,7 @@ import com.thedavelopers.eventqr.features.staff.StaffScreenExtras
 import com.thedavelopers.eventqr.features.staff.orUnknown
 import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
 import com.thedavelopers.eventqr.features.transactions.TransactionLogAdapter
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import com.thedavelopers.eventqr.ui.components.RegistrationBadges
 import com.thedavelopers.eventqr.ui.theme.applyEventQrBottomInsetPadding
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
@@ -113,14 +113,29 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
     @VisibleForTesting
     internal open fun newRepository(): StaffRepository = StaffRepository(this)
 
+    private fun showStatus(message: CharSequence?) {
+        val status = findViewById<TextView>(R.id.txtDetailStatus) ?: return
+        if (message.isNullOrBlank()) {
+            status.visibility = View.GONE
+            return
+        }
+        status.text = message
+        status.visibility = View.VISIBLE
+    }
+
     private fun loadDetails() {
         if (eventId.isBlank() || attendeeId.isBlank()) {
-            Toast.makeText(this, this.getString(R.string.staff_attendee_details_missing_attendee_context), Toast.LENGTH_SHORT).show()
-            finish()
+            // No context to load: report it in flow instead of toasting and closing the screen.
+            findViewById<EventQrEmptyState>(R.id.errorAttendeeDetails).apply {
+                show(getString(R.string.ui_staff_attendee_details_load_failed), getString(R.string.staff_attendee_details_missing_attendee_context))
+                setAction(null)
+                visibility = View.VISIBLE
+            }
             return
         }
 
-        findViewById<ProgressBar>(R.id.progressAttendeeDetails).visibility = View.VISIBLE
+        findViewById<View>(R.id.progressAttendeeDetails).visibility = View.VISIBLE
+        findViewById<View>(R.id.errorAttendeeDetails).visibility = View.GONE
         lifecycleScope.launch {
             loadPrintPermission()
             when (val attendeeResult = repository.getAttendeeByEvent(eventId, attendeeId)) {
@@ -129,11 +144,22 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
                     loadTransactions()
                     loadPrintLogs()
                 }
-                is NetworkResult.Error -> Toast.makeText(this@StaffAttendeeDetailsActivity, attendeeResult.message, Toast.LENGTH_SHORT).show()
+                is NetworkResult.Error -> showLoadError(attendeeResult.message)
                 NetworkResult.Loading -> Unit
             }
-            findViewById<ProgressBar>(R.id.progressAttendeeDetails).visibility = View.GONE
+            findViewById<View>(R.id.progressAttendeeDetails).visibility = View.GONE
         }
+    }
+
+    /** Failure reports in flow with Retry; the screen stays put instead of finishing or toasting. */
+    private fun showLoadError(message: String) {
+        val state = findViewById<EventQrEmptyState>(R.id.errorAttendeeDetails)
+        state.show(
+            getString(R.string.ui_staff_attendee_details_load_failed),
+            message.ifBlank { getString(R.string.ui_staff_load_failed_body) },
+        )
+        state.setAction(getString(R.string.common_retry)) { loadDetails() }
+        state.visibility = View.VISIBLE
     }
 
     private suspend fun loadPrintPermission() {
@@ -306,20 +332,21 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
     @VisibleForTesting
     internal fun printId() {
         if (eventId.isBlank() || attendeeId.isBlank()) {
-            Toast.makeText(this, this.getString(R.string.staff_attendee_details_attendee_context_is_required_for_pri), Toast.LENGTH_SHORT).show()
+            showStatus(this.getString(R.string.staff_attendee_details_attendee_context_is_required_for_pri))
             return
         }
         if (!printPermissionKnown) {
             val message = if (printPermissionLoading) R.string.staff_print_permission_checking else R.string.staff_print_permission_check_failed
-            Toast.makeText(this, this.getString(message), Toast.LENGTH_LONG).show()
+            showStatus(this.getString(message))
             return
         }
         if (!canPrintAllowed) {
-            Toast.makeText(this, this.getString(R.string.staff_print_id_permission_required), Toast.LENGTH_LONG).show()
+            showStatus(this.getString(R.string.staff_print_id_permission_required))
             return
         }
 
-        findViewById<ProgressBar>(R.id.progressAttendeeDetails).visibility = View.VISIBLE
+        showStatus(null)
+        findViewById<View>(R.id.progressAttendeeDetails).visibility = View.VISIBLE
         lifecycleScope.launch {
             val apiService = com.thedavelopers.eventqr.core.api.ApiClient.getService(this@StaffAttendeeDetailsActivity)
 
@@ -338,7 +365,7 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
             }
 
             onPrintResult(requestIdPrint(), visibleFields, qrValue)
-            findViewById<ProgressBar>(R.id.progressAttendeeDetails).visibility = View.GONE
+            findViewById<View>(R.id.progressAttendeeDetails).visibility = View.GONE
         }
     }
 
@@ -374,7 +401,7 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
                 } else {
                     result.message
                 }
-                Toast.makeText(this@StaffAttendeeDetailsActivity, message, Toast.LENGTH_LONG).show()
+                showStatus(message)
                 loadPrintLogs()
             }
             NetworkResult.Loading -> Unit
@@ -402,13 +429,18 @@ open class StaffAttendeeDetailsActivity : AppCompatActivity() {
             if (confirmedAll && !isFinishing && !isDestroyed) loadPrintLogs()
         }
         if (isFinishing || isDestroyed) return
-        if (outcome == AndroidIdPrinter.PrintOutcome.SENT) showPrintedState(true)
         val message = when (outcome) {
             AndroidIdPrinter.PrintOutcome.SENT -> serverMessage
             AndroidIdPrinter.PrintOutcome.CANCELLED -> getString(R.string.staff_print_cancelled_toast)
             AndroidIdPrinter.PrintOutcome.FAILED -> getString(R.string.staff_print_job_failed_message)
         }
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+        if (outcome == AndroidIdPrinter.PrintOutcome.SENT) {
+            showPrintedState(true)
+            // A sent job is a success: the message stays a Toast; failures land inline.
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+        } else {
+            showStatus(message)
+        }
     }
 
     private fun showPrintedState(printed: Boolean) {

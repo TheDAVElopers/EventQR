@@ -26,6 +26,7 @@ import com.thedavelopers.eventqr.features.admin.logs.AuditLogRowBinder
 import com.thedavelopers.eventqr.features.admin.model.dto.AdminPendingPreview
 import com.thedavelopers.eventqr.features.admin.model.dto.AdminStatsResponse
 import com.thedavelopers.eventqr.features.audit.model.dto.AuditLogResponse
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import com.thedavelopers.eventqr.ui.components.ListRowBinder
 import com.thedavelopers.eventqr.ui.components.PassHeadBinder
 import com.thedavelopers.eventqr.ui.components.PassHeadModel
@@ -51,7 +52,7 @@ class AdminDashboardActivity : AppCompatActivity() {
     private lateinit var passHeadSkeleton: View
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var skeletonDashboard: View
-    private lateinit var layoutDashboardError: View
+    private lateinit var layoutDashboardError: EventQrEmptyState
     private lateinit var pendingRowsContainer: android.widget.LinearLayout
     private lateinit var textNoPending: TextView
     private lateinit var btnViewAllRequests: TextView
@@ -170,7 +171,7 @@ class AdminDashboardActivity : AppCompatActivity() {
 
     private fun bindActions() {
         btnViewAllRequests.setOnClickListener { openRequests() }
-        findViewById<View>(R.id.btnDashboardRetry).setOnClickListener { loadDashboard(showSkeleton = true) }
+        layoutDashboardError.setAction(getString(R.string.common_retry)) { loadDashboard(showSkeleton = true) }
     }
 
     private fun setupSwipeRefresh() {

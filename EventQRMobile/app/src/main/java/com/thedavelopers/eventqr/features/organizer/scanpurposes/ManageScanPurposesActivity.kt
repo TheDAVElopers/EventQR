@@ -13,13 +13,16 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.ScanPurposeCode
@@ -40,6 +43,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
     private lateinit var repository: OrganizerRepository
     private lateinit var selectedEvent: OrganizerMvpEvent
     private lateinit var purposeHost: LinearLayout
+    private lateinit var statusLine: TextView
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private var scanPurposes: List<OrganizerMvpScanPurpose> = emptyList()
     private var loadRequestSerial: Int = 0
@@ -83,6 +87,13 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
                 onRefresh = { loadPurposes(showInitialLoading = false) }
             )
             swipeRefresh = shell.swipeRefreshLayout
+            // One inline status line above the list: every failure lands here, never in a Toast.
+            statusLine = styledText("", R.dimen.ui_type_body_s, false, color(R.color.ui_error)).apply {
+                visibility = View.GONE
+                accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+                setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_sm))
+            }
+            shell.content.addView(statusLine)
             purposeHost = LinearLayout(this@ManageScanPurposesActivity).apply {
                 id = com.thedavelopers.eventqr.R.id.msp_purpose_host
                 orientation = LinearLayout.VERTICAL
@@ -93,10 +104,21 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         }
     }
 
+    private fun showStatus(message: CharSequence?) {
+        if (message.isNullOrBlank()) return
+        statusLine.text = message
+        statusLine.visibility = View.VISIBLE
+        // A row action can fail while the list is scrolled down; the line is above the list.
+        var parent = statusLine.parent
+        while (parent != null && parent !is ScrollView) parent = parent.parent
+        (parent as? ScrollView)?.scrollTo(0, 0)
+    }
+
     private fun loadPurposes(showInitialLoading: Boolean = true) {
         refreshCount += 1
         val requestSerial = ++loadRequestSerial
         if (showInitialLoading && !swipeRefresh.isRefreshing) {
+            statusLine.visibility = View.GONE
             purposeHost.removeAllViews()
             purposeHost.addView(loadingState(getString(R.string.manage_scan_purposes_loading)))
         }
@@ -126,9 +148,16 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
                 )
             }
             swipeRefresh.isRefreshing = false
+            if (source.source == OrganizerMvpDataSource.ERROR) {
+                // The failure owns the slot: an empty state would claim "no purposes" for a list
+                // that was never read. Show the error line only.
+                purposeHost.removeAllViews()
+                source.message?.let { showStatus(it) }
+                return@launch
+            }
             renderPurposes(scanPurposes)
             source.message?.let {
-                Toast.makeText(this@ManageScanPurposesActivity, it, Toast.LENGTH_SHORT).show()
+                showStatus(it)
             }
         }
     }
@@ -183,7 +212,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
             val purposeId = purpose.id?.takeIf { it.isNotBlank() }
             if (purposeId == null) {
                 Log.w(persistenceTag, "eventId=${selectedEvent.id} toggleSkipped reason=missingPurposeId")
-                Toast.makeText(this@ManageScanPurposesActivity, this@ManageScanPurposesActivity.getString(R.string.manage_scan_purposes_unable_to_update_unsaved_scan_purpos), Toast.LENGTH_SHORT).show()
+                showStatus(this@ManageScanPurposesActivity.getString(R.string.manage_scan_purposes_unable_to_update_unsaved_scan_purpos))
                 return@launch
             }
             Log.d(TAG, "eventId=${selectedEvent.id} purposeId=$purposeId toggleValue=$enabled")
@@ -204,7 +233,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
                     toggle?.setOnCheckedChangeListener { _, checked ->
                         togglePurpose(purpose, checked, toggle)
                     }
-                    Toast.makeText(this@ManageScanPurposesActivity, getString(R.string.manage_scan_purposes_failed_update, result.message), Toast.LENGTH_SHORT).show()
+                    showStatus(getString(R.string.manage_scan_purposes_failed_update, result.message))
                 }
                 NetworkResult.Loading -> Log.d(TAG, "eventId=${selectedEvent.id} purposeId=${purpose.id} toggleApiResult=LOADING")
             }
@@ -215,7 +244,6 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         val isEdit = purpose != null
         val dialogView = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dimenPx(R.dimen.space_20), dimenPx(R.dimen.space_20), dimenPx(R.dimen.space_20), dimenPx(R.dimen.space_20))
         }
 
         var selectedType = purposeTypes.firstOrNull { it.code == purpose?.code }
@@ -306,61 +334,80 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         dialogView.addView(duplicateHelper)
         dialogView.addView(trackingOnlyCheck)
 
-        val dialogBuilder = AlertDialog.Builder(this)
-            .setTitle(getString(if (isEdit) R.string.manage_scan_purposes_edit_scan_purpose else R.string.manage_scan_purposes_add_scan_purpose))
-            .setView(dialogView)
-            .setPositiveButton(getString(R.string.manage_scan_purposes_save), null)
-            .setNegativeButton(getString(R.string.request_event_cancel), null)
-        if (isEdit) {
-            dialogBuilder.setNeutralButton(getString(R.string.admin_account_management_delete), null)
-        }
-        val dialog = dialogBuilder.create()
+        // §5.12: one dialog base, title / form / right-aligned text actions. Delete stays reachable from
+        // the edit dialog (it has no other home) but is pushed to the start and tinted destructive.
+        val root = layoutInflater.inflate(R.layout.dialog_base, null, false) as LinearLayout
+        root.findViewById<TextView>(R.id.dialogTitle).setText(
+            if (isEdit) R.string.manage_scan_purposes_edit_scan_purpose else R.string.manage_scan_purposes_add_scan_purpose,
+        )
+        root.findViewById<View>(R.id.dialogBody).visibility = View.GONE
+        val actions = root.findViewById<LinearLayout>(R.id.dialogActions)
+        root.addView(dialogView, root.indexOfChild(actions))
+        val dialog = AlertDialog.Builder(this).setView(root).create()
 
-        dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val name = nameInput.text.toString().trim()
-                val description = descInput.text.toString().trim()
-                val trackingOnly = trackingOnlyCheck.isChecked
-                val points = pointsInput.text.toString().trim().toIntOrNull()?.coerceAtLeast(0) ?: 0
-                if (name.isBlank()) {
-                    nameInput.error = getString(R.string.manage_scan_purposes_scan_purpose_name_is_required)
-                    return@setOnClickListener
-                }
-                val effectivePoints = if (trackingOnly) 0 else points
-                val pointsEnabled = !trackingOnly && effectivePoints > 0
-                val requestPurpose = (purpose ?: OrganizerMvpScanPurpose(
-                    label = "",
-                    description = "",
-                    enabled = true,
-                    duplicateRule = "",
-                    trackingOnly = false,
-                    pointsEnabled = false,
-                    pointsValue = 0,
-                    requiredSelectionLabel = "",
-                )).copy(
-                    label = name,
-                    description = description.ifBlank { defaultDescription(name, selectedType) },
-                    code = selectedType.code,
-                    pointsValue = effectivePoints,
-                    pointsEnabled = pointsEnabled,
-                    trackingOnly = trackingOnly,
-                    duplicateRule = getString(if (duplicateCheck.isChecked) R.string.manage_scan_purposes_allow_duplicates else R.string.manage_scan_purposes_no_duplicates_2),
-                    requiredSelectionLabel = selectedType.selectionLabel,
-                )
-                savePurpose(requestPurpose)
-                dialog.dismiss()
+        val positive = root.findViewById<Button>(R.id.dialogPositive)
+        positive.setText(R.string.manage_scan_purposes_save)
+        positive.alpha = 1f
+        positive.setOnClickListener {
+            val name = nameInput.text.toString().trim()
+            val description = descInput.text.toString().trim()
+            val trackingOnly = trackingOnlyCheck.isChecked
+            val points = pointsInput.text.toString().trim().toIntOrNull()?.coerceAtLeast(0) ?: 0
+            if (name.isBlank()) {
+                nameInput.error = getString(R.string.manage_scan_purposes_scan_purpose_name_is_required)
+                nameInput.requestFocus()
+                return@setOnClickListener
             }
+            val effectivePoints = if (trackingOnly) 0 else points
+            val pointsEnabled = !trackingOnly && effectivePoints > 0
+            val requestPurpose = (purpose ?: OrganizerMvpScanPurpose(
+                label = "",
+                description = "",
+                enabled = true,
+                duplicateRule = "",
+                trackingOnly = false,
+                pointsEnabled = false,
+                pointsValue = 0,
+                requiredSelectionLabel = "",
+            )).copy(
+                label = name,
+                description = description.ifBlank { defaultDescription(name, selectedType) },
+                code = selectedType.code,
+                pointsValue = effectivePoints,
+                pointsEnabled = pointsEnabled,
+                trackingOnly = trackingOnly,
+                duplicateRule = getString(if (duplicateCheck.isChecked) R.string.manage_scan_purposes_allow_duplicates else R.string.manage_scan_purposes_no_duplicates_2),
+                requiredSelectionLabel = selectedType.selectionLabel,
+            )
+            savePurpose(requestPurpose)
+            dialog.dismiss()
+        }
 
-            if (isEdit && purpose != null) {
-                dialog.getButton(AlertDialog.BUTTON_NEUTRAL).apply {
-                    setTextColor(color(R.color.error))
+        val negative = root.findViewById<Button>(R.id.dialogNegative)
+        negative.setText(R.string.request_event_cancel)
+        negative.setOnClickListener { dialog.dismiss() }
+
+        if (isEdit && purpose != null) {
+            actions.addView(
+                Button(this).apply {
+                    setText(R.string.admin_account_management_delete)
+                    setTextColor(color(R.color.ui_error))
+                    setBackgroundResource(R.drawable.bg_ui_button_ghost)
+                    minHeight = dimenPx(R.dimen.ui_button_height_inline)
+                    setPadding(dimenPx(R.dimen.space_lg), 0, dimenPx(R.dimen.space_lg), 0)
+                    layoutParams = LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ).apply { marginEnd = dimenPx(R.dimen.space_8) }
                     setOnClickListener {
                         dialog.dismiss()
                         confirmDeletePurpose(purpose)
                     }
-                }
-            }
+                },
+                0,
+            )
         }
+
         dialog.show()
     }
 
@@ -384,7 +431,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
                 }
                 is NetworkResult.Error -> {
                     Log.w(persistenceTag, "eventId=${selectedEvent.id} saveError")
-                    Toast.makeText(this@ManageScanPurposesActivity, getString(R.string.manage_scan_purposes_failed_save, result.message), Toast.LENGTH_SHORT).show()
+                    showStatus(getString(R.string.manage_scan_purposes_failed_save, result.message))
                 }
                 NetworkResult.Loading -> Unit
             }
@@ -394,16 +441,29 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
     private fun confirmDeletePurpose(purpose: OrganizerMvpScanPurpose) {
         val purposeId = purpose.id?.takeIf { it.isNotBlank() }
         if (purposeId == null) {
-            Toast.makeText(this, this.getString(R.string.manage_scan_purposes_unable_to_delete_unsaved_scan_purpos), Toast.LENGTH_SHORT).show()
+            showStatus(this.getString(R.string.manage_scan_purposes_unable_to_delete_unsaved_scan_purpos))
             return
         }
 
-        AlertDialog.Builder(this)
-            .setTitle(getString(R.string.manage_scan_purposes_delete_scan_purpose))
-            .setMessage(getString(R.string.manage_scan_purposes_delete_message, purpose.label))
-            .setPositiveButton(getString(R.string.admin_account_management_delete)) { _, _ -> deletePurposeIfUnused(purposeId, purpose.label) }
-            .setNegativeButton(getString(R.string.request_event_cancel), null)
-            .show()
+        // §5.12: `dialog_base` with the verb as the destructive commit.
+        val root = layoutInflater.inflate(R.layout.dialog_base, null, false)
+        val dialog = AlertDialog.Builder(this).setView(root).create()
+        root.findViewById<TextView>(R.id.dialogTitle).setText(R.string.manage_scan_purposes_delete_scan_purpose)
+        root.findViewById<TextView>(R.id.dialogBody).text = getString(R.string.manage_scan_purposes_delete_message, purpose.label)
+        root.findViewById<Button>(R.id.dialogNegative).apply {
+            setText(R.string.request_event_cancel)
+            setOnClickListener { dialog.dismiss() }
+        }
+        root.findViewById<Button>(R.id.dialogPositive).apply {
+            setText(R.string.admin_account_management_delete)
+            setBackgroundResource(R.drawable.bg_ui_button_destructive_commit)
+            setTextColor(ContextCompat.getColor(context, R.color.ui_on_primary))
+            setOnClickListener {
+                dialog.dismiss()
+                deletePurposeIfUnused(purposeId, purpose.label)
+            }
+        }
+        dialog.show()
     }
 
     private fun deletePurposeIfUnused(purposeId: String, purposeName: String) {
@@ -412,21 +472,14 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
             val usageCount = when (transactionResult) {
                 is NetworkResult.Success -> transactionResult.data.count { it.scanPurposeId?.toString() == purposeId }
                 is NetworkResult.Error -> {
-                    Toast.makeText(
-                        this@ManageScanPurposesActivity, this@ManageScanPurposesActivity.getString(R.string.manage_scan_purposes_unable_to_verify_transaction_usage_t),
-                        Toast.LENGTH_LONG,
-                    ).show()
+                    showStatus(this@ManageScanPurposesActivity.getString(R.string.manage_scan_purposes_unable_to_verify_transaction_usage_t))
                     return@launch
                 }
                 NetworkResult.Loading -> 0
             }
 
             if (usageCount > 0) {
-                Toast.makeText(
-                    this@ManageScanPurposesActivity,
-                    getString(R.string.manage_scan_purposes_in_use, purposeName, usageCount),
-                    Toast.LENGTH_LONG,
-                ).show()
+                showStatus(getString(R.string.manage_scan_purposes_in_use, purposeName, usageCount))
                 return@launch
             }
 
@@ -436,7 +489,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
                     loadPurposes()
                 }
                 is NetworkResult.Error -> {
-                    Toast.makeText(this@ManageScanPurposesActivity, getString(R.string.manage_scan_purposes_failed_delete, deleteResult.message), Toast.LENGTH_LONG).show()
+                    showStatus(getString(R.string.manage_scan_purposes_failed_delete, deleteResult.message))
                 }
                 NetworkResult.Loading -> Unit
             }

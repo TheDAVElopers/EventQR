@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    QR display (§5.14, §6.2) - the same pass as the credential screen, opened from the registered
-    events list, so it carries the standard 56dp top bar with a back action instead of a close
-    button. Everything else is identical, and identical on purpose: one object, one anatomy.
+    QR display (§5.14, §6.2) - the one canonical pass layout. Both entry points use it: the
+    post-registration success screen and the pass opened from My passes. It carries the standard
+    56dp top bar with a back action titled `Pass`; there is no second variant and no flag.
 
     Deleted: the centred gradient check circle, the 164dp QR with no plate, the 46sp centred event
     name, the icon-row card, the dark-gradient download button, the duplicate details card that
@@ -66,11 +66,15 @@
                 android:visibility="gone"
                 tools:text="Saved copy, last updated 12 Oct 2026, 9:41 AM" />
 
+            <!-- One object, one action: the pass, then Save pass and the brightness switch. The
+                 duplicated ATTENDEE / EMAIL / REGISTRATION card is gone; the serial lives once,
+                 inside the pass (§5.14, §6.2). -->
             <!-- ═════════ Save pass ═════════ -->
             <FrameLayout
                 android:id="@+id/groupSavePass"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/ui_button_height"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/ui_button_height"
                 android:layout_marginTop="@dimen/space_24"
                 android:visibility="gone">
 
@@ -78,7 +82,8 @@
                     android:id="@+id/btnMarkQrDownloaded"
                     style="@style/Widget.EventQR.Ui.Button.Secondary"
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/ui_button_height"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_button_height"
                     android:text="@string/ui_attendee_save_pass" />
 
                 <ProgressBar
@@ -105,7 +110,8 @@
             <LinearLayout
                 android:id="@+id/rowKeepBright"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/ui_touch_min"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/ui_touch_min"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:visibility="gone">

@@ -29,7 +29,7 @@ import com.thedavelopers.eventqr.ui.theme.dimenOffset
  * The `text` property is kept as the title so existing `emptyView.text = "..."` call sites keep
  * working; assigning it never drops the subtitle, the body states the next action.
  *
- * Compose mirror: EmptyState(...) / EmptyStateView(...) in EmptyStateView.kt.
+ * Compose mirror: EmptyState(...) in EmptyState.kt.
  */
 class EventQrEmptyState @JvmOverloads constructor(
     context: Context,

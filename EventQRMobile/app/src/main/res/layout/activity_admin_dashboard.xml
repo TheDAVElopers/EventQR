@@ -15,6 +15,7 @@
     A dashboard block is never a bare entry point to a bottom-nav destination (§6.5).
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -70,7 +71,6 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:importantForAccessibility="noHideDescendants"
-                android:minHeight="@dimen/ui_pass_head_title_min"
                 android:orientation="horizontal">
 
                 <include
@@ -93,8 +93,6 @@
             android:baselineAligned="false"
             android:gravity="center_vertical"
             android:importantForAccessibility="noHideDescendants"
-            android:minHeight="@dimen/ui_pass_head_stub_height"
-            android:orientation="horizontal"
             android:paddingStart="@dimen/ui_gutter">
 
             <LinearLayout
@@ -211,7 +209,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_4"
-                    android:importantForAccessibility="noHideDescendants"
+                    android:contentDescription="@string/ui_skeleton_loading"
+                    android:focusable="true"
                     android:orientation="vertical">
 
                     <include
@@ -230,38 +229,20 @@
                         android:layout_height="@dimen/ui_skeleton_row_height" />
                 </LinearLayout>
 
-                <!-- Stats failed: in-flow error block where the queue was, one Retry. -->
-                <LinearLayout
+                <!-- Stats failed: in-flow empty state where the queue was, one Retry (§6.8 row 3). -->
+                <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
                     android:id="@+id/layoutDashboardError"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/ui_gutter"
                     android:layout_marginTop="@dimen/space_4"
                     android:layout_marginEnd="@dimen/ui_gutter"
-                    android:background="@drawable/bg_ui_card"
-                    android:orientation="vertical"
-                    android:padding="@dimen/ui_card_padding"
                     android:visibility="gone"
-                    tools:visibility="visible">
-
-                    <TextView
-                        android:id="@+id/txtDashboardError"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:accessibilityLiveRegion="polite"
-                        android:text="@string/ui_admin_dashboard_error"
-                        android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
-                        android:textColor="@color/ui_text_secondary" />
-
-                    <Button
-                        android:id="@+id/btnDashboardRetry"
-                        style="@style/Widget.EventQR.Ui.Button.Ghost"
-                        android:layout_width="wrap_content"
-                        android:layout_height="@dimen/ui_button_height_inline"
-                        android:layout_marginTop="@dimen/space_8"
-                        android:minWidth="@dimen/ui_touch_min"
-                        android:text="@string/common_retry" />
-                </LinearLayout>
+                    app:gutter="false"
+                    app:icon="@drawable/ic_ui_warning"
+                    app:subtitle="@string/ui_admin_error_body"
+                    app:title="@string/ui_admin_dashboard_error"
+                    tools:visibility="visible" />
 
                 <!-- The preview rows are inflated at bind time (list_row_icon + ListRowBinder). -->
                 <LinearLayout
@@ -289,19 +270,15 @@
                 <!-- Truncated preview only: extends the queue, never a second nav entry. -->
                 <TextView
                     android:id="@+id/btnViewAllRequests"
-                    style="@style/TextAppearance.EventQR.Type.Label"
+                    style="@style/Widget.EventQR.Ui.SectionAction"
                     android:layout_width="wrap_content"
-                    android:layout_height="@dimen/ui_touch_min"
+                    android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/ui_gutter"
                     android:layout_marginTop="@dimen/space_2"
                     android:layout_marginEnd="@dimen/ui_gutter"
-                    android:background="?attr/selectableItemBackground"
                     android:clickable="true"
                     android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:minWidth="@dimen/ui_touch_min"
                     android:text="@string/ui_admin_view_all_requests"
-                    android:textColor="@color/ui_primary"
                     android:visibility="gone" />
 
                 <!-- ═════════ RECENT ACTIVITY - read-only, supplementary ═════════ -->

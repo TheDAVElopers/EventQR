@@ -168,7 +168,6 @@
     <dimen name="ui_touch_min">48dp</dimen>
     <dimen name="ui_checkbox_size">20dp</dimen>
     <dimen name="ui_field_icon">20dp</dimen>
-    <dimen name="ui_rule_mark">16dp</dimen>
     <dimen name="ui_strength_bar_height">4dp</dimen>
 
     <!-- Auth shell (§3.7, §6.1) -->

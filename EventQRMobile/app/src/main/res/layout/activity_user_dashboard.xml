@@ -5,10 +5,10 @@
         Pass head        role tab, first name, stub POINTS / EVENTS / CHECK-INS, bell
         NEXT UP          one list_row_date (96dp) for the next registered event
         DISCOVER         up to three list_row_icon rows
-        QUICK ACTIONS    eyebrow + equal-width chip row (History / Request) filling the gutter; two
-                         chips only - Discover is the Events destination in the bottom nav, which is
-                         always on screen, so a second entry point here would duplicate it. Labels
-                         wrap at large font and the row never scrolls - not a three-column card
+        QUICK ACTIONS    eyebrow + hug-width chip strip (My passes / History / Request); My passes is
+                         the only entry point to the registered-events screen - the Registered tab it
+                         replaced is gone. Discover stays the Events tab in the bottom nav. Chips wrap
+                         onto a second line at large font and the row never scrolls.
 
     Deleted: the 135-degree gradient header, the translucent "Attendee" caret chip, the 40dp
     translucent bell, the three translucent stat tiles inside the header, the "Quick Actions"
@@ -20,6 +20,7 @@
     ids (btnTransactionHistory, btnRequestEventCard).
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -157,42 +158,58 @@
                         android:text="@string/ui_attendee_quick_actions"
                         android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
 
-                    <!-- Equal-width chips: 0dp + weight 1 across the 20dp gutters, so the row ends
-                         flush with NEXT UP / DISCOVER. Labels wrap at large font and the row grows
-                         in height; the row no longer scrolls. -->
-                    <LinearLayout
+                    <!-- Hug-width chips in a Flow: 8dp gaps, wraps to a second line instead of
+                         clipping when fontScale grows. Left-packed so the strip starts on the
+                         gutter, never a scroller and never equal-width columns. -->
+                    <androidx.constraintlayout.widget.ConstraintLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/space_sm"
                         android:minHeight="@dimen/ui_attendee_chip_row"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
                         android:paddingStart="@dimen/ui_gutter"
                         android:paddingEnd="@dimen/ui_gutter">
+
+                        <androidx.constraintlayout.helper.widget.Flow
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            app:constraint_referenced_ids="btnMyPasses,btnTransactionHistory,btnRequestEventCard"
+                            app:flow_horizontalBias="0"
+                            app:flow_horizontalGap="@dimen/space_8"
+                            app:flow_horizontalStyle="packed"
+                            app:flow_verticalGap="@dimen/space_8"
+                            app:flow_wrapMode="aligned"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent" />
+
+                        <TextView
+                            android:id="@+id/btnMyPasses"
+                            style="@style/Widget.EventQR.Ui.Chip.Action"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:minHeight="@dimen/ui_touch_min"
+                            android:drawableStart="@drawable/ic_ui_confirmation_number"
+                            android:text="@string/ui_attendee_quick_passes" />
 
                         <TextView
                             android:id="@+id/btnTransactionHistory"
                             style="@style/Widget.EventQR.Ui.Chip.Action"
-                            android:layout_width="0dp"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:minHeight="@dimen/ui_chip_height"
-                            android:gravity="center"
+                            android:minHeight="@dimen/ui_touch_min"
                             android:drawableStart="@drawable/ic_ui_receipt_long"
                             android:text="@string/ui_attendee_quick_history" />
 
                         <TextView
                             android:id="@+id/btnRequestEventCard"
                             style="@style/Widget.EventQR.Ui.Chip.Action"
-                            android:layout_width="0dp"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="@dimen/ui_chip_gap"
-                            android:minHeight="@dimen/ui_chip_height"
-                            android:gravity="center"
+                            android:minHeight="@dimen/ui_touch_min"
                             android:drawableStart="@drawable/ic_ui_pending_actions"
                             android:text="@string/ui_attendee_quick_request" />
-                    </LinearLayout>
+                    </androidx.constraintlayout.widget.ConstraintLayout>
                 </LinearLayout>
             </LinearLayout>
         </ScrollView>

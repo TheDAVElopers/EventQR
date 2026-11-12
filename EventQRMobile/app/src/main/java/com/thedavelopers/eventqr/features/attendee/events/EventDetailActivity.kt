@@ -6,9 +6,11 @@ import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Base64
 import android.util.Log
+import android.view.Gravity
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.VisibleForTesting
@@ -28,6 +30,9 @@ import com.thedavelopers.eventqr.features.organizer.events.EventManagementHubAct
 import com.thedavelopers.eventqr.ui.theme.applyEventQrBottomInsetPadding
 import java.time.Instant
 import kotlinx.coroutines.launch
+
+// §6.2: above this scale the REGISTRATION WINDOW row stacks instead of sharing one line.
+private const val REG_WINDOW_STACK_FONT_SCALE = 1.3f
 
 open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     @VisibleForTesting
@@ -82,7 +87,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
             startActivity(Intent(this, AttendeeRewardsActivity::class.java).putExtra(EXTRA_EVENT_ID, eventId))
         }
 
-        findViewById<Button>(R.id.btnCancelRegistration).setOnClickListener { confirmCancelRegistration() }
+        findViewById<View>(R.id.btnCancelRegistration).setOnClickListener { confirmCancelRegistration() }
 
         findViewById<Button>(R.id.btnRegisterForEvent).setOnClickListener {
             // The organizer label outranks the pass: an owner or manager who also holds a live
@@ -179,34 +184,52 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         findViewById<View>(R.id.layoutAudienceRow).visibility = audienceVisibility
         findViewById<View>(R.id.viewAudienceDivider).visibility = audienceVisibility
 
-        val regFormatter = java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy, h:mm a", java.util.Locale.ENGLISH).withZone(manilaZone)
-        val regOpen = event.registrationOpenAt?.let { regFormatter.format(it) }
-        val regClose = event.registrationCloseAt?.let { regFormatter.format(it) }
-        val regWindow = when {
-            regOpen != null && regClose != null -> "$regOpen - $regClose"
-            regClose != null -> "Closes $regClose"
-            regOpen != null -> "Opens $regOpen"
-            else -> null
-        }
+        val regWindow = formatRegistrationWindow(
+            openAt = event.registrationOpenAt,
+            closeAt = event.registrationCloseAt,
+            now = Instant.now(),
+            zone = manilaZone,
+            rangeFormat = getString(R.string.event_detail_date_range),
+            opensPrefix = getString(R.string.ui_attendee_registration_opens),
+            closesPrefix = getString(R.string.ui_attendee_registration_closes),
+        )
         findViewById<TextView>(R.id.txtDetailRegWindow).text = regWindow.orEmpty()
         val regVisibility = if (regWindow != null) View.VISIBLE else View.GONE
         findViewById<View>(R.id.layoutRegWindowRow).visibility = regVisibility
         findViewById<View>(R.id.viewRegWindowDivider).visibility = regVisibility
+        applyRegWindowRowLayout()
 
         updateRegistrationStatusUI(event.currentAttendeeCount, event.capacity)
 
         val rewardsRow = findViewById<View>(R.id.layoutRewardsRow)
         val rewardsDivider = findViewById<View>(R.id.viewRewardsDivider)
-        if (event.rewardsEnabled) {
-            rewardsRow?.visibility = View.VISIBLE
-            rewardsDivider?.visibility = View.VISIBLE
-        } else {
-            rewardsRow?.visibility = View.GONE
-            rewardsDivider?.visibility = View.GONE
-        }
+        val rewardsRowVisible = event.rewardsEnabled
+        rewardsRow?.visibility = if (rewardsRowVisible) View.VISIBLE else View.GONE
+        rewardsDivider?.visibility = if (rewardsRowVisible) View.VISIBLE else View.GONE
 
         checkOwnedEventThenAvailability(event)
         updateCancelButtonVisibility()
+    }
+
+    // §6.2: the label's overline token is 11sp; at the 1.3 threshold it is about 14.3sp / ~200dp,
+    // so the 320dp content row has no room left for the deadline beside it. Stack the row instead
+    // of breaking the word mid-label. At or below 1.3 the row keeps the layout's label-left,
+    // value-right anatomy untouched. This branch assumes a fresh activity: a font-scale change
+    // recreates the activity (no `configChanges` in the manifest), so both branches must be reset
+    // here if that ever changes.
+    private fun applyRegWindowRowLayout() {
+        if (resources.configuration.fontScale <= REG_WINDOW_STACK_FONT_SCALE) return
+        findViewById<LinearLayout>(R.id.layoutRegWindowRow).orientation = LinearLayout.VERTICAL
+        val value = findViewById<TextView>(R.id.txtDetailRegWindow)
+        value.gravity = Gravity.START
+        (value.layoutParams as LinearLayout.LayoutParams).apply {
+            // 0dp + weight only fills the horizontal row; stacked, it must take the full width.
+            width = LinearLayout.LayoutParams.MATCH_PARENT
+            weight = 0f
+            marginStart = 0
+            marginEnd = 0
+            topMargin = resources.getDimensionPixelSize(R.dimen.space_4)
+        }
     }
 
     // Poster and band are exclusive: nothing is ever drawn over the image, and the no-poster plate
@@ -257,25 +280,14 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
 
     private fun updateRegistrationStatusUI(current: Int, capacity: Int) {
         val capacityView = findViewById<TextView>(R.id.txtDetailCapacity)
-        val percentView = findViewById<TextView>(R.id.txtRegPercent)
-        val progressBar = findViewById<android.widget.ProgressBar>(R.id.pbRegistrationDetail)
-        val remainingView = findViewById<TextView>(R.id.txtRemainingSpots)
 
         if (capacity <= 0) {
             // Capacity 0 means unlimited on the backend, not "unknown".
             capacityView.text = getString(R.string.event_detail_capacity_unlimited, current)
-            percentView.text = ""
-            remainingView.text = ""
-            progressBar.progress = 0
             return
         }
 
         capacityView.text = getString(R.string.event_detail_capacity_registered, current, capacity)
-        val percent = (current.toFloat() / capacity.toFloat() * 100).toInt().coerceIn(0, 100)
-        val remaining = (capacity - current).coerceAtLeast(0)
-        percentView.text = getString(R.string.event_detail_percent_full, percent)
-        progressBar.progress = percent
-        remainingView.text = getString(R.string.event_detail_spots_remaining, remaining)
     }
 
     private fun checkOwnedEventThenAvailability(event: AttendeeEventResponse) {
@@ -404,7 +416,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         val visible = cancellableRegistrationId != null &&
             !canManageEvent() &&
             EventDetailPresenter.isCancelWindowOpen(currentEvent)
-        findViewById<Button>(R.id.btnCancelRegistration).visibility = if (visible) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.btnCancelRegistration).visibility = if (visible) View.VISIBLE else View.GONE
     }
 
     private fun confirmCancelRegistration() {
@@ -423,9 +435,9 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     }
 
     override fun showCancelling(isCancelling: Boolean) {
-        findViewById<Button>(R.id.btnCancelRegistration).apply {
+        findViewById<View>(R.id.btnCancelRegistration).apply {
             isEnabled = !isCancelling
-            text = getString(
+            contentDescription = getString(
                 if (isCancelling) R.string.event_detail_cancelling_registration else R.string.event_detail_cancel_registration,
             )
         }

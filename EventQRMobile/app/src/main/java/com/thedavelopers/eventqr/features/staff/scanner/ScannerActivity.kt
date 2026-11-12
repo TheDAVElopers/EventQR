@@ -118,6 +118,10 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
     private lateinit var scannerIcon: ImageView
     private lateinit var cameraContainer: FrameLayout
     private lateinit var scanPanel: View
+    private lateinit var scanPreview: View
+    private lateinit var permissionState: View
+    private lateinit var permissionMessage: TextView
+    private lateinit var openCameraSettings: View
     private lateinit var guidanceRow: View
     private lateinit var torchButton: ImageView
     private lateinit var resultGroup: View
@@ -160,6 +164,9 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
     // The assigned-event load failed: one in-flow error state with a single retry (§5.10), never a
     // toast over a blank screen.
     private var eventsLoadFailed = false
+    // The selected event's purpose load failed: the viewport takes the same directed state slot as
+    // "no events" with one inline Retry, because there is nothing to scan against (§6.8 row 12).
+    private var purposesLoadFailed = false
     private var lastSubmittedSignature: String? = null
     private var lastSubmittedAtMs: Long = 0L
     // A pass that was answered without a submission (no purpose yet, duplicate window, bad payload)
@@ -234,13 +241,8 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
         } else {
             cameraPermissionDenied = true
             bindCameraPermissionAction()
-            if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
-                Toast.makeText(this, this.getString(R.string.scanner_camera_permission_is_required_for_qr), Toast.LENGTH_LONG).show()
-            } else {
-                // No rationale right after a denial means the system will not show its dialog again,
-                // so the only way back is the app's settings page.
-                showCameraSettingsDialog()
-            }
+            // No rationale after a denial means the system will not show its dialog again; the
+            // panel's Open settings action is the way back. No Toast on top: it would duplicate it.
         }
     }
 
@@ -287,6 +289,10 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
         purposeNote = findViewById(R.id.txtSelectedPurposePoints)
         cameraStatus = findViewById(R.id.scanGuidance)
         scanPanel = findViewById(R.id.scanPanel)
+        scanPreview = findViewById(R.id.scanPreview)
+        permissionState = findViewById(R.id.scanPermissionState)
+        permissionMessage = findViewById(R.id.scanPermissionMessage)
+        openCameraSettings = findViewById(R.id.btnOpenCameraSettings)
         guidanceRow = findViewById(R.id.scanGuidanceRow)
         torchButton = findViewById(R.id.scanTorch)
         resultGroup = findViewById(R.id.groupScanResult)
@@ -312,7 +318,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
         staffUserId = sessionManager.getUserId()
 
         // The shared viewport's preview slot gets the camera surface, behind the frame + brackets.
-        val previewSlot = findViewById<FrameLayout>(R.id.scanPreview)
+        val previewSlot = scanPreview as FrameLayout
         val preview = layoutInflater.inflate(R.layout.ui_staff_scan_preview, previewSlot, false)
         previewSlot.addView(preview, 0)
         inlineCameraPreview = preview.findViewById(R.id.textureInlineCameraPreview)
@@ -339,6 +345,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
 
         contextBar.setOnClickListener { setContextSheetOpen(!isContextSheetOpen) }
         torchButton.setOnClickListener { toggleTorch() }
+        openCameraSettings.setOnClickListener { openAppSettings() }
 
         configureStaffBottomNav(StaffBottomNavItem.SCANNER, selectedEvent()?.id)
 
@@ -489,6 +496,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
     override fun showPurposes(items: List<ScanPurposeResponse>) {
         // ID printing is only offered while the caller holds the Print IDs permission for the event.
         val activePurposes = items.filter { it.active && isPurposeAllowed(it) }
+        purposesLoadFailed = false
         purposeOptions.clear()
         purposeOptions.addAll(activePurposes)
         // One choke point for the decode gate: only a bound, non-empty list can start a scan.
@@ -509,6 +517,8 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
         } else {
             bindSelectedPurposeHeader()
         }
+        // The list is the decode gate, so a fresh one also re-opens the camera panel (§6.8 row 12).
+        bindScanChrome()
     }
 
     /**
@@ -519,8 +529,24 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
      */
     override fun showPurposesUnavailable(message: String) {
         loadedPurposeEventId = null
-        showPurposes(emptyList())
-        showMessage(message)
+        // Same slot as "no events", with one inline Retry: a toast over a dead camera would leave
+        // the screen with no route forward (§6.8 row 12). The list stays empty so a stale purpose
+        // from the previous event can never be posted.
+        purposesLoadFailed = true
+        purposeOptions.clear()
+        selectedPurposeIndex = 0
+        scanPurposesReady = false
+        contextPurpose.text = getString(R.string.scanner_no_scan_purposes_enabled)
+        contextPurpose.visibility = View.VISIBLE
+        purposeNote.text = ""
+        scanEmptyState.setIcon(AppIcons.Warning)
+        scanEmptyState.setContent(getString(R.string.ui_staff_purposes_error_title), message)
+        scanEmptyState.setAction(getString(R.string.common_retry), primary = false) {
+            val eventId = selectedEvent()?.id ?: return@setAction
+            loadedPurposeEventId = eventId
+            presenter.loadPurposes(eventId)
+        }
+        bindScanChrome()
     }
 
     override fun showRecordedResult(result: TransactionResponse) {
@@ -578,7 +604,8 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
     }
 
     override fun showMessage(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        // Refusals and decode failures report inline, never in a Toast (§5.13).
+        showScanStrip(message)
     }
 
     override fun showLoading(isLoading: Boolean) {
@@ -636,8 +663,8 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
 
     private fun hasSelectableEvent(): Boolean = selectedEvent() != null
 
-    /** A live scan surface: an assigned event exists and no result owns the screen. */
-    private fun scannerChromeVisible(): Boolean = hasSelectableEvent() && !resultShown()
+    /** A live scan surface: an assigned event with purposes exists and no result owns the screen. */
+    private fun scannerChromeVisible(): Boolean = hasSelectableEvent() && !resultShown() && !purposesLoadFailed
 
     /**
      * The one rule for the purpose micro line. It needs the guidance row above it, so it is GONE
@@ -663,16 +690,23 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
         // never competes with a finished scan for the same setting.
         scanViewport.visibility = if (resultShown()) View.GONE else View.VISIBLE
         scanPanel.visibility = visibility
-        guidanceRow.visibility = visibility
+        // Without the camera permission the guidance row has nothing to point at, so it stays
+        // gone even when the panel does not (the permission state owns the panel then).
+        guidanceRow.visibility = if (visibility == View.VISIBLE && !cameraPermissionDenied) View.VISIBLE else View.GONE
         manualEntryGroup.visibility = visibility
         // The purpose micro line is part of the guidance row (§5.13), so it follows the chrome:
         // with the panel gone it must not float alone under the context bar.
         bindPurposeNote()
         // Only after the load settles: an empty state shown while events are still loading would
-        // claim there are none.
+        // claim there are none. A failed purpose load takes the same slot (§6.8 row 12).
         scanEmptyState.visibility =
-            if ((eventsLoaded || eventsLoadFailed) && !hasSelectableEvent() && !resultShown()) View.VISIBLE else View.GONE
+            if ((eventsLoaded || eventsLoadFailed) && ((!hasSelectableEvent()) || purposesLoadFailed) && !resultShown()) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
         bindContextAffordance()
+        if (cameraPermissionDenied) bindCameraPermissionAction()
     }
 
     private fun bindResultBlock(
@@ -728,6 +762,10 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
         resultHint.setTextColor(color(if (neutral) R.color.ui_text_secondary else R.color.ui_on_primary))
         resultHint.text = hint
         resultHint.visibility = if (hint.isBlank()) View.GONE else View.VISIBLE
+        // The block is the polite live region: one descriptor change announces the whole verdict,
+        // so the two TextViews stay out of the a11y tree (importantForAccessibility="no") and no
+        // second manual announcement is needed.
+        resultBlock.contentDescription = listOf(state, hint).filter { it.isNotBlank() }.joinToString(". ")
 
         resultAttendee.text = attendee ?: getString(R.string.ui_staff_result_attendee)
         resultAttendee.visibility = if (attendee.isNullOrBlank()) View.GONE else View.VISIBLE
@@ -772,10 +810,6 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
         // "Scan next" restarts it.
         releaseInlineCamera()
         scrollScanner.post { scrollScanner.smoothScrollTo(0, 0) }
-        val announcement = listOf(resultState.text, resultHint.text)
-            .filter { it.isNotBlank() }
-            .joinToString(". ")
-        resultGroup.post { resultGroup.announceForAccessibility(announcement) }
     }
 
     private fun bindRecordedResult(result: TransactionResponse) {
@@ -997,18 +1031,32 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
     // ── Camera ───────────────────────────────────────────────────────────────
 
     /**
-     * The camera permission is off: the panel is the one tap target and its guidance line is the
-     * permission CTA. The torch needs a camera, so it leaves with it.
+     * The camera permission is off: the panel states the block in place (lock, one line, Open
+     * settings). The preview, torch and guidance row need a camera, so they leave with it; the
+     * manual entry below stays usable.
      */
     private fun bindCameraPermissionAction() {
-        cameraStatus.text = getString(R.string.scanner_camera_permission_tap_to_enable)
+        permissionState.visibility = View.VISIBLE
+        scanPreview.visibility = View.INVISIBLE
+        guidanceRow.visibility = View.GONE
         torchButton.visibility = View.GONE
-        scannerIcon.visibility = View.VISIBLE
+        // The panel's own children already say the block; a second description would read it twice,
+        // and the panel is not a control while the permission is off.
+        scanPanel.contentDescription = null
+        scanPanel.setOnClickListener(null)
+        scanPanel.isClickable = false
     }
 
     /** The permission is back: the live-camera chrome returns before the camera starts. */
     private fun clearCameraPermissionAction() {
+        permissionState.visibility = View.GONE
+        permissionMessage.setText(R.string.ui_scan_permission_blocked)
+        scanPanel.setOnClickListener { requestInlineCameraStart(userInitiated = true) }
+        scanPreview.visibility = View.VISIBLE
         torchButton.visibility = View.VISIBLE
+        guidanceRow.visibility = if (scannerChromeVisible()) View.VISIBLE else View.GONE
+        bindContextAffordance()
+        bindPurposeNote()
     }
 
     private fun requestInlineCameraStart(userInitiated: Boolean) {
@@ -1026,7 +1074,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
         cameraPermissionAutoRequested = true
         when {
             shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> showCameraRationaleDialog()
-            cameraPermissionDenied -> showCameraSettingsDialog()
+            cameraPermissionDenied -> bindCameraPermissionAction()
             else -> launchCameraPermissionRequest()
         }
     }
@@ -1048,20 +1096,11 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
             .show()
     }
 
-    private fun showCameraSettingsDialog() {
-        if (cameraPermissionDialog?.isShowing == true) return
-        cameraPermissionDialog = AlertDialog.Builder(this)
-            .setTitle(R.string.scanner_camera_permission_title)
-            .setMessage(R.string.scanner_camera_permission_denied_settings)
-            .setPositiveButton(R.string.scanner_camera_permission_open_settings) { _, _ -> openAppSettings() }
-            .setNegativeButton(R.string.scanner_camera_permission_not_now, null)
-            .show()
-    }
-
     private fun openAppSettings() {
         val settingsIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null))
         runCatching { startActivity(settingsIntent) }.onFailure {
-            Toast.makeText(this, getString(R.string.scanner_camera_permission_is_required_for_qr), Toast.LENGTH_LONG).show()
+            // The guidance row is GONE here; the visible permission panel owns the failure.
+            permissionMessage.setText(R.string.scanner_camera_permission_is_required_for_qr)
         }
     }
 
@@ -1165,7 +1204,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
         }
     }
 
-    /** §5.13: the torch is a 44dp target inside the panel and it must actually toggle. */
+    /** §5.13: the torch is a 48dp target inside the panel and it must actually toggle. */
     private fun toggleTorch() {
         val cam = camera ?: return
         val supported = cam.parameters.supportedFlashModes.orEmpty()
@@ -1770,7 +1809,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
     @VisibleForTesting
     internal fun bindPrintFailure(result: NetworkResult.Error) {
         if (PrintPermission.isPermissionDenied(result)) {
-            Toast.makeText(this, getString(R.string.staff_print_id_permission_required), Toast.LENGTH_LONG).show()
+            showScanStrip(getString(R.string.staff_print_id_permission_required))
             setScanNextPrimary()
             return
         }

@@ -16,10 +16,10 @@ import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResponse
-import com.thedavelopers.eventqr.features.staff.scanner.ScannerActivity
 import com.thedavelopers.eventqr.ui.components.CountLabel
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import com.thedavelopers.eventqr.ui.components.PassHeadBinder
+import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import kotlinx.coroutines.launch
@@ -45,6 +45,7 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
     private var isFirstResume = true
     private var selectedFilter: StaffEventFilter = StaffEventFilter.ALL
     private var allEvents: List<StaffAssignedEventResponse> = emptyList()
+    private var loadFailed = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,8 +89,7 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
         chipCompleted.setOnClickListener { selectFilter(StaffEventFilter.COMPLETED) }
 
         adapter = StaffAssignedEventAdapter(
-            onScanClick = { event -> openScanner(event) },
-            onAttendeesClick = { event -> openAttendees(event) },
+            onClick = { event -> openAttendees(event) },
         )
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
@@ -111,6 +111,8 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
     private fun selectFilter(filter: StaffEventFilter) {
         selectedFilter = filter
         updateFilterUI()
+        // The error state belongs to loadEvents; a filter tap must not overwrite it with empty copy.
+        if (loadFailed) return
         renderFilteredEvents()
     }
 
@@ -136,16 +138,22 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
             when (val result = repository.getEvents()) {
                 is NetworkResult.Success -> {
                     allEvents = result.data
+                    loadFailed = false
                     renderFilteredEvents()
                 }
                 is NetworkResult.Error -> {
+                    loadFailed = true
                     allEvents = emptyList()
                     adapter.submitItems(emptyList())
-                    emptyState.text = result.message
+                    emptyState.setIcon(AppIcons.Warning)
+                    emptyState.show(
+                        getString(R.string.ui_staff_events_error_title),
+                        result.message.ifBlank { getString(R.string.ui_staff_load_failed_body) },
+                    )
+                    emptyState.setAction(getString(R.string.common_retry)) { loadEvents() }
                     emptyState.visibility = View.VISIBLE
                     countView.text = ""
                     skeletonLoading.visibility = View.GONE
-                    Toast.makeText(this@StaffAssignedEventsActivity, result.message, Toast.LENGTH_SHORT).show()
                 }
                 NetworkResult.Loading -> Unit
             }
@@ -180,15 +188,16 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
         } else {
             CountLabel.format(filtered.size.toLong(), getString(R.string.ui_staff_events_count))
         }
+        emptyState.setIcon(AppIcons.Event)
+        // Reset the copy too: a previous load failure must not survive a successful render.
+        emptyState.setContent(
+            getString(R.string.ui_staff_no_assigned_events),
+            getString(R.string.ui_staff_no_assigned_events_body),
+        )
+        emptyState.setAction(null)
         emptyState.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
         recyclerView.visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
         adapter.submitItems(filtered)
-    }
-
-    private fun openScanner(event: StaffAssignedEventResponse) {
-        startActivity(Intent(this, ScannerActivity::class.java).apply {
-            putExtra(StaffScreenExtras.EXTRA_EVENT_ID, event.eventId.toString())
-        })
     }
 
     private fun openAttendees(event: StaffAssignedEventResponse) {

@@ -6,7 +6,7 @@
         48dp context field  one control: event name (title) over scan purpose (label), caret
         320x256dp panel    flat ui_scan_panel, radius 16
         240x240dp preview  1px ui_scan_frame + four 24dp brackets at 3dp, white 80%
-        torch              44dp target, 20dp icon, 16dp inset in the panel corner
+        torch              48dp target, 20dp icon ink, in the guidance row below the panel
         guidance           one body_s line under the panel - no pill, no chip
 
     The preview is the bracket square: the camera view is centre-cropped inside scanPreview and the
@@ -19,8 +19,13 @@
         bg_ui_scan_strip) under the panel - NEVER a toast
       * brackets tint to ui_accent only while a decode is confirmed; that is the only lime here
 
+    Permission off: the panel keeps its dark surface and states the block in place - lock glyph,
+         one body_s line and the 52dp "Open settings" primary. The preview, torch and guidance
+         row leave; manual entry stays usable, so the screen still has a way to check a pass.
+
     ids: scanRoot, scanContext, scanContextEvent, scanContextPurpose, scanContextCaret, scanPanel,
-         scanPreview, scanBracketTl/Tr/Bl/Br, scanTorch, scanGuidance.
+         scanPreview, scanBracketTl/Tr/Bl/Br, scanPermissionState, scanPermissionMessage,
+         btnOpenCameraSettings, scanTorch, scanGuidance.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -139,10 +144,51 @@
                 android:scaleY="-1" />
         </FrameLayout>
 
+        <!-- Camera permission off: same dark panel, no preview. ScannerActivity owns visibility:
+             it hides the preview, torch and guidance row and clears scanPanel's description. -->
+        <LinearLayout
+            android:id="@+id/scanPermissionState"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="@dimen/ui_gutter"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="@dimen/icon_lg"
+                android:layout_height="@dimen/icon_lg"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_ui_lock"
+                android:tint="@color/ui_on_primary" />
+
+            <TextView
+                android:id="@+id/scanPermissionMessage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_8"
+                android:accessibilityLiveRegion="polite"
+                android:gravity="center"
+                android:text="@string/ui_scan_permission_blocked"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                android:textColor="@color/ui_on_primary" />
+
+            <TextView
+                android:id="@+id/btnOpenCameraSettings"
+                style="@style/Widget.EventQR.Ui.Button.Primary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_16"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="@string/scanner_camera_permission_open_settings" />
+        </LinearLayout>
+
     </FrameLayout>
 
-    <!-- Torch lives in the guidance row: a 44dp control inside the panel corner overlapped the
-         24dp bottom-right bracket by 20dp, so it moved out of the bracket's zone. -->
+    <!-- Torch lives in the guidance row, 48dp at the row's end: a target inside the panel corner
+         overlapped the 24dp bottom-right bracket, so it moved out of the bracket's zone. -->
     <LinearLayout
         android:id="@+id/scanGuidanceRow"
         android:layout_width="match_parent"

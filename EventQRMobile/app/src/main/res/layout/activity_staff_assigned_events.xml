@@ -5,8 +5,8 @@
         Compact pass head + count, a 48dp chip row (36dp chips, radius 4), then the assigned-event
         rows. No gradient page background, no Material pill chips, no outlined cards around filters.
 
-    The row itself is EventCard (shared Compose component) rendered by StaffAssignedEventAdapter -
-    not forked here.
+    The row is the shared `list_row_date` (§5.5) bound by StaffAssignedEventAdapter - never a card
+    with a two-button footer.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -21,53 +21,70 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <!-- ═════════ Filters: 36dp chips in a 48dp touch row ═════════ -->
-    <HorizontalScrollView
+    <!-- ═════════ Filters: wrapping chip row, never a scroller (§5.6) ═════════ -->
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="@dimen/ui_staff_chip_row"
-        android:clipToPadding="false"
-        android:scrollbars="none">
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/ui_gutter"
+        android:paddingEnd="@dimen/ui_gutter">
 
-        <LinearLayout
+        <androidx.constraintlayout.helper.widget.Flow
+            android:id="@+id/chipFlow"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:constraint_referenced_ids="chipAll,chipUpcoming,chipActive,chipCompleted"
+            app:flow_horizontalGap="@dimen/ui_chip_gap"
+            app:flow_maxElementsWrap="3"
+            app:flow_verticalGap="@dimen/ui_chip_gap"
+            app:flow_wrapMode="chain"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/chipAll"
+            style="@style/Widget.EventQR.Ui.Chip"
             android:layout_width="wrap_content"
-            android:layout_height="@dimen/ui_staff_chip_row"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="@dimen/ui_gutter"
-            android:paddingEnd="@dimen/ui_gutter">
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_ui_chip_inset"
+            android:minHeight="@dimen/ui_touch_min"
+            android:paddingTop="@dimen/space_sm"
+            android:paddingBottom="@dimen/space_sm"
+            android:text="@string/ui_staff_filter_all" />
 
-            <TextView
-                android:id="@+id/chipAll"
-                style="@style/Widget.EventQR.Ui.Chip"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_chip_height"
-                android:text="@string/ui_staff_filter_all" />
+        <TextView
+            android:id="@+id/chipUpcoming"
+            style="@style/Widget.EventQR.Ui.Chip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_ui_chip_inset"
+            android:minHeight="@dimen/ui_touch_min"
+            android:paddingTop="@dimen/space_sm"
+            android:paddingBottom="@dimen/space_sm"
+            android:text="@string/ui_staff_filter_upcoming" />
 
-            <TextView
-                android:id="@+id/chipUpcoming"
-                style="@style/Widget.EventQR.Ui.Chip"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_chip_height"
-                android:layout_marginStart="@dimen/ui_chip_gap"
-                android:text="@string/ui_staff_filter_upcoming" />
+        <TextView
+            android:id="@+id/chipActive"
+            style="@style/Widget.EventQR.Ui.Chip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_ui_chip_inset"
+            android:minHeight="@dimen/ui_touch_min"
+            android:paddingTop="@dimen/space_sm"
+            android:paddingBottom="@dimen/space_sm"
+            android:text="@string/ui_staff_filter_active" />
 
-            <TextView
-                android:id="@+id/chipActive"
-                style="@style/Widget.EventQR.Ui.Chip"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_chip_height"
-                android:layout_marginStart="@dimen/ui_chip_gap"
-                android:text="@string/ui_staff_filter_active" />
-
-            <TextView
-                android:id="@+id/chipCompleted"
-                style="@style/Widget.EventQR.Ui.Chip"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_chip_height"
-                android:layout_marginStart="@dimen/ui_chip_gap"
-                android:text="@string/ui_staff_filter_completed" />
-        </LinearLayout>
-    </HorizontalScrollView>
+        <TextView
+            android:id="@+id/chipCompleted"
+            style="@style/Widget.EventQR.Ui.Chip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_ui_chip_inset"
+            android:minHeight="@dimen/ui_touch_min"
+            android:paddingTop="@dimen/space_sm"
+            android:paddingBottom="@dimen/space_sm"
+            android:text="@string/ui_staff_filter_completed" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshAssignedEvents"
@@ -85,9 +102,7 @@
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
                 android:overScrollMode="never"
-                android:paddingStart="@dimen/ui_gutter"
                 android:paddingTop="@dimen/space_16"
-                android:paddingEnd="@dimen/ui_gutter"
                 android:paddingBottom="@dimen/space_24" />
 
             <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
@@ -99,14 +114,55 @@
                 app:subtitle="@string/ui_staff_no_assigned_events_body"
                 app:title="@string/ui_staff_no_assigned_events" />
 
-            <include
+            <!-- Loading mirrors the loaded rows: flat 96dp date rows, not a card. -->
+            <LinearLayout
                 android:id="@+id/skeletonLoading"
-                layout="@layout/include_skeleton_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/ui_gutter"
                 android:layout_marginTop="@dimen/space_16"
-                android:layout_marginEnd="@dimen/ui_gutter" />
+                android:importantForAccessibility="noHideDescendants"
+                android:orientation="vertical">
+
+                <!-- 96dp rows: the include is a 72dp row, the wrapper sets the loaded geometry. -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:minHeight="@dimen/ui_row_height_date"
+                    android:orientation="vertical">
+
+                    <include
+                        layout="@layout/include_skeleton_row"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:minHeight="@dimen/ui_row_height_date"
+                    android:orientation="vertical">
+
+                    <include
+                        layout="@layout/include_skeleton_row"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:minHeight="@dimen/ui_row_height_date"
+                    android:orientation="vertical">
+
+                    <include
+                        layout="@layout/include_skeleton_row"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+            </LinearLayout>
         </FrameLayout>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 

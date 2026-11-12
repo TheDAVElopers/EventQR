@@ -48,11 +48,11 @@ class EventQrBottomNavBarComposeTest {
     @Test
     fun attendeeNavItems_exposeExpectedIdsAndLabels() {
         assertEquals(
-            listOf("home", "events", "registered", "rewards", "profile"),
+            listOf("home", "events", "rewards", "profile"),
             AttendeeNavItems.map { it.id },
         )
         assertEquals(
-            listOf("Home", "Events", "Registered", "Rewards", "Profile"),
+            listOf("Home", "Events", "Rewards", "Profile"),
             AttendeeNavItems.map { it.label },
         )
     }
@@ -73,7 +73,7 @@ class EventQrBottomNavBarComposeTest {
     fun attendeeNavBar_rendersEveryItemLabel() {
         setNavBar(items = AttendeeNavItems, selectedId = "home")
 
-        listOf("Home", "Events", "Registered", "Rewards", "Profile").forEach { label ->
+        listOf("Home", "Events", "Rewards", "Profile").forEach { label ->
             composeTestRule.onNodeWithText(label).assertIsDisplayed()
         }
     }
@@ -142,7 +142,7 @@ class EventQrBottomNavBarComposeTest {
     fun everyItem_exposesTabRole() {
         setNavBar(items = AttendeeNavItems, selectedId = "home")
 
-        listOf("Home", "Events", "Registered", "Rewards", "Profile").forEach { label ->
+        listOf("Home", "Events", "Rewards", "Profile").forEach { label ->
             assertEquals(Role.Tab, roleOf(label))
         }
     }
@@ -203,7 +203,7 @@ class EventQrBottomNavBarComposeTest {
     fun everyItem_meetsMinimumTouchHeight() {
         setNavBar(items = AttendeeNavItems, selectedId = "home")
 
-        listOf("Home", "Events", "Registered", "Rewards", "Profile").forEach { label ->
+        listOf("Home", "Events", "Rewards", "Profile").forEach { label ->
             composeTestRule.onNode(hasText(label)).assertHeightIsAtLeast(48.dp)
         }
     }
@@ -212,7 +212,7 @@ class EventQrBottomNavBarComposeTest {
     fun unknownSelectedId_leavesEveryItemUnselected() {
         setNavBar(items = AttendeeNavItems, selectedId = "does-not-exist")
 
-        listOf("Home", "Events", "Registered", "Rewards", "Profile").forEach { label ->
+        listOf("Home", "Events", "Rewards", "Profile").forEach { label ->
             composeTestRule.onNode(hasText(label)).assertIsNotSelected()
         }
     }

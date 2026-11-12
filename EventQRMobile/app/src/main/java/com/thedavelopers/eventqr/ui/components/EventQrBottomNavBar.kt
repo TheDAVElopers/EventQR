@@ -77,7 +77,7 @@ data class NavItem(
 @Composable
 fun EventQrBottomNavBar(
     items: List<NavItem>,
-    selectedId: String,
+    selectedId: String?,
     onItemSelected: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -184,14 +184,14 @@ fun EventQrBottomNavBar(
 }
 
 /**
- * Attendee bar. Five destinations (Home / Events / Registered / Rewards / Profile) because the
- * attendee shell has five screens today; §5.7 budgets four for most roles and five for organizer.
- * Keep the ids - they are the navigation keys.
+ * Attendee bar. Four destinations (Home / Events / Rewards / Profile) per §5.7's four-item budget.
+ * The old Registered tab is retired: the dashboard's "My passes" quick chip is the entry point to
+ * RegisteredEventsActivity, which still binds this bar with no item selected. Keep the ids - they
+ * are the navigation keys.
  */
 val AttendeeNavItems = listOf(
     NavItem("home", "Home", AppIcons.Home),
     NavItem("events", "Events", AppIcons.Event),
-    NavItem("registered", "Registered", AppIcons.Pass),
     NavItem("rewards", "Rewards", AppIcons.Reward),
     NavItem("profile", "Profile", AppIcons.Profile),
 )

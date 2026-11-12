@@ -47,7 +47,7 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
         setContentView(R.layout.activity_user_registered_events)
         applyEventQrSystemBarAppearance(lightStatusBars = false)
         findViewById<View>(R.id.passHeadIdentity).applyEventQrTopInsetPadding()
-        configureAttendeeBottomNav(AttendeeBottomNavItem.REGISTERED)
+        configureAttendeeBottomNav(null)
 
         PassHeadBinder.bindCompact(
             findViewById(R.id.passHead),

@@ -102,7 +102,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         requestEventCard = findViewById(R.id.btnRequestEventCard)
         // The quick-action chips carry a 20dp glyph; a compound drawable would otherwise lay out at
         // the vector's 24dp intrinsic size (§5.6).
-        listOf(R.id.btnTransactionHistory, R.id.btnRequestEventCard).forEach {
+        listOf(R.id.btnMyPasses, R.id.btnTransactionHistory, R.id.btnRequestEventCard).forEach {
             FieldIcons.apply(findViewById(it))
         }
         upcomingEventsLayout = findViewById(R.id.layoutUpcomingEvents)
@@ -420,6 +420,9 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
     }
 
     private fun configureActions() {
+        findViewById<View>(R.id.btnMyPasses).setOnClickListener {
+            startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.RegisteredEventsActivity::class.java))
+        }
         organizerCard.setOnClickListener {
             startActivity(Intent(this, com.thedavelopers.eventqr.features.attendee.AttendeeTransactionsActivity::class.java))
         }

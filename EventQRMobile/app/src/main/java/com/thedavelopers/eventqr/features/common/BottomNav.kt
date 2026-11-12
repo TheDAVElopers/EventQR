@@ -19,7 +19,7 @@ import com.thedavelopers.eventqr.ui.theme.EventQrTheme
 internal fun AppCompatActivity.bindComposeBottomNav(
     view: ComposeView,
     items: List<NavItem>,
-    selectedId: String,
+    selectedId: String?,
     onNavigate: (String) -> Unit,
 ) {
     view.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)

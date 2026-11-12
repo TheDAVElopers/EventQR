@@ -14,6 +14,7 @@
     Empty/error state is the shared EventQrEmptyState (left aligned, one action).
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -43,7 +44,7 @@
             android:id="@+id/inputEventSearch"
             style="@style/Widget.EventQR.Ui.TextField.Search"
             android:layout_width="0dp"
-            android:layout_height="@dimen/ui_field_search_height"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:drawableStart="@drawable/ic_ui_search"
             android:drawablePadding="@dimen/space_md"
@@ -66,45 +67,62 @@
             android:text="@string/ui_attendee_date" />
     </LinearLayout>
 
-    <HorizontalScrollView
+    <!-- §5.6: the filter row wraps on a Flow, it never scrolls. Three chips per line; the inset
+         background keeps the 36dp fill inside a 48dp touch target, and wrap_content height lets
+         the label grow instead of clipping at fontScale 2.0. -->
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/space_lg"
-        android:clipToPadding="false"
         android:paddingStart="@dimen/ui_gutter"
-        android:paddingEnd="@dimen/ui_gutter"
-        android:scrollbars="none">
+        android:paddingEnd="@dimen/ui_gutter">
 
-        <LinearLayout
+        <androidx.constraintlayout.helper.widget.Flow
+            android:id="@+id/chipFlow"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:constraint_referenced_ids="chipAll,chipThisWeek,chipRegistered"
+            app:flow_horizontalGap="@dimen/ui_chip_gap"
+            app:flow_maxElementsWrap="3"
+            app:flow_verticalGap="@dimen/ui_chip_gap"
+            app:flow_wrapMode="chain"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/chipAll"
+            style="@style/Widget.EventQR.Ui.Chip"
             android:layout_width="wrap_content"
-            android:layout_height="@dimen/ui_attendee_chip_row"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_ui_chip_inset"
+            android:minHeight="@dimen/ui_touch_min"
+            android:paddingTop="@dimen/space_sm"
+            android:paddingBottom="@dimen/space_sm"
+            android:text="@string/ui_attendee_all" />
 
-            <TextView
-                android:id="@+id/chipAll"
-                style="@style/Widget.EventQR.Ui.Chip"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_chip_height"
-                android:text="@string/ui_attendee_all" />
+        <TextView
+            android:id="@+id/chipThisWeek"
+            style="@style/Widget.EventQR.Ui.Chip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_ui_chip_inset"
+            android:minHeight="@dimen/ui_touch_min"
+            android:paddingTop="@dimen/space_sm"
+            android:paddingBottom="@dimen/space_sm"
+            android:text="@string/ui_attendee_this_week" />
 
-            <TextView
-                android:id="@+id/chipThisWeek"
-                style="@style/Widget.EventQR.Ui.Chip"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_chip_height"
-                android:layout_marginStart="@dimen/ui_chip_gap"
-                android:text="@string/ui_attendee_this_week" />
-
-            <TextView
-                android:id="@+id/chipRegistered"
-                style="@style/Widget.EventQR.Ui.Chip"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_chip_height"
-                android:layout_marginStart="@dimen/ui_chip_gap"
-                android:text="@string/ui_attendee_registered" />
-        </LinearLayout>
-    </HorizontalScrollView>
+        <TextView
+            android:id="@+id/chipRegistered"
+            style="@style/Widget.EventQR.Ui.Chip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_ui_chip_inset"
+            android:minHeight="@dimen/ui_touch_min"
+            android:paddingTop="@dimen/space_sm"
+            android:paddingBottom="@dimen/space_sm"
+            android:text="@string/ui_attendee_registered" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshEvents"
@@ -134,7 +152,8 @@
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/ui_skeleton_loading"
                 android:focusable="true"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:visibility="gone">
 
                 <include
                     layout="@layout/include_skeleton_row"

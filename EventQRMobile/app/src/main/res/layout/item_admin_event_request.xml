@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    ADMIN EVENT REQUEST ROW (§6.5, §5.5 list-row language).
+
+        88dp flat page row - no card, no per-request container, hairline divider inset 76dp.
+        40dp neutral tile with the requester initial; event name in `Title`; requester and
+        submitted date as two meta lines; ONE trailing status badge.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/requestRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:duplicateParentState="true"
+        android:minHeight="@dimen/ui_row_height_tall"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/ui_row_start"
+        android:paddingTop="@dimen/space_12"
+        android:paddingEnd="@dimen/ui_row_end"
+        android:paddingBottom="@dimen/space_12">
+
+        <TextView
+            android:id="@+id/textRequestAvatar"
+            android:layout_width="@dimen/ui_row_tile"
+            android:layout_height="@dimen/ui_row_tile"
+            android:background="@drawable/bg_ui_icon_tile"
+            android:gravity="center"
+            android:importantForAccessibility="no"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.Title"
+            android:textColor="@color/ui_primary"
+            tools:text="J" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_16"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/textRequestTitle"
+                    style="@style/Widget.EventQR.Ui.ListRow.Title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    tools:text="DevFest Manila" />
+
+                <TextView
+                    android:id="@+id/textRequestStatus"
+                    style="@style/Widget.EventQR.Ui.StatusBadge.Warning"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_8"
+                    android:minHeight="@dimen/ui_badge_height"
+                    tools:text="Pending review" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/textRequestRequester"
+                style="@style/Widget.EventQR.Ui.ListRow.Meta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_2"
+                android:ellipsize="end"
+                android:maxLines="1"
+                tools:text="Maria Santos" />
+
+            <TextView
+                android:id="@+id/textRequestSubmitted"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_2"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_text_secondary"
+                tools:text="Submitted 12 Oct 2026" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:layout_marginStart="@dimen/ui_divider_inset"
+        android:background="@color/ui_hairline"
+        android:importantForAccessibility="no" />
+</LinearLayout>

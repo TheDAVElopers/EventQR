@@ -191,10 +191,11 @@
             <TextView
                 android:id="@+id/passHeadChip"
                 android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_chip_dark_height"
+                android:layout_height="wrap_content"
                 android:layout_gravity="start|center_vertical"
                 android:background="@drawable/bg_ui_pass_chip"
                 android:gravity="center"
+                android:minHeight="@dimen/ui_chip_dark_height"
                 android:paddingStart="@dimen/space_md"
                 android:paddingEnd="@dimen/space_md"
                 android:textAppearance="@style/TextAppearance.EventQR.Type.Overline"
@@ -325,8 +326,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/ui_pass_head_stat_label_gap"
-                android:ellipsize="end"
-                android:maxLines="1"
+                android:maxLines="2"
                 android:textAppearance="@style/TextAppearance.EventQR.Type.Overline"
                 android:textColor="@color/ui_on_primary_muted"
                 tools:text="Registered" />
@@ -366,8 +366,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/ui_pass_head_stat_label_gap"
-                android:ellipsize="end"
-                android:maxLines="1"
+                android:maxLines="2"
                 android:textAppearance="@style/TextAppearance.EventQR.Type.Overline"
                 android:textColor="@color/ui_on_primary_muted"
                 tools:text="Check-ins" />
@@ -406,8 +405,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/ui_pass_head_stat_label_gap"
-                android:ellipsize="end"
-                android:maxLines="1"
+                android:maxLines="2"
                 android:textAppearance="@style/TextAppearance.EventQR.Type.Overline"
                 android:textColor="@color/ui_on_primary_muted"
                 tools:text="Events" />

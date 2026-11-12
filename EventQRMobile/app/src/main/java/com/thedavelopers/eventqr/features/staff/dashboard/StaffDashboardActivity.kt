@@ -24,6 +24,7 @@ import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import com.thedavelopers.eventqr.ui.components.PassHeadBinder
 import com.thedavelopers.eventqr.ui.components.PassHeadModel
 import com.thedavelopers.eventqr.ui.components.PassStat
+import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import kotlinx.coroutines.launch
@@ -85,6 +86,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
         emptyRecentScans.setAction(getString(R.string.ui_staff_scan_a_pass)) { openScanner() }
 
         findViewById<View>(R.id.btnScanPass).setOnClickListener { openScanner() }
+        findViewById<View>(R.id.btnStaffDashboardRetry).setOnClickListener { presenter.loadData() }
         configureStaffBottomNav(StaffBottomNavItem.DASHBOARD)
 
         swipeRefreshLayout = findViewById(R.id.swipeRefreshDashboard)
@@ -170,8 +172,34 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
         recentScanCount = items.size
         val empty = items.isEmpty()
         recyclerRecentScans.visibility = if (empty) View.GONE else View.VISIBLE
+        if (empty) {
+            // Restore the success copy after an error pass reused the same slot.
+            emptyRecentScans.setIcon(AppIcons.QrCode)
+            emptyRecentScans.show(
+                getString(R.string.ui_staff_no_scans),
+                getString(R.string.ui_staff_no_scans_body),
+            )
+            emptyRecentScans.setAction(getString(R.string.ui_staff_scan_a_pass)) { openScanner() }
+        }
         emptyRecentScans.visibility = if (empty) View.VISIBLE else View.GONE
         updateRecentCount()
+    }
+
+    override fun showError(message: String) = showScansError(message)
+
+    override fun showRecentScansError(message: String) = showScansError(message)
+
+    /** §5.10 error variant in the list slot: warning icon, server reason, one ghost Retry. */
+    private fun showScansError(message: String) {
+        skeletonLoading.visibility = View.GONE
+        recyclerRecentScans.visibility = View.GONE
+        emptyRecentScans.setIcon(AppIcons.Warning)
+        emptyRecentScans.show(
+            getString(R.string.ui_staff_dashboard_error_title),
+            message.ifBlank { getString(R.string.ui_staff_load_failed_body) },
+        )
+        emptyRecentScans.setAction(getString(R.string.common_retry)) { presenter.loadData() }
+        emptyRecentScans.visibility = View.VISIBLE
     }
 
     /** "N today" is the server summary count, never the truncated five-row list. Summary failure falls back to the loaded rows. */
@@ -189,7 +217,10 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
     }
 
     override fun showMessage(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        // Summary failure reports above the scan block; the loaded rows stay readable (§5.7).
+        findViewById<TextView>(R.id.txtStaffDashboardError).text =
+            message.ifBlank { getString(R.string.ui_staff_load_failed_body) }
+        findViewById<View>(R.id.errorStaffDashboard).visibility = View.VISIBLE
     }
 
     override fun showNotificationBadge(unreadCount: Int) {
@@ -198,6 +229,7 @@ open class StaffDashboardActivity : AppCompatActivity(), StaffDashboardContract.
     }
 
     override fun showLoading(isLoading: Boolean) {
+        if (isLoading) findViewById<View>(R.id.errorStaffDashboard).visibility = View.GONE
         if (isSwipeRefreshing) {
             if (!isLoading) stopSwipeRefresh()
         } else {

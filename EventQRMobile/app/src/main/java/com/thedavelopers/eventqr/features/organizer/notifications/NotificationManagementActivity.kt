@@ -29,6 +29,7 @@ import com.thedavelopers.eventqr.features.notifications.NotificationAdapter
 import com.thedavelopers.eventqr.features.notifications.model.dto.NotificationResponse
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpDataSource
 import com.thedavelopers.eventqr.features.organizer.OrganizerRepository
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.ui.theme.dimenOffset
 import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
@@ -125,6 +126,9 @@ class NotificationManagementActivity : AppCompatActivity() {
         findViewById<View>(R.id.cardEventFilter).setOnClickListener {
             if (eventFilterLoadFailed) loadEventFilterOptions(repo, openWhenLoaded = true) else toggleEventDropdown()
         }
+        findViewById<View>(R.id.btnEventFilterRetry).setOnClickListener {
+            loadEventFilterOptions(repo, openWhenLoaded = true)
+        }
         findViewById<View>(R.id.cardTypeFilter).setOnClickListener { toggleTypeDropdown() }
         loadEventFilterOptions(repo)
     }
@@ -134,20 +138,18 @@ class NotificationManagementActivity : AppCompatActivity() {
      * the filter silently showing only "All events" as if the organizer had none.
      */
     private fun loadEventFilterOptions(repo: OrganizerRepository, openWhenLoaded: Boolean = false) {
-        // Repeated taps while a load is running must not start parallel loads (or stack failure toasts).
+        // Repeated taps while a load is running must not start parallel loads (or restack the failure strip).
         if (eventFilterLoadJob?.isActive == true) return
         eventFilterLoadJob = lifecycleScope.launch {
             val eventsLoad = repo.loadApprovedOrganizerEvents()
             if (eventsLoad.source == OrganizerMvpDataSource.ERROR) {
                 eventFilterLoadFailed = true
-                android.widget.Toast.makeText(
-                    this@NotificationManagementActivity,
-                    getString(R.string.organizer_notifications_event_filter_load_failed),
-                    android.widget.Toast.LENGTH_LONG,
-                ).show()
+                // Failure reports in the flow with Retry; the filter keeps working on the last good list.
+                findViewById<View>(R.id.errorEventFilter).visibility = View.VISIBLE
                 return@launch
             }
             eventFilterLoadFailed = false
+            findViewById<View>(R.id.errorEventFilter).visibility = View.GONE
             eventOptions.clear()
             eventIdsByLabel.clear()
             eventOptions.add(getString(R.string.notification_mgmt_all_events))
@@ -266,13 +268,7 @@ class NotificationManagementActivity : AppCompatActivity() {
     private fun observeState() {
         // One render function for every input, so exactly one of skeleton / error / empty / list is visible.
         viewModel.loading.observe(this) { renderState() }
-        viewModel.error.observe(this) { error ->
-            // With rows already on screen the error has no panel of its own, so say it briefly instead of dropping it.
-            if (error != null && viewModel.list.value.orEmpty().isNotEmpty()) {
-                android.widget.Toast.makeText(this, error, android.widget.Toast.LENGTH_SHORT).show()
-            }
-            renderState()
-        }
+        viewModel.error.observe(this) { renderState() }
         viewModel.loaded.observe(this) { renderState() }
         viewModel.list.observe(this) { items ->
             adapter.submitItems(items)
@@ -292,7 +288,25 @@ class NotificationManagementActivity : AppCompatActivity() {
         )
         findViewById<View>(R.id.skeletonLoading).visibility = if (state == NotificationsScreenState.LOADING) View.VISIBLE else View.GONE
         findViewById<View>(R.id.layoutNotificationEmpty).visibility = if (state == NotificationsScreenState.EMPTY) View.VISIBLE else View.GONE
-        findViewById<View>(R.id.layoutNotificationError).visibility = if (state == NotificationsScreenState.ERROR) View.VISIBLE else View.GONE
+        val errorState = findViewById<EventQrEmptyState>(R.id.layoutNotificationError)
+        val error = viewModel.error.value
+        if (state == NotificationsScreenState.ERROR) {
+            errorState.show(
+                getString(R.string.organizer_notifications_error_loading_notifications),
+                error?.takeIf { it.isNotBlank() } ?: getString(R.string.ui_staff_load_failed_body),
+            )
+            errorState.setAction(getString(R.string.common_retry)) { viewModel.refresh() }
+        }
+        errorState.visibility = if (state == NotificationsScreenState.ERROR) View.VISIBLE else View.GONE
+        // A failed refresh with readable rows keeps the list and reports in the flow (§5.7 line 642).
+        val strip = findViewById<View>(R.id.errorNotifications)
+        val showStrip = state == NotificationsScreenState.CONTENT && error != null
+        if (showStrip) {
+            findViewById<TextView>(R.id.txtNotificationsError).text =
+                error?.takeIf { it.isNotBlank() } ?: getString(R.string.ui_staff_load_failed_body)
+            findViewById<View>(R.id.btnNotificationsRetry).setOnClickListener { viewModel.refresh() }
+        }
+        strip.visibility = if (showStrip) View.VISIBLE else View.GONE
         findViewById<View>(R.id.recyclerNotifications).visibility = if (state == NotificationsScreenState.CONTENT) View.VISIBLE else View.GONE
         // The pull-to-refresh spinner is the loading cue when rows are already on screen; the skeleton covers the rest.
         findViewById<SwipeRefreshLayout>(R.id.swipeRefreshNotifications).isRefreshing =

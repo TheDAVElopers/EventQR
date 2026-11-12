@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Edit profile (§6.2, form pattern §6.6) - retires Gen A.
+    Edit profile (§6.2, form pattern §6.7) - retires Gen A.
 
         Two eyebrowed sections (Personal details / Security) separated by a 1dp perforation
         56dp filled fields, static overline labels, inline error text under the field
-        72dp sticky footer whose "Save changes" never scrolls away
+        76dp sticky footer whose "Save changes" never scrolls away (space_12 block padding:
+        12 + 52 + 12, four dp over the nominal 72dp because space_10 is banned, §6.7)
 
     Deleted: the outlined TextInputLayout tower with helper text in the box, the counter inside
     the phone box, the full-width Save button floating in the scroll and the CardView per section.
@@ -45,40 +46,147 @@
                 android:paddingEnd="@dimen/ui_gutter"
                 android:paddingBottom="@dimen/space_24">
 
-                <include
+                <!-- Form-shaped skeleton: a section bar, three label + field groups, a security bar
+                     and the password card row, so the loaded geometry does not jump in (§5.11). -->
+                <LinearLayout
                     android:id="@+id/skeletonLoading"
-                    layout="@layout/include_skeleton_card"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:visibility="gone" />
+                    android:contentDescription="@string/ui_skeleton_loading"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <include
+                        layout="@layout/include_skeleton_block"
+                        android:layout_width="@dimen/ui_skeleton_meta_width"
+                        android:layout_height="@dimen/ui_skeleton_bar_height"
+                        android:layout_marginBottom="@dimen/space_12" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/space_16"
+                        android:orientation="vertical">
+
+                        <include
+                            layout="@layout/include_skeleton_block"
+                            android:layout_width="@dimen/ui_skeleton_label_width"
+                            android:layout_height="@dimen/ui_skeleton_bar_height" />
+
+                        <include
+                            layout="@layout/include_skeleton_block"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/ui_control_height"
+                            android:layout_marginTop="@dimen/space_8" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/space_16"
+                        android:orientation="vertical">
+
+                        <include
+                            layout="@layout/include_skeleton_block"
+                            android:layout_width="@dimen/ui_skeleton_label_width"
+                            android:layout_height="@dimen/ui_skeleton_bar_height" />
+
+                        <include
+                            layout="@layout/include_skeleton_block"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/ui_control_height"
+                            android:layout_marginTop="@dimen/space_8" />
+
+                        <!-- The locked-email helper line always renders under this field. -->
+                        <include
+                            layout="@layout/include_skeleton_block"
+                            android:layout_width="@dimen/ui_skeleton_title_width"
+                            android:layout_height="@dimen/ui_skeleton_bar_height"
+                            android:layout_marginTop="@dimen/space_4" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <include
+                            layout="@layout/include_skeleton_block"
+                            android:layout_width="@dimen/ui_skeleton_label_width"
+                            android:layout_height="@dimen/ui_skeleton_bar_height" />
+
+                        <include
+                            layout="@layout/include_skeleton_block"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/ui_control_height"
+                            android:layout_marginTop="@dimen/space_8" />
+                    </LinearLayout>
+
+                    <!-- Models the perforation between the field section and Security. -->
+                    <include
+                        layout="@layout/include_skeleton_block"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/stroke_hairline"
+                        android:layout_marginTop="@dimen/space_16"
+                        android:layout_marginBottom="@dimen/space_8" />
+
+                    <include
+                        layout="@layout/include_skeleton_block"
+                        android:layout_width="@dimen/ui_skeleton_meta_width"
+                        android:layout_height="@dimen/ui_skeleton_bar_height"
+                        android:layout_marginTop="@dimen/space_8"
+                        android:layout_marginBottom="@dimen/space_8" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_ui_card"
+                        android:gravity="center_vertical"
+                        android:minHeight="@dimen/ui_row_height_value"
+                        android:orientation="horizontal"
+                        android:paddingStart="@dimen/ui_card_padding">
+
+                        <include
+                            layout="@layout/include_skeleton_block"
+                            android:layout_width="@dimen/ui_skeleton_title_width"
+                            android:layout_height="@dimen/ui_skeleton_bar_height" />
+                    </LinearLayout>
+                </LinearLayout>
 
                 <!-- ═════════ Error: what happened, then what to do ═════════ -->
                 <LinearLayout
                     android:id="@+id/cardError"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/space_lg"
-                    android:background="@drawable/bg_ui_card"
+                    android:layout_marginBottom="@dimen/space_16"
+                    android:accessibilityLiveRegion="polite"
+                    android:background="@drawable/bg_ui_block_r4"
                     android:backgroundTint="@color/ui_error_container"
-                    android:orientation="vertical"
-                    android:padding="@dimen/ui_card_padding"
+                    android:gravity="center_vertical"
+                    android:minHeight="@dimen/ui_touch_min"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/space_16"
+                    android:paddingTop="@dimen/space_8"
+                    android:paddingEnd="@dimen/space_8"
+                    android:paddingBottom="@dimen/space_8"
                     android:visibility="gone">
 
                     <TextView
                         android:id="@+id/txtApiError"
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
                         android:textColor="@color/ui_on_error_container" />
 
                     <TextView
                         android:id="@+id/btnRetryProfileLoad"
+                        style="@style/Widget.EventQR.Ui.Button.Ghost"
                         android:layout_width="wrap_content"
-                        android:layout_height="@dimen/ui_button_height_inline"
-                        android:layout_marginTop="@dimen/space_xs"
-                        android:gravity="center_vertical"
+                        android:layout_height="wrap_content"
+                        android:focusable="true"
+                        android:minHeight="@dimen/ui_button_height_inline"
                         android:text="@string/ui_attendee_retry"
-                        android:textAppearance="@style/TextAppearance.EventQR.Type.Label"
                         android:textColor="@color/ui_on_error_container" />
                 </LinearLayout>
 
@@ -86,7 +194,7 @@
                     android:id="@+id/txtEmptyHint"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/space_lg"
+                    android:layout_marginBottom="@dimen/space_16"
                     android:text="@string/edit_profile_complete_your_profile_to_help_organi"
                     android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
                     android:textColor="@color/ui_text_secondary"
@@ -108,7 +216,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_md"
+                        android:layout_marginTop="@dimen/space_12"
                         android:labelFor="@id/edtFullName"
                         android:text="@string/ui_attendee_full_name"
                         android:textAppearance="@style/TextAppearance.EventQR.Type.FieldLabel" />
@@ -117,8 +225,8 @@
                         android:id="@+id/edtFullName"
                         style="@style/Widget.EventQR.Ui.TextField"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/ui_control_height"
-                        android:layout_marginTop="@dimen/space_sm"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_8"
                         android:autoText="false"
                         android:inputType="textPersonName|textCapWords"
                         android:maxLength="60"
@@ -128,7 +236,7 @@
                         android:id="@+id/txtNameError"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_xs"
+                        android:layout_marginTop="@dimen/space_4"
                         android:text="@string/ui_attendee_name_required"
                         android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
                         android:textColor="@color/ui_error"
@@ -137,7 +245,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_lg"
+                        android:layout_marginTop="@dimen/space_16"
                         android:labelFor="@id/edtEmail"
                         android:text="@string/ui_attendee_email"
                         android:textAppearance="@style/TextAppearance.EventQR.Type.FieldLabel" />
@@ -146,8 +254,8 @@
                         android:id="@+id/edtEmail"
                         style="@style/Widget.EventQR.Ui.TextField.Display"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/ui_control_height"
-                        android:layout_marginTop="@dimen/space_sm"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_8"
                         android:enabled="false"
                         android:focusable="false"
                         android:focusableInTouchMode="false"
@@ -157,7 +265,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_xs"
+                        android:layout_marginTop="@dimen/space_4"
                         android:text="@string/ui_attendee_email_locked"
                         android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
                         android:textColor="@color/ui_text_secondary" />
@@ -165,7 +273,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_lg"
+                        android:layout_marginTop="@dimen/space_16"
                         android:labelFor="@id/edtPhone"
                         android:text="@string/ui_attendee_phone"
                         android:textAppearance="@style/TextAppearance.EventQR.Type.FieldLabel" />
@@ -175,20 +283,21 @@
                     <LinearLayout
                         android:id="@+id/layoutPhoneField"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/ui_control_height"
-                        android:layout_marginTop="@dimen/space_sm"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_8"
                         android:addStatesFromChildren="true"
                         android:background="@drawable/bg_ui_field"
                         android:gravity="center_vertical"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:minHeight="@dimen/ui_control_height">
 
                         <TextView
                             android:layout_width="wrap_content"
-                            android:layout_height="match_parent"
+                            android:layout_height="wrap_content"
                             android:gravity="center_vertical"
                             android:includeFontPadding="false"
-                            android:paddingStart="@dimen/space_lg"
-                            android:paddingEnd="@dimen/space_sm"
+                            android:paddingStart="@dimen/space_16"
+                            android:paddingEnd="@dimen/space_8"
                             android:text="@string/phone_prefix"
                             android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
                             android:textColor="@color/ui_text_primary" />
@@ -196,13 +305,13 @@
                         <EditText
                             android:id="@+id/edtPhone"
                             android:layout_width="0dp"
-                            android:layout_height="match_parent"
+                            android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:background="@null"
                             android:hint="@string/ui_attendee_phone_hint"
                             android:inputType="number"
                             android:maxLines="1"
-                            android:paddingEnd="@dimen/space_lg"
+                            android:paddingEnd="@dimen/space_16"
                             android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
                             android:textColor="@color/ui_text_primary"
                             android:textColorHint="@color/ui_text_secondary" />
@@ -212,7 +321,7 @@
                         android:id="@+id/txtPhoneError"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_xs"
+                        android:layout_marginTop="@dimen/space_4"
                         android:text="@string/ui_attendee_phone_required"
                         android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
                         android:textColor="@color/ui_error"
@@ -220,8 +329,8 @@
 
                     <View
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/stroke_focus"
-                        android:layout_marginTop="@dimen/space_lg"
+                        android:layout_height="@dimen/stroke_hairline"
+                        android:layout_marginTop="@dimen/space_16"
                         android:background="@drawable/divider_perforation_light"
                         android:layerType="software" />
 
@@ -229,41 +338,46 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_lg"
+                        android:layout_marginTop="@dimen/space_16"
                         android:text="@string/ui_attendee_security"
                         android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
 
-                    <LinearLayout
-                        android:id="@+id/btnChangePassword"
+                    <com.google.android.material.card.MaterialCardView
+                        style="@style/Widget.EventQR.Ui.Card.Grouped"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/ui_row_height_value"
-                        android:layout_marginTop="@dimen/space_sm"
-                        android:background="?attr/selectableItemBackground"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_8"
+                        android:clipToOutline="true">
 
-                        <TextView
-                            android:layout_width="0dp"
+                        <LinearLayout
+                            android:id="@+id/btnChangePassword"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/ui_attendee_change_password"
-                            android:textAppearance="@style/TextAppearance.EventQR.Type.Title"
-                            android:textColor="@color/ui_text_primary" />
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center_vertical"
+                            android:minHeight="@dimen/ui_row_height_value"
+                            android:orientation="horizontal"
+                            android:paddingStart="@dimen/ui_card_padding"
+                            android:paddingEnd="@dimen/ui_card_padding">
 
-                        <ImageView
-                            android:layout_width="@dimen/ui_chevron"
-                            android:layout_height="@dimen/ui_chevron"
-                            android:importantForAccessibility="no"
-                            android:src="@drawable/ic_ui_chevron_right"
-                            android:tint="@color/ui_text_secondary" />
-                    </LinearLayout>
+                            <TextView
+                                style="@style/Widget.EventQR.Ui.ListRow.Title"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/ui_attendee_change_password" />
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="@dimen/stroke_hairline"
-                        android:background="@color/ui_hairline" />
+                            <ImageView
+                                android:layout_width="@dimen/ui_chevron"
+                                android:layout_height="@dimen/ui_chevron"
+                                android:layout_marginStart="@dimen/space_8"
+                                android:importantForAccessibility="no"
+                                android:tint="@color/ui_text_secondary"
+                                app:srcCompat="@drawable/ic_ui_chevron_right" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
                 </LinearLayout>
             </LinearLayout>
         </ScrollView>
@@ -280,17 +394,19 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/ui_surface"
+        android:minHeight="@dimen/ui_footer_height"
         android:orientation="vertical"
         android:paddingStart="@dimen/ui_gutter"
-        android:paddingTop="@dimen/space_md"
+        android:paddingTop="@dimen/space_12"
         android:paddingEnd="@dimen/ui_gutter"
-        android:paddingBottom="@dimen/space_md">
+        android:paddingBottom="@dimen/space_12">
 
         <Button
             android:id="@+id/btnSaveChanges"
             style="@style/Widget.EventQR.Ui.Button.Primary"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/ui_button_height"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/ui_button_height"
             android:text="@string/ui_attendee_save_changes" />
     </LinearLayout>
 

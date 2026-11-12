@@ -1,7 +1,6 @@
 package com.thedavelopers.eventqr.features.auth.register
 
-import android.text.InputType
-import android.view.MotionEvent
+import android.text.method.PasswordTransformationMethod
 import android.view.View
 import android.widget.Button
 import android.widget.CheckBox
@@ -24,7 +23,7 @@ import org.robolectric.annotation.Config
 
 /**
  * Robolectric tests for the XML reverted RegistrationActivity: phone
- * normalization + live counter, password requirement UI, terms gating
+ * normalization, password requirement UI, terms gating
  * (TestFlow REG-9/REG-10), presenter field-error wiring and navigation.
  * The successful account creation performs a network call via AuthRepository
  * and is not unit-testable (see coverage notes).
@@ -44,25 +43,22 @@ class RegistrationActivityTest {
     // -- Phone normalization ------------------------------------------------------
 
     @Test
-    fun phoneInput_plainTenDigits_unchangedWithFullCounter() {
+    fun phoneInput_plainTenDigits_unchanged() {
         val activity = buildActivity()
         val phoneInput = activity.findViewById<EditText>(R.id.edtPhoneNumber)
 
         phoneInput.setText("9123456789")
 
         assertEquals("9123456789", phoneInput.text.toString())
-        assertEquals("10/10", activity.findViewById<TextView>(R.id.txtPhoneCounter).text.toString())
     }
 
     @Test
-    fun phoneInput_shortEntry_updatesLiveCounter() {
+    fun phoneInput_shortEntry_unchanged() {
         val activity = buildActivity()
         val phoneInput = activity.findViewById<EditText>(R.id.edtPhoneNumber)
-        val counter = activity.findViewById<TextView>(R.id.txtPhoneCounter)
 
         phoneInput.setText("123")
         assertEquals("123", phoneInput.text.toString())
-        assertEquals("3/10", counter.text.toString())
     }
 
     @Test
@@ -75,7 +71,6 @@ class RegistrationActivityTest {
         // No raw maxLength on the field: the full input reaches the normalizer, which
         // strips prefixes and caps the NATIONAL digits at 10 afterwards.
         assertEquals("1234567890", phoneInput.text.toString())
-        assertEquals("10/10", activity.findViewById<TextView>(R.id.txtPhoneCounter).text.toString())
     }
 
     @Test
@@ -87,7 +82,6 @@ class RegistrationActivityTest {
 
         // +63 stripped on the FULL input, leaving the 10 national digits intact.
         assertEquals("9171234567", phoneInput.text.toString())
-        assertEquals("10/10", activity.findViewById<TextView>(R.id.txtPhoneCounter).text.toString())
     }
 
     @Test
@@ -98,7 +92,6 @@ class RegistrationActivityTest {
         phoneInput.setText("00639171234567")
 
         assertEquals("9171234567", phoneInput.text.toString())
-        assertEquals("10/10", activity.findViewById<TextView>(R.id.txtPhoneCounter).text.toString())
     }
 
     @Test
@@ -111,7 +104,6 @@ class RegistrationActivityTest {
         phoneInput.setText("6391712345678901")
 
         assertEquals("9171234567", phoneInput.text.toString())
-        assertEquals("10/10", activity.findViewById<TextView>(R.id.txtPhoneCounter).text.toString())
     }
 
     @Test
@@ -124,26 +116,12 @@ class RegistrationActivityTest {
         phoneInput.setText("09171234567")
 
         assertEquals("9171234567", phoneInput.text.toString())
-        assertEquals("10/10", activity.findViewById<TextView>(R.id.txtPhoneCounter).text.toString())
-    }
-
-    @Test
-    fun phoneInput_clearedField_resetsCounter() {
-        val activity = buildActivity()
-        val phoneInput = activity.findViewById<EditText>(R.id.edtPhoneNumber)
-        val counter = activity.findViewById<TextView>(R.id.txtPhoneCounter)
-
-        phoneInput.setText("9123456789")
-        assertEquals("10/10", counter.text.toString())
-
-        phoneInput.setText("")
-        assertEquals("0/10", counter.text.toString())
     }
 
     // -- Password requirements UI ------------------------------------------------
 
     @Test
-    fun passwordInput_updatesRequirementsAndStrengthUI() {
+    fun passwordInput_updatesRequirementsUI() {
         val activity = buildActivity()
         val passwordInput = activity.findViewById<EditText>(R.id.edtPassword)
 
@@ -159,11 +137,10 @@ class RegistrationActivityTest {
         assertRequirementMet(activity, R.id.txtPasswordLowercaseRequirement, "One lowercase letter")
         assertRequirementMet(activity, R.id.txtPasswordNumberRequirement, "One number")
         assertRequirementMet(activity, R.id.txtPasswordSpecialRequirement, "One special character")
-        assertEquals("Strong", activity.findViewById<TextView>(R.id.txtPasswordStrength).text.toString())
     }
 
     @Test
-    fun passwordInput_partialPassword_showsUnmetRequirementsAndWeakStrength() {
+    fun passwordInput_partialPassword_showsUnmetRequirements() {
         val activity = buildActivity()
         val passwordInput = activity.findViewById<EditText>(R.id.edtPassword)
 
@@ -173,26 +150,35 @@ class RegistrationActivityTest {
         assertRequirementMet(activity, R.id.txtPasswordLengthRequirement, "At least 8 characters")
         assertRequirementUnmet(activity, R.id.txtPasswordCapitalRequirement, "One uppercase letter")
         assertRequirementMet(activity, R.id.txtPasswordLowercaseRequirement, "One lowercase letter")
-        assertEquals("Fair", activity.findViewById<TextView>(R.id.txtPasswordStrength).text.toString())
     }
 
     private fun assertRequirementMet(activity: RegistrationActivity, id: Int, label: String) {
-        assertRequirement(activity, id, label, activity.getColor(R.color.ui_text_primary))
+        assertRequirement(activity, id, label, met = true)
     }
 
     private fun assertRequirementUnmet(activity: RegistrationActivity, id: Int, label: String) {
-        assertRequirement(activity, id, label, activity.getColor(R.color.ui_text_secondary))
+        assertRequirement(activity, id, label, met = false)
     }
 
     /**
-     * A rule row carries its label as text and its state in the leading mark (a 16dp compound
-     * drawable) plus the label tone - no ✓/○ character is ever part of the string.
+     * A rule row carries its label as text, its state in the fixed 16dp leading slot (the
+     * `ic_ui_check` tick when met, empty at rest) and a `{rule}, met` / `{rule}, not met`
+     * description - no ✓/○ character is ever part of the string.
      */
-    private fun assertRequirement(activity: RegistrationActivity, id: Int, label: String, expectedTextColor: Int) {
+    private fun assertRequirement(activity: RegistrationActivity, id: Int, label: String, met: Boolean) {
         val view = activity.findViewById<TextView>(id)
         assertEquals(label, view.text.toString())
-        assertEquals(expectedTextColor, view.currentTextColor)
-        assertEquals(activity.resources.getDimensionPixelSize(R.dimen.ui_rule_mark), view.compoundDrawablesRelative[0].intrinsicWidth)
+        assertEquals(
+            activity.getString(
+                if (met) R.string.ui_password_rule_met else R.string.ui_password_rule_not_met,
+                label,
+            ),
+            view.contentDescription.toString(),
+        )
+        assertEquals(
+            activity.resources.getDimensionPixelSize(R.dimen.icon_sm),
+            view.compoundDrawablesRelative[0].bounds.width(),
+        )
     }
 
     @Test
@@ -314,43 +300,43 @@ class RegistrationActivityTest {
     // -- Password visibility toggle -----------------------------------------------
 
     @Test
-    fun passwordToggle_switchesBothPasswordFieldInputTypes() {
+    fun passwordToggle_switchesBothPasswordFieldTransformations() {
         val activity = buildActivity()
         val passwordInput = activity.findViewById<EditText>(R.id.edtPassword)
         val confirmPasswordInput = activity.findViewById<EditText>(R.id.edtConfirmPassword)
-        layoutInput(passwordInput)
-        layoutInput(confirmPasswordInput)
-        val hidden = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-        val visible = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
 
-        assertEquals(hidden, passwordInput.inputType)
-        assertEquals(hidden, confirmPasswordInput.inputType)
+        assertTrue(passwordInput.transformationMethod is PasswordTransformationMethod)
+        assertTrue(confirmPasswordInput.transformationMethod is PasswordTransformationMethod)
 
-        dispatchActionUp(passwordInput, 10_000f)
-        assertEquals(visible, passwordInput.inputType)
-        assertEquals(hidden, confirmPasswordInput.inputType)
+        // Material's password_toggle end icon owns each eye now; each tap unmasks only its field.
+        toggleEndIcon(passwordInput)
+        assertNull(passwordInput.transformationMethod)
+        assertTrue(confirmPasswordInput.transformationMethod is PasswordTransformationMethod)
 
-        dispatchActionUp(confirmPasswordInput, 10_000f)
-        assertEquals(visible, confirmPasswordInput.inputType)
+        toggleEndIcon(confirmPasswordInput)
+        assertNull(confirmPasswordInput.transformationMethod)
 
-        dispatchActionUp(passwordInput, 10_000f)
-        assertEquals(hidden, passwordInput.inputType)
+        toggleEndIcon(passwordInput)
+        assertTrue(passwordInput.transformationMethod is PasswordTransformationMethod)
     }
 
-    private fun layoutInput(input: EditText) {
-        input.measure(
-            View.MeasureSpec.makeMeasureSpec(1000, View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(200, View.MeasureSpec.EXACTLY),
-        )
-        input.layout(0, 0, 1000, 200)
-    }
-
-    private fun dispatchActionUp(input: EditText, rawX: Float) {
-        val event = MotionEvent.obtain(0L, 0L, MotionEvent.ACTION_UP, rawX, 100f, 0)
-        try {
-            input.dispatchTouchEvent(event)
-        } finally {
-            event.recycle()
+    /** Taps Material's password_toggle end icon on the field's [TextInputLayout] host. */
+    private fun toggleEndIcon(input: EditText) {
+        var parent: android.view.ViewParent? = input.parent
+        while (parent is View) {
+            if (parent is com.google.android.material.textfield.TextInputLayout) {
+                assertEquals(
+                    com.google.android.material.textfield.TextInputLayout.END_ICON_PASSWORD_TOGGLE,
+                    parent.endIconMode,
+                )
+                val icon = parent.findViewById<View>(
+                    com.google.android.material.R.id.text_input_end_icon,
+                )
+                requireNotNull(icon) { "password toggle end icon missing" }.performClick()
+                return
+            }
+            parent = parent.parent
         }
+        throw AssertionError("password field has no TextInputLayout host")
     }
 }

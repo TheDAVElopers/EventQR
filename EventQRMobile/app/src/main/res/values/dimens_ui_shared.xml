@@ -27,10 +27,10 @@
     <dimen name="ui_pass_head_identity_height">116dp</dimen>   <!-- minHeight: grows with fontScale -->
     <dimen name="ui_pass_head_row_tabs">56dp</dimen>
     <dimen name="ui_pass_head_title_min">44dp</dimen>
-    <dimen name="ui_pass_head_stub_height">60dp</dimen>
+    <dimen name="ui_pass_head_stub_height">56dp</dimen>
     <!-- Breathing room above the value and below the label inside the stub. Small enough that the
-         default-scale content (value + gap + label = ~47dp) still sits inside the 60dp floor, so
-         1.0 renders exactly 60dp; at larger font scales the band grows and this stays as the clear
+         default-scale content (value + gap + label = ~47dp) still sits inside the 56dp floor, so
+         1.0 renders exactly 56dp; at larger font scales the band grows and this stays as the clear
          margin between the glyphs and the band edge instead of 0dp. -->
     <dimen name="ui_pass_head_stub_pad_v">4dp</dimen>
     <dimen name="ui_pass_head_compact_row">20dp</dimen>
@@ -114,8 +114,10 @@
     <dimen name="ui_empty_top_offset">40dp</dimen>
 
     <!-- ═════════ Skeleton (§5.11) ═════════ -->
+    <dimen name="ui_progress_inline">20dp</dimen>  <!-- in-button indeterminate spinner -->
     <dimen name="ui_skeleton_bar_height">12dp</dimen>
     <dimen name="ui_skeleton_title_width">160dp</dimen>
+    <dimen name="ui_skeleton_label_width">80dp</dimen>
     <dimen name="ui_skeleton_meta_width">96dp</dimen>
     <dimen name="ui_skeleton_row_height">72dp</dimen>
     <dimen name="ui_skeleton_avatar">40dp</dimen>
@@ -185,7 +187,7 @@
     <dimen name="ui_scan_panel_height">256dp</dimen>        <!-- 8dp above/below the 240dp square -->
     <dimen name="ui_scan_preview">240dp</dimen>             <!-- square; the camera preview is cropped to it -->
     <dimen name="ui_scan_bracket_arm">24dp</dimen>
-    <dimen name="ui_scan_torch">44dp</dimen>
+    <dimen name="ui_scan_torch">48dp</dimen>
     <dimen name="ui_scan_torch_inset">16dp</dimen>
     <dimen name="ui_scan_context_height">48dp</dimen>
     <dimen name="ui_scan_status_height">56dp</dimen>

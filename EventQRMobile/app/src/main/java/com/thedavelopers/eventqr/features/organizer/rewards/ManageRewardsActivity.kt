@@ -14,6 +14,7 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -22,6 +23,7 @@ import android.widget.Toast
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.organizer.formatOrganizerEventDate
@@ -83,6 +85,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
     private lateinit var rewardsEnabledSwitch: SwitchCompat
     private lateinit var rewardHost: LinearLayout
     private lateinit var addRewardChip: TextView
+    private lateinit var statusLine: TextView
     private lateinit var refreshLayout: androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 
     /** Tests set this before the first rewards call to replace the network service. */
@@ -106,6 +109,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
         stateHost = findViewById(R.id.manageRewardsStateHost)
         refreshLayout = findViewById(R.id.swipeRefreshRewards)
         rewardHost = findViewById(R.id.mrw_reward_host)
+        statusLine = findViewById(R.id.mrw_status)
         addRewardChip = findViewById(R.id.mrw_add_reward)
         FieldIcons.apply(addRewardChip)
         addRewardChip.setOnClickListener { showRewardDialog(null) }
@@ -288,6 +292,13 @@ open class ManageRewardsActivity : AppCompatActivity() {
         rewardsEnabledSwitch.setOnCheckedChangeListener { _, checked -> setRewardsEnabled(checked) }
     }
 
+    /** Inline failure channel above the list, mirroring the scan-purposes screen (§6.8). */
+    private fun showStatus(message: CharSequence?) {
+        if (message.isNullOrBlank()) return
+        statusLine.text = message
+        statusLine.visibility = View.VISIBLE
+    }
+
     @VisibleForTesting
     internal fun loadRewards(showInitialLoading: Boolean = true) {
         // A refresh can arrive before the event list has resolved an event; there is nothing to load yet.
@@ -296,6 +307,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
             return
         }
         if (showInitialLoading && !refreshLayout.isRefreshing) {
+            statusLine.visibility = View.GONE
             rewardHost.removeAllViews()
             addRewardChip.visibility = View.GONE
             rewardHost.addView(styledText(getString(R.string.manage_rewards_loading), R.dimen.type_body_medium, false, orgColors.muted).apply {
@@ -326,13 +338,13 @@ open class ManageRewardsActivity : AppCompatActivity() {
                 rewardHost.removeAllViews()
                 addRewardChip.visibility = View.GONE
                 rewardHost.addView(errorState(error.message ?: getString(R.string.manage_rewards_load_failed)) { loadRewards() })
-                Toast.makeText(this@ManageRewardsActivity, error.message ?: getString(R.string.manage_rewards_load_failed), Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     private fun renderRewards() {
         bindEventSummary()
+        statusLine.visibility = View.GONE
         rewardHost.removeAllViews()
         addRewardChip.visibility = if (rewards.isEmpty()) View.GONE else View.VISIBLE
         val enabled = rewardsEnabled
@@ -371,15 +383,15 @@ open class ManageRewardsActivity : AppCompatActivity() {
         when {
             !rewardsEnabled || reward.status == RewardStatus.INACTIVE -> {
                 badge.setText(R.string.manage_rewards_badge_disabled)
-                badge.setTextAppearance(R.style.Widget_EventQR_Ui_StatusBadge_Neutral)
+                ListRowBinder.applyBadgeTone(badge, R.style.Widget_EventQR_Ui_StatusBadge_Neutral)
             }
             stockState.outOfStock -> {
                 badge.setText(R.string.reward_details_out_of_stock)
-                badge.setTextAppearance(R.style.Widget_EventQR_Ui_StatusBadge_Error)
+                ListRowBinder.applyBadgeTone(badge, R.style.Widget_EventQR_Ui_StatusBadge_Error)
             }
             else -> {
                 badge.setText(R.string.manage_rewards_badge_available)
-                badge.setTextAppearance(R.style.Widget_EventQR_Ui_StatusBadge_Success)
+                ListRowBinder.applyBadgeTone(badge, R.style.Widget_EventQR_Ui_StatusBadge_Success)
             }
         }
 
@@ -488,16 +500,23 @@ open class ManageRewardsActivity : AppCompatActivity() {
         form.addView(fieldLabel(getString(R.string.manage_rewards_settings)))
         form.addView(duplicateSwitch)
 
+        // §5.12: one dialog base; the form slots between the title and the right-aligned text actions.
+        val root = layoutInflater.inflate(R.layout.dialog_base, null, false) as LinearLayout
+        root.findViewById<TextView>(R.id.dialogTitle).setText(
+            if (isEdit) R.string.manage_rewards_edit_reward else R.string.manage_rewards_create_reward,
+        )
+        root.findViewById<View>(R.id.dialogBody).visibility = View.GONE
+        val actions = root.findViewById<LinearLayout>(R.id.dialogActions)
+        form.setPadding(0, dimenPx(R.dimen.space_md), 0, 0)
+        root.addView(form, root.indexOfChild(actions))
+
         rewardDialog?.dismiss()
-        val dialog = AlertDialog.Builder(this)
-            .setTitle(getString(if (isEdit) R.string.manage_rewards_edit_reward else R.string.manage_rewards_create_reward))
-            .setView(form)
-            .setNegativeButton(getString(R.string.request_event_cancel), null)
-            // Click handling is replaced after show() so invalid input keeps the dialog (and what was typed) open.
-            .setPositiveButton(getString(if (isEdit) R.string.manage_scan_purposes_save else R.string.manage_rewards_create), null)
-            .show()
+        val dialog = AlertDialog.Builder(this).setView(root).create()
         rewardDialog = dialog
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+
+        val positive = root.findViewById<Button>(R.id.dialogPositive)
+        positive.setText(if (isEdit) R.string.manage_scan_purposes_save else R.string.manage_rewards_create)
+        positive.setOnClickListener {
             val title = titleInput.text.toString().trim()
             val points = pointsInput.text.toString().trim().toIntOrNull()
             val quantity = resolveRewardQuantity(quantityInput.text.toString(), reward?.let { it.totalQuantity?.toString().orEmpty() })
@@ -519,6 +538,13 @@ open class ManageRewardsActivity : AppCompatActivity() {
                 dialog,
             )
         }
+
+        root.findViewById<Button>(R.id.dialogNegative).apply {
+            setText(R.string.request_event_cancel)
+            setOnClickListener { dialog.dismiss() }
+        }
+
+        dialog.show()
     }
 
     private fun fieldLabel(label: String): TextView = styledText(label, R.dimen.type_body_compact, true, orgColors.text).apply {
@@ -555,15 +581,21 @@ open class ManageRewardsActivity : AppCompatActivity() {
                 if (error is kotlinx.coroutines.CancellationException) throw error
                 setRewardDialogBusy(dialog, busy = false)
                 val serverMessage = (error as? retrofit2.HttpException)?.let { com.thedavelopers.eventqr.core.api.parseHttpErrorMessage(it) }
-                Toast.makeText(this@ManageRewardsActivity, serverMessage ?: error.message ?: getString(R.string.manage_rewards_save_failed), Toast.LENGTH_LONG).show()
+                // The dialog stays open, so the failure belongs inside it: the body slot becomes the error line.
+                dialog.findViewById<TextView>(R.id.dialogBody)?.apply {
+                    setTextColor(color(R.color.ui_error))
+                    text = serverMessage ?: error.message ?: getString(R.string.manage_rewards_save_failed)
+                    visibility = View.VISIBLE
+                    accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+                }
             }
         }
     }
 
     private fun setRewardDialogBusy(dialog: AlertDialog, busy: Boolean) {
         dialog.setCancelable(!busy)
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.isEnabled = !busy
-        dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.isEnabled = !busy
+        dialog.findViewById<Button>(R.id.dialogPositive)?.isEnabled = !busy
+        dialog.findViewById<Button>(R.id.dialogNegative)?.isEnabled = !busy
     }
 
     override fun onDestroy() {
@@ -574,12 +606,26 @@ open class ManageRewardsActivity : AppCompatActivity() {
     }
 
     private fun confirmDeleteReward(reward: RewardResponse) {
-        AlertDialog.Builder(this)
-            .setTitle(getString(R.string.manage_rewards_remove_reward))
-            .setMessage(getString(R.string.manage_rewards_remove_confirm, reward.name, selectedEvent.title))
-            .setNegativeButton(getString(R.string.request_event_cancel), null)
-            .setPositiveButton(getString(R.string.staff_remove)) { _, _ -> deleteReward(reward) }
-            .show()
+        // §5.12: `dialog_base` with the verb as the destructive commit.
+        val root = layoutInflater.inflate(R.layout.dialog_base, null, false)
+        val dialog = AlertDialog.Builder(this).setView(root).create()
+        root.findViewById<TextView>(R.id.dialogTitle).setText(R.string.manage_rewards_remove_reward)
+        root.findViewById<TextView>(R.id.dialogBody).text =
+            getString(R.string.manage_rewards_remove_confirm, reward.name, selectedEvent.title)
+        root.findViewById<Button>(R.id.dialogNegative).apply {
+            setText(R.string.request_event_cancel)
+            setOnClickListener { dialog.dismiss() }
+        }
+        root.findViewById<Button>(R.id.dialogPositive).apply {
+            setText(R.string.staff_remove)
+            setBackgroundResource(R.drawable.bg_ui_button_destructive_commit)
+            setTextColor(ContextCompat.getColor(context, R.color.ui_on_primary))
+            setOnClickListener {
+                dialog.dismiss()
+                deleteReward(reward)
+            }
+        }
+        dialog.show()
     }
 
     private fun deleteReward(reward: RewardResponse) {
@@ -591,7 +637,7 @@ open class ManageRewardsActivity : AppCompatActivity() {
                 Toast.makeText(this@ManageRewardsActivity, response.message ?: getString(R.string.manage_rewards_removed), Toast.LENGTH_SHORT).show()
                 loadRewards()
             } catch (error: Exception) {
-                Toast.makeText(this@ManageRewardsActivity, error.message ?: getString(R.string.manage_rewards_remove_failed), Toast.LENGTH_LONG).show()
+                showStatus(error.message ?: getString(R.string.manage_rewards_remove_failed))
             }
         }
     }
@@ -632,11 +678,12 @@ open class ManageRewardsActivity : AppCompatActivity() {
                 rewardsEnabledSwitch.setOnCheckedChangeListener(null)
                 rewardsEnabledSwitch.isChecked = rewardsEnabled
                 rewardsEnabledSwitch.setOnCheckedChangeListener { _, checked -> setRewardsEnabled(checked) }
-                Toast.makeText(
-                    this@ManageRewardsActivity,
-                    getString(R.string.manage_rewards_update_settings_failed, error.message ?: getString(R.string.common_try_again_lower)),
-                    Toast.LENGTH_LONG,
-                ).show()
+                showStatus(
+                    getString(
+                        R.string.manage_rewards_update_settings_failed,
+                        error.message ?: getString(R.string.common_try_again_lower),
+                    ),
+                )
             }
         }
     }

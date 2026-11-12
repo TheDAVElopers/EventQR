@@ -19,7 +19,7 @@ import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [35])
-class EmptyStateViewComposeTest {
+class EmptyStateComposeTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
@@ -93,7 +93,7 @@ class EmptyStateViewComposeTest {
     private fun setEmptyState(actionLabel: String? = null, onActionClick: (() -> Unit)? = null) {
         composeTestRule.setContent {
             EventQrTheme {
-                EmptyStateView(
+                EmptyState(
                     icon = AppIcons.Notification,
                     title = "No events yet",
                     description = "Create your first event to get started.",

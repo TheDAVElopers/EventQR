@@ -43,11 +43,50 @@
                 android:orientation="vertical"
                 android:paddingBottom="@dimen/space_24">
 
+                <!-- Summary failure reports in the flow above the action; loaded rows stay (§5.7). -->
+                <LinearLayout
+                    android:id="@+id/errorStaffDashboard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/ui_gutter"
+                    android:layout_marginTop="@dimen/space_16"
+                    android:layout_marginEnd="@dimen/ui_gutter"
+                    android:accessibilityLiveRegion="polite"
+                    android:background="@drawable/bg_ui_block_r4"
+                    android:backgroundTint="@color/ui_error_container"
+                    android:gravity="center_vertical"
+                    android:minHeight="@dimen/ui_touch_min"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/space_lg"
+                    android:paddingTop="@dimen/space_sm"
+                    android:paddingEnd="@dimen/space_sm"
+                    android:paddingBottom="@dimen/space_sm"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/txtStaffDashboardError"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                        android:textColor="@color/ui_on_error_container" />
+
+                    <TextView
+                        android:id="@+id/btnStaffDashboardRetry"
+                        style="@style/Widget.EventQR.Ui.Button.Ghost"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:focusable="true"
+                        android:minHeight="@dimen/ui_button_height_inline"
+                        android:text="@string/common_retry"
+                        android:textColor="@color/ui_on_error_container" />
+                </LinearLayout>
+
                 <!-- ═════════ The one primary action ═════════ -->
                 <LinearLayout
                     android:id="@+id/btnScanPass"
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/ui_staff_scan_block_height"
+                    android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/ui_gutter"
                     android:layout_marginTop="@dimen/space_24"
                     android:layout_marginEnd="@dimen/ui_gutter"
@@ -57,7 +96,8 @@
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingStart="@dimen/space_lg"
-                    android:paddingEnd="@dimen/space_lg">
+                    android:paddingEnd="@dimen/space_lg"
+                    android:minHeight="@dimen/ui_staff_scan_block_height">
 
                     <ImageView
                         android:layout_width="@dimen/icon_lg"

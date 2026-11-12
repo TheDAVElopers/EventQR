@@ -396,8 +396,9 @@ class ScannerResultUiTest {
         assertTrue(activity.openedCards.isEmpty())
         assertEquals(
             activity.getString(R.string.staff_print_id_permission_required),
-            ShadowToast.getTextOfLatestToast(),
+            text(activity, R.id.txtScannerResult),
         )
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.scanErrorGroup).visibility)
         // Not the generic ID-print-failed panel: the print was refused, the pass itself still stands.
         assertEquals(activity.getString(R.string.ui_staff_result_verified), text(activity, R.id.scanResultState))
     }

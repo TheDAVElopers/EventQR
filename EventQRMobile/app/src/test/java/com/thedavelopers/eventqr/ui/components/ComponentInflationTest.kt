@@ -579,21 +579,20 @@ class ComponentInflationTest {
     }
 
     /**
-     * Quick actions (§6.2): two equal-width chips fill the gutter, so the row ends flush with
-     * NEXT UP / DISCOVER and never needs a horizontal drag. `Discover` is gone - it is the Events
-     * destination in the always-visible bottom nav, so a chip for it would be a duplicate entry.
+     * Quick actions (§6.2): three hug-width chips in a wrapping Flow, 8dp apart, starting on the
+     * gutter. `My passes` is the only entry point to the retired Registered tab; `Discover` stays
+     * the Events destination in the always-visible bottom nav. No chip may run past the gutter.
      */
     @Test
-    fun dashboardQuickActions_areEqualWidthAcrossTheGutter() {
+    fun dashboardQuickActions_areHugWidthChipsInsideTheGutter() {
         val context = themedContext()
         val root = LayoutInflater.from(context)
             .inflate(R.layout.activity_user_dashboard, LinearLayout(context), false)
-        val chips = listOf(R.id.btnTransactionHistory, R.id.btnRequestEventCard)
+        val chips = listOf(R.id.btnMyPasses, R.id.btnTransactionHistory, R.id.btnRequestEventCard)
             .map { root.findViewById<View>(it) }
-        val row = chips.first().parent as LinearLayout
+        val row = chips.first().parent as ViewGroup
         val density = context.resources.displayMetrics.density
         val gutter = context.resources.getDimensionPixelSize(R.dimen.ui_gutter)
-        val gap = context.resources.getDimensionPixelSize(R.dimen.ui_chip_gap)
         val screenWidth = (360f * density).toInt()
 
         row.measure(
@@ -602,17 +601,15 @@ class ComponentInflationTest {
         )
         row.layout(0, 0, row.measuredWidth, row.measuredHeight)
 
-        assertEquals("row starts on the left gutter", gutter, chips[0].left)
-        assertEquals("row ends on the right gutter", screenWidth - gutter, chips[1].right)
-        assertEquals("two chips only", 2, row.childCount)
+        assertEquals("three chips only", 3, chips.size)
+        assertEquals("the strip starts on the left gutter", gutter, chips[0].left)
         assertTrue(
-            "equal widths within 1px: ${chips.map { it.measuredWidth }}",
-            abs(chips[0].measuredWidth - chips[1].measuredWidth) <= 1,
+            "chips hug their labels instead of filling equal columns: ${chips.map { it.measuredWidth }}",
+            chips.all { it.measuredWidth < screenWidth / 3 },
         )
-        assertEquals(
-            "chips plus gap fill the content width",
-            screenWidth - 2 * gutter,
-            chips.sumOf { it.measuredWidth } + gap,
+        assertTrue(
+            "no chip runs past the right gutter: ${chips.map { it.right }}",
+            chips.all { it.right <= screenWidth - gutter },
         )
         assertEquals(
             "the Discover chip id is no longer resolvable",
@@ -648,8 +645,9 @@ class ComponentInflationTest {
     }
 
     /**
-     * §5.14 one object, one anatomy: the QR display is the shared pass plus the save/brightness
-     * controls. The duplicate details card and the never-visible registration-id load plumbing are
+     * §5.14 one object, one anatomy: `activity_qr_display` is the one canonical pass layout, used
+     * by both entry points; the shared pass plus the save/brightness controls. The duplicate
+     * details card, the never-visible registration-id load plumbing and the second layout are
      * deleted, not hidden.
      */
     @Test
@@ -657,9 +655,15 @@ class ComponentInflationTest {
         val context = themedContext()
         val root = inflate(R.layout.activity_qr_display, LinearLayout(context))
 
+        assertNotNull(root.findViewById<View>(R.id.layoutQrPassContent))
         assertNotNull(root.findViewById<View>(R.id.qrCredential))
         assertNotNull(root.findViewById<View>(R.id.btnMarkQrDownloaded))
         assertNotNull(root.findViewById<View>(R.id.switchKeepBright))
+        assertEquals(
+            "the second QR layout must not exist: activity_qr_display is canonical",
+            0,
+            context.resources.getIdentifier("activity_qr_credential", "layout", context.packageName),
+        )
         listOf(
             "txtQrAttendeeName",
             "txtQrAttendeeEmail",
@@ -716,7 +720,6 @@ class ComponentInflationTest {
             R.layout.item_report_section,
             R.layout.item_report_chart,
             R.layout.item_report_table,
-            R.layout.dialog_event_request_submitted,
             R.layout.activity_organizer_event_details,
         )
         for (layout in screens) {

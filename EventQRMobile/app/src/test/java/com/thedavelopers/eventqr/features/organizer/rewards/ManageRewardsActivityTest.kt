@@ -18,7 +18,9 @@ import kotlinx.coroutines.CompletableDeferred
 import org.robolectric.Shadows.shadowOf
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.thedavelopers.eventqr.R
@@ -95,6 +97,10 @@ class ManageRewardsActivityTest {
         return ShadowAlertDialog.getLatestAlertDialog() as AlertDialog
     }
 
+    /** §5.12 dialogs carry their own action buttons; `getButton()` is null for a `setView` dialog. */
+    private fun AlertDialog.action(id: Int): Button = findViewById(id)
+    private fun AlertDialog.titleText(): String = findViewById<TextView>(R.id.dialogTitle).text.toString()
+
     @Test
     fun addRewardBeforeAnEventResolves_doesNotOpenTheDialogOrCrash() {
         val activity = build()
@@ -110,7 +116,7 @@ class ManageRewardsActivityTest {
         val activity = build()
         val dialog = openDialog(activity)
 
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        dialog.action(R.id.dialogPositive).performClick()
 
         assertTrue(dialog.isShowing)
         assertEquals(
@@ -133,7 +139,7 @@ class ManageRewardsActivityTest {
         dialog.findViewById<EditText>(R.id.mrw_reward_points_input).setText("0")
         dialog.findViewById<EditText>(R.id.mrw_reward_quantity_input).setText("-3")
 
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        dialog.action(R.id.dialogPositive).performClick()
 
         assertTrue(dialog.isShowing)
         assertEquals("Free T-shirt", title.text.toString())
@@ -189,7 +195,7 @@ class ManageRewardsActivityTest {
         val dialog = openDialog(activity)
         dialog.findViewById<EditText>(R.id.mrw_reward_title_input).setText("Free T-shirt")
         dialog.findViewById<EditText>(R.id.mrw_reward_points_input).setText("50")
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        dialog.action(R.id.dialogPositive).performClick()
         shadowOf(Looper.getMainLooper()).idle()
         return activity to dialog
     }
@@ -201,8 +207,8 @@ class ManageRewardsActivityTest {
 
         assertEquals(1, service.createCalls)
         assertTrue(dialog.isShowing)
-        assertFalse(dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled)
-        assertFalse(dialog.getButton(AlertDialog.BUTTON_NEGATIVE).isEnabled)
+        assertFalse(dialog.action(R.id.dialogPositive).isEnabled)
+        assertFalse(dialog.action(R.id.dialogNegative).isEnabled)
         assertFalse(shadowOf(dialog).isCancelable)
     }
 
@@ -215,8 +221,8 @@ class ManageRewardsActivityTest {
         shadowOf(Looper.getMainLooper()).idle()
 
         assertTrue(dialog.isShowing)
-        assertTrue(dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled)
-        assertTrue(dialog.getButton(AlertDialog.BUTTON_NEGATIVE).isEnabled)
+        assertTrue(dialog.action(R.id.dialogPositive).isEnabled)
+        assertTrue(dialog.action(R.id.dialogNegative).isEnabled)
         assertTrue(shadowOf(dialog).isCancelable)
         assertEquals("Free T-shirt", dialog.findViewById<EditText>(R.id.mrw_reward_title_input).text.toString())
     }
@@ -339,7 +345,7 @@ class ManageRewardsActivityTest {
         assertTrue(activity.window.decorView.clickText(addReward))
         assertEquals(
             activity.getString(R.string.manage_rewards_create_reward),
-            shadowOf(ShadowAlertDialog.getLatestAlertDialog()).title?.toString(),
+            (ShadowAlertDialog.getLatestAlertDialog() as AlertDialog).titleText(),
         )
     }
 
@@ -354,7 +360,7 @@ class ManageRewardsActivityTest {
         activity.findViewById<View>(R.id.emptyAction).performClick()
         assertEquals(
             activity.getString(R.string.manage_rewards_create_reward),
-            shadowOf(ShadowAlertDialog.getLatestAlertDialog()).title?.toString(),
+            (ShadowAlertDialog.getLatestAlertDialog() as AlertDialog).titleText(),
         )
     }
 

@@ -109,7 +109,12 @@ fun EventRequestCard(
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = if (showRequester) {
-                    requesterDisplay(request.requesterName, request.contactEmail, request.requesterUserId)
+                    requesterDisplay(
+                        request.requesterName,
+                        request.contactEmail,
+                        request.requesterUserId,
+                        stringResource(R.string.ui_request_detail_unknown_requester),
+                    )
                 } else {
                     eventName
                 },

@@ -65,7 +65,8 @@
             android:id="@+id/txtSearchAttendeeStatus"
             style="@style/Widget.EventQR.Ui.StatusBadge.Neutral"
             android:layout_width="wrap_content"
-            android:layout_height="@dimen/ui_badge_height"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/ui_badge_height"
             android:layout_marginStart="@dimen/space_8"
             tools:text="Checked in" />
     </LinearLayout>

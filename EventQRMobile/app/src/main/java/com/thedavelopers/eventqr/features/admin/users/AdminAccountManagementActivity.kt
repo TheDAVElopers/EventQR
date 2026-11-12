@@ -3,15 +3,15 @@ package com.thedavelopers.eventqr.features.admin.users
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
 import android.widget.EditText
-import android.widget.ProgressBar
 import android.widget.TextView
-import android.widget.Toast
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -21,6 +21,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
+import com.thedavelopers.eventqr.core.api.dto.AccountStatus
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.PagedAccumulator
 import com.thedavelopers.eventqr.core.util.RoleMapper
@@ -63,7 +64,7 @@ class AdminAccountManagementActivity : AppCompatActivity() {
     private lateinit var adapter: AdminAccountAdapter
     private lateinit var searchInput: EditText
     private lateinit var recyclerAccounts: RecyclerView
-    private lateinit var progressLoading: ProgressBar
+    private lateinit var skeletonAccounts: View
     private lateinit var textPlaceholder: EventQrEmptyState
     private lateinit var countView: TextView
     private lateinit var rowCreateAccount: View
@@ -110,7 +111,7 @@ class AdminAccountManagementActivity : AppCompatActivity() {
         searchInput = findViewById(R.id.inputAccountSearch)
         FieldIcons.apply(searchInput)
         recyclerAccounts = findViewById(R.id.recyclerAdminAccounts)
-        progressLoading = findViewById(R.id.progressAccountsLoading)
+        skeletonAccounts = findViewById(R.id.skeletonAccountsLoading)
         textPlaceholder = findViewById(R.id.textAccountsPlaceholder)
         rowCreateAccount = findViewById(R.id.rowCreateAccount)
         recyclerAccounts.layoutManager = LinearLayoutManager(this)
@@ -208,9 +209,9 @@ class AdminAccountManagementActivity : AppCompatActivity() {
         paging.reset()
         countView.visibility = View.GONE
         adapter.submitItems(emptyList())
-        progressLoading.visibility = View.VISIBLE
+        skeletonAccounts.visibility = View.VISIBLE
         recyclerAccounts.visibility = View.GONE
-        textPlaceholder.visibility = View.GONE
+        textPlaceholder.hide()
         loadPage()
     }
 
@@ -225,33 +226,25 @@ class AdminAccountManagementActivity : AppCompatActivity() {
                         val users = paging.items
                         countView.text = CountLabel.format(paging.totalElements, getString(R.string.ui_admin_accounts_count))
                         countView.visibility = View.VISIBLE
-                        progressLoading.visibility = View.GONE
-                        recyclerAccounts.visibility = if (users.isEmpty()) View.GONE else View.VISIBLE
-                        textPlaceholder.visibility = if (users.isEmpty()) View.VISIBLE else View.GONE
-                        textPlaceholder.subtext = getString(
-                            if (query.isNotEmpty()) R.string.ui_admin_accounts_empty_search_body
-                            else R.string.ui_admin_accounts_empty_body
-                        )
+                        skeletonAccounts.visibility = View.GONE
+                        if (users.isEmpty()) {
+                            recyclerAccounts.visibility = View.GONE
+                            showEmptyState(query)
+                        } else {
+                            recyclerAccounts.visibility = View.VISIBLE
+                            textPlaceholder.hide()
+                        }
                         adapter.submitItems(users)
                     }
                 }
                 is NetworkResult.Error -> {
                     if (paging.onFailure(ticket)) {
-                        progressLoading.visibility = View.GONE
+                        skeletonAccounts.visibility = View.GONE
                         if (paging.isEmpty) {
-                            recyclerAccounts.visibility = View.GONE
-                            textPlaceholder.visibility = View.VISIBLE
-                            // A load failure replaces the copy; the empty-state body would contradict it.
-                            textPlaceholder.text = getString(R.string.admin_account_management_account_management_is_currently_unav)
-                            textPlaceholder.subtext = null
+                            showLoadFailure(result.serverMessage)
+                        } else {
+                            showRetrySnackbar(result.serverMessage)
                         }
-                        retrySnackbar?.dismiss()
-                        retrySnackbar = Snackbar.make(recyclerAccounts, result.message, Snackbar.LENGTH_INDEFINITE)
-                            .setAction(R.string.common_retry) {
-                                paging.retry()
-                                loadPage()
-                            }
-                        retrySnackbar?.show()
                     }
                 }
                 NetworkResult.Loading -> Unit
@@ -259,81 +252,96 @@ class AdminAccountManagementActivity : AppCompatActivity() {
         }
     }
 
-    private fun onAccountActionClick(user: UserResponse, action: AccountAction) {
-        when (action) {
-            AccountAction.ENABLE -> {
-                if (user.userId.toString() == currentUserId) {
-                    Toast.makeText(this, this.getString(R.string.admin_account_management_cannot_enable_your_own_account), Toast.LENGTH_SHORT).show()
-                    return
-                }
-                performEnable(user)
+    /** §5.10: one control. Only the search state has something to do. */
+    private fun showEmptyState(query: String) {
+        if (query.isNotEmpty()) {
+            textPlaceholder.setIcon(AppIcons.Search)
+            textPlaceholder.show(
+                getString(R.string.ui_admin_accounts_empty_search_title),
+                getString(R.string.ui_admin_accounts_empty_search_body),
+            )
+            textPlaceholder.setAction(getString(R.string.ui_admin_accounts_clear_search), primary = false) {
+                searchJob?.cancel()
+                searchQuery = ""
+                searchInput.setText("")
+                loadAccounts()
             }
-            AccountAction.DISABLE -> {
-                if (user.userId.toString() == currentUserId) {
-                    Toast.makeText(this, this.getString(R.string.admin_account_management_cannot_disable_your_own_account), Toast.LENGTH_SHORT).show()
-                    return
-                }
-                performDisable(user)
-            }
-            AccountAction.DELETE -> {
-                if (user.userId.toString() == currentUserId) {
-                    Toast.makeText(this, this.getString(R.string.admin_account_management_cannot_delete_your_own_account), Toast.LENGTH_SHORT).show()
-                    return
-                }
-                showDeleteConfirmation(user)
-            }
+            return
         }
+        textPlaceholder.setIcon(AppIcons.People)
+        textPlaceholder.show(
+            getString(R.string.ui_admin_accounts_empty_title),
+            getString(R.string.ui_admin_accounts_empty_body),
+        )
+        textPlaceholder.setAction(null)
     }
 
-    private fun performEnable(user: UserResponse) {
-        lifecycleScope.launch {
-            when (val result = repository.enableUser(user.userId.toString())) {
-                is NetworkResult.Success -> {
-                    Toast.makeText(this@AdminAccountManagementActivity, this@AdminAccountManagementActivity.getString(R.string.admin_account_management_account_enabled), Toast.LENGTH_SHORT).show()
-                    loadAccounts()
-                }
-                is NetworkResult.Error -> {
-                    Toast.makeText(this@AdminAccountManagementActivity, getString(R.string.common_failed_with_reason, result.message), Toast.LENGTH_LONG).show()
-                }
-                NetworkResult.Loading -> Unit
-            }
-        }
+    private fun showLoadFailure(serverMessage: String?) {
+        recyclerAccounts.visibility = View.GONE
+        textPlaceholder.setIcon(AppIcons.Warning)
+        textPlaceholder.show(
+            getString(R.string.ui_admin_accounts_error_title),
+            serverMessage?.takeIf { it.isNotBlank() } ?: getString(R.string.ui_admin_error_body),
+        )
+        textPlaceholder.setAction(getString(R.string.common_retry), primary = false) { loadAccounts() }
     }
 
-    private fun performDisable(user: UserResponse) {
-        lifecycleScope.launch {
-            when (val result = repository.disableUser(user.userId.toString())) {
-                is NetworkResult.Success -> {
-                    Toast.makeText(this@AdminAccountManagementActivity, this@AdminAccountManagementActivity.getString(R.string.admin_account_management_account_disabled), Toast.LENGTH_SHORT).show()
-                    loadAccounts()
-                }
-                is NetworkResult.Error -> {
-                    Toast.makeText(this@AdminAccountManagementActivity, getString(R.string.common_failed_with_reason, result.message), Toast.LENGTH_LONG).show()
-                }
-                NetworkResult.Loading -> Unit
+    private fun showRetrySnackbar(serverMessage: String?) {
+        retrySnackbar?.dismiss()
+        val message = serverMessage?.takeIf { it.isNotBlank() } ?: getString(R.string.ui_admin_accounts_error_title)
+        retrySnackbar = Snackbar.make(recyclerAccounts, message, Snackbar.LENGTH_INDEFINITE)
+            .setAction(R.string.common_retry) {
+                paging.retry()
+                loadPage()
             }
-        }
+        retrySnackbar?.show()
     }
 
+    private fun onAccountActionClick(user: UserResponse) {
+        // Mirrors the adapter: an active account and a super admin are not deletable.
+        if (user.status == AccountStatus.ACTIVE || user.role == AccountRole.SUPER_ADMIN) return
+        if (user.userId.toString() == currentUserId) {
+            Snackbar.make(recyclerAccounts, R.string.ui_admin_accounts_self_delete, Snackbar.LENGTH_SHORT).show()
+            return
+        }
+        showDeleteConfirmation(user)
+    }
+
+    /** §5.12: `dialog_base` with the verb as the destructive commit. */
     private fun showDeleteConfirmation(user: UserResponse) {
-        AlertDialog.Builder(this)
-            .setTitle(getString(R.string.admin_account_management_delete_account))
-            .setMessage(getString(R.string.admin_account_confirm_delete, user.fullName))
-            .setPositiveButton(getString(R.string.admin_account_management_delete)) { _, _ -> performDelete(user) }
-            .setNegativeButton(getString(R.string.request_event_cancel), null)
-            .show()
+        val view = layoutInflater.inflate(R.layout.dialog_base, null, false)
+        val dialog = AlertDialog.Builder(this).setView(view).create()
+
+        view.findViewById<TextView>(R.id.dialogTitle).setText(R.string.ui_admin_accounts_delete_title)
+        view.findViewById<TextView>(R.id.dialogBody).text =
+            getString(R.string.ui_admin_accounts_delete_body, user.fullName)
+
+        view.findViewById<Button>(R.id.dialogNegative).apply {
+            setText(R.string.ui_admin_accounts_keep)
+            setOnClickListener { dialog.dismiss() }
+        }
+        view.findViewById<Button>(R.id.dialogPositive).apply {
+            setText(R.string.ui_admin_accounts_delete)
+            setBackgroundResource(R.drawable.bg_ui_button_destructive_commit)
+            setTextColor(ContextCompat.getColor(context, R.color.ui_on_primary))
+            setOnClickListener {
+                dialog.dismiss()
+                performDelete(user)
+            }
+        }
+        dialog.show()
     }
 
     private fun performDelete(user: UserResponse) {
         lifecycleScope.launch {
             when (val result = repository.deleteUser(user.userId.toString())) {
                 is NetworkResult.Success -> {
-                    Toast.makeText(this@AdminAccountManagementActivity, this@AdminAccountManagementActivity.getString(R.string.admin_account_management_account_deleted), Toast.LENGTH_SHORT).show()
+                    Snackbar.make(recyclerAccounts, R.string.ui_admin_accounts_deleted, Snackbar.LENGTH_SHORT).show()
                     loadAccounts()
                 }
                 is NetworkResult.Error -> {
-                    Toast.makeText(this@AdminAccountManagementActivity, getString(R.string.common_failed_with_reason, result.message), Toast.LENGTH_LONG).show()
-                    loadAccounts()
+                    val message = result.serverMessage?.takeIf { it.isNotBlank() } ?: result.message
+                    Snackbar.make(recyclerAccounts, message, Snackbar.LENGTH_LONG).show()
                 }
                 NetworkResult.Loading -> Unit
             }

@@ -845,7 +845,7 @@ class AttendeeEventsActivityTest {
         )
     }
 
-    /** At 2.0 the row stacks, so neither label can collapse; the field keeps its 48dp height. */
+    /** At 2.0 the row stacks, so neither label can collapse; the field keeps its 48dp target. */
     @Test
     @Config(fontScale = 2.0f)
     fun largeFont_stacksTheDateChipUnderTheFullWidthSearchField() {
@@ -856,9 +856,12 @@ class AttendeeEventsActivityTest {
 
         assertEquals(LinearLayout.VERTICAL, row.orientation)
         assertEquals(ViewGroup.LayoutParams.MATCH_PARENT, field.layoutParams.width)
+        // Height grows with the font scale; the 48dp target is a minimum, not a fixed height.
+        assertEquals(ViewGroup.LayoutParams.WRAP_CONTENT, field.layoutParams.height)
+        // The style's minHeight is the floor; the field grows past it at large font scales.
         assertEquals(
             activity.resources.getDimensionPixelSize(R.dimen.ui_field_search_height),
-            field.layoutParams.height,
+            field.minimumHeight,
         )
         val params = chip.layoutParams as LinearLayout.LayoutParams
         assertEquals(Gravity.END, params.gravity)

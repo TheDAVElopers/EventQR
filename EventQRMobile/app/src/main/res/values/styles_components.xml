@@ -126,7 +126,8 @@
 
     <style name="RequestEventInput" parent="Widget.EventQR.EditText">
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">@dimen/control_height_54</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">@dimen/control_height_54</item>
         <item name="android:layout_marginTop">@dimen/space_sm</item>
         <item name="android:background">@drawable/bg_input_filled</item>
         <!-- keeps the 15sp the request forms always used (EditText default is 14sp) -->
@@ -135,7 +136,8 @@
     </style>
 
     <style name="RequestEventInput.Multi" parent="RequestEventInput">
-        <item name="android:layout_height">@dimen/request_textarea_height</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">@dimen/request_textarea_height</item>
         <item name="android:gravity">top</item>
         <item name="android:padding">@dimen/space_14</item>
         <item name="android:singleLine">false</item>
@@ -378,13 +380,16 @@
     <style name="Widget.EventQR.Ui.TextField" parent="Widget.AppCompat.EditText">
         <item name="android:background">@drawable/bg_ui_field</item>
         <item name="android:minHeight">@dimen/ui_control_height</item>
-        <item name="android:maxHeight">@dimen/ui_control_height</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.Body</item>
         <item name="android:textColor">@color/ui_text_primary</item>
         <item name="android:textColorHint">@color/ui_text_secondary</item>
         <item name="android:paddingStart">@dimen/space_lg</item>
         <item name="android:paddingEnd">@dimen/space_lg</item>
+        <!-- 8dp vertical padding: 56dp stays the floor at fontScale 1.0 (22dp line box), and
+             15sp grows to a 44dp line box at 2.0, so the field grows instead of clipping. -->
+        <item name="android:paddingTop">@dimen/space_8</item>
+        <item name="android:paddingBottom">@dimen/space_8</item>
         <item name="android:drawablePadding">@dimen/space_md</item>
         <item name="android:drawableTint">@color/ui_text_secondary</item>
         <item name="android:backgroundTint">@null</item>

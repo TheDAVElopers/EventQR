@@ -1,8 +1,10 @@
 package com.thedavelopers.eventqr.features.admin.users
 
 import android.os.Looper
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.features.admin.AdminRepository
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
@@ -15,7 +17,6 @@ import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.features.ShadowEncryptedSharedPreferences
 import com.thedavelopers.eventqr.features.ShadowMasterKeys
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -35,24 +36,26 @@ class CreateAdminAccountActivityTest {
         }
     }
 
-    private fun submitWithPhone(phone: String): EditText {
+    private fun submitWithPhone(phone: String): CreateAdminAccountActivity {
         val activity = Robolectric.buildActivity(CreateAdminAccountActivity::class.java).create().get()
-        val phoneInput = activity.findViewById<EditText>(R.id.inputAdminPhone)
-        phoneInput.setText(phone)
+        activity.findViewById<EditText>(R.id.inputAdminPhone).setText(phone)
         // Other fields stay blank so validation fails before any network call; only the phone error matters here.
         activity.findViewById<Button>(R.id.btnCreateAdminAccount).performClick()
-        return phoneInput
+        return activity
     }
+
+    private fun CreateAdminAccountActivity.phoneError(): TextView =
+        findViewById(R.id.txtAdminPhoneError)
 
     @Test
     fun hintFormatWithSpaces_passesPhoneValidation() {
-        assertNull(submitWithPhone("+63 912 345 6789").error)
+        assertEquals(View.GONE, submitWithPhone("+63 912 345 6789").phoneError().visibility)
     }
 
     @Test
     fun dashedAndPlainDigitForms_passPhoneValidation() {
-        assertNull(submitWithPhone("+63-912-345-6789").error)
-        assertNull(submitWithPhone("639123456789").error)
+        assertEquals(View.GONE, submitWithPhone("+63-912-345-6789").phoneError().visibility)
+        assertEquals(View.GONE, submitWithPhone("639123456789").phoneError().visibility)
     }
 
     @Test
@@ -88,10 +91,12 @@ class CreateAdminAccountActivityTest {
 
     @Test
     fun shortNumber_isStillRejected() {
-        val phoneInput = submitWithPhone("+63 912 345")
+        val activity = submitWithPhone("+63 912 345")
+        val helper = activity.phoneError()
+        assertEquals(View.VISIBLE, helper.visibility)
         assertEquals(
-            phoneInput.context.getString(R.string.error_invalid_phone),
-            phoneInput.error?.toString(),
+            activity.getString(R.string.error_invalid_phone),
+            helper.text.toString(),
         )
     }
 }

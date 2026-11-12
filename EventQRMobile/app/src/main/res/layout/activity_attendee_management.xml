@@ -73,7 +73,8 @@
     <!-- Section row: eyebrow + the one search action. -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="@dimen/ui_touch_min"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/ui_touch_min"
         android:layout_marginStart="@dimen/ui_gutter"
         android:layout_marginTop="@dimen/space_24"
         android:layout_marginEnd="@dimen/space_8"
@@ -126,14 +127,47 @@
                 app:subtitle="@string/attendee_management_attendees_will_appear_here_once_they"
                 app:title="@string/attendee_management_no_attendees_registered_yet" />
 
-            <include
+            <LinearLayout
                 android:id="@+id/skeletonLoading"
-                layout="@layout/include_skeleton_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/ui_gutter"
                 android:layout_marginEnd="@dimen/ui_gutter"
-                android:visibility="gone" />
+                android:visibility="gone"
+                android:contentDescription="@string/ui_skeleton_loading"
+                android:orientation="vertical">
+                <include layout="@layout/include_skeleton_row" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline" />
+                <include layout="@layout/include_skeleton_row" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline" />
+                <include layout="@layout/include_skeleton_row" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline" />
+                <include layout="@layout/include_skeleton_row" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline" />
+                <include layout="@layout/include_skeleton_row" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline" />
+                <include layout="@layout/include_skeleton_row" />
+            </LinearLayout>
         </FrameLayout>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 

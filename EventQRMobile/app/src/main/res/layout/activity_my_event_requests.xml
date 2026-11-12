@@ -26,7 +26,8 @@
             android:id="@+id/btnNewRequest"
             style="@style/Widget.EventQR.Ui.Button.Ghost"
             android:layout_width="wrap_content"
-            android:layout_height="@dimen/ui_button_height_inline"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/ui_button_height_inline"
             android:minWidth="@dimen/ui_touch_min"
             android:text="@string/ui_attendee_new" />
     </com.thedavelopers.eventqr.ui.components.EventQrDetailHeader>

@@ -31,10 +31,18 @@
     <string name="ui_admin_requests_count">request</string>
     <string name="ui_admin_requests_empty_title">No event requests</string>
     <string name="ui_admin_requests_empty_body">Requests from organizers will show up here.</string>
+    <string name="ui_admin_requests_empty_pending_title">No pending requests</string>
+    <string name="ui_admin_requests_empty_pending_body">Requests waiting for a decision show up here.</string>
+    <string name="ui_admin_requests_empty_approved_title">No approved requests</string>
+    <string name="ui_admin_requests_empty_approved_body">Approved requests show up here.</string>
+    <string name="ui_admin_requests_empty_rejected_title">No rejected requests</string>
+    <string name="ui_admin_requests_empty_rejected_body">Rejected requests show up here.</string>
+    <string name="ui_admin_requests_error_title">Couldn\'t load requests</string>
     <string name="ui_admin_filter_all">All</string>
     <string name="ui_admin_filter_pending">Pending</string>
     <string name="ui_admin_filter_approved">Approved</string>
     <string name="ui_admin_filter_rejected">Rejected</string>
+    <string name="ui_admin_filter_clear">Clear filter</string>
 
     <!-- Account management -->
     <string name="ui_admin_accounts_title">Accounts</string>
@@ -43,10 +51,27 @@
     <string name="ui_admin_accounts_search">Search accounts</string>
     <string name="ui_admin_accounts_create">Create admin account</string>
     <string name="ui_admin_accounts_create_meta">Super Admin only</string>
-    <string name="ui_admin_accounts_empty_title">No accounts yet</string>
-    <string name="ui_admin_accounts_empty_body">Created accounts will show up here.</string>
-    <string name="ui_admin_accounts_empty_search_body">No account matches that search.</string>
+    <string name="ui_admin_accounts_empty_title">No accounts found</string>
+    <string name="ui_admin_accounts_empty_body">Accounts appear here once someone signs up.</string>
+    <string name="ui_admin_accounts_empty_search_title">No account found</string>
+    <string name="ui_admin_accounts_empty_search_body">Check the spelling.</string>
+    <string name="ui_admin_accounts_clear_search">Clear search</string>
+    <string name="ui_admin_accounts_error_title">Couldn\'t load accounts</string>
     <string name="ui_admin_accounts_more">Account actions</string>
+    <string name="ui_admin_accounts_actions_for">Actions for %1$s</string>
+    <string name="ui_admin_accounts_meta">%1$s · %2$s</string>
+    <string name="ui_admin_accounts_status_active">Active</string>
+    <string name="ui_admin_accounts_status_pending">Pending</string>
+    <string name="ui_admin_accounts_status_inactive">Inactive</string>
+    <string name="ui_admin_accounts_status_suspended">Suspended</string>
+    <string name="ui_admin_accounts_status_disabled">Disabled</string>
+    <string name="ui_admin_accounts_status_unknown">Unknown</string>
+    <string name="ui_admin_accounts_delete_title">Delete account?</string>
+    <string name="ui_admin_accounts_delete_body">%1$s loses access immediately. Their registrations stay.</string>
+    <string name="ui_admin_accounts_keep">Keep account</string>
+    <string name="ui_admin_accounts_delete">Delete</string>
+    <string name="ui_admin_accounts_deleted">Account deleted</string>
+    <string name="ui_admin_accounts_self_delete">You can\'t delete your own account.</string>
     <string name="ui_admin_role_attendee">Attendee</string>
     <string name="ui_admin_role_staff">Staff</string>
     <string name="ui_admin_role_organizer">Organizer</string>
@@ -66,6 +91,10 @@
     <string name="ui_admin_create_password">Temporary password</string>
     <string name="ui_admin_create_confirm">Confirm password</string>
     <string name="ui_admin_create_submit">Create account</string>
+    <string name="ui_admin_create_submitting">Creating account</string>
+    <string name="ui_admin_create_error">Couldn\'t create the account. Try again.</string>
+    <string name="ui_admin_create_email_taken">An account with this email already exists.</string>
+    <string name="ui_admin_create_permission">Only a super admin can create admins.</string>
 
     <!-- Audit log -->
     <string name="ui_admin_logs_title">Audit logs</string>
@@ -104,6 +133,7 @@
 
     <!-- Event request detail (§6.5, shared admin/attendee) -->
     <string name="ui_request_detail_error_title">Couldn\'t load request</string>
+    <string name="ui_request_detail_unknown_requester">Unknown requester</string>
     <string name="ui_request_detail_description">Description</string>
     <string name="ui_request_detail_duration">Duration</string>
     <string name="ui_request_detail_registration">Registration window</string>
@@ -128,6 +158,22 @@
     <string name="ui_request_detail_confirm_approve_body">The requester is notified and the event becomes live.</string>
     <string name="ui_request_detail_confirm_reject_body">The requester is notified. This cannot be undone.</string>
     <string name="ui_request_detail_remarks">Remarks (optional)</string>
+    <string name="ui_request_detail_title">Event request</string>
+    <string name="ui_request_detail_approved">Request approved</string>
+    <string name="ui_request_detail_rejected">Request rejected</string>
+
+    <!-- Shared admin error copy, used by the requests list and the request detail. -->
+    <string name="ui_admin_error_disabled">Account is disabled. Contact support.</string>
+    <string name="ui_admin_error_session">Session expired. Sign in again.</string>
+    <string name="ui_admin_error_admin_required">Admin access required.</string>
+    <string name="ui_admin_error_not_found">Request not found.</string>
+    <string name="ui_admin_error_bad_request">Request failed. Check the request state and try again.</string>
+    <string name="ui_admin_error_conflict">This request was already reviewed. Refresh the list.</string>
+    <string name="ui_admin_error_server">Server error. Try again later.</string>
+    <string name="ui_admin_error_network">No internet connection. Check your network and try again.</string>
+    <string name="ui_admin_error_action_state">Action cannot be completed in the current state.</string>
+    <string name="ui_admin_error_body">Pull down to refresh.</string>
+    <string name="ui_admin_go_back">Go back</string>
 
     <string name="auth_wordmark_description">EventQR</string>
     <string name="ui_auth_step_1_of_3">Step 1 of 3</string>

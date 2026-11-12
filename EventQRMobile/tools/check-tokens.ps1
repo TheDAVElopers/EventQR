@@ -48,6 +48,13 @@
                    setTextSize(literal), postDelayed(..., n), duration = n (0 and 1 allowed for alpha/elevation/radius)
       compose      <n>.dp / <n>.sp literals anywhere in Kotlin (0.dp allowed)
 
+    Fixed-height gate (§9.3, §9.6:17)
+      fixed-height text-bearing view/style whose layout_height is not wrap_content (res/layout and
+                   res/values/styles*.xml, every surface); layout_height resolving to a row / badge /
+                   button / footer token; android:maxHeight outside the multiline field style.
+                   tools/fixed-height-allowlist.json exempts a genuinely non-text element
+                   (file|id|height|why) and fails as `stale` when an entry matches nothing.
+
 .PARAMETER Enforce
     Exit with code 1 if a blocking category is non-zero. Default: report only (exit 0).
     Also available as `gradlew checkTokens` (registered in the root build.gradle.kts; not wired into `check`/CI).
@@ -446,7 +453,95 @@ foreach ($f in $resXml) {
     if (-not $ok) { Add-IconHit $rel '@drawable/ic_ui_ outside res/layout, res/menu or res/values/styles*.xml' }
 }
 
+# ---- 10c. fixed-height gate (§9.3, §9.6:17) -----------------------------------------------------------------------
+# Text never sits in a fixed-height box: the control is wrap_content + minHeight, so it grows at
+# fontScale 2.0 instead of clipping. Four rules, every surface:
+#   1 text views    res/layout: a text-bearing tag whose layout_height is anything but wrap_content
+#   2 banned tokens res/layout + styles*.xml: layout_height resolving to a row / badge / button / footer token
+#   3 maxHeight     res/layout + styles*.xml: android:maxHeight, except Widget.EventQR.Ui.TextField.Multiline
+#   4 text styles   styles*.xml: a style that declares text attributes must not fix its layout_height
+# tools/fixed-height-allowlist.json exempts a genuinely non-text element (a plate, a bar, a bracket).
+$fhAllowFile = Join-Path $PSScriptRoot 'fixed-height-allowlist.json'
+$fhAllow = @()
+if (Test-Path $fhAllowFile) {
+    $fhJson = (Read-Text $fhAllowFile) | ConvertFrom-Json
+    foreach ($e in @($fhJson.entries)) {
+        $fhAllow += , @{ File = [string]$e.file; Id = [string]$e.id; Height = [string]$e.height; Why = [string]$e.why; Hits = 0 }
+    }
+}
+function Test-FixedHeightAllowed([string]$file, [string]$id, [string]$height, [bool]$isInclude) {
+    foreach ($e in $fhAllow) {
+        if ($e.File -ne $file -or $e.Height -ne $height) { continue }
+        # An entry with no id may only match an <include> or a layout that is itself included
+        # (include_*.xml); otherwise it would exempt every element of that height in the file.
+        if ($e.Id -ne $id) { continue }
+        if ($e.Id -eq '' -and -not $isInclude) { continue }
+        $e.Hits++
+        return $true
+    }
+    return $false
+}
+
+# A text-bearing tag is any TextView family member, plus the input and field containers that hold text.
+$textTags = @('TextView', 'Button', 'EditText', 'TextInputEditText', 'TextInputLayout', 'CheckedTextView', 'AutoCompleteTextView',
+    'MaterialButton', 'MaterialTextView', 'AppCompatTextView', 'AppCompatButton')
+# Row / badge / button / footer tokens are minHeight-only by contract; a fixed height is the defect.
+$bannedHeights = @('ui_badge_height', 'ui_metric_row_height', 'ui_row_height', 'ui_row_height_tall', 'ui_row_height_value',
+    'ui_row_height_date', 'ui_pass_head_stub_height', 'ui_pass_head_identity_height', 'ui_scan_status_height',
+    'ui_scan_context_height', 'ui_control_height', 'ui_chip_height', 'ui_touch_min', 'ui_attendee_chip_row',
+    'ui_attendee_reward_row', 'ui_staff_reward_row', 'ui_footer_height', 'ui_sticky_footer_height', 'ui_button_height',
+    'ui_button_height_inline', 'ui_staff_result_block_height', 'ui_staff_scan_block_height')
+$tagNameRx = [regex]::new('<([A-Za-z0-9_.]+)')
+$fh = New-Result
+foreach ($f in $layouts) {
+    $rel = ((Get-NormPath (Get-RelPath $f.FullName)) -replace '^app/src/main/res/', '')
+    $n = 0
+    foreach ($m in $tagRx.Matches((Read-XmlCode $f.FullName))) {
+        $tag = $m.Value
+        $short = (($tagNameRx.Match($tag)).Groups[1].Value -split '\.')[-1]
+        $idm = $idRx.Match($tag)
+        $id = if ($idm.Success) { $idm.Groups[1].Value } else { '' }
+        $h = ''; $maxH = $false
+        foreach ($am in $attrRx.Matches($tag)) {
+            $name = $am.Groups['name'].Value
+            if ($name -eq 'layout_height') { $h = $am.Groups['val'].Value.Trim() }
+            if ($name -eq 'maxHeight') { $maxH = $true }
+        }
+        $isText = $textTags -contains $short
+        $banned = ($h -match '^@dimen/([A-Za-z0-9_]+)$') -and ($bannedHeights -contains $Matches[1])
+        $isInclude = ($short -eq 'include') -or ($f.Name -like 'include_*')
+        if ((($isText -and $h -ne '' -and $h -ne 'wrap_content') -or $banned) -and -not (Test-FixedHeightAllowed $rel $id $h $isInclude)) { $n++ }
+        if ($maxH -and -not (Test-FixedHeightAllowed $rel $id 'maxHeight' $isInclude)) { $n++ }
+    }
+    Add-Hit $fh $rel $n
+}
+
+$styleBlockRx = [regex]::new('<style\s+name="(?<name>[^"]+)"[^>]*>(?<body>.*?)</style>', 'Singleline')
+$styleTextRx = [regex]::new('name="android:(?:textAppearance|textSize|textColor|textStyle|hint|letterSpacing)"')
+$styleHeightRx = [regex]::new('<item\s+name="android:layout_height">\s*(?<val>[^<]*?)\s*</item>')
+$styleMaxHeightRx = [regex]::new('<item\s+name="android:maxHeight">')
+foreach ($f in $styleFiles) {
+    $rel = ((Get-NormPath (Get-RelPath $f.FullName)) -replace '^app/src/main/res/', '')
+    $n = 0
+    foreach ($sm in $styleBlockRx.Matches((Read-XmlCode $f.FullName))) {
+        $name = $sm.Groups['name'].Value; $body = $sm.Groups['body'].Value
+        $hm = $styleHeightRx.Match($body)
+        if ($hm.Success) {
+            $val = $hm.Groups['val'].Value
+            $banned = ($val -match '^@dimen/([A-Za-z0-9_]+)$') -and ($bannedHeights -contains $Matches[1])
+            $textStyle = $styleTextRx.IsMatch($body)
+            if ((($textStyle -and $val -ne 'wrap_content') -or $banned) -and -not (Test-FixedHeightAllowed $rel $name $val)) { $n++ }
+        }
+        if ($styleMaxHeightRx.IsMatch($body) -and $name -ne 'Widget.EventQR.Ui.TextField.Multiline' -and
+            -not (Test-FixedHeightAllowed $rel $name 'maxHeight')) { $n++ }
+    }
+    Add-Hit $fh $rel $n
+}
+
 # ---- 10b. stale allow-list entries --------------------------------------------------------------------------------
+foreach ($e in $fhAllow) {
+    if ($e.Hits -eq 0) { [void]$staleRows.Add([pscustomobject]@{ File = "fixed-height-allowlist.json: $($e.File)|$($e.Id)|$($e.Height)"; Count = 1 }) }
+}
 foreach ($e in $dpAllow) {
     if ($e.Hits -eq 0) { [void]$staleRows.Add([pscustomobject]@{ File = "dp-allow.txt: $($e.Line)"; Count = 1 }) }
 }
@@ -474,6 +569,7 @@ $categories = @(
     @{ Key = 'kotlin-shape'; R = $ktShape;   Block = $true;  Msg = 'cornerRadius/setStroke/elevation/alpha/Typeface/textSize/postDelayed/duration literals' },
     @{ Key = 'compose';      R = $compose;   Block = $true;  Msg = '<n>.dp / <n>.sp literals in Kotlin' },
     @{ Key = 'icons';        R = $icons;     Block = $true;  Msg = 'icon family: manifest bijection, grid, hash, one shape, single family/address, uniqueness' },
+    @{ Key = 'fixed-height'; R = $fh;        Block = $true;  Msg = 'text in a fixed-height box (wrap_content + minHeight only), maxHeight outside the multiline field' },
     @{ Key = 'stale';        R = $stale;     Block = $true;  Msg = 'allow-list / exception entries matching nothing (delete them)' },
     @{ Key = 'deco';         R = $deco;      Block = $false; Msg = 'deco_* references (info only; decorative one-offs = design debt)' }
 )

@@ -16,7 +16,7 @@
     <dimen name="ui_organizer_event_banner_height">180dp</dimen>
 
     <!-- First-load skeleton for the event view (§5.11): the head geometry the loaded screen lands
-         on, so the page does not jump when the fetch returns. The stub (60dp) and the three table
+         on, so the page does not jump when the fetch returns. The stub (56dp) and the three table
          rows (56dp each) reuse ui_pass_head_stub_height / ui_metric_row_height. -->
     <dimen name="ui_organizer_head_skeleton_height">132dp</dimen>
 

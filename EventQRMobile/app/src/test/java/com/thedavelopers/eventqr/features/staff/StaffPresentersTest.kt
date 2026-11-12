@@ -200,6 +200,8 @@ class StaffPresentersTest {
         override fun renderRecentScans(items: List<TransactionResponse>) = Unit
         override fun updateStats(scans: Int?, checkins: Int?) { this.scans = scans; this.checkins = checkins }
         override fun showMessage(message: String) { messages += message }
+        override fun showError(message: String) { messages += message }
+        override fun showRecentScansError(message: String) { messages += message }
         override fun showLoading(isLoading: Boolean) = Unit
         override fun showNotificationBadge(unreadCount: Int) = Unit
     }

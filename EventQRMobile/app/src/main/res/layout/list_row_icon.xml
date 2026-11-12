@@ -107,7 +107,8 @@
                 android:id="@+id/listRowBadge"
                 style="@style/Widget.EventQR.Ui.StatusBadge.Success"
                 android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_badge_height"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/ui_badge_height"
                 android:visibility="gone"
                 tools:text="Checked in" />
 

@@ -51,7 +51,8 @@
                 android:id="@+id/skeletonAuditLoading"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:importantForAccessibility="noHideDescendants"
+                android:contentDescription="@string/ui_skeleton_loading"
+                    android:focusable="true"
                 android:orientation="vertical"
                 android:visibility="gone">
 

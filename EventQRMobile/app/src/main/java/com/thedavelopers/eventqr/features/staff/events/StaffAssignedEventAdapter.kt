@@ -1,42 +1,25 @@
 package com.thedavelopers.eventqr.features.staff
 
+import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.res.stringResource
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.thedavelopers.eventqr.R
+import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import com.thedavelopers.eventqr.core.util.EventCardPresenter
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResponse
-import com.thedavelopers.eventqr.ui.components.EventCard
-import com.thedavelopers.eventqr.ui.components.UiButton
-import com.thedavelopers.eventqr.ui.components.UiButtonTone
-import com.thedavelopers.eventqr.ui.components.parseBadgeStatus
-import com.thedavelopers.eventqr.ui.theme.EventQrRowTheme
-import com.thedavelopers.eventqr.ui.theme.LocalGrid
-import com.thedavelopers.eventqr.ui.theme.LocalSpacing
+import com.thedavelopers.eventqr.ui.components.ListRowBinder
 
-data class StaffAssignedEventCardState(
-    val title: String = "",
-    val badgeStatusRaw: String = "",
-    val day: String = EventCardPresenter.UNKNOWN_DAY,
-    val month: String = EventCardPresenter.UNKNOWN_MONTH,
-    val time: String = EventCardPresenter.UNKNOWN_TIME,
-    val location: String = EventCardPresenter.UNKNOWN_LOCATION,
-    val canScan: Boolean = false,
-)
-
+/**
+ * One assigned event = one `list_row_date` (§6.3 amendment v1.13). 96dp, date block leading, title
+ * up to two lines, one trailing status badge - the card and its two-button footer are deleted. The
+ * row is the target and opens the event's registrations; scanning stays on the scanner's context
+ * field and the dashboard's `Scan a pass`.
+ */
 class StaffAssignedEventAdapter(
-    private val onScanClick: (StaffAssignedEventResponse) -> Unit,
-    private val onAttendeesClick: (StaffAssignedEventResponse) -> Unit,
+    private val onClick: (StaffAssignedEventResponse) -> Unit,
 ) : RecyclerView.Adapter<StaffAssignedEventAdapter.ViewHolder>() {
 
     private val items = mutableListOf<StaffAssignedEventResponse>()
@@ -47,105 +30,46 @@ class StaffAssignedEventAdapter(
         notifyDataSetChanged()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val composeView = ComposeView(parent.context).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            )
-        }
-        return ViewHolder(composeView)
-    }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
+        ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.list_row_date, parent, false))
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(items[position])
+        holder.bind(items[position], position == items.lastIndex)
     }
 
     override fun getItemCount(): Int = items.size
 
-    inner class ViewHolder(private val composeView: ComposeView) :
-        RecyclerView.ViewHolder(composeView) {
+    inner class ViewHolder(private val row: View) : RecyclerView.ViewHolder(row) {
 
-        private val state = mutableStateOf(StaffAssignedEventCardState())
-
-        private var item: StaffAssignedEventResponse? = null
-
-        init {
-            composeView.setContent {
-                EventQrRowTheme {
-                    StaffAssignedEventCard(
-                        state = state.value,
-                        onScanClick = { item?.let(onScanClick) },
-                        onAttendeesClick = { item?.let(onAttendeesClick) },
-                    )
-                }
-            }
+        fun bind(event: StaffAssignedEventResponse, isLast: Boolean) {
+            val date = EventCardPresenter.dateParts(event.eventStartAt)
+            row.findViewById<TextView>(R.id.listRowDay).text = date.day
+            row.findViewById<TextView>(R.id.listRowMonth).text = date.month
+            val status = EventStatusBadgeStyler.resolve(event.status, event.eventStartAt, event.eventEndAt)
+            ListRowBinder.bind(
+                row,
+                title = event.title.ifBlank { row.context.getString(R.string.common_untitled_event) },
+                meta = listOf(date.time, EventCardPresenter.location(event.location))
+                    .filter {
+                        it != EventCardPresenter.UNKNOWN_TIME && it != EventCardPresenter.UNKNOWN_LOCATION
+                    }
+                    .joinToString(" - "),
+                trailing = ListRowBinder.Trailing.BADGE,
+                trailingText = EventStatusBadgeStyler.displayLabel(status),
+                badgeStyle = toneFor(status),
+                showDivider = !isLast,
+                onClick = { onClick(event) },
+            )
         }
 
-        fun bind(event: StaffAssignedEventResponse) {
-            item = event
-            val resolvedStatus = EventStatusBadgeStyler.resolve(
-                event.status,
-                event.eventStartAt,
-                event.eventEndAt,
-            )
-            val date = EventCardPresenter.dateParts(event.eventStartAt)
-
-            state.value = StaffAssignedEventCardState(
-                title = event.title.ifBlank {
-                    composeView.context.getString(R.string.common_untitled_event)
-                },
-                badgeStatusRaw = EventStatusBadgeStyler.displayLabel(resolvedStatus),
-                day = date.day,
-                month = date.month,
-                time = date.time,
-                location = EventCardPresenter.location(event.location),
-                canScan = event.canStartScan,
-            )
+        /** §5.4: only `Rejected` is an error; Draft and Cancelled are neutral, not failures. */
+        private fun toneFor(status: EventStatus): Int = when (status) {
+            EventStatus.ACTIVE -> R.style.Widget_EventQR_Ui_StatusBadge_Valid
+            EventStatus.APPROVED -> R.style.Widget_EventQR_Ui_StatusBadge_Info
+            EventStatus.PENDING_REVIEW -> R.style.Widget_EventQR_Ui_StatusBadge_Warning
+            EventStatus.REJECTED -> R.style.Widget_EventQR_Ui_StatusBadge_Error
+            EventStatus.DRAFT, EventStatus.CANCELLED, EventStatus.ENDED, EventStatus.UNKNOWN ->
+                R.style.Widget_EventQR_Ui_StatusBadge_Neutral
         }
     }
-}
-
-@Composable
-private fun StaffAssignedEventCard(
-    state: StaffAssignedEventCardState,
-    onScanClick: () -> Unit,
-    onAttendeesClick: () -> Unit,
-) {
-    val spacing = LocalSpacing.current
-
-    EventCard(
-        title = state.title,
-        status = parseBadgeStatus(state.badgeStatusRaw),
-        day = state.day,
-        month = state.month,
-        time = state.time,
-        location = state.location,
-        modifier = Modifier.padding(bottom = spacing.mediumSmall),
-        // §5.1: one flat button family, radius 4, no elevation, no pill. A button label is words,
-        // so no leading icon is carried inside the control.
-        footer = {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(LocalGrid.current.s8),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                UiButton(
-                    text = stringResource(R.string.ui_staff_scan),
-                    onClick = onScanClick,
-                    modifier = Modifier.weight(1f),
-                    tone = UiButtonTone.PRIMARY,
-                    inline = true,
-                    enabled = state.canScan,
-                )
-                UiButton(
-                    text = stringResource(R.string.attendee_management_attendees),
-                    onClick = onAttendeesClick,
-                    modifier = Modifier.weight(1f),
-                    tone = UiButtonTone.SECONDARY,
-                    inline = true,
-                )
-            }
-        },
-    )
 }

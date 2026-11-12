@@ -4,9 +4,7 @@ import com.thedavelopers.eventqr.core.util.UiStrings
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
-import android.text.InputType
 import android.text.TextWatcher
-import android.view.MotionEvent
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
@@ -21,8 +19,8 @@ import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.auth.AuthRepository
 import com.thedavelopers.eventqr.features.auth.login.LoginActivity
 import com.thedavelopers.eventqr.features.terms.TermsLink
-import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.icons.FieldIcons
+import com.thedavelopers.eventqr.ui.icons.RuleMarks
 
 open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View {
     private lateinit var presenter: RegistrationPresenter
@@ -30,7 +28,6 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
     private lateinit var lastNameInput: EditText
     private lateinit var emailInput: EditText
     private lateinit var phoneInput: EditText
-    private lateinit var phoneCounterText: TextView
     private lateinit var passwordInput: EditText
     private lateinit var confirmPasswordInput: EditText
     private lateinit var termsCheckBox: CheckBox
@@ -41,9 +38,7 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
     private lateinit var passwordLowercaseRequirement: TextView
     private lateinit var passwordSpecialRequirement: TextView
     private lateinit var passwordNumberRequirement: TextView
-    private lateinit var passwordStrengthText: TextView
     private lateinit var requirementsLayout: android.view.View
-    private lateinit var strengthBars: List<android.view.View>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,7 +56,6 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
         lastNameInput = findViewById(R.id.edtLastName)
         emailInput = findViewById(R.id.edtEmail)
         phoneInput = findViewById(R.id.edtPhoneNumber)
-        phoneCounterText = findViewById(R.id.txtPhoneCounter)
         passwordInput = findViewById(R.id.edtPassword)
         confirmPasswordInput = findViewById(R.id.edtConfirmPassword)
         termsCheckBox = findViewById(R.id.chkTerms)
@@ -72,21 +66,14 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
         passwordLowercaseRequirement = findViewById(R.id.txtPasswordLowercaseRequirement)
         passwordSpecialRequirement = findViewById(R.id.txtPasswordSpecialRequirement)
         passwordNumberRequirement = findViewById(R.id.txtPasswordNumberRequirement)
-        passwordStrengthText = findViewById(R.id.txtPasswordStrength)
         requirementsLayout = findViewById(R.id.layoutPasswordRequirements)
-        strengthBars = listOf(
-            findViewById(R.id.viewStrength1),
-            findViewById(R.id.viewStrength2),
-            findViewById(R.id.viewStrength3),
-            findViewById(R.id.viewStrength4)
-        )
         presenter.attach(this)
 
         FieldIcons.apply(emailInput)
         // The phone glyph sits on the "+63" prefix inside the shared field box, not on the EditText.
         FieldIcons.apply(findViewById(R.id.txtPhonePrefix))
-        configurePasswordToggle(passwordInput)
-        configurePasswordToggle(confirmPasswordInput)
+        FieldIcons.apply(passwordInput)
+        FieldIcons.apply(confirmPasswordInput)
         configurePhoneInput()
         passwordInput.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
@@ -193,7 +180,6 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
         passwordInput.error = if (!requirements.withinMaxLength) getString(R.string.error_password_too_long) else null
         passwordInput.isActivated = !requirements.withinMaxLength
 
-        updateStrengthUI(requirements.strengthLevel)
         updateRegisterButtonState()
     }
 
@@ -204,50 +190,16 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
         registerButton.isEnabled = isRegistrationFormValid()
     }
 
-    /**
-     * One checklist row. The mark is a compound drawable, not a ✓/○ character: lime only when
-     * the rule is met, a neutral ring in ui_outline_interactive while it is not. The label stays
-     * readable in both states - the mark carries the state, not the text colour.
-     */
+    /** One checklist row (§6.1): the 16dp tick slot carries the state, never colour alone. */
     private fun updateRequirement(view: TextView, label: String, isMet: Boolean) {
-        view.text = label
-        view.setCompoundDrawablesRelativeWithIntrinsicBounds(
-            if (isMet) R.drawable.ui_rule_on else R.drawable.ui_rule_off,
-            0,
-            0,
-            0
-        )
-        view.setTextColor(getColor(if (isMet) R.color.ui_text_primary else R.color.ui_text_secondary))
-    }
-
-    private fun updateStrengthUI(metCount: Int) {
-        // The label carries the tone as text (AA on the page); the bars use the tone's outline
-        // colour, which is the 3:1 non-text version of the same state.
-        val (labelColor, barColor, label) = when (metCount) {
-            0 -> Triple(R.color.ui_text_secondary, R.color.ui_hairline, "")
-            1 -> Triple(R.color.ui_error, R.color.ui_error_outline, getString(R.string.password_strength_weak))
-            2 -> Triple(R.color.ui_warning, R.color.ui_warning_outline, getString(R.string.password_strength_fair))
-            3 -> Triple(R.color.ui_info, R.color.ui_info_outline, getString(R.string.password_strength_good))
-            4 -> Triple(R.color.ui_success, R.color.ui_success_outline, getString(R.string.password_strength_strong))
-            else -> Triple(R.color.ui_text_secondary, R.color.ui_hairline, "")
-        }
-
-        passwordStrengthText.text = label
-        passwordStrengthText.setTextColor(if (metCount > 0) getColor(labelColor) else getColor(R.color.ui_text_secondary))
-
-        strengthBars.forEachIndexed { index, view ->
-            view.background.mutate().setTint(
-                if (index < metCount) getColor(barColor) else getColor(R.color.ui_hairline)
-            )
-        }
+        RuleMarks.apply(view, label, isMet)
     }
 
     // EventQR - UI validation deviation beyond SRS UC-01 field spec
     // Phone format enforcement: numeric-only entry (inputType=number). No raw maxLength
     // cap — pasted full numbers ("0917...", "0063...", "63917...", "+63917...") must reach
     // the normalizer intact. Normalization strips +63/0063/0 prefixes on the full input and
-    // caps the national digits at 10 AFTER stripping; a live n/10 counter mirrors the
-    // normalized field state.
+    // caps the national digits at 10 AFTER stripping.
     private fun configurePhoneInput() {
         phoneInput.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
@@ -255,7 +207,6 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
             override fun afterTextChanged(editable: Editable?) {
                 val current = editable ?: return
                 val normalized = normalizePhoneDigits(current.toString())
-                phoneCounterText.text = "${normalized.length}/10"
                 if (normalized != current.toString()) {
                     current.replace(0, current.length, normalized)
                     phoneInput.error = null
@@ -276,26 +227,5 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
             digits = digits.removePrefix("0")
         }
         return digits.take(10)
-    }
-
-    private fun configurePasswordToggle(input: EditText) {
-        FieldIcons.apply(input)
-        input.setOnTouchListener { view, event ->
-            if (event.action == MotionEvent.ACTION_UP && event.rawX >= input.right - input.compoundPaddingEnd) {
-                val isVisible = input.inputType == (InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD)
-                if (isVisible) {
-                    input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-                    FieldIcons.setTrailing(input, AppIcons.Visibility)
-                } else {
-                    input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-                    FieldIcons.setTrailing(input, AppIcons.VisibilityOff)
-                }
-                input.setSelection(input.text.length)
-                view.performClick()
-                true
-            } else {
-                false
-            }
-        }
     }
 }

@@ -20,7 +20,8 @@
         android:id="@+id/metricRow"
         style="@style/Widget.EventQR.Ui.MetricRow"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/ui_metric_row_height"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/ui_metric_row_height"
         android:orientation="horizontal">
 
         <TextView

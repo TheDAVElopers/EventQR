@@ -7,7 +7,6 @@ import com.thedavelopers.eventqr.ui.theme.dimenFloat
 import com.thedavelopers.eventqr.ui.theme.dimenPx
 import com.thedavelopers.eventqr.ui.theme.roundedRect
 import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
-import com.thedavelopers.eventqr.ui.theme.strong
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.util.TypedValue
@@ -20,9 +19,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
-import android.widget.Toast
 import androidx.annotation.DimenRes
-import androidx.appcompat.app.AlertDialog
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -56,6 +53,12 @@ open class EventReportsActivity : AppCompatActivity() {
     private var loadedEvents: List<OrganizerMvpEvent> = emptyList()
     private var summary: EventReportSummaryDto = EventReportSummaryDto()
     private var skeletonLoading: View? = null
+    private var generateAllAction: View? = null
+    private var generateStatusLine: TextView? = null
+    private var generateErrorStrip: View? = null
+    private var generateErrorText: TextView? = null
+    private var summaryErrorStrip: View? = null
+    private var summaryErrorText: TextView? = null
     private val dateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -120,11 +123,10 @@ open class EventReportsActivity : AppCompatActivity() {
 
                 is NetworkResult.Error -> {
                     renderList(summaryContainer)
-                    Toast.makeText(
-                        this@EventReportsActivity,
-                        result.message,
-                        Toast.LENGTH_LONG,
-                    ).show()
+                    // Totals failed but the catalogue still works: report above the metric rows with Retry.
+                    summaryErrorText?.text = result.message.takeIf { it.isNotBlank() }
+                        ?: getString(R.string.event_reports_summary_failed)
+                    summaryErrorStrip?.visibility = View.VISIBLE
                 }
 
                 NetworkResult.Loading -> Unit
@@ -146,8 +148,18 @@ open class EventReportsActivity : AppCompatActivity() {
                 loadScreen()
             },
         )
+        container.addView(buildSummaryErrorStrip())
         container.addView(buildSummaryMetrics())
         container.addView(sectionHeader(getString(R.string.event_reports_generate_reports)))
+        // Bulk generation runs in place: one micro line under the section title, never a modal.
+        generateStatusLine = styledText(
+            getString(R.string.event_reports_generating_reports),
+            R.dimen.ui_type_micro,
+            false,
+            orgColors.muted,
+        ).apply { visibility = View.GONE }
+        container.addView(generateStatusLine)
+        container.addView(buildGenerateErrorStrip())
         container.addView(buildReportCatalogContainer(reportCatalog()))
     }
 
@@ -174,40 +186,40 @@ open class EventReportsActivity : AppCompatActivity() {
         return row
     }
 
+    /**
+     * Section title at the 20sp step with the bulk action under it (§6.4). The action is the
+     * label-hugging 48dp secondary inline button: wrap_content width, ui_primary_container fill,
+     * ui_primary label - it never spans the gutter, and it carries no chevron.
+     */
     private fun sectionHeader(label: String): LinearLayout = LinearLayout(this).apply {
-        orientation = LinearLayout.HORIZONTAL
-        gravity = Gravity.CENTER_VERTICAL
+        orientation = LinearLayout.VERTICAL
         setPadding(dimenPx(R.dimen.space_xxs), dimenPx(R.dimen.space_xs), dimenPx(R.dimen.space_xxs), dimenPx(R.dimen.space_md))
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
         )
 
-        addView(styledText(label, R.dimen.type_title_large, true, color(R.color.primary_dark)).apply {
-            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-        })
+        addView(styledText(label, R.dimen.type_title_large, true, color(R.color.primary_dark)))
 
-        val actionRow = LinearLayout(this@EventReportsActivity).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
+        val action = TextView(this@EventReportsActivity).apply {
+            text = getString(R.string.event_reports_generate_all)
+            setTextAppearance(R.style.TextAppearance_EventQR_Type_ButtonLabelInline)
+            setTextColor(color(R.color.ui_primary))
+            background = ContextCompat.getDrawable(context, R.drawable.bg_ui_button_secondary)
+            gravity = Gravity.CENTER
+            isClickable = true
+            isFocusable = true
+            minimumHeight = dimenPx(R.dimen.ui_button_height_inline)
+            minWidth = dimenPx(R.dimen.ui_button_height_inline)
+            setPadding(dimenPx(R.dimen.space_lg), 0, dimenPx(R.dimen.space_lg), 0)
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply { topMargin = dimenPx(R.dimen.space_sm) }
             setOnClickListener { generateAllReports() }
-
-            addView(TextView(this@EventReportsActivity).apply {
-                text = getString(R.string.event_reports_generate_all)
-                setTextSizeRes(R.dimen.type_body_medium)
-                strong()
-                setTextColor(color(R.color.primary))
-            })
-
-            addView(ImageView(this@EventReportsActivity).apply {
-                setImageResource(AppIcons.Chevron)
-                setColorFilter(color(R.color.primary))
-                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.ui_chevron), dimenPx(R.dimen.ui_chevron)).apply {
-                    marginStart = dimenPx(R.dimen.space_xxs)
-                }
-            })
         }
-        addView(actionRow)
+        addView(action)
+        generateAllAction = action
     }
 
     /**
@@ -406,20 +418,19 @@ open class EventReportsActivity : AppCompatActivity() {
     private fun generateAllReports() {
         val combined = mutableListOf<EventReportDto>()
         val allTypes = reportCatalog().map { it.reportType }
-        val loading = AlertDialog.Builder(this)
-            .setTitle(getString(R.string.event_reports_generating_reports))
-            .setMessage(getString(R.string.event_reports_please_wait_while_all_report_section))
-            .setCancelable(false)
-            .create()
-        loading.show()
+        generateAllAction?.apply {
+            isEnabled = false
+            alpha = dimenFloat(R.dimen.alpha_busy)
+        }
+        generateErrorStrip?.visibility = View.GONE
+        generateStatusLine?.visibility = View.VISIBLE
 
-        val job = lifecycleScope.launch {
+        lifecycleScope.launch {
             for (type in allTypes) {
                 when (val result = reportsRepository.generateReport(selectedEvent.id, type, OrganizerReportsRepository.defaultFilters())) {
                     is NetworkResult.Success -> combined.add(result.data)
                     is NetworkResult.Error -> {
-                        loading.dismiss()
-                        Toast.makeText(this@EventReportsActivity, result.message, Toast.LENGTH_LONG).show()
+                        showGenerateFailure(result.message)
                         return@launch
                     }
 
@@ -427,7 +438,11 @@ open class EventReportsActivity : AppCompatActivity() {
                 }
             }
 
-            loading.dismiss()
+            generateStatusLine?.visibility = View.GONE
+            generateAllAction?.apply {
+                isEnabled = true
+                alpha = 1f
+            }
             startActivity(
                 ReportPreviewActivity.newCombinedIntent(
                     context = this@EventReportsActivity,
@@ -437,9 +452,62 @@ open class EventReportsActivity : AppCompatActivity() {
                 ),
             )
         }
-        // Leaving mid-generation cancels the job; drop the modal so it does not leak the window.
-        job.invokeOnCompletion { loading.dismiss() }
     }
+
+    /** Failure reports in the flow above the catalogue, with Retry as the one action. */
+    private fun showGenerateFailure(message: String) {
+        generateStatusLine?.visibility = View.GONE
+        generateAllAction?.apply {
+            isEnabled = true
+            alpha = 1f
+        }
+        generateErrorText?.text = message.ifBlank { getString(R.string.ui_staff_load_failed_body) }
+        generateErrorStrip?.visibility = View.VISIBLE
+    }
+
+    /** In-flow failure strip: server message plus one Retry action (§5.7). */
+    private fun buildErrorStrip(onRetry: () -> Unit, onText: (TextView) -> Unit): LinearLayout {
+        val strip = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            minimumHeight = dimenPx(R.dimen.ui_touch_min)
+            background = ContextCompat.getDrawable(context, R.drawable.bg_ui_block_r4)
+            backgroundTintList = android.content.res.ColorStateList.valueOf(color(R.color.ui_error_container))
+            setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_sm))
+            visibility = View.GONE
+            // A failed load writes into an existing strip; TalkBack must announce the change.
+            accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+        }
+        val text = styledText(
+            "",
+            R.dimen.ui_type_body_s,
+            false,
+            color(R.color.ui_on_error_container),
+        ).apply {
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        }
+        onText(text)
+        strip.addView(text)
+        strip.addView(TextView(this).apply {
+            setTextAppearance(R.style.TextAppearance_EventQR_Type_Label)
+            setText(R.string.common_retry)
+            setTextColor(color(R.color.ui_on_error_container))
+            setBackgroundResource(R.drawable.bg_ui_button_ghost)
+            gravity = Gravity.CENTER
+            isClickable = true
+            isFocusable = true
+            minimumHeight = dimenPx(R.dimen.ui_button_height_inline)
+            setPadding(dimenPx(R.dimen.space_lg), 0, dimenPx(R.dimen.space_lg), 0)
+            setOnClickListener { onRetry() }
+        })
+        return strip
+    }
+
+    private fun buildGenerateErrorStrip(): LinearLayout =
+        buildErrorStrip(onRetry = { generateAllReports() }, onText = { generateErrorText = it }).also { generateErrorStrip = it }
+
+    private fun buildSummaryErrorStrip(): LinearLayout =
+        buildErrorStrip(onRetry = { loadScreen() }, onText = { summaryErrorText = it }).also { summaryErrorStrip = it }
 
     private fun reportCatalog(): List<EventReportCatalogItem> = listOf(
         EventReportCatalogItem(EventReportType.ROSTER, getString(R.string.event_reports_title_roster), AppIcons.People, color(R.color.chart_5), color(R.color.accent_container)),

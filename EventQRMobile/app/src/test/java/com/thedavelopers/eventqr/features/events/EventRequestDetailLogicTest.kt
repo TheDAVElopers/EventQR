@@ -7,16 +7,24 @@ import java.util.UUID
 
 class EventRequestDetailLogicTest {
 
+    private val unknown = "Unknown requester"
+
+    private fun display(
+        name: String?,
+        email: String?,
+        userId: UUID?,
+    ) = requesterDisplay(name, email, userId, unknown)
+
     @Test
     fun requesterPrefersName() {
-        val result = requesterDisplay("Ada", "ada@example.com", UUID.randomUUID())
+        val result = display("Ada", "ada@example.com", UUID.randomUUID())
 
         assertEquals("Ada", result)
     }
 
     @Test
     fun requesterFallsBackToEmail() {
-        val result = requesterDisplay("   ", "ada@example.com", UUID.randomUUID())
+        val result = display("   ", "ada@example.com", UUID.randomUUID())
 
         assertEquals("ada@example.com", result)
     }
@@ -25,8 +33,8 @@ class EventRequestDetailLogicTest {
     fun requesterFallsBackToUserId() {
         val id = UUID.randomUUID()
 
-        assertEquals("Unknown requester", requesterDisplay(null, null, id))
-        assertEquals("Unknown requester", requesterDisplay("  ", "  ", id))
+        assertEquals(unknown, display(null, null, id))
+        assertEquals(unknown, display("  ", "  ", id))
     }
 
     @Test
@@ -34,18 +42,18 @@ class EventRequestDetailLogicTest {
         val id = UUID.randomUUID()
 
         listOf(
-            requesterDisplay(null, null, id),
-            requesterDisplay(null, "  ", id),
-            requesterDisplay("   ", null, id),
+            display(null, null, id),
+            display(null, "  ", id),
+            display("   ", null, id),
         ).forEach { rendered ->
-            assertEquals("Unknown requester", rendered)
+            assertEquals(unknown, rendered)
             assertFalse(rendered.contains(id.toString()))
         }
     }
 
     @Test
     fun requesterReportsUnknownWhenNothingAvailable() {
-        assertEquals("Unknown requester", requesterDisplay(null, null, null))
-        assertEquals("Unknown requester", requesterDisplay("", "  ", null))
+        assertEquals(unknown, display(null, null, null))
+        assertEquals(unknown, display("", "  ", null))
     }
 }

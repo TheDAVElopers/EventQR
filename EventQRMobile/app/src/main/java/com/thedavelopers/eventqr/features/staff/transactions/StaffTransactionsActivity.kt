@@ -119,6 +119,9 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         swipeRefresh.setOnRefreshListener { refreshTransactions() }
 
         skeletonLoading = findViewById(R.id.skeletonLoading)
+        findViewById<View>(R.id.btnStaffTransactionsRetry).setOnClickListener {
+            loadAssignedEventsAndTransactions()
+        }
 
         recyclerView.apply {
             layoutManager = LinearLayoutManager(this@StaffTransactionsActivity)
@@ -201,7 +204,8 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         paging.reset()
         renderSummary(StaffTransactionSummary())
         adapter.submitItems(emptyList())
-        txtEmptyState.text = getString(R.string.ui_staff_no_logs_prompt)
+        txtEmptyState.setContent(getString(R.string.ui_staff_no_logs_prompt))
+        txtEmptyState.setAction(getString(R.string.ui_staff_select_event)) { toggleEventPopup() }
         txtEmptyState.visibility = View.VISIBLE
         recyclerView.visibility = View.GONE
         setPurposeCardEnabled(false)
@@ -471,6 +475,14 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         swipeRefresh.isRefreshing = false
         skeletonLoading.visibility = View.GONE
         adapter.submitItems(items)
+        if (items.isEmpty()) {
+            // The plain empty state never keeps the prompt's action.
+            txtEmptyState.setContent(
+                getString(R.string.ui_staff_no_logs),
+                getString(R.string.ui_staff_no_logs_body),
+            )
+            txtEmptyState.setAction(null)
+        }
         txtEmptyState.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
         recyclerView.visibility = if (items.isEmpty()) View.GONE else View.VISIBLE
     }
@@ -484,14 +496,19 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
 
     override fun showMessage(message: String) {
         swipeRefresh.isRefreshing = false
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        // Failure reports in the flow; the loaded rows stay readable (§5.7).
+        findViewById<TextView>(R.id.txtStaffTransactionsError).text =
+            message.ifBlank { getString(R.string.ui_staff_load_failed_body) }
+        findViewById<View>(R.id.errorStaffTransactions).visibility = View.VISIBLE
     }
 
     override fun showLoading(isLoading: Boolean) {
         if (isLoading && !swipeRefresh.isRefreshing) {
+            findViewById<View>(R.id.errorStaffTransactions).visibility = View.GONE
             skeletonLoading.visibility = View.VISIBLE
         }
         if (!isLoading) {
+            skeletonLoading.visibility = View.GONE
             swipeRefresh.isRefreshing = false
         }
     }

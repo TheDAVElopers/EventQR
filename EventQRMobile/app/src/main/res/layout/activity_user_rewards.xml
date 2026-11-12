@@ -66,7 +66,7 @@
                         android:id="@+id/btnRewardsRetry"
                         style="@style/Widget.EventQR.Ui.Button.Ghost"
                         android:layout_width="wrap_content"
-                        android:layout_height="@dimen/ui_button_height_inline"
+                        android:layout_height="wrap_content"
                         android:text="@string/ui_attendee_retry"
                         android:visibility="gone" />
                 </LinearLayout>
@@ -193,37 +193,58 @@
                         </FrameLayout>
                     </LinearLayout>
 
-                    <!-- ═════════ Available / Claimed / History ═════════ -->
-                    <LinearLayout
+                    <!-- ═════════ Available / Claimed / History: wrapping chips (§5.6) ═════════ -->
+                    <androidx.constraintlayout.widget.ConstraintLayout
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/ui_attendee_chip_row"
-                        android:layout_marginTop="@dimen/space_24"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_24">
+
+                        <androidx.constraintlayout.helper.widget.Flow
+                            android:id="@+id/chipFlow"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            app:constraint_referenced_ids="chipAvailable,txtMyClaims,txtRewardsHistory"
+                            app:flow_horizontalGap="@dimen/ui_chip_gap"
+                            app:flow_maxElementsWrap="3"
+                            app:flow_verticalGap="@dimen/ui_chip_gap"
+                            app:flow_wrapMode="chain"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
 
                         <TextView
                             android:id="@+id/chipAvailable"
-                            android:layout_width="wrap_content"
-                            android:layout_height="@dimen/ui_chip_height"
                             style="@style/Widget.EventQR.Ui.Chip"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_ui_chip_inset"
+                            android:minHeight="@dimen/ui_touch_min"
+                            android:paddingTop="@dimen/space_sm"
+                            android:paddingBottom="@dimen/space_sm"
                             android:text="@string/ui_attendee_available" />
 
                         <TextView
                             android:id="@+id/txtMyClaims"
                             style="@style/Widget.EventQR.Ui.Chip"
                             android:layout_width="wrap_content"
-                            android:layout_height="@dimen/ui_chip_height"
-                            android:layout_marginStart="@dimen/ui_chip_gap"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_ui_chip_inset"
+                            android:minHeight="@dimen/ui_touch_min"
+                            android:paddingTop="@dimen/space_sm"
+                            android:paddingBottom="@dimen/space_sm"
                             android:text="@string/ui_attendee_claimed" />
 
                         <TextView
                             android:id="@+id/txtRewardsHistory"
                             style="@style/Widget.EventQR.Ui.Chip"
                             android:layout_width="wrap_content"
-                            android:layout_height="@dimen/ui_chip_height"
-                            android:layout_marginStart="@dimen/ui_chip_gap"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_ui_chip_inset"
+                            android:minHeight="@dimen/ui_touch_min"
+                            android:paddingTop="@dimen/space_sm"
+                            android:paddingBottom="@dimen/space_sm"
                             android:text="@string/ui_attendee_history" />
-                    </LinearLayout>
+                    </androidx.constraintlayout.widget.ConstraintLayout>
 
                     <TextView
                         android:id="@+id/txtRewardsSectionTitle"
@@ -246,12 +267,45 @@
                             app:gutter="false" />
                     </FrameLayout>
 
-                    <include
+                    <LinearLayout
                         android:id="@+id/layoutRewardsSkeleton"
-                        layout="@layout/include_skeleton_card"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:visibility="gone" />
+                        android:visibility="gone"
+                        android:contentDescription="@string/ui_skeleton_loading"
+                        android:orientation="vertical">
+                        <include layout="@layout/include_skeleton_row" />
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/stroke_hairline"
+                            android:layout_marginStart="@dimen/ui_divider_inset"
+                            android:background="@color/ui_hairline" />
+                        <include layout="@layout/include_skeleton_row" />
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/stroke_hairline"
+                            android:layout_marginStart="@dimen/ui_divider_inset"
+                            android:background="@color/ui_hairline" />
+                        <include layout="@layout/include_skeleton_row" />
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/stroke_hairline"
+                            android:layout_marginStart="@dimen/ui_divider_inset"
+                            android:background="@color/ui_hairline" />
+                        <include layout="@layout/include_skeleton_row" />
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/stroke_hairline"
+                            android:layout_marginStart="@dimen/ui_divider_inset"
+                            android:background="@color/ui_hairline" />
+                        <include layout="@layout/include_skeleton_row" />
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/stroke_hairline"
+                            android:layout_marginStart="@dimen/ui_divider_inset"
+                            android:background="@color/ui_hairline" />
+                        <include layout="@layout/include_skeleton_row" />
+                    </LinearLayout>
 
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/recyclerRewards"

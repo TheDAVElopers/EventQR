@@ -184,14 +184,16 @@
                     android:id="@+id/btnSignIn"
                     style="@style/Widget.EventQR.Ui.Button.Primary"
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/ui_button_height"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_button_height"
                     android:text="@string/auth_sign_in" />
 
                 <Button
                     android:id="@+id/btnCreateAccount"
                     style="@style/Widget.EventQR.Ui.Button.Ghost"
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/ui_button_height_inline"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_button_height_inline"
                     android:layout_marginTop="@dimen/space_xs"
                     android:text="@string/auth_create_account" />
             </LinearLayout>

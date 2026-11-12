@@ -4,15 +4,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,12 +39,13 @@ import com.thedavelopers.eventqr.ui.theme.UiTextPrimary
  *   label 13/500 ui_text_primary
  *   selected: ui_primary fill, ui_on_primary label, NO check icon - the fill is the state
  *   disabled: sunken fill, ui_text_disabled
- *   row: horizontal scroll, 8dp gaps, 20dp start pad, 8dp bottom pad
+ *   row: wraps, 8dp gaps, 20dp gutter, 8dp vertical pad, max 3 per line so a chip is never clipped
  *
  * Public signature unchanged; the Material FilterChip (pill + check glyph + tinted container) is
  * replaced with a plain tonal box so the shape and the state are ours.
  */
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun <T> FilterChipRow(
     items: List<T>,
@@ -58,13 +57,13 @@ fun <T> FilterChipRow(
 ) {
     val grid = LocalGrid.current
 
-    Row(
+    FlowRow(
         modifier = modifier
             .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
             .padding(start = grid.gutter, end = grid.gutter, top = grid.s8, bottom = grid.s8),
         horizontalArrangement = Arrangement.spacedBy(grid.chipGap),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalArrangement = Arrangement.spacedBy(grid.chipGap),
+        maxItemsInEachRow = 3,
     ) {
         items.forEach { item ->
             FilterChipItem(
@@ -119,11 +118,11 @@ fun FilterChipItem(
     ) {
         Box(
             modifier = Modifier
-                .height(dimensionResource(R.dimen.ui_chip_height))
+                .heightIn(min = dimensionResource(R.dimen.ui_chip_height))
                 .clip(shape)
                 .background(fill)
                 .then(if (border != null) Modifier.border(borderWidth, border, shape) else Modifier)
-                .padding(horizontal = grid.chipPadH),
+                .padding(horizontal = grid.chipPadH, vertical = grid.s8),
             contentAlignment = Alignment.Center,
         ) {
             Text(

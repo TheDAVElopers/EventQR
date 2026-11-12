@@ -10,7 +10,7 @@
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    style="@style/Widget.EventQR.Ui.Card"
+    android:background="@drawable/bg_ui_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="@dimen/space_8"
@@ -78,7 +78,8 @@
             android:id="@+id/mrw_reward_badge"
             style="@style/Widget.EventQR.Ui.StatusBadge.Neutral"
             android:layout_width="wrap_content"
-            android:layout_height="@dimen/ui_badge_height"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/ui_badge_height"
             android:layout_marginStart="@dimen/space_8"
             tools:text="Available" />
     </LinearLayout>
@@ -103,7 +104,8 @@
             android:id="@+id/mrw_reward_edit"
             style="@style/Widget.EventQR.Ui.Button.Secondary.Inline"
             android:layout_width="0dp"
-            android:layout_height="@dimen/ui_button_height_inline"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/ui_button_height_inline"
             android:layout_weight="1"
             android:text="@string/manage_rewards_edit" />
 
@@ -111,7 +113,8 @@
             android:id="@+id/mrw_reward_remove"
             style="@style/Widget.EventQR.Ui.Button.Destructive.Inline"
             android:layout_width="0dp"
-            android:layout_height="@dimen/ui_button_height_inline"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/ui_button_height_inline"
             android:layout_marginStart="@dimen/space_8"
             android:layout_weight="1"
             android:text="@string/manage_rewards_remove" />

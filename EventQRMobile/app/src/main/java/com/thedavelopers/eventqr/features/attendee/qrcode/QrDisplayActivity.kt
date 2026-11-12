@@ -24,7 +24,6 @@ import com.thedavelopers.eventqr.features.qrcredential.model.dto.QrCredentialSna
 import com.thedavelopers.eventqr.features.registrations.RegistrationNumberFormatter
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
-import com.thedavelopers.eventqr.ui.components.asCredentialHolderName
 import com.thedavelopers.eventqr.ui.theme.applyEventQrBottomInsetPadding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

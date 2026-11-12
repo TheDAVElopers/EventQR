@@ -89,7 +89,8 @@
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/ui_skeleton_loading"
                 android:focusable="true"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:visibility="gone">
 
                 <include
                     layout="@layout/include_skeleton_row"

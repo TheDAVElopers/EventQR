@@ -7,7 +7,6 @@ import com.thedavelopers.eventqr.features.admin.dashboard.AdminDashboardActivity
 import com.thedavelopers.eventqr.features.admin.users.AdminAccountManagementActivity
 import com.thedavelopers.eventqr.features.attendee.AttendeeEventsActivity
 import com.thedavelopers.eventqr.features.attendee.AttendeeRewardsActivity
-import com.thedavelopers.eventqr.features.attendee.RegisteredEventsActivity
 import com.thedavelopers.eventqr.features.attendee.attendeeNavDestination
 import com.thedavelopers.eventqr.features.attendee.attendeeTabFlags
 import com.thedavelopers.eventqr.features.dashboard.DashboardActivity
@@ -53,7 +52,6 @@ class BottomNavMappingTest {
     fun attendeeNavDestination_mapsEveryTab() {
         assertEquals(DashboardActivity::class.java, attendeeNavDestination("home"))
         assertEquals(AttendeeEventsActivity::class.java, attendeeNavDestination("events"))
-        assertEquals(RegisteredEventsActivity::class.java, attendeeNavDestination("registered"))
         assertEquals(AttendeeRewardsActivity::class.java, attendeeNavDestination("rewards"))
         assertEquals(com.thedavelopers.eventqr.features.attendee.AttendeeProfileActivity::class.java, attendeeNavDestination("profile"))
     }
@@ -80,7 +78,6 @@ class BottomNavMappingTest {
     fun attendeeTabFlags_nonHomeTabsReorderToFrontWithoutClearing() {
         listOf(
             AttendeeEventsActivity::class.java,
-            RegisteredEventsActivity::class.java,
             AttendeeRewardsActivity::class.java,
             com.thedavelopers.eventqr.features.attendee.AttendeeProfileActivity::class.java,
         ).forEach { destination ->

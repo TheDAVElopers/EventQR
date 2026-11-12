@@ -3,12 +3,13 @@
     ADMIN ACCOUNT ROW (§5.5 list-row language, §5.4 one badge).
 
         88dp row on the page - no per-row card, no shadow, 1dp hairline divider inset 76dp.
-        40dp neutral tile with the account initial; name in `title`; email + role in `body_s`/`micro`.
+        40dp neutral tile with the account initial; name in `title`; email in `body_s`.
         ONE badge (account status) sits beside the name; the overflow button is the row's only
         trailing control, so the row never grows two competing affordances.
 
-    Deleted: `bg_admin_surface_card`, the 42dp violet avatar raster, `bg_admin_role_badge_*`,
-    `bg_admin_status_*_badge` and the bare `ic_filter_list` glyph used as an overflow menu.
+    Deleted: the role badge (role is not a state), `bg_admin_surface_card`, the 42dp violet
+    avatar raster, `bg_admin_role_badge_*`, `bg_admin_status_*_badge` and the bare
+    `ic_filter_list` glyph used as an overflow menu.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -65,7 +66,8 @@
                     android:id="@+id/textAccountStatusBadge"
                     style="@style/Widget.EventQR.Ui.StatusBadge.Neutral"
                     android:layout_width="wrap_content"
-                    android:layout_height="@dimen/ui_badge_height"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_badge_height"
                     android:layout_marginStart="@dimen/space_8"
                     tools:text="Active" />
             </LinearLayout>
@@ -79,17 +81,6 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 tools:text="juan@example.com" />
-
-            <TextView
-                android:id="@+id/textAccountRoleBadge"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_2"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
-                android:textColor="@color/ui_text_secondary"
-                tools:text="Attendee" />
         </LinearLayout>
 
         <ImageButton

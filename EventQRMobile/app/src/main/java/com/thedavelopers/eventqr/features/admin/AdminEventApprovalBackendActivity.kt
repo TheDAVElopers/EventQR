@@ -3,10 +3,7 @@ package com.thedavelopers.eventqr.features.admin
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
-import android.widget.ProgressBar
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
@@ -22,14 +19,15 @@ import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.ui.components.CountLabel
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import com.thedavelopers.eventqr.ui.components.PassHeadBinder
+import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import kotlinx.coroutines.launch
 
 /**
- * Admin event requests list (§6.5). Compact pass head, one shared chip row, the shared
- * EventRequestCard rows. The filter chips carry their state in the fill (§5.6), so no state
- * drawables and no per-chip elevation are set from code.
+ * Admin event requests list (§6.5). Compact pass head, one shared chip row, flat 88dp page rows.
+ * The filter chips carry their state in the fill (§5.6), so no state drawables and no per-chip
+ * elevation are set from code.
  */
 class AdminEventApprovalBackendActivity : AppCompatActivity() {
 
@@ -50,14 +48,13 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
     private lateinit var chipRejected: TextView
     private lateinit var textCount: TextView
 
-    private lateinit var loadingRequests: ProgressBar
-    private lateinit var textError: TextView
-    private lateinit var buttonRetry: Button
+    private lateinit var skeletonRequests: View
     private lateinit var textEmpty: EventQrEmptyState
     private lateinit var recyclerRequests: RecyclerView
 
     private var allRequests = emptyList<com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse>()
     private var currentFilter: EventRequestFilter = EventRequestFilter.ALL
+    private var loadFailed = false
 
     private val detailLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         loadRequests(showLoading = false)
@@ -92,13 +89,10 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
         chipApproved = findViewById(R.id.chipApproved)
         chipRejected = findViewById(R.id.chipRejected)
 
-        loadingRequests = findViewById(R.id.loadingRequests)
-        textError = findViewById(R.id.textError)
-        buttonRetry = findViewById(R.id.buttonRetry)
+        skeletonRequests = findViewById(R.id.skeletonRequests)
         textEmpty = findViewById(R.id.textEmpty)
         recyclerRequests = findViewById(R.id.recyclerRequests)
 
-        buttonRetry.setOnClickListener { loadRequests(showLoading = true) }
         swipeRefresh.setOnRefreshListener { loadRequests(showLoading = false) }
     }
 
@@ -139,14 +133,16 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
             when (val result = repository.getCurrentUser()) {
                 is NetworkResult.Success -> {
                     if (result.data.role != AccountRole.ADMIN && result.data.role != AccountRole.SUPER_ADMIN) {
-                        showError(getString(R.string.admin_event_approval_backend_admin_access_required), showRetry = false)
-                        Toast.makeText(this@AdminEventApprovalBackendActivity, this@AdminEventApprovalBackendActivity.getString(R.string.admin_event_approval_backend_admin_access_required), Toast.LENGTH_SHORT).show()
+                        showAccessDenied()
                     } else {
                         bindRoleEyebrow(result.data.role.name)
                         loadRequests(showLoading = true)
                     }
                 }
-                is NetworkResult.Error -> showError(toFriendlyError(result.message), showRetry = false)
+                is NetworkResult.Error -> {
+                    setLoadingState(false)
+                    showError(toFriendlyError(result.message), showRetry = false)
+                }
                 NetworkResult.Loading -> Unit
             }
         }
@@ -162,6 +158,7 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
                 is NetworkResult.Success -> {
                     swipeRefresh.isRefreshing = false
                     allRequests = result.data
+                    loadFailed = false
                     setLoadingState(false)
                     renderList()
                 }
@@ -178,11 +175,12 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
     private fun applyFilter(filter: EventRequestFilter) {
         currentFilter = filter
         updateFilterChips(filter)
+        // The failure owns the slot until a load succeeds; a filter must not replace it with empty copy.
+        if (loadFailed) return
         renderList()
     }
 
     private fun renderList() {
-        hideErrorAndEmpty()
         val filtered = when (currentFilter) {
             EventRequestFilter.ALL -> allRequests
             EventRequestFilter.PENDING -> allRequests.filter { it.status == EventRequestStatus.PENDING }
@@ -190,8 +188,49 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
             EventRequestFilter.REJECTED -> allRequests.filter { it.status == EventRequestStatus.REJECTED }
         }
         adapter.submit(filtered)
+        // shortcut: GET /admin/event-requests returns the whole list with no page or total, so the
+        // loaded list is the page total. Swap in a server total when the endpoint grows paging.
         textCount.text = CountLabel.format(filtered.size.toLong(), getString(R.string.ui_admin_requests_count))
-        textEmpty.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
+        if (filtered.isEmpty()) {
+            recyclerRequests.visibility = View.GONE
+            showFilterEmpty()
+        } else {
+            recyclerRequests.visibility = View.VISIBLE
+            textEmpty.hide()
+        }
+    }
+
+    /** §6.8: each chip owns its empty copy and a ghost Clear filter; no filter owns no action. */
+    private fun showFilterEmpty() {
+        val titleRes: Int
+        val bodyRes: Int
+        when (currentFilter) {
+            EventRequestFilter.ALL -> {
+                titleRes = R.string.ui_admin_requests_empty_title
+                bodyRes = R.string.ui_admin_requests_empty_body
+            }
+            EventRequestFilter.PENDING -> {
+                titleRes = R.string.ui_admin_requests_empty_pending_title
+                bodyRes = R.string.ui_admin_requests_empty_pending_body
+            }
+            EventRequestFilter.APPROVED -> {
+                titleRes = R.string.ui_admin_requests_empty_approved_title
+                bodyRes = R.string.ui_admin_requests_empty_approved_body
+            }
+            EventRequestFilter.REJECTED -> {
+                titleRes = R.string.ui_admin_requests_empty_rejected_title
+                bodyRes = R.string.ui_admin_requests_empty_rejected_body
+            }
+        }
+        textEmpty.setIcon(AppIcons.Request)
+        textEmpty.show(getString(titleRes), getString(bodyRes))
+        if (currentFilter == EventRequestFilter.ALL) {
+            textEmpty.setAction(null)
+        } else {
+            textEmpty.setAction(getString(R.string.ui_admin_filter_clear)) {
+                applyFilter(EventRequestFilter.ALL)
+            }
+        }
     }
 
     private fun updateFilterChips(filter: EventRequestFilter) {
@@ -202,41 +241,46 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
     }
 
     private fun setLoadingState(loading: Boolean) {
-        if (!swipeRefresh.isRefreshing) {
-            loadingRequests.visibility = if (loading) View.VISIBLE else View.GONE
-        }
+        skeletonRequests.visibility = if (loading && !swipeRefresh.isRefreshing) View.VISIBLE else View.GONE
         recyclerRequests.visibility = if (loading) View.GONE else View.VISIBLE
         if (loading) {
-            textError.visibility = View.GONE
-            buttonRetry.visibility = View.GONE
-            textEmpty.visibility = View.GONE
+            textEmpty.hide()
         }
     }
 
+    /** §6.8 state 3: a failed load owns the empty slot, with the recovery as its only action. */
     private fun showError(message: String, showRetry: Boolean) {
+        loadFailed = true
         recyclerRequests.visibility = View.GONE
-        textEmpty.visibility = View.GONE
-        textError.visibility = View.VISIBLE
-        textError.text = message
-        buttonRetry.visibility = if (showRetry) View.VISIBLE else View.GONE
+        textEmpty.setIcon(AppIcons.Warning)
+        textEmpty.show(getString(R.string.ui_admin_requests_error_title), message)
+        textEmpty.setAction(if (showRetry) getString(R.string.common_retry) else null) {
+            loadRequests(showLoading = true)
+        }
     }
 
-    private fun hideErrorAndEmpty() {
-        recyclerRequests.visibility = View.VISIBLE
-        textError.visibility = View.GONE
-        buttonRetry.visibility = View.GONE
+    /** Access denied is one in-flow error with one action. No toast duplicates the message. */
+    private fun showAccessDenied() {
+        loadFailed = true
+        setLoadingState(false)
+        textCount.text = ""
+        recyclerRequests.visibility = View.GONE
+        textEmpty.setIcon(AppIcons.Warning)
+        textEmpty.show(getString(R.string.ui_admin_error_admin_required))
+        textEmpty.setAction(getString(R.string.ui_admin_go_back)) { finish() }
     }
 
     private fun toFriendlyError(message: String): String {
         val normalized = message.lowercase()
         return when {
-            normalized.contains("disabled") || normalized.contains("suspend") -> "Account is disabled. Contact support."
-            normalized.contains("401") || normalized.contains("unauthorized") -> "Session expired. Sign in again."
-            normalized.contains("403") || normalized.contains("forbidden") || normalized.contains("admin access") -> "Admin access required."
-            normalized.contains("404") || normalized.contains("not found") -> "Request not found."
-            normalized.contains("400") || normalized.contains("invalid") || normalized.contains("bad request") -> "Request failed. Check the request state and try again."
-            normalized.contains("500") -> "Server error. Try again later."
-            normalized.contains("unable to resolve host") || normalized.contains("failed to connect") || normalized.contains("timeout") -> "No internet connection. Check your network and try again."
+            normalized.contains("disabled") || normalized.contains("suspend") -> getString(R.string.ui_admin_error_disabled)
+            normalized.contains("401") || normalized.contains("unauthorized") -> getString(R.string.ui_admin_error_session)
+            normalized.contains("403") || normalized.contains("forbidden") || normalized.contains("admin access") -> getString(R.string.ui_admin_error_admin_required)
+            normalized.contains("404") || normalized.contains("not found") -> getString(R.string.ui_admin_error_not_found)
+            normalized.contains("409") || normalized.contains("conflict") -> getString(R.string.ui_admin_error_conflict)
+            normalized.contains("400") || normalized.contains("invalid") || normalized.contains("bad request") -> getString(R.string.ui_admin_error_bad_request)
+            normalized.contains("500") -> getString(R.string.ui_admin_error_server)
+            normalized.contains("unable to resolve host") || normalized.contains("failed to connect") || normalized.contains("timeout") -> getString(R.string.ui_admin_error_network)
             else -> message
         }
     }

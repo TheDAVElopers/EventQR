@@ -11,7 +11,6 @@ import android.text.InputType
 import android.util.Log
 import android.view.ViewGroup
 import android.widget.LinearLayout
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
@@ -36,6 +35,9 @@ open class TransactionRulesActivity : AppCompatActivity() {
     private var purposes: List<OrganizerMvpScanPurpose> = emptyList()
     private var rules: List<OrganizerTransactionRuleDto> = emptyList()
     private var selectedPurposeId: String? = null
+    /** Save outcome as (message, success). Rendered above the Save button, never a Toast. */
+    private var saveStatus: Pair<String, Boolean>? = null
+    private var saveStatusView: android.widget.TextView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -142,6 +144,7 @@ open class TransactionRulesActivity : AppCompatActivity() {
                         addView(chip(purpose.label, purpose.id == purposeId).apply {
                             setOnClickListener {
                                 selectedPurposeId = purpose.id
+                                saveStatus = null
                                 renderUI()
                             }
                         })
@@ -204,6 +207,19 @@ open class TransactionRulesActivity : AppCompatActivity() {
 
         content.addView(spacerRes(R.dimen.space_20))
 
+        saveStatusView = styledText(
+            saveStatus?.first.orEmpty(),
+            R.dimen.ui_type_body,
+            false,
+            color(if (saveStatus?.second == true) R.color.ui_success else R.color.ui_error),
+        ).apply {
+            id = R.id.txr_save_status
+            accessibilityLiveRegion = android.view.View.ACCESSIBILITY_LIVE_REGION_POLITE
+            visibility = if (saveStatus == null) android.view.View.GONE else android.view.View.VISIBLE
+            setPadding(0, 0, 0, dimenPx(R.dimen.space_sm))
+        }
+        content.addView(saveStatusView)
+
         content.addView(primaryButton(getString(R.string.transaction_rules_save)) {
             saveRules(allowDuplicate, requiresStaff, cooldownMinutes, maxScans)
         }.apply {
@@ -215,7 +231,7 @@ open class TransactionRulesActivity : AppCompatActivity() {
     private fun saveRules(allowDuplicate: Boolean, requiresStaff: Boolean, cooldown: Int, maxScans: Int) {
         val purposeId = selectedPurposeId
         if (purposeId == null) {
-            Toast.makeText(this, getString(R.string.transaction_rules_no_purposes_message), Toast.LENGTH_LONG).show()
+            showSaveStatus(getString(R.string.transaction_rules_no_purposes_message), success = false)
             return
         }
 
@@ -235,11 +251,21 @@ open class TransactionRulesActivity : AppCompatActivity() {
             Log.d(TAG, "Save result: ${result.source}")
 
             if (result.source == OrganizerMvpDataSource.BACKEND) {
-                Toast.makeText(this@TransactionRulesActivity, this@TransactionRulesActivity.getString(R.string.transaction_rules_rules_saved_successfully), Toast.LENGTH_SHORT).show()
+                saveStatus = getString(R.string.transaction_rules_rules_saved_successfully) to true
                 loadData()
             } else {
-                Toast.makeText(this@TransactionRulesActivity, getString(R.string.transaction_rules_failed_save, result.message), Toast.LENGTH_SHORT).show()
+                showSaveStatus(getString(R.string.transaction_rules_failed_save, result.message), success = false)
             }
+        }
+    }
+
+    /** Inline outcome above Save: no Toast, announced once by the polite live region. */
+    private fun showSaveStatus(message: String, success: Boolean) {
+        saveStatus = message to success
+        saveStatusView?.apply {
+            text = message
+            setTextColor(color(if (success) R.color.ui_success else R.color.ui_error))
+            visibility = android.view.View.VISIBLE
         }
     }
 

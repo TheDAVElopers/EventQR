@@ -3,9 +3,7 @@ package com.thedavelopers.eventqr.features.auth.resetpassword
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
-import android.text.InputType
 import android.text.TextWatcher
-import android.view.MotionEvent
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -20,8 +18,8 @@ import com.thedavelopers.eventqr.core.util.Wordmark
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.core.util.setInlineError
 import com.thedavelopers.eventqr.features.auth.login.LoginActivity
-import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.icons.FieldIcons
+import com.thedavelopers.eventqr.ui.icons.RuleMarks
 
 /** Final step of the reset flow; receives the email and the already verified code from [ResetPasswordActivity]. */
 open class NewPasswordActivity : AppCompatActivity(), NewPasswordContract.View {
@@ -62,8 +60,8 @@ open class NewPasswordActivity : AppCompatActivity(), NewPasswordContract.View {
         passwordNumberRequirement = findViewById(R.id.txtPasswordNumberRequirement)
         passwordSpecialRequirement = findViewById(R.id.txtPasswordSpecialRequirement)
 
-        configurePasswordToggle(newPasswordInput)
-        configurePasswordToggle(confirmPasswordInput)
+        FieldIcons.apply(newPasswordInput)
+        FieldIcons.apply(confirmPasswordInput)
 
         val watcher = object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
@@ -156,41 +154,9 @@ open class NewPasswordActivity : AppCompatActivity(), NewPasswordContract.View {
             newPasswordInput.text.toString() == confirmPasswordInput.text.toString()
     }
 
-    /**
-     * One checklist row, same mark as Registration: the tokenised ui_rule_on / ui_rule_off drawable
-     * carries the state (lime only when the rule is met). The label is never tinted by the state:
-     * ui_text_primary when met, ui_text_secondary while pending.
-     */
+    /** One checklist row (§6.1): the 16dp mark carries the state, never colour alone. */
     private fun updateRequirement(view: TextView, label: String, isMet: Boolean) {
-        view.text = label
-        view.setTextColor(getColor(if (isMet) R.color.ui_text_primary else R.color.ui_text_secondary))
-        view.setCompoundDrawablesRelativeWithIntrinsicBounds(
-            if (isMet) R.drawable.ui_rule_on else R.drawable.ui_rule_off,
-            0,
-            0,
-            0
-        )
-    }
-
-    private fun configurePasswordToggle(input: EditText) {
-        FieldIcons.apply(input)
-        input.setOnTouchListener { view, event ->
-            if (event.action == MotionEvent.ACTION_UP && event.rawX >= input.right - input.compoundPaddingEnd) {
-                val isVisible = input.inputType == (InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD)
-                if (isVisible) {
-                    input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-                    FieldIcons.setTrailing(input, AppIcons.Visibility)
-                } else {
-                    input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-                    FieldIcons.setTrailing(input, AppIcons.VisibilityOff)
-                }
-                input.setSelection(input.text.length)
-                view.performClick()
-                true
-            } else {
-                false
-            }
-        }
+        RuleMarks.apply(view, label, isMet)
     }
 
     companion object {

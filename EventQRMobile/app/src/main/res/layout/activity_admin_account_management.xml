@@ -5,7 +5,8 @@
         Compact pass head (eyebrow ADMIN, title Accounts)
         Create admin account row - super admins only, a list row rather than a raised card
         48dp search field, then the shared chip row hosted as Compose (FilterChipRow)
-        Hairline account rows; loading is a progress indicator, empty state is the shared one
+        Hairline account rows; first load is skeleton rows at the loaded geometry, empty state is
+        the shared one
 
     Deleted: the EventQrTabHeader, `bg_organizer_events_screen`, `bg_admin_surface_card`, the
     IconTile matrix tile, `bg_admin_search_field` + `ic_ui_search`, the Material ChipGroup
@@ -49,7 +50,7 @@
                 android:id="@+id/inputAccountSearch"
                 style="@style/Widget.EventQR.Ui.TextField.Search"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/ui_field_search_height"
+                android:layout_height="wrap_content"
                 android:autofillHints="emailAddress"
                 android:drawableStart="@drawable/ic_ui_search"
                 android:drawablePadding="@dimen/space_sm"
@@ -65,14 +66,45 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-        <ProgressBar
-            android:id="@+id/progressAccountsLoading"
-            android:layout_width="@dimen/ui_loading_indicator"
-            android:layout_height="@dimen/ui_loading_indicator"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="@dimen/space_16"
-            android:indeterminateTint="@color/ui_primary"
-            android:visibility="gone" />
+        <LinearLayout
+            android:id="@+id/skeletonAccountsLoading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/ui_skeleton_loading"
+            android:focusable="true"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <include
+                layout="@layout/include_skeleton_row"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/ui_row_height_tall" />
+
+            <include
+                layout="@layout/include_skeleton_row"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/ui_row_height_tall" />
+
+            <include
+                layout="@layout/include_skeleton_row"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/ui_row_height_tall" />
+
+            <include
+                layout="@layout/include_skeleton_row"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/ui_row_height_tall" />
+
+            <include
+                layout="@layout/include_skeleton_row"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/ui_row_height_tall" />
+
+            <include
+                layout="@layout/include_skeleton_row"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/ui_row_height_tall" />
+        </LinearLayout>
 
         <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
             android:id="@+id/textAccountsPlaceholder"

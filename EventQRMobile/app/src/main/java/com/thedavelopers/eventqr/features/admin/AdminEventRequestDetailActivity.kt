@@ -24,6 +24,8 @@ class AdminEventRequestDetailActivity : AppCompatActivity() {
     private val _request = MutableStateFlow<EventRequestResponse?>(null)
     private val _isLoading = MutableStateFlow(false)
     private val _errorMessage = MutableStateFlow<String?>(null)
+    private val _decisionMessage = MutableStateFlow<String?>(null)
+    private val _decisionIsError = MutableStateFlow(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,11 +38,13 @@ class AdminEventRequestDetailActivity : AppCompatActivity() {
 
         repository = AdminRepository(this)
 
-        setContentWithDetailHeader("Event Request") {
+        setContentWithDetailHeader(getString(R.string.ui_request_detail_title)) {
             EventQrTheme {
                 val request = _request.collectAsStateWithLifecycle().value
                 val isLoading = _isLoading.collectAsStateWithLifecycle().value
                 val errorMessage = _errorMessage.collectAsStateWithLifecycle().value
+                val decisionMessage = _decisionMessage.collectAsStateWithLifecycle().value
+                val decisionIsError = _decisionIsError.collectAsStateWithLifecycle().value
 
                 EventRequestDetailScreen(
                     request = request,
@@ -50,6 +54,8 @@ class AdminEventRequestDetailActivity : AppCompatActivity() {
                     onRetryClick = { verifyAdminAndLoad() },
                     onApproveClick = { remarks -> approveRequest(remarks) },
                     onRejectClick = { remarks -> rejectRequest(remarks) },
+                    decisionMessage = decisionMessage,
+                    decisionIsError = decisionIsError,
                 )
             }
         }
@@ -71,13 +77,15 @@ class AdminEventRequestDetailActivity : AppCompatActivity() {
     private fun verifyAdminAndLoad() {
         _isLoading.value = true
         _errorMessage.value = null
+        _decisionMessage.value = null
+        _decisionIsError.value = false
 
         lifecycleScope.launch {
             when (val result = repository.getCurrentUser()) {
                 is NetworkResult.Success -> {
                     if (result.data.role != AccountRole.ADMIN && result.data.role != AccountRole.SUPER_ADMIN) {
                         _isLoading.value = false
-                        _errorMessage.value = "Admin access required."
+                        _errorMessage.value = getString(R.string.ui_admin_error_admin_required)
                     } else {
                         loadRequest()
                     }
@@ -112,16 +120,19 @@ class AdminEventRequestDetailActivity : AppCompatActivity() {
 
     private fun approveRequest(remarks: String?) {
         _isLoading.value = true
+        _decisionMessage.value = null
         lifecycleScope.launch {
             when (val result = repository.approveEvent(requestId, remarks)) {
                 is NetworkResult.Success -> {
-                    Toast.makeText(this@AdminEventRequestDetailActivity, this@AdminEventRequestDetailActivity.getString(R.string.admin_event_request_detail_event_request_approved), Toast.LENGTH_SHORT).show()
+                    _decisionIsError.value = false
+                    _decisionMessage.value = getString(R.string.ui_request_detail_approved)
                     setResult(RESULT_OK)
                     loadRequest()
                 }
                 is NetworkResult.Error -> {
                     _isLoading.value = false
-                    Toast.makeText(this@AdminEventRequestDetailActivity, toFriendlyError(result.message), Toast.LENGTH_LONG).show()
+                    _decisionIsError.value = true
+                    _decisionMessage.value = toFriendlyError(result.message)
                 }
                 NetworkResult.Loading -> Unit
             }
@@ -130,15 +141,19 @@ class AdminEventRequestDetailActivity : AppCompatActivity() {
 
     private fun rejectRequest(remarks: String?) {
         _isLoading.value = true
+        _decisionMessage.value = null
         lifecycleScope.launch {
             when (val result = repository.rejectEvent(requestId, remarks)) {
                 is NetworkResult.Success -> {
-                    Toast.makeText(this@AdminEventRequestDetailActivity, this@AdminEventRequestDetailActivity.getString(R.string.admin_event_request_detail_request_rejected), Toast.LENGTH_SHORT).show()
+                    _decisionIsError.value = false
+                    _decisionMessage.value = getString(R.string.ui_request_detail_rejected)
+                    setResult(RESULT_OK)
                     loadRequest()
                 }
                 is NetworkResult.Error -> {
                     _isLoading.value = false
-                    Toast.makeText(this@AdminEventRequestDetailActivity, toFriendlyError(result.message), Toast.LENGTH_LONG).show()
+                    _decisionIsError.value = true
+                    _decisionMessage.value = toFriendlyError(result.message)
                 }
                 NetworkResult.Loading -> Unit
             }
@@ -148,13 +163,14 @@ class AdminEventRequestDetailActivity : AppCompatActivity() {
     private fun toFriendlyError(message: String): String {
         val normalized = message.lowercase()
         return when {
-            normalized.contains("disabled") || normalized.contains("suspend") -> "Account is disabled. Contact support."
-            normalized.contains("401") || normalized.contains("unauthorized") -> "Session expired. Please sign in again."
-            normalized.contains("403") || normalized.contains("forbidden") || normalized.contains("admin access") -> "Admin access required."
-            normalized.contains("404") || normalized.contains("not found") -> "Request not found."
-            normalized.contains("400") || normalized.contains("invalid") || normalized.contains("bad request") -> "Action cannot be completed in the current state."
-            normalized.contains("500") -> "Server error. Please try again later."
-            normalized.contains("unable to resolve host") || normalized.contains("failed to connect") || normalized.contains("timeout") -> "No internet connection. Check your network and try again."
+            normalized.contains("disabled") || normalized.contains("suspend") -> getString(R.string.ui_admin_error_disabled)
+            normalized.contains("401") || normalized.contains("unauthorized") -> getString(R.string.ui_admin_error_session)
+            normalized.contains("403") || normalized.contains("forbidden") || normalized.contains("admin access") -> getString(R.string.ui_admin_error_admin_required)
+            normalized.contains("404") || normalized.contains("not found") -> getString(R.string.ui_admin_error_not_found)
+            normalized.contains("409") || normalized.contains("conflict") -> getString(R.string.ui_admin_error_conflict)
+            normalized.contains("400") || normalized.contains("invalid") || normalized.contains("bad request") -> getString(R.string.ui_admin_error_action_state)
+            normalized.contains("500") -> getString(R.string.ui_admin_error_server)
+            normalized.contains("unable to resolve host") || normalized.contains("failed to connect") || normalized.contains("timeout") -> getString(R.string.ui_admin_error_network)
             else -> message
         }
     }

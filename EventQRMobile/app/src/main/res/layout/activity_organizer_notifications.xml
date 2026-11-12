@@ -24,7 +24,8 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="@dimen/ui_touch_min"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/ui_touch_min"
         android:layout_marginStart="@dimen/ui_gutter"
         android:layout_marginTop="@dimen/space_8"
         android:layout_marginEnd="@dimen/ui_gutter"
@@ -34,7 +35,8 @@
         <TextView
             android:id="@+id/txtMarkAllRead"
             android:layout_width="wrap_content"
-            android:layout_height="@dimen/ui_button_height_inline"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/ui_button_height_inline"
             android:background="?attr/selectableItemBackground"
             android:clickable="true"
             android:focusable="true"
@@ -141,6 +143,85 @@
             android:visibility="gone" />
     </LinearLayout>
 
+    <!-- Event-filter load failure: the filter stays usable and retries in place (§5.7). -->
+    <LinearLayout
+        android:id="@+id/errorEventFilter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/ui_gutter"
+        android:layout_marginTop="@dimen/space_md"
+        android:layout_marginEnd="@dimen/ui_gutter"
+        android:accessibilityLiveRegion="polite"
+        android:background="@drawable/bg_ui_block_r4"
+        android:backgroundTint="@color/ui_error_container"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/ui_touch_min"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_lg"
+        android:paddingTop="@dimen/space_sm"
+        android:paddingEnd="@dimen/space_sm"
+        android:paddingBottom="@dimen/space_sm"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/txtEventFilterError"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/organizer_notifications_event_filter_load_failed"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+            android:textColor="@color/ui_on_error_container" />
+
+        <TextView
+            android:id="@+id/btnEventFilterRetry"
+            style="@style/Widget.EventQR.Ui.Button.Ghost"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:minHeight="@dimen/ui_button_height_inline"
+            android:text="@string/common_retry"
+            android:textColor="@color/ui_on_error_container" />
+    </LinearLayout>
+
+    <!-- Refresh failure with rows on screen: rows stay, the failure reports in the flow (§5.7). -->
+    <LinearLayout
+        android:id="@+id/errorNotifications"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/ui_gutter"
+        android:layout_marginTop="@dimen/space_md"
+        android:layout_marginEnd="@dimen/ui_gutter"
+        android:accessibilityLiveRegion="polite"
+        android:background="@drawable/bg_ui_block_r4"
+        android:backgroundTint="@color/ui_error_container"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/ui_touch_min"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_lg"
+        android:paddingTop="@dimen/space_sm"
+        android:paddingEnd="@dimen/space_sm"
+        android:paddingBottom="@dimen/space_sm"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/txtNotificationsError"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+            android:textColor="@color/ui_on_error_container" />
+
+        <TextView
+            android:id="@+id/btnNotificationsRetry"
+            style="@style/Widget.EventQR.Ui.Button.Ghost"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:minHeight="@dimen/ui_button_height_inline"
+            android:text="@string/common_retry"
+            android:textColor="@color/ui_on_error_container" />
+    </LinearLayout>
+
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshNotifications"
         android:layout_width="match_parent"
@@ -161,13 +242,46 @@
                 android:overScrollMode="never"
                 android:paddingBottom="@dimen/space_24" />
 
-            <include
+            <LinearLayout
                 android:id="@+id/skeletonLoading"
-                layout="@layout/include_skeleton_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/ui_gutter"
-                android:layout_marginEnd="@dimen/ui_gutter" />
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:contentDescription="@string/ui_skeleton_loading"
+                android:orientation="vertical">
+                <include layout="@layout/include_skeleton_row" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline" />
+                <include layout="@layout/include_skeleton_row" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline" />
+                <include layout="@layout/include_skeleton_row" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline" />
+                <include layout="@layout/include_skeleton_row" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline" />
+                <include layout="@layout/include_skeleton_row" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline" />
+                <include layout="@layout/include_skeleton_row" />
+            </LinearLayout>
 
             <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
                 android:id="@+id/layoutNotificationEmpty"
@@ -178,34 +292,14 @@
                 app:subtitle="@string/organizer_notifications_stay_tuned_for_updates_on_your_event"
                 app:title="@string/organizer_notifications_no_notifications_yet" />
 
-            <LinearLayout
+            <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
                 android:id="@+id/layoutNotificationError"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/ui_gutter"
-                android:layout_marginEnd="@dimen/ui_gutter"
-                android:background="@drawable/bg_ui_card"
-                android:orientation="vertical"
-                android:padding="@dimen/ui_card_padding"
-                android:visibility="gone">
-
-                <ImageView
-                    android:layout_width="@dimen/ui_row_tile"
-                    android:layout_height="@dimen/ui_row_tile"
-                    android:background="@drawable/bg_ui_empty_plate"
-                    android:contentDescription="@string/organizer_notifications_error_loading_notifications"
-                    android:padding="@dimen/space_8"
-                    android:src="@drawable/ic_ui_notifications_none"
-                    android:tint="@color/ui_text_secondary" />
-
-                <TextView
-                    android:id="@+id/txtNotificationError"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_12"
-                    android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
-                    android:textColor="@color/ui_text_secondary" />
-            </LinearLayout>
+                android:visibility="gone"
+                app:icon="@drawable/ic_ui_warning"
+                app:subtitle="@string/ui_staff_load_failed_body"
+                app:title="@string/organizer_notifications_error_loading_notifications" />
         </FrameLayout>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 </LinearLayout>

@@ -21,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -45,33 +44,8 @@ import com.thedavelopers.eventqr.ui.theme.UiTextSecondary
  *
  * Banned: illustration blobs, a 96dp glyph, centring, exclamation marks.
  *
- * The file is kept because five screens import EmptyStateView; it now renders the same anatomy as
- * the EventQrEmptyState View. New Compose code should call EmptyState(...) directly.
+ * The View twin is EventQrEmptyState; both render the same anatomy.
  */
-
-@Composable
-fun EmptyStateView(
-    @DrawableRes icon: Int,
-    title: String,
-    description: String,
-    modifier: Modifier = Modifier,
-    actionLabel: String? = null,
-    onActionClick: (() -> Unit)? = null,
-    /** Kept for source compatibility; the redesign has one icon tone. */
-    @Suppress("UNUSED_PARAMETER") iconTint: Color? = null,
-    /** Kept for source compatibility; the plate is always ui_surface_sunken. */
-    @Suppress("UNUSED_PARAMETER") iconBackgroundColor: Color? = null,
-) {
-    EmptyState(
-        icon = icon,
-        title = title,
-        description = description,
-        modifier = modifier,
-        actionLabel = actionLabel,
-        onActionClick = onActionClick,
-        primaryAction = false,
-    )
-}
 
 /** The single empty-state composable. [primaryAction] picks the one action's weight. */
 @Composable

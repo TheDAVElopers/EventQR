@@ -3,7 +3,6 @@ package com.thedavelopers.eventqr.features.attendee
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -18,6 +17,7 @@ import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 class AttendeeProfileActivity : AppCompatActivity() {
@@ -25,12 +25,14 @@ class AttendeeProfileActivity : AppCompatActivity() {
     private lateinit var sessionManager: SessionManager
     private lateinit var repository: AttendeeRepository
     private lateinit var txtProfileName: TextView
-    private lateinit var txtProfileRole: TextView
+    private lateinit var txtProfileEmail: TextView
     private lateinit var skeletonLoading: View
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var layoutProfileMenu: View
+    private lateinit var errorProfileBlock: View
     private lateinit var txtProfileError: TextView
     private lateinit var btnProfileRetry: TextView
+    private var loadJob: Job? = null
 
     // False until the role guard passed and every view above is inflated. A denied session
     // finishes in onCreate without inflating anything, so onResume must not touch them.
@@ -51,10 +53,11 @@ class AttendeeProfileActivity : AppCompatActivity() {
         findViewById<View>(R.id.headerProfile).applyEventQrTopInsetPadding()
 
         txtProfileName = findViewById(R.id.txtProfileName)
-        txtProfileRole = findViewById(R.id.txtProfileRole)
+        txtProfileEmail = findViewById(R.id.txtProfileEmail)
         skeletonLoading = findViewById(R.id.skeletonLoading)
         swipeRefresh = findViewById(R.id.swipeRefreshProfile)
         layoutProfileMenu = findViewById(R.id.layoutProfileMenu)
+        errorProfileBlock = findViewById(R.id.errorProfileBlock)
         txtProfileError = findViewById(R.id.txtProfileError)
         btnProfileRetry = findViewById(R.id.btnProfileRetry)
 
@@ -97,6 +100,7 @@ class AttendeeProfileActivity : AppCompatActivity() {
     }
 
     private fun performSignOut() {
+        loadJob?.cancel()
         findViewById<View>(R.id.cardSignOut).isEnabled = false
         lifecycleScope.launch {
             // Revokes the token on the server first, then clears local session state.
@@ -118,7 +122,8 @@ class AttendeeProfileActivity : AppCompatActivity() {
 
         renderProfile(null)
 
-        lifecycleScope.launch {
+        loadJob?.cancel()
+        loadJob = lifecycleScope.launch {
             when (val result = repository.getMyProfile()) {
                 is NetworkResult.Success -> {
                     val user = result.data
@@ -136,29 +141,22 @@ class AttendeeProfileActivity : AppCompatActivity() {
     }
 
     private fun renderProfile(user: UserResponse? = null) {
-        txtProfileName.text = user?.fullName ?: sessionManager.getFullName().orEmpty()
-        txtProfileRole.text = (user?.role?.name ?: sessionManager.getUserRole())
-            ?.takeIf { it.isNotBlank() }
-            ?.let { RoleMapper.getDisplayName(this, it) }
-            .orEmpty()
-
+        // The pre-load pass has no DTO yet, so fall back to the cached session values instead of
+        // flashing an empty name or email before the request resolves.
         val name = user?.fullName ?: sessionManager.getFullName().orEmpty()
-        findViewById<TextView>(R.id.txtProfileInitial)?.text =
-            name.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
+        txtProfileName.text = name
+        txtProfileEmail.text = user?.email ?: sessionManager.getEmail().orEmpty()
 
-        findViewById<TextView>(R.id.txtProfileDetailName)?.text = user?.fullName
-        findViewById<TextView>(R.id.txtProfileDetailEmail)?.text = user?.email
-        findViewById<TextView>(R.id.txtProfileDetailPhone)?.text = user?.phoneNumber ?: "—"
+        findViewById<TextView>(R.id.txtProfileInitial).text =
+            name.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
     }
 
     private fun setLoadingState(loading: Boolean) {
-        if (!swipeRefresh.isRefreshing) {
-            skeletonLoading.visibility = if (loading) View.VISIBLE else View.GONE
-        }
+        val showSkeleton = loading && !swipeRefresh.isRefreshing
+        skeletonLoading.visibility = if (showSkeleton) View.VISIBLE else View.GONE
         if (loading) {
-            layoutProfileMenu.visibility = View.GONE
-            btnProfileRetry.visibility = View.GONE
-            txtProfileError.visibility = View.GONE
+            if (showSkeleton) layoutProfileMenu.visibility = View.GONE
+            errorProfileBlock.visibility = View.GONE
         } else {
             swipeRefresh.isRefreshing = false
             layoutProfileMenu.visibility = View.VISIBLE
@@ -168,13 +166,11 @@ class AttendeeProfileActivity : AppCompatActivity() {
     private fun showErrorState(message: String) {
         skeletonLoading.visibility = View.GONE
         layoutProfileMenu.visibility = View.VISIBLE
+        errorProfileBlock.visibility = View.VISIBLE
         txtProfileError.text = message
-        txtProfileError.visibility = View.VISIBLE
-        btnProfileRetry.visibility = View.VISIBLE
     }
 
     private fun clearErrorState() {
-        txtProfileError.visibility = View.GONE
-        btnProfileRetry.visibility = View.GONE
+        errorProfileBlock.visibility = View.GONE
     }
 }

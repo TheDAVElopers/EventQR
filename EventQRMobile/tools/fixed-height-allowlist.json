@@ -1,0 +1,179 @@
+{
+  "//": "Fixed-height gate exemptions (tools/check-tokens.ps1, category fixed-height). One entry per genuinely non-text element that must keep a fixed box: a plate, a bar, a bracket, a dot. A text-bearing view never belongs here - it takes wrap_content + minHeight instead. Entry shape: file (path under res/), id (\"\" when the element has no android:id, or the style name), height (the exact layout_height value, or \"maxHeight\"), why. An entry that matches nothing fails the `stale` category.",
+  "entries": [
+    {
+      "file": "layout/activity_organizer_event_details.xml",
+      "id": "oedStubSkeleton",
+      "height": "@dimen/ui_pass_head_stub_height",
+      "why": "Skeleton stub plate: non-text placeholder that must equal the loaded stub's 56dp floor, no intrinsic height of its own"
+    },
+    {
+      "file": "layout/activity_staff_dashboard.xml",
+      "id": "",
+      "height": "@dimen/ui_row_height",
+      "why": "Skeleton row placeholders (include_skeleton_row) must occupy the loaded row's height; no intrinsic size"
+    },
+    {
+      "file": "layout/activity_organizer_dashboard.xml",
+      "id": "",
+      "height": "@dimen/ui_row_height_date",
+      "why": "Skeleton dated-row placeholders must occupy the loaded row's height; no intrinsic size"
+    },
+    {
+      "file": "layout/activity_user_dashboard.xml",
+      "id": "",
+      "height": "@dimen/ui_row_height_date",
+      "why": "Skeleton dated-row placeholders must occupy the loaded row's height; no intrinsic size"
+    },
+    {
+      "file": "layout/activity_user_dashboard.xml",
+      "id": "",
+      "height": "@dimen/ui_row_height",
+      "why": "Skeleton row placeholders must occupy the loaded row's height; no intrinsic size"
+    },
+    {
+      "file": "layout/activity_user_events.xml",
+      "id": "",
+      "height": "@dimen/ui_row_height_date",
+      "why": "Skeleton dated-row placeholders must occupy the loaded row's height; no intrinsic size"
+    },
+    {
+      "file": "layout/activity_claimed_rewards.xml",
+      "id": "",
+      "height": "@dimen/ui_attendee_reward_row",
+      "why": "Skeleton reward-row placeholders must occupy the loaded row's height; no intrinsic size"
+    },
+    {
+      "file": "layout/activity_user_transaction_history.xml",
+      "id": "",
+      "height": "@dimen/ui_row_height",
+      "why": "Skeleton row placeholders must occupy the loaded row's height; no intrinsic size"
+    },
+    {
+      "file": "layout/activity_user_registered_events.xml",
+      "id": "",
+      "height": "@dimen/ui_row_height_date",
+      "why": "Skeleton dated-row placeholders must occupy the loaded row's height; no intrinsic size"
+    },
+    {
+      "file": "layout/activity_edit_profile.xml",
+      "id": "",
+      "height": "@dimen/ui_control_height",
+      "why": "Skeleton field blocks model the 56dp field; the block is the placeholder, not text"
+    },
+    {
+      "file": "layout/include_skeleton_row_audit.xml",
+      "id": "",
+      "height": "@dimen/ui_row_height_value",
+      "why": "Skeleton audit row placeholder; fixed by design"
+    },
+    {
+      "file": "layout/activity_staff_attendee_details.xml",
+      "id": "txtDetailAvatar",
+      "height": "@dimen/ui_staff_identity_tile",
+      "why": "Decorative avatar plate: the TextView is the painted tile, one non-wrapping initial glyph"
+    },
+    {
+      "file": "layout/activity_attendee_details.xml",
+      "id": "txtDetailInitial",
+      "height": "@dimen/tile_44",
+      "why": "Decorative avatar plate: the TextView is the painted tile, one non-wrapping initial glyph"
+    },
+    {
+      "file": "layout/include_pass_head.xml",
+      "id": "passHeadBellBadge",
+      "height": "@dimen/ui_count_badge_size",
+      "why": "Count badge dot; the label is drawn by the parent, not by this box"
+    },
+    {
+      "file": "layout/item_admin_account.xml",
+      "id": "textAccountAvatar",
+      "height": "@dimen/ui_row_tile",
+      "why": "Decorative avatar plate: the TextView is the painted tile, one non-wrapping initial glyph"
+    },
+    {
+      "file": "layout/item_organizer_attendee.xml",
+      "id": "txtAttendeeInitial",
+      "height": "@dimen/ui_row_tile",
+      "why": "Decorative avatar plate: the TextView is the painted tile, one non-wrapping initial glyph"
+    },
+    {
+      "file": "layout/item_registration.xml",
+      "id": "txtRegistrationAvatar",
+      "height": "@dimen/ui_row_tile",
+      "why": "Decorative avatar plate: the TextView is the painted tile, one non-wrapping initial glyph"
+    },
+    {
+      "file": "layout/item_search_attendee.xml",
+      "id": "txtSearchAttendeeInitial",
+      "height": "@dimen/ui_row_tile",
+      "why": "Decorative avatar plate: the TextView is the painted tile, one non-wrapping initial glyph"
+    },
+    {
+      "file": "layout/item_search_user_account.xml",
+      "id": "txtUserAvatarInitial",
+      "height": "@dimen/ui_row_tile",
+      "why": "Decorative avatar plate: the TextView is the painted tile, one non-wrapping initial glyph"
+    },
+    {
+      "file": "layout/item_staff_assignment.xml",
+      "id": "txtStaffAvatarInitial",
+      "height": "@dimen/ui_row_tile",
+      "why": "Decorative avatar plate: the TextView is the painted tile, one non-wrapping initial glyph"
+    },
+    {
+      "file": "layout/item_terms_section.xml",
+      "id": "txtTermsNumber",
+      "height": "@dimen/ui_terms_number_size",
+      "why": "Decorative terms index plate; the number is a single digit, the label sits beside it"
+    },
+    {
+      "file": "layout/activity_attendee_management.xml",
+      "id": "btnFilter",
+      "height": "@dimen/ui_touch_min",
+      "why": "Square icon touch target; wrap_content would collapse to the 24dp glyph"
+    },
+    {
+      "file": "layout/item_admin_account.xml",
+      "id": "actionMenu",
+      "height": "@dimen/ui_touch_min",
+      "why": "Square icon touch target; wrap_content would collapse to the 24dp glyph"
+    },
+    {
+      "file": "layout/item_staff_assignment.xml",
+      "id": "btnStaffRowActions",
+      "height": "@dimen/ui_touch_min",
+      "why": "Square icon touch target; wrap_content would collapse to the 24dp glyph"
+    },
+    {
+      "file": "layout/activity_manage_rewards.xml",
+      "id": "mrw_rewards_switch",
+      "height": "@dimen/ui_touch_min",
+      "why": "SwitchCompat touch target; the switch draws its own 48dp hit area"
+    },
+    {
+      "file": "layout/item_organizer_toggle_row.xml",
+      "id": "switchToggle",
+      "height": "@dimen/ui_touch_min",
+      "why": "SwitchCompat touch target; the switch draws its own 48dp hit area"
+    },
+    {
+      "file": "layout/activity_admin_account_management.xml",
+      "id": "",
+      "height": "@dimen/ui_row_height_tall",
+      "why": "Skeleton row placeholders (include_skeleton_row) must occupy the loaded 88dp row; no intrinsic size"
+    },
+    {
+      "file": "layout/activity_admin_event_requests.xml",
+      "id": "",
+      "height": "@dimen/ui_row_height_tall",
+      "why": "Skeleton row placeholders (include_skeleton_row) must occupy the loaded 88dp row; no intrinsic size"
+    },
+    {
+      "file": "layout/item_admin_event_request.xml",
+      "id": "textRequestAvatar",
+      "height": "@dimen/ui_row_tile",
+      "why": "Decorative avatar plate: the TextView is the painted tile, one non-wrapping initial glyph"
+    }
+  ]
+}

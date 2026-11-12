@@ -29,7 +29,12 @@
     <!-- §9.5: the panel speaks the context, so the bar and the preview are one reading order. -->
     <string name="ui_scan_panel_description_context">Camera preview. Point at the attendee\'s pass. Scanning for %1$s, purpose %2$s.</string>
     <string name="ui_scan_guidance">Point the camera at the attendee\'s pass.</string>
+    <string name="ui_scan_permission_blocked">Camera access is off, so passes cannot be scanned.</string>
     <string name="ui_scan_torch">Torch</string>
+
+    <!-- Password rule checklist (§6.1) -->
+    <string name="ui_password_rule_met">%1$s, met</string>
+    <string name="ui_password_rule_not_met">%1$s, not met</string>
 
     <!-- Skeleton (§5.11) -->
     <string name="ui_skeleton_loading">Loading</string>

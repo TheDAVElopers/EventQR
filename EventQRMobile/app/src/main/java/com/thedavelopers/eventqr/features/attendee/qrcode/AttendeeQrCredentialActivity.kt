@@ -24,7 +24,6 @@ import com.thedavelopers.eventqr.features.qrcredential.model.dto.QrCredentialSna
 import com.thedavelopers.eventqr.features.registrations.RegistrationNumberFormatter
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
-import com.thedavelopers.eventqr.ui.components.asCredentialHolderName
 import com.thedavelopers.eventqr.ui.theme.applyEventQrBottomInsetPadding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -56,7 +55,7 @@ open class AttendeeQrCredentialActivity : AppCompatActivity(), QrCredentialContr
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_qr_credential)
+        setContentView(R.layout.activity_qr_display)
 
         presenter = QrCredentialPresenter(this, AttendeeRepository(this), UiStrings(this))
         qrImage = findViewById(R.id.qrImage)
@@ -76,7 +75,7 @@ open class AttendeeQrCredentialActivity : AppCompatActivity(), QrCredentialContr
         findViewById<TextView>(R.id.qrRole).text = getString(R.string.ui_attendee_attendee)
 
         findViewById<View>(R.id.nav_header_back).setOnClickListener { finish() }
-        findViewById<View>(R.id.layoutQrCredentialContent).applyEventQrBottomInsetPadding()
+        findViewById<View>(R.id.layoutQrPassContent).applyEventQrBottomInsetPadding()
         KeepScreenBright.bind(this, findViewById(R.id.switchKeepBright))
 
         loadPass()

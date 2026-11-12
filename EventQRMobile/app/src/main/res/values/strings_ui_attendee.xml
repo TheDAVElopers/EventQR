@@ -25,9 +25,12 @@
     <string name="ui_attendee_view_pass">View pass</string>
     <string name="ui_attendee_discover">Discover</string>
     <string name="ui_attendee_quick_actions">Quick actions</string>
-    <!-- Chip labels only. Screen titles keep ui_attendee_transaction_history / ui_attendee_request_event. -->
+    <!-- Chip labels only. Screen titles keep ui_attendee_transaction_history /
+         ui_attendee_request_event / ui_attendee_my_passes. -->
     <string name="ui_attendee_quick_history">History</string>
     <string name="ui_attendee_quick_request">Request</string>
+    <string name="ui_attendee_quick_passes">My passes</string>
+    <!-- Pass head title on the registered-events screen. -->
     <string name="ui_attendee_my_passes">My passes</string>
     <string name="ui_attendee_rewards">Rewards</string>
     <string name="ui_attendee_dashboard_empty_next">No upcoming events</string>
@@ -75,6 +78,8 @@
     <string name="ui_attendee_category">Category</string>
     <string name="ui_attendee_audience">Audience</string>
     <string name="ui_attendee_registration_window">Registration window</string>
+    <string name="ui_attendee_registration_opens">Opens %1$s</string>
+    <string name="ui_attendee_registration_closes">Closes %1$s</string>
     <string name="ui_attendee_capacity">Capacity</string>
     <string name="ui_attendee_event_rewards">Rewards</string>
 
@@ -136,7 +141,6 @@
     <string name="ui_attendee_personal_details">Personal details</string>
     <string name="ui_attendee_account">Account</string>
     <string name="ui_attendee_security">Security</string>
-    <string name="ui_attendee_name">Name</string>
     <string name="ui_attendee_phone">Phone</string>
     <string name="ui_attendee_edit_profile">Edit profile</string>
     <string name="ui_attendee_transaction_history">Transaction history</string>

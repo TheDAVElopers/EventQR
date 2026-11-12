@@ -38,69 +38,64 @@
             android:paddingTop="@dimen/space_20"
             android:paddingBottom="@dimen/space_24">
 
-            <!-- ═════════ Identity ═════════ -->
-            <com.google.android.material.card.MaterialCardView
-                style="@style/Widget.EventQR.Ui.Card"
+            <!-- ═════════ Identity (flat block, no card) ═════════ -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/ui_gutter"
-                android:layout_marginEnd="@dimen/ui_gutter">
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/ui_gutter"
+                android:paddingTop="@dimen/space_20"
+                android:paddingEnd="@dimen/ui_gutter"
+                android:paddingBottom="@dimen/space_16">
+
+                <TextView
+                    android:id="@+id/txtDetailAvatar"
+                    android:layout_width="@dimen/ui_staff_identity_tile"
+                    android:layout_height="@dimen/ui_staff_identity_tile"
+                    android:background="@drawable/bg_ui_icon_tile"
+                    android:gravity="center"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.NumericM"
+                    android:textColor="@color/ui_primary"
+                    android:textSize="@dimen/ui_staff_identity_initial" />
 
                 <LinearLayout
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:padding="@dimen/ui_card_padding">
+                    android:layout_marginStart="@dimen/space_lg"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
                     <TextView
-                        android:id="@+id/txtDetailAvatar"
-                        android:layout_width="@dimen/ui_staff_identity_tile"
-                        android:layout_height="@dimen/ui_staff_identity_tile"
-                        android:background="@drawable/bg_ui_icon_tile"
-                        android:gravity="center"
-                        android:textAppearance="@style/TextAppearance.EventQR.Type.NumericM"
-                        android:textColor="@color/ui_primary"
-                        android:textSize="@dimen/ui_staff_identity_initial" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
+                        android:id="@+id/txtDetailAttendeeName"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/space_lg"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:ellipsize="end"
+                        android:maxLines="2"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.TitleLarge"
+                        android:textColor="@color/ui_text_primary" />
 
-                        <TextView
-                            android:id="@+id/txtDetailAttendeeName"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:ellipsize="end"
-                            android:maxLines="2"
-                            android:textAppearance="@style/TextAppearance.EventQR.Type.TitleLarge"
-                            android:textColor="@color/ui_text_primary" />
+                    <TextView
+                        android:id="@+id/txtDetailAttendeeEmail"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_2"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                        android:textColor="@color/ui_text_secondary" />
 
-                        <TextView
-                            android:id="@+id/txtDetailAttendeeEmail"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/space_2"
-                            android:ellipsize="end"
-                            android:maxLines="1"
-                            android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
-                            android:textColor="@color/ui_text_secondary" />
-
-                        <TextView
-                            android:id="@+id/txtDetailAttendeePhone"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/space_2"
-                            android:ellipsize="end"
-                            android:maxLines="1"
-                            android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
-                            android:textColor="@color/ui_text_secondary" />
-                    </LinearLayout>
+                    <TextView
+                        android:id="@+id/txtDetailAttendeePhone"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_2"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                        android:textColor="@color/ui_text_secondary" />
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
 
             <!-- ═════════ Spec table ═════════ -->
             <LinearLayout
@@ -113,7 +108,8 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/ui_metric_row_height"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_metric_row_height"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -145,7 +141,8 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/ui_metric_row_height"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_metric_row_height"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -173,7 +170,8 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/ui_metric_row_height"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_metric_row_height"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -188,7 +186,8 @@
                         android:id="@+id/txtDetailRegistrationStatus"
                         style="@style/Widget.EventQR.Ui.StatusBadge.Neutral"
                         android:layout_width="wrap_content"
-                        android:layout_height="@dimen/ui_badge_height" />
+                        android:layout_height="wrap_content"
+                        android:minHeight="@dimen/ui_badge_height" />
                 </LinearLayout>
 
                 <View
@@ -199,7 +198,8 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/ui_metric_row_height"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_metric_row_height"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -227,7 +227,8 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/ui_metric_row_height"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_metric_row_height"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -255,7 +256,8 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/ui_metric_row_height"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_metric_row_height"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -280,7 +282,8 @@
             <LinearLayout
                 android:id="@+id/btnPrintOrReprintId"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/ui_button_height"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/ui_button_height"
                 android:layout_marginStart="@dimen/ui_gutter"
                 android:layout_marginTop="@dimen/space_24"
                 android:layout_marginEnd="@dimen/ui_gutter"
@@ -311,7 +314,8 @@
             <LinearLayout
                 android:id="@+id/btnScanAgain"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/ui_button_height"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/ui_button_height"
                 android:layout_marginStart="@dimen/ui_gutter"
                 android:layout_marginTop="@dimen/space_sm"
                 android:layout_marginEnd="@dimen/ui_gutter"
@@ -350,43 +354,83 @@
                 android:textColor="@color/ui_error"
                 android:visibility="gone" />
 
-            <ProgressBar
-                android:id="@+id/progressAttendeeDetails"
-                android:layout_width="wrap_content"
+            <!-- Inline print/status failure line (§6.8): permission and print errors stay on screen. -->
+            <TextView
+                android:id="@+id/txtDetailStatus"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="@dimen/space_lg"
+                android:layout_marginStart="@dimen/ui_gutter"
+                android:layout_marginTop="@dimen/space_sm"
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:accessibilityLiveRegion="polite"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
                 android:visibility="gone" />
+
+            <!-- Load state: skeleton rows for the identity and spec table, never a spinner. -->
+            <LinearLayout
+                android:id="@+id/progressAttendeeDetails"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_16"
+                android:importantForAccessibility="noHideDescendants"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <include
+                    layout="@layout/include_skeleton_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <include
+                    layout="@layout/include_skeleton_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <include
+                    layout="@layout/include_skeleton_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <!-- Load failure: the shared empty state with an inline Retry (§5.7). -->
+            <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+                android:id="@+id/errorAttendeeDetails"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:icon="@drawable/ic_ui_notifications_none"
+                app:title="@string/ui_staff_attendee_details_load_failed" />
 
             <!-- Kept off-screen: values other staff screens rely on. -->
             <TextView
                 android:id="@+id/txtDetailQrStatus"
                 android:layout_width="0dp"
-                android:layout_height="0dp"
+                android:layout_height="wrap_content"
                 android:visibility="gone" />
 
             <TextView
                 android:id="@+id/txtDetailEntryStatus"
                 android:layout_width="0dp"
-                android:layout_height="0dp"
+                android:layout_height="wrap_content"
                 android:visibility="gone" />
 
             <TextView
                 android:id="@+id/txtDetailAttendanceStatus"
                 android:layout_width="0dp"
-                android:layout_height="0dp"
+                android:layout_height="wrap_content"
                 android:visibility="gone" />
 
             <TextView
                 android:id="@+id/txtDetailExitStatus"
                 android:layout_width="0dp"
-                android:layout_height="0dp"
+                android:layout_height="wrap_content"
                 android:visibility="gone" />
 
             <TextView
                 android:id="@+id/txtDetailRegistrationDate"
                 android:layout_width="0dp"
-                android:layout_height="0dp"
+                android:layout_height="wrap_content"
                 android:visibility="gone" />
 
             <!-- ═════════ Recent transactions (full-bleed: rows own the 20dp inset) ═════════ -->

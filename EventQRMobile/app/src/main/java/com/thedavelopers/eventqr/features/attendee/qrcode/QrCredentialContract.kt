@@ -11,3 +11,7 @@ interface QrCredentialContract {
         fun showLoadError(message: String)
     }
 }
+
+/** The holder line: trimmed, inner whitespace collapsed, null when blank (§5.14). */
+internal fun String?.asCredentialHolderName(): String? =
+    this?.trim()?.replace(Regex("\\s+"), " ")?.takeIf { it.isNotBlank() }

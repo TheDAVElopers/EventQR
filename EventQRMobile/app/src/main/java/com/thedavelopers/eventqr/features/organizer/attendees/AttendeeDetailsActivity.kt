@@ -6,7 +6,6 @@ import android.view.View
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
@@ -28,6 +27,7 @@ import com.thedavelopers.eventqr.features.organizer.statusLabel
 import com.thedavelopers.eventqr.features.organizer.tintBlock
 import com.thedavelopers.eventqr.features.organizer.transactionTypeLabel
 import com.thedavelopers.eventqr.features.organizer.transactions.TransactionLogsActivity
+import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.ui.theme.defaultBold
@@ -58,16 +58,6 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
         ScreenInsets.padContentForNavigationBar(this)
         repository = OrganizerRepository(this)
 
-        findViewById<View>(R.id.topBarBack).setOnClickListener { finish() }
-        findViewById<View>(R.id.btnAttendeeRetry).setOnClickListener {
-            val attendeeId = intent.getStringExtra(SearchAttendeesActivity.EXTRA_ATTENDEE_ID).orEmpty()
-            // If the event list itself failed there is no selected event yet: retry that load first.
-            if (::selectedEvent.isInitialized) {
-                loadAttendee(selectedEvent.id, attendeeId)
-            } else {
-                loadEventThenAttendee(intentEventId().orEmpty().ifBlank { selectedEventId() }, attendeeId)
-            }
-        }
         findViewById<View>(R.id.btnViewFullLog).setOnClickListener {
             startActivity(Intent(this, TransactionLogsActivity::class.java).apply {
                 putExtra(EXTRA_EVENT_ID, selectedEvent.id)
@@ -76,12 +66,20 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
             saveSelectedEventId(selectedEvent.id)
         }
         skeletonLoading = findViewById(R.id.skeletonLoading)
+        findViewById<EventQrEmptyState>(R.id.layoutAttendeeError).setAction(getString(R.string.common_retry)) {
+            val attendeeId = intent.getStringExtra(SearchAttendeesActivity.EXTRA_ATTENDEE_ID).orEmpty()
+            // If the event list itself failed there is no selected event yet: retry that load first.
+            if (::selectedEvent.isInitialized) {
+                loadAttendee(selectedEvent.id, attendeeId)
+            } else {
+                loadEventThenAttendee(intentEventId().orEmpty().ifBlank { selectedEventId() }, attendeeId)
+            }
+        }
 
         val attendeeId = intent.getStringExtra(SearchAttendeesActivity.EXTRA_ATTENDEE_ID).orEmpty()
         val eventId = intentEventId().orEmpty().ifBlank { selectedEventId() }
         if (attendeeId.isBlank() || eventId.isBlank()) {
-            Toast.makeText(this, this.getString(R.string.attendee_details_open_attendee_details_from_an_event), Toast.LENGTH_SHORT).show()
-            finish()
+            showAttendeeError(getString(R.string.attendee_details_open_attendee_details_from_an_event))
             return
         }
 
@@ -100,8 +98,7 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
             }
             selectedEvent = resolveSelectedEvent(eventsLoad.data, eventId)
                 ?: run {
-                    Toast.makeText(this@AttendeeDetailsActivity, this@AttendeeDetailsActivity.getString(R.string.attendee_details_selected_event_not_available), Toast.LENGTH_SHORT).show()
-                    finish()
+                    showAttendeeError(getString(R.string.attendee_details_selected_event_not_available))
                     return@launch
                 }
             loadAttendee(eventId, attendeeId)
@@ -132,13 +129,13 @@ open class AttendeeDetailsActivity : AppCompatActivity() {
 
     private fun showAttendeeError(message: String) {
         skeletonLoading.visibility = View.GONE
-        findViewById<View>(R.id.layoutAttendeeError).visibility = View.VISIBLE
-        findViewById<TextView>(R.id.txtAttendeeError).text = message
+        findViewById<EventQrEmptyState>(R.id.layoutAttendeeError).apply {
+            show(getString(R.string.attendee_details_record_load_failed), message)
+        }
     }
 
     private fun renderProfile() {
         skeletonLoading.visibility = View.GONE
-        findViewById<TextView>(R.id.topBarTitle).text = getString(R.string.attendee_details_attendee_details)
         findViewById<TextView>(R.id.txtDetailInitial).text = attendeeInitial(attendee.name)
         findViewById<TextView>(R.id.txtDetailName).text = attendee.name
         findViewById<TextView>(R.id.txtDetailEmail).text = attendee.email

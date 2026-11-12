@@ -143,10 +143,22 @@
         <item name="android:singleLine">false</item>
     </style>
 
-    <!-- Search: 48dp, radius 4, no label. 20dp ui_text_secondary leading icon is set per site. -->
+    <!-- End-icon host for the password fields (§6.1): the filled 56dp field stays the EditText's
+         own bg_ui_field (boxBackgroundMode none - no outline, no underline), and Material draws
+         only the password toggled eye over its end. The eye pair is supplied in code by
+         PasswordTextInputLayout, from AppIcons, so the icon family keeps one address. -->
+    <style name="Widget.EventQR.Ui.TextField.Password" parent="Widget.MaterialComponents.TextInputLayout.FilledBox">
+        <item name="boxBackgroundMode">none</item>
+        <item name="hintEnabled">false</item>
+        <item name="endIconMode">password_toggle</item>
+        <item name="endIconTint">@color/ui_text_secondary</item>
+    </style>
+
+    <!-- Search: 48dp, radius 4, no label. 20dp ui_text_secondary leading icon is set per site.
+         48dp is a floor, not a cap: the same defect the base field carried (min+max pinned to one
+         value clipped a 15sp label at fontScale 2.0). -->
     <style name="Widget.EventQR.Ui.TextField.Search" parent="@style/Widget.EventQR.Ui.TextField">
         <item name="android:minHeight">@dimen/ui_field_search_height</item>
-        <item name="android:maxHeight">@dimen/ui_field_search_height</item>
         <item name="android:inputType">text</item>
     </style>
 
@@ -207,7 +219,6 @@
 
     <style name="Widget.EventQR.Ui.StatusBadge" parent="">
         <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">@dimen/ui_badge_height</item>
         <item name="android:minHeight">@dimen/ui_badge_height</item>
         <item name="android:background">@drawable/bg_ui_badge</item>
         <item name="android:backgroundTint">@color/ui_surface_sunken</item>
@@ -260,7 +271,7 @@
 
     <style name="Widget.EventQR.Ui.Chip" parent="">
         <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">@dimen/ui_chip_height</item>
+        <item name="android:layout_height">wrap_content</item>
         <item name="android:minHeight">@dimen/ui_chip_height</item>
         <item name="android:minWidth">@dimen/ui_touch_min</item>
         <item name="android:background">@drawable/bg_ui_chip</item>
@@ -357,7 +368,7 @@
 
     <style name="Widget.EventQR.Ui.MetricRow" parent="">
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">@dimen/ui_metric_row_height</item>
+        <item name="android:minHeight">@dimen/ui_metric_row_height</item>
         <item name="android:orientation">horizontal</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:paddingStart">@dimen/ui_gutter</item>
@@ -478,7 +489,7 @@
              to ui_accent_deep while the torch is on; both states must stay readable here. -->
         <item name="android:tint">@color/ui_text_primary</item>
         <item name="android:contentDescription">@string/ui_scan_torch</item>
-        <!-- 12dp padding inside the 44dp target leaves the 24dp glyph at 20dp (§5.13). -->
+        <!-- 12dp padding inside the 48dp target leaves the 24dp glyph's 20dp ink (§5.13). -->
         <item name="android:padding">@dimen/space_12</item>
     </style>
 
@@ -507,7 +518,7 @@
 
     <style name="Widget.EventQR.Ui.Scan.StatusStrip" parent="">
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">@dimen/ui_scan_status_height</item>
+        <item name="android:minHeight">@dimen/ui_scan_status_height</item>
         <item name="android:background">@drawable/bg_ui_scan_strip</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:paddingStart">@dimen/space_lg</item>

@@ -80,7 +80,7 @@
                 android:id="@+id/eventNameInput"
                 style="@style/Widget.EventQR.Ui.TextField"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/ui_control_height"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_sm"
                 android:hint="@string/request_event_event_name_2"
                 android:inputType="textCapSentences"
@@ -97,13 +97,14 @@
             <LinearLayout
                 android:id="@+id/cardEventCategory"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/ui_control_height"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_sm"
                 android:background="@drawable/bg_ui_field"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:minHeight="@dimen/ui_control_height">
 
                 <LinearLayout
                     android:id="@+id/layoutEventCategoryContent"
@@ -168,7 +169,7 @@
                 android:id="@+id/targetAudienceInput"
                 style="@style/Widget.EventQR.Ui.TextField"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/ui_control_height"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_sm"
                 android:hint="@string/request_event_students_professionals_community_mem"
                 android:inputType="textCapSentences"
@@ -186,7 +187,7 @@
                 android:id="@+id/capacityInput"
                 style="@style/Widget.EventQR.Ui.TextField"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/ui_control_height"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_sm"
                 android:hint="@string/capacity_hint"
                 android:inputType="number"
@@ -194,7 +195,7 @@
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/stroke_focus"
+                android:layout_height="@dimen/stroke_hairline"
                 android:layout_marginTop="@dimen/space_lg"
                 android:background="@drawable/divider_perforation_light"
                 android:layerType="software" />
@@ -219,7 +220,7 @@
                 android:id="@+id/venueInput"
                 style="@style/Widget.EventQR.Ui.TextField"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/ui_control_height"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_sm"
                 android:hint="@string/request_event_venue_or_address"
                 android:inputType="textCapSentences"
@@ -237,7 +238,7 @@
                 android:id="@+id/startDateTimeInput"
                 style="@style/Widget.EventQR.Ui.TextField"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/ui_control_height"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_sm"
                 android:clickable="true"
                 android:cursorVisible="false"
@@ -261,7 +262,7 @@
                 android:id="@+id/endDateTimeInput"
                 style="@style/Widget.EventQR.Ui.TextField"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/ui_control_height"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_sm"
                 android:clickable="true"
                 android:cursorVisible="false"
@@ -285,7 +286,7 @@
                 android:id="@+id/registrationStartDateTimeInput"
                 style="@style/Widget.EventQR.Ui.TextField"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/ui_control_height"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_sm"
                 android:clickable="true"
                 android:cursorVisible="false"
@@ -309,7 +310,7 @@
                 android:id="@+id/registrationEndDateTimeInput"
                 style="@style/Widget.EventQR.Ui.TextField"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/ui_control_height"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_sm"
                 android:clickable="true"
                 android:cursorVisible="false"
@@ -323,7 +324,7 @@
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/stroke_focus"
+                android:layout_height="@dimen/stroke_hairline"
                 android:layout_marginTop="@dimen/space_lg"
                 android:background="@drawable/divider_perforation_light"
                 android:layerType="software" />
@@ -348,7 +349,7 @@
                 android:id="@+id/requesterNameInput"
                 style="@style/Widget.EventQR.Ui.TextField"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/ui_control_height"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_sm"
                 android:hint="@string/common_full_name"
                 android:inputType="textPersonName"
@@ -366,7 +367,7 @@
                 android:id="@+id/contactEmailInput"
                 style="@style/Widget.EventQR.Ui.TextField"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/ui_control_height"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_sm"
                 android:hint="@string/request_event_name_example_com"
                 android:inputType="textEmailAddress"
@@ -384,7 +385,7 @@
                 android:id="@+id/contactNumberInput"
                 style="@style/Widget.EventQR.Ui.TextField"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/ui_control_height"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_sm"
                 android:hint="@string/phone_hint_example"
                 android:inputType="phone"
@@ -392,7 +393,7 @@
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/stroke_focus"
+                android:layout_height="@dimen/stroke_hairline"
                 android:layout_marginTop="@dimen/space_lg"
                 android:background="@drawable/divider_perforation_light"
                 android:layerType="software" />
@@ -471,7 +472,7 @@
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/stroke_focus"
+                android:layout_height="@dimen/stroke_hairline"
                 android:layout_marginTop="@dimen/space_lg"
                 android:background="@drawable/divider_perforation_light"
                 android:layerType="software" />
@@ -527,14 +528,16 @@
             android:id="@+id/submitRequestButton"
             style="@style/Widget.EventQR.Ui.Button.Primary"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/ui_button_height"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/ui_button_height"
             android:text="@string/ui_attendee_submit_request" />
 
         <Button
             android:id="@+id/cancelButton"
             style="@style/Widget.EventQR.Ui.Button.Ghost"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/ui_button_height_inline"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/ui_button_height_inline"
             android:layout_marginTop="@dimen/space_xs"
             android:text="@string/ui_attendee_cancel" />
     </LinearLayout>

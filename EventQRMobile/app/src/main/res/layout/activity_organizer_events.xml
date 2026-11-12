@@ -28,7 +28,7 @@
         android:id="@+id/inputEventSearch"
         style="@style/Widget.EventQR.Ui.TextField.Search"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/ui_field_search_height"
+        android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/ui_gutter"
         android:layout_marginTop="@dimen/space_12"
         android:layout_marginEnd="@dimen/ui_gutter"
@@ -40,52 +40,72 @@
         android:importantForAutofill="no"
         android:inputType="text" />
 
-    <HorizontalScrollView
+    <!-- §5.6: the filter row wraps on a Flow, it never scrolls. Three chips per line; 36dp fill
+         inside a 48dp touch target, wrap height so a grown label is not clipped. -->
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/space_12"
-        android:clipToPadding="false"
         android:paddingStart="@dimen/ui_gutter"
-        android:paddingEnd="@dimen/ui_gutter"
-        android:scrollbars="none">
+        android:paddingEnd="@dimen/ui_gutter">
 
-        <LinearLayout
+        <androidx.constraintlayout.helper.widget.Flow
+            android:id="@+id/chipFlow"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:constraint_referenced_ids="chipAll,chipUpcoming,chipActive,chipCompleted"
+            app:flow_horizontalGap="@dimen/ui_chip_gap"
+            app:flow_maxElementsWrap="3"
+            app:flow_verticalGap="@dimen/ui_chip_gap"
+            app:flow_wrapMode="chain"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/chipAll"
+            style="@style/Widget.EventQR.Ui.Chip"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:background="@drawable/bg_ui_chip_inset"
+            android:minHeight="@dimen/ui_touch_min"
+            android:paddingTop="@dimen/space_sm"
+            android:paddingBottom="@dimen/space_sm"
+            android:text="@string/common_all" />
 
-            <TextView
-                android:id="@+id/chipAll"
-                style="@style/Widget.EventQR.Ui.Chip"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_touch_min"
-                android:text="@string/common_all" />
+        <TextView
+            android:id="@+id/chipUpcoming"
+            style="@style/Widget.EventQR.Ui.Chip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_ui_chip_inset"
+            android:minHeight="@dimen/ui_touch_min"
+            android:paddingTop="@dimen/space_sm"
+            android:paddingBottom="@dimen/space_sm"
+            android:text="@string/common_upcoming" />
 
-            <TextView
-                android:id="@+id/chipUpcoming"
-                style="@style/Widget.EventQR.Ui.Chip"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_touch_min"
-                android:layout_marginStart="@dimen/ui_chip_gap"
-                android:text="@string/common_upcoming" />
+        <TextView
+            android:id="@+id/chipActive"
+            style="@style/Widget.EventQR.Ui.Chip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_ui_chip_inset"
+            android:minHeight="@dimen/ui_touch_min"
+            android:paddingTop="@dimen/space_sm"
+            android:paddingBottom="@dimen/space_sm"
+            android:text="@string/common_active" />
 
-            <TextView
-                android:id="@+id/chipActive"
-                style="@style/Widget.EventQR.Ui.Chip"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_touch_min"
-                android:layout_marginStart="@dimen/ui_chip_gap"
-                android:text="@string/common_active" />
-
-            <TextView
-                android:id="@+id/chipCompleted"
-                style="@style/Widget.EventQR.Ui.Chip"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_touch_min"
-                android:layout_marginStart="@dimen/ui_chip_gap"
-                android:text="@string/common_completed" />
-        </LinearLayout>
-    </HorizontalScrollView>
+        <TextView
+            android:id="@+id/chipCompleted"
+            style="@style/Widget.EventQR.Ui.Chip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_ui_chip_inset"
+            android:minHeight="@dimen/ui_touch_min"
+            android:paddingTop="@dimen/space_sm"
+            android:paddingBottom="@dimen/space_sm"
+            android:text="@string/common_completed" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- ALL EVENTS - list head. The request action lives here and only here, so it is present
          in every state; the empty state carries no second control (§6.4). -->
@@ -148,15 +168,48 @@
                 app:subtitle="@string/common_try_adjusting_your_search_or_filters"
                 app:title="@string/organizer_events_no_events_available_for_the_selected" />
 
-            <include
+            <LinearLayout
                 android:id="@+id/skeletonLoading"
-                layout="@layout/include_skeleton_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/ui_gutter"
                 android:layout_marginTop="@dimen/space_8"
                 android:layout_marginEnd="@dimen/ui_gutter"
-                android:visibility="gone" />
+                android:visibility="gone"
+                android:contentDescription="@string/ui_skeleton_loading"
+                android:orientation="vertical">
+                <include layout="@layout/include_skeleton_row" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline" />
+                <include layout="@layout/include_skeleton_row" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline" />
+                <include layout="@layout/include_skeleton_row" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline" />
+                <include layout="@layout/include_skeleton_row" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline" />
+                <include layout="@layout/include_skeleton_row" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline" />
+                <include layout="@layout/include_skeleton_row" />
+            </LinearLayout>
         </FrameLayout>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 

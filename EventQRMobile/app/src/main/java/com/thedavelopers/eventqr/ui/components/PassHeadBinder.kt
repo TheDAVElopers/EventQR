@@ -319,7 +319,7 @@ object ListRowBinder {
      * background), so a Warning badge kept the layout's Success fill. Both tone colours are resolved
      * from the style and set directly instead.
      */
-    private fun applyBadgeTone(badge: TextView, @StyleRes style: Int) {
+    internal fun applyBadgeTone(badge: TextView, @StyleRes style: Int) {
         badge.setTextAppearance(style)
         val tone = badge.context.theme.obtainStyledAttributes(
             style,

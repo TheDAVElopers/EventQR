@@ -29,7 +29,7 @@
         android:id="@+id/edtSearchAttendees"
         style="@style/Widget.EventQR.Ui.TextField.Search"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/ui_field_search_height"
+        android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/ui_gutter"
         android:layout_marginTop="@dimen/space_12"
         android:layout_marginEnd="@dimen/ui_gutter"
@@ -53,61 +53,84 @@
         android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
         android:textColor="@color/ui_text_secondary" />
 
-    <HorizontalScrollView
+    <!-- §5.6: five status chips never fit 360dp in one line, so the row wraps on a Flow and never
+         scrolls. Three chips per line, 36dp fill inside a 48dp touch target. -->
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/space_12"
-        android:clipToPadding="false"
         android:paddingStart="@dimen/ui_gutter"
-        android:paddingEnd="@dimen/ui_gutter"
-        android:scrollbars="none">
+        android:paddingEnd="@dimen/ui_gutter">
 
-        <LinearLayout
+        <androidx.constraintlayout.helper.widget.Flow
+            android:id="@+id/chipFlow"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:constraint_referenced_ids="chipAll,chipRegistered,chipCheckedIn,chipExited,chipCancelled"
+            app:flow_horizontalGap="@dimen/ui_chip_gap"
+            app:flow_maxElementsWrap="3"
+            app:flow_verticalGap="@dimen/ui_chip_gap"
+            app:flow_wrapMode="chain"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/chipAll"
+            style="@style/Widget.EventQR.Ui.Chip"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:background="@drawable/bg_ui_chip_inset"
+            android:minHeight="@dimen/ui_touch_min"
+            android:paddingTop="@dimen/space_sm"
+            android:paddingBottom="@dimen/space_sm"
+            android:text="@string/common_all" />
 
-            <TextView
-                android:id="@+id/chipAll"
-                style="@style/Widget.EventQR.Ui.Chip"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_touch_min"
-                android:text="@string/common_all" />
+        <TextView
+            android:id="@+id/chipRegistered"
+            style="@style/Widget.EventQR.Ui.Chip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_ui_chip_inset"
+            android:minHeight="@dimen/ui_touch_min"
+            android:paddingTop="@dimen/space_sm"
+            android:paddingBottom="@dimen/space_sm"
+            android:text="@string/common_registered" />
 
-            <TextView
-                android:id="@+id/chipRegistered"
-                style="@style/Widget.EventQR.Ui.Chip"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_touch_min"
-                android:layout_marginStart="@dimen/ui_chip_gap"
-                android:text="@string/common_registered" />
+        <TextView
+            android:id="@+id/chipCheckedIn"
+            style="@style/Widget.EventQR.Ui.Chip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_ui_chip_inset"
+            android:minHeight="@dimen/ui_touch_min"
+            android:paddingTop="@dimen/space_sm"
+            android:paddingBottom="@dimen/space_sm"
+            android:text="@string/common_checked_in" />
 
-            <TextView
-                android:id="@+id/chipCheckedIn"
-                style="@style/Widget.EventQR.Ui.Chip"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_touch_min"
-                android:layout_marginStart="@dimen/ui_chip_gap"
-                android:text="@string/common_checked_in" />
+        <TextView
+            android:id="@+id/chipExited"
+            style="@style/Widget.EventQR.Ui.Chip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_ui_chip_inset"
+            android:minHeight="@dimen/ui_touch_min"
+            android:paddingTop="@dimen/space_sm"
+            android:paddingBottom="@dimen/space_sm"
+            android:text="@string/search_attendees_exited" />
 
-            <TextView
-                android:id="@+id/chipExited"
-                style="@style/Widget.EventQR.Ui.Chip"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_touch_min"
-                android:layout_marginStart="@dimen/ui_chip_gap"
-                android:text="@string/search_attendees_exited" />
-
-            <TextView
-                android:id="@+id/chipCancelled"
-                style="@style/Widget.EventQR.Ui.Chip"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_touch_min"
-                android:layout_marginStart="@dimen/ui_chip_gap"
-                android:text="@string/search_attendees_cancelled" />
-            <!-- "No Show" chip intentionally removed: nothing in the system sets RegistrationStatus.NO_SHOW yet. -->
-        </LinearLayout>
-    </HorizontalScrollView>
+        <TextView
+            android:id="@+id/chipCancelled"
+            style="@style/Widget.EventQR.Ui.Chip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_ui_chip_inset"
+            android:minHeight="@dimen/ui_touch_min"
+            android:paddingTop="@dimen/space_sm"
+            android:paddingBottom="@dimen/space_sm"
+            android:text="@string/search_attendees_cancelled" />
+        <!-- "No Show" chip intentionally removed: nothing in the system sets RegistrationStatus.NO_SHOW yet. -->
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <FrameLayout
         android:layout_width="match_parent"

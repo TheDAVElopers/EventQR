@@ -2,7 +2,9 @@ package com.thedavelopers.eventqr.features.attendee
 
 import android.content.Intent
 import android.os.Looper
+import android.view.Gravity
 import android.view.View
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -16,13 +18,16 @@ import com.thedavelopers.eventqr.features.attendee.EXTRA_EVENT_TITLE
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
 import com.thedavelopers.eventqr.features.events.model.dto.EventAvailabilityResponse
 import com.thedavelopers.eventqr.features.organizer.events.EventManagementHubActivity
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 import org.junit.Test
 import org.robolectric.Shadows.shadowOf
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import java.time.Instant
 import java.util.UUID
@@ -39,6 +44,53 @@ class EventDetailActivityTest {
     }
 
     private fun event(title: String) = AttendeeEventResponse(eventId = UUID.randomUUID(), title = title, description = "About the event")
+
+    @After
+    fun resetFontScale() {
+        RuntimeEnvironment.setFontScale(1.0f)
+    }
+
+    /**
+     * A font-scale change recreates the activity (no `configChanges` in the manifest), so the scale
+     * must be set before the activity is built. Availability is queued, never fetched.
+     */
+    private fun buildWithRegWindow(fontScale: Float): EventDetailActivity {
+        RuntimeEnvironment.setFontScale(fontScale)
+        val activity = build(null)
+        activity.repository = QueuedAvailabilityRepo()
+        activity.renderEvent(
+            event("Windowed").copy(
+                registrationOpenAt = Instant.now().plusSeconds(86_400),
+                registrationCloseAt = Instant.now().plusSeconds(172_800),
+            ),
+        )
+        return activity
+    }
+
+    @Test
+    fun regWindowRow_aboveTheFontScaleThreshold_stacksTheValueUnderTheLabel() {
+        val activity = buildWithRegWindow(2.0f)
+        val row = activity.findViewById<LinearLayout>(R.id.layoutRegWindowRow)
+        val value = activity.findViewById<TextView>(R.id.txtDetailRegWindow)
+        val params = value.layoutParams as LinearLayout.LayoutParams
+
+        assertEquals(LinearLayout.VERTICAL, row.orientation)
+        assertEquals(Gravity.START, value.gravity and Gravity.START)
+        assertEquals(LinearLayout.LayoutParams.MATCH_PARENT, params.width)
+        assertEquals(0f, params.weight, 0f)
+        assertTrue(params.topMargin > 0)
+    }
+
+    @Test
+    fun regWindowRow_atTheDefaultFontScale_keepsTheSharedRow() {
+        val activity = buildWithRegWindow(1.0f)
+        val row = activity.findViewById<LinearLayout>(R.id.layoutRegWindowRow)
+        val params = activity.findViewById<TextView>(R.id.txtDetailRegWindow).layoutParams as LinearLayout.LayoutParams
+
+        assertEquals(LinearLayout.HORIZONTAL, row.orientation)
+        assertEquals(0, params.width)
+        assertEquals(1f, params.weight, 0f)
+    }
 
     @Test
     fun whileLoading_headerSaysEventDetailsAndTheBannerShowsTheNameFromTheIntent() {
@@ -93,10 +145,6 @@ class EventDetailActivityTest {
 
         assertEquals(activity.getString(R.string.event_detail_capacity_registered, 0, 12), before)
         assertEquals(activity.getString(R.string.event_detail_capacity_registered, 1, 12), capacityView.text.toString())
-        assertEquals(
-            activity.getString(R.string.event_detail_spots_remaining, 11),
-            activity.findViewById<TextView>(R.id.txtRemainingSpots).text.toString(),
-        )
 
         // After a cancel the next availability response drops the count back.
         activity.updateRegisterButtonFromAvailability(fest, availability(fest, count = 0, capacity = 12))

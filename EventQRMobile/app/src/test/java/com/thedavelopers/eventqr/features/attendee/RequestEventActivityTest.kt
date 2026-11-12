@@ -172,7 +172,7 @@ class RequestEventActivityTest {
         val success = ShadowDialog.getLatestDialog()
         assertTrue(success.isShowing)
 
-        success.findViewById<Button>(R.id.successViewRequestsButton).performClick()
+        success.findViewById<Button>(R.id.dialogPositive).performClick()
 
         val rationale = ShadowDialog.getLatestDialog() as AlertDialog
         assertFalse("the success dialog must close before the rationale shows", success.isShowing)

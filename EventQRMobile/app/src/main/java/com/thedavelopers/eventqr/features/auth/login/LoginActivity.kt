@@ -3,8 +3,6 @@ package com.thedavelopers.eventqr.features.auth.login
 import com.thedavelopers.eventqr.core.util.UiStrings
 import android.content.Intent
 import android.os.Bundle
-import android.text.InputType
-import android.view.MotionEvent
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
@@ -22,7 +20,6 @@ import com.thedavelopers.eventqr.features.auth.AuthRepository
 import com.thedavelopers.eventqr.features.auth.forgotpassword.ForgotPasswordActivity
 import com.thedavelopers.eventqr.features.auth.register.RegistrationActivity
 import com.thedavelopers.eventqr.features.dashboard.DashboardActivity
-import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.icons.FieldIcons
 
 open class LoginActivity : AppCompatActivity(), LoginContract.View {
@@ -63,7 +60,7 @@ open class LoginActivity : AppCompatActivity(), LoginContract.View {
         }
         presenter.attach(this)
         FieldIcons.apply(emailInput)
-        configurePasswordToggle(passwordInput)
+        FieldIcons.apply(passwordInput)
 
         signInButton.setOnClickListener {
             presenter.submitLogin(emailInput.text.toString(), passwordInput.text.toString())
@@ -143,26 +140,5 @@ open class LoginActivity : AppCompatActivity(), LoginContract.View {
 
     override fun navigateToForgotPassword() {
         startActivity(Intent(this, ForgotPasswordActivity::class.java))
-    }
-
-    private fun configurePasswordToggle(input: EditText) {
-        FieldIcons.apply(input)
-        input.setOnTouchListener { view, event ->
-            if (event.action == MotionEvent.ACTION_UP && event.rawX >= input.right - input.compoundPaddingEnd) {
-                val isVisible = input.inputType == (InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD)
-                if (isVisible) {
-                    input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-                    FieldIcons.setTrailing(input, AppIcons.Visibility)
-                } else {
-                    input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-                    FieldIcons.setTrailing(input, AppIcons.VisibilityOff)
-                }
-                input.setSelection(input.text.length)
-                view.performClick()
-                true
-            } else {
-                false
-            }
-        }
     }
 }

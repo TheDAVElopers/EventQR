@@ -122,7 +122,8 @@
     <!-- ═════════ Three counts, 56dp, one hairline card ═════════ -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="@dimen/ui_metric_row_height"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/ui_metric_row_height"
         android:layout_marginStart="@dimen/ui_gutter"
         android:layout_marginTop="@dimen/space_12"
         android:layout_marginEnd="@dimen/ui_gutter"
@@ -237,6 +238,45 @@
         android:layout_height="0dp"
         android:visibility="gone" />
 
+    <!-- Failure reports in the flow with Retry; loaded rows stay (§5.7). -->
+    <LinearLayout
+        android:id="@+id/errorStaffTransactions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/ui_gutter"
+        android:layout_marginTop="@dimen/space_sm"
+        android:layout_marginEnd="@dimen/ui_gutter"
+        android:accessibilityLiveRegion="polite"
+        android:background="@drawable/bg_ui_block_r4"
+        android:backgroundTint="@color/ui_error_container"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/ui_touch_min"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_lg"
+        android:paddingTop="@dimen/space_sm"
+        android:paddingEnd="@dimen/space_sm"
+        android:paddingBottom="@dimen/space_sm"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/txtStaffTransactionsError"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+            android:textColor="@color/ui_on_error_container" />
+
+        <TextView
+            android:id="@+id/btnStaffTransactionsRetry"
+            style="@style/Widget.EventQR.Ui.Button.Ghost"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:minHeight="@dimen/ui_button_height_inline"
+            android:text="@string/common_retry"
+            android:textColor="@color/ui_on_error_container" />
+    </LinearLayout>
+
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshStaffTransactions"
         android:layout_width="match_parent"
@@ -265,13 +305,46 @@
                 app:subtitle="@string/ui_staff_no_logs_body"
                 app:title="@string/ui_staff_no_logs" />
 
-            <include
+            <LinearLayout
                 android:id="@+id/skeletonLoading"
-                layout="@layout/include_skeleton_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/ui_gutter"
-                android:layout_marginEnd="@dimen/ui_gutter" />
+                android:layout_marginEnd="@dimen/ui_gutter"
+                android:contentDescription="@string/ui_skeleton_loading"
+                android:orientation="vertical">
+                <include layout="@layout/include_skeleton_row" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline" />
+                <include layout="@layout/include_skeleton_row" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline" />
+                <include layout="@layout/include_skeleton_row" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline" />
+                <include layout="@layout/include_skeleton_row" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline" />
+                <include layout="@layout/include_skeleton_row" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:layout_marginStart="@dimen/ui_divider_inset"
+                    android:background="@color/ui_hairline" />
+                <include layout="@layout/include_skeleton_row" />
+            </LinearLayout>
 
             <ProgressBar
                 android:id="@+id/pbStaffTransactionsLoadMore"
@@ -284,13 +357,13 @@
             <EditText
                 android:id="@+id/edtStaffTransactionsEventId"
                 android:layout_width="0dp"
-                android:layout_height="0dp"
+                android:layout_height="wrap_content"
                 android:visibility="gone" />
 
             <Button
                 android:id="@+id/btnLoadStaffTransactions"
                 android:layout_width="0dp"
-                android:layout_height="0dp"
+                android:layout_height="wrap_content"
                 android:visibility="gone" />
         </FrameLayout>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>

@@ -1,26 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Registration row (§5.3 Card, §5.5 row language). One hairline card per row is acceptable here
-    because the row IS the selectable object in the staff attendee list; it carries the shared
-    card style, a flat 40dp avatar tile, the ONE status badge and the points in numeric_s.
+    Registration row (§6.3 amendment v1.13). A registration is a page row, not a card: 72dp
+    `minHeight`, initials plate leading, title + meta, one trailing StatusBadge, hairline inset
+    `ui_divider_inset`. The MaterialCardView wrapper is deleted - a card holding one row exists
+    only to draw a border.
 -->
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/space_sm"
-    style="@style/Widget.EventQR.Ui.Card">
+    android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/registrationRowContent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
         android:gravity="center_vertical"
         android:minHeight="@dimen/ui_row_height"
         android:orientation="horizontal"
-        android:paddingStart="@dimen/ui_card_padding"
+        android:paddingStart="@dimen/ui_row_start"
         android:paddingTop="@dimen/ui_row_padding_vertical"
-        android:paddingEnd="@dimen/ui_card_padding"
+        android:paddingEnd="@dimen/ui_row_end"
         android:paddingBottom="@dimen/ui_row_padding_vertical">
 
         <CheckBox
@@ -65,28 +68,21 @@
                 tools:text="juan@example.com" />
         </LinearLayout>
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/txtRegistrationStatus"
+            style="@style/Widget.EventQR.Ui.StatusBadge.Neutral"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/space_sm"
-            android:gravity="end"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/txtRegistrationStatus"
-                style="@style/Widget.EventQR.Ui.StatusBadge.Neutral"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_badge_height"
-                tools:text="Registered" />
-
-            <TextView
-                android:id="@+id/txtRegistrationPoints"
-                style="@style/Widget.EventQR.Ui.ListRow.Value"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_4"
-                android:textColor="@color/ui_text_secondary"
-                tools:text="10 pts" />
-        </LinearLayout>
+            android:minHeight="@dimen/ui_badge_height"
+            tools:text="Registered" />
     </LinearLayout>
-</com.google.android.material.card.MaterialCardView>
+
+    <View
+        android:id="@+id/registrationRowDivider"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stroke_hairline"
+        android:layout_marginStart="@dimen/ui_divider_inset"
+        android:background="@color/ui_hairline"
+        android:importantForAccessibility="no" />
+</LinearLayout>

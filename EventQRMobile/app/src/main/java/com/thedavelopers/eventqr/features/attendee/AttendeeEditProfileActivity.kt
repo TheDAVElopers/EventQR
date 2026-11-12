@@ -285,8 +285,8 @@ class AttendeeEditProfileActivity : AppCompatActivity() {
     private fun showApiError(message: String) {
         skeletonLoading.visibility = View.GONE
         layoutEditProfileContent.visibility = View.VISIBLE
-        txtApiError.text = message
         cardError.visibility = View.VISIBLE
+        txtApiError.text = message
         btnRetryProfileLoad.visibility = View.VISIBLE
     }
 

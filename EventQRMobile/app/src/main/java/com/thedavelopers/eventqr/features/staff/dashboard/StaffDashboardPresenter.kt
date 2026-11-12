@@ -34,18 +34,26 @@ class StaffDashboardPresenter(
                 Triple(eventsDeferred.await(), todayDeferred.await(), summaryDeferred.await())
             }
 
+            var eventsFailed = false
+
             when (eventsResult) {
-                is NetworkResult.Error -> view?.showMessage(eventsResult.message)
+                is NetworkResult.Error -> {
+                    eventsFailed = true
+                    view?.showError(eventsResult.message)
+                }
                 is NetworkResult.Success -> Unit
                 NetworkResult.Loading -> Unit
             }
 
-            when (todayResult) {
-                is NetworkResult.Success -> view?.renderRecentScans(
-                    todayResult.data.sortedByDescending { it.scannedAt ?: java.time.Instant.EPOCH }.take(5),
-                )
-                is NetworkResult.Error -> view?.renderRecentScans(emptyList())
-                NetworkResult.Loading -> Unit
+            if (!eventsFailed) {
+                when (todayResult) {
+                    is NetworkResult.Success -> view?.renderRecentScans(
+                        todayResult.data.sortedByDescending { it.scannedAt ?: java.time.Instant.EPOCH }.take(5),
+                    )
+                    // A failed load is not "no scans": keep the shared error state with Retry.
+                    is NetworkResult.Error -> view?.showRecentScansError(todayResult.message)
+                    NetworkResult.Loading -> Unit
+                }
             }
 
             // Tile counts are server-side, scoped to the caller's own scans today (check-ins = distinct

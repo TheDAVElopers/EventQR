@@ -19,11 +19,11 @@
     android:background="@color/ui_background"
     android:orientation="vertical">
 
-    <include
-        android:id="@+id/topBar"
-        layout="@layout/include_top_bar"
+    <com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
+        android:id="@+id/headerTopBar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        app:title="@string/attendee_details_attendee_details" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -116,7 +116,8 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/ui_metric_row_height"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_metric_row_height"
                     android:background="@color/ui_surface"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
@@ -146,7 +147,8 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/ui_metric_row_height"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_metric_row_height"
                     android:background="@color/ui_surface"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
@@ -172,7 +174,8 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/ui_metric_row_height"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_metric_row_height"
                     android:background="@color/ui_surface"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
@@ -190,14 +193,16 @@
                         android:id="@+id/txtDetailStatusValue"
                         style="@style/Widget.EventQR.Ui.StatusBadge.Neutral"
                         android:layout_width="wrap_content"
-                        android:layout_height="@dimen/ui_badge_height" />
+                        android:layout_height="wrap_content"
+                        android:minHeight="@dimen/ui_badge_height" />
                 </LinearLayout>
 
                 <View style="@style/Widget.EventQR.Ui.ListRow.Divider" android:layout_marginStart="0dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/ui_metric_row_height"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_metric_row_height"
                     android:background="@color/ui_surface"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
@@ -215,14 +220,16 @@
                         android:id="@+id/txtDetailIdStatusValue"
                         style="@style/Widget.EventQR.Ui.StatusBadge.Neutral"
                         android:layout_width="wrap_content"
-                        android:layout_height="@dimen/ui_badge_height" />
+                        android:layout_height="wrap_content"
+                        android:minHeight="@dimen/ui_badge_height" />
                 </LinearLayout>
 
                 <View style="@style/Widget.EventQR.Ui.ListRow.Divider" android:layout_marginStart="0dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/ui_metric_row_height"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_metric_row_height"
                     android:background="@color/ui_surface"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
@@ -248,7 +255,8 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/ui_metric_row_height"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_metric_row_height"
                     android:background="@color/ui_surface"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
@@ -274,7 +282,8 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/ui_metric_row_height"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_metric_row_height"
                     android:background="@color/ui_surface"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
@@ -335,7 +344,8 @@
             <TextView
                 android:id="@+id/btnViewFullLog"
                 android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_button_height_inline"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/ui_button_height_inline"
                 android:layout_marginStart="@dimen/ui_gutter"
                 android:layout_marginTop="@dimen/space_8"
                 android:background="?attr/selectableItemBackground"
@@ -349,43 +359,224 @@
                 android:textAppearance="@style/TextAppearance.EventQR.Type.Label"
                 android:textColor="@color/ui_primary" />
 
-            <!-- Error -->
-            <LinearLayout
+            <!-- Error: the shared empty state with Retry, never a hand-rolled card. -->
+            <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
                 android:id="@+id/layoutAttendeeError"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/ui_gutter"
-                android:layout_marginTop="@dimen/space_16"
-                android:layout_marginEnd="@dimen/ui_gutter"
-                android:background="@drawable/bg_ui_card"
-                android:orientation="vertical"
-                android:padding="@dimen/ui_card_padding"
-                android:visibility="gone">
+                android:visibility="gone"
+                app:icon="@drawable/ic_ui_notifications_none"
+                app:title="@string/attendee_details_record_load_failed" />
 
-                <TextView
-                    android:id="@+id/txtAttendeeError"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
-                    android:textColor="@color/ui_text_secondary" />
-
-                <Button
-                    android:id="@+id/btnAttendeeRetry"
-                    style="@style/Widget.EventQR.Ui.Button.Ghost"
-                    android:layout_width="wrap_content"
-                    android:layout_height="@dimen/ui_button_height_inline"
-                    android:layout_marginTop="@dimen/space_8"
-                    android:text="@string/common_retry" />
-            </LinearLayout>
-
-            <include
+            <!-- Skeleton mirrors the loaded geometry: 44dp identity tile, then six 56dp spec rows. -->
+            <LinearLayout
                 android:id="@+id/skeletonLoading"
-                layout="@layout/include_skeleton_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/ui_gutter"
-                android:layout_marginTop="@dimen/space_16"
-                android:layout_marginEnd="@dimen/ui_gutter" />
+                android:importantForAccessibility="noHideDescendants"
+                android:orientation="vertical"
+                android:paddingTop="@dimen/space_24">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/ui_gutter"
+                    android:paddingEnd="@dimen/ui_gutter"
+                    android:paddingBottom="@dimen/space_16">
+
+                    <include
+                        layout="@layout/include_skeleton_block"
+                        android:layout_width="@dimen/tile_44"
+                        android:layout_height="@dimen/tile_44" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_16"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <include
+                            layout="@layout/include_skeleton_block"
+                            android:layout_width="@dimen/ui_skeleton_title_width"
+                            android:layout_height="@dimen/ui_skeleton_bar_height" />
+
+                        <include
+                            layout="@layout/include_skeleton_block"
+                            android:layout_width="@dimen/ui_skeleton_meta_width"
+                            android:layout_height="@dimen/ui_skeleton_bar_height"
+                            android:layout_marginTop="@dimen/space_sm" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@color/ui_hairline"
+                    android:importantForAccessibility="no" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_metric_row_height"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/ui_gutter"
+                    android:paddingEnd="@dimen/ui_gutter">
+
+                    <include
+                        layout="@layout/include_skeleton_block"
+                        android:layout_width="@dimen/ui_skeleton_meta_width"
+                        android:layout_height="@dimen/ui_skeleton_bar_height" />
+
+                    <Space
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <include
+                        layout="@layout/include_skeleton_block"
+                        android:layout_width="@dimen/ui_skeleton_meta_width"
+                        android:layout_height="@dimen/ui_skeleton_bar_height" />
+                </LinearLayout>
+
+                <View style="@style/Widget.EventQR.Ui.ListRow.Divider" android:layout_marginStart="0dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_metric_row_height"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/ui_gutter"
+                    android:paddingEnd="@dimen/ui_gutter">
+
+                    <include
+                        layout="@layout/include_skeleton_block"
+                        android:layout_width="@dimen/ui_skeleton_meta_width"
+                        android:layout_height="@dimen/ui_skeleton_bar_height" />
+
+                    <Space
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <include
+                        layout="@layout/include_skeleton_block"
+                        android:layout_width="@dimen/ui_skeleton_meta_width"
+                        android:layout_height="@dimen/ui_skeleton_bar_height" />
+                </LinearLayout>
+
+                <View style="@style/Widget.EventQR.Ui.ListRow.Divider" android:layout_marginStart="0dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_metric_row_height"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/ui_gutter"
+                    android:paddingEnd="@dimen/ui_gutter">
+
+                    <include
+                        layout="@layout/include_skeleton_block"
+                        android:layout_width="@dimen/ui_skeleton_meta_width"
+                        android:layout_height="@dimen/ui_skeleton_bar_height" />
+
+                    <Space
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <include
+                        layout="@layout/include_skeleton_block"
+                        android:layout_width="@dimen/ui_skeleton_meta_width"
+                        android:layout_height="@dimen/ui_skeleton_bar_height" />
+                </LinearLayout>
+
+                <View style="@style/Widget.EventQR.Ui.ListRow.Divider" android:layout_marginStart="0dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_metric_row_height"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/ui_gutter"
+                    android:paddingEnd="@dimen/ui_gutter">
+
+                    <include
+                        layout="@layout/include_skeleton_block"
+                        android:layout_width="@dimen/ui_skeleton_meta_width"
+                        android:layout_height="@dimen/ui_skeleton_bar_height" />
+
+                    <Space
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <include
+                        layout="@layout/include_skeleton_block"
+                        android:layout_width="@dimen/ui_skeleton_meta_width"
+                        android:layout_height="@dimen/ui_skeleton_bar_height" />
+                </LinearLayout>
+
+                <View style="@style/Widget.EventQR.Ui.ListRow.Divider" android:layout_marginStart="0dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_metric_row_height"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/ui_gutter"
+                    android:paddingEnd="@dimen/ui_gutter">
+
+                    <include
+                        layout="@layout/include_skeleton_block"
+                        android:layout_width="@dimen/ui_skeleton_meta_width"
+                        android:layout_height="@dimen/ui_skeleton_bar_height" />
+
+                    <Space
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <include
+                        layout="@layout/include_skeleton_block"
+                        android:layout_width="@dimen/ui_skeleton_meta_width"
+                        android:layout_height="@dimen/ui_skeleton_bar_height" />
+                </LinearLayout>
+
+                <View style="@style/Widget.EventQR.Ui.ListRow.Divider" android:layout_marginStart="0dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_metric_row_height"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/ui_gutter"
+                    android:paddingEnd="@dimen/ui_gutter">
+
+                    <include
+                        layout="@layout/include_skeleton_block"
+                        android:layout_width="@dimen/ui_skeleton_meta_width"
+                        android:layout_height="@dimen/ui_skeleton_bar_height" />
+
+                    <Space
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <include
+                        layout="@layout/include_skeleton_block"
+                        android:layout_width="@dimen/ui_skeleton_meta_width"
+                        android:layout_height="@dimen/ui_skeleton_bar_height" />
+                </LinearLayout>
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

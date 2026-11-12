@@ -7,7 +7,6 @@
 <resources>
     <!-- Initial numeric / empty-value placeholders shown before data loads -->
     <string name="placeholder_zero" translatable="false">0</string>
-    <string name="counter_zero_of_ten" translatable="false">0/10</string>
 
     <!-- Glyphs and separators -->
 

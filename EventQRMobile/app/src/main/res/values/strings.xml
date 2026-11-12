@@ -35,10 +35,6 @@
     <string name="password_req_uppercase">One uppercase letter</string>
     <string name="password_req_number">One number</string>
     <string name="password_req_special">One special character</string>
-    <string name="password_strength_weak">Weak</string>
-    <string name="password_strength_fair">Fair</string>
-    <string name="password_strength_good">Good</string>
-    <string name="password_strength_strong">Strong</string>
     <string name="password_policy_hint">Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number, and a special character</string>
     <string name="password_error_current_required">Enter your current password</string>
     <string name="password_error_mismatch">Passwords do not match</string>
@@ -77,7 +73,7 @@
     <string name="common_confirm_password">Confirm Password</string>
     <string name="edit_profile_complete_your_profile_to_help_organi">Complete your profile to help organizers reach you.</string>
     <string name="event_detail_event_poster">Event poster</string>
-    <string name="event_detail_date_range">%1$s - %2$s</string>
+    <string name="event_detail_date_range">%1$s –&#160;%2$s</string>
     <string name="event_detail_manage_event">Manage Event</string>
     <string name="event_detail_register">Register</string>
     <string name="common_full_name">Full name</string>
@@ -152,7 +148,7 @@
     <string name="staff_scanner_select_purpose">Select purpose</string>
     <string name="staff_transaction_result_points_awarded_to_attendee">Points awarded to attendee</string>
     <string name="staff_transaction_result_scan_rejected_and_logged">The scan was saved, but the pass was not accepted.</string>
-    <string name="common_back_to_dashboard">Back to Dashboard</string>
+    <string name="common_done">Done</string>
     <string name="dashboard_value_unavailable">--</string>
     <string name="user_dashboard_next_event">Next Event</string>
     <string name="user_dashboard_discover_events">Discover Events</string>
@@ -164,10 +160,8 @@
     <string name="user_transaction_history_all_events">All Events</string>
     <string name="user_transaction_history_0_transactions">0 transactions</string>
     <string name="user_transaction_history_unable_to_load_transactions">Unable to load transactions.</string>
-    <string name="dialog_event_request_submitted_event_request_submitted">Event Request Submitted</string>
-    <string name="dialog_event_request_submitted_your_event_request_has_been_submitte">Your event request has been submitted for admin review.</string>
-    <string name="dialog_event_request_submitted_status_pending">Status: Pending</string>
-    <string name="dialog_event_request_submitted_view_my_event_request">View My Event Request</string>
+    <string name="dialog_event_request_submitted_event_request_submitted">Request submitted</string>
+    <string name="dialog_event_request_submitted_your_event_request_has_been_submitte">An admin reviews new events. You\'ll get a notification when yours is decided.</string>
     <string name="item_portal_option_attendee_portal">Attendee Portal</string>
     <string name="item_portal_option_events_rewards_and_your_profile">Events, rewards, and your profile</string>
     <string name="item_portal_option_current">Current</string>
@@ -299,12 +293,10 @@
     <string name="scanner_purpose_desc_exit">Record attendee exit</string>
     <string name="scanner_purpose_desc_default">Scan attendee QR credential</string>
     <string name="scanner_camera_permission_title">Camera access needed</string>
-    <string name="scanner_camera_permission_rationale">EventQR uses the camera only to read attendee QR codes. You can still type the attendee ID below without it.</string>
-    <string name="scanner_camera_permission_denied_settings">Camera access is turned off for EventQR. Enable it in App settings to scan QR codes, or type the attendee ID below.</string>
+    <string name="scanner_camera_permission_rationale">EventQR uses the camera only to read attendee QR codes. You can still type the pass ID below without it.</string>
     <string name="scanner_camera_permission_allow">Allow</string>
     <string name="scanner_camera_permission_open_settings">Open settings</string>
     <string name="scanner_camera_permission_not_now">Not now</string>
-    <string name="scanner_camera_permission_tap_to_enable">Camera access is off. Tap here to enable it.</string>
 
     <!-- Extracted from Kotlin screens (formats and plurals). -->
     <string name="create_admin_account_creating_admin">Creating admin...</string>

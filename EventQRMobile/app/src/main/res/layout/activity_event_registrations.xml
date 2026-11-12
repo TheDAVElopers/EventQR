@@ -27,7 +27,8 @@
             android:id="@+id/badgeSelectionCount"
             style="@style/Widget.EventQR.Ui.StatusBadge.Neutral"
             android:layout_width="wrap_content"
-            android:layout_height="@dimen/ui_badge_height"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/ui_badge_height"
             android:layout_marginEnd="@dimen/space_sm"
             android:text="@string/placeholder_zero"
             android:visibility="gone" />
@@ -87,7 +88,7 @@
                         android:id="@+id/edtRegistrationSearch"
                         style="@style/Widget.EventQR.Ui.TextField.Search"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/ui_field_search_height"
+                        android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/space_16"
                         android:drawableStart="@drawable/ic_ui_search"
                         android:drawablePadding="@dimen/space_md"
@@ -103,7 +104,8 @@
                     <!-- ═════════ Three counts, 56dp, one hairline card ═════════ -->
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/ui_metric_row_height"
+                        android:layout_height="wrap_content"
+                        android:minHeight="@dimen/ui_metric_row_height"
                         android:layout_marginTop="@dimen/space_16"
                         android:background="@drawable/bg_ui_card"
                         android:gravity="center_vertical"
@@ -204,6 +206,45 @@
                     </LinearLayout>
                 </LinearLayout>
 
+                <!-- Events load failure reports in the flow above the list, with Retry (§5.7). -->
+                <LinearLayout
+                    android:id="@+id/errorRegistrations"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/ui_gutter"
+                    android:layout_marginTop="@dimen/space_16"
+                    android:layout_marginEnd="@dimen/ui_gutter"
+                    android:accessibilityLiveRegion="polite"
+                    android:background="@drawable/bg_ui_block_r4"
+                    android:backgroundTint="@color/ui_error_container"
+                    android:gravity="center_vertical"
+                    android:minHeight="@dimen/ui_touch_min"
+                    android:orientation="horizontal"
+                    android:paddingStart="@dimen/space_lg"
+                    android:paddingTop="@dimen/space_sm"
+                    android:paddingEnd="@dimen/space_sm"
+                    android:paddingBottom="@dimen/space_sm"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/txtRegistrationsError"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+                        android:textColor="@color/ui_on_error_container" />
+
+                    <TextView
+                        android:id="@+id/btnRegistrationsRetry"
+                        style="@style/Widget.EventQR.Ui.Button.Ghost"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:focusable="true"
+                        android:minHeight="@dimen/ui_button_height_inline"
+                        android:text="@string/common_retry"
+                        android:textColor="@color/ui_on_error_container" />
+                </LinearLayout>
+
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recyclerEventRegistrations"
                     android:layout_width="match_parent"
@@ -212,8 +253,6 @@
                     android:layout_weight="1"
                     android:clipToPadding="false"
                     android:overScrollMode="never"
-                    android:paddingStart="@dimen/ui_gutter"
-                    android:paddingEnd="@dimen/ui_gutter"
                     android:paddingBottom="@dimen/space_8" />
 
                 <!-- Empty state lives in the list slot, under the search and count rows, never over them. -->
@@ -229,24 +268,45 @@
                 <EditText
                     android:id="@+id/edtRegistrationsEventId"
                     android:layout_width="0dp"
-                    android:layout_height="0dp"
+                    android:layout_height="wrap_content"
                     android:visibility="gone" />
 
                 <Button
                     android:id="@+id/btnLoadEventRegistrations"
                     android:layout_width="0dp"
-                    android:layout_height="0dp"
+                    android:layout_height="wrap_content"
                     android:visibility="gone" />
             </LinearLayout>
 
-            <include
+            <!-- Loading mirrors the loaded rows: flat 72dp rows, not a card. -->
+            <LinearLayout
                 android:id="@+id/skeletonLoading"
-                layout="@layout/include_skeleton_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/ui_gutter"
-                android:layout_marginTop="@dimen/space_lg"
-                android:layout_marginEnd="@dimen/ui_gutter" />
+                android:layout_marginTop="@dimen/space_16"
+                android:importantForAccessibility="noHideDescendants"
+                android:orientation="vertical">
+
+                <include
+                    layout="@layout/include_skeleton_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <include
+                    layout="@layout/include_skeleton_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <include
+                    layout="@layout/include_skeleton_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <include
+                    layout="@layout/include_skeleton_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
         </FrameLayout>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 
@@ -278,7 +338,8 @@
             <Button
                 android:id="@+id/btnSelectAllRegistrations"
                 android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_button_height_inline"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/ui_button_height_inline"
                 android:background="@drawable/bg_ui_button_ghost"
                 android:minWidth="@dimen/ui_touch_min"
                 android:paddingStart="@dimen/space_lg"
@@ -292,7 +353,8 @@
             <Button
                 android:id="@+id/btnPrintSelectedIds"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/ui_button_height_inline"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/ui_button_height_inline"
                 android:layout_marginStart="@dimen/space_sm"
                 android:layout_weight="1"
                 android:background="@drawable/bg_ui_button_primary"

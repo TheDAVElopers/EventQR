@@ -27,7 +27,8 @@
             android:id="@+id/txtRecordCount"
             style="@style/Widget.EventQR.Ui.StatusBadge.Info"
             android:layout_width="wrap_content"
-            android:layout_height="@dimen/ui_badge_height"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/ui_badge_height"
             android:layout_marginStart="@dimen/space_8"
             tools:text="24 records" />
     </LinearLayout>

@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.auth.login
 
 import android.text.InputType
+import android.text.method.PasswordTransformationMethod
 import android.view.MotionEvent
 import android.widget.EditText
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -138,21 +139,20 @@ class LoginActivityTest {
     }
 
     @Test
-    fun passwordToggle_toggleTheEyeSwitchesInputType() {
+    fun passwordToggle_toggleTheEyeUnmasksTheField() {
         val activity = buildActivity()
         val passwordInput = activity.findViewById<EditText>(R.id.edtPassword)
-        layoutInput(passwordInput)
-        val passwordInputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-        val visibleInputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
 
-        assertEquals(passwordInputType, passwordInput.inputType)
+        // The field carries the password input type, which TextView backs with a password
+        // transformation; unmasking swaps that transformation, not the input type.
+        assertTrue(passwordInput.transformationMethod is PasswordTransformationMethod)
 
-        // Touch the drawable-end zone (rawX beyond right - compoundPaddingEnd).
-        dispatchActionUp(passwordInput, 10_000f)
-        assertEquals(visibleInputType, passwordInput.inputType)
+        // Material's password_toggle end icon owns the eye now; tapping it reveals the text.
+        toggleEndIcon(passwordInput)
+        assertNull(passwordInput.transformationMethod)
 
-        dispatchActionUp(passwordInput, 10_000f)
-        assertEquals(passwordInputType, passwordInput.inputType)
+        toggleEndIcon(passwordInput)
+        assertTrue(passwordInput.transformationMethod is PasswordTransformationMethod)
     }
 
     @Test
@@ -174,6 +174,26 @@ class LoginActivityTest {
             android.view.View.MeasureSpec.makeMeasureSpec(200, android.view.View.MeasureSpec.EXACTLY),
         )
         input.layout(0, 0, 1000, 200)
+    }
+
+    /** Taps Material's password_toggle end icon on the field's [TextInputLayout] host. */
+    private fun toggleEndIcon(input: EditText) {
+        var parent: android.view.ViewParent? = input.parent
+        while (parent is android.view.View) {
+            if (parent is com.google.android.material.textfield.TextInputLayout) {
+                assertEquals(
+                    com.google.android.material.textfield.TextInputLayout.END_ICON_PASSWORD_TOGGLE,
+                    parent.endIconMode,
+                )
+                val icon = parent.findViewById<android.view.View>(
+                    com.google.android.material.R.id.text_input_end_icon,
+                )
+                requireNotNull(icon) { "password toggle end icon missing" }.performClick()
+                return
+            }
+            parent = parent.parent
+        }
+        throw AssertionError("password field has no TextInputLayout host")
     }
 
     private fun dispatchActionUp(input: EditText, rawX: Float) {

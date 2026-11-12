@@ -44,14 +44,16 @@
             android:id="@+id/dialogNegative"
             style="@style/Widget.EventQR.Ui.Button.Ghost"
             android:layout_width="wrap_content"
-            android:layout_height="@dimen/ui_button_height_inline"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/ui_button_height_inline"
             tools:text="Keep seat" />
 
         <Button
             android:id="@+id/dialogPositive"
             style="@style/Widget.EventQR.Ui.Button.Ghost"
             android:layout_width="wrap_content"
-            android:layout_height="@dimen/ui_button_height_inline"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/ui_button_height_inline"
             android:layout_marginStart="@dimen/space_8"
             tools:text="Cancel seat" />
     </LinearLayout>

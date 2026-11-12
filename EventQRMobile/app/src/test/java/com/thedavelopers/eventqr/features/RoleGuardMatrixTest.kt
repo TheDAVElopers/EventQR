@@ -153,10 +153,22 @@ class RoleGuardMatrixTest {
 
     @Test
     fun createAdminAccount_deniesAttendeeAndAdmin_superOnlyHeld() {
-        assertTrue(denies(CreateAdminAccountActivity::class.java, AccountRole.ATTENDEE))
-        assertTrue(denies(CreateAdminAccountActivity::class.java, AccountRole.ORGANIZER))
-        assertTrue(denies(CreateAdminAccountActivity::class.java, AccountRole.ADMIN))
-        assertFalse(denies(CreateAdminAccountActivity::class.java, AccountRole.SUPER_ADMIN))
+        listOf(AccountRole.ATTENDEE, AccountRole.ORGANIZER, AccountRole.ADMIN).forEach { role ->
+            sessionManager.saveRole(role)
+            val activity = Robolectric.buildActivity(CreateAdminAccountActivity::class.java).create().get()
+            assertEquals(
+                role.name,
+                View.VISIBLE,
+                activity.findViewById<View>(R.id.layoutCreateAdminDenied).visibility,
+            )
+        }
+
+        sessionManager.saveRole(AccountRole.SUPER_ADMIN)
+        val allowed = Robolectric.buildActivity(CreateAdminAccountActivity::class.java).create().get()
+        assertEquals(
+            View.GONE,
+            allowed.findViewById<View>(R.id.layoutCreateAdminDenied).visibility,
+        )
     }
 
     @Test

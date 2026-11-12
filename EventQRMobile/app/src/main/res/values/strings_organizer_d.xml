@@ -71,6 +71,7 @@
     <string name="event_reports_no_events_title">No events found</string>
     <string name="event_reports_no_events_subtext">You don\'t have any approved events yet.</string>
     <string name="event_reports_generate_reports">Generate Reports</string>
+    <string name="event_reports_summary_failed">Could not load the event totals.</string>
     <string name="event_reports_generate_all">Generate All Reports</string>
     <string name="event_reports_subtitle_roster">Complete attendee check-in and registration roster</string>
     <string name="event_reports_subtitle_no_shows">Registered attendees who have not checked in yet</string>

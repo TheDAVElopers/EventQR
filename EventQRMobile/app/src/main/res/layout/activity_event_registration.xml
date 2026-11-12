@@ -84,7 +84,8 @@
                 <TextView
                     android:id="@+id/btnEditDetailsInProfile"
                     android:layout_width="wrap_content"
-                    android:layout_height="@dimen/ui_touch_min"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_touch_min"
                     android:layout_marginStart="@dimen/space_sm"
                     android:background="?attr/selectableItemBackground"
                     android:clickable="true"
@@ -203,7 +204,7 @@
             <!-- ═════════ Perforation: details above, acknowledgement below ═════════ -->
             <View
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/stroke_focus"
+                android:layout_height="@dimen/stroke_hairline"
                 android:layout_marginTop="@dimen/space_lg"
                 android:background="@drawable/divider_perforation_light"
                 android:layerType="software" />

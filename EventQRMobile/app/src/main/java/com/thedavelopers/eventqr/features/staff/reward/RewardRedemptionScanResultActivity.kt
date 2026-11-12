@@ -1,13 +1,13 @@
 package com.thedavelopers.eventqr.features.staff.reward
 
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -50,6 +50,7 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
     private var rejectionReason: String = ""
     private var rewardsContainer: LinearLayout? = null
     private var rewardsEyebrow: TextView? = null
+    private var rewardsErrorStrip: TextView? = null
     private var emptyState: EventQrEmptyState? = null
     private var inFlight = false
 
@@ -89,6 +90,9 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
             content.addView(spacer(R.dimen.space_32))
             rewardsEyebrow = eyebrow(getString(R.string.ui_staff_available_rewards)).also { content.addView(it) }
             content.addView(spacer(R.dimen.space_8))
+
+            // §6.8 row 6: a failed redeem keeps the picker on screen and reports in flow.
+            rewardsErrorStrip = errorStrip().also { content.addView(it) }
 
             rewardsContainer = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
@@ -199,19 +203,79 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
         setTextColor(color(R.color.ui_text_secondary))
     }
 
+    /** In-flow failure strip (§6.8 row 6): semantic container, body copy, no second control. */
+    private fun errorStrip(): TextView = TextView(this).apply {
+        setTextAppearance(R.style.TextAppearance_EventQR_Type_BodySmall)
+        setTextColor(color(R.color.ui_on_error_container))
+        setBackgroundResource(R.drawable.bg_ui_block_r4)
+        backgroundTintList = ColorStateList.valueOf(color(R.color.ui_error_container))
+        accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+        setPadding(
+            dimenOffset(R.dimen.space_lg),
+            dimenOffset(R.dimen.space_sm),
+            dimenOffset(R.dimen.space_lg),
+            dimenOffset(R.dimen.space_sm),
+        )
+        visibility = View.GONE
+    }
+
     private fun loadRewards() {
         if (scanRejected) return
         if (eventId.isBlank()) {
-            showMessage(getString(R.string.ui_staff_missing_event_context))
+            showRewardsError(getString(R.string.ui_staff_missing_event_context), canRetry = false)
             return
         }
+        showRewardsSkeleton()
         lifecycleScope.launch {
             when (val result = repository.getRewardsByEvent(eventId)) {
                 is NetworkResult.Success -> renderRewards(result.data)
-                is NetworkResult.Error -> showMessage(result.message.ifBlank { getString(R.string.ui_staff_rewards_unavailable) })
+                is NetworkResult.Error -> showRewardsError(result.message.ifBlank { getString(R.string.ui_staff_rewards_unavailable) })
                 NetworkResult.Loading -> Unit
             }
         }
+    }
+
+    /** Three flat skeleton bars while the picker loads, so the card never flashes in from nothing. */
+    private fun showRewardsSkeleton() {
+        rewardsEyebrow?.visibility = View.VISIBLE
+        rewardsErrorStrip?.visibility = View.GONE
+        emptyState?.visibility = View.GONE
+        rewardsContainer?.apply {
+            removeAllViews()
+            visibility = View.VISIBLE
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+            repeat(3) {
+                addView(View(this@RewardRedemptionScanResultActivity).apply {
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dimenOffset(R.dimen.ui_skeleton_bar_height),
+                    ).apply {
+                        setMargins(
+                            dimenOffset(R.dimen.ui_card_padding),
+                            dimenOffset(R.dimen.space_md),
+                            dimenOffset(R.dimen.ui_card_padding),
+                            dimenOffset(R.dimen.space_md),
+                        )
+                    }
+                    setBackgroundResource(R.drawable.bg_ui_skeleton)
+                })
+            }
+        }
+    }
+
+    /** §6.8 row 11: load failure is a state with one ghost Retry, never a toast over a dead list. */
+    private fun showRewardsError(message: String, canRetry: Boolean = true) {
+        rewardsEyebrow?.visibility = View.GONE
+        rewardsContainer?.visibility = View.GONE
+        rewardsErrorStrip?.visibility = View.GONE
+        emptyState?.setIcon(AppIcons.Warning)
+        emptyState?.setContent(getString(R.string.ui_staff_rewards_error_title), message)
+        if (canRetry) {
+            emptyState?.setAction(getString(R.string.common_retry), primary = false) { loadRewards() }
+        } else {
+            emptyState?.setAction(null, null)
+        }
+        emptyState?.visibility = View.VISIBLE
     }
 
     private fun renderRewards(rewards: List<RewardResponse>) {
@@ -226,7 +290,15 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
         }
         val container = rewardsContainer ?: return
         container.removeAllViews()
+        container.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
         val hasRewards = list.isNotEmpty()
+        // A settled list owns the slot: the failure copy from a previous attempt cannot linger.
+        emptyState?.setIcon(AppIcons.Reward)
+        emptyState?.setContent(
+            getString(R.string.ui_staff_no_eligible_rewards),
+            getString(R.string.ui_staff_no_eligible_rewards_body),
+        )
+        emptyState?.setAction(null, null)
         rewardsEyebrow?.visibility = if (hasRewards) View.VISIBLE else View.GONE
         if (!hasRewards) {
             container.visibility = View.GONE
@@ -307,6 +379,7 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
             showMessage(getString(R.string.ui_staff_missing_redemption_context))
             return
         }
+        rewardsErrorStrip?.visibility = View.GONE
         inFlight = true
         val request = RewardRedemptionGrantRequest(
             eventId = UUID.fromString(eventId),
@@ -339,7 +412,10 @@ class RewardRedemptionScanResultActivity : AppCompatActivity() {
     }
 
     private fun showMessage(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        rewardsErrorStrip?.apply {
+            text = message
+            visibility = View.VISIBLE
+        }
     }
 
     private fun initials(name: String): String = name.ifBlank { getString(R.string.ui_staff_result_attendee) }

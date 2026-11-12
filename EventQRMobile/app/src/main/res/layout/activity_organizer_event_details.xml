@@ -4,7 +4,7 @@
 
         Top bar      56dp, back + "Event details"
         Head         include_organizer_event_head: name + StatusBadge, when, where, tear
-        Stub         Registered / Capacity / Available on the tonal step, wrap_content + 60dp floor
+        Stub         Registered / Capacity / Available on the tonal step, wrap_content + 56dp floor
         Spec table   Registration window, Organizer, Co-organizers only - Date, Time and Venue live
                      in the head, which is where a reader looks for them first
         Review note  adminRemarks once, error tone for Rejected, warning for Pending review
@@ -54,7 +54,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
-            <!-- Block B: the stub. 60dp is a MINIMUM - value over label grows at large font scale. -->
+            <!-- Block B: the stub. 56dp is a MINIMUM - value over label grows at large font scale. -->
             <LinearLayout
                 android:id="@+id/oedStub"
                 android:layout_width="match_parent"
@@ -417,6 +417,7 @@
         </FrameLayout>
 
         <FrameLayout
+            android:id="@+id/oedStubSkeleton"
             android:layout_width="match_parent"
             android:layout_height="@dimen/ui_pass_head_stub_height"
             android:importantForAccessibility="noHideDescendants">

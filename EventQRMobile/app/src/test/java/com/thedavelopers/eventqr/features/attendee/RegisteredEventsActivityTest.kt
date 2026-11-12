@@ -79,15 +79,21 @@ class RegisteredEventsActivityTest {
         assertEquals(3, shown(activity))
     }
 
-    // Two equal-width rows of two: every filter reachable at large font scale, no horizontal
-    // scroller hiding two of four chips off the edge.
+    // Chips wrap instead of scrolling: every filter stays visible and reachable at large font
+    // scale, and none of the four is hidden off the edge of a horizontal scroller.
     @Test
-    fun theChipRowIsATwoByTwoGridOfEqualCells() {
+    fun theChipRowWrapsInsteadOfScrolling() {
         val activity = screen()
-        val grid = activity.findViewById<LinearLayout>(R.id.chipRowRegisteredEvents)
+        val row = activity.findViewById<ViewGroup>(R.id.chipRowRegisteredEvents)
+        val flow = (0 until row.childCount)
+            .map { row.getChildAt(it) }
+            .filterIsInstance<androidx.constraintlayout.helper.widget.Flow>()
+            .single()
 
-        assertEquals(LinearLayout.VERTICAL, grid.orientation)
-        assertEquals(2, grid.childCount)
+        assertEquals(
+            setOf(R.id.chipAll, R.id.chipUpcoming, R.id.chipActive, R.id.chipCompleted),
+            flow.referencedIds.toSet(),
+        )
 
         val chipIds = listOf(R.id.chipAll, R.id.chipUpcoming, R.id.chipActive, R.id.chipCompleted)
         val touchFloor = activity.resources.getDimensionPixelSize(R.dimen.ui_touch_min)
@@ -95,17 +101,6 @@ class RegisteredEventsActivityTest {
             val chip = chip(activity, id)
             assertEquals("$id must wrap its label", ViewGroup.LayoutParams.WRAP_CONTENT, chip.layoutParams.height)
             assertEquals("$id keeps the 48dp floor", touchFloor, chip.minHeight)
-        }
-
-        for (rowIndex in 0 until grid.childCount) {
-            val line = grid.getChildAt(rowIndex) as LinearLayout
-            assertEquals(LinearLayout.HORIZONTAL, line.orientation)
-            assertEquals(2, line.childCount)
-            for (cell in 0 until line.childCount) {
-                val params = line.getChildAt(cell).layoutParams as LinearLayout.LayoutParams
-                assertEquals(0, params.width)
-                assertEquals(1f, params.weight)
-            }
         }
     }
 

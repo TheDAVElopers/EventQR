@@ -35,15 +35,18 @@
     <string name="ui_staff_no_scans_body">Scans you perform will show up here.</string>
 
     <!-- ═════════ Scanner (§5.13) ═════════ -->
-    <string name="ui_staff_scan_label">Attendee ID</string>
+    <string name="ui_staff_scan_label">Enter pass ID</string>
     <string name="ui_staff_scan_hint">e.g. 001</string>
     <string name="ui_staff_scan_no_matching_pass">No pass matches that ID.</string>
     <string name="ui_staff_scan_lookup_unavailable">Couldn\'t check that pass. Try again.</string>
-    <string name="ui_staff_verify">Check pass</string>
+    <string name="ui_staff_verify">Check in</string>
     <string name="ui_staff_no_events">No assigned events</string>
     <string name="ui_staff_no_events_body">Ask your organizer to assign you to an event.</string>
     <!-- §5.10 error variant: same slot, same left edge, one inline Retry, the server reason as body. -->
     <string name="ui_staff_events_error_title">Couldn\'t load your events</string>
+    <string name="ui_staff_purposes_error_title">Couldn\'t load scan purposes</string>
+    <string name="ui_staff_attendee_details_load_failed">Couldn\'t load this attendee</string>
+    <string name="ui_staff_dashboard_error_title">Couldn\'t load your dashboard</string>
     <string name="staff_torch_on">Torch on</string>
     <string name="staff_torch_off">Torch off</string>
     <string name="staff_torch_unavailable">This camera has no torch.</string>
@@ -182,6 +185,7 @@
     <string name="ui_staff_one_claim">One claim only</string>
     <string name="ui_staff_duplicates_allowed">Duplicate claims allowed</string>
     <string name="ui_staff_rewards_unavailable">Unable to load rewards.</string>
+    <string name="ui_staff_rewards_error_title">Couldn\'t load rewards</string>
     <string name="ui_staff_missing_event_context">Open this screen from the scanner.</string>
     <string name="ui_staff_missing_redemption_context">This scan is missing its redemption context.</string>
     <string name="ui_staff_redeem_failed">The reward could not be redeemed.</string>

@@ -1,20 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Overflow actions. Icon tint is the use-site tint (no colour is baked into a vector); the
-     family is the one in `AppIcons` / design/05-icon-system.md. -->
+<!-- Overflow holds one action (§5.5). Enable/Disable retired: status is not an admin task here. -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/action_enable"
-        android:icon="@drawable/ic_ui_check_circle"
-        android:iconTint="@color/ui_primary"
-        android:title="Enable" />
-    <item
-        android:id="@+id/action_disable"
-        android:icon="@drawable/ic_ui_admin_panel_settings"
-        android:iconTint="@color/ui_text_primary"
-        android:title="Disable" />
-    <item
         android:id="@+id/action_delete"
-        android:icon="@drawable/ic_ui_edit"
-        android:iconTint="@color/ui_text_primary"
-        android:title="Delete" />
+        android:title="@string/ui_admin_accounts_delete" />
 </menu>

@@ -73,6 +73,7 @@
     <item name="mrw_reward_quantity_input" type="id" />
     <item name="mrw_reward_description_input" type="id" />
     <item name="txr_save_button" type="id" />
+    <item name="txr_save_status" type="id" />
     <item name="mrw_reward_duplicate_switch" type="id" />
 
     <!-- ManageScanPurposesActivity (msp_) -->

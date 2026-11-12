@@ -4,14 +4,16 @@
 
         Top bar (back at 4dp, title at 56dp), then three eyebrowed sections separated by 1dp
         perforations: IDENTITY / CONTACT / SECURITY. Filled 56dp fields at radius 4, a
-        password checklist whose marks turn lime as each rule is satisfied, and a 72dp sticky
-        footer so the primary action never scrolls away.
+        password checklist whose 16dp leading slot holds the `ic_ui_check` tick in `accent_deep`
+        as each rule is satisfied, and a 72dp sticky footer so the primary action never scrolls
+        away.
 
     Deleted: `bg_admin_surface_card`, the IconTile matrix, `bg_auth_field`, the raster envelope
     and padlock, the tinted requirement box, the `bg_password_requirements` block and the
     Unicode check/bullet glyphs.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/ui_background"
@@ -23,9 +25,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <ScrollView
-        android:id="@+id/formScroll"
+    <!-- §6.8 row 18: permission denied is an in-flow state, never a toast. -->
+    <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+        android:id="@+id/layoutCreateAdminDenied"
         android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:icon="@drawable/ic_ui_warning"
+        app:title="@string/ui_admin_create_permission" />
+
+    <ScrollView
+        android:id="@+id/formScroll"        android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:clipToPadding="false"
@@ -79,11 +89,20 @@
                         android:id="@+id/inputAdminFirstName"
                         style="@style/Widget.EventQR.Ui.TextField"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/ui_control_height"
+                        android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/space_8"
                         android:autoText="false"
                         android:inputType="textPersonName"
                         android:maxLines="1" />
+
+                    <TextView
+                        android:id="@+id/txtAdminFirstNameError"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_4"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                        android:textColor="@color/ui_error"
+                        android:visibility="gone" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -104,17 +123,26 @@
                         android:id="@+id/inputAdminLastName"
                         style="@style/Widget.EventQR.Ui.TextField"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/ui_control_height"
+                        android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/space_8"
                         android:autoText="false"
                         android:inputType="textPersonName"
                         android:maxLines="1" />
+
+                    <TextView
+                        android:id="@+id/txtAdminLastNameError"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_4"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                        android:textColor="@color/ui_error"
+                        android:visibility="gone" />
                 </LinearLayout>
             </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/stroke_focus"
+                android:layout_height="@dimen/stroke_hairline"
                 android:layout_marginTop="@dimen/space_16"
                 android:background="@drawable/divider_perforation_light"
                 android:layerType="software" />
@@ -139,12 +167,21 @@
                 android:id="@+id/inputAdminEmail"
                 style="@style/Widget.EventQR.Ui.TextField"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/ui_control_height"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_8"
                 android:autoText="false"
                 android:drawableStart="@drawable/ic_ui_mail"
                 android:inputType="textEmailAddress"
                 android:maxLines="1" />
+
+            <TextView
+                android:id="@+id/txtAdminEmailError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -158,15 +195,24 @@
                 android:id="@+id/inputAdminPhone"
                 style="@style/Widget.EventQR.Ui.TextField"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/ui_control_height"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_8"
                 android:drawableStart="@drawable/ic_ui_call"
                 android:inputType="phone"
                 android:maxLines="1" />
 
+            <TextView
+                android:id="@+id/txtAdminPhoneError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
+
             <View
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/stroke_focus"
+                android:layout_height="@dimen/stroke_hairline"
                 android:layout_marginTop="@dimen/space_16"
                 android:background="@drawable/divider_perforation_light"
                 android:layerType="software" />
@@ -191,7 +237,7 @@
                 android:id="@+id/inputAdminPassword"
                 style="@style/Widget.EventQR.Ui.TextField"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/ui_control_height"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_8"
                 android:autoText="false"
                 android:drawableStart="@drawable/ic_ui_lock"
@@ -200,68 +246,26 @@
                 android:maxLength="128"
                 android:maxLines="1" />
 
-            <!-- Rules: the mark is a compound drawable the activity swaps, so no glyph stands
-                 in for an affordance. Lime only when a rule is met. -->
+            <TextView
+                android:id="@+id/txtAdminPasswordError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
+
+            <!-- Rules: five rows, one per Validators rule. The 16dp leading slot is ic_ui_check
+                 in accent_deep when met and empty at rest; the mark and the row's "met"/"not met"
+                 description carry the state, never colour alone. -->
             <LinearLayout
                 android:id="@+id/layoutPasswordRequirements"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_12"
+                android:accessibilityLiveRegion="polite"
                 android:orientation="vertical"
                 android:visibility="gone">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="horizontal">
-
-                        <View
-                            android:id="@+id/viewStrength1"
-                            android:layout_width="0dp"
-                            android:layout_height="@dimen/ui_strength_bar_height"
-                            android:layout_weight="1"
-                            android:background="@drawable/bg_ui_strength_bar" />
-
-                        <View
-                            android:id="@+id/viewStrength2"
-                            android:layout_width="0dp"
-                            android:layout_height="@dimen/ui_strength_bar_height"
-                            android:layout_marginStart="@dimen/space_4"
-                            android:layout_weight="1"
-                            android:background="@drawable/bg_ui_strength_bar" />
-
-                        <View
-                            android:id="@+id/viewStrength3"
-                            android:layout_width="0dp"
-                            android:layout_height="@dimen/ui_strength_bar_height"
-                            android:layout_marginStart="@dimen/space_4"
-                            android:layout_weight="1"
-                            android:background="@drawable/bg_ui_strength_bar" />
-
-                        <View
-                            android:id="@+id/viewStrength4"
-                            android:layout_width="0dp"
-                            android:layout_height="@dimen/ui_strength_bar_height"
-                            android:layout_marginStart="@dimen/space_4"
-                            android:layout_weight="1"
-                            android:background="@drawable/bg_ui_strength_bar" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/txtPasswordStrength"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/space_12"
-                        android:textAppearance="@style/TextAppearance.EventQR.Type.Label"
-                        android:textColor="@color/ui_text_secondary" />
-                </LinearLayout>
 
                 <TextView
                     android:id="@+id/txtPasswordLengthRequirement"
@@ -331,7 +335,7 @@
                 android:id="@+id/inputAdminConfirmPassword"
                 style="@style/Widget.EventQR.Ui.TextField"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/ui_control_height"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_8"
                 android:autoText="false"
                 android:drawableStart="@drawable/ic_ui_lock"
@@ -339,16 +343,63 @@
                 android:inputType="textPassword"
                 android:maxLength="128"
                 android:maxLines="1" />
+
+            <TextView
+                android:id="@+id/txtAdminConfirmPasswordError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_4"
+                android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
+                android:textColor="@color/ui_error"
+                android:visibility="gone" />
         </LinearLayout>
     </ScrollView>
 
+    <!-- ═════════ Page failure: in-flow strip above the footer, values kept (§6.8 row 6) ═════════ -->
+    <LinearLayout
+        android:id="@+id/layoutCreateAdminError"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:accessibilityLiveRegion="polite"
+        android:background="@drawable/bg_ui_block_r4"
+        android:backgroundTint="@color/ui_error_container"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/ui_touch_min"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_16"
+        android:paddingTop="@dimen/space_8"
+        android:paddingEnd="@dimen/space_8"
+        android:paddingBottom="@dimen/space_8"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/txtCreateAdminError"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
+            android:textColor="@color/ui_on_error_container" />
+
+        <TextView
+            android:id="@+id/btnCreateAdminRetry"
+            style="@style/Widget.EventQR.Ui.Button.Ghost"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:minHeight="@dimen/ui_button_height_inline"
+            android:text="@string/common_retry"
+            android:textColor="@color/ui_on_error_container" />
+    </LinearLayout>
+
     <!-- ═════════ Sticky footer: the primary action never scrolls away ═════════ -->
     <View
+        android:id="@+id/dividerCreateAdminFooter"
         android:layout_width="match_parent"
         android:layout_height="@dimen/stroke_hairline"
         android:background="@color/ui_hairline" />
 
     <LinearLayout
+        android:id="@+id/layoutCreateAdminFooter"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/ui_surface"
@@ -357,11 +408,26 @@
         android:paddingHorizontal="@dimen/ui_gutter"
         android:paddingVertical="@dimen/space_md">
 
-        <Button
-            android:id="@+id/btnCreateAdminAccount"
-            style="@style/Widget.EventQR.Ui.Button.Primary"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="@dimen/ui_button_height"
-            android:text="@string/ui_admin_create_submit" />
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/btnCreateAdminAccount"
+                style="@style/Widget.EventQR.Ui.Button.Primary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/ui_button_height"
+                android:text="@string/ui_admin_create_submit" />
+
+            <ProgressBar
+                android:id="@+id/progressCreateAdmin"
+                android:layout_width="@dimen/ui_progress_inline"
+                android:layout_height="@dimen/ui_progress_inline"
+                android:layout_gravity="center"
+                android:indeterminate="true"
+                android:indeterminateTint="@color/ui_on_primary"
+                android:visibility="gone" />
+        </FrameLayout>
     </LinearLayout>
 </LinearLayout>

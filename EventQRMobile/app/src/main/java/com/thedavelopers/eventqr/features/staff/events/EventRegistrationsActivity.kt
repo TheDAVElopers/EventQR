@@ -120,24 +120,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
             presenter.load(selectedEventId)
             loadPrintPermission(selectedEventId)
         } else {
-            lifecycleScope.launch {
-                when (val eventsResult = repository.getEvents()) {
-                    is NetworkResult.Success -> {
-                        val firstEvent = eventsResult.data.firstOrNull()
-                        if (firstEvent == null) {
-                            showMessage(getString(R.string.event_registrations_no_assigned_events_found))
-                            return@launch
-                        }
-                        selectedEventId = firstEvent.eventId.toString()
-                        eventTitleView.text = firstEvent.title.ifBlank { getString(R.string.event_registrations_assigned_event_fallback) }
-                        findViewById<EditText>(R.id.edtRegistrationsEventId).setText(selectedEventId)
-                        presenter.load(selectedEventId)
-                        applyPrintPermission(firstEvent.canPrintId)
-                    }
-                    is NetworkResult.Error -> showMessage(eventsResult.message)
-                    NetworkResult.Loading -> Unit
-                }
-            }
+            loadDefaultEvent()
         }
 
         findViewById<Button>(R.id.btnLoadEventRegistrations).setOnClickListener {
@@ -150,6 +133,34 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
     /** Overridden in tests to inject a fake repository. */
     @VisibleForTesting
     internal open fun newRepository(): StaffRepository = StaffRepository(this)
+
+    /** Picks the first assigned event when the caller did not name one. Failure reports inline, not as a Toast. */
+    private fun loadDefaultEvent() {
+        findViewById<View>(R.id.errorRegistrations).visibility = View.GONE
+        lifecycleScope.launch {
+            when (val eventsResult = repository.getEvents()) {
+                is NetworkResult.Success -> {
+                    val firstEvent = eventsResult.data.firstOrNull()
+                    if (firstEvent == null) {
+                        showMessage(getString(R.string.event_registrations_no_assigned_events_found))
+                        return@launch
+                    }
+                    selectedEventId = firstEvent.eventId.toString()
+                    eventTitleView.text = firstEvent.title.ifBlank { getString(R.string.event_registrations_assigned_event_fallback) }
+                    findViewById<EditText>(R.id.edtRegistrationsEventId).setText(selectedEventId)
+                    presenter.load(selectedEventId)
+                    applyPrintPermission(firstEvent.canPrintId)
+                }
+                is NetworkResult.Error -> {
+                    findViewById<TextView>(R.id.txtRegistrationsError).text =
+                        eventsResult.message.ifBlank { getString(R.string.ui_staff_load_failed_body) }
+                    findViewById<View>(R.id.btnRegistrationsRetry).visibility = View.VISIBLE
+                    findViewById<View>(R.id.errorRegistrations).visibility = View.VISIBLE
+                }
+                NetworkResult.Loading -> Unit
+            }
+        }
+    }
 
     /** Reads the caller's Print IDs permission for [eventId] off the assigned-event list. */
     private fun loadPrintPermission(eventId: String) {
@@ -232,6 +243,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
             if (adapter.isAllSelected()) adapter.clearSelection() else presenter.selectAllForPrint()
         }
         btnPrintSelectedIds.setOnClickListener { printSelected() }
+        findViewById<View>(R.id.btnRegistrationsRetry).setOnClickListener { loadDefaultEvent() }
 
         swipeRefresh.setOnRefreshListener {
             if (selectedEventId.isNotBlank()) presenter.load(selectedEventId, searchInput.text?.toString().orEmpty()) else swipeRefresh.isRefreshing = false
@@ -281,11 +293,16 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
     }
 
     override fun showMessage(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        // Failures land in the strip above the list, never in a Toast. These messages are not
+        // load failures, so the strip's Retry action stays hidden here.
+        findViewById<TextView>(R.id.txtRegistrationsError).text = message
+        findViewById<View>(R.id.btnRegistrationsRetry).visibility = View.GONE
+        findViewById<View>(R.id.errorRegistrations).visibility = View.VISIBLE
     }
 
     override fun showLoading(isLoading: Boolean) {
         if (isLoading && !swipeRefresh.isRefreshing) {
+            findViewById<View>(R.id.errorRegistrations).visibility = View.GONE
             skeletonLoading.visibility = View.VISIBLE
             // Loading is not an empty result: the stale state must not cover the skeleton.
             emptyState.visibility = View.GONE

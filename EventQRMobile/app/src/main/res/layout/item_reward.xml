@@ -78,7 +78,8 @@
                 android:id="@+id/txtRewardStatus"
                 style="@style/Widget.EventQR.Ui.StatusBadge.Valid"
                 android:layout_width="wrap_content"
-                android:layout_height="@dimen/ui_badge_height"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/ui_badge_height"
                 android:layout_marginTop="@dimen/space_4"
                 tools:text="Available" />
         </LinearLayout>

@@ -52,7 +52,7 @@ class AttendeeRegistrationLayoutTest {
         assertEquals(
             "the link keeps the 48dp touch target",
             context.resources.getDimensionPixelSize(R.dimen.ui_touch_min),
-            link.layoutParams.height,
+            link.minHeight,
         )
     }
 

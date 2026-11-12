@@ -248,6 +248,10 @@ class StaffPrintPermissionUiTest {
 
     private fun permissionNotice(activity: StaffAttendeeDetailsActivity) = activity.findViewById<TextView>(R.id.txtPrintPermissionNotice)
 
+    private fun detailStatus(activity: StaffAttendeeDetailsActivity) = activity.findViewById<TextView>(R.id.txtDetailStatus)
+
+    private fun registrationsError(activity: EventRegistrationsActivity) = activity.findViewById<TextView>(R.id.txtRegistrationsError)
+
     // ---- the print affordance follows canPrintId
 
     @Test
@@ -286,7 +290,7 @@ class StaffPrintPermissionUiTest {
 
         assertEquals(0, fake.printCalls)
         assertTrue(activity.openedCards.isEmpty())
-        assertEquals(context.getString(R.string.staff_print_id_permission_required), ShadowToast.getTextOfLatestToast())
+        assertEquals(context.getString(R.string.staff_print_id_permission_required), detailStatus(activity).text.toString())
     }
 
     @Test
@@ -309,7 +313,7 @@ class StaffPrintPermissionUiTest {
         activity.onPrintResult(httpError(403, denialMessage), emptyList(), "")
 
         assertTrue(activity.openedCards.isEmpty())
-        assertEquals(denialMessage, ShadowToast.getTextOfLatestToast())
+        assertEquals(denialMessage, detailStatus(activity).text.toString())
     }
 
     @Test
@@ -320,7 +324,7 @@ class StaffPrintPermissionUiTest {
         activity.onPrintResult(NetworkResult.Error("Request failed", HttpException(Response.error<Any>(403, "".toResponseBody(null)))), emptyList(), "")
 
         assertTrue(activity.openedCards.isEmpty())
-        assertEquals(context.getString(R.string.staff_print_permission_denied), ShadowToast.getTextOfLatestToast())
+        assertEquals(context.getString(R.string.staff_print_permission_denied), detailStatus(activity).text.toString())
     }
 
     @Test
@@ -331,7 +335,7 @@ class StaffPrintPermissionUiTest {
         activity.onPrintResult(httpError(500, "Active ID template not found for event"), emptyList(), "")
 
         assertTrue(activity.openedCards.isEmpty())
-        assertEquals("Active ID template not found for event", ShadowToast.getTextOfLatestToast())
+        assertEquals("Active ID template not found for event", detailStatus(activity).text.toString())
     }
 
     @Test
@@ -352,7 +356,7 @@ class StaffPrintPermissionUiTest {
 
         activity.printId()
 
-        assertEquals(context.getString(R.string.staff_print_permission_checking), ShadowToast.getTextOfLatestToast())
+        assertEquals(context.getString(R.string.staff_print_permission_checking), detailStatus(activity).text.toString())
         assertEquals(0, fake.printCalls)
     }
 
@@ -364,7 +368,7 @@ class StaffPrintPermissionUiTest {
 
         activity.printId()
 
-        assertEquals(context.getString(R.string.staff_print_permission_check_failed), ShadowToast.getTextOfLatestToast())
+        assertEquals(context.getString(R.string.staff_print_permission_check_failed), detailStatus(activity).text.toString())
         assertEquals(0, fake.printCalls)
     }
 
@@ -420,7 +424,7 @@ class StaffPrintPermissionUiTest {
 
         assertEquals(1, fake.batchCalls)
         assertTrue(activity.openedBatches.isEmpty())
-        assertEquals(denialMessage, ShadowToast.getTextOfLatestToast())
+        assertEquals(denialMessage, registrationsError(activity).text.toString())
     }
 
     @Test
@@ -457,7 +461,7 @@ class StaffPrintPermissionUiTest {
             activity.cancelCompletedWhenMessaged == true,
         )
         assertEquals(denialMessage, activity.lastMessage)
-        assertEquals(denialMessage, ShadowToast.getTextOfLatestToast())
+        assertEquals(denialMessage, registrationsError(activity).text.toString())
         val confirmed = fake.confirmCalls.single()
         assertEquals(AndroidIdPrinter.PrintOutcome.CANCELLED, confirmed.first)
         assertEquals(listOf(firstLogId), confirmed.second)

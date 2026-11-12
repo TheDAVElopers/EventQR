@@ -105,32 +105,38 @@ class RegistrationAdapter(
     override fun getItemCount(): Int = items.size
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val container: View = itemView.findViewById(R.id.registrationRowContent)
+        private val divider: View = itemView.findViewById(R.id.registrationRowDivider)
         private val checkView: CheckBox = itemView.findViewById(R.id.chkRegistrationSelect)
         private val avatarView: TextView = itemView.findViewById(R.id.txtRegistrationAvatar)
         private val titleView: TextView = itemView.findViewById(R.id.txtRegistrationTitle)
         private val detailView: TextView = itemView.findViewById(R.id.txtRegistrationDetails)
         private val statusView: TextView = itemView.findViewById(R.id.txtRegistrationStatus)
-        private val pointsView: TextView = itemView.findViewById(R.id.txtRegistrationPoints)
 
         fun bind(item: RegistrationResponse) {
             val name = item.attendeeName.ifBlank { "Attendee" }
             avatarView.text = name.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "A"
             titleView.text = name
-            detailView.text = item.attendeeEmail.ifBlank { "No email provided" }
-            pointsView.text = "${item.pointsEarned} pts"
+            // §6.3 amendment v1.13: one trailing badge, so points ride in the meta line.
+            detailView.text = listOf(
+                item.attendeeEmail.ifBlank { "No email provided" },
+                "${item.pointsEarned} pts",
+            ).joinToString(" · ")
             AttendeeBadges.bind(statusView, item.status)
+            divider.visibility =
+                if (absoluteAdapterPosition == itemCount - 1) View.GONE else View.VISIBLE
 
             checkView.visibility = if (selectionMode) View.VISIBLE else View.GONE
             checkView.isChecked = isSelected(item)
             checkView.isEnabled = item.qrCredentialId != null
 
-            (itemView as? androidx.cardview.widget.CardView)?.setCardBackgroundColor(
+            container.setBackgroundColor(
                 itemView.context.color(
-                    if (selectionMode && isSelected(item)) R.color.ui_primary_wash else R.color.ui_surface,
+                    if (selectionMode && isSelected(item)) R.color.ui_primary_wash else R.color.transparent,
                 ),
             )
 
-            itemView.setOnClickListener {
+            container.setOnClickListener {
                 if (selectionMode) {
                     toggleSelection(item)
                 } else {
@@ -139,9 +145,9 @@ class RegistrationAdapter(
             }
             checkView.setOnClickListener {
                 select(item, checkView.isChecked)
-                (itemView as? androidx.cardview.widget.CardView)?.setCardBackgroundColor(
+                container.setBackgroundColor(
                     itemView.context.color(
-                        if (isSelected(item)) R.color.ui_primary_wash else R.color.ui_surface,
+                        if (isSelected(item)) R.color.ui_primary_wash else R.color.transparent,
                     ),
                 )
                 onSelectionChanged?.invoke(selectedIds.size)

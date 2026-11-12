@@ -562,7 +562,7 @@ class RequestEventActivity : AppCompatActivity() {
         if (isFinishing || isDestroyed) return
         successDialog?.dismiss()
 
-        val dialogView = layoutInflater.inflate(R.layout.dialog_event_request_submitted, null)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_base, null)
         val dialog = AlertDialog.Builder(this)
             .setView(dialogView)
             .create()
@@ -571,23 +571,25 @@ class RequestEventActivity : AppCompatActivity() {
         dialog.setCanceledOnTouchOutside(false)
         dialog.window?.setBackgroundDrawable(ColorDrawable(color(R.color.transparent)))
 
-        // Each action dismisses this dialog first, then runs the permission flow, then leaves. The
-        // success dialog is never on screen beside the rationale, and nothing navigates under one.
-        dialogView.findViewById<Button>(R.id.successViewRequestsButton).setOnClickListener {
-            dialog.dismiss()
-            askForDecisionNotifications {
-                startActivity(Intent(this, MyEventRequestsActivity::class.java))
-                finish()
-            }
-        }
-        dialogView.findViewById<Button>(R.id.successDashboardButton).setOnClickListener {
-            dialog.dismiss()
-            askForDecisionNotifications {
-                startActivity(
-                    Intent(this, com.thedavelopers.eventqr.features.dashboard.DashboardActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP),
-                )
-                finish()
+        // dialog_base (§5.12): title / body / one text action. The status row and the second
+        // full-width button are gone: the request's status lives on My Event Requests, which is
+        // where the dialog's action goes.
+        dialogView.findViewById<TextView>(R.id.dialogTitle)
+            .setText(R.string.dialog_event_request_submitted_event_request_submitted)
+        dialogView.findViewById<TextView>(R.id.dialogBody)
+            .setText(R.string.dialog_event_request_submitted_your_event_request_has_been_submitte)
+        dialogView.findViewById<Button>(R.id.dialogNegative).visibility = View.GONE
+        dialogView.findViewById<Button>(R.id.dialogPositive).apply {
+            setText(R.string.common_done)
+            // Each action dismisses this dialog first, then runs the permission flow, then leaves.
+            // The success dialog is never on screen beside the rationale, and nothing navigates
+            // under one.
+            setOnClickListener {
+                dialog.dismiss()
+                askForDecisionNotifications {
+                    startActivity(Intent(this@RequestEventActivity, MyEventRequestsActivity::class.java))
+                    finish()
+                }
             }
         }
 
