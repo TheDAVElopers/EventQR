@@ -40,24 +40,22 @@
         android:importantForAutofill="no"
         android:inputType="text" />
 
-    <!-- §5.6: the filter row wraps on a Flow, it never scrolls. Three chips per line; 36dp fill
-         inside a 48dp touch target, wrap height so a grown label is not clipped. -->
+    <!-- §5.6: the filter row wraps on a packed, start-aligned Flow, it never scrolls. Four chips
+         share one line at 360dp; 36dp fill inside a 48dp touch target, wrap height so a grown
+         label is not clipped. -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_12"
+        android:layout_marginTop="@dimen/space_8"
         android:paddingStart="@dimen/ui_gutter"
         android:paddingEnd="@dimen/ui_gutter">
 
         <androidx.constraintlayout.helper.widget.Flow
             android:id="@+id/chipFlow"
+            style="@style/Widget.EventQR.Ui.ChipFlow"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             app:constraint_referenced_ids="chipAll,chipUpcoming,chipActive,chipCompleted"
-            app:flow_horizontalGap="@dimen/ui_chip_gap"
-            app:flow_maxElementsWrap="3"
-            app:flow_verticalGap="@dimen/ui_chip_gap"
-            app:flow_wrapMode="chain"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -113,7 +111,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/ui_gutter"
-        android:layout_marginTop="@dimen/space_16"
+        android:layout_marginTop="@dimen/space_8"
         android:layout_marginEnd="@dimen/ui_gutter"
         android:gravity="center_vertical"
         android:minHeight="@dimen/ui_touch_min"

@@ -1,8 +1,6 @@
 package com.thedavelopers.eventqr.ui.components
 
 import android.view.View
-import android.view.accessibility.AccessibilityNodeInfo
-import android.widget.Button
 import android.widget.TextView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -35,20 +33,11 @@ import com.thedavelopers.eventqr.ui.theme.UiOnErrorContainer
  */
 fun View.showInlineError(message: CharSequence, announce: Boolean = true) {
     findViewById<TextView>(R.id.txtErrorStrip).text = message
-    // A styled TextView has no Button role, and there is no XML attribute for the class name, so a
-    // delegate sets it on the node: TalkBack matches the Compose mirror's Role.Button.
-    findViewById<TextView>(R.id.btnErrorStripRetry).apply {
-        if (accessibilityDelegate == null) accessibilityDelegate = ButtonRoleDelegate
-    }
+    // A styled TextView has no Button role, and there is no XML attribute for the class name, so the
+    // shared delegate sets it on the node: TalkBack matches the Compose mirror's Role.Button.
+    findViewById<TextView>(R.id.btnErrorStripRetry).asButtonRole()
     visibility = View.VISIBLE
     if (announce) announceForAccessibility(message)
-}
-
-private object ButtonRoleDelegate : View.AccessibilityDelegate() {
-    override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfo) {
-        super.onInitializeAccessibilityNodeInfo(host, info)
-        info.className = Button::class.java.name
-    }
 }
 
 /**

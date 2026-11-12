@@ -286,6 +286,21 @@
         <item name="android:textAllCaps">false</item>
     </style>
 
+    <!-- Chip row (§5.6): the shared recipe for every wrapping chip row. Apply with
+         style="@style/Widget.EventQR.Ui.ChipFlow" on a ConstraintLayout Flow. Chips chain packed
+         and start-aligned (bias 0) at ui_chip_gap, so a line breaks only when the next chip does
+         not fit and an orphan chip sits at the start, never centred. NEVER add
+         flow_maxElementsWrap: a count cap breaks a row that still has room. Layout attributes do
+         not resolve from a style, so layout_width=0dp, wrap_content height and the start/end/top
+         constraints stay on the Flow itself. -->
+    <style name="Widget.EventQR.Ui.ChipFlow" parent="">
+        <item name="flow_wrapMode">chain</item>
+        <item name="flow_horizontalStyle">packed</item>
+        <item name="flow_horizontalBias">0</item>
+        <item name="flow_horizontalGap">@dimen/ui_chip_gap</item>
+        <item name="flow_verticalGap">@dimen/ui_chip_gap</item>
+    </style>
+
     <!-- Action variant: a leading glyph says what the action is; a check icon would say "selected". -->
     <style name="Widget.EventQR.Ui.Chip.Action" parent="@style/Widget.EventQR.Ui.Chip">
         <item name="android:drawablePadding">@dimen/space_4</item>

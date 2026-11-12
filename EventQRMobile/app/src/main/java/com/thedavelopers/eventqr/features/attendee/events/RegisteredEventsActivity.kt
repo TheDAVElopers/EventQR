@@ -6,7 +6,6 @@ import android.util.Log
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -15,6 +14,7 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.features.registrations.RegisteredEventAdapter
 import com.thedavelopers.eventqr.features.registrations.model.dto.RegistrationResponse
 import com.thedavelopers.eventqr.ui.components.PassHeadBinder
+import com.thedavelopers.eventqr.ui.components.asFilterChips
 import com.thedavelopers.eventqr.ui.components.showInlineError
 import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
@@ -71,6 +71,7 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
         chipUpcoming = findViewById(R.id.chipUpcoming)
         chipActive = findViewById(R.id.chipActive)
         chipCompleted = findViewById(R.id.chipCompleted)
+        asFilterChips(chipAll, chipUpcoming, chipActive, chipCompleted)
         chipRow = findViewById(R.id.chipRowRegisteredEvents)
         errorStrip = findViewById(R.id.errorRegisteredEvents)
         // §5.16: Retry re-runs the presenter's load; the current filter is re-applied on arrival.
@@ -127,12 +128,6 @@ open class RegisteredEventsActivity : AppCompatActivity(), RegisteredEventsContr
         for ((filter, chip) in chips) {
             val isSelected = filter == selectedFilter
             chip.isSelected = isSelected
-            chip.setTextColor(
-                ContextCompat.getColor(
-                    this,
-                    if (isSelected) R.color.ui_on_primary else R.color.ui_text_primary,
-                ),
-            )
         }
     }
 

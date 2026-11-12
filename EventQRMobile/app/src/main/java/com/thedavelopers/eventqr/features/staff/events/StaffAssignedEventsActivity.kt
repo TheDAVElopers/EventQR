@@ -19,6 +19,7 @@ import com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResp
 import com.thedavelopers.eventqr.ui.components.CountLabel
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import com.thedavelopers.eventqr.ui.components.PassHeadBinder
+import com.thedavelopers.eventqr.ui.components.asFilterChips
 import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
@@ -82,6 +83,7 @@ open class StaffAssignedEventsActivity : AppCompatActivity() {
         chipUpcoming = findViewById(R.id.chipUpcoming)
         chipActive = findViewById(R.id.chipActive)
         chipCompleted = findViewById(R.id.chipCompleted)
+        asFilterChips(chipAll, chipUpcoming, chipActive, chipCompleted)
 
         chipAll.setOnClickListener { selectFilter(StaffEventFilter.ALL) }
         chipUpcoming.setOnClickListener { selectFilter(StaffEventFilter.UPCOMING) }

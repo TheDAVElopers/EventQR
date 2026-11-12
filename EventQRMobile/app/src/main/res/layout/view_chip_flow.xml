@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Chip-row host for code-built screens (§5.6): the same recipe as the XML chip rows - a Flow on
+    Widget.EventQR.Ui.ChipFlow (chain, packed, bias 0, ui_chip_gap gaps, no flow_maxElementsWrap).
+    `chipFlow()` in OrganizerScreenHelpers adds the chips as children and points the Flow at them.
+    The host owns no padding: the screen's column supplies the gutter.
+-->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <androidx.constraintlayout.helper.widget.Flow
+        android:id="@+id/chipFlow"
+        style="@style/Widget.EventQR.Ui.ChipFlow"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

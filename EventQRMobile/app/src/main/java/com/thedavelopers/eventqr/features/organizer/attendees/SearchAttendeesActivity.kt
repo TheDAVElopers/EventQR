@@ -29,6 +29,7 @@ import com.thedavelopers.eventqr.features.organizer.selectedEventId
 import com.thedavelopers.eventqr.features.organizer.showEventsLoadErrorScreen
 import com.thedavelopers.eventqr.features.organizer.showMissingEventScreen
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+import com.thedavelopers.eventqr.ui.components.asFilterChip
 import com.thedavelopers.eventqr.ui.icons.FieldIcons
 import com.thedavelopers.eventqr.ui.theme.color
 import kotlinx.coroutines.launch
@@ -97,6 +98,7 @@ open class SearchAttendeesActivity : AppCompatActivity() {
                 // No "No Show" chip: nothing in the system sets RegistrationStatus.NO_SHOW, so it would always be empty.
             )
             filterChips.forEach { (label, chip) ->
+                chip.asFilterChip()
                 chip.setOnClickListener {
                     currentFilter = label
                     updateChips()
@@ -140,12 +142,6 @@ open class SearchAttendeesActivity : AppCompatActivity() {
         filterChips.forEach { (label, chip) ->
             val selected = label == currentFilter
             chip.isSelected = selected
-            chip.setBackgroundResource(
-                if (selected) R.drawable.bg_ui_chip_selected else R.drawable.bg_ui_chip_unselected,
-            )
-            chip.setTextColor(
-                getColor(if (selected) R.color.ui_on_primary else R.color.ui_text_primary),
-            )
         }
     }
 

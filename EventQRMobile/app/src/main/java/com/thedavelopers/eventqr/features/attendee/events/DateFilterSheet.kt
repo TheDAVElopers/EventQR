@@ -16,6 +16,8 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.DateFormatters
+import com.thedavelopers.eventqr.ui.components.asFilterChip
+import com.thedavelopers.eventqr.ui.components.asFilterChips
 import com.thedavelopers.eventqr.ui.theme.dimenOffset
 import java.time.LocalDate
 import java.time.Month
@@ -90,6 +92,7 @@ class DateFilterSheet(private val context: Context) {
 
         sheet.findViewById<FrameLayout>(R.id.sheetContent).addView(content)
 
+        asFilterChips(chipModeAny, chipModeMonth, chipModeDay)
         chipModeAny.setOnClickListener { setMode(DateFilterMode.ANY) }
         chipModeMonth.setOnClickListener { setMode(DateFilterMode.MONTH) }
         chipModeDay.setOnClickListener { setMode(DateFilterMode.DAY) }
@@ -203,7 +206,8 @@ class DateFilterSheet(private val context: Context) {
     }
 
     private fun inflateChip(): TextView =
-        LayoutInflater.from(context).inflate(R.layout.chip_option, monthChipGrid, false) as TextView
+        (LayoutInflater.from(context).inflate(R.layout.chip_option, monthChipGrid, false) as TextView)
+            .also { it.asFilterChip() }
 
     private fun setMode(mode: DateFilterMode) {
         draft = draft.copy(mode = mode)

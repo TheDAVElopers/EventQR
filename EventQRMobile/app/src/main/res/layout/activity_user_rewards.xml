@@ -201,13 +201,10 @@
 
                         <androidx.constraintlayout.helper.widget.Flow
                             android:id="@+id/chipFlow"
+                            style="@style/Widget.EventQR.Ui.ChipFlow"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             app:constraint_referenced_ids="chipAvailable,txtMyClaims,txtRewardsHistory"
-                            app:flow_horizontalGap="@dimen/ui_chip_gap"
-                            app:flow_maxElementsWrap="3"
-                            app:flow_verticalGap="@dimen/ui_chip_gap"
-                            app:flow_wrapMode="chain"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />

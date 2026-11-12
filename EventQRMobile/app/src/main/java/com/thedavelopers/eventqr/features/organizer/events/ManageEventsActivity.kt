@@ -32,6 +32,7 @@ import com.thedavelopers.eventqr.ui.components.CountLabel
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import com.thedavelopers.eventqr.ui.components.ListRowBinder
 import com.thedavelopers.eventqr.ui.components.PassHeadBinder
+import com.thedavelopers.eventqr.ui.components.asFilterChips
 import com.thedavelopers.eventqr.ui.icons.FieldIcons
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
@@ -96,6 +97,12 @@ open class ManageEventsActivity : AppCompatActivity() {
         recyclerView.adapter = adapter
 
         swipeRefresh.setOnRefreshListener { loadEvents() }
+        asFilterChips(
+            findViewById(R.id.chipAll),
+            findViewById(R.id.chipUpcoming),
+            findViewById(R.id.chipActive),
+            findViewById(R.id.chipCompleted),
+        )
         findViewById<View>(R.id.chipAll).setOnClickListener { selectFilter(FILTER_ALL) }
         findViewById<View>(R.id.chipUpcoming).setOnClickListener { selectFilter("Upcoming") }
         findViewById<View>(R.id.chipActive).setOnClickListener { selectFilter("Active") }
@@ -135,7 +142,11 @@ open class ManageEventsActivity : AppCompatActivity() {
         renderFilteredEvents()
     }
 
-    /** §5.6: the fill is the state; there is no check icon and no pill. */
+    /**
+     * §5.6: the fill is the state; there is no check icon and no pill. State is `isSelected` only:
+     * `bg_ui_chip_inset` (36dp fill in a 48dp target) and `ui_chip_text` follow it, so no code swaps
+     * a background or a colour.
+     */
     private fun updateChips() {
         val chips = mapOf(
             FILTER_ALL to findViewById<TextView>(R.id.chipAll),
@@ -146,15 +157,6 @@ open class ManageEventsActivity : AppCompatActivity() {
         for ((label, chip) in chips) {
             val selected = label == selectedFilter
             chip.isSelected = selected
-            chip.setBackgroundResource(
-                if (selected) R.drawable.bg_ui_chip_selected else R.drawable.bg_ui_chip_unselected,
-            )
-            chip.setTextColor(
-                ContextCompat.getColor(
-                    this,
-                    if (selected) R.color.ui_on_primary else R.color.ui_text_primary,
-                ),
-            )
         }
     }
 

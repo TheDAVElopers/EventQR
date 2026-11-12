@@ -19,6 +19,7 @@ import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.ui.components.CountLabel
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import com.thedavelopers.eventqr.ui.components.PassHeadBinder
+import com.thedavelopers.eventqr.ui.components.asFilterChips
 import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
@@ -88,6 +89,7 @@ class AdminEventApprovalBackendActivity : AppCompatActivity() {
         chipPending = findViewById(R.id.chipPending)
         chipApproved = findViewById(R.id.chipApproved)
         chipRejected = findViewById(R.id.chipRejected)
+        asFilterChips(chipAll, chipPending, chipApproved, chipRejected)
 
         skeletonRequests = findViewById(R.id.skeletonRequests)
         textEmpty = findViewById(R.id.textEmpty)

@@ -4,7 +4,6 @@ import android.app.DatePickerDialog
 import android.content.DialogInterface
 import android.os.Bundle
 import android.os.Looper
-import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
@@ -821,51 +820,70 @@ class AttendeeEventsActivityTest {
         sheet.dismiss()
     }
 
-    /** At the normal scale the date chip stays on the search row, as the plan specifies. */
-    @Test
-    fun standardFont_keepsTheDateChipOnTheSearchRow() {
-        val activity = launch(CountingRepo(emptyList())).get()
-        val row = activity.findViewById<LinearLayout>(R.id.searchRow)
-        val chip = activity.findViewById<TextView>(R.id.chipDateFilter)
-
-        assertEquals(LinearLayout.HORIZONTAL, row.orientation)
-        assertTrue((chip.layoutParams as LinearLayout.LayoutParams).marginStart > 0)
-        // The chip paints 36dp but carries a 48dp target (§9.2:1253).
-        assertEquals(activity.resources.getDimensionPixelSize(R.dimen.ui_touch_min), chip.minHeight)
-    }
-
-    /** 1.3 is the threshold itself: the row stacks at that scale, not only above it. */
-    @Test
-    @Config(fontScale = 1.3f)
-    fun thresholdFont_stacksTheDateChipAtOnePointThree() {
-        val activity = launch(CountingRepo(emptyList())).get()
-        assertEquals(
-            LinearLayout.VERTICAL,
-            activity.findViewById<LinearLayout>(R.id.searchRow).orientation,
-        )
-    }
-
-    /** At 2.0 the row stacks, so neither label can collapse; the field keeps its 48dp target. */
+    /** The search field is a direct, full-width child; no row shared with the chip, no reflow code. */
     @Test
     @Config(fontScale = 2.0f)
-    fun largeFont_stacksTheDateChipUnderTheFullWidthSearchField() {
+    fun searchField_ownsItsFullWidthRowAtLargeFontScale() {
         val activity = launch(CountingRepo(emptyList())).get()
-        val row = activity.findViewById<LinearLayout>(R.id.searchRow)
         val field = activity.findViewById<EditText>(R.id.inputEventSearch)
-        val chip = activity.findViewById<TextView>(R.id.chipDateFilter)
 
-        assertEquals(LinearLayout.VERTICAL, row.orientation)
         assertEquals(ViewGroup.LayoutParams.MATCH_PARENT, field.layoutParams.width)
         // Height grows with the font scale; the 48dp target is a minimum, not a fixed height.
         assertEquals(ViewGroup.LayoutParams.WRAP_CONTENT, field.layoutParams.height)
-        // The style's minHeight is the floor; the field grows past it at large font scales.
         assertEquals(
             activity.resources.getDimensionPixelSize(R.dimen.ui_field_search_height),
             field.minimumHeight,
         )
-        val params = chip.layoutParams as LinearLayout.LayoutParams
-        assertEquals(Gravity.END, params.gravity)
-        assertEquals(activity.resources.getDimensionPixelSize(R.dimen.space_sm), params.topMargin)
-        assertEquals(0, params.marginStart)
+        // The field is a direct child of the page column (the pass head's parent), and the chip is a
+        // member of the chip Flow's host: no row shared between them.
+        assertSame(activity.findViewById<View>(R.id.passHead).parent, field.parent)
+        assertSame(
+            activity.findViewById<View>(R.id.chipFlow).parent,
+            activity.findViewById<View>(R.id.chipDateFilter).parent,
+        )
+    }
+
+    /** The date sheet's mode, month and year chips carry the Button role like every filter chip (§9.5). */
+    @Test
+    fun dateSheetChips_exposeTheButtonRole() {
+        val activity = launch(CountingRepo(listOf(eventAt("Night Market", at(nextMonth(), 10))))).get()
+        activity.findViewById<TextView>(R.id.chipDateFilter).performClick()
+        val sheet = activity.dateSheet!!
+        sheet.view.findViewById<TextView>(R.id.chipModeMonth).performClick()
+
+        fun role(chip: View): String {
+            val info = android.view.accessibility.AccessibilityNodeInfo.obtain()
+            chip.onInitializeAccessibilityNodeInfo(info)
+            return info.className.toString()
+        }
+        val button = android.widget.Button::class.java.name
+        listOf(R.id.chipModeAny, R.id.chipModeMonth, R.id.chipModeDay).forEach {
+            assertEquals(button, role(sheet.view.findViewById(it)))
+        }
+        val grid = sheet.view.findViewById<LinearLayout>(R.id.monthChipGrid)
+        val monthChip = (grid.getChildAt(0) as LinearLayout).getChildAt(0)
+        assertEquals(button, role(monthChip))
+        val yearRow = sheet.view.findViewById<LinearLayout>(R.id.yearChipRow)
+        assertEquals(button, role(yearRow.getChildAt(0)))
+    }
+
+    /** The four chips are buttons that announce selection; selection state is `isSelected` only. */
+    @Test
+    fun filterChips_exposeButtonRoleAndSelectedState() {
+        val activity = launch(CountingRepo(emptyList())).get()
+        val ids = listOf(R.id.chipAll, R.id.chipThisWeek, R.id.chipRegistered, R.id.chipDateFilter)
+
+        ids.forEach { id ->
+            val chip = activity.findViewById<TextView>(id)
+            val info = android.view.accessibility.AccessibilityNodeInfo.obtain()
+            chip.onInitializeAccessibilityNodeInfo(info)
+            assertEquals(android.widget.Button::class.java.name, info.className.toString())
+            assertEquals(chip.isSelected, info.isSelected)
+        }
+        val thisWeek = activity.findViewById<TextView>(R.id.chipThisWeek)
+        thisWeek.performClick()
+        val picked = android.view.accessibility.AccessibilityNodeInfo.obtain()
+        thisWeek.onInitializeAccessibilityNodeInfo(picked)
+        assertTrue(picked.isSelected)
     }
 }

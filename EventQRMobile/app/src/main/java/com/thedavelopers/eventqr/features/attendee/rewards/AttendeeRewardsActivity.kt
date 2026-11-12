@@ -15,7 +15,6 @@ import android.widget.PopupWindow
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -35,6 +34,7 @@ import com.thedavelopers.eventqr.features.rewards.model.dto.PointBalanceResponse
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardResponse
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import com.thedavelopers.eventqr.ui.components.PassHeadBinder
+import com.thedavelopers.eventqr.ui.components.asFilterChips
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import kotlinx.coroutines.launch
@@ -174,7 +174,7 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
         }
         val availableChip = findViewById<TextView>(R.id.chipAvailable)
         availableChip.isSelected = true
-        availableChip.setTextColor(ContextCompat.getColor(this, R.color.ui_on_primary))
+        asFilterChips(availableChip, claimsAction, findViewById(R.id.txtRewardsHistory))
 
         retryButton.setOnClickListener { refreshRewardsPreservingSelection() }
         swipeRefresh.setOnRefreshListener { refreshRewardsPreservingSelection() }

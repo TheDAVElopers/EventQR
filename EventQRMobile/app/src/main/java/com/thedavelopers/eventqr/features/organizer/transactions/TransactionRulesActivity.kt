@@ -137,20 +137,16 @@ open class TransactionRulesActivity : AppCompatActivity() {
         // Purpose selector: one rule per scan purpose.
         container.addView(cardRes(R.dimen.space_lg).apply {
             addView(styledText(getString(R.string.transaction_rules_purpose_label), R.dimen.type_body_medium, true).apply { setPadding(0, 0, 0, dimenPx(R.dimen.space_sm)) })
-            addView(android.widget.HorizontalScrollView(this@TransactionRulesActivity).apply {
-                isHorizontalScrollBarEnabled = false
-                addView(row().apply {
-                    purposes.forEach { purpose ->
-                        addView(chip(purpose.label, purpose.id == purposeId).apply {
-                            setOnClickListener {
-                                selectedPurposeId = purpose.id
-                                saveStatus = null
-                                renderUI()
-                            }
-                        })
+            // §5.6: the purpose chips wrap on a Flow; they never scroll.
+            addView(chipFlow(purposes.map { purpose ->
+                chip(purpose.label, purpose.id == purposeId).apply {
+                    setOnClickListener {
+                        selectedPurposeId = purpose.id
+                        saveStatus = null
+                        renderUI()
                     }
-                })
-            })
+                }
+            }))
         })
 
         // Card 1: Duplicate Prevention

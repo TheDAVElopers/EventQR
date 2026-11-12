@@ -3,18 +3,13 @@ package com.thedavelopers.eventqr.features.attendee
 import android.content.Intent
 import android.os.Bundle
 import android.text.TextWatcher
-import android.view.Gravity
 import android.view.View
-import android.view.ViewGroup
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.inputmethod.InputMethodManager
-import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -24,6 +19,7 @@ import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
 import com.thedavelopers.eventqr.ui.components.CountLabel
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import com.thedavelopers.eventqr.ui.components.PassHeadBinder
+import com.thedavelopers.eventqr.ui.components.asFilterChips
 import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.icons.FieldIcons
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
@@ -99,9 +95,8 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
         // 20dp field glyph on the search box, 16dp caret on the selector chip (§3.6/§5.6).
         FieldIcons.apply(findViewById(R.id.inputEventSearch))
         FieldIcons.apply(chipDateFilter, R.dimen.ui_chevron)
+        asFilterChips(chipAll, chipThisWeek, chipRegistered, chipDateFilter)
         adapter = AttendeeEventAdapter { event -> openEventDetail(event) }
-
-        reflowSearchRowForFontScale()
 
         countView = findViewById<TextView>(R.id.passHeadTitleCount).apply { visibility = View.VISIBLE }
         PassHeadBinder.bindCompact(
@@ -137,28 +132,6 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
                 }
                 override fun afterTextChanged(s: android.text.Editable?) {}
             })
-    }
-
-    /**
-     * At `fontScale` 1.3 and above the single row cannot hold both labels: the search field would
-     * collapse toward zero behind the date chip. Stack the chip under a full-width field instead
-     * (end aligned, one 8dp gap), keeping the plan's single row at normal font scales.
-     */
-    private fun reflowSearchRowForFontScale() {
-        if (resources.configuration.fontScale < SEARCH_ROW_REFLOW_FONT_SCALE) return
-        val row = findViewById<LinearLayout>(R.id.searchRow)
-        val field = findViewById<EditText>(R.id.inputEventSearch)
-        row.orientation = LinearLayout.VERTICAL
-        field.layoutParams = (field.layoutParams as LinearLayout.LayoutParams).apply {
-            width = ViewGroup.LayoutParams.MATCH_PARENT
-            weight = 0f
-        }
-        chipDateFilter.layoutParams = (chipDateFilter.layoutParams as LinearLayout.LayoutParams).apply {
-            width = ViewGroup.LayoutParams.WRAP_CONTENT
-            marginStart = 0
-            topMargin = resources.getDimensionPixelSize(R.dimen.space_sm)
-            gravity = Gravity.END
-        }
     }
 
     private fun statusMatches(item: AttendeeEventResponse, now: Instant): Boolean = when (selectedFilter) {
@@ -347,12 +320,6 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
         for ((filter, chip) in chips) {
             val isSelected = filter == selectedFilter
             chip.isSelected = isSelected
-            chip.setTextColor(
-                ContextCompat.getColor(
-                    this,
-                    if (isSelected) R.color.ui_on_primary else R.color.ui_text_primary,
-                ),
-            )
         }
     }
 
@@ -555,7 +522,6 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
     }
 
     private companion object {
-        const val SEARCH_ROW_REFLOW_FONT_SCALE = 1.3f
         const val THIS_WEEK_DAYS = 7L
         const val STATE_FILTER_STATUS = "discover.filter.status"
         const val STATE_FILTER_MODE = "discover.dateFilter.mode"

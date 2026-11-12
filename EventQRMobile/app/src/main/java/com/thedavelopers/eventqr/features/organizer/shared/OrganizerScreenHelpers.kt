@@ -3,6 +3,9 @@ package com.thedavelopers.eventqr.features.organizer
 import com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
 import com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
 import com.thedavelopers.eventqr.ui.components.EventQrTabHeader
+import com.thedavelopers.eventqr.ui.components.asFilterChip
+import androidx.constraintlayout.helper.widget.Flow
+import androidx.constraintlayout.widget.ConstraintLayout
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
@@ -154,22 +157,37 @@ internal fun AppCompatActivity.ghostButton(label: String, onClick: () -> Unit): 
         setOnClickListener { onClick() }
     }
 
-/** 36dp chip, radius 4, never a pill (§5.6). Selected = primary fill, no check icon. */
-internal fun AppCompatActivity.chip(label: String, active: Boolean = false, color: Int = orgColors.primary): TextView =
-    styledText(label, R.dimen.ui_type_label, active, if (active) orgColors.onPrimary else orgColors.text).apply {
-        gravity = Gravity.CENTER
-        background = ResourcesCompat.getDrawable(
-            resources,
-            if (active) R.drawable.bg_ui_chip_selected else R.drawable.bg_ui_chip_unselected,
-            theme,
-        )
+/**
+ * 36dp chip painted inside a 48dp target, radius 4, never a pill (§5.6). Built from
+ * `Widget.EventQR.Ui.Chip` so the label (13sp/500), `ui_chip_text` colour and 12dp side padding match
+ * the XML chips. State is [View.isSelected] only: `bg_ui_chip_inset` (via `bg_ui_chip`) and the label
+ * selector follow it, so a caller flips `isSelected` and never swaps a background or a colour.
+ */
+internal fun AppCompatActivity.chip(label: String, active: Boolean = false): TextView =
+    TextView(this, null, 0, R.style.Widget_EventQR_Ui_Chip).apply {
+        text = label
+        isSelected = active
+        asFilterChip()
+        background = ResourcesCompat.getDrawable(resources, R.drawable.bg_ui_chip_inset, theme)
         minHeight = dimenPx(R.dimen.ui_touch_min)
         setPadding(dimenPx(R.dimen.ui_chip_pad_h), dimenPx(R.dimen.space_8), dimenPx(R.dimen.ui_chip_pad_h), dimenPx(R.dimen.space_8))
-        layoutParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-        ).apply { setMargins(0, 0, dimenPx(R.dimen.ui_chip_gap), 0) }
     }
+
+/**
+ * A wrapping chip row for code-built screens (§5.6): inflates `view_chip_flow` (the Flow on
+ * `Widget.EventQR.Ui.ChipFlow`), adds [chips] as children and points the Flow at them in order. The
+ * Flow supplies the `ui_chip_gap` gaps, so a chip carries no margin of its own. Never wrap this in a
+ * `HorizontalScrollView`: the row grows in height instead.
+ */
+internal fun AppCompatActivity.chipFlow(chips: List<TextView>): ConstraintLayout {
+    val host = layoutInflater.inflate(R.layout.view_chip_flow, null, false) as ConstraintLayout
+    chips.forEach { chip ->
+        chip.id = View.generateViewId()
+        host.addView(chip)
+    }
+    host.findViewById<Flow>(R.id.chipFlow).referencedIds = chips.map { it.id }.toIntArray()
+    return host
+}
 
 /**
  * Status text as the ONE badge (§5.4). Tones come from the semantic mapping; a status that is not

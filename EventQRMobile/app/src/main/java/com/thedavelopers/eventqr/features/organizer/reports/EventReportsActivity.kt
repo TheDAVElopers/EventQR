@@ -590,7 +590,8 @@ open class EventReportsActivity : AppCompatActivity() {
         })
     }
 
-    private fun statusSelector(onSelected: (EventReportFilterStatus) -> Unit): LinearLayout = LinearLayout(this).apply {
+    /** The transaction-status filter: one wrapping chip row (§5.6). Internal so tests can drive it. */
+    internal fun statusSelector(onSelected: (EventReportFilterStatus) -> Unit): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
         addView(
             TextView(this@EventReportsActivity).apply {
@@ -599,36 +600,20 @@ open class EventReportsActivity : AppCompatActivity() {
                 setPadding(0, dimenPx(R.dimen.space_16), 0, dimenPx(R.dimen.space_8))
             },
         )
-        val chipRow = row().apply {
-            setPadding(0, dimenPx(R.dimen.space_8), 0, 0)
-            gravity = Gravity.START
-        }
+        val chips = mutableListOf<TextView>()
 
         fun statusChip(label: String, status: EventReportFilterStatus): TextView {
             return chip(label, status == EventReportFilterStatus.ALL).apply {
                 setOnClickListener {
                     onSelected(status)
-                    for (idx in 0 until chipRow.childCount) {
-                        val child = chipRow.getChildAt(idx) as? TextView ?: continue
-                        val isActive = child.text.toString().equals(label, ignoreCase = true)
-                        child.isSelected = isActive
-                        child.setTextColor(
-                            ContextCompat.getColor(
-                                context,
-                                if (isActive) R.color.ui_on_primary else R.color.ui_text_primary,
-                            ),
-                        )
-                        child.setBackgroundResource(
-                            if (isActive) R.drawable.bg_ui_chip_selected else R.drawable.bg_ui_chip_unselected,
-                        )
-                    }
+                    chips.forEach { it.isSelected = it === this }
                 }
-            }
+            }.also { chips += it }
         }
 
-        chipRow.addView(statusChip(getString(R.string.common_all), EventReportFilterStatus.ALL))
-        chipRow.addView(statusChip(getString(R.string.common_approved), EventReportFilterStatus.APPROVED))
-        chipRow.addView(statusChip(getString(R.string.common_rejected), EventReportFilterStatus.REJECTED))
-        addView(chipRow)
+        statusChip(getString(R.string.common_all), EventReportFilterStatus.ALL)
+        statusChip(getString(R.string.common_approved), EventReportFilterStatus.APPROVED)
+        statusChip(getString(R.string.common_rejected), EventReportFilterStatus.REJECTED)
+        addView(chipFlow(chips).apply { setPadding(0, dimenPx(R.dimen.space_8), 0, 0) })
     }
 }
