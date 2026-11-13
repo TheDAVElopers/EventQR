@@ -1,6 +1,7 @@
 package com.thedavelopers.eventqr.features.staff
 
 import android.content.res.ColorStateList
+import android.content.Intent
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.Gravity
@@ -68,6 +69,8 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
     private var purposePopup: PopupWindow? = null
     private var isEventPopupOpen = false
     private var isPurposePopupOpen = false
+    private var isFirstResume = true
+    private var refreshedInNewIntent = false
 
     // Pagination state: rows come newest-first from the server, one page at a time.
     private val paging = PagedAccumulator<TransactionResponse, java.util.UUID> { it.transactionId }
@@ -135,8 +138,52 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         eventCard.setOnClickListener { toggleEventPopup() }
         purposeCard.setOnClickListener { togglePurposePopup() }
 
-        setupBottomNav()
+        syncPurposeFilter()
         loadAssignedEventsAndTransactions()
+    }
+
+    /**
+     * The bottom nav reuses this instance (`CLEAR_TOP | SINGLE_TOP`) and carries the event it is
+     * showing, so a re-entry can change the selection under us. The first resume follows onCreate.
+     */
+    override fun onResume() {
+        super.onResume()
+        if (isFirstResume) {
+            isFirstResume = false
+            return
+        }
+        if (refreshedInNewIntent) {
+            refreshedInNewIntent = false
+            return
+        }
+        refreshOnReturn()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val requested = intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_ID) ?: return
+        if (assignedEvents.isEmpty()) {
+            loadAssignedEventsAndTransactions()
+            return
+        }
+        val resolved = resolveInitialEventId(assignedEvents, requested) ?: return
+        if (resolved == selectedEventId) return
+        selectedEventId = resolved
+        selectedPurposeId = null
+        bindEventHeader()
+        bindPurposeHeader()
+        setupBottomNav()
+        refreshedInNewIntent = true
+        refreshTransactions()
+    }
+
+    private fun refreshOnReturn() {
+        when {
+            assignedEvents.isEmpty() -> loadAssignedEventsAndTransactions()
+            selectedEventId == null -> showPromptState()
+            else -> refreshTransactions()
+        }
     }
 
     private fun loadAssignedEventsAndTransactions() {
@@ -145,28 +192,36 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
             when (val eventsResult = repository.getEvents()) {
                 is NetworkResult.Success -> {
                     assignedEvents = eventsResult.data.filter { it.canScan || it.canViewLogs }
-                    selectedEventId = intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_ID)
-                        ?.takeIf { extra -> assignedEvents.any { it.eventId.toString() == extra } }
+                    selectedEventId = resolveInitialEventId(
+                        assignedEvents,
+                        intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_ID),
+                    )
                     if (assignedEvents.isEmpty()) {
-                        renderTransactions(emptyList())
-                        showMessage(getString(R.string.event_registrations_no_assigned_events_found))
-                        showLoading(false)
-                        return@launch
-                    }
-                    bindEventHeader()
-                    if (selectedEventId == null) {
-                        showPromptState()
+                        showNoAssignedEventsState()
                     } else {
-                        refreshTransactions()
+                        bindEventHeader()
+                        if (selectedEventId == null) {
+                            showPromptState()
+                        } else {
+                            refreshTransactions()
+                        }
                     }
                 }
                 is NetworkResult.Error -> {
+                    // A failed event load cannot keep a selection it no longer has the events for.
+                    selectedEventId = null
+                    selectedPurposeId = null
+                    renderSummary(null)
+                    bindEventHeader()
+                    bindPurposeHeader()
                     renderTransactions(emptyList())
                     showMessage(eventsResult.message)
                     showLoading(false)
                 }
                 NetworkResult.Loading -> Unit
             }
+            // The nav carries the current event into Scanner and Logs; bind it once the id is known.
+            setupBottomNav()
         }
     }
 
@@ -178,7 +233,6 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         retrySnackbar?.dismiss()
         paging.reset()
         purposesLoaded = false
-        setPurposeCardEnabled(true)
         loadSummary()
         loadPage()
     }
@@ -196,25 +250,77 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         }
     }
 
-    private fun showPromptState() {
+    internal fun showPromptState() {
         skeletonLoading.visibility = View.GONE
         swipeRefresh.isRefreshing = false
         summaryJob?.cancel()
         retrySnackbar?.dismiss()
+        findViewById<View>(R.id.errorStaffTransactions).visibility = View.GONE
         paging.reset()
-        renderSummary(StaffTransactionSummary())
+        selectedPurposeId = null
+        bindPurposeHeader()
+        syncPurposeFilter()
+        setEventCardEnabled(assignedEvents.isNotEmpty())
+        // No event is no source: the band says unknown, never a zero it cannot prove (§5.9).
+        renderSummary(null)
         adapter.submitItems(emptyList())
-        txtEmptyState.setContent(getString(R.string.ui_staff_no_logs_prompt))
+        txtEmptyState.setContent(
+            getString(R.string.ui_staff_no_event_selected),
+            getString(R.string.ui_staff_no_logs_prompt),
+        )
         txtEmptyState.setAction(getString(R.string.ui_staff_select_event)) { toggleEventPopup() }
         txtEmptyState.visibility = View.VISIBLE
         recyclerView.visibility = View.GONE
+    }
+
+    /**
+     * Zero assignments is not an empty list: there is no event to select and no scan to show, so
+     * the state itself is the whole report - the event row is inert, the strip stays hidden and
+     * the one sentence is the title (§6.3).
+     */
+    internal fun showNoAssignedEventsState() {
+        skeletonLoading.visibility = View.GONE
+        swipeRefresh.isRefreshing = false
+        summaryJob?.cancel()
+        retrySnackbar?.dismiss()
+        findViewById<View>(R.id.errorStaffTransactions).visibility = View.GONE
+        paging.reset()
+        selectedEventId = null
+        selectedPurposeId = null
+        eventTitleView.text = getString(R.string.ui_staff_select_event)
+        applyFilterCardState()
+        setEventCardEnabled(false)
         setPurposeCardEnabled(false)
+        renderSummary(null)
+        adapter.submitItems(emptyList())
+        txtEmptyState.setContent(
+            getString(R.string.event_registrations_no_assigned_events_found),
+            null,
+        )
+        txtEmptyState.setAction(null)
+        txtEmptyState.visibility = View.VISIBLE
+        recyclerView.visibility = View.GONE
+    }
+
+    /**
+     * The purpose filter only narrows a selected event's scans, so it follows the event selection
+     * and nothing else (§6.3). One source, so no path can leave it live over an empty list.
+     */
+    private fun syncPurposeFilter() {
+        setPurposeCardEnabled(selectedEventId != null)
     }
 
     private fun setPurposeCardEnabled(enabled: Boolean) {
         purposeCard.isClickable = enabled
         purposeCard.isEnabled = enabled
         purposeCard.alpha = if (enabled) 1f else dimenFloat(R.dimen.alpha_disabled)
+    }
+
+    /** No assigned events leaves the event menu empty, so the row must not look tappable. */
+    private fun setEventCardEnabled(enabled: Boolean) {
+        eventCard.isClickable = enabled
+        eventCard.isEnabled = enabled
+        eventCard.alpha = if (enabled) 1f else dimenFloat(R.dimen.alpha_disabled)
     }
 
     private fun loadPage() {
@@ -300,6 +406,8 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
         val selected = assignedEvents.firstOrNull { it.eventId.toString() == selectedEventId }
         eventTitleView.text = selected?.title ?: getString(R.string.ui_staff_select_event)
         applyFilterCardState()
+        setEventCardEnabled(assignedEvents.isNotEmpty())
+        syncPurposeFilter()
     }
 
     private fun bindPurposeHeader() {
@@ -460,8 +568,7 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
 
 
     private fun setupBottomNav() {
-        configureStaffBottomNav(StaffBottomNavItem.LOGS, intent.getStringExtra(StaffScreenExtras.EXTRA_EVENT_ID)
-            ?.takeIf { extra -> assignedEvents.any { it.eventId.toString() == extra } } ?: selectedEventId)
+        configureStaffBottomNav(StaffBottomNavItem.LOGS, selectedEventId)
     }
 
     override fun onDestroy() {
@@ -514,4 +621,18 @@ open class StaffTransactionsActivity : AppCompatActivity(), StaffTransactionsCon
     }
 
     private data class PurposeOption(val id: String, val label: String)
+}
+
+/**
+ * The event "My scans" opens on (§6.3). An explicit launch extra wins; then the only assigned
+ * event, then the only event that still accepts scans. Zero or several live events keep the
+ * prompt state - a guess would show the wrong event's numbers.
+ */
+internal fun resolveInitialEventId(
+    events: List<StaffAssignedEventResponse>,
+    requestedEventId: String?,
+): String? {
+    requestedEventId?.takeIf { id -> events.any { it.eventId.toString() == id } }?.let { return it }
+    events.singleOrNull()?.let { return it.eventId.toString() }
+    return events.filter { it.canStartScan }.singleOrNull()?.eventId?.toString()
 }

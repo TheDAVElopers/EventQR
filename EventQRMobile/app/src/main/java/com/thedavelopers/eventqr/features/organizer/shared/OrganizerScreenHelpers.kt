@@ -11,6 +11,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
+import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.Gravity
@@ -24,17 +25,22 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.PopupWindow
 import android.widget.ScrollView
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.annotation.DimenRes
 import androidx.annotation.DrawableRes
+import androidx.annotation.IdRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.AccessibilityDelegateCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.widget.TextViewCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.thedavelopers.eventqr.R
@@ -439,6 +445,243 @@ internal fun AppCompatActivity.labeledInput(
         afterTextChanged { onChanged(text.toString()) }
     })
 }
+
+/**
+ * A single-select field (§5.2): the static `FieldLabel` above a `bg_ui_field` box that always shows
+ * the selected option and opens an anchored menu below it. The menu is an overlay of content, not a
+ * second card: `bg_ui_menu` (surface + hairline, radius 10), capped at half the screen height with
+ * inner scroll, one `ui_touch_min` row per option. Selection is `View.isSelected` only.
+ *
+ * [onSelect] runs after the menu is dismissed: the host may rebuild the whole screen, which detaches
+ * [fieldId] and would otherwise leave an open popup over removed views.
+ *
+ * The field carries the label as its accessible name (`labelFor`), the selected option as its
+ * `stateDescription`, a `Dropdown list` role description and expand/collapse actions; the caret is
+ * decorative. A long option wraps instead of truncating (`maxLines` and `ellipsize` stay unset).
+ */
+internal fun AppCompatActivity.selectField(
+    @IdRes fieldId: Int,
+    label: String,
+    value: String,
+    options: List<String>,
+    selectedIndex: Int,
+    onSelect: (Int) -> Unit,
+): LinearLayout = LinearLayout(this).apply {
+    orientation = LinearLayout.VERTICAL
+
+    addView(TextView(this@selectField).apply {
+        text = label
+        setTextAppearance(R.style.TextAppearance_EventQR_Type_FieldLabel)
+        labelFor = fieldId
+    }, LinearLayout.LayoutParams(
+        ViewGroup.LayoutParams.WRAP_CONTENT,
+        ViewGroup.LayoutParams.WRAP_CONTENT,
+    ).apply { bottomMargin = dimenPx(R.dimen.space_sm) })
+
+    val field = LinearLayout(this@selectField).apply {
+        id = fieldId
+        orientation = LinearLayout.HORIZONTAL
+        gravity = Gravity.CENTER_VERTICAL
+        isClickable = true
+        isFocusable = true
+        // A dismiss must be able to return input focus even when the device is in touch mode.
+        isFocusableInTouchMode = true
+        minimumHeight = dimenPx(R.dimen.ui_control_height)
+        setPadding(
+            dimenPx(R.dimen.space_lg),
+            dimenPx(R.dimen.space_sm),
+            dimenPx(R.dimen.space_md),
+            dimenPx(R.dimen.space_sm),
+        )
+        background = ResourcesCompat.getDrawable(resources, R.drawable.bg_ui_field, theme)
+    }
+
+    field.addView(TextView(this@selectField).apply {
+        text = value
+        setTextAppearance(R.style.TextAppearance_EventQR_Type_Body)
+        setTextColor(orgColors.text)
+        // The field is one node (labelFor + stateDescription); a child value node would read twice.
+        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+    }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+
+    field.addView(
+        ImageView(this@selectField, null, 0, R.style.Widget_EventQR_Ui_Selector_Caret).apply {
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            contentDescription = null
+        },
+        LinearLayout.LayoutParams(dimenPx(R.dimen.ui_chevron), dimenPx(R.dimen.ui_chevron)).apply {
+            marginStart = dimenPx(R.dimen.space_sm)
+        },
+    )
+    addView(field, LinearLayout.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.LayoutParams.WRAP_CONTENT,
+    ))
+
+    var menu: SelectFieldPopup? = null
+
+    /** Closes the current menu without pulling focus back: the host is rebuilding or leaving. */
+    fun closeMenu() {
+        menu?.let {
+            it.programmaticDismiss = true
+            it.dismiss()
+        }
+    }
+
+    fun openMenu() {
+        if (options.isEmpty()) return
+        closeMenu()
+        val width = field.width
+        if (width <= 0) return
+
+        val list = LinearLayout(this@selectField).apply { orientation = LinearLayout.VERTICAL }
+        options.forEachIndexed { index, option ->
+            list.addView(
+                this@selectField.selectFieldRow(option, index == selectedIndex) {
+                    closeMenu()
+                    onSelect(index)
+                },
+                LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                ),
+            )
+        }
+
+        val menuView = LinearLayout(this@selectField).apply {
+            orientation = LinearLayout.VERTICAL
+            background = ResourcesCompat.getDrawable(resources, R.drawable.bg_ui_menu, theme)
+            // Rows are square so one item drawable serves first, middle and last; the menu clips them.
+            clipToOutline = true
+        }
+        menuView.addView(ScrollView(this@selectField).apply {
+            isFillViewport = true
+            addView(list, ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ))
+        }, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT,
+        ))
+
+        list.measure(
+            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+        )
+        val maxHeight = (resources.displayMetrics.heightPixels * 0.5f).toInt()
+        menu = SelectFieldPopup(
+            menuView,
+            width,
+            min(list.measuredHeight, maxHeight),
+        ).apply {
+            isOutsideTouchable = true
+            // Hairline only: an overlay of content never carries a shadow (§4.4).
+            elevation = 0f
+            setOnDismissListener {
+                val decor = window?.decorView
+                if (decor?.getTag(R.id.select_field_menu) === this) {
+                    decor.setTag(R.id.select_field_menu, null)
+                }
+                field.setTag(R.id.select_field_menu, null)
+                // Only a user dismissal (Back or an outside tap) returns focus; a programmatic one
+                // happens while leaving or rebuilding the screen and must not paint a focus ring.
+                if (!programmaticDismiss && field.isAttachedToWindow) field.requestFocus()
+            }
+        }
+        field.setTag(R.id.select_field_menu, menu)
+        window?.decorView?.setTag(R.id.select_field_menu, menu)
+        menu?.showAsDropDown(field, 0, dimenPx(R.dimen.space_xs))
+    }
+
+    val role = getString(R.string.ui_organizer_select_role)
+    ViewCompat.setStateDescription(field, value)
+    ViewCompat.setAccessibilityDelegate(field, object : AccessibilityDelegateCompat() {
+        override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfoCompat) {
+            super.onInitializeAccessibilityNodeInfo(host, info)
+            info.roleDescription = role
+            info.stateDescription = value
+            info.addAction(AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_EXPAND)
+            info.addAction(AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_COLLAPSE)
+        }
+
+        override fun performAccessibilityAction(host: View, action: Int, args: Bundle?): Boolean = when (action) {
+            AccessibilityNodeInfoCompat.ACTION_EXPAND -> {
+                openMenu()
+                true
+            }
+            AccessibilityNodeInfoCompat.ACTION_COLLAPSE -> {
+                closeMenu()
+                true
+            }
+            else -> super.performAccessibilityAction(host, action, args)
+        }
+    })
+    // Always open: with `isOutsideTouchable`, a tap on the field while the menu is open arrives as
+    // ACTION_OUTSIDE first, so a toggle would read the stale state. `openMenu()` dismisses first.
+    field.setOnClickListener { openMenu() }
+}
+
+/**
+ * The select field's anchored menu. [programmaticDismiss] marks a close the host initiated (stop,
+ * reload, rebuild, row commit), so the dismiss listener does not pull focus back to a field that is
+ * leaving the screen or about to be replaced.
+ */
+private class SelectFieldPopup(
+    contentView: View,
+    width: Int,
+    height: Int,
+) : PopupWindow(contentView, width, height, true) {
+    var programmaticDismiss = false
+}
+
+/** Closes the menu a select field on this activity owns, if any. Call before removing its view tree. */
+internal fun AppCompatActivity.dismissSelectField() {
+    val decor = window?.decorView ?: return
+    val popup = decor.getTag(R.id.select_field_menu) as? PopupWindow ?: return
+    if (popup is SelectFieldPopup) popup.programmaticDismiss = true
+    popup.dismiss()
+    // The listener clears this too; the write here covers a popup that was already gone.
+    if (decor.getTag(R.id.select_field_menu) === popup) decor.setTag(R.id.select_field_menu, null)
+}
+
+/** One menu row: `ui_touch_min`, label left, no glyph. The row owns the state, the label follows it. */
+private fun AppCompatActivity.selectFieldRow(label: String, selected: Boolean, onClick: () -> Unit): LinearLayout =
+    LinearLayout(this).apply {
+        orientation = LinearLayout.HORIZONTAL
+        gravity = Gravity.CENTER_VERTICAL
+        isClickable = true
+        isFocusable = true
+        isSelected = selected
+        minimumHeight = dimenPx(R.dimen.ui_touch_min)
+        setPadding(
+            dimenPx(R.dimen.space_lg),
+            dimenPx(R.dimen.space_12),
+            dimenPx(R.dimen.space_lg),
+            dimenPx(R.dimen.space_12),
+        )
+        background = ResourcesCompat.getDrawable(resources, R.drawable.bg_ui_menu_item, theme)
+        ViewCompat.setAccessibilityDelegate(this, object : AccessibilityDelegateCompat() {
+            override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfoCompat) {
+                super.onInitializeAccessibilityNodeInfo(host, info)
+                info.className = Button::class.java.name
+                // The row's fill and label follow state_selected, so the node must report it too.
+                info.isSelected = selected
+            }
+        })
+        setOnClickListener { onClick() }
+        addView(TextView(this@selectFieldRow).apply {
+            text = label
+            setTextAppearance(R.style.TextAppearance_EventQR_Type_Body)
+            setTextColor(ContextCompat.getColorStateList(this@selectFieldRow, R.color.ui_menu_item_text))
+            typeface = ResourcesCompat.getFont(
+                this@selectFieldRow,
+                if (selected) R.font.ibm_plex_sans_semibold else R.font.ibm_plex_sans_regular,
+            )
+            // The fill and the label both follow the row's selected state; no code swaps either.
+            isDuplicateParentStateEnabled = true
+        }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+    }
 
 /**
  * The compact pass head (§4.6) for every secondary organizer screen: 64dp identity block + tear.

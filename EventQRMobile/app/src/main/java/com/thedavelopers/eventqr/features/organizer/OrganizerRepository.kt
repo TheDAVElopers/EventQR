@@ -49,7 +49,7 @@ enum class OrganizerMvpDataSource {
     ERROR,
 }
 
-class OrganizerRepository(private val context: Context) {
+open class OrganizerRepository(private val context: Context) {
   private val apiService = ApiClient.getService(context)
   // Cached in-memory event store (replaces OrganizerMvpPlaceholders cachedEvents)
   private var cachedEvents: List<OrganizerMvpEvent> = emptyList()
@@ -70,7 +70,7 @@ class OrganizerRepository(private val context: Context) {
      * Same cache and filtering as [getApprovedOrganizerEvents], but a failed fetch comes back as
      * [OrganizerMvpDataSource.ERROR] so screens show an error with Retry instead of "no events".
      */
-    suspend fun loadApprovedOrganizerEvents(): OrganizerMvpLoad<List<OrganizerMvpEvent>> {
+    open suspend fun loadApprovedOrganizerEvents(): OrganizerMvpLoad<List<OrganizerMvpEvent>> {
         val now = System.currentTimeMillis()
         val ttlExpired = (now - lastCacheTime) > CACHE_TTL_MS
         return if (cachedEvents.isNotEmpty() && !ttlExpired) {
@@ -197,24 +197,6 @@ class OrganizerRepository(private val context: Context) {
         }
     }
 
-    suspend fun saveScanPurposesForMvp(eventId: String, purposes: List<OrganizerMvpScanPurpose>): OrganizerMvpLoad<List<OrganizerMvpScanPurpose>> {
-        val saved = mutableListOf<OrganizerMvpScanPurpose>()
-        purposes.forEach { purpose ->
-            val request = purpose.toOrganizerRequest()
-            val result = if (purpose.id.isNullOrBlank()) {
-                createOrganizerScanPurpose(eventId, request)
-            } else {
-                updateOrganizerScanPurpose(eventId, purpose.id, request)
-            }
-            when (result) {
-                is NetworkResult.Success -> saved.add(result.data.toMvpScanPurpose(context))
-                is NetworkResult.Error -> return OrganizerMvpLoad(emptyList(), OrganizerMvpDataSource.ERROR, result.message)
-                NetworkResult.Loading -> Unit
-            }
-        }
-        return OrganizerMvpLoad(saved.ifEmpty { purposes }, OrganizerMvpDataSource.BACKEND)
-    }
-
     suspend fun loadTransactionRulesForMvp(eventId: String): OrganizerMvpLoad<List<OrganizerTransactionRuleDto>> {
         return when (val result = getTransactionRules(eventId)) {
             is NetworkResult.Success -> OrganizerMvpLoad(result.data, OrganizerMvpDataSource.BACKEND)
@@ -251,7 +233,7 @@ class OrganizerRepository(private val context: Context) {
             NetworkResult.Loading -> NetworkResult.Loading
         }
     suspend fun fetchOrganizerEvents() = safeApiCall { apiService.getOrganizerEvents() }
-    suspend fun fetchOrganizerEvent(eventId: String) = safeApiCall { apiService.getOrganizerEvent(eventId) }
+    open suspend fun fetchOrganizerEvent(eventId: String) = safeApiCall { apiService.getOrganizerEvent(eventId) }
 
     /**
      * Event detail for the editor's PATCH echo: `OrganizerEventResponse` has no category, but the PATCH
@@ -366,7 +348,7 @@ private fun OrganizerEventDto.toMvpEvent(context: Context): OrganizerMvpEvent = 
     organizerName = organizerName ?: context.getString(R.string.organizer_repo_organizer),
     dateTime = dateTime ?: "-",
     shortDate = shortDate ?: "-",
-    venue = venue ?: "Venue not set",
+    venue = venue.orEmpty(),
     status = status ?: "Pending",
     submittedDate = submittedDate ?: "-",
     adminRemarks = adminRemarks ?: context.getString(R.string.organizer_repo_no_admin_remarks),
@@ -497,26 +479,13 @@ private fun OrganizerScanPurposeDto.toMvpScanPurpose(context: Context): Organize
     description = description ?: title ?: code.toDisplayPurposeName(context),
     enabled = enabled,
     duplicateRule = duplicateRuleSummary ?: code.defaultDuplicateRule(),
+    allowDuplicate = allowDuplicate,
     trackingOnly = trackingOnly,
     pointsEnabled = pointsEnabled,
     pointsValue = pointsValue,
     requiredSelectionLabel = requiredSelectionLabel ?: code.defaultRequiredSelection(),
     id = scanPurposeId?.toString(),
     code = code,
-)
-
-private fun OrganizerMvpScanPurpose.toOrganizerRequest(): OrganizerScanPurposeRequestDto = OrganizerScanPurposeRequestDto(
-    scanPurposeId = id?.toUuidOrNull(),
-    title = label,
-    code = code ?: label.toScanPurposeCode(),
-    enabled = enabled,
-    trackingOnly = trackingOnly,
-    pointsEnabled = pointsEnabled,
-    pointsValue = pointsValue,
-    allowDuplicate = duplicateRule.contains("allow", ignoreCase = true),
-    duplicateRuleSummary = duplicateRule,
-    requiredSelectionLabel = requiredSelectionLabel,
-    description = description,
 )
 
 /** Add-staff body: Scan QR is always granted, the other flags come from the permission switches. */

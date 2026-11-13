@@ -2,8 +2,6 @@ package com.thedavelopers.eventqr.features.organizer.scanpurposes
 
 import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.dimenPx
-import com.thedavelopers.eventqr.ui.theme.dimenFloat
-import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
 import com.thedavelopers.eventqr.features.organizer.styledText
 import android.app.AlertDialog
 import android.os.Bundle
@@ -14,7 +12,6 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
-import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -104,6 +101,17 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Coming back from Transaction Rules can change `allowDuplicate`; re-read the snapshot so an edit
+     * here never writes a stale duplicate setting (the PATCH rewrites the rule row).
+     */
+    override fun onResume() {
+        super.onResume()
+        if (::selectedEvent.isInitialized && ::purposeHost.isInitialized) {
+            loadPurposes(showInitialLoading = false)
+        }
+    }
+
     private fun showStatus(message: CharSequence?) {
         if (message.isNullOrBlank()) return
         statusLine.text = message
@@ -180,7 +188,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
                 append(purpose.code?.toDisplayTypeLabel() ?: getString(R.string.manage_scan_purposes_custom_scan))
                 append(" · ")
                 if (purpose.pointsEnabled && purpose.pointsValue > 0) append("+").append(getString(R.string.common_points_short, purpose.pointsValue)); append(" · ")
-                append(getString(if (purpose.duplicateRule.lowercase().contains("allow")) R.string.manage_scan_purposes_allows_duplicates else R.string.manage_scan_purposes_no_duplicates))
+                append(getString(if (purpose.allowDuplicate) R.string.manage_scan_purposes_allows_duplicates else R.string.manage_scan_purposes_no_duplicates))
             }
 
             val purposeCard = purposeCard(
@@ -240,7 +248,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         }
     }
 
-    private fun showAddEditDialog(purpose: OrganizerMvpScanPurpose? = null) {
+    internal fun showAddEditDialog(purpose: OrganizerMvpScanPurpose? = null) {
         val isEdit = purpose != null
         val dialogView = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -249,29 +257,6 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         var selectedType = purposeTypes.firstOrNull { it.code == purpose?.code }
             ?: purpose?.label?.toScanPurposeCode()?.let { inferred -> purposeTypes.firstOrNull { it.code == inferred } }
             ?: purposeTypes.first { it.code == ScanPurposeCode.BOOTH_VISIT }
-
-        val duplicateHelper = TextView(this).apply {
-            id = com.thedavelopers.eventqr.R.id.msp_duplicate_helper
-            text = getString(R.string.manage_scan_purposes_reward_duplicate_helper)
-            setTextSizeRes(R.dimen.type_caption)
-            setTextColor(color(R.color.text_secondary))
-            setPadding(dimenPx(R.dimen.space_xs), dimenPx(R.dimen.space_xxs), dimenPx(R.dimen.space_xs), 0)
-            visibility = View.GONE
-        }
-        val duplicateCheck = CheckBox(this).apply {
-            id = com.thedavelopers.eventqr.R.id.msp_duplicate_check
-            text = getString(R.string.manage_scan_purposes_allow_duplicate_scans)
-            isChecked = purpose?.duplicateRule?.lowercase()?.contains("allow") ?: false
-        }
-        val applyDuplicateLock: (ScanPurposeType) -> Unit = { type ->
-            val isReward = type.code == ScanPurposeCode.REWARD_REDEMPTION_SCAN
-            duplicateCheck.isEnabled = !isReward
-            duplicateCheck.alpha = if (isReward) dimenFloat(R.dimen.alpha_disabled) else 1f
-            if (isReward) {
-                duplicateCheck.isChecked = false
-            }
-            duplicateHelper.visibility = if (isReward) View.VISIBLE else View.GONE
-        }
 
         val typeSpinner = Spinner(this).apply {
             id = com.thedavelopers.eventqr.R.id.msp_type_spinner
@@ -286,11 +271,9 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         typeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 selectedType = purposeTypes.getOrElse(position) { selectedType }
-                applyDuplicateLock(selectedType)
             }
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
         }
-        applyDuplicateLock(selectedType)
 
         val nameInput = EditText(this).apply {
             id = com.thedavelopers.eventqr.R.id.msp_name_input
@@ -311,16 +294,6 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
             setText(purpose?.pointsValue?.takeIf { it > 0 }?.toString() ?: "0")
             setSingleLine(true)
         }
-        val trackingOnlyCheck = CheckBox(this).apply {
-            id = com.thedavelopers.eventqr.R.id.msp_tracking_only_check
-            text = getString(R.string.manage_scan_purposes_tracking_only)
-            isChecked = purpose?.trackingOnly ?: ((purpose?.pointsValue ?: 0) <= 0 && purpose?.pointsEnabled != true)
-            setOnCheckedChangeListener { _, checked ->
-                pointsInput.isEnabled = !checked
-                if (checked) pointsInput.setText("0")
-            }
-        }
-        pointsInput.isEnabled = !trackingOnlyCheck.isChecked
 
         dialogView.addView(styledText(getString(R.string.manage_scan_purposes_label_scan_type), R.dimen.type_body_medium, true))
         dialogView.addView(typeSpinner)
@@ -330,9 +303,6 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         dialogView.addView(descInput)
         dialogView.addView(styledText(getString(R.string.manage_scan_purposes_label_points), R.dimen.type_body_medium, true).apply { setPadding(0, dimenPx(R.dimen.space_md), 0, 0) })
         dialogView.addView(pointsInput)
-        dialogView.addView(duplicateCheck)
-        dialogView.addView(duplicateHelper)
-        dialogView.addView(trackingOnlyCheck)
 
         // §5.12: one dialog base, title / form / right-aligned text actions. Delete stays reachable from
         // the edit dialog (it has no other home) but is pushed to the start and tinted destructive.
@@ -351,35 +321,13 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         positive.setOnClickListener {
             val name = nameInput.text.toString().trim()
             val description = descInput.text.toString().trim()
-            val trackingOnly = trackingOnlyCheck.isChecked
             val points = pointsInput.text.toString().trim().toIntOrNull()?.coerceAtLeast(0) ?: 0
             if (name.isBlank()) {
                 nameInput.error = getString(R.string.manage_scan_purposes_scan_purpose_name_is_required)
                 nameInput.requestFocus()
                 return@setOnClickListener
             }
-            val effectivePoints = if (trackingOnly) 0 else points
-            val pointsEnabled = !trackingOnly && effectivePoints > 0
-            val requestPurpose = (purpose ?: OrganizerMvpScanPurpose(
-                label = "",
-                description = "",
-                enabled = true,
-                duplicateRule = "",
-                trackingOnly = false,
-                pointsEnabled = false,
-                pointsValue = 0,
-                requiredSelectionLabel = "",
-            )).copy(
-                label = name,
-                description = description.ifBlank { defaultDescription(name, selectedType) },
-                code = selectedType.code,
-                pointsValue = effectivePoints,
-                pointsEnabled = pointsEnabled,
-                trackingOnly = trackingOnly,
-                duplicateRule = getString(if (duplicateCheck.isChecked) R.string.manage_scan_purposes_allow_duplicates else R.string.manage_scan_purposes_no_duplicates_2),
-                requiredSelectionLabel = selectedType.selectionLabel,
-            )
-            savePurpose(requestPurpose)
+            savePurpose(draftScanPurpose(purpose, name, description, selectedType.code, selectedType.selectionLabel, points))
             dialog.dismiss()
         }
 
@@ -411,7 +359,42 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    private fun savePurpose(purpose: OrganizerMvpScanPurpose) {
+    /**
+     * Dialog result -> model. Points is the only input for tracking-only: 0 means tracking-only, any
+     * positive value awards points, so `trackingOnly` and `pointsEnabled` always match the stored rule.
+     * Duplicate settings belong to the Transaction Rules screen and are carried over untouched.
+     */
+    internal fun draftScanPurpose(
+        existing: OrganizerMvpScanPurpose?,
+        name: String,
+        description: String,
+        code: ScanPurposeCode,
+        selectionLabel: String,
+        points: Int,
+    ): OrganizerMvpScanPurpose {
+        val trackingOnly = points == 0
+        val base = existing ?: OrganizerMvpScanPurpose(
+            label = "",
+            description = "",
+            enabled = true,
+            duplicateRule = "",
+            trackingOnly = true,
+            pointsEnabled = false,
+            pointsValue = 0,
+            requiredSelectionLabel = "",
+        )
+        return base.copy(
+            label = name,
+            description = description.ifBlank { defaultDescription(name, purposeTypes.firstOrNull { it.code == code }) },
+            code = code,
+            pointsValue = if (trackingOnly) 0 else points,
+            pointsEnabled = !trackingOnly,
+            trackingOnly = trackingOnly,
+            requiredSelectionLabel = selectionLabel,
+        )
+    }
+
+    internal open fun savePurpose(purpose: OrganizerMvpScanPurpose) {
         lifecycleScope.launch {
             val existingPurposeId = purpose.id?.takeIf { it.isNotBlank() }
             Log.d(persistenceTag, "eventId=${selectedEvent.id} saveRequest id=${existingPurposeId ?: "null"} code=${purpose.code} enabled=${purpose.enabled} trackingOnly=${purpose.trackingOnly} pointsEnabled=${purpose.pointsEnabled} pointsValue=${purpose.pointsValue}")
@@ -496,7 +479,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         }
     }
 
-    private fun OrganizerMvpScanPurpose.toOrganizerRequest() = OrganizerScanPurposeRequestDto(
+    internal fun OrganizerMvpScanPurpose.toOrganizerRequest() = OrganizerScanPurposeRequestDto(
         scanPurposeId = id?.let { runCatching { UUID.fromString(it) }.getOrNull() },
         title = label.trim(),
         code = code ?: label.toScanPurposeCode(),
@@ -504,7 +487,7 @@ open class ManageScanPurposesActivity : AppCompatActivity() {
         trackingOnly = trackingOnly,
         pointsEnabled = pointsEnabled && !trackingOnly && pointsValue > 0,
         pointsValue = if (trackingOnly) 0 else pointsValue.coerceAtLeast(0),
-        allowDuplicate = duplicateRule.contains("allow", ignoreCase = true),
+        allowDuplicate = allowDuplicate,
         duplicateRuleSummary = duplicateRule,
         requiredSelectionLabel = requiredSelectionLabel.ifBlank { (code ?: label.toScanPurposeCode()).defaultRequiredSelection() },
         description = description.ifBlank { defaultDescription(label, purposeTypes.firstOrNull { it.code == code }) },

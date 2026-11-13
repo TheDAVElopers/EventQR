@@ -41,6 +41,9 @@
 
     <!-- Generic component actions -->
 
+    <!-- Points delta. Points are never pluralised: the unit stays "pts". -->
+    <string name="ui_points_gain">+%1$d pts</string>
+
     <!-- Card meta (replaces the raw "%1$d registered" / "%1$d / %2$d" concatenations) -->
     <string name="ui_card_registered_count">%1$d registered</string>
     <string name="ui_card_registered_of">%1$d / %2$d registered</string>

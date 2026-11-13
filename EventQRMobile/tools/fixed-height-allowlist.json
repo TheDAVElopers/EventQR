@@ -2,12 +2,6 @@
   "//": "Fixed-height gate exemptions (tools/check-tokens.ps1, category fixed-height). One entry per genuinely non-text element that must keep a fixed box: a plate, a bar, a bracket, a dot. A text-bearing view never belongs here - it takes wrap_content + minHeight instead. Entry shape: file (path under res/), id (\"\" when the element has no android:id, or the style name), height (the exact layout_height value, or \"maxHeight\"), why. An entry that matches nothing fails the `stale` category.",
   "entries": [
     {
-      "file": "layout/activity_organizer_event_details.xml",
-      "id": "oedStubSkeleton",
-      "height": "@dimen/ui_pass_head_stub_height",
-      "why": "Skeleton stub plate: non-text placeholder that must equal the loaded stub's 56dp floor, no intrinsic height of its own"
-    },
-    {
       "file": "layout/activity_staff_dashboard.xml",
       "id": "",
       "height": "@dimen/ui_row_height",

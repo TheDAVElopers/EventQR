@@ -169,9 +169,10 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
             }
 
         val options = mutableListOf<Pair<String?, String>>()
-        options += null to "All Events"
+        options += null to getString(R.string.user_transaction_history_all_events)
         groupedEvents.forEach { (eventId, eventItems) ->
-            val title = eventItems.firstNotNullOfOrNull { it.eventTitle?.takeIf(String::isNotBlank) } ?: "Event"
+            val title = eventItems.firstNotNullOfOrNull { it.eventTitle?.takeIf(String::isNotBlank) }
+                ?: getString(R.string.ui_attendee_untitled_event)
             options += eventId to title
         }
         eventFilterOptions = options
@@ -200,7 +201,7 @@ open class AttendeeTransactionsActivity : AppCompatActivity(), TransactionHistor
 
     private fun bindSelectedEventHeader() {
         val option = eventFilterOptions.getOrNull(filterSpinner.selectedItemPosition)
-        txtSelectedEventTitle.text = option?.second ?: "All Events"
+        txtSelectedEventTitle.text = option?.second ?: getString(R.string.user_transaction_history_all_events)
     }
 
     private fun renderEventDropdown() {

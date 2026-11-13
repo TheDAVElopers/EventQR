@@ -63,7 +63,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_24"
                 android:text="@string/ui_admin_create_eyebrow_identity"
-                android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+                style="@style/Widget.EventQR.Ui.SectionHeading" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -153,7 +153,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_16"
                 android:text="@string/ui_admin_create_eyebrow_contact"
-                android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+                style="@style/Widget.EventQR.Ui.SectionHeading" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -223,7 +223,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_16"
                 android:text="@string/ui_admin_create_eyebrow_security"
-                android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+                style="@style/Widget.EventQR.Ui.SectionHeading" />
 
             <TextView
                 android:layout_width="wrap_content"

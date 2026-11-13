@@ -18,6 +18,8 @@
     <string name="ui_attendee_check_ins">Check-ins</string>
     <string name="ui_attendee_balance">Balance</string>
     <string name="ui_attendee_registration">Registration</string>
+    <!-- Fallback label when the server sends no availability message. -->
+    <string name="ui_attendee_registration_unavailable">Registration Unavailable</string>
     <string name="ui_attendee_email">Email</string>
     <string name="ui_attendee_attendee">Attendee</string>
 
@@ -35,8 +37,8 @@
     <string name="ui_attendee_rewards">Rewards</string>
     <string name="ui_attendee_dashboard_empty_next">No upcoming events</string>
     <string name="ui_attendee_dashboard_empty_next_body">Events you register for appear here.</string>
-    <string name="ui_attendee_dashboard_empty_activity">No activity yet</string>
-    <string name="ui_attendee_dashboard_empty_activity_body">Check-ins and points show up here.</string>
+    <string name="ui_attendee_dashboard_empty_discover">No events to discover yet</string>
+    <string name="ui_attendee_dashboard_empty_discover_body">New events open for registration will appear here.</string>
     <string name="ui_attendee_dashboard_error_title">Couldn\'t load your dashboard</string>
     <string name="ui_attendee_dashboard_partial_failed">Couldn\'t load part of your dashboard.</string>
 
@@ -70,20 +72,20 @@
     <!-- ═════════ Event detail (§6.2) ═════════ -->
     <string name="ui_attendee_about">About</string>
     <string name="ui_attendee_event_details">Event details</string>
-    <string name="ui_attendee_no_description">No description yet.</string>
-    <string name="ui_attendee_venue_tbd">Venue to be announced</string>
+    <string name="ui_attendee_venue_tbd">Location to be announced</string>
+    <string name="ui_attendee_location_not_specified">Location not specified</string>
     <string name="ui_attendee_date_tbd">Date to be announced</string>
     <string name="ui_attendee_date">Date</string>
     <string name="ui_attendee_status">Status</string>
-    <string name="ui_attendee_time">Time</string>
-    <string name="ui_attendee_venue">Venue</string>
+    <string name="ui_attendee_event_time">Event time</string>
+    <string name="ui_attendee_venue">Location</string>
     <string name="ui_attendee_category">Category</string>
     <string name="ui_attendee_audience">Audience</string>
     <string name="ui_attendee_registration_window">Registration window</string>
-    <string name="ui_attendee_registration_opens">Opens %1$s</string>
-    <string name="ui_attendee_registration_closes">Closes %1$s</string>
     <string name="ui_attendee_capacity">Capacity</string>
     <string name="ui_attendee_event_rewards">Rewards</string>
+    <!-- The REWARDS row's value: a read-only indicator, never a link. -->
+    <string name="ui_attendee_none">None</string>
     <string name="ui_event_detail_load_failed">Couldn\'t load the event details.</string>
 
     <!-- ═════════ Registration (§6.2, §6.6) ═════════ -->
@@ -108,6 +110,10 @@
     <string name="ui_attendee_reward_already_claimed">You already claimed this reward.</string>
     <string name="ui_attendee_rewards_all_claimed_title">All rewards claimed</string>
     <string name="ui_attendee_rewards_all_claimed_body">You\'ve claimed every reward for this event.</string>
+    <string name="ui_attendee_rewards_load_failed">Unable to load rewards.</string>
+    <string name="ui_attendee_registered_events_load_failed">Unable to load registered events.</string>
+    <string name="ui_attendee_availability_unavailable">Availability unavailable</string>
+    <string name="ui_attendee_untitled_event">Event</string>
     <string name="ui_attendee_history">History</string>
     <string name="ui_attendee_points_cost">%1$s pts</string>
     <string name="ui_attendee_points_spent">-%1$d pts</string>
@@ -146,6 +152,7 @@
 
     <!-- ═════════ Profile (§6.2) ═════════ -->
     <string name="ui_attendee_personal_details">Personal details</string>
+    <string name="ui_attendee_activity">Activity</string>
     <string name="ui_attendee_account">Account</string>
     <string name="ui_attendee_security">Security</string>
     <string name="ui_attendee_phone">Phone</string>
@@ -153,6 +160,14 @@
     <string name="ui_attendee_transaction_history">Transaction history</string>
     <string name="ui_attendee_claimed_rewards">Claimed rewards</string>
     <string name="ui_attendee_my_event_requests">My event requests</string>
+    <string name="ui_attendee_profile_meta_history">Points earned and spent</string>
+    <string name="ui_attendee_profile_meta_rewards">Rewards you redeemed</string>
+    <string name="ui_attendee_profile_meta_requests">Status of your requests</string>
+    <!-- Edit profile's meta when the account has no phone number: the row always keeps one line. -->
+    <string name="ui_attendee_profile_meta_edit">Name and phone number</string>
+    <string name="ui_attendee_version">Version %1$s (%2$d)</string>
+    <!-- Shown when the profile request fails without its own message. -->
+    <string name="ui_attendee_profile_load_failed">Couldn\'t load your profile.</string>
     <string name="ui_attendee_change_password">Change password</string>
     <string name="ui_attendee_save_changes">Save changes</string>
     <string name="ui_attendee_saving">Saving…</string>
@@ -169,7 +184,7 @@
     <string name="ui_attendee_request_event">Request event</string>
     <string name="ui_attendee_my_requests">My requests</string>
     <string name="ui_attendee_event_information">Event information</string>
-    <string name="ui_attendee_schedule">Schedule and venue</string>
+    <string name="ui_attendee_schedule">Schedule and location</string>
     <string name="ui_attendee_requester">Requester</string>
     <string name="ui_attendee_setup">Event setup</string>
     <string name="ui_attendee_reason">Reason for request</string>
@@ -222,7 +237,7 @@
     <string name="ui_attendee_request_error_event_description">Event description is required</string>
     <string name="ui_attendee_request_error_target_audience">Target audience is required</string>
     <string name="ui_attendee_request_error_capacity">Capacity must be a positive number</string>
-    <string name="ui_attendee_request_error_venue">Venue/location is required</string>
+    <string name="ui_attendee_request_error_venue">Location is required</string>
     <string name="ui_attendee_request_error_start_required">Start date/time is required</string>
     <string name="ui_attendee_request_error_end_required">End date/time is required</string>
     <string name="ui_attendee_request_error_registration_start_required">Registration start date/time is required</string>

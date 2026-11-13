@@ -6,6 +6,8 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.IdRes
 import androidx.annotation.StyleRes
+import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
 import com.thedavelopers.eventqr.R
 
 /**
@@ -228,15 +230,24 @@ object PassHeadBinder {
 
 /**
  * XML binder for the three list-row layouts (§5.5). One trailing thing only - the binder enforces
- * that so a row can never grow both a chevron and a value.
+ * that so a row can never grow both a chevron and a value. The one shape that carries two is
+ * [Trailing.VALUE_WITH_CHEVRON]: a row whose current value *is* the label and still opens something,
+ * which is the §5.2 select-field anatomy. It has no call site since the profile's Switch portal row
+ * was deleted (v1.34).
+ *
+ * Accessibility: a row that navigates is one TalkBack node with the Button role; above
+ * `fontScale` 1.3 the title takes a second line instead of ellipsizing a real name (§9.3).
  */
 object ListRowBinder {
 
-    enum class Trailing { NONE, CHEVRON, VALUE, BADGE }
+    enum class Trailing { NONE, CHEVRON, VALUE, VALUE_WITH_CHEVRON, BADGE }
 
     /**
      * @param badgeStyle one of the `Widget.EventQR.Ui.StatusBadge.*` styles when [trailing] is
      *   [Trailing.BADGE]; both its text colour and its container tint are applied. Ignored otherwise.
+     * @param contentDescription the row's one TalkBack name, when the title alone is not the whole
+     *   story (a row that also prints a value). Reset to null on every bind, so a recycled row
+     *   never keeps the previous one's name.
      */
     fun bind(
         row: View,
@@ -246,9 +257,15 @@ object ListRowBinder {
         trailingText: String? = null,
         @StyleRes badgeStyle: Int? = null,
         showDivider: Boolean = true,
+        contentDescription: String? = null,
         onClick: (() -> Unit)? = null,
     ) {
-        row.findViewById<TextView>(R.id.listRowTitle)?.text = title
+        row.findViewById<TextView>(R.id.listRowTitle)?.apply {
+            text = title
+            // One line is the row's default; a real title at fontScale 2.0 would be cut to a
+            // fragment, so the cap lifts to two lines above 1.3 (§9.3).
+            maxLines = if (MetricRowStacking.stacks(row.resources.configuration.fontScale)) 2 else 1
+        }
         row.findViewById<TextView>(R.id.listRowMeta)?.apply {
             text = meta
             visibility = if (meta.isNullOrBlank()) View.GONE else View.VISIBLE
@@ -258,10 +275,24 @@ object ListRowBinder {
         val value = row.findViewById<TextView>(R.id.listRowValue)
         val badge = row.findViewById<TextView>(R.id.listRowBadge)
 
-        chevron?.visibility = if (trailing == Trailing.CHEVRON) View.VISIBLE else View.GONE
+        chevron?.visibility =
+            if (trailing == Trailing.CHEVRON || trailing == Trailing.VALUE_WITH_CHEVRON) View.VISIBLE
+            else View.GONE
         value?.apply {
-            visibility = if (trailing == Trailing.VALUE) View.VISIBLE else View.GONE
+            visibility = when (trailing) {
+                Trailing.VALUE, Trailing.VALUE_WITH_CHEVRON -> View.VISIBLE
+                else -> View.GONE
+            }
             text = trailingText
+            // The value's tone is the shape's, not the caller's: a plain value is data (primary),
+            // the value in a value + chevron row is context (secondary). Reset on every bind.
+            setTextColor(
+                ContextCompat.getColor(
+                    row.context,
+                    if (trailing == Trailing.VALUE_WITH_CHEVRON) R.color.ui_text_secondary
+                    else R.color.ui_text_primary,
+                ),
+            )
         }
         badge?.apply {
             visibility = if (trailing == Trailing.BADGE) View.VISIBLE else View.GONE
@@ -272,6 +303,12 @@ object ListRowBinder {
         val container = row.findViewById<View>(R.id.listRowContainer)
         container?.isClickable = onClick != null
         container?.setOnClickListener { onClick?.invoke() }
+        container?.contentDescription = contentDescription
+        // Clear first: rows are recycled, and a dead delegate would keep announcing a Button.
+        container?.let {
+            ViewCompat.setAccessibilityDelegate(it, null)
+            if (onClick != null) it.asButtonRole()
+        }
 
         row.findViewById<View>(R.id.listRowDivider)?.visibility =
             if (showDivider) View.VISIBLE else View.GONE

@@ -27,6 +27,7 @@ import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -101,10 +102,22 @@ class QrPassScreensTest {
     private fun awaitVisible(view: View) =
         awaitCondition("expected the view on screen") { view.visibility == View.VISIBLE }
 
-    private fun awaitCache(registrationId: String, present: Boolean) =
-        awaitCondition("expected the cached pass present=$present") {
-            (QrPassCache.load(context, registrationId) != null) == present
+    /**
+     * Joins the screen's real cache job instead of polling the store. Polling is not neutral:
+     * [QrPassCache.load] clears an entry it cannot read yet, and that clear can commit after the
+     * write and erase it, which is the flake this replaces.
+     */
+    private fun awaitCache(activity: QrDisplayActivity, registrationId: String, present: Boolean) {
+        val job = requireNotNull(activity.lastCacheJob) {
+            "the screen must schedule its cache write before the test awaits it"
         }
+        runBlocking { job.join() }
+        assertEquals(
+            "expected the cached pass present=$present",
+            present,
+            QrPassCache.load(context, registrationId) != null,
+        )
+    }
 
     private fun pass(activity: Activity): View = activity.findViewById(R.id.qrCredential)
     private fun empty(activity: Activity): EventQrEmptyState = activity.findViewById(R.id.emptyQrPassState)
@@ -190,7 +203,7 @@ class QrPassScreensTest {
             registration(registrationId),
             "DevFest Manila",
         )
-        awaitCache(registrationId.toString(), present = true)
+        awaitCache(activity, registrationId.toString(), present = true)
 
         val cached = QrPassCache.load(context, registrationId.toString())
         assertNotNull(cached)
@@ -214,7 +227,7 @@ class QrPassScreensTest {
             registration(registrationId),
             "DevFest Manila",
         )
-        awaitCache(registrationId.toString(), present = false)
+        awaitCache(activity, registrationId.toString(), present = false)
 
         assertEquals(View.GONE, pass(activity).visibility)
         assertEquals(View.GONE, saveGroup(activity).visibility)
@@ -238,7 +251,7 @@ class QrPassScreensTest {
             registration(registrationId),
             "DevFest Manila",
         )
-        awaitCache(registrationId.toString(), present = false)
+        awaitCache(activity, registrationId.toString(), present = false)
 
         assertEquals(View.GONE, pass(activity).visibility)
         assertNull(activity.findViewById<ImageView>(R.id.qrImage).drawable)

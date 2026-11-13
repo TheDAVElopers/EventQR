@@ -94,7 +94,10 @@ class TransactionLogAdapter : RecyclerView.Adapter<TransactionLogAdapter.ViewHol
                 pointsView.visibility = View.GONE
             } else {
                 pointsView.visibility = View.VISIBLE
-                pointsView.text = if (points > 0) "+$points pts" else "$points pts"
+                pointsView.text = context.getString(
+                    if (points > 0) R.string.ui_points_gain else R.string.common_points_short,
+                    points,
+                )
                 pointsView.setTextColor(
                     ContextCompat.getColor(
                         context,

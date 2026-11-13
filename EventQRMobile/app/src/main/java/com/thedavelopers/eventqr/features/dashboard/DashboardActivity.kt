@@ -299,7 +299,7 @@ open class DashboardActivity : AppCompatActivity(), DashboardContract.View {
         val rows = events.distinctBy { it.eventId }.take(3)
         replaceRows(discoverEventsLayout) {
             if (rows.isEmpty()) {
-                addView(emptyRow(R.string.ui_attendee_dashboard_empty_activity, R.string.ui_attendee_dashboard_empty_activity_body))
+                addView(emptyRow(R.string.ui_attendee_dashboard_empty_discover, R.string.ui_attendee_dashboard_empty_discover_body))
             } else {
                 rows.forEach { addView(iconRow(it)) }
             }

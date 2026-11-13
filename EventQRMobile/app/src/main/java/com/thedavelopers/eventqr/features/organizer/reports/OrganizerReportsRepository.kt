@@ -16,7 +16,7 @@ open class OrganizerReportsRepository(private val context: Context) {
     open suspend fun fetchSummary(eventId: String): NetworkResult<EventReportSummaryDto> =
         safeApiCall { apiService.getEventReportSummary(eventId) }
 
-    suspend fun generateReport(
+    open suspend fun generateReport(
         eventId: String,
         reportType: EventReportType,
         filters: EventReportFiltersDto,

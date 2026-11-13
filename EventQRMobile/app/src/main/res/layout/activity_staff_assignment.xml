@@ -3,14 +3,17 @@
     ORGANIZER - STAFF ASSIGNMENT (6.4).
 
         Top bar    56dp, back + "Staff assignment"
-        Strip      event glyph + event title, then the "Add staff" chip (include_organizer_event_strip)
         Rows       72dp person rows: initials plate, name, permission summary, one overflow button
-        Empty      shared empty state with the Add staff action
-        Error      the same component as an error: warning icon, message, Retry
+        Empty      shared empty state with no action: the footer is the action
+        Error      zero rows: the same component as an error: warning icon, message, Retry
+        Refresh    rows kept: the 5.16 include_error_strip under the bar, one sentence + Retry
+        Footer     pinned primary "Add staff" (6.7), 1dp hairline on top; shown after a successful load
+
+    The event is named by the Manage event screen, so this roster carries no event strip.
 
     Deleted: bg_organizer_events_screen, the EventQrDetailHeader slot button, a whole 48dp row whose
-    only content was one right-aligned text action, the per-row card, the two stacked row actions and
-    the centred empty block.
+    only content was one right-aligned text action, the per-row card, the two stacked row actions, the
+    48dp event strip (include_organizer_event_strip) and the centred empty block.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -25,11 +28,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
+    <!-- 5.16: a failed refresh over readable rows reports here and never wipes them. -->
     <include
-        android:id="@+id/eventStrip"
-        layout="@layout/include_organizer_event_strip"
+        android:id="@+id/errorStaffAssignment"
+        layout="@layout/include_error_strip"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/ui_gutter"
+        android:layout_marginTop="@dimen/space_md"
+        android:layout_marginEnd="@dimen/ui_gutter" />
 
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshStaffAssignment"
@@ -48,7 +55,7 @@
                 android:clipToPadding="false"
                 android:overScrollMode="never"
                 android:paddingTop="@dimen/space_8"
-                android:paddingBottom="@dimen/space_24" />
+                android:paddingBottom="@dimen/space_16" />
 
             <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
                 android:id="@+id/txtEmptyStaff"
@@ -58,4 +65,35 @@
                 app:icon="@drawable/ic_ui_group" />
         </FrameLayout>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
+
+    <!-- Pinned after a load with rows or a successful empty load; gone on a failed load with zero rows. -->
+    <LinearLayout
+        android:id="@+id/staffAddFooter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/ui_surface"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/stroke_hairline"
+            android:background="@color/ui_hairline"
+            android:importantForAccessibility="no" />
+
+        <Button
+            android:id="@+id/btnAddStaff"
+            style="@style/Widget.EventQR.Ui.Button.Primary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/ui_gutter"
+            android:layout_marginTop="@dimen/space_12"
+            android:layout_marginEnd="@dimen/ui_gutter"
+            android:layout_marginBottom="@dimen/space_16"
+            android:drawablePadding="@dimen/space_8"
+            android:drawableTint="@color/ui_on_primary"
+            android:minHeight="@dimen/ui_button_height"
+            android:text="@string/ui_organizer_add_staff"
+            app:drawableStartCompat="@drawable/ic_ui_add" />
+    </LinearLayout>
 </LinearLayout>

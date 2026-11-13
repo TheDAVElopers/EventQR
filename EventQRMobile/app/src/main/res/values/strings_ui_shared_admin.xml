@@ -127,6 +127,7 @@
     <string name="ui_notifications_empty_title">No notifications</string>
     <string name="ui_notifications_empty_body">Updates about your events and registrations will show up here.</string>
     <string name="ui_notifications_error_title">Couldn\'t load notifications</string>
+    <string name="ui_notifications_load_failed">Unable to load notifications.</string>
     <string name="ui_notifications_unread">Unread</string>
     <string name="ui_notifications_read">Read</string>
     <string name="ui_notifications_item">%1$s notification. %2$s</string>
@@ -140,7 +141,7 @@
     <string name="ui_request_detail_registration">Registration window</string>
     <string name="ui_request_detail_category">Category</string>
     <string name="ui_request_detail_audience">Audience</string>
-    <string name="ui_request_detail_venue">Venue</string>
+    <string name="ui_request_detail_venue">Location</string>
     <string name="ui_request_detail_capacity">Expected attendees</string>
     <string name="ui_request_detail_contact_email">Contact email</string>
     <string name="ui_request_detail_contact_phone">Contact number</string>

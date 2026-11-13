@@ -13,4 +13,6 @@ data class OrganizerMvpScanPurpose(
     val requiredSelectionLabel: String,
     val id: String? = null,
     val code: ScanPurposeCode? = null,
+    /** Owned by the Transaction Rules screen; carried through purpose edits unchanged. */
+    val allowDuplicate: Boolean = false,
 )

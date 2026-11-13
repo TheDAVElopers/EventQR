@@ -119,8 +119,13 @@
             android:tint="@color/ui_text_secondary" />
     </LinearLayout>
 
-    <!-- ═════════ Three counts, 56dp, one hairline card ═════════ -->
+    <!-- ═════════ Three counts, 56dp, one hairline card ═════════
+         Every child is wrap_content height. A match_parent cell inside a wrap_content horizontal
+         band answers its AT_MOST spec with the whole remaining screen, and the band follows it -
+         that is what stretched this card over the list (§9.6:17). The rules keep match_parent so
+         they run the band's full height. -->
     <LinearLayout
+        android:id="@+id/staffTransactionsStats"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:minHeight="@dimen/ui_metric_row_height"
@@ -133,7 +138,7 @@
 
         <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center_vertical"
             android:orientation="vertical"
@@ -144,16 +149,14 @@
                 android:id="@+id/txtTotalScans"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:maxLines="1"
-                android:text="@string/placeholder_zero"
+                
+                android:text="@string/common_value_unavailable"
                 android:textAppearance="@style/TextAppearance.EventQR.Type.NumericM"
                 android:textColor="@color/ui_text_primary" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="1"
                 android:text="@string/staff_transaction_logs_total_scans"
                 android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
         </LinearLayout>
@@ -166,7 +169,7 @@
 
         <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center_vertical"
             android:orientation="vertical"
@@ -177,16 +180,14 @@
                 android:id="@+id/txtSuccessfulScans"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:maxLines="1"
-                android:text="@string/placeholder_zero"
+                
+                android:text="@string/common_value_unavailable"
                 android:textAppearance="@style/TextAppearance.EventQR.Type.NumericM"
                 android:textColor="@color/ui_text_primary" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="1"
                 android:text="@string/ui_staff_successful"
                 android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
         </LinearLayout>
@@ -199,7 +200,7 @@
 
         <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center_vertical"
             android:orientation="vertical"
@@ -210,16 +211,14 @@
                 android:id="@+id/txtRejectedScans"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:maxLines="1"
-                android:text="@string/placeholder_zero"
+                
+                android:text="@string/common_value_unavailable"
                 android:textAppearance="@style/TextAppearance.EventQR.Type.NumericM"
                 android:textColor="@color/ui_text_primary" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="1"
                 android:text="@string/ui_staff_rejected"
                 android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
         </LinearLayout>

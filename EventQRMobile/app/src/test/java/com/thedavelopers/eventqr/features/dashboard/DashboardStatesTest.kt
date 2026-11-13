@@ -88,7 +88,11 @@ class DashboardStatesTest {
         val next = activity.bodyBlock(activity.upcoming())
         val discover = activity.bodyBlock(activity.discover())
         assertEquals("No upcoming events", (next.getChildAt(0) as TextView).text.toString())
-        assertEquals("No activity yet", (discover.getChildAt(0) as TextView).text.toString())
+        assertEquals("No events to discover yet", (discover.getChildAt(0) as TextView).text.toString())
+        assertEquals(
+            "New events open for registration will appear here.",
+            (discover.getChildAt(1) as TextView).text.toString(),
+        )
         assertTrue(activity.upcoming().getChildAt(1) !is EventQrEmptyState)
     }
 

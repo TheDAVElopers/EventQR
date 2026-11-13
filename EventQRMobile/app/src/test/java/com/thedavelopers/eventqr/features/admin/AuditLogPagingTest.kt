@@ -116,16 +116,16 @@ class AuditLogPagingTest {
         val today = LocalDate.of(2026, 10, 12)
         assertEquals("Today", DateFormatters.auditDayLabel(today, today))
         assertEquals("Yesterday", DateFormatters.auditDayLabel(today.minusDays(1), today))
-        assertEquals("12 Sep", DateFormatters.auditDayLabel(LocalDate.of(2026, 9, 12), today))
-        assertEquals("2 Jan", DateFormatters.auditDayLabel(LocalDate.of(2026, 1, 2), today))
-        assertEquals("12 Oct 2025", DateFormatters.auditDayLabel(LocalDate.of(2025, 10, 12), today))
+        assertEquals("12\u00A0Sep", DateFormatters.auditDayLabel(LocalDate.of(2026, 9, 12), today))
+        assertEquals("2\u00A0Jan", DateFormatters.auditDayLabel(LocalDate.of(2026, 1, 2), today))
+        assertEquals("12\u00A0Oct\u00A02025", DateFormatters.auditDayLabel(LocalDate.of(2025, 10, 12), today))
     }
 
     @Test
     fun auditTimeAndDayUseTheAuditZoneNotUtc() {
         val instant = Instant.parse("2026-10-11T16:30:00Z") // 00:30 on 12 Oct in Manila
         assertEquals(LocalDate.of(2026, 10, 12), DateFormatters.auditDay(instant))
-        assertEquals("12:30 AM", DateFormatters.auditTime(instant))
+        assertEquals("12:30\u00A0AM", DateFormatters.auditTime(instant))
     }
 
     @Test

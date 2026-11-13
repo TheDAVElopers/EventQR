@@ -4,6 +4,7 @@ import android.app.DatePickerDialog
 import android.content.DialogInterface
 import android.os.Bundle
 import android.os.Looper
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
@@ -560,18 +561,18 @@ class AttendeeEventsActivityTest {
         )
 
         activity.applyDateFilter(DiscoverDateFilter.MonthOf(YearMonth.of(2026, 11)))
-        assertEquals("Nov 2026", chip.text.toString())
+        assertEquals("Nov\u00A02026", chip.text.toString())
         assertTrue(chip.isSelected)
         assertEquals(
-            activity.getString(R.string.ui_attendee_filter_date_value, "Nov 2026"),
+            activity.getString(R.string.ui_attendee_filter_date_value, "Nov\u00A02026"),
             chip.contentDescription.toString(),
         )
 
         activity.applyDateFilter(DiscoverDateFilter.DayOf(LocalDate.of(2026, 11, 12)))
-        assertEquals("12 Nov 2026", chip.text.toString())
+        assertEquals("12\u00A0Nov\u00A02026", chip.text.toString())
         assertTrue(chip.isSelected)
         assertEquals(
-            activity.getString(R.string.ui_attendee_filter_date_value, "12 Nov 2026"),
+            activity.getString(R.string.ui_attendee_filter_date_value, "12\u00A0Nov\u00A02026"),
             chip.contentDescription.toString(),
         )
     }
@@ -820,27 +821,52 @@ class AttendeeEventsActivityTest {
         sheet.dismiss()
     }
 
-    /** The search field is a direct, full-width child; no row shared with the chip, no reflow code. */
+    /** At the normal scale the date chip stays on the search row, as the plan specifies. */
+    @Test
+    fun standardFont_keepsTheDateChipOnTheSearchRow() {
+        val activity = launch(CountingRepo(emptyList())).get()
+        val row = activity.findViewById<LinearLayout>(R.id.searchRow)
+        val chip = activity.findViewById<TextView>(R.id.chipDateFilter)
+
+        assertEquals(LinearLayout.HORIZONTAL, row.orientation)
+        assertTrue((chip.layoutParams as LinearLayout.LayoutParams).marginStart > 0)
+        // The chip paints 36dp but carries a 48dp target (§9.2:1253).
+        assertEquals(activity.resources.getDimensionPixelSize(R.dimen.ui_touch_min), chip.minHeight)
+    }
+
+    /** 1.3 is the threshold itself: the row stacks at that scale, not only above it. */
+    @Test
+    @Config(fontScale = 1.3f)
+    fun thresholdFont_stacksTheDateChipAtOnePointThree() {
+        val activity = launch(CountingRepo(emptyList())).get()
+        assertEquals(
+            LinearLayout.VERTICAL,
+            activity.findViewById<LinearLayout>(R.id.searchRow).orientation,
+        )
+    }
+
+    /** At 2.0 the row stacks, so neither label can collapse; the field keeps its 48dp target. */
     @Test
     @Config(fontScale = 2.0f)
-    fun searchField_ownsItsFullWidthRowAtLargeFontScale() {
+    fun largeFont_stacksTheDateChipUnderTheFullWidthSearchField() {
         val activity = launch(CountingRepo(emptyList())).get()
+        val row = activity.findViewById<LinearLayout>(R.id.searchRow)
         val field = activity.findViewById<EditText>(R.id.inputEventSearch)
+        val chip = activity.findViewById<TextView>(R.id.chipDateFilter)
 
+        assertEquals(LinearLayout.VERTICAL, row.orientation)
         assertEquals(ViewGroup.LayoutParams.MATCH_PARENT, field.layoutParams.width)
         // Height grows with the font scale; the 48dp target is a minimum, not a fixed height.
         assertEquals(ViewGroup.LayoutParams.WRAP_CONTENT, field.layoutParams.height)
+        // The style's minHeight is the floor; the field grows past it at large font scales.
         assertEquals(
             activity.resources.getDimensionPixelSize(R.dimen.ui_field_search_height),
             field.minimumHeight,
         )
-        // The field is a direct child of the page column (the pass head's parent), and the chip is a
-        // member of the chip Flow's host: no row shared between them.
-        assertSame(activity.findViewById<View>(R.id.passHead).parent, field.parent)
-        assertSame(
-            activity.findViewById<View>(R.id.chipFlow).parent,
-            activity.findViewById<View>(R.id.chipDateFilter).parent,
-        )
+        val params = chip.layoutParams as LinearLayout.LayoutParams
+        assertEquals(Gravity.END, params.gravity)
+        assertEquals(activity.resources.getDimensionPixelSize(R.dimen.space_sm), params.topMargin)
+        assertEquals(0, params.marginStart)
     }
 
     /** The date sheet's mode, month and year chips carry the Button role like every filter chip (§9.5). */

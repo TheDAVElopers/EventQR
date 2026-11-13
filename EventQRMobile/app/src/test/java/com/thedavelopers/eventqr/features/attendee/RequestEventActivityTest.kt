@@ -221,7 +221,7 @@ class RequestEventActivityTest {
             R.id.txtEventDescriptionError to "Event description is required",
             R.id.txtTargetAudienceError to "Target audience is required",
             R.id.txtCapacityError to "Capacity must be a positive number",
-            R.id.txtVenueError to "Venue/location is required",
+            R.id.txtVenueError to "Location is required",
             R.id.txtStartDateTimeError to "Start date/time is required",
             R.id.txtEndDateTimeError to "End date/time is required",
             R.id.txtRegistrationStartDateTimeError to "Registration start date/time is required",
@@ -276,13 +276,13 @@ class RequestEventActivityTest {
         val activity = build()
         submit(activity)
         assertEquals("Event name is required", helperText(activity, R.id.txtEventNameError))
-        assertEquals("Venue/location is required", helperText(activity, R.id.txtVenueError))
+        assertEquals("Location is required", helperText(activity, R.id.txtVenueError))
 
         activity.findViewById<EditText>(R.id.eventNameInput).setText("T")
 
         assertNull(helperText(activity, R.id.txtEventNameError))
         assertFalse(activity.findViewById<View>(R.id.eventNameInput).isActivated)
-        assertEquals("Venue/location is required", helperText(activity, R.id.txtVenueError))
+        assertEquals("Location is required", helperText(activity, R.id.txtVenueError))
     }
 
     @Test
@@ -488,6 +488,53 @@ class RequestEventActivityTest {
         assertTrue(start.isActivated)
     }
 
+    /**
+     * The review promise belongs to the action it qualifies. It used to open the scroll content,
+     * where it was read once as preamble and scrolled away from; it is now the footer's own node,
+     * above Submit, never inside the ScrollView and never a hint on the button.
+     */
+    @Test
+    fun reviewCaption_sitsInTheSubmitBarAboveSubmit_withNoLiveRegionOrLabelFor() {
+        val activity = build()
+        val caption = activity.findViewById<TextView>(R.id.txtSubmitReviewNote)
+        val bar = activity.findViewById<android.view.ViewGroup>(R.id.layoutSubmitBar)
+
+        assertEquals(bar, caption.parent)
+        assertEquals(
+            "the caption is the first thing in the bar, above the primary",
+            0,
+            bar.indexOfChild(caption),
+        )
+        assertTrue(
+            "the caption comes before Submit",
+            bar.indexOfChild(caption) < bar.indexOfChild(activity.findViewById(R.id.submitRequestButton)),
+        )
+        assertEquals(
+            activity.getString(R.string.request_event_admin_review_note),
+            caption.text.toString(),
+        )
+        assertEquals(
+            "the run copy, not the old one-liner",
+            "An admin reviews your request. You'll be notified when it's approved or rejected.",
+            caption.text.toString(),
+        )
+        assertEquals(View.VISIBLE, caption.visibility)
+
+        var node: View? = caption
+        var insideScroll = false
+        while (node != null) {
+            if (node is android.widget.ScrollView) insideScroll = true
+            node = node.parent as? View
+        }
+        assertFalse("the caption is not scroll content", insideScroll)
+
+        // Its own ordinary node: no live region, no labelFor, no contentDescription, no maxLines cap.
+        assertEquals(View.ACCESSIBILITY_LIVE_REGION_NONE, caption.accessibilityLiveRegion)
+        assertEquals("the caption names no other view", View.NO_ID, caption.labelFor)
+        assertNull(caption.contentDescription)
+        assertEquals("the line wraps instead of truncating at 2.0", Int.MAX_VALUE, caption.maxLines)
+    }
+
     @Test
     fun theStrip_sitsBetweenTheFormAndTheSubmitArea() {
         val activity = build()
@@ -537,7 +584,7 @@ class RequestEventActivityTest {
 
         assertNull("an edited field stays clear after the typed text is restored", helperText(after, R.id.txtEventNameError))
         assertEquals("Tech Talk", after.findViewById<EditText>(R.id.eventNameInput).text.toString())
-        assertEquals("Venue/location is required", helperText(after, R.id.txtVenueError))
+        assertEquals("Location is required", helperText(after, R.id.txtVenueError))
         assertEquals("Event category is required", helperText(after, R.id.txtEventCategoryError))
         assertEquals("Start date/time is required", helperText(after, R.id.txtStartDateTimeError))
         assertTrue(after.findViewById<View>(R.id.venueInput).isActivated)

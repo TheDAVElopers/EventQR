@@ -70,7 +70,7 @@
     <string name="common_confirm_password">Confirm Password</string>
     <string name="edit_profile_complete_your_profile_to_help_organi">Complete your profile to help organizers reach you.</string>
     <string name="event_detail_event_poster">Event poster</string>
-    <string name="event_detail_date_range">%1$s –&#160;%2$s</string>
+    <string name="event_detail_date_range">%1$s\n–&#160;%2$s</string>
     <string name="event_detail_manage_event">Manage Event</string>
     <string name="event_detail_register">Register</string>
     <string name="common_full_name">Full name</string>
@@ -99,7 +99,7 @@
     <string name="organizer_notifications_error_loading_notifications">Error loading notifications</string>
     <string name="common_attendee">Attendee</string>
     <string name="common_loading_credential">Loading credential...</string>
-    <string name="request_event_admin_review_note">An admin reviews new events.</string>
+    <string name="request_event_admin_review_note">An admin reviews your request. You\'ll be notified when it\'s approved or rejected.</string>
     <string name="request_event_event_name">Event name</string>
     <string name="request_event_event_name_2">Event name</string>
     <string name="request_event_event_category">Event category</string>
@@ -108,9 +108,9 @@
     <string name="request_event_describe_the_event">Describe the event</string>
     <string name="request_event_target_audience">Target audience</string>
     <string name="request_event_students_professionals_community_mem">Students, professionals, community members</string>
-    <string name="request_event_expected_attendees_capacity">Expected attendees / capacity</string>
-    <string name="request_event_venue_location">Venue / location</string>
-    <string name="request_event_venue_or_address">Venue or address</string>
+    <string name="request_event_expected_attendees">Expected attendees</string>
+    <string name="request_event_venue_location">Location</string>
+    <string name="request_event_venue_or_address">Location or address</string>
     <string name="request_event_start_date_and_time">Start date and time</string>
     <string name="request_event_tap_to_select_date_and_time">Tap to select date and time</string>
     <string name="request_event_end_date_and_time">End date and time</string>
@@ -322,8 +322,6 @@
     <string name="manage_scan_purposes_disabled">disabled</string>
     <string name="manage_scan_purposes_edit_scan_purpose">Edit Scan Purpose</string>
     <string name="manage_scan_purposes_add_scan_purpose">Add Scan Purpose</string>
-    <string name="manage_scan_purposes_allow_duplicates">Allow Duplicates</string>
-    <string name="manage_scan_purposes_no_duplicates_2">No Duplicates</string>
     <string name="transaction_logs_no_event_logs_yet">No event logs yet</string>
     <string name="transaction_logs_no_attendee_logs_yet">No attendee logs yet</string>
     <string name="transaction_logs_transaction_logs_will_appear_here_on">Transaction logs will appear here once activity occurs.</string>
@@ -361,7 +359,6 @@
     <string name="scanner_select_an_assigned_event">Select an assigned event</string>
     <string name="scanner_input_is_required">Input is required</string>
     <string name="scanner_scan_setup_is_invalid">Scan setup is invalid. Go back and select the event again.</string>
-    <string name="scanner_event_has_ended">Event has ended. Scanning is disabled.</string>
     <string name="event_registrations_select_an_assigned_event_first">Select an assigned event first</string>
     <string name="notifications_unknown_error">Unknown error</string>
     <string name="qr_credential_missing_registration_information">Missing registration information</string>
@@ -369,7 +366,7 @@
 
     <!-- Compose, portal and role labels. -->
     <string name="common_untitled_event">Untitled Event</string>
-    <string name="common_venue_tbd">Venue TBD</string>
+    <string name="common_venue_tbd">Location TBD</string>
     <string name="event_request_card_submitted_submitted_1_s">Submitted %1$s</string>
     <string name="common_description">Description</string>
     <string name="event_request_detail_missing_event_request_information">Missing event request information.</string>

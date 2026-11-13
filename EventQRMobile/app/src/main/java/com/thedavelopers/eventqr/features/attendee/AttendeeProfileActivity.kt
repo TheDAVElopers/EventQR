@@ -7,8 +7,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.thedavelopers.eventqr.BuildConfig
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
@@ -16,19 +16,37 @@ import com.thedavelopers.eventqr.core.session.SessionLogout
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
+import com.thedavelopers.eventqr.ui.components.ListRowBinder
+import com.thedavelopers.eventqr.ui.components.MetricRowStacking
+import com.thedavelopers.eventqr.ui.components.asButtonRole
+import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
+/**
+ * Attendee profile (§6.2) - retires Gen A.
+ *
+ * Everything scrolls, identity block included. The identity is one TalkBack node (its name is the
+ * heading) and the two sections are `list_row_icon` rows bound through [ListRowBinder]: ACCOUNT
+ * first with Edit profile alone, then ACTIVITY. Every role reaches this screen, so it holds no
+ * portal switch - the dashboard role tabs do that.
+ *
+ * Transaction history shows no points balance: `PointBalanceResponse` is per (event, attendee) - the
+ * Rewards screen reads it for the event it has selected - and there is no account-wide balance
+ * endpoint, so the row keeps its chevron instead of printing an event's balance under a page-wide
+ * label.
+ */
 class AttendeeProfileActivity : AppCompatActivity() {
 
     private lateinit var sessionManager: SessionManager
     private lateinit var repository: AttendeeRepository
+    private lateinit var headerProfile: View
     private lateinit var txtProfileName: TextView
     private lateinit var txtProfileEmail: TextView
     private lateinit var skeletonLoading: View
-    private lateinit var swipeRefresh: SwipeRefreshLayout
-    private lateinit var layoutProfileMenu: View
+    private lateinit var swipeRefresh: com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
+    private lateinit var layoutProfileSections: View
     private lateinit var errorProfileBlock: View
     private lateinit var txtProfileError: TextView
     private lateinit var btnProfileRetry: TextView
@@ -50,39 +68,82 @@ class AttendeeProfileActivity : AppCompatActivity() {
         }
 
         setContentView(R.layout.activity_attendee_profile)
-        findViewById<View>(R.id.headerProfile).applyEventQrTopInsetPadding()
+        headerProfile = findViewById(R.id.headerProfile)
+        headerProfile.applyEventQrTopInsetPadding()
 
         txtProfileName = findViewById(R.id.txtProfileName)
         txtProfileEmail = findViewById(R.id.txtProfileEmail)
         skeletonLoading = findViewById(R.id.skeletonLoading)
         swipeRefresh = findViewById(R.id.swipeRefreshProfile)
-        layoutProfileMenu = findViewById(R.id.layoutProfileMenu)
+        layoutProfileSections = findViewById(R.id.layoutProfileSections)
         errorProfileBlock = findViewById(R.id.errorProfileBlock)
         txtProfileError = findViewById(R.id.txtProfileError)
         btnProfileRetry = findViewById(R.id.btnProfileRetry)
+
+        findViewById<TextView>(R.id.txtProfileVersion).text = getString(
+            R.string.ui_attendee_version,
+            BuildConfig.VERSION_NAME,
+            BuildConfig.VERSION_CODE,
+        )
 
         swipeRefresh.setOnRefreshListener { loadProfile() }
 
         btnProfileRetry.setOnClickListener { loadProfile() }
 
-        findViewById<View>(R.id.cardEditProfile).setOnClickListener {
-            startActivity(Intent(this, AttendeeEditProfileActivity::class.java))
-        }
-        findViewById<View>(R.id.cardTransactionHistory).setOnClickListener {
-            startActivity(Intent(this, AttendeeTransactionsActivity::class.java))
-        }
-        findViewById<View>(R.id.cardClaimedRewards).setOnClickListener {
-            startActivity(Intent(this, ClaimedRewardsActivity::class.java))
-        }
-        findViewById<View>(R.id.cardMyEventRequests).setOnClickListener {
-            startActivity(Intent(this, MyEventRequestsActivity::class.java))
-        }
-        findViewById<View>(R.id.cardSignOut).setOnClickListener {
-            showSignOutConfirmation()
+        bindActivityRows()
+
+        // A styled TextView, so it needs the Button role explicitly (§9.5).
+        findViewById<View>(R.id.cardSignOut).apply {
+            asButtonRole()
+            setOnClickListener { showSignOutConfirmation() }
         }
 
         configureAttendeeBottomNav(AttendeeBottomNavItem.PROFILE)
         uiReady = true
+    }
+
+    private fun bindActivityRows() {
+        bindRow(
+            R.id.rowTransactionHistory,
+            title = getString(R.string.ui_attendee_transaction_history),
+            meta = getString(R.string.ui_attendee_profile_meta_history),
+            icon = AppIcons.Logs,
+        ) { startActivity(Intent(this, AttendeeTransactionsActivity::class.java)) }
+
+        bindRow(
+            R.id.rowClaimedRewards,
+            title = getString(R.string.ui_attendee_claimed_rewards),
+            meta = getString(R.string.ui_attendee_profile_meta_rewards),
+            icon = AppIcons.Reward,
+        ) { startActivity(Intent(this, ClaimedRewardsActivity::class.java)) }
+
+        bindRow(
+            R.id.rowMyEventRequests,
+            title = getString(R.string.ui_attendee_my_event_requests),
+            meta = getString(R.string.ui_attendee_profile_meta_requests),
+            icon = AppIcons.Request,
+            showDivider = false,
+        ) { startActivity(Intent(this, MyEventRequestsActivity::class.java)) }
+    }
+
+    private fun bindRow(
+        rowId: Int,
+        title: String,
+        meta: String?,
+        @androidx.annotation.DrawableRes icon: Int,
+        showDivider: Boolean = true,
+        onClick: () -> Unit,
+    ) {
+        val row = findViewById<View>(rowId)
+        ListRowBinder.bind(
+            row = row,
+            title = title,
+            meta = meta,
+            trailing = ListRowBinder.Trailing.CHEVRON,
+            showDivider = showDivider,
+            onClick = onClick,
+        )
+        row.findViewById<android.widget.ImageView>(R.id.listRowIcon)?.setImageResource(icon)
     }
 
     private fun showSignOutConfirmation() {
@@ -132,7 +193,9 @@ class AttendeeProfileActivity : AppCompatActivity() {
                     renderProfile(user)
                     clearErrorState()
                 }
-                is NetworkResult.Error -> showErrorState(result.message.ifBlank { "Unable to load profile." })
+                is NetworkResult.Error -> showErrorState(
+                    result.message.ifBlank { getString(R.string.ui_attendee_profile_load_failed) },
+                )
                 else -> Unit
             }
 
@@ -144,28 +207,50 @@ class AttendeeProfileActivity : AppCompatActivity() {
         // The pre-load pass has no DTO yet, so fall back to the cached session values instead of
         // flashing an empty name or email before the request resolves.
         val name = user?.fullName ?: sessionManager.getFullName().orEmpty()
+        val email = user?.email ?: sessionManager.getEmail().orEmpty()
         txtProfileName.text = name
-        txtProfileEmail.text = user?.email ?: sessionManager.getEmail().orEmpty()
+        txtProfileEmail.text = email
+        txtProfileEmail.maxLines = if (MetricRowStacking.stacks(resources.configuration.fontScale)) 2 else 1
 
         findViewById<TextView>(R.id.txtProfileInitial).text =
             name.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
+
+        // One TalkBack node for the block, the name first; the avatar and both labels are
+        // importantForAccessibility="no" so nothing is read twice (§9.5).
+        headerProfile.contentDescription = listOf(name, email).filter { it.isNotBlank() }.joinToString(", ")
+
+        // Edit profile always prints a meta line: the real number when there is one, else what the
+        // row edits. A meta that vanished with the data would change the row's height mid-load.
+        val phone = (if (user != null) user.phoneNumber else sessionManager.getPhone())
+            ?.takeIf { it.isNotBlank() }
+            ?: getString(R.string.ui_attendee_profile_meta_edit)
+        findViewById<View>(R.id.rowEditProfile).let { row ->
+            ListRowBinder.bind(
+                row = row,
+                title = getString(R.string.ui_attendee_edit_profile),
+                meta = phone,
+                trailing = ListRowBinder.Trailing.CHEVRON,
+                showDivider = false,
+            ) { startActivity(Intent(this, AttendeeEditProfileActivity::class.java)) }
+            row.findViewById<android.widget.ImageView>(R.id.listRowIcon)?.setImageResource(AppIcons.Profile)
+        }
     }
 
     private fun setLoadingState(loading: Boolean) {
         val showSkeleton = loading && !swipeRefresh.isRefreshing
         skeletonLoading.visibility = if (showSkeleton) View.VISIBLE else View.GONE
         if (loading) {
-            if (showSkeleton) layoutProfileMenu.visibility = View.GONE
+            if (showSkeleton) layoutProfileSections.visibility = View.GONE
             errorProfileBlock.visibility = View.GONE
         } else {
             swipeRefresh.isRefreshing = false
-            layoutProfileMenu.visibility = View.VISIBLE
+            layoutProfileSections.visibility = View.VISIBLE
         }
     }
 
     private fun showErrorState(message: String) {
         skeletonLoading.visibility = View.GONE
-        layoutProfileMenu.visibility = View.VISIBLE
+        layoutProfileSections.visibility = View.VISIBLE
         errorProfileBlock.visibility = View.VISIBLE
         txtProfileError.text = message
     }

@@ -3,9 +3,13 @@ package com.thedavelopers.eventqr.features.attendee
 import android.content.Intent
 import android.os.Bundle
 import android.text.TextWatcher
+import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.VisibleForTesting
@@ -98,6 +102,8 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
         asFilterChips(chipAll, chipThisWeek, chipRegistered, chipDateFilter)
         adapter = AttendeeEventAdapter { event -> openEventDetail(event) }
 
+        reflowSearchRowForFontScale()
+
         countView = findViewById<TextView>(R.id.passHeadTitleCount).apply { visibility = View.VISIBLE }
         PassHeadBinder.bindCompact(
             findViewById(R.id.passHead),
@@ -123,7 +129,7 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
             openDateSheet(draft)
         }
 
-        findViewById<android.widget.EditText>(R.id.inputEventSearch)
+        findViewById<EditText>(R.id.inputEventSearch)
             .addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -132,6 +138,31 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
                 }
                 override fun afterTextChanged(s: android.text.Editable?) {}
             })
+    }
+
+    /**
+     * At `fontScale` 1.3 and above the single row cannot hold both labels: the search field would
+     * collapse toward zero behind the date chip. Stack the chip under a full-width field instead
+     * (end aligned, one 8dp gap), keeping the plan's single row at normal font scales.
+     *
+     * Runs once in `onCreate`; a font-scale change relies on the activity being recreated. Call it
+     * from `onConfigurationChanged` if `configChanges` ever includes `fontScale`.
+     */
+    private fun reflowSearchRowForFontScale() {
+        if (resources.configuration.fontScale < SEARCH_ROW_REFLOW_FONT_SCALE) return
+        val row = findViewById<LinearLayout>(R.id.searchRow)
+        val field = findViewById<EditText>(R.id.inputEventSearch)
+        row.orientation = LinearLayout.VERTICAL
+        field.layoutParams = (field.layoutParams as LinearLayout.LayoutParams).apply {
+            width = ViewGroup.LayoutParams.MATCH_PARENT
+            weight = 0f
+        }
+        chipDateFilter.layoutParams = (chipDateFilter.layoutParams as LinearLayout.LayoutParams).apply {
+            width = ViewGroup.LayoutParams.WRAP_CONTENT
+            marginStart = 0
+            topMargin = resources.getDimensionPixelSize(R.dimen.space_sm)
+            gravity = Gravity.END
+        }
     }
 
     private fun statusMatches(item: AttendeeEventResponse, now: Instant): Boolean = when (selectedFilter) {
@@ -522,6 +553,7 @@ open class AttendeeEventsActivity : AppCompatActivity(), EventsContract.View {
     }
 
     private companion object {
+        const val SEARCH_ROW_REFLOW_FONT_SCALE = 1.3f
         const val THIS_WEEK_DAYS = 7L
         const val STATE_FILTER_STATUS = "discover.filter.status"
         const val STATE_FILTER_MODE = "discover.dateFilter.mode"

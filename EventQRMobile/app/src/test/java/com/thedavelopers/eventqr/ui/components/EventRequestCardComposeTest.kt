@@ -41,7 +41,7 @@ class EventRequestCardComposeTest {
 
         val expected = "Submitted ${DateFormatters.formatEventDate(fixedInstant)}"
         composeTestRule.onNodeWithText(expected).assertIsDisplayed()
-        assertEquals("14 Mar 2026", DateFormatters.eventDateFormatter.format(fixedInstant))
+        assertEquals("14\u00A0Mar\u00A02026", DateFormatters.eventDateFormatter.format(fixedInstant))
     }
 
     @Test

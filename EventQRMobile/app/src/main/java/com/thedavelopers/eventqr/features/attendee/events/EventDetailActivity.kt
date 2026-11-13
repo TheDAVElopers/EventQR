@@ -6,11 +6,9 @@ import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Base64
 import android.util.Log
-import android.view.Gravity
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.VisibleForTesting
@@ -21,20 +19,26 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.AccountRole
 import com.thedavelopers.eventqr.core.api.dto.EventStatus
+import com.thedavelopers.eventqr.core.format.formatEventTime
+import com.thedavelopers.eventqr.core.format.formatRegistrationWindow
 import com.thedavelopers.eventqr.core.session.SessionManager
 import com.thedavelopers.eventqr.core.util.RoleMapper
+import com.thedavelopers.eventqr.features.attendee.claimableRewards
+import com.thedavelopers.eventqr.features.attendee.redeemedRewardIds
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
 import com.thedavelopers.eventqr.features.events.model.dto.EventAvailabilityResponse
 import com.thedavelopers.eventqr.features.organizer.events.EventManagementHubActivity
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+import com.thedavelopers.eventqr.ui.components.MetricRowStacking
 import com.thedavelopers.eventqr.ui.components.showInlineError
 import com.thedavelopers.eventqr.ui.theme.applyEventQrBottomInsetPadding
 import java.time.Instant
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 
-// §6.2: above this scale the REGISTRATION WINDOW row stacks instead of sharing one line.
-private const val REG_WINDOW_STACK_FONT_SCALE = 1.3f
+// §6.2: above fontScale 1.3 the EVENT TIME and REGISTRATION WINDOW rows stack instead of sharing one
+// line. The threshold and the reflow live in MetricRowStacking, shared with the organizer spec table.
 
 open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     @VisibleForTesting
@@ -53,6 +57,11 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
     private var cancelDialog: androidx.appcompat.app.AlertDialog? = null
     private var failureDialog: androidx.appcompat.app.AlertDialog? = null
     private var availabilityJob: kotlinx.coroutines.Job? = null
+    private var rewardsAvailabilityJob: kotlinx.coroutines.Job? = null
+    // The last settled REWARDS label and its event: a same-event re-bind re-shows it instead of
+    // blanking a finished value while the fresh read runs.
+    private var rewardsLabelEventId: String? = null
+    private var rewardsLabel: String? = null
     // Re-draws the button from the last availability outcome when the registration status changes afterwards.
     private var reapplyAvailability: (() -> Unit)? = null
     private lateinit var errorStrip: View
@@ -79,6 +88,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
             text = launchDescription
             visibility = if (hasLaunchDescription) View.VISIBLE else View.GONE
         }
+        findViewById<View>(R.id.viewAboutDivider).visibility = if (hasLaunchDescription) View.VISIBLE else View.GONE
 
         repository = AttendeeRepository(this)
         presenter = EventDetailPresenter(this, repository, UiStrings(this))
@@ -91,7 +101,8 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         if (launchTitle.isBlank()) findViewById<View>(R.id.layoutEventHero).visibility = View.GONE
         findViewById<TextView>(R.id.txtDetailTitle).text = launchTitle
         findViewById<TextView>(R.id.txtDetailTitlePoster).text = launchTitle
-        findViewById<TextView>(R.id.txtDetailVenue).text = intent.getStringExtra(EXTRA_EVENT_LOCATION).orEmpty().ifBlank { "Location not specified" }
+        findViewById<TextView>(R.id.txtDetailVenue).text = intent.getStringExtra(EXTRA_EVENT_LOCATION).orEmpty()
+            .ifBlank { getString(R.string.ui_attendee_location_not_specified) }
         
         intent.getStringExtra(EXTRA_EVENT_COUNT)?.let { countStr ->
             intent.getStringExtra(EXTRA_EVENT_CAPACITY)?.let { capacityStr ->
@@ -102,10 +113,6 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         findViewById<Button>(R.id.btnRegisterForEvent).apply {
             isEnabled = false
             text = getString(R.string.event_detail_loading)
-        }
-
-        findViewById<View>(R.id.layoutRewardsRow)?.setOnClickListener {
-            startActivity(Intent(this, AttendeeRewardsActivity::class.java).putExtra(EXTRA_EVENT_ID, eventId))
         }
 
         findViewById<View>(R.id.btnCancelRegistration).setOnClickListener { confirmCancelRegistration() }
@@ -158,8 +165,6 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         errorStrip.visibility = View.GONE
         emptyState.hide()
         findViewById<View>(R.id.layoutSpecTable).visibility = View.VISIBLE
-        findViewById<View>(R.id.txtDetailAboutLabel).visibility = View.VISIBLE
-        findViewById<View>(R.id.txtDetailDescription).visibility = View.VISIBLE
         // The top bar keeps its fixed "Event details" title; the event name sits in the media head:
         // in the no-poster band, or on the page background under the poster.
         findViewById<TextView>(R.id.txtDetailTitle).text = event.title
@@ -173,90 +178,147 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         if (status != EventStatus.UNKNOWN) {
             AttendeeBadges.bind(findViewById(R.id.txtDetailStatus), status)
         }
-        findViewById<TextView>(R.id.txtDetailDescription).text = event.description?.takeIf { it.isNotBlank() } ?: getString(R.string.ui_attendee_no_description)
         findViewById<TextView>(R.id.txtDetailVenue).text = event.location?.takeIf { it.isNotBlank() } ?: getString(R.string.ui_attendee_venue_tbd)
         renderEventPoster(event.eventLogoUrl)
 
-        val manilaZone = java.time.ZoneId.of("Asia/Manila")
-        // §7.6: `12 Oct 2026` for a date, `12 Oct 2026, 9:41 AM` for a date and time.
-        val dateFormatter = java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", java.util.Locale.ENGLISH).withZone(manilaZone)
-        val timeFormatter = java.time.format.DateTimeFormatter.ofPattern("h:mm a", java.util.Locale.ENGLISH).withZone(manilaZone)
-        
-        if (event.eventStartAt != null) {
-            val endAt = event.eventEndAt
-            val multiDay = endAt != null &&
-                event.eventStartAt.atZone(manilaZone).toLocalDate() != endAt.atZone(manilaZone).toLocalDate()
-            findViewById<TextView>(R.id.txtDetailDate).text = if (multiDay && endAt != null) {
-                val shortFormatter = java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", java.util.Locale.ENGLISH).withZone(manilaZone)
-                getString(R.string.event_detail_date_range, shortFormatter.format(event.eventStartAt), shortFormatter.format(endAt))
-            } else {
-                dateFormatter.format(event.eventStartAt)
-            }
-            val startTime = timeFormatter.format(event.eventStartAt)
-            findViewById<TextView>(R.id.txtDetailTime).text =
-                event.eventEndAt?.let { "$startTime - ${timeFormatter.format(it)}" } ?: startTime
-        } else {
-            findViewById<TextView>(R.id.txtDetailDate).text = "--"
-            findViewById<TextView>(R.id.txtDetailTime).text = "-"
-        }
-
-        val category = event.category?.takeIf { it.isNotBlank() }
-        findViewById<TextView>(R.id.txtDetailCategory).text = category.orEmpty()
-        val categoryVisibility = if (category != null) View.VISIBLE else View.GONE
-        findViewById<View>(R.id.layoutCategoryRow).visibility = categoryVisibility
-        findViewById<View>(R.id.viewCategoryDivider).visibility = categoryVisibility
-
-        val audience = event.targetAudience?.takeIf { it.isNotBlank() }
-        findViewById<TextView>(R.id.txtDetailAudience).text = audience.orEmpty()
-        val audienceVisibility = if (audience != null) View.VISIBLE else View.GONE
-        findViewById<View>(R.id.layoutAudienceRow).visibility = audienceVisibility
-        findViewById<View>(R.id.viewAudienceDivider).visibility = audienceVisibility
-
-        val regWindow = formatRegistrationWindow(
-            openAt = event.registrationOpenAt,
-            closeAt = event.registrationCloseAt,
-            now = Instant.now(),
-            zone = manilaZone,
-            rangeFormat = getString(R.string.event_detail_date_range),
-            opensPrefix = getString(R.string.ui_attendee_registration_opens),
-            closesPrefix = getString(R.string.ui_attendee_registration_closes),
+        // §6.2: one EVENT TIME row, the organizer page's value through the one shared helper, and
+        // the same full registration window. A missing start hides the row with its hairline.
+        bindOptionalRow(
+            R.id.layoutEventTimeRow,
+            R.id.viewEventTimeDivider,
+            R.id.txtDetailEventTime,
+            formatEventTime(this, event.eventStartAt, event.eventEndAt),
         )
-        findViewById<TextView>(R.id.txtDetailRegWindow).text = regWindow.orEmpty()
-        val regVisibility = if (regWindow != null) View.VISIBLE else View.GONE
-        findViewById<View>(R.id.layoutRegWindowRow).visibility = regVisibility
-        findViewById<View>(R.id.viewRegWindowDivider).visibility = regVisibility
-        applyRegWindowRowLayout()
+        bindOptionalRow(
+            R.id.layoutRegWindowRow,
+            R.id.viewRegWindowDivider,
+            R.id.txtDetailRegWindow,
+            formatRegistrationWindow(this, event.registrationOpenAt, event.registrationCloseAt),
+        )
+
+        // About answers "what is it" between the facts and the role-specific rows; a blank
+        // description hides the block and its hairline (§6.2).
+        val about = event.description?.takeIf { it.isNotBlank() }
+        val aboutVisibility = if (about != null) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.txtDetailAboutLabel).visibility = aboutVisibility
+        findViewById<View>(R.id.txtDetailDescription).visibility = aboutVisibility
+        findViewById<View>(R.id.viewAboutDivider).visibility = aboutVisibility
+        about?.let { findViewById<TextView>(R.id.txtDetailDescription).text = it }
+
+        bindOptionalRow(
+            R.id.layoutCategoryRow,
+            R.id.viewCategoryDivider,
+            R.id.txtDetailCategory,
+            event.category?.takeIf { it.isNotBlank() },
+        )
+        bindOptionalRow(
+            R.id.layoutAudienceRow,
+            R.id.viewAudienceDivider,
+            R.id.txtDetailAudience,
+            event.targetAudience?.takeIf { it.isNotBlank() },
+        )
 
         updateRegistrationStatusUI(event.currentAttendeeCount, event.capacity)
 
-        val rewardsRow = findViewById<View>(R.id.layoutRewardsRow)
-        val rewardsDivider = findViewById<View>(R.id.viewRewardsDivider)
-        val rewardsRowVisible = event.rewardsEnabled
-        rewardsRow?.visibility = if (rewardsRowVisible) View.VISIBLE else View.GONE
-        rewardsDivider?.visibility = if (rewardsRowVisible) View.VISIBLE else View.GONE
+        // §6.2: REWARDS is an indicator, not a link, and the row always shows. Only a failed rewards
+        // read leaves the value silent, so the table never jumps or claims a wrong "None".
+        findViewById<View>(R.id.layoutRewardsRow).visibility = View.VISIBLE
+        findViewById<View>(R.id.viewRewardsDivider).visibility = View.VISIBLE
+        val rewardsEventId = event.eventId.toString()
+        if (rewardsEventId != rewardsLabelEventId) {
+            rewardsLabelEventId = null
+            rewardsLabel = null
+        }
+        if (event.rewardsEnabled) {
+            // A value already settled for this event survives the re-bind; the fresh read updates it.
+            showRewardsLabel(rewardsLabel)
+            loadRewardsAvailability(rewardsEventId)
+        } else {
+            setRewardsLabel(rewardsEventId, getString(R.string.ui_attendee_none))
+        }
+
+        applyStackedRows()
 
         checkOwnedEventThenAvailability(event)
         updateCancelButtonVisibility()
     }
 
-    // §6.2: the label's overline token is 11sp; at the 1.3 threshold it is about 14.3sp / ~200dp,
-    // so the 320dp content row has no room left for the deadline beside it. Stack the row instead
-    // of breaking the word mid-label. At or below 1.3 the row keeps the layout's label-left,
-    // value-right anatomy untouched. This branch assumes a fresh activity: a font-scale change
-    // recreates the activity (no `configChanges` in the manifest), so both branches must be reset
-    // here if that ever changes.
-    private fun applyRegWindowRowLayout() {
-        if (resources.configuration.fontScale <= REG_WINDOW_STACK_FONT_SCALE) return
-        findViewById<LinearLayout>(R.id.layoutRegWindowRow).orientation = LinearLayout.VERTICAL
-        val value = findViewById<TextView>(R.id.txtDetailRegWindow)
-        value.gravity = Gravity.START
-        (value.layoutParams as LinearLayout.LayoutParams).apply {
-            // 0dp + weight only fills the horizontal row; stacked, it must take the full width.
-            width = LinearLayout.LayoutParams.MATCH_PARENT
-            weight = 0f
-            marginStart = 0
-            marginEnd = 0
-            topMargin = resources.getDimensionPixelSize(R.dimen.space_4)
+    /**
+     * "Available" when the event lists at least one reward the attendee may still claim, "None" when
+     * it lists none, and no value at all when the rewards read fails for any other reason. The
+     * redemptions read only narrows by the Rewards screen's own rule (`claimableRewards`), so an
+     * already-claimed reward cannot read as available here; that read needs a registration, so a 403
+     * from an unregistered viewer falls back to the rewards list instead of silencing the row.
+     *
+     * The rewards read itself is gated the same way (`requireRegistered`): it answers 403 to any
+     * viewer who is not registered for the event - an organizer browsing as attendee, or an attendee
+     * who has not registered yet - while the organizer has rewards enabled for it. That viewer cannot
+     * see the list, so the row reads "Available", never a wrong "None". Other failures stay blank.
+     */
+    private fun loadRewardsAvailability(eventId: String) {
+        rewardsAvailabilityJob?.cancel()
+        rewardsAvailabilityJob = lifecycleScope.launch {
+            val rewards = repository.getRewardsByEvent(eventId)
+            if (rewards is NetworkResult.Error && rewards.isForbidden()) {
+                setRewardsLabel(eventId, getString(R.string.ui_attendee_available))
+                return@launch
+            }
+            if (rewards !is NetworkResult.Success) return@launch
+            val label = if (rewards.data.isEmpty()) {
+                getString(R.string.ui_attendee_none)
+            } else {
+                val redemptions = repository.getMyRewardRedemptions(eventId)
+                val claimable = if (redemptions is NetworkResult.Success) {
+                    claimableRewards(rewards.data, redeemedRewardIds(redemptions.data))
+                } else {
+                    rewards.data
+                }
+                getString(
+                    if (claimable.isNotEmpty()) R.string.ui_attendee_available else R.string.ui_attendee_none,
+                )
+            }
+            setRewardsLabel(eventId, label)
+        }
+    }
+
+    /**
+     * HTTP 403 from the rewards read: the viewer is not registered for this event, so the list is
+     * not theirs to see. Read through the transport error, never the message text.
+     */
+    private fun NetworkResult.Error.isForbidden(): Boolean =
+        (throwable as? HttpException)?.code() == HTTP_FORBIDDEN
+
+    /** Records a settled label for [eventId] and draws it; a same-event re-bind re-shows it. */
+    private fun setRewardsLabel(eventId: String, label: String) {
+        rewardsLabelEventId = eventId
+        rewardsLabel = label
+        showRewardsLabel(label)
+    }
+
+    /** A null label is a blank value: invisible keeps the row's height so the table never jumps. */
+    private fun showRewardsLabel(label: String?) {
+        findViewById<TextView>(R.id.txtRewardsAvailable).apply {
+            text = label
+            visibility = if (label != null) View.VISIBLE else View.INVISIBLE
+        }
+    }
+
+    /** A blank value hides the row and its own hairline — no empty label, no orphan rule. */
+    private fun bindOptionalRow(rowId: Int, dividerId: Int, valueId: Int, value: String?) {
+        val visible = !value.isNullOrBlank()
+        findViewById<View>(rowId).visibility = if (visible) View.VISIBLE else View.GONE
+        findViewById<View>(dividerId).visibility = if (visible) View.VISIBLE else View.GONE
+        value?.let { findViewById<TextView>(valueId).text = it }
+    }
+
+    // §6.2/§9.3: above fontScale 1.3 the datetime rows stack, label over a full-width value. The
+    // overline token is 11sp, so at the 1.3 threshold it is ~14.3sp / ~200dp and leaves no room for
+    // a range beside it. At or below 1.3 the layout's label-left/value-right anatomy stands. This
+    // branch assumes a fresh activity: a font-scale change recreates the activity (no
+    // `configChanges` in the manifest), so both branches must be reset here if that ever changes.
+    private fun applyStackedRows() {
+        attendeeEventDetailStackedRows.forEach { (rowId, valueId) ->
+            MetricRowStacking.apply(this, findViewById(rowId), findViewById(valueId))
         }
     }
 
@@ -337,7 +399,10 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
                     updateRegisterButtonFromAvailability(event, result.data)
                 }
                 is NetworkResult.Error -> {
-                    updateRegisterButtonWithFallback(event, result.message.ifBlank { "Availability unavailable" })
+                    updateRegisterButtonWithFallback(
+                        event,
+                        result.message.ifBlank { getString(R.string.ui_attendee_availability_unavailable) },
+                    )
                 }
                 NetworkResult.Loading -> Unit
             }
@@ -377,7 +442,7 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
         }
 
         btn.isEnabled = false
-        btn.text = availability.message.ifBlank { "Registration Unavailable" }
+        btn.text = availability.message.ifBlank { getString(R.string.ui_attendee_registration_unavailable) }
         logRegistrationWindow(event, availability, false)
     }
 
@@ -666,5 +731,22 @@ open class EventDetailActivity : AppCompatActivity(), EventDetailContract.View {
 
     private companion object {
         const val TAG = "EventDetail"
+
+        /** Not registered for this event: the attendee rewards read's own gate. */
+        const val HTTP_FORBIDDEN = 403
     }
 }
+
+/**
+ * The spec-table rows that stack above `fontScale` 1.3 (§6.2/§9.3), as (row, value) pairs in table
+ * order: EVENT TIME and REGISTRATION WINDOW hold ranges, and the 11sp overline leaves no room for a
+ * range beside it at the threshold. REWARDS stacks for the same reason (a value slot that must never
+ * be clipped). `applyStackedRows()` iterates this list and the Robolectric tests iterate the same
+ * list, so the production set and the asserted set cannot drift.
+ */
+internal val attendeeEventDetailStackedRows: List<Pair<Int, Int>> = listOf(
+    R.id.layoutEventTimeRow to R.id.txtDetailEventTime,
+    R.id.layoutRegWindowRow to R.id.txtDetailRegWindow,
+    R.id.layoutRewardsRow to R.id.txtRewardsAvailable,
+)
+

@@ -1,14 +1,17 @@
 package com.thedavelopers.eventqr.features.staff.scanner
 
+import android.util.Log
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.UiStrings
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import com.thedavelopers.eventqr.core.util.Validators
+import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.rewards.model.dto.RewardRedemptionScanRequest
 import com.thedavelopers.eventqr.features.scanpurposes.model.dto.ScanPurposeResponse
 import com.thedavelopers.eventqr.features.staff.EventSpinnerOption
 import com.thedavelopers.eventqr.features.staff.StaffRepository
+import com.thedavelopers.eventqr.features.staff.model.dto.StaffAssignedEventResponse
 import com.thedavelopers.eventqr.features.transactions.model.dto.TransactionRequest
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -26,6 +29,8 @@ class ScannerPresenter(
 ) {
     private val tag = "StaffQrScanner"
     private var job: Job? = null
+    // Events dropped for an unreadable status, so the reason is logged once each, not once per load.
+    private val loggedUnknownEventIds = mutableSetOf<String>()
 
     // A submit belongs to the event it was started for. It gets its own job so an event switch can
     // abandon it without touching the events load, and so its late callback can be dropped.
@@ -59,12 +64,12 @@ class ScannerPresenter(
         job = scope.launch {
             when (val result = repository.getEvents()) {
                 is NetworkResult.Success -> {
+                    // The picker offers what can be scanned right now: an assigned event the caller may
+                    // scan that is ACTIVE. Upcoming events stay out until they start, and an ended one
+                    // leaves the moment it ends (§5.13), so the list is never a menu of dead targets.
                     val selectable = result.data
-                        .filter { it.canStartScan }
+                        .filter { it.isActiveForScan() }
                         .map { EventSpinnerOption(it.eventId.toString(), it.title, it.canScan, it.eventStartAt, it.canPrintId) }
-                    if (selectable.isEmpty() && result.data.any { it.status == EventStatus.ENDED }) {
-                        view?.showMessage(strings.get(R.string.scanner_event_has_ended))
-                    }
                     view?.showEvents(selectable)
                 }
                 is NetworkResult.Error -> view?.showEventsLoadFailed(result.message)
@@ -227,6 +232,16 @@ class ScannerPresenter(
     }
 
     /**
+     * The picker emptied: a purpose load for the event that left must not land on the screen and
+     * re-arm the decoder for an event no longer offered.
+     */
+    fun cancelPurposes() {
+        purposesJob?.cancel()
+        purposesJob = null
+        purposesEventId = null
+    }
+
+    /**
      * The purpose list belongs to one event. A fast event switch can leave two requests in flight,
      * so the previous load is cancelled and any response tagged with an older event id is dropped:
      * otherwise the slower first response would overwrite the purposes of the event now selected.
@@ -302,6 +317,24 @@ class ScannerPresenter(
     private fun isLookupFailure(error: NetworkResult.Error): Boolean {
         val code = (error.throwable as? retrofit2.HttpException)?.code() ?: return false
         return code == 400 || code == 404 || code == 422
+    }
+
+    /**
+     * An event belongs in the picker when the caller may scan it and it is running now. "Active" is
+     * [EventStatusBadgeStyler.resolve] - the same rule the Assigned events screen's badge reads - so
+     * the two surfaces can never disagree about what counts as active (dates decide, and the backend
+     * `status` only carries the states dates cannot express). The permission is `canScan`, not
+     * [StaffAssignedEventResponse.canStartScan]: that one also drops backend-ENDED, which would hide
+     * a running event the badge still calls Active.
+     */
+    private fun StaffAssignedEventResponse.isActiveForScan(): Boolean {
+        val resolved = EventStatusBadgeStyler.resolve(status, eventStartAt, eventEndAt)
+        if (resolved == EventStatus.UNKNOWN && loggedUnknownEventIds.add(eventId.toString())) {
+            // The badge prints a neutral `Status: …` for this event, so it cannot claim Active here;
+            // say why it left the picker instead of dropping it silently.
+            Log.w(tag, "event $eventId not listed on Scan: unreadable status $status")
+        }
+        return canScan && resolved == EventStatus.ACTIVE
     }
 
     private fun isShortId(value: String): Boolean = value.startsWith("#") || value.all { it.isDigit() }

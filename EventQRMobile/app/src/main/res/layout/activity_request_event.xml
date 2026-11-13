@@ -2,10 +2,10 @@
 <!--
     Request event (§6.2, shared form pattern §6.6) - retires Gen A.
 
-        Five eyebrowed sections separated by 1dp perforations
+        Five sections headed Widget.EventQR.Ui.SectionHeading, separated by 1dp perforations
         56dp filled fields with static overline labels
         Poster picker as a flat media block
-        72dp sticky footer: primary Submit request + ghost Cancel
+        Sticky footer: review caption (txtSubmitReviewNote) above primary Submit request + ghost Cancel
         Field errors: a micro ui_error line under the field (txt*Error) + the activated 2dp error stroke
         Server failure: include_error_strip above the footer (errorRequestEvent)
 
@@ -43,20 +43,13 @@
             android:paddingEnd="@dimen/ui_gutter"
             android:paddingBottom="@dimen/space_24">
 
+            <!-- ═════════ Event information ═════════ -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/request_event_admin_review_note"
-                android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
-                android:textColor="@color/ui_text_secondary" />
-
-            <!-- ═════════ EVENT INFORMATION ═════════ -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_24"
+                android:layout_marginTop="0dp"
                 android:text="@string/ui_attendee_event_information"
-                android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+                style="@style/Widget.EventQR.Ui.SectionHeading" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -206,7 +199,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_lg"
                 android:labelFor="@id/capacityInput"
-                android:text="@string/request_event_expected_attendees_capacity"
+                android:text="@string/request_event_expected_attendees"
                 android:textAppearance="@style/TextAppearance.EventQR.Type.FieldLabel" />
 
             <EditText
@@ -235,13 +228,13 @@
                 android:background="@drawable/divider_perforation_light"
                 android:layerType="software" />
 
-            <!-- ═════════ SCHEDULE AND VENUE ═════════ -->
+            <!-- ═════════ Schedule and location ═════════ -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_lg"
                 android:text="@string/ui_attendee_schedule"
-                android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+                style="@style/Widget.EventQR.Ui.SectionHeading" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -409,13 +402,13 @@
                 android:background="@drawable/divider_perforation_light"
                 android:layerType="software" />
 
-            <!-- ═════════ REQUESTER ═════════ -->
+            <!-- ═════════ Requester ═════════ -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_lg"
                 android:text="@string/ui_attendee_requester"
-                android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+                style="@style/Widget.EventQR.Ui.SectionHeading" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -505,7 +498,7 @@
                 android:background="@drawable/divider_perforation_light"
                 android:layerType="software" />
 
-            <!-- ═════════ EVENT SETUP ═════════ -->
+            <!-- ═════════ Event setup ═════════ -->
             <LinearLayout
                 android:id="@+id/layoutPosterSection"
                 android:layout_width="match_parent"
@@ -517,7 +510,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_lg"
                 android:text="@string/ui_attendee_setup"
-                android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+                style="@style/Widget.EventQR.Ui.SectionHeading" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -585,13 +578,14 @@
                 android:layerType="software" />
             </LinearLayout>
 
-            <!-- ═════════ REASON FOR REQUEST ═════════ -->
+            <!-- ═════════ Reason for request ═════════ -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_lg"
+                android:labelFor="@id/reasonForRequestInput"
                 android:text="@string/ui_attendee_reason"
-                android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+                style="@style/Widget.EventQR.Ui.SectionHeading" />
 
             <EditText
                 android:id="@+id/reasonForRequestInput"
@@ -651,6 +645,17 @@
         android:paddingTop="@dimen/space_md"
         android:paddingEnd="@dimen/ui_gutter"
         android:paddingBottom="@dimen/space_md">
+
+        <!-- The review promise sits with the action it qualifies: one Type.Help line above Submit,
+             its own TalkBack node, never a tinted box or an icon. -->
+        <TextView
+            android:id="@+id/txtSubmitReviewNote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/space_sm"
+            android:gravity="start"
+            android:text="@string/request_event_admin_review_note"
+            android:textAppearance="@style/TextAppearance.EventQR.Type.Help" />
 
         <Button
             android:id="@+id/submitRequestButton"

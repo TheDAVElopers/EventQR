@@ -18,19 +18,21 @@ import com.thedavelopers.eventqr.features.organizer.bindEventBadge
  *         findViewById(R.id.oeHead),
  *         title = event.title.orEmpty(),
  *         status = status,
- *         whenText = whenLine,
- *         whereText = event.venue,
  *     )
  *
- * Both meta lines are optional and `GONE` when blank, so a head with no venue shrinks to the title
- * row instead of rendering a placeholder. `whenText` / `whereText` are named for the Kotlin keyword.
+ * The head carries identity only: the name with the badge as its trailing value. Venue and schedule
+ * are label/value rows in each host's spec table, never lines under the title.
  *
- * Reflow: at `fontScale > 1.3` the badge leaves the title row and becomes the meta block's last
+ * `showStatus = false` hides the badge for a host that renders the status as its own table row
+ * (organizer event details' and the editor's `STATUS`): one head, one badge, no duplicated label.
+ * Both organizer hosts bind it that way, so a header is always the title alone.
+ *
+ * Reflow: at `fontScale > 1.3` the badge leaves the title row and becomes the reflow block's last
  * line (`space_8` above, no start margin). Beside a 3-line 28sp title at 2.0 a trailing badge leaves
  * roughly 90dp for the name, so the badge moves rather than squeezing the title.
  *
- * TalkBack (§9.5): the name and status are one node (`{name}, {status}`), the badge's tone is never
- * read, and each meta line is its own node.
+ * TalkBack (§9.5): the name and status are one node (`{name}, {status}`), and the badge's tone is
+ * never read.
  */
 object OrganizerEventHeadBinder {
 
@@ -41,8 +43,7 @@ object OrganizerEventHeadBinder {
         root: View,
         title: CharSequence,
         status: EventStatus? = null,
-        whenText: CharSequence? = null,
-        whereText: CharSequence? = null,
+        showStatus: Boolean = true,
     ) {
         val titleRow = root.findViewById<ViewGroup>(R.id.oeHeadTitleRow)
         val metaBlock = root.findViewById<ViewGroup>(R.id.oeHeadMeta)
@@ -51,7 +52,7 @@ object OrganizerEventHeadBinder {
         val context = root.context
 
         titleView.text = title
-        if (status != null) {
+        if (showStatus && status != null) {
             badge.visibility = View.VISIBLE
             badge.bindEventBadge(status)
         } else {
@@ -88,14 +89,6 @@ object OrganizerEventHeadBinder {
                 gravity = Gravity.TOP or Gravity.START,
             )
         }
-
-        bindMeta(root.findViewById(R.id.oeHeadWhen), whenText)
-        bindMeta(root.findViewById(R.id.oeHeadWhere), whereText)
-    }
-
-    private fun bindMeta(view: TextView, text: CharSequence?) {
-        view.text = text
-        view.visibility = if (text.isNullOrBlank()) View.GONE else View.VISIBLE
     }
 
     /** Idempotent: rebinding never stacks a second badge in the same parent. */

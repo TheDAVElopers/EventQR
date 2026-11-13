@@ -15,10 +15,8 @@
     <!-- Event editor (§6.4): 16:9 banner preview at a 320dp content width. -->
     <dimen name="ui_organizer_event_banner_height">180dp</dimen>
 
-    <!-- First-load skeleton for the event view (§5.11): the head geometry the loaded screen lands
-         on, so the page does not jump when the fetch returns. The stub (56dp) and the three table
-         rows (56dp each) reuse ui_pass_head_stub_height / ui_metric_row_height. -->
-    <dimen name="ui_organizer_head_skeleton_height">132dp</dimen>
+    <!-- title-only head band at the typical 2-line title: 16 top + 2x34 + 16 + 1 tear = 101dp (plan 5.11, 6.4). 1-line and 3-line titles deviate by 34dp; accepted. -->
+    <dimen name="ui_organizer_head_skeleton_height">100dp</dimen>
 
     <!-- Reward row: 40dp tile + two text lines + trailing cost, matching list_row_icon geometry. -->
 

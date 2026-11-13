@@ -3,14 +3,16 @@
     ORGANIZER - ADD STAFF (6.4).
 
         Top bar    56dp, back + "Add staff"
-        Strip      event glyph + event title; no chip - this screen is the add action
         Search     48dp filled field
         Success    48dp confirmation strip, cleared on the next keystroke
         Rows       72dp account rows; selection is the fill plus one "Selected" badge
         Footer     one 52dp primary action ("Set permissions") + a hairline on top
 
+    The event is named by the Manage event screen, so this screen carries no event strip.
+
     Deleted: bg_staff_search_box, the hand-rolled 54dp search row, the per-row card, the inline
-    bg_ui_card permission host, the promote dialog and the 0.9 * screenWidth success dialog.
+    bg_ui_card permission host, the promote dialog, the 0.9 * screenWidth success dialog and the
+    48dp event strip (include_organizer_event_strip).
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -22,12 +24,6 @@
     <include
         android:id="@+id/topBar"
         layout="@layout/include_top_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <include
-        android:id="@+id/eventStrip"
-        layout="@layout/include_organizer_event_strip"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 

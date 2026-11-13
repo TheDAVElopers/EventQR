@@ -190,6 +190,13 @@
     <color name="ui_text_on_dark">@color/p_ink_0</color>
     <color name="ui_text_on_dark_muted">@color/p_brand_200</color>
 
+    <!-- On-dark status dots. The hub's quiet status line sits on the ui_primary band, where the
+         light-surface container roles read as a washed-out fill, so the dot takes one on-dark role
+         per tone. These are fills only: the word beside the dot is always ui_text_on_dark_muted. -->
+    <color name="ui_status_dot_on_dark_info">@color/p_brand_300</color>
+    <color name="ui_status_dot_on_dark_warning">@color/p_amber_500</color>
+    <color name="ui_status_dot_on_dark_error">@color/p_red_300</color>
+
     <!-- Semantic states -->
     <color name="ui_success">@color/p_success_ink</color>
     <color name="ui_success_container">@color/p_success_surface</color>

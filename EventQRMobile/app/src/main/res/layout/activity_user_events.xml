@@ -3,10 +3,8 @@
     Discover (§6.2 of MyFiles/EventQR-Redesign-Plan.md) - retires Gen B.
 
         Compact pass head (Block A + tear) - "Discover" with the result count in the end slot
-        48dp filled search field, no label, on its own full-width row
-        36dp chips in a 48dp row on one packed Flow: All / This week / Registered / Date. Date is
-        the optional date-filter chip and the LAST Flow member: it stays on line 1 when it fits
-        and wraps to the start of line 2 when it does not (no font-scale reflow code).
+        48dp filled search field, no label, with the optional date-filter chip trailing it
+        36dp chips in a 48dp row: All / This week / Registered
         list_row_date rows at 96dp on the flat page: one badge trailing, hairline dividers
 
     Deleted: the 280dp radial purple glow, the 26sp + 13sp tab header, the 54dp outlined search
@@ -29,22 +27,45 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <EditText
-        android:id="@+id/inputEventSearch"
-        style="@style/Widget.EventQR.Ui.TextField.Search"
+    <!-- Search + optional date filter. One row below fontScale 1.3; at that scale and above
+         the row is vertical and the chip drops under the full-width field, so neither label can
+         collapse or truncate (§9.2, §9.3). The reflow is applied in AttendeeEventsActivity. -->
+    <LinearLayout
+        android:id="@+id/searchRow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/ui_gutter"
-        android:layout_marginTop="@dimen/space_12"
-        android:layout_marginEnd="@dimen/ui_gutter"
-        android:drawableStart="@drawable/ic_ui_search"
-        android:drawablePadding="@dimen/space_md"
-        android:drawableTint="@color/ui_text_secondary"
-        android:hint="@string/common_search_events"
-        android:imeOptions="actionSearch"
-        android:inputType="text"
-        android:maxLines="1"
-        android:textColorHint="@color/ui_text_secondary" />
+        android:layout_marginTop="@dimen/space_lg"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/ui_gutter"
+        android:paddingEnd="@dimen/ui_gutter">
+
+        <EditText
+            android:id="@+id/inputEventSearch"
+            style="@style/Widget.EventQR.Ui.TextField.Search"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:drawableStart="@drawable/ic_ui_search"
+            android:drawablePadding="@dimen/space_md"
+            android:drawableTint="@color/ui_text_secondary"
+            android:hint="@string/common_search_events"
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:maxLines="1"
+            android:textColorHint="@color/ui_text_secondary" />
+
+        <!-- Optional date filter: the label is the value ("Date", "Nov 2026", "12 Nov 2026"),
+             the fill is the applied state, and the trailing glyph says it opens a choice. -->
+        <TextView
+            android:id="@+id/chipDateFilter"
+            style="@style/Widget.EventQR.Ui.Chip.Selector"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/ui_chip_gap"
+            android:drawableEnd="@drawable/ic_ui_expand_more"
+            android:text="@string/ui_attendee_date" />
+    </LinearLayout>
 
     <!-- §5.6: the filter row wraps on a packed, start-aligned Flow, it never scrolls. A line
          breaks only when the next chip does not fit; the inset background keeps the 36dp fill
@@ -53,7 +74,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_8"
+        android:layout_marginTop="@dimen/space_lg"
         android:paddingStart="@dimen/ui_gutter"
         android:paddingEnd="@dimen/ui_gutter">
 
@@ -62,7 +83,7 @@
             style="@style/Widget.EventQR.Ui.ChipFlow"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:constraint_referenced_ids="chipAll,chipThisWeek,chipRegistered,chipDateFilter"
+            app:constraint_referenced_ids="chipAll,chipThisWeek,chipRegistered"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -99,28 +120,13 @@
             android:paddingTop="@dimen/space_sm"
             android:paddingBottom="@dimen/space_sm"
             android:text="@string/ui_attendee_registered" />
-
-        <!-- Optional date filter, the last Flow member: the label is the value ("Date", "Nov 2026",
-             "12 Nov 2026"), the fill is the applied state, and the trailing glyph says it opens a
-             choice. -->
-        <TextView
-            android:id="@+id/chipDateFilter"
-            style="@style/Widget.EventQR.Ui.Chip.Selector"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_ui_chip_inset"
-            android:drawableEnd="@drawable/ic_ui_expand_more"
-            android:minHeight="@dimen/ui_touch_min"
-            android:paddingTop="@dimen/space_sm"
-            android:paddingBottom="@dimen/space_sm"
-            android:text="@string/ui_attendee_date" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshEvents"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="@dimen/space_8"
+        android:layout_marginTop="@dimen/space_16"
         android:layout_weight="1">
 
         <FrameLayout

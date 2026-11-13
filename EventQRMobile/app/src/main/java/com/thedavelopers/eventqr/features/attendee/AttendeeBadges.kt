@@ -41,6 +41,22 @@ object AttendeeBadges {
         EventStatus.DRAFT, EventStatus.ENDED, EventStatus.CANCELLED, EventStatus.UNKNOWN -> neutral
     }
 
+    /**
+     * The dot fill for the hub's quiet status line, which sits on the dark `ui_primary` band.
+     * The [Tone.container] roles are light-surface fills and disappear there, so this is the one
+     * on-dark mapping: tone -> token. It is a fill only - the word beside the dot always stays
+     * `ui_text_on_dark_muted`, never lime text.
+     */
+    @ColorRes
+    fun onDarkDotColorRes(status: EventStatus): Int = when (status) {
+        EventStatus.ACTIVE -> R.color.ui_accent
+        EventStatus.APPROVED -> R.color.ui_status_dot_on_dark_info
+        EventStatus.PENDING_REVIEW -> R.color.ui_status_dot_on_dark_warning
+        EventStatus.REJECTED -> R.color.ui_status_dot_on_dark_error
+        EventStatus.DRAFT, EventStatus.ENDED, EventStatus.CANCELLED, EventStatus.UNKNOWN ->
+            R.color.ui_text_on_dark_muted
+    }
+
     fun labelRes(status: EventStatus): Int = when (status) {
         EventStatus.DRAFT -> R.string.ui_attendee_draft
         EventStatus.PENDING_REVIEW -> R.string.ui_attendee_pending_review

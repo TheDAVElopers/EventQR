@@ -95,7 +95,11 @@ class MyEventRequestsActivity : AppCompatActivity() {
             when (val result = repository.getMyEventRequests()) {
                 is NetworkResult.Success -> showDataState(result.data)
                 is NetworkResult.Error -> {
-                    showErrorState(result.message.ifBlank { "Unable to load event requests." })
+                    showErrorState(
+                        result.message.ifBlank {
+                            getString(R.string.my_event_requests_unable_to_load_event_requests)
+                        },
+                    )
                 }
                 NetworkResult.Loading -> Unit
             }

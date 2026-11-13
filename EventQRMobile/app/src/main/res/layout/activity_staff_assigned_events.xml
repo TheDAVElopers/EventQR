@@ -21,10 +21,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <!-- ═════════ Filters: wrapping chip row, never a scroller (§5.6) ═════════ -->
+    <!-- ═════════ Filters: wrapping chip row, never a scroller (§5.6) ═════════
+         No search field on this screen, so the row takes the head-to-row gap itself: space_lg
+         plus the 6dp inset above the 36dp fill paints 22dp under the tear, matching the row-to-list
+         gap that space_16 on the list host supplies. -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_lg"
         android:paddingStart="@dimen/ui_gutter"
         android:paddingEnd="@dimen/ui_gutter">
 
@@ -87,6 +91,7 @@
         android:id="@+id/swipeRefreshAssignedEvents"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_marginTop="@dimen/space_16"
         android:layout_weight="1">
 
         <FrameLayout
@@ -99,7 +104,6 @@
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
                 android:overScrollMode="never"
-                android:paddingTop="@dimen/space_16"
                 android:paddingBottom="@dimen/space_24" />
 
             <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
@@ -111,12 +115,13 @@
                 app:subtitle="@string/ui_staff_no_assigned_events_body"
                 app:title="@string/ui_staff_no_assigned_events" />
 
-            <!-- Loading mirrors the loaded rows: flat 96dp date rows, not a card. -->
+            <!-- Loading mirrors the loaded rows: flat 96dp date rows, not a card. No top margin:
+                 the list host carries the space_16 above the first row, so both states start on
+                 the same y (§9.6 #13). -->
             <LinearLayout
                 android:id="@+id/skeletonLoading"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_16"
                 android:importantForAccessibility="noHideDescendants"
                 android:orientation="vertical">
 

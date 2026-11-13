@@ -374,7 +374,7 @@ open class OrganizerDashboardActivity : AppCompatActivity() {
         row.findViewById<TextView>(R.id.listRowMonth).text =
             parsedDate?.format(monthFormatter)?.uppercase(Locale.ENGLISH) ?: EventCardPresenter.UNKNOWN_MONTH
         val time = parsedStart?.format(timeFormatter) ?: EventCardPresenter.UNKNOWN_TIME
-        val location = event.venue.takeIf { it.isNotBlank() && it != "Venue not set" }
+        val location = event.venue.takeIf { it.isNotBlank() }
             ?: EventCardPresenter.UNKNOWN_LOCATION
         val status = event.lifecycleStatus()
         ListRowBinder.bind(

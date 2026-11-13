@@ -3,10 +3,11 @@
     ORGANIZER - EDIT EVENT DETAILS (§6.4 v1.7, editor).
 
         Top bar       56dp, back + "Edit event"
-        Head          include_organizer_event_head: name + StatusBadge, BOTH meta lines GONE
-                      (the venue is edited below and the schedule is a locked row)
-        Form          five eyebrowed sections on the 20dp gutter, 1dp divider_perforation_light
-                      between them, in the view page's block order:
+        Head          include_organizer_event_head: the name only (showStatus = false); the status
+                      is the read-only STATUS row that opens the form column
+        Form          STATUS row, then five sections headed Widget.EventQR.Ui.SectionHeading on the
+                      20dp gutter, 1dp divider_perforation_light between them, in the view page's
+                      block order:
                         Event         Title (required), Venue (optional)
                         Schedule      Event dates, locked, + one micro note
                         Registration  Registration window (locked), Capacity (required, >= registered)
@@ -70,14 +71,55 @@
                 android:paddingEnd="@dimen/ui_gutter"
                 android:paddingBottom="@dimen/space_32">
 
+                <!-- STATUS first, like the read-only details page (§6.4 v1.20/v1.24): the head is the
+                     title alone, so the badge lives in a read-only row and never rides the header.
+                     Anatomy is EVENT DATES / REGISTRATION WINDOW's - overline label left, value on
+                     the row's trailing edge, ui_metric_row_height floor, hairline under. The badge is
+                     wrap_content (it hugs, never a full-width pill) and is bound through
+                     bindEventBadge, the head binder's own status -> label/tone mapping. -->
+                <LinearLayout
+                    android:id="@+id/eeStatusRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:minHeight="@dimen/ui_metric_row_height"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/ui_organizer_detail_status"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline"
+                        android:textColor="@color/ui_text_secondary" />
+
+                    <TextView
+                        android:id="@+id/eeStatusValue"
+                        style="@style/Widget.EventQR.Ui.StatusBadge.Info"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:minHeight="@dimen/ui_badge_height"
+                        android:visibility="invisible"
+                        tools:text="Upcoming"
+                        tools:visibility="visible" />
+                </LinearLayout>
+
+                <View
+                    android:id="@+id/eeDividerStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@color/ui_hairline"
+                    android:importantForAccessibility="no" />
+
                 <!-- Locked fallback: the ONLY state that survives for Active / Completed (§6.4).
                      The activity also hides the save bar and disables every field. -->
                 <TextView
                     android:id="@+id/eeLockedNote"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_24"
                     android:accessibilityLiveRegion="polite"
-                    android:layout_marginBottom="@dimen/space_16"
                     android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
                     android:textColor="@color/ui_error"
                     android:visibility="gone"
@@ -89,13 +131,14 @@
                     android:id="@+id/eeSectionEvent"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_24"
                     android:orientation="vertical">
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/ui_organizer_edit_section_event"
-                        android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+                        style="@style/Widget.EventQR.Ui.SectionHeading" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -182,7 +225,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/ui_organizer_edit_section_schedule"
-                        android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+                        style="@style/Widget.EventQR.Ui.SectionHeading" />
 
                     <LinearLayout
                         android:id="@+id/eeEventDatesRow"
@@ -249,7 +292,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/ui_organizer_edit_section_registration"
-                        android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+                        style="@style/Widget.EventQR.Ui.SectionHeading" />
 
                     <LinearLayout
                         android:id="@+id/eeWindowRow"
@@ -344,7 +387,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/ui_organizer_about"
-                        android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+                        style="@style/Widget.EventQR.Ui.SectionHeading" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -391,7 +434,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/ui_organizer_edit_section_banner"
-                        android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
+                        style="@style/Widget.EventQR.Ui.SectionHeading" />
 
                     <!-- 16:9 at a 320dp content width. The sunken fill doubles as the empty plate:
                          the image is never GONE, so "no banner" reads as an empty frame, not a gap. -->

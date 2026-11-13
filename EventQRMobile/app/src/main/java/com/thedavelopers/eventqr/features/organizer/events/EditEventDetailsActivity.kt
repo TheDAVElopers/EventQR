@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.events
 
+import android.content.Context
 import android.graphics.BitmapFactory
 import android.graphics.Rect
 import android.net.Uri
@@ -11,11 +12,13 @@ import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
@@ -26,14 +29,17 @@ import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
 import com.thedavelopers.eventqr.core.api.dto.EventStatus
-import com.thedavelopers.eventqr.core.util.DateFormatters
+import com.thedavelopers.eventqr.core.format.formatEventTime
+import com.thedavelopers.eventqr.core.format.formatRegistrationWindow
 import com.thedavelopers.eventqr.features.events.EventStatusBadgeStyler
 import com.thedavelopers.eventqr.features.events.model.dto.EventRequest
 import com.thedavelopers.eventqr.features.organizer.OrganizerRepository
+import com.thedavelopers.eventqr.features.organizer.bindEventBadge
 import com.thedavelopers.eventqr.features.organizer.formatCount
 import com.thedavelopers.eventqr.features.organizer.intentEventId
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerEventDto
 import com.thedavelopers.eventqr.features.organizer.showMissingEventScreen
+import com.thedavelopers.eventqr.ui.components.MetricRowStacking
 import com.thedavelopers.eventqr.ui.theme.applyEventQrBottomInsetPadding
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.yalantis.ucrop.UCrop
@@ -49,7 +55,8 @@ import kotlin.math.max
  * Organizer event editor (§6.4 v1.7) - the Draft / Pending review / Approved screen.
  *
  * Five eyebrowed sections in the view page's block order (Event, Schedule, Registration, About,
- * Banner), the shared identity head with both meta lines hidden, and one bottom-anchored save bar.
+ * Banner), the shared identity-only head, a read-only STATUS row that opens the form (the header is
+ * the title alone), and one bottom-anchored save bar.
  * Everything here binds a real layout: no view is built at runtime, and no field name reaches the
  * user.
  *
@@ -65,11 +72,20 @@ import kotlin.math.max
  */
 class EditEventDetailsActivity : AppCompatActivity() {
 
-    private lateinit var repository: OrganizerRepository
+    private var repositoryFactory: (Context) -> OrganizerRepository = { OrganizerRepository(it) }
+
+    @VisibleForTesting
+    internal lateinit var repository: OrganizerRepository
+
+    @VisibleForTesting
+    internal fun installRepositoryFactory(factory: (Context) -> OrganizerRepository) {
+        repositoryFactory = factory
+    }
     private lateinit var eventId: String
 
     private lateinit var scroll: ScrollView
     private lateinit var head: View
+    private lateinit var statusValue: TextView
     private lateinit var titleInput: EditText
     private lateinit var venueInput: EditText
     private lateinit var capacityInput: EditText
@@ -105,6 +121,11 @@ class EditEventDetailsActivity : AppCompatActivity() {
     /** Suppresses the dirty recalc while the loaded values are written into the fields. */
     private var populating = false
 
+    /** The form as the process left it; consumed by the next [populate], over the loaded baseline. */
+    private var restoredDraft: Draft? = null
+    private var restoredBannerDirty = false
+    private var restoredBannerPath: String? = null
+
     private val bannerPicker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let { launchBannerCrop(it) }
     }
@@ -131,9 +152,10 @@ class EditEventDetailsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_organizer_event_edit)
         applyEventQrSystemBarAppearance(lightStatusBars = true)
-        repository = OrganizerRepository(this)
+        repository = repositoryFactory(this)
         bindViews()
         applySaveBarInsets()
+        restoreDraft(savedInstanceState)
 
         eventId = intentEventId()
             ?: return showMissingEventScreen(getString(R.string.ui_organizer_edit_title))
@@ -151,6 +173,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
     private fun bindViews() {
         scroll = findViewById(R.id.eeScroll)
         head = findViewById(R.id.oeHead)
+        statusValue = findViewById(R.id.eeStatusValue)
         titleInput = findViewById(R.id.eeTitleInput)
         venueInput = findViewById(R.id.eeVenueInput)
         capacityInput = findViewById(R.id.eeCapacityInput)
@@ -243,7 +266,8 @@ class EditEventDetailsActivity : AppCompatActivity() {
         }
     }
 
-    private fun populate(event: OrganizerEventDto) {
+    @VisibleForTesting
+    internal fun populate(event: OrganizerEventDto) {
         loadedEvent = event
         val status = EventStatusBadgeStyler.resolve(
             EventStatusBadgeStyler.fromLabel(event.status),
@@ -256,9 +280,14 @@ class EditEventDetailsActivity : AppCompatActivity() {
             title = event.title?.takeIf { it.isNotBlank() }
                 ?: getString(R.string.organizer_untitled_event),
             status = status,
-            whenText = null,
-            whereText = null,
+            // The badge is the STATUS row here, not a header ornament - same head as the details
+            // page, so the band is the title alone and the status is never printed twice.
+            showStatus = false,
         )
+        // Same status -> label/tone mapping as the head binder (`bindEventBadge`), one code path.
+        // The badge starts `invisible` so an empty pill never flashes before this bind.
+        statusValue.bindEventBadge(status)
+        statusValue.visibility = View.VISIBLE
 
         populating = true
         titleInput.setText(event.title.orEmpty())
@@ -268,12 +297,51 @@ class EditEventDetailsActivity : AppCompatActivity() {
         capacityInput.setText(String.format(Locale.ROOT, "%d", event.capacity.coerceAtLeast(0)))
         populating = false
 
-        eventDatesValue.text = eventDatesText(event)
-        windowValue.text = registrationWindow(event)
+        // The details pages break a multi-day range after the start date; these two read-only rows are
+        // side-by-side form fields, so the range flows on one line and wraps at its own width.
+        eventDatesValue.text = eventDatesText(event).inlineRange()
+        windowValue.text = registrationWindow(event).inlineRange()
+        // §6.4/§9.3: above fontScale 1.3 STATUS, EVENT DATES and REGISTRATION WINDOW stack through
+        // MetricRowStacking - the same path as the details page's spec table, one implementation.
+        organizerEventEditStackedRows.forEach { (rowId, valueId) ->
+            MetricRowStacking.apply(
+                this,
+                findViewById<LinearLayout>(rowId),
+                findViewById<TextView>(valueId),
+            )
+        }
         original = draft()
         bannerDirty = false
         selectedBannerFile = null
-        loadBannerPreview(event)
+        // A draft the process saved comes back over the freshly loaded values, which stay the
+        // baseline: a restored draft that differs from them is dirty, so back still asks.
+        val restored = restoredDraft
+        restoredDraft = null
+        if (restored != null) {
+            populating = true
+            titleInput.setText(restored.title)
+            venueInput.setText(restored.venue)
+            descriptionInput.setText(restored.description)
+            capacityInput.setText(restored.capacity)
+            populating = false
+            // The head and the inline errors follow a typed title; a restore bypasses the watcher.
+            applyHeadTitle()
+            if (titleError.isVisible) setTitleError(titleErrorFor())
+            if (capacityErrorShown) setCapacityError(capacityErrorFor())
+        }
+        val restoredBanner = restoredBannerPath
+            ?.let(::File)
+            ?.takeIf { restoredBannerDirty && it.exists() }
+        restoredBannerPath = null
+        restoredBannerDirty = false
+        if (restoredBanner != null) {
+            selectedBannerFile = restoredBanner
+            bannerDirty = true
+            bannerPreview.setImageURI(Uri.fromFile(restoredBanner))
+            showBannerNote(R.string.ui_organizer_edit_banner_selected)
+        } else {
+            loadBannerPreview(event)
+        }
         if (locked) applyLock(status) else renderDirty()
     }
 
@@ -296,37 +364,21 @@ class EditEventDetailsActivity : AppCompatActivity() {
         scroll.applyEventQrBottomInsetPadding()
     }
 
-    /** `12 Jun 2026, 9:00 AM - 5:00 PM`, the range when the event spans days. */
-    private fun eventDatesText(event: OrganizerEventDto): String {
-        val start = event.eventStartAt ?: return getString(R.string.ui_organizer_value_unavailable)
-        val end = event.eventEndAt
-        val date = if (end != null &&
-            DateFormatters.formatEventDate(end) != DateFormatters.formatEventDate(start)
-        ) {
-            getString(
-                R.string.event_detail_date_range,
-                DateFormatters.formatEventDate(start),
-                DateFormatters.formatEventDate(end),
-            )
-        } else {
-            DateFormatters.formatEventDate(start)
-        }
-        val time = if (end != null) {
-            "${DateFormatters.formatTime(start)} - ${DateFormatters.formatTime(end)}"
-        } else {
-            DateFormatters.formatTime(start)
-        }
-        return "$date, $time"
-    }
+    // The details page's shared formatter, so the editor and the read-only page cannot print the
+    // same range two ways. The field is a one-line form value, so the range's deterministic break
+    // is flattened here.
+    private fun eventDatesText(event: OrganizerEventDto): String =
+        formatEventTime(this, event.eventStartAt, event.eventEndAt)?.inlineRange()
+            ?: getString(R.string.ui_organizer_value_unavailable)
 
-    private fun registrationWindow(event: OrganizerEventDto): String {
-        val open = event.registrationOpenAt?.let { DateFormatters.displayFormatter.format(it) }
-        val close = event.registrationCloseAt?.let { DateFormatters.displayFormatter.format(it) }
-        return when {
-            open != null && close != null -> "$open - $close"
-            else -> open ?: close ?: getString(R.string.ui_organizer_value_unavailable)
-        }
-    }
+    // One window, one string: the details page's shared formatter, so the editor and the read-only
+    // page cannot print the same window two ways. The field labels and input formats are unchanged.
+    private fun registrationWindow(event: OrganizerEventDto): String =
+        formatRegistrationWindow(this, event.registrationOpenAt, event.registrationCloseAt)
+            ?: getString(R.string.ui_organizer_value_unavailable)
+
+    /** `event_detail_date_range` breaks after the start date; a one-line form field does not want it. */
+    private fun String.inlineRange(): String = replace('\n', ' ')
 
     // ---------------------------------------------------------------- dirty state
 
@@ -365,13 +417,18 @@ class EditEventDetailsActivity : AppCompatActivity() {
         renderDirty()
     }
 
-    /** The head is bound from data, so a typed title has to follow it - text and its one a11y node. */
+    /**
+     * The head is bound from data, so a typed title has to follow it. Delegates to the binder with
+     * `showStatus = false` - the band carries the title alone here (the status is the STATUS row), so
+     * the a11y composition stays in one place instead of being re-implemented.
+     */
     private fun applyHeadTitle() {
-        val title = titleInput.text.toString().trim()
-        head.findViewById<TextView>(R.id.oeHeadTitle).text = title
-        val status = head.findViewById<TextView>(R.id.oeHeadStatus).text?.toString().orEmpty()
-        head.findViewById<View>(R.id.oeHeadTitleRow).contentDescription =
-            if (status.isNotBlank()) "$title, $status" else title
+        OrganizerEventHeadBinder.bind(
+            root = head,
+            title = titleInput.text.toString().trim(),
+            status = null,
+            showStatus = false,
+        )
     }
 
     // ---------------------------------------------------------------- validation
@@ -433,6 +490,37 @@ class EditEventDetailsActivity : AppCompatActivity() {
             ensureVisible(it)
         }
         return firstInvalid == null
+    }
+
+    // ---------------------------------------------------------------- saved state
+
+    /**
+     * The typed values and the picked banner ride the saved state only - never our own storage and
+     * never the server. A rotation or a killed process comes back to the same form; the loaded
+     * values are re-read and stay the baseline, so a restored draft still reads dirty.
+     */
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        if (loadedEvent == null) return
+        val form = draft()
+        outState.putString(KEY_DRAFT_TITLE, form.title)
+        outState.putString(KEY_DRAFT_VENUE, form.venue)
+        outState.putString(KEY_DRAFT_CAPACITY, form.capacity)
+        outState.putString(KEY_DRAFT_DESCRIPTION, form.description)
+        outState.putBoolean(KEY_DRAFT_BANNER_DIRTY, bannerDirty)
+        selectedBannerFile?.let { outState.putString(KEY_DRAFT_BANNER_PATH, it.absolutePath) }
+    }
+
+    private fun restoreDraft(state: Bundle?) {
+        if (state == null || !state.containsKey(KEY_DRAFT_TITLE)) return
+        restoredDraft = Draft(
+            title = state.getString(KEY_DRAFT_TITLE).orEmpty(),
+            venue = state.getString(KEY_DRAFT_VENUE).orEmpty(),
+            capacity = state.getString(KEY_DRAFT_CAPACITY).orEmpty(),
+            description = state.getString(KEY_DRAFT_DESCRIPTION).orEmpty(),
+        )
+        restoredBannerDirty = state.getBoolean(KEY_DRAFT_BANNER_DIRTY, false)
+        restoredBannerPath = state.getString(KEY_DRAFT_BANNER_PATH)
     }
 
     // ---------------------------------------------------------------- banner
@@ -618,14 +706,32 @@ class EditEventDetailsActivity : AppCompatActivity() {
                 finish()
                 return
             }
-            DiscardChangesDialog.create(this@EditEventDetailsActivity) { finish() }.show()
+            DiscardChangesDialog.create(this@EditEventDetailsActivity, onDiscard = { finish() }).show()
         }
     }
 
     companion object {
         private const val MAX_BANNER_BYTES = 5L * 1024L * 1024L
+        private const val KEY_DRAFT_TITLE = "edit_event_draft_title"
+        private const val KEY_DRAFT_VENUE = "edit_event_draft_venue"
+        private const val KEY_DRAFT_CAPACITY = "edit_event_draft_capacity"
+        private const val KEY_DRAFT_DESCRIPTION = "edit_event_draft_description"
+        private const val KEY_DRAFT_BANNER_DIRTY = "edit_event_draft_banner_dirty"
+        private const val KEY_DRAFT_BANNER_PATH = "edit_event_draft_banner_path"
     }
 }
+
+/**
+ * The read-only rows the editor stacks above `fontScale` 1.3 (§6.4/§9.3), as (row, value) pairs:
+ * `STATUS`, `EVENT DATES`, `REGISTRATION WINDOW` - the same [MetricRowStacking] path the details
+ * page's spec table uses, so the two screens reflow identically. `populate()` applies it from this
+ * list, and the editor's Robolectric test pins the inflated rows to it.
+ */
+internal val organizerEventEditStackedRows: List<Pair<Int, Int>> = listOf(
+    R.id.eeStatusRow to R.id.eeStatusValue,
+    R.id.eeEventDatesRow to R.id.eeEventDatesValue,
+    R.id.eeWindowRow to R.id.eeWindowValue,
+)
 
 /**
  * The edit lock both organizer screens share, keyed on the date-derived status: editable while the

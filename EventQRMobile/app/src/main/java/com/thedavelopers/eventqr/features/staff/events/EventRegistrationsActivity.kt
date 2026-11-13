@@ -407,14 +407,19 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         scroll.addView(container)
 
         container.addView(TextView(this).apply {
-            text = "Print Selected IDs"
+            text = getString(R.string.ui_staff_print_preview_title)
             setTextSizeRes(R.dimen.type_headline)
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(color(R.color.text_primary))
             textAlignment = View.TEXT_ALIGNMENT_CENTER
         })
         container.addView(TextView(this).apply {
-            text = "${cards.size} attendees selected · $pages sheet${if (pages == 1) "" else "s"} (9 per page) · cut along dashed guides"
+            text = resources.getQuantityString(
+                R.plurals.ui_staff_print_preview_summary,
+                pages,
+                cards.size,
+                pages,
+            )
             setTextSizeRes(R.dimen.type_body_compact)
             setTextColor(color(R.color.text_secondary))
             textAlignment = View.TEXT_ALIGNMENT_CENTER
@@ -434,7 +439,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
                 setPadding(0, 0, 0, dimenPx(R.dimen.space_sm))
             }
             pageBlock.addView(TextView(this).apply {
-                text = "Page ${p + 1} of $pages"
+                text = getString(R.string.ui_staff_print_page, p + 1, pages)
                 setTextSizeRes(R.dimen.type_caption)
                 setTextColor(color(R.color.text_secondary))
                 textAlignment = View.TEXT_ALIGNMENT_CENTER
@@ -525,7 +530,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
     ) {
         val printEventId = selectedEventId
         val printRepository = repository
-        AndroidIdPrinter.print(this, "EventQR IDs — batch (${cards.size})", cards) { outcome ->
+        AndroidIdPrinter.print(this, getString(R.string.ui_staff_print_job_name, cards.size), cards) { outcome ->
             printRepository.confirmPrintLogsInBackground(printEventId, printLogIds, outcome)
             if (!isFinishing && !isDestroyed) showBatchPrintResult(cards.size, selected.size, failures, outcome)
         }
@@ -544,7 +549,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         }
         body.addView(TextView(this).apply {
             text = when (outcome) {
-                AndroidIdPrinter.PrintOutcome.SENT -> "$printed of $total IDs printed successfully."
+                AndroidIdPrinter.PrintOutcome.SENT -> getString(R.string.ui_staff_print_success, printed, total)
                 AndroidIdPrinter.PrintOutcome.CANCELLED -> getString(R.string.event_registrations_batch_print_cancelled)
                 AndroidIdPrinter.PrintOutcome.FAILED -> getString(R.string.event_registrations_batch_print_job_failed)
             }
@@ -554,7 +559,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
         })
         if (failures.isNotEmpty()) {
             body.addView(TextView(this).apply {
-                text = "The following could not be printed:"
+                text = getString(R.string.ui_staff_print_failures_heading)
                 setTextSizeRes(R.dimen.type_body_medium)
                 typeface = Typeface.DEFAULT_BOLD
                 setTextColor(color(R.color.text_primary))
@@ -562,7 +567,11 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
             })
             for ((name, reason) in failures) {
                 body.addView(TextView(this).apply {
-                    text = "• $name — ${reason.ifBlank { "unknown error" }}"
+                    text = getString(
+                        R.string.ui_staff_print_failure_row,
+                        name,
+                        reason.ifBlank { getString(R.string.ui_staff_print_unknown_error) },
+                    )
                     setTextSizeRes(R.dimen.type_body_compact)
                     setTextColor(color(R.color.error))
                     setPadding(dimenPx(R.dimen.space_sm), dimenPx(R.dimen.space_xxs), 0, 0)
@@ -570,7 +579,7 @@ open class EventRegistrationsActivity : AppCompatActivity(), EventRegistrationsC
             }
         } else if (printed == 0) {
             body.addView(TextView(this).apply {
-                text = "No IDs were printed."
+                text = getString(R.string.ui_staff_print_none)
                 setTextSizeRes(R.dimen.type_body_compact)
                 setTextColor(color(R.color.error))
                 setPadding(0, dimenPx(R.dimen.space_6), 0, 0)

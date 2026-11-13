@@ -70,12 +70,12 @@ class ScannerContextBarTest {
     }
 
     @Test
-    fun noAssignedEvent_showsEmptyCopy_andDropsCaretAndTouch() {
+    fun noActiveEvent_showsEmptyCopy_andDropsCaretAndTouch() {
         val activity = Robolectric.buildActivity(ScannerActivity::class.java).create().get()
         activity.showEvents(emptyList())
 
         assertEquals(
-            activity.getString(R.string.ui_staff_no_events),
+            activity.getString(R.string.ui_staff_no_active_events),
             activity.findViewById<TextView>(R.id.scanContextEvent).text.toString(),
         )
         assertEquals(View.GONE, activity.findViewById<TextView>(R.id.scanContextPurpose).visibility)

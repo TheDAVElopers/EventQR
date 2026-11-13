@@ -386,7 +386,7 @@ open class TransactionLogsActivity : AppCompatActivity() {
                     addView(detailRow(AppIcons.Event, getString(R.string.transaction_logs_detail_event, log.eventTitle)))
                     addView(detailRow(AppIcons.Profile, getString(R.string.transaction_logs_detail_attendee, log.attendeeEmail.ifBlank { getString(R.string.transaction_logs_no_email) })))
 
-                    val staffText = if (log.staffEmail.isNotBlank() && log.staffEmail != "No email" && log.staffEmail != log.staffName) {
+                    val staffText = if (log.staffEmail.isNotBlank() && "@" in log.staffEmail && log.staffEmail != log.staffName) {
                         getString(R.string.transaction_logs_detail_staff_email, log.staffName, log.staffEmail)
                     } else {
                         getString(R.string.transaction_logs_detail_staff, log.staffName)

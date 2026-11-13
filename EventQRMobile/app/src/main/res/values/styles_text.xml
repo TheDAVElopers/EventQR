@@ -383,6 +383,12 @@
         <item name="android:letterSpacing">0</item>
         <item name="android:lineSpacingExtra">@dimen/ui_leading_half</item>
     </style>
+    <!-- A form section heading is the TITLE role, not an overline (§3, §5.2): sentence case,
+         tracking 0, primary ink. It only exists as a type because the overline is already taken by
+         the field label directly beneath it, and two identical 11sp caps lines cannot rank. -->
+    <style name="TextAppearance.EventQR.Type.SectionHeading" parent="TextAppearance.EventQR.Type.Title">
+        <item name="android:textColor">@color/ui_text_primary</item>
+    </style>
     <style name="TextAppearance.EventQR.Type.BodyLarge">
         <item name="android:fontFamily">@font/ibm_plex_sans_regular</item>
         <item name="android:textSize">@dimen/ui_type_body_l</item>

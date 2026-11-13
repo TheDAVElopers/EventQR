@@ -40,8 +40,8 @@
     <string name="ui_staff_scan_no_matching_pass">No pass matches that ID.</string>
     <string name="ui_staff_scan_lookup_unavailable">Couldn\'t check that pass. Try again.</string>
     <string name="ui_staff_verify">Check in</string>
-    <string name="ui_staff_no_events">No assigned events</string>
-    <string name="ui_staff_no_events_body">Ask your organizer to assign you to an event.</string>
+    <string name="ui_staff_no_active_events">No active events</string>
+    <string name="ui_staff_no_active_events_body">Events you are assigned to appear here once they start.</string>
     <!-- §5.10 error variant: same slot, same left edge, one inline Retry, the server reason as body. -->
     <string name="ui_staff_events_error_title">Couldn\'t load your events</string>
     <string name="ui_staff_purposes_error_title">Couldn\'t load scan purposes</string>
@@ -142,6 +142,20 @@
     <string name="ui_staff_print_selected">Print selected</string>
     <string name="ui_staff_no_attendees">No attendees found</string>
     <string name="ui_staff_no_attendees_body">Registered attendees will show up here.</string>
+    <string name="ui_staff_no_email_provided">No email provided</string>
+    <!-- Batch ID print: preview sheet, system job, result dialog. -->
+    <string name="ui_staff_print_preview_title">Print Selected IDs</string>
+    <plurals name="ui_staff_print_preview_summary">
+        <item quantity="one">%1$d attendees selected · %2$d sheet (9 per page) · cut along dashed guides</item>
+        <item quantity="other">%1$d attendees selected · %2$d sheets (9 per page) · cut along dashed guides</item>
+    </plurals>
+    <string name="ui_staff_print_page">Page %1$d of %2$d</string>
+    <string name="ui_staff_print_job_name">EventQR IDs — batch (%1$d)</string>
+    <string name="ui_staff_print_success">%1$d of %2$d IDs printed successfully.</string>
+    <string name="ui_staff_print_failures_heading">The following could not be printed:</string>
+    <string name="ui_staff_print_failure_row">• %1$s — %2$s</string>
+    <string name="ui_staff_print_unknown_error">unknown error</string>
+    <string name="ui_staff_print_none">No IDs were printed.</string>
 
     <!-- ═════════ My scans (§6.3) ═════════ -->
     <string name="ui_staff_logs">My scans</string>
@@ -154,6 +168,7 @@
     <string name="ui_staff_all_purposes">All purposes</string>
     <string name="ui_staff_no_logs">No scans yet</string>
     <string name="ui_staff_no_logs_body">Scans you perform will show up here.</string>
+    <string name="ui_staff_no_event_selected">No event selected</string>
     <string name="ui_staff_no_logs_prompt">Select an event to view your scans.</string>
     <string name="ui_staff_no_purposes">No scan purposes found for this filter.</string>
     <string name="ui_staff_logs_attendee_fallback">Attendee</string>

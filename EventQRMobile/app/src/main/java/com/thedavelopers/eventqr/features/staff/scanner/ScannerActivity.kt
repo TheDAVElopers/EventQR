@@ -355,7 +355,14 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
         // A rotation while a request was in flight replays the same request id, so the server
         // returns its stored row instead of the camera logging the pass a second time. Otherwise a
         // result that was already rendered is put back on screen.
-        if (pendingRequestId != null) replayPendingScan() else restoreRenderedResult(savedInstanceState)
+        // A keyed record replays at once, so a timeout that landed comes back as the stored row. An
+        // ID print has no key: its replay waits for the event list (showEvents), which drops it when
+        // the event is no longer offered, so a print can never post against a dead target.
+        if (pendingRequestId != null) {
+            if (pendingPurpose?.code != ScanPurposeCode.ID_PRINT) replayPendingScan()
+        } else {
+            restoreRenderedResult(savedInstanceState)
+        }
         uiReady = true
         presenter.loadEvents()
     }
@@ -366,6 +373,12 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
     override fun onResume() {
         super.onResume()
         if (!uiReady) return
+        // "Active" is clock-derived, so the list is re-derived every time the screen comes back: a
+        // staff member who opened Scan before the start time gets the event when it begins, and one
+        // whose event ended while the screen was paused cannot submit against it. Same resume
+        // refresh the sibling staff lists run; skipped while a result, a replay or a save owns the
+        // screen, and never on a failed load (that state has its own Retry).
+        if (eventsLoaded && !eventsLoadFailed && !resultShown() && !submitInFlight) presenter.loadEvents()
         // The camera prompt follows the screen taking focus, never the async event load: gating it
         // on a loaded event list left a cold open with a black panel, a "point the camera" line and
         // nothing to tap. The auto-request guard keeps this to one system prompt per screen open.
@@ -461,12 +474,21 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
         eventsLoadFailed = false
         bindScanEmptyState()
         loadedPurposeEventId = null
-        // Same preselection rule the Spinner carried: the requested event when it is assigned,
-        // otherwise the first one.
-        selectedEventIndex = items.indexOfFirst { it.id == preselectedEventId }.coerceAtLeast(0)
+        // The remembered event survives a rotation only while it is still listed: one that ended or
+        // was unassigned falls back to the first active event, so a scan can never post under an
+        // event the picker no longer offers.
+        val remembered = items.indexOfFirst { it.id == preselectedEventId }
+        selectedEventIndex = if (remembered >= 0) remembered else 0
+        preselectedEventId = items.getOrNull(selectedEventIndex)?.id
         bindSelectedEventHeader()
         loadSelectedPurposes()
         bindScanChrome()
+        // An ID print replay carries no idempotency key, so it waits for this list: an event the
+        // picker no longer offers (ended while the screen was paused) is dropped, never re-posted.
+        // A print already in flight is not replayed again by a reload that lands on top of it.
+        if (!submitInFlight && pendingPurpose?.code == ScanPurposeCode.ID_PRINT) {
+            if (eventOptions.any { it.id == pendingEventId }) replayPendingScan() else clearPendingScan()
+        }
         // The camera may have been asked for before the list arrived (cold open); with an event to
         // scan for, start it now instead of waiting for the next resume.
         if (!resultShown() && hasSelectableEvent()) requestInlineCameraStart(userInitiated = false)
@@ -489,7 +511,10 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
     private fun bindScanEmptyState() {
         if (eventsLoadFailed) return
         scanEmptyState.setIcon(AppIcons.Event)
-        scanEmptyState.setContent(getString(R.string.ui_staff_no_events), getString(R.string.ui_staff_no_events_body))
+        scanEmptyState.setContent(
+            getString(R.string.ui_staff_no_active_events),
+            getString(R.string.ui_staff_no_active_events_body),
+        )
         scanEmptyState.setAction(null, null)
     }
 
@@ -1309,7 +1334,17 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
     // ── Selection ────────────────────────────────────────────────────────────
 
     private fun loadSelectedPurposes() {
-        val event = selectedEvent() ?: return
+        val event = selectedEvent()
+        if (event == null) {
+            // Nothing to scan against: the previous event's list must not survive as a postable
+            // purpose, and the decode gate stays closed until a new list lands.
+            purposeOptions.clear()
+            selectedPurposeIndex = 0
+            scanPurposesReady = false
+            loadedPurposeEventId = null
+            presenter.cancelPurposes()
+            return
+        }
         // The adapter's selection callback and the explicit call after a load describe the same
         // event: one event change means one request.
         if (event.id == loadedPurposeEventId) return
@@ -1334,7 +1369,7 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
 
     private fun bindSelectedEventHeader() {
         val event = selectedEvent()
-        contextEvent.text = event?.label ?: getString(R.string.ui_staff_no_events)
+        contextEvent.text = event?.label ?: getString(R.string.ui_staff_no_active_events)
         contextPurpose.visibility = if (event == null) View.GONE else View.VISIBLE
         bindContextAffordance()
     }
@@ -1485,6 +1520,9 @@ open class ScannerActivity : AppCompatActivity(), ScannerContract.View, TextureV
         }
         presenter.cancelScan()
         selectedEventIndex = index
+        // The user's pick becomes the remembered one, so the resume reload keeps it instead of
+        // falling back to the event the screen opened on.
+        preselectedEventId = eventOptions.getOrNull(index)?.id
         scanNext()
         // The previous event's purposes must not survive the switch, not even for the frames before
         // the new list lands: [scanPurposesReady] keeps the decode path closed until it does.

@@ -230,7 +230,7 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
     override fun showError(message: String) {
         swipeRefresh.isRefreshing = false
         errorContainer.visibility = View.VISIBLE
-        errorText.text = message.ifBlank { "Unable to load rewards." }
+        errorText.text = message.ifBlank { getString(R.string.ui_attendee_rewards_load_failed) }
         errorText.visibility = View.VISIBLE
         retryButton.visibility = View.VISIBLE
         emptyEventsText.visibility = View.GONE
@@ -401,7 +401,11 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
 
                 is NetworkResult.Error -> {
                     swipeRefresh.isRefreshing = false
-                    showError(registrationsResult.message.ifBlank { "Unable to load registered events." })
+                    showError(
+                        registrationsResult.message.ifBlank {
+                            getString(R.string.ui_attendee_registered_events_load_failed)
+                        },
+                    )
                 }
 
                 NetworkResult.Loading -> Unit
@@ -411,7 +415,7 @@ open class AttendeeRewardsActivity : AppCompatActivity(), RewardsContract.View {
 
     private fun bindSelectedEventHeader() {
         val option = eventOptions.getOrNull(eventSpinner.selectedItemPosition)
-        txtSelectedEventTitle.text = option?.title ?: "Select event"
+        txtSelectedEventTitle.text = option?.title ?: getString(R.string.common_select_event)
     }
 
     private fun renderEventDropdown() {

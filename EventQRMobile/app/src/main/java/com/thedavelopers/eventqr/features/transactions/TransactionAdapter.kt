@@ -87,8 +87,10 @@ internal fun bindScanTransactionRow(itemView: View, item: TransactionResponse) {
             pointsView.setTextColor(ContextCompat.getColor(context, R.color.ui_text_secondary))
         }
         else -> {
-            val deltaPrefix = if (isEarned) "+" else ""
-            pointsView.text = "$deltaPrefix${item.pointsDelta} pts"
+            pointsView.text = context.getString(
+                if (isEarned) R.string.ui_points_gain else R.string.common_points_short,
+                item.pointsDelta,
+            )
             pointsView.setTextColor(
                 ContextCompat.getColor(
                     context,

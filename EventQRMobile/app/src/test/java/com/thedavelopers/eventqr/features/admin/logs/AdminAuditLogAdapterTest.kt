@@ -53,12 +53,12 @@ class AdminAuditLogAdapterTest {
 
         assertEquals(View.VISIBLE, view.findViewById<View>(R.id.textAuditTime).visibility)
         assertEquals(View.GONE, view.findViewById<View>(R.id.textAuditTimeInline).visibility)
-        assertEquals("9:41 AM", view.findViewById<TextView>(R.id.textAuditTime).text)
+        assertEquals("9:41\u00A0AM", view.findViewById<TextView>(R.id.textAuditTime).text)
         assertEquals("Approved an event request", view.findViewById<TextView>(R.id.textAuditAction).text)
         assertEquals("by Maria Santos", view.findViewById<TextView>(R.id.textAuditActor).text)
         assertEquals("DevFest Manila", view.findViewById<TextView>(R.id.textAuditTarget).text)
         assertEquals(
-            "9:41 AM. Approved an event request by Maria Santos, DevFest Manila.",
+            "9:41\u00A0AM. Approved an event request by Maria Santos, DevFest Manila.",
             view.contentDescription,
         )
     }
@@ -70,9 +70,9 @@ class AdminAuditLogAdapterTest {
 
         assertEquals(View.GONE, view.findViewById<View>(R.id.textAuditTime).visibility)
         assertEquals(View.VISIBLE, view.findViewById<View>(R.id.textAuditTimeInline).visibility)
-        assertEquals("9:41 AM", view.findViewById<TextView>(R.id.textAuditTimeInline).text)
+        assertEquals("9:41\u00A0AM", view.findViewById<TextView>(R.id.textAuditTimeInline).text)
         assertEquals(
-            "9:41 AM. Approved an event request by Maria Santos, DevFest Manila.",
+            "9:41\u00A0AM. Approved an event request by Maria Santos, DevFest Manila.",
             view.contentDescription,
         )
     }
@@ -83,7 +83,7 @@ class AdminAuditLogAdapterTest {
 
         assertEquals(View.GONE, view.findViewById<View>(R.id.auditMetaDot).visibility)
         assertEquals(View.GONE, view.findViewById<View>(R.id.textAuditTarget).visibility)
-        assertEquals("9:41 AM. Approved an event request by Maria Santos.", view.contentDescription)
+        assertEquals("9:41\u00A0AM. Approved an event request by Maria Santos.", view.contentDescription)
     }
 
     @Test

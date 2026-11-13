@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -17,9 +18,9 @@ import com.google.android.material.snackbar.Snackbar
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.util.ScreenInsets
 import com.thedavelopers.eventqr.features.organizer.EXTRA_EVENT_ID
-import com.thedavelopers.eventqr.features.organizer.EXTRA_EVENT_TITLE
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpDataSource
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpEvent
+import com.thedavelopers.eventqr.features.organizer.OrganizerMvpLoad
 import com.thedavelopers.eventqr.features.organizer.OrganizerMvpStaff
 import com.thedavelopers.eventqr.features.organizer.OrganizerRepository
 import com.thedavelopers.eventqr.features.organizer.intentEventId
@@ -28,16 +29,20 @@ import com.thedavelopers.eventqr.features.organizer.showEventsLoadErrorScreen
 import com.thedavelopers.eventqr.features.organizer.showEventsLoadingScreen
 import com.thedavelopers.eventqr.features.organizer.showMissingEventScreen
 import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
+import com.thedavelopers.eventqr.ui.components.showInlineError
 import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.icons.FieldIcons
 import kotlinx.coroutines.launch
 
 open class ManageUsersActivity : AppCompatActivity() {
     private lateinit var repository: OrganizerRepository
-    private lateinit var selectedEvent: OrganizerMvpEvent
+    @VisibleForTesting
+    internal lateinit var selectedEvent: OrganizerMvpEvent
     private lateinit var recyclerStaff: RecyclerView
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var emptyStateText: EventQrEmptyState
+    private lateinit var addStaffFooter: View
+    private lateinit var errorStrip: View
     private lateinit var staffAdapter: StaffAssignmentAdapter
     private val assignedStaff = mutableListOf<OrganizerMvpStaff>()
 
@@ -66,21 +71,33 @@ open class ManageUsersActivity : AppCompatActivity() {
                     return@launch
                 }
 
-            setContentView(R.layout.activity_staff_assignment)
-            ScreenInsets.padContentForNavigationBar(this@ManageUsersActivity)
-            bindViews()
-            setupList()
-            bindActions()
+            buildScreen()
             loadAssigned()
         }
+    }
+
+    /** The screen itself, split out so tests can render it without the event-list round trip. */
+    @VisibleForTesting
+    internal fun buildScreen() {
+        setContentView(R.layout.activity_staff_assignment)
+        ScreenInsets.padContentForNavigationBar(this)
+        bindViews()
+        setupList()
+        bindActions()
     }
 
     private fun bindViews() {
         swipeRefresh = findViewById(R.id.swipeRefreshStaffAssignment)
         recyclerStaff = findViewById(R.id.recyclerStaffAssignment)
         emptyStateText = findViewById(R.id.txtEmptyStaff)
-        findViewById<TextView>(R.id.eventStripTitle).text = selectedEvent.title
-        FieldIcons.apply(findViewById(R.id.eventStripAction))
+        addStaffFooter = findViewById(R.id.staffAddFooter)
+        errorStrip = findViewById(R.id.errorStaffAssignment)
+        FieldIcons.apply(findViewById(R.id.btnAddStaff))
+        // §5.16: Retry re-runs the same load; the strip clears as the attempt starts.
+        findViewById<View>(R.id.btnErrorStripRetry).setOnClickListener {
+            errorStrip.visibility = View.GONE
+            loadAssigned()
+        }
         swipeRefresh.setOnRefreshListener { loadAssigned() }
     }
 
@@ -96,7 +113,7 @@ open class ManageUsersActivity : AppCompatActivity() {
     private fun bindActions() {
         findViewById<View>(R.id.topBarBack).setOnClickListener { finish() }
         findViewById<TextView>(R.id.topBarTitle).text = getString(R.string.staff_assignment_title)
-        findViewById<View>(R.id.eventStripAction).setOnClickListener { openSearchUserPage() }
+        findViewById<View>(R.id.btnAddStaff).setOnClickListener { openSearchUserPage() }
     }
 
     private fun openSearchUserPage() {
@@ -111,15 +128,20 @@ open class ManageUsersActivity : AppCompatActivity() {
 
         val intent = Intent(this, SearchUserAccountActivity::class.java).apply {
             putExtra(EXTRA_EVENT_ID, selectedEvent.id)
-            putExtra(EXTRA_EVENT_TITLE, selectedEvent.title)
             putStringArrayListExtra(SearchUserAccountActivity.EXTRA_ACTIVE_STAFF_EMAILS, activeStaffEmails)
         }
         searchUserLauncher.launch(intent)
     }
 
-    private fun loadAssigned() {
-        lifecycleScope.launch {
-            val source = repository.loadStaffForMvp(selectedEvent)
+    internal open fun loadAssigned() {
+        lifecycleScope.launch { applyStaffLoad(repository.loadStaffForMvp(selectedEvent)) }
+    }
+
+    @VisibleForTesting
+    internal fun applyStaffLoad(source: OrganizerMvpLoad<List<OrganizerMvpStaff>>) {
+        val failed = source.source == OrganizerMvpDataSource.ERROR
+        // §5.16: a failed refresh never wipes rows the organizer can still read.
+        if (!failed || assignedStaff.isEmpty()) {
             assignedStaff.clear()
             source.data.forEach { incoming ->
                 val existingIndex = assignedStaff.indexOfFirst { existing ->
@@ -135,13 +157,29 @@ open class ManageUsersActivity : AppCompatActivity() {
                     assignedStaff.add(incoming)
                 }
             }
+        }
 
-            swipeRefresh.isRefreshing = false
-            val renderedCount = renderAssigned()
-            if (renderedCount == 0 && source.source == OrganizerMvpDataSource.ERROR) {
+        swipeRefresh.isRefreshing = false
+        val renderedCount = renderAssigned()
+        refreshChrome(renderedCount, failed)
+        if (failed) {
+            if (renderedCount > 0) {
+                errorStrip.showInlineError(
+                    source.message?.takeIf { it.isNotBlank() } ?: getString(R.string.ui_staff_load_failed_body),
+                )
+            } else {
                 showLoadError(source.message)
             }
         }
+    }
+
+    /**
+     * §5.16 chrome after any roster change: the strip never outlives the rows it described, and the
+     * footer is the action for a roster we can read (rows kept, or a successful load).
+     */
+    private fun refreshChrome(renderedCount: Int, failed: Boolean) {
+        addStaffFooter.visibility = if (!failed || renderedCount > 0) View.VISIBLE else View.GONE
+        errorStrip.visibility = View.GONE
     }
 
     private fun renderAssigned(): Int {
@@ -162,9 +200,7 @@ open class ManageUsersActivity : AppCompatActivity() {
             getString(R.string.ui_staff_no_staff),
             getString(R.string.ui_staff_no_staff_body),
         )
-        emptyStateText.setAction(getString(R.string.ui_organizer_add_staff), primary = true) {
-            openSearchUserPage()
-        }
+        emptyStateText.setAction(null)
     }
 
     private fun showLoadError(message: String?) {
@@ -228,7 +264,7 @@ open class ManageUsersActivity : AppCompatActivity() {
             val source = repository.removeStaffForMvp(selectedEvent, staff)
             if (source.source == OrganizerMvpDataSource.BACKEND) {
                 assignedStaff.removeAll { it.id == staff.id && it.assignedEventId == staff.assignedEventId }
-                renderAssigned()
+                refreshChrome(renderAssigned(), failed = false)
             } else {
                 Snackbar.make(
                     recyclerStaff,

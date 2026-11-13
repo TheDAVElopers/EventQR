@@ -150,16 +150,16 @@
                     android:text="@string/ui_staff_verify" />
             </LinearLayout>
 
-            <!-- No selectable event: the shared empty state (§5.10), in the scroll content, so the
-                 screen still has a route forward ("ask your organizer") instead of a dead panel. -->
+            <!-- Nothing scannable: the shared empty state (§5.10), in the scroll content, so the
+                 screen says why the list is empty instead of offering a dead panel. -->
             <com.thedavelopers.eventqr.ui.components.EventQrEmptyState
                 android:id="@+id/txtScannerEmptyState"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:visibility="gone"
                 app:icon="@drawable/ic_ui_event"
-                app:subtitle="@string/ui_staff_no_events_body"
-                app:title="@string/ui_staff_no_events" />
+                app:subtitle="@string/ui_staff_no_active_events_body"
+                app:title="@string/ui_staff_no_active_events" />
 
             <!-- ═════════ Inline scan result (§6.3) ═════════
                  The plan's result screen, folded into the scanner: 160dp flat semantic block,

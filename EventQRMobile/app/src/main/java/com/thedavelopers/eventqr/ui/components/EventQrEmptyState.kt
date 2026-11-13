@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -101,6 +102,13 @@ class EventQrEmptyState @JvmOverloads constructor(
         }
         actionView = TextView(context).apply {
             id = R.id.emptyAction
+            // A text-only control still has to announce itself as a button (§9.5).
+            accessibilityDelegate = object : View.AccessibilityDelegate() {
+                override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfo) {
+                    super.onInitializeAccessibilityNodeInfo(host, info)
+                    info.className = "android.widget.Button"
+                }
+            }
             setTextAppearance(R.style.TextAppearance_EventQR_Type_Label)
             setTextColor(ContextCompat.getColor(context, R.color.ui_primary))
             setBackgroundResource(R.drawable.bg_ui_button_ghost)

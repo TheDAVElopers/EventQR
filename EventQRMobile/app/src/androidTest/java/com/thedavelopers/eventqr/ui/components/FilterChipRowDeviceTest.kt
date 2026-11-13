@@ -16,6 +16,7 @@ import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.ui.icons.FieldIcons
 import java.io.File
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,12 +24,11 @@ import org.junit.runner.RunWith
 /**
  * The chip-row recipe on real hardware graphics (§5.6): a 360dp host at `fontScale` 1.0 (asserted) and 1.05-1.2 (logged).
  * Robolectric's legacy graphics report one pixel per character, so only a device proves where a
- * packed `Flow` really breaks the line. The Discover `Date` chip is measured as `Date` (the
- * default, asserted to stay on line 1) and as `Nov 2026` / `12 Nov 2026` (logged only: a long
- * applied value wraps to the start of line 2 by design). The 1.0 cases have little slack: at 360dp
- * the attendee `Date` chip ends 1dp inside the 340dp limit, so a wider label or a larger glyph moves
- * it to line 2. At 1.2 only a loose bound is asserted (at most two chip lines). Bounds and a PNG per case are written to the app's external files dir
- * (`Android/data/<package>/files/chip-rows`) and logged under the tag `ChipRowDevice`.
+ * packed `Flow` really breaks the line. The Discover date chip is measured on the search row with
+ * the shipped 16dp chevron: it trails the field, shares its row and starts one `ui_chip_gap` after
+ * it, in `Date`, `Nov 2026` and `12 Nov 2026` applied states. Bounds and a PNG per case are written
+ * to the app's external files dir (`Android/data/<package>/files/chip-rows`) and logged under the
+ * tag `ChipRowDevice`.
  */
 @RunWith(AndroidJUnit4::class)
 class FilterChipRowDeviceTest {
@@ -50,7 +50,7 @@ class FilterChipRowDeviceTest {
         chipIds: List<Int>,
         fontScale: Float,
         tag: String,
-        dateLabel: String = "Date",
+        dateLabel: String? = null,
     ): Laid {
         lateinit var laid: Laid
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
@@ -58,14 +58,20 @@ class FilterChipRowDeviceTest {
             val root = LayoutInflater.from(context).inflate(layout, null, false)
             // The Compose bottom nav needs a window; it is not part of the chip-row geometry.
             root.findViewById<View>(R.id.composeBottomNav)?.let { (it.parent as ViewGroup).removeView(it) }
-            val chips = chipIds.map { root.findViewById<TextView>(it) }
-            chips.filter { it.id == R.id.chipDateFilter }.forEach {
-                FieldIcons.apply(it, R.dimen.ui_chevron)
+            // The Discover date chip is prepared by id: it is not part of the status chip list but
+            // must carry the shipped 16dp chevron before it is measured.
+            root.findViewById<TextView>(R.id.chipDateFilter)?.let { chip ->
+                FieldIcons.apply(chip, R.dimen.ui_chevron)
                 // Relative drawables resolve with the layout direction, which an unattached view
                 // never resolves on its own; without this the trailing chevron is not measured.
-                it.layoutDirection = View.LAYOUT_DIRECTION_LTR
-                it.text = dateLabel
+                chip.layoutDirection = View.LAYOUT_DIRECTION_LTR
+                dateLabel?.let { label ->
+                    chip.text = label
+                    // The fill is the applied state, so an applied label must be selected.
+                    chip.isSelected = true
+                }
             }
+            val chips = chipIds.map { root.findViewById<TextView>(it) }
             val density = context.resources.displayMetrics.density
             val width = (HOST_WIDTH_DP * density).toInt()
             val height = (HOST_HEIGHT_DP * density).toInt()
@@ -101,7 +107,7 @@ class FilterChipRowDeviceTest {
     }
 
     private val organizerIds = listOf(R.id.chipAll, R.id.chipUpcoming, R.id.chipActive, R.id.chipCompleted)
-    private val attendeeIds = listOf(R.id.chipAll, R.id.chipThisWeek, R.id.chipRegistered, R.id.chipDateFilter)
+    private val attendeeIds = listOf(R.id.chipAll, R.id.chipThisWeek, R.id.chipRegistered)
 
     @Test
     fun organizerChips_shareOneLine_at360dp_fontScale1() = organizerOneLine(1.0f, "organizer-1.00")
@@ -127,31 +133,58 @@ class FilterChipRowDeviceTest {
     }
 
     @Test
-    fun attendeeDate_staysOnLineOne_at360dp_fontScale1_0() {
-        attendeeDate(1.0f, "attendee-1.00", "Date", assertLineOne = true)
+    fun attendeeChips_shareOneLine_at360dp_fontScale1_0() {
+        val laid = attendeeChips(1.0f, "attendee-1.00")
+        assertEquals("three chips on one line", 1, tops(laid.chips).toSet().size)
+        // Start-aligned: the first chip sits at the 20dp gutter, not centred or spread.
+        val gutter = laid.context.resources.getDimensionPixelSize(R.dimen.ui_gutter)
+        assertEquals(gutter, laid.chips.first().left)
     }
 
     @Test
-    fun attendeeAppliedValues_logWhereDateLands() {
+    fun attendeeChips_logWhereTheyLand_atLargerFontScales() {
         listOf(1.05f, 1.1f, 1.15f, 1.2f).forEach { scale ->
-            val laid = attendeeDate(scale, "attendee-$scale-Date", "Date", assertLineOne = false)
+            val laid = attendeeChips(scale, "attendee-$scale")
             assertTrue("at most two chip lines at $scale", tops(laid.chips).toSet().size <= 2)
-        }
-        listOf(1.0f, 1.05f, 1.15f).forEach { scale ->
-            listOf("Nov 2026", "12 Nov 2026").forEach { label ->
-                attendeeDate(scale, "attendee-${scale}-${label.replace(' ', '_')}", label, assertLineOne = false)
-            }
         }
     }
 
-    private fun attendeeDate(scale: Float, tag: String, dateLabel: String, assertLineOne: Boolean): Laid {
-        val laid = layOut(R.layout.activity_user_events, attendeeIds, scale, tag, dateLabel)
+    private fun attendeeChips(scale: Float, tag: String): Laid {
+        val laid = layOut(R.layout.activity_user_events, attendeeIds, scale, tag)
         log(tag, laid.chips)
-        val tops = tops(laid.chips)
-        if (assertLineOne) assertTrue("Date wrapped to a second line: tops=$tops", tops.toSet().size == 1)
         // Each chip is a 48dp target; the 36dp fill is painted inside it by bg_ui_chip_inset.
         assertTrue(laid.chips.all { it.height >= laid.context.resources.getDimensionPixelSize(R.dimen.ui_touch_min) })
         return laid
+    }
+
+    /**
+     * The date chip trails the search field on the same row (§6.2) in every applied state: `Date`,
+     * `Nov 2026` and `12 Nov 2026` all stay in the content box beside a non-zero field, and the
+     * 48dp target never changes.
+     */
+    @Test
+    fun attendeeDateChip_trailsTheSearchFieldAt360dp() {
+        listOf("Date", "Nov 2026", "12 Nov 2026").forEach { label ->
+            val tag = "attendee-search-row-${label.replace(' ', '_')}"
+            val laid = layOut(R.layout.activity_user_events, attendeeIds, 1.0f, tag, dateLabel = label)
+            val field = laid.root.findViewById<View>(R.id.inputEventSearch)
+            val date = laid.root.findViewById<TextView>(R.id.chipDateFilter)
+            log(tag, listOf(date))
+            val gap = laid.context.resources.getDimensionPixelSize(R.dimen.ui_chip_gap)
+            val gutter = laid.context.resources.getDimensionPixelSize(R.dimen.ui_gutter)
+            val touch = laid.context.resources.getDimensionPixelSize(R.dimen.ui_touch_min)
+
+            assertEquals("$label is the applied label", label, date.text.toString())
+            assertTrue("$label fills the chip", date.isSelected)
+            // Same row: both are children of the search row and share its top edge.
+            assertSame(field.parent, date.parent)
+            assertEquals("$label shares the field's row", field.top, date.top)
+            // The field keeps a usable width; the chip follows it and ends on the end gutter.
+            assertTrue("$label leaves the field a non-zero width", field.width > 0)
+            assertEquals("$label starts one ui_chip_gap after the field", field.left + field.width + gap, date.left)
+            assertEquals("$label fits the content box", laid.root.width - gutter, date.right)
+            assertTrue("$label keeps the 48dp touch target", date.height >= touch)
+        }
     }
 }
 

@@ -19,7 +19,10 @@
 
     <!-- EventManagementHubActivity (emh_) -->
     <item name="emh_header_banner" type="id" />
-    <item name="emh_status_badge" type="id" />
+    <item name="emh_header_identity" type="id" />
+    <item name="emh_status_row" type="id" />
+    <item name="emh_status_dot" type="id" />
+    <item name="emh_status_text" type="id" />
     <item name="emh_event_title" type="id" />
     <item name="emh_stats_row" type="id" />
     <item name="emh_stat_registered" type="id" />
@@ -72,8 +75,11 @@
     <item name="mrw_reward_points_input" type="id" />
     <item name="mrw_reward_quantity_input" type="id" />
     <item name="mrw_reward_description_input" type="id" />
+    <item name="txr_purpose_field" type="id" />
     <item name="txr_save_button" type="id" />
     <item name="txr_save_status" type="id" />
+    <!-- Tag: the PopupWindow a select field currently owns (OrganizerScreenHelpers.selectField). -->
+    <item name="select_field_menu" type="id" />
     <item name="mrw_reward_duplicate_switch" type="id" />
 
     <!-- ManageScanPurposesActivity (msp_) -->
@@ -83,9 +89,6 @@
     <item name="msp_name_input" type="id" />
     <item name="msp_desc_input" type="id" />
     <item name="msp_points_input" type="id" />
-    <item name="msp_duplicate_check" type="id" />
-    <item name="msp_duplicate_helper" type="id" />
-    <item name="msp_tracking_only_check" type="id" />
 
     <!-- IdTemplateSettingsActivity (idt_) -->
     <item name="idt_locked_card" type="id" />
@@ -93,6 +96,9 @@
     <item name="idt_preview_container" type="id" />
     <item name="idt_status" type="id" />
     <item name="idt_save_button" type="id" />
+
+    <!-- EventReportsActivity (eventReports*) -->
+    <item name="eventReportsGenerateAll" type="id" />
 
     <!-- TransactionLogsActivity (tlg_) -->
     <item name="tlg_list" type="id" />

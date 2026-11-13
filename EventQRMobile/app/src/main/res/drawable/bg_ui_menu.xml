@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Anchored menu surface (plan 5.2 select field, 5.12). Surface fill, 1dp hairline, radius 10:
+     the same boundary a card carries, because a menu is an overlay of content, not a sheet.
+     No gradient, no shadow. The host clips its rows to this outline so a selected first or last
+     row cannot square off the rounded corner. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/ui_surface" />
+    <stroke
+        android:width="@dimen/stroke_hairline"
+        android:color="@color/ui_hairline" />
+    <corners android:radius="@dimen/ui_radius_card" />
+</shape>

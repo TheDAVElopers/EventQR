@@ -94,8 +94,6 @@ class SearchUserAccountActivity : AppCompatActivity() {
         assignButton = findViewById(R.id.btnAssignStaff)
         assignedStrip = findViewById(R.id.staffAssignedStrip)
         assignedStripText = findViewById(R.id.txtStaffAssignedStrip)
-        findViewById<TextView>(R.id.eventStripTitle).text = selectedEvent.title
-        findViewById<View>(R.id.eventStripAction).visibility = View.GONE
     }
 
     private fun setupList() {

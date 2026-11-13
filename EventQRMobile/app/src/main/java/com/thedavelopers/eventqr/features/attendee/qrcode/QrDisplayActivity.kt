@@ -9,6 +9,7 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.zxing.BarcodeFormat
@@ -27,6 +28,7 @@ import com.thedavelopers.eventqr.ui.components.EventQrEmptyState
 import com.thedavelopers.eventqr.ui.components.showInlineError
 import com.thedavelopers.eventqr.ui.theme.applyEventQrBottomInsetPadding
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Instant
@@ -62,6 +64,13 @@ class QrDisplayActivity : AppCompatActivity(), QrCredentialContract.View {
     private var currentRegistrationId: String? = null
     private var showingSavedCopy = false
     private var loadGeneration = 0
+    /**
+     * The last cache job (a save or a clear), so a test can join the real IO work instead of polling
+     * the store. A poll is not neutral: [QrPassCache.load] clears an entry it cannot read, and that
+     * clear can land after the write and erase it.
+     */
+    @VisibleForTesting
+    internal var lastCacheJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -228,7 +237,9 @@ class QrDisplayActivity : AppCompatActivity(), QrCredentialContract.View {
                 attendeeName = holderName,
             )
             val key = cacheKey().ifBlank { snapshot.registrationId.toString() }
-            lifecycleScope.launch(Dispatchers.IO) { QrPassCache.save(this@QrDisplayActivity, key, pass) }
+            lastCacheJob = lifecycleScope.launch(Dispatchers.IO) {
+                QrPassCache.save(this@QrDisplayActivity, key, pass)
+            }
         }
     }
 
@@ -311,7 +322,9 @@ class QrDisplayActivity : AppCompatActivity(), QrCredentialContract.View {
     private fun clearCachedPass(registrationId: String? = null) {
         val keys = listOf(cacheKey(), registrationId.orEmpty()).filter { it.isNotBlank() }.distinct()
         if (keys.isEmpty()) return
-        lifecycleScope.launch(Dispatchers.IO) { keys.forEach { QrPassCache.clear(this@QrDisplayActivity, it) } }
+        lastCacheJob = lifecycleScope.launch(Dispatchers.IO) {
+            keys.forEach { QrPassCache.clear(this@QrDisplayActivity, it) }
+        }
     }
 
     private fun renderQrBitmap(value: String): Bitmap? {

@@ -111,7 +111,9 @@ open class UnifiedNotificationsActivity : AppCompatActivity() {
                 }
                 is NetworkResult.Error -> {
                     _isLoading.value = false
-                    _errorMessage.value = result.message.ifBlank { "Unable to load notifications." }
+                    _errorMessage.value = result.message.ifBlank {
+                        getString(R.string.ui_notifications_load_failed)
+                    }
                 }
                 NetworkResult.Loading -> Unit
             }

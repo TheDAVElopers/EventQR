@@ -114,13 +114,13 @@ class RegistrationAdapter(
         private val statusView: TextView = itemView.findViewById(R.id.txtRegistrationStatus)
 
         fun bind(item: RegistrationResponse) {
-            val name = item.attendeeName.ifBlank { "Attendee" }
+            val name = item.attendeeName.ifBlank { itemView.context.getString(R.string.ui_staff_logs_attendee_fallback) }
             avatarView.text = name.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "A"
             titleView.text = name
             // §6.3 amendment v1.13: one trailing badge, so points ride in the meta line.
             detailView.text = listOf(
-                item.attendeeEmail.ifBlank { "No email provided" },
-                "${item.pointsEarned} pts",
+                item.attendeeEmail.ifBlank { itemView.context.getString(R.string.ui_staff_no_email_provided) },
+                itemView.context.getString(R.string.common_points_short, item.pointsEarned),
             ).joinToString(" · ")
             AttendeeBadges.bind(statusView, item.status)
             divider.visibility =

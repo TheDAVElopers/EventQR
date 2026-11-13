@@ -38,13 +38,16 @@
 
     <!-- Event management hub (6.4) -->
     <string name="ui_organizer_hub_title">Manage event</string>
+    <!-- TalkBack name for the quiet dot + status line under the title. -->
+    <string name="ui_organizer_hub_status_a11y">Status: %1$s</string>
 
     <!-- Event details, read-only (6.4) -->
     <string name="ui_organizer_event_details_title">Event details</string>
-    <string name="ui_organizer_date">Date</string>
-    <string name="ui_organizer_time">Time</string>
-    <string name="ui_organizer_venue">Venue</string>
+    <string name="ui_organizer_venue">Location</string>
     <string name="ui_organizer_registration_window">Registration window</string>
+    <string name="ui_organizer_event_time">Event time</string>
+    <!-- Same-day EVENT TIME: date once, then the start and end times. -->
+    <string name="ui_organizer_event_time_same_day">%1$s, %2$s –&#160;%3$s</string>
     <string name="ui_organizer_organizer">Organizer</string>
     <string name="ui_organizer_coorganizers">Co-organizers</string>
     <string name="ui_organizer_about">About</string>
@@ -83,6 +86,11 @@
     <string name="ui_organizer_edit_discard_body">Your edits to this event will be lost.</string>
     <string name="ui_organizer_edit_keep_editing">Keep editing</string>
     <string name="ui_organizer_edit_discard">Discard</string>
+
+    <!-- Transaction rules: the shared discard confirm, with this screen's subject in the body -->
+    <string name="transaction_rules_discard_switch_body">You have unsaved changes to the %1$s rules. Switching to %2$s will discard them.</string>
+    <string name="transaction_rules_discard_leave_body">You have unsaved changes to the %1$s rules. Leaving this screen will discard them.</string>
+    <string name="transaction_rules_showing_purpose">Showing %1$s rules</string>
 
     <!-- Attendees -->
     <string name="ui_organizer_search_attendees">Search attendees</string>
@@ -132,8 +140,22 @@
     <string name="ui_organizer_detail_view_log">View full log</string>
     <!-- Scan purposes / transaction rules / logs -->
     <string name="ui_organizer_no_transactions">No transactions yet</string>
+    <!-- TalkBack role for a select field (plan 5.2, 9.5). The field's name comes from its label. -->
+    <string name="ui_organizer_select_role">Dropdown list</string>
 
     <!-- ID template -->
+    <string name="ui_organizer_id_template_title">ID template</string>
+    <string name="ui_organizer_id_template_save">Save template</string>
+    <string name="ui_organizer_id_template_saved">Template saved.</string>
+    <string name="ui_organizer_id_template_always_included">Always included</string>
+    <string name="ui_organizer_id_template_always_shown">Always shown on the pass</string>
+    <string name="ui_organizer_id_template_qr_code">QR code</string>
+    <string name="ui_organizer_id_template_attendee_name">Attendee name</string>
+    <string name="ui_organizer_id_template_locked">Locked</string>
+    <string name="ui_organizer_id_template_show_on_printed_id">Show on printed ID</string>
+    <string name="ui_organizer_id_template_preview_title">ID Preview</string>
+    <!-- Preview sample attendee: a fixed placeholder, never translated. -->
+    <string name="ui_organizer_id_template_sample_name" translatable="false">Juan Dela Cruz</string>
 
     <!-- Dialogs / destructive confirms -->
 

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Select-field menu row (plan 5.2). State is carried by fill only, never by a check icon:
+     selected -> ui_primary_container, pressed -> ui_surface_pressed, resting -> transparent.
+     Keyboard focus -> 2dp ui_primary ring inset inside the row (ui_on_primary_container when the
+     row is also selected, so the ring keeps 12.46:1 on the primary-container fill), mirroring
+     bg_ui_chip. No corners here: the menu host clips every row to bg_ui_menu's rounded outline, so
+     one drawable serves the first, middle and last row. The label colour follows the same state
+     through res/color/ui_menu_item_text.xml. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:state_focused="true"
+        android:state_selected="true">
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/ui_primary_container" />
+                </shape>
+            </item>
+            <item android:inset="@dimen/stroke_hairline">
+                <shape android:shape="rectangle">
+                    <solid android:color="@android:color/transparent" />
+                    <stroke
+                        android:width="@dimen/stroke_focus"
+                        android:color="@color/ui_on_primary_container" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+
+    <item android:state_selected="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/ui_primary_container" />
+        </shape>
+    </item>
+
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/ui_surface_pressed" />
+        </shape>
+    </item>
+
+    <item android:state_focused="true">
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@android:color/transparent" />
+                </shape>
+            </item>
+            <item android:inset="@dimen/stroke_hairline">
+                <shape android:shape="rectangle">
+                    <solid android:color="@android:color/transparent" />
+                    <stroke
+                        android:width="@dimen/stroke_focus"
+                        android:color="@color/ui_primary" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+        </shape>
+    </item>
+
+</selector>

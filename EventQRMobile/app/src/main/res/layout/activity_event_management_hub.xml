@@ -3,9 +3,9 @@
     EVENT MANAGEMENT HUB (6.4) - retires Gen C.
 
         Top bar        56dp, hairline under
-        Identity       pass-head anatomy (§4.6) at per-event scale: event name headline with the
-                       status badge as its trailing value, 1dp tear, then three stat slots on the
-                       ui_pass_stub tonal band
+        Identity       pass-head anatomy (§4.6) at per-event scale: event name headline on the
+                       full band, a quiet dot + status line under it (§5.4 on-dark exception),
+                       1dp tear, then three stat slots on the ui_pass_stub tonal band
         Manage         ONE grouped card holding the five management rows, 16dp chevrons
 
     Deleted: the #0F172A -> primary_dark -> primary 3-stop GradientDrawable banner, the 96dp
@@ -49,7 +49,8 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- Block A: identity. The name is the anchor; status is its trailing value (§5.4). -->
+                <!-- Block A: identity. The name owns the full band; status is the quiet dot +
+                     word line under it (§5.4 placement exception on a dark ui_primary band). -->
                 <LinearLayout
                     android:id="@+id/emh_header_identity"
                     android:layout_width="match_parent"
@@ -61,32 +62,45 @@
                     android:paddingEnd="@dimen/ui_gutter"
                     android:paddingBottom="@dimen/space_16">
 
-                    <LinearLayout
+                    <TextView
+                        android:id="@+id/emh_event_title"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:baselineAligned="false"
-                        android:orientation="horizontal">
+                        android:ellipsize="end"
+                        android:gravity="start"
+                        android:maxLines="2"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Headline"
+                        android:textColor="@color/ui_on_primary"
+                        tools:text="DevFest Manila 2026" />
+
+                    <!-- Quiet status line: opaque 6dp dot + muted word, one TalkBack node.
+                         invisible by default so the band keeps its height before the first bind. -->
+                    <LinearLayout
+                        android:id="@+id/emh_status_row"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_8"
+                        android:gravity="center_vertical|start"
+                        android:orientation="horizontal"
+                        android:visibility="invisible"
+                        tools:visibility="visible">
+
+                        <View
+                            android:id="@+id/emh_status_dot"
+                            android:layout_width="@dimen/ui_badge_dot"
+                            android:layout_height="@dimen/ui_badge_dot"
+                            android:layout_marginEnd="@dimen/ui_badge_dot_gap"
+                            android:background="@drawable/bg_ui_dot_solid"
+                            android:importantForAccessibility="no" />
 
                         <TextView
-                            android:id="@+id/emh_event_title"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:ellipsize="end"
-                            android:maxLines="2"
-                            android:textAppearance="@style/TextAppearance.EventQR.Type.Headline"
-                            android:textColor="@color/ui_on_primary"
-                            tools:text="DevFest Manila 2026" />
-
-                        <TextView
-                            android:id="@+id/emh_status_badge"
-                            style="@style/Widget.EventQR.Ui.StatusBadge.Info"
+                            android:id="@+id/emh_status_text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="top"
-                            android:layout_marginStart="@dimen/space_12"
-                            android:layout_marginTop="@dimen/space_4"
-                            tools:text="Upcoming" />
+                            android:importantForAccessibility="no"
+                            android:textAppearance="@style/TextAppearance.EventQR.Type.Label"
+                            android:textColor="@color/ui_text_on_dark_muted"
+                            tools:text="Active" />
                     </LinearLayout>
                 </LinearLayout>
 

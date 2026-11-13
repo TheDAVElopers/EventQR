@@ -5,7 +5,6 @@ import com.thedavelopers.eventqr.ui.icons.AppIcons
 import com.thedavelopers.eventqr.ui.theme.color
 import com.thedavelopers.eventqr.ui.theme.configDpToPx
 import com.thedavelopers.eventqr.ui.theme.dimenPx
-import com.thedavelopers.eventqr.ui.theme.setTextSizeRes
 import com.thedavelopers.eventqr.ui.theme.strong
 import androidx.lifecycle.lifecycleScope
 import android.os.Bundle
@@ -47,7 +46,6 @@ import kotlin.math.roundToInt
 class IdTemplateSettingsActivity : AppCompatActivity() {
 
     private lateinit var repository: IdTemplateConfigRepository
-    private lateinit var organizerRepository: OrganizerRepository
     private lateinit var eventId: String
     private lateinit var content: LinearLayout
     private lateinit var previewContainer: LinearLayout
@@ -73,17 +71,12 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         repository = IdTemplateConfigRepository(this)
-        organizerRepository = OrganizerRepository(this)
-        eventId = intentEventId() ?: return showMissingEventScreen("ID Display Settings")
+        eventId = intentEventId() ?: return showMissingEventScreen(getString(R.string.ui_organizer_id_template_title))
 
-        val initialTitle = intentEventTitle()?.takeIf { it.isNotBlank() }
         content = organizerShell(
-            title = "ID Display Settings",
+            title = getString(R.string.ui_organizer_id_template_title),
             showBack = true,
         )
-
-        // The detail header has no subtitle, so the event chip sits at the top of the content.
-        if (initialTitle != null) content.addView(createHighlightedEventTitleView(initialTitle).also { eventTitleView = it }, 0)
 
         content.addView(lockedFieldsCard().apply {
             id = com.thedavelopers.eventqr.R.id.idt_locked_card
@@ -104,7 +97,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
         }
         content.addView(statusView)
 
-        saveButton = primaryButton("Save ID Display Settings") { saveConfig() }.apply {
+        saveButton = primaryButton(getString(R.string.ui_organizer_id_template_save)) { saveConfig() }.apply {
             id = com.thedavelopers.eventqr.R.id.idt_save_button
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -116,72 +109,30 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
         loadConfig()
     }
 
-    private var eventTitleView: View? = null
-
-    private fun updateHeaderSubtitle(title: String) {
-        if (title.isBlank()) return
-        eventTitleView?.let { content.removeView(it) }
-        eventTitleView = createHighlightedEventTitleView(title).also { content.addView(it, 0) }
-    }
-
-    private fun createHighlightedEventTitleView(titleText: String): LinearLayout =
-        LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            tintBlock(R.color.ui_primary_container, R.drawable.bg_ui_block_r16)
-            setPadding(dimenPx(R.dimen.space_md), dimenPx(R.dimen.space_6), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_6))
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply {
-                bottomMargin = dimenPx(R.dimen.space_md)
-            }
-
-            // Calendar / Event Icon
-            addView(ImageView(this@IdTemplateSettingsActivity).apply {
-                setImageResource(AppIcons.Event)
-                setColorFilter(color(R.color.primary))
-                layoutParams = LinearLayout.LayoutParams(dimenPx(R.dimen.icon_md), dimenPx(R.dimen.icon_md)).apply {
-                    marginEnd = dimenPx(R.dimen.space_sm)
-                }
-            })
-
-            // Event Title Text
-            addView(TextView(this@IdTemplateSettingsActivity).apply {
-                text = titleText
-                setTextSizeRes(R.dimen.type_body)
-                strong()
-                setTextColor(color(R.color.primary))
-                maxLines = 1
-                ellipsize = android.text.TextUtils.TruncateAt.END
-            })
-        }
-
     private fun lockedFieldsCard(): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
         setPadding(dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg), dimenPx(R.dimen.space_lg))
         tintBlock(R.color.ui_surface, R.drawable.bg_ui_block_r16)
-        elevation = dimenPx(R.dimen.elevation_card).toFloat()
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
-        ).apply { setMargins(0, dimenPx(R.dimen.space_sm), 0, dimenPx(R.dimen.space_lg)) }
+        ).apply { setMargins(0, 0, 0, dimenPx(R.dimen.space_lg)) }
 
-        addView(styledText("Always included", R.dimen.type_body, true, color(R.color.text_primary)).apply {
+        addView(styledText(getString(R.string.ui_organizer_id_template_always_included), R.dimen.type_body, true, color(R.color.text_primary)).apply {
             setPadding(0, 0, 0, dimenPx(R.dimen.space_md))
         })
 
         addView(createLockedRow(
-            title = "QR Code",
-            subtitle = "Always shown on printed ID",
+            title = getString(R.string.ui_organizer_id_template_qr_code),
+            subtitle = getString(R.string.ui_organizer_id_template_always_shown),
             iconRes = AppIcons.Scan,
         ))
 
         addView(createDivider())
 
         addView(createLockedRow(
-            title = "Attendee Name",
-            subtitle = "Always shown on printed ID",
+            title = getString(R.string.ui_organizer_id_template_attendee_name),
+            subtitle = getString(R.string.ui_organizer_id_template_always_shown),
             iconRes = AppIcons.Profile,
         ))
     }
@@ -231,7 +182,14 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
                         marginEnd = dimenPx(R.dimen.space_xs)
                     }
                 })
-                addView(styledText("Locked", R.dimen.type_overline, true, color(R.color.text_secondary)))
+                addView(
+                    styledText(
+                        getString(R.string.ui_organizer_id_template_locked),
+                        R.dimen.type_overline,
+                        true,
+                        color(R.color.text_secondary),
+                    ),
+                )
             })
         }
 
@@ -251,7 +209,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
 
     private fun buildToggleCardContent(container: LinearLayout) {
         container.removeAllViews()
-        container.addView(styledText("Show on printed ID", R.dimen.type_body, true, color(R.color.text_primary)).apply {
+        container.addView(styledText(getString(R.string.ui_organizer_id_template_show_on_printed_id), R.dimen.type_body, true, color(R.color.text_primary)).apply {
             setPadding(0, 0, 0, dimenPx(R.dimen.space_md))
         })
 
@@ -339,7 +297,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
                 ViewGroup.LayoutParams.WRAP_CONTENT,
             ).apply { setMargins(0, 0, 0, dimenPx(R.dimen.space_lg)) }
 
-            addView(styledText("ID Preview", R.dimen.type_body, true, color(R.color.text_primary)).apply {
+            addView(styledText(getString(R.string.ui_organizer_id_template_preview_title), R.dimen.type_body, true, color(R.color.text_primary)).apply {
                 setPadding(0, 0, 0, dimenPx(R.dimen.space_md))
             })
         }
@@ -378,7 +336,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
                 ViewGroup.LayoutParams.WRAP_CONTENT,
             ).apply { setMargins(0, 0, 0, dimenPx(R.dimen.space_md)) }
 
-            addView(styledText("QR CODE", R.dimen.type_micro, true, color(R.color.chart_5), align = Gravity.CENTER_HORIZONTAL).apply {
+            addView(styledText(getString(R.string.ui_organizer_id_template_qr_code).uppercase(), R.dimen.type_micro, true, color(R.color.chart_5), align = Gravity.CENTER_HORIZONTAL).apply {
                 includeFontPadding = false
                 setPadding(0, 0, 0, dimenPx(R.dimen.space_6))
             })
@@ -400,8 +358,8 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
 
         // 2. Attendee Name (ALWAYS shown)
         cardView.addView(previewField(
-            label = "ATTENDEE NAME",
-            value = "Juan Dela Cruz",
+            label = getString(R.string.ui_organizer_id_template_attendee_name).uppercase(),
+            value = getString(R.string.ui_organizer_id_template_sample_name),
             valueSizeSp = previewNameFontSp,
             isBoldValue = true,
         ))
@@ -502,13 +460,6 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
 
     private fun loadConfig() {
         lifecycleScope.launch {
-            if (intentEventTitle().isNullOrBlank()) {
-                val eventLoad = organizerRepository.loadEventForMvp(eventId)
-                eventLoad.data?.title?.takeIf { it.isNotBlank() }?.let { fetchedTitle ->
-                    updateHeaderSubtitle(fetchedTitle)
-                }
-            }
-
             when (val result = repository.fetchConfig(eventId)) {
                 is NetworkResult.Success -> {
                     result.data.visibleFields.filterNotNull().forEach { field ->
@@ -537,7 +488,7 @@ class IdTemplateSettingsActivity : AppCompatActivity() {
         saveButton.isEnabled = false
         lifecycleScope.launch {
             when (val result = withContext(NonCancellable) { repository.saveConfig(eventId, visibleFields) }.also { ensureActive() }) {
-                is NetworkResult.Success -> showStatus("ID display settings saved.", isError = false)
+                is NetworkResult.Success -> showStatus(getString(R.string.ui_organizer_id_template_saved), isError = false)
                 is NetworkResult.Error -> showStatus(result.message, isError = true)
                 NetworkResult.Loading -> Unit
             }

@@ -35,7 +35,7 @@ class ReportFilterProvenanceTest {
     @Test
     fun dateSpan_countsAsOneFilter() {
         assertEquals(
-            "1 filter · 1 Jan 2026 - 5 Jan 2026",
+            "1 filter · 1\u00A0Jan\u00A02026 - 5\u00A0Jan\u00A02026",
             appliedFiltersText(resources, EventReportFiltersDto(startDate = jan1, endDate = jan5)),
         )
     }
@@ -43,7 +43,7 @@ class ReportFilterProvenanceTest {
     @Test
     fun singleDate_keepsTheOtherEndWord() {
         assertEquals(
-            "1 filter · 1 Jan 2026 - End",
+            "1 filter · 1\u00A0Jan\u00A02026 - End",
             appliedFiltersText(resources, EventReportFiltersDto(startDate = jan1)),
         )
     }
@@ -51,7 +51,7 @@ class ReportFilterProvenanceTest {
     @Test
     fun endDateOnly_keepsTheStartWord() {
         assertEquals(
-            "1 filter · Start - 5 Jan 2026",
+            "1 filter · Start - 5\u00A0Jan\u00A02026",
             appliedFiltersText(resources, EventReportFiltersDto(endDate = jan5)),
         )
     }
@@ -59,7 +59,7 @@ class ReportFilterProvenanceTest {
     @Test
     fun everyDimension_countsSeparately() {
         assertEquals(
-            "3 filters · 1 Jan 2026 - 5 Jan 2026 · Attendee: ana · Status: APPROVED",
+            "3 filters · 1\u00A0Jan\u00A02026 - 5\u00A0Jan\u00A02026 · Attendee: ana · Status: APPROVED",
             appliedFiltersText(
                 resources,
                 EventReportFiltersDto(

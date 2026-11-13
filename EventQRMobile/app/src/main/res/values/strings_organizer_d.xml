@@ -70,9 +70,12 @@
     <string name="event_reports_screen_title">Event Reports</string>
     <string name="event_reports_no_events_title">No events found</string>
     <string name="event_reports_no_events_subtext">You don\'t have any approved events yet.</string>
-    <string name="event_reports_generate_reports">Generate Reports</string>
+    <string name="event_reports_generate_reports">Generate reports</string>
     <string name="event_reports_summary_failed">Could not load the event totals.</string>
-    <string name="event_reports_generate_all">Generate All Reports</string>
+    <string name="event_reports_generate_all">Generate all</string>
+    <string name="event_reports_generating_all">Generating…</string>
+    <string name="event_reports_generating_progress">Generating report %1$d of %2$d…</string>
+    <string name="event_reports_generating_state">Generating</string>
     <string name="event_reports_subtitle_roster">Complete attendee check-in and registration roster</string>
     <string name="event_reports_subtitle_no_shows">Registered attendees who have not checked in yet</string>
     <string name="event_reports_subtitle_entry_logs">Timestamped event entry transactions and staff</string>
@@ -206,12 +209,9 @@
     <string name="manage_scan_purposes_empty_subtext">Configure scan purposes to define what staff can scan for this event.</string>
     <string name="manage_scan_purposes_custom_scan">Custom Scan</string>
     <string name="manage_scan_purposes_failed_update">Failed to update scan purpose: %1$s</string>
-    <string name="manage_scan_purposes_reward_duplicate_helper">Reward redemptions cannot allow duplicate scans.</string>
-    <string name="manage_scan_purposes_allow_duplicate_scans">Allow duplicate scans</string>
     <string name="manage_scan_purposes_hint_name">Scan purpose name</string>
     <string name="manage_scan_purposes_hint_description">Description (optional)</string>
     <string name="manage_scan_purposes_hint_points">Points (e.g. 10)</string>
-    <string name="manage_scan_purposes_tracking_only">Tracking only (0 points)</string>
     <string name="manage_scan_purposes_label_scan_type">Scan Type</string>
     <string name="manage_scan_purposes_label_custom_name">Custom Name</string>
     <string name="manage_scan_purposes_label_points">Points</string>

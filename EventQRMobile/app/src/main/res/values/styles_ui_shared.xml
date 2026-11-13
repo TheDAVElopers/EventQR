@@ -102,7 +102,7 @@
         <item name="android:ellipsize">end</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.Label</item>
-        <item name="android:textColor">@color/ui_primary</item>
+        <item name="android:textColor">@color/ui_section_action_text</item>
     </style>
 
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
@@ -114,6 +114,14 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.FieldLabel</item>
+    </style>
+
+    <!-- Section heading on a form: the title role, a TalkBack heading, no accent of its own. -->
+    <style name="Widget.EventQR.Ui.SectionHeading" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:accessibilityHeading">true</item>
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.SectionHeading</item>
     </style>
 
     <!-- Error variant: the box is already 2dp ui_error at rest. -->

@@ -5,10 +5,17 @@
 
         20dp gutter   paddingStart/End ui_gutter, space_16 paddingTop
         title row     event name in Headline + StatusBadge as the row's trailing value
-        meta rows     optional `when` (space_8 above) and optional `where` (space_2 above),
-                      BodySmall in ui_on_primary_muted, both GONE until a screen binds them
+        reflow block  empty at the default scale; at fontScale > 1.3 the binder moves the badge here
+                      as the block's last line (space_8 above, no start margin)
         1dp tear      divider_perforation_dark, the block's LAST child so the 24%-white dashes
                       land on ui_primary instead of the page background
+
+    The head is identity only: the event's venue and schedule are label/value rows in the host
+    screen's spec table, never lines under the title.
+
+    One host owns the badge: both organizer hosts bind `showStatus = false` and render the badge as
+    their STATUS table row (details) or the editor's read-only STATUS row, so the status is never
+    printed twice and no second head layout exists.
 
     wrap_content height everywhere: a 3-line title at fontScale 2.0 grows the block. No fixed text
     container, no maxHeight.
@@ -19,7 +26,7 @@
     out locally rather than changing the shared style's blast radius.
 
     The binder (OrganizerEventHeadBinder) moves the badge out of the title row to the last line of
-    the meta block at fontScale > 1.3, where a trailing badge beside a 3-line 28sp title would
+    the reflow block at fontScale > 1.3, where a trailing badge beside a 3-line 28sp title would
     leave roughly 90dp for the name.
 
     Usage:
@@ -27,9 +34,8 @@
                  android:layout_width="match_parent"
                  android:layout_height="wrap_content" />
 
-    ids: oeHead, oeHeadTitleRow, oeHeadTitle, oeHeadStatus, oeHeadMeta, oeHeadWhen, oeHeadWhere,
-         oeHeadTear. The root keeps @+id/oeHead, so findViewById(R.id.oeHead) works without an id
-    on the <include>.
+    ids: oeHead, oeHeadTitleRow, oeHeadTitle, oeHeadStatus, oeHeadMeta, oeHeadTear. The root keeps
+         @+id/oeHead, so findViewById(R.id.oeHead) works without an id on the <include>.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -80,30 +86,7 @@
         android:id="@+id/oeHeadMeta"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <TextView
-            android:id="@+id/oeHeadWhen"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_8"
-            android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
-            android:textColor="@color/ui_on_primary_muted"
-            android:visibility="gone"
-            tools:text="12 Jun 2026, 9:00 AM - 5:00 PM"
-            tools:visibility="visible" />
-
-        <TextView
-            android:id="@+id/oeHeadWhere"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_2"
-            android:textAppearance="@style/TextAppearance.EventQR.Type.BodySmall"
-            android:textColor="@color/ui_on_primary_muted"
-            android:visibility="gone"
-            tools:text="SMX Convention Center"
-            tools:visibility="visible" />
-    </LinearLayout>
+        android:orientation="vertical" />
 
     <!-- Last child inside the dark block: the dashes must land on ui_primary. space_16 above is the
          block's bottom breathing room; the block closes flush on the perforation. -->

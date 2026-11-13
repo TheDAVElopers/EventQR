@@ -7,19 +7,23 @@
           no poster: 120dp flat ui_primary plate carrying the title in a 96dp band on its bottom edge
           poster: 240dp full-bleed image with nothing drawn over it; the band is GONE and the title
                   sits on the page background directly below the image (txtDetailTitlePoster)
-        spec table: overline label left, body value right, 1dp hairlines, icon-free except a
-          row's trailing navigation chevron (§5.5); STATUS is row 1: the badge is a trailing
-          value, never a floating pill (§5.4). The REGISTRATION WINDOW row is the one exception:
-          above fontScale 1.3 EventDetailActivity.applyRegWindowRowLayout() stacks it label
-          above value: the 11sp overline is ~14.3sp / ~200dp at that threshold, leaving no room
-          for the deadline beside it. Every
-          other row keeps the label-left/value-right anatomy at all scales.
-        About body copy
+        spec table: overline label left, body value right, 1dp hairlines, icon-free (§5.5); STATUS is
+          row 1: the badge is a trailing value, never a floating pill (§5.4). One order across both
+          event-details screens (§6.2, §6.4): STATUS, LOCATION, EVENT TIME, REGISTRATION WINDOW,
+          ABOUT, then the role-specific rows (CATEGORY, AUDIENCE, CAPACITY, REWARDS). Each row owns
+          the hairline under it, so two rows never share a rule and none goes missing.
+          EVENT TIME and REGISTRATION WINDOW stack above fontScale 1.3 through MetricRowStacking:
+          the 11sp overline is ~14.3sp / ~200dp at that threshold, leaving no room for a range
+          beside it. Every other row keeps the label-left/value-right anatomy at all scales.
+          EVENT TIME and REGISTRATION WINDOW take the organizer row geometry (ui_metric_row_height +
+          space_12): both print a range, so one value treatment keeps the two rows identical.
+        About body copy: eyebrow + body inside the table flow, its own hairline closing the block
         72dp sticky footer with a hairline top border
 
     Deleted: the 220dp gradient hero, the 28sp white title on the hero, the one-big-card icon-row
     block with 11sp caps labels, the gradient Register button and the red text Cancel button in
-    the flow.
+    the flow; the separate DATE and TIME rows (one EVENT TIME row replaces them) and the REWARDS
+    row's chevron (it is a read-only indicator, never a link).
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -131,7 +135,7 @@
                 android:layout_marginEnd="@dimen/ui_gutter"
                 android:orientation="vertical">
 
-                <!-- Status is derived from the date rows below it, so it sits with its evidence (§6.2). -->
+                <!-- Status is derived from the EVENT TIME row below it, so it sits with its evidence (§6.2). -->
                 <LinearLayout
                     android:id="@+id/layoutStatusRow"
                     android:layout_width="match_parent"
@@ -160,65 +164,9 @@
                     android:layout_height="@dimen/stroke_hairline"
                     android:background="@color/ui_hairline" />
 
+                <!-- LOCATION: where, first, because it is what an attendee checks before anything else. -->
                 <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minHeight="@dimen/ui_row_height_value"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/ui_attendee_date"
-                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
-
-                    <TextView
-                        android:id="@+id/txtDetailDate"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/space_lg"
-                        android:layout_weight="1"
-                        android:gravity="end"
-                        android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
-                        android:textColor="@color/ui_text_primary" />
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/stroke_hairline"
-                    android:background="@color/ui_hairline" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minHeight="@dimen/ui_row_height_value"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/ui_attendee_time"
-                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
-
-                    <TextView
-                        android:id="@+id/txtDetailTime"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/space_lg"
-                        android:layout_weight="1"
-                        android:gravity="end"
-                        android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
-                        android:textColor="@color/ui_text_primary" />
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/stroke_hairline"
-                    android:background="@color/ui_hairline" />
-
-                <LinearLayout
+                    android:id="@+id/layoutLocationRow"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:minHeight="@dimen/ui_row_height_value"
@@ -243,7 +191,113 @@
                 </LinearLayout>
 
                 <View
-                    android:id="@+id/viewCategoryDivider"
+                    android:id="@+id/viewLocationDivider"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@color/ui_hairline" />
+
+                <!-- EVENT TIME, one row: the organizer page's value and its row geometry
+                     (ui_metric_row_height + space_12, not the attendee 64dp value row) (§6.2). -->
+                <LinearLayout
+                    android:id="@+id/layoutEventTimeRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:minHeight="@dimen/ui_metric_row_height"
+                    android:orientation="horizontal"
+                    android:paddingTop="@dimen/space_12"
+                    android:paddingBottom="@dimen/space_12"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/ui_attendee_event_time"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
+
+                    <TextView
+                        android:id="@+id/txtDetailEventTime"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_lg"
+                        android:layout_weight="1"
+                        android:gravity="end"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.NumericS"
+                        android:textColor="@color/ui_text_primary" />
+                </LinearLayout>
+
+                <View
+                    android:id="@+id/viewEventTimeDivider"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@color/ui_hairline"
+                    android:visibility="gone" />
+
+                <!-- REGISTRATION WINDOW, the organizer page's row geometry: the two range rows share
+                     one value treatment so a stacked fontScale never makes them disagree (6.2). -->
+                <LinearLayout
+                    android:id="@+id/layoutRegWindowRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/ui_metric_row_height"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingTop="@dimen/space_12"
+                    android:paddingBottom="@dimen/space_12"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/ui_attendee_registration_window"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
+
+                    <TextView
+                        android:id="@+id/txtDetailRegWindow"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_lg"
+                        android:layout_weight="1"
+                        android:gravity="end"
+                        android:textAppearance="@style/TextAppearance.EventQR.Type.NumericS"
+                        android:textColor="@color/ui_text_primary" />
+                </LinearLayout>
+
+                <View
+                    android:id="@+id/viewRegWindowDivider"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@color/ui_hairline"
+                    android:visibility="gone" />
+
+                <!-- ABOUT answers "what is it" directly under the facts and above the secondary
+                     rows: free text of unpredictable length never pushes the location or the
+                     schedule off screen. Eyebrow + body, closed by its own hairline; a blank
+                     description hides all three, and the rows above and below keep their rules.
+                     The body is the app's only justified text (inter-word, so the last line stays
+                     start-aligned); every label and value elsewhere stays ragged-right. -->
+                <TextView
+                    android:id="@+id/txtDetailAboutLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_16"
+                    android:layout_marginBottom="@dimen/space_sm"
+                    android:text="@string/ui_attendee_about"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/txtDetailDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/space_16"
+                    android:justificationMode="inter_word"
+                    android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
+                    android:textColor="@color/ui_text_secondary"
+                    android:visibility="gone" />
+
+                <View
+                    android:id="@+id/viewAboutDivider"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/stroke_hairline"
                     android:background="@color/ui_hairline"
@@ -276,7 +330,7 @@
                 </LinearLayout>
 
                 <View
-                    android:id="@+id/viewAudienceDivider"
+                    android:id="@+id/viewCategoryDivider"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/stroke_hairline"
                     android:background="@color/ui_hairline"
@@ -309,44 +363,14 @@
                 </LinearLayout>
 
                 <View
-                    android:id="@+id/viewRegWindowDivider"
+                    android:id="@+id/viewAudienceDivider"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/stroke_hairline"
                     android:background="@color/ui_hairline"
                     android:visibility="gone" />
 
                 <LinearLayout
-                    android:id="@+id/layoutRegWindowRow"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minHeight="@dimen/ui_row_height_value"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:visibility="gone">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/ui_attendee_registration_window"
-                        android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
-
-                    <TextView
-                        android:id="@+id/txtDetailRegWindow"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/space_lg"
-                        android:layout_weight="1"
-                        android:gravity="end"
-                        android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
-                        android:textColor="@color/ui_text_primary" />
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/stroke_hairline"
-                    android:background="@color/ui_hairline" />
-
-                <LinearLayout
+                    android:id="@+id/layoutCapacityRow"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:minHeight="@dimen/ui_row_height_value"
@@ -371,23 +395,22 @@
                 </LinearLayout>
 
                 <View
-                    android:id="@+id/viewRewardsDivider"
+                    android:id="@+id/viewCapacityDivider"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/stroke_hairline"
-                    android:background="@color/ui_hairline"
-                    android:visibility="gone" />
+                    android:background="@color/ui_hairline" />
 
+                <!-- REWARDS is a read-only indicator, never a link: it reads like CAPACITY, two
+                     TalkBack facts and no action. The row always shows; only a failed rewards read
+                     leaves the value slot invisible, so the row never claims a placeholder or a
+                     wrong "None". -->
                 <LinearLayout
                     android:id="@+id/layoutRewardsRow"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:minHeight="@dimen/ui_row_height_value"
-                    android:background="?attr/selectableItemBackground"
-                    android:clickable="true"
-                    android:focusable="true"
                     android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:visibility="gone">
+                    android:orientation="horizontal">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -395,7 +418,6 @@
                         android:text="@string/ui_attendee_event_rewards"
                         android:textAppearance="@style/TextAppearance.EventQR.Type.Overline" />
 
-                    <!-- A future binder must set the text and flip this view to VISIBLE: INVISIBLE survives a text change. -->
                     <TextView
                         android:id="@+id/txtRewardsAvailable"
                         android:layout_width="0dp"
@@ -406,34 +428,14 @@
                         android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
                         android:textColor="@color/ui_text_primary"
                         android:visibility="invisible" />
-
-                    <ImageView
-                        style="@style/Widget.EventQR.Ui.ListRow.Chevron"
-                        android:layout_marginStart="@dimen/space_8" />
                 </LinearLayout>
+
+                <View
+                    android:id="@+id/viewRewardsDivider"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/stroke_hairline"
+                    android:background="@color/ui_hairline" />
             </LinearLayout>
-
-            <!-- ═════════ Registration fill ═════════ -->
-            <!-- ═════════ About ═════════ -->
-            <TextView
-                android:id="@+id/txtDetailAboutLabel"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/ui_gutter"
-                android:layout_marginTop="@dimen/space_32"
-                android:layout_marginEnd="@dimen/ui_gutter"
-                android:layout_marginBottom="@dimen/space_sm"
-                android:text="@string/ui_attendee_about"
-                android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
-
-            <TextView
-                android:id="@+id/txtDetailDescription"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/ui_gutter"
-                android:layout_marginEnd="@dimen/ui_gutter"
-                android:textAppearance="@style/TextAppearance.EventQR.Type.Body"
-                android:textColor="@color/ui_text_secondary" />
         </LinearLayout>
     </ScrollView>
 

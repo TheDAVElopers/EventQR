@@ -147,7 +147,7 @@ class AdminDashboardTest {
         assertEquals(3, rows.childCount)
         val first = rows.getChildAt(0)
         assertEquals("Requester 1", first.findViewById<TextView>(R.id.listRowTitle).text.toString())
-        assertEquals("Event 1, submitted 14 Mar 2026", first.findViewById<TextView>(R.id.listRowMeta).text.toString())
+        assertEquals("Event 1, submitted 14\u00A0Mar\u00A02026", first.findViewById<TextView>(R.id.listRowMeta).text.toString())
         assertEquals("Pending review", first.findViewById<TextView>(R.id.listRowBadge).text.toString())
     }
 

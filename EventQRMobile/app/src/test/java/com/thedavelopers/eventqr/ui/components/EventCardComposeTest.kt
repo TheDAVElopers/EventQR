@@ -130,10 +130,10 @@ class EventCardComposeTest {
     }
 
     @Test
-    fun blankLocation_rendersVenueTBD() {
+    fun blankLocation_rendersLocationTBD() {
         setCard(location = "")
 
-        composeTestRule.onNodeWithText("Venue TBD").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Location TBD").assertIsDisplayed()
     }
 
     @Test

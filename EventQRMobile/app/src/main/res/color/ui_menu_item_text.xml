@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Select-field menu row label (plan 5.2). Selected = ui_on_primary_container on the
+     ui_primary_container fill; resting = ui_text_primary. The row sets the 600 weight at build
+     time because a typeface is not a state, and the menu is rebuilt on every open. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true" android:color="@color/ui_on_primary_container" />
+    <item android:color="@color/ui_text_primary" />
+</selector>
