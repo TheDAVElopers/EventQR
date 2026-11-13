@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- API 28+: the form section heading is also a TalkBack heading (accessibilityHeading needs API 28). -->
+    <style name="Widget.EventQR.Ui.SectionHeading" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:accessibilityHeading">true</item>
+        <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.SectionHeading</item>
+    </style>
+</resources>

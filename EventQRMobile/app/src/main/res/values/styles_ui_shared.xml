@@ -116,11 +116,10 @@
         <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.FieldLabel</item>
     </style>
 
-    <!-- Section heading on a form: the title role, a TalkBack heading, no accent of its own. -->
+    <!-- Section heading on a form: the title role, no accent of its own. The TalkBack heading flag lives in values-v28 (accessibilityHeading is API 28; minSdk is 26). -->
     <style name="Widget.EventQR.Ui.SectionHeading" parent="">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:accessibilityHeading">true</item>
         <item name="android:textAppearance">@style/TextAppearance.EventQR.Type.SectionHeading</item>
     </style>
 
