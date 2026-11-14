@@ -30,7 +30,9 @@
     <string name="ui_organizer_no_events_body">Request an event to start taking registrations.</string>
     <string name="ui_organizer_no_active_events">No active events</string>
     <string name="ui_organizer_no_active_events_body">Active events show up here once they start.</string>
-    <string name="ui_organizer_request_event">Request event</string>
+    <!-- Underline markup is the section action's link affordance (plan 5.1). getString() strips it,
+         so only an android:text consumer sees the span. -->
+    <string name="ui_organizer_request_event"><u>Request event</u></string>
     <string name="ui_organizer_dashboard_error_title">Couldn\'t load your dashboard</string>
     <!-- Unit only: CountLabel.format() prefixes the compact number and uppercases the noun. -->
     <string name="ui_organizer_events_count">event</string>

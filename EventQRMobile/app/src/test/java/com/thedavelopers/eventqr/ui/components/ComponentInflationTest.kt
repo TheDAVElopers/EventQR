@@ -5,6 +5,8 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Rect
+import android.text.Spanned
+import android.text.style.UnderlineSpan
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -202,7 +204,6 @@ class ComponentInflationTest {
     fun organizerScreens_carryTheRequestActionOutsideTheEmptyState() {
         val context = themedContext()
         val touchMin = context.resources.getDimensionPixelSize(R.dimen.ui_touch_min)
-        val inlineHeight = context.resources.getDimensionPixelSize(R.dimen.ui_button_height_inline)
         val glyphSlots = arrayOf("start", "top", "end", "bottom")
         val layouts = intArrayOf(
             R.layout.activity_organizer_dashboard,
@@ -229,16 +230,17 @@ class ComponentInflationTest {
                 node = node.parent as? View
             }
 
-            // v1.39: Request event is a real control, not a section action. It must read as one: a
-            // Button, the inline 48dp floor, no glyph in any compound slot, and a filled secondary
-            // paint, so it can never pass for the plain text sitting next to it.
-            assertTrue(
-                "$host/btnRequestEvent must be a Button, not a text-only section action",
+            // v1.42: Request event is a section action again - text only, never a Button. It stays
+            // readable as the screen's one action by paint, not by a control boundary: the style's
+            // own ui_section_action_text selector (ui_primary at rest) and an underline on the
+            // label, on the 48dp floor, with no glyph.
+            assertFalse(
+                "$host/btnRequestEvent must be a text action, not a Button",
                 action is Button,
             )
             assertEquals(
-                "$host/btnRequestEvent must sit on the inline 48dp floor",
-                inlineHeight,
+                "$host/btnRequestEvent must keep the 48dp section-action floor",
+                touchMin,
                 action.minimumHeight,
             )
             action.compoundDrawablesRelative.forEachIndexed { index, drawable ->
@@ -247,17 +249,17 @@ class ComponentInflationTest {
                     drawable,
                 )
             }
-            val requestBackground = requireNotNull(action.background) {
-                "$host/btnRequestEvent has no secondary fill"
-            }
-            val requestBitmap = Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888)
-            requestBackground.setState(action.drawableState)
-            requestBackground.setBounds(0, 0, 8, 8)
-            requestBackground.draw(Canvas(requestBitmap))
-            assertNotEquals(
-                "$host/btnRequestEvent must paint a filled control boundary",
-                0,
-                Color.alpha(requestBitmap.getPixel(4, 4)),
+            assertEquals(
+                "$host/btnRequestEvent must inherit the section action's ui_primary ink",
+                ContextCompat.getColor(context, R.color.ui_primary),
+                action.currentTextColor,
+            )
+            val requestLabel = action.text
+            assertTrue(
+                "$host/btnRequestEvent must be underlined",
+                requestLabel is Spanned &&
+                    requestLabel.getSpans(0, requestLabel.length, UnderlineSpan::class.java)
+                        .isNotEmpty(),
             )
 
             // See all stays the section action (dashboard only): text only, no glyph in any compound
