@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Attendee profile (§6.2 of MyFiles/EventQR-Redesign-Plan.md, v1.34).
+    Attendee profile (§6.2 of MyFiles/EventQR-Redesign-Plan.md, v1.34; head added in v1.41).
 
-        Everything scrolls: identity block, ACCOUNT, ACTIVITY, Sign out, version. The identity
-        block is inside the ScrollView so the whole page moves as one surface and a short page
-        never leaves a pinned band over a scrolling card.
+        Compact pass head (title Profile) pinned above the scroll: the same flat ui_primary band,
+        tear and status-bar inset the attendee Rewards screen and the admin Accounts / Requests
+        screens carry, so this page opens on brand ink like every other secondary screen instead
+        of on a bare bright page. `passHeadIdentity` takes `applyEventQrTopInsetPadding()`; the
+        role eyebrow stays retired (BindCompact is called without one, v1.40), there is no count
+        (a profile has no result set) and no back arrow (a top-level nav destination).
+
+        Everything else scrolls: identity block, ACCOUNT, ACTIVITY, Sign out, version. The
+        identity block is inside the ScrollView so the whole page moves as one surface below the
+        band and the pull-to-refresh gesture is the page's (v1.31).
 
         Identity block: 64dp primary_container avatar square, name in title_l (2 lines), email in
         body_s secondary at the full width. The role pill is deleted: every role reaches this
@@ -30,12 +37,18 @@
     Sign out that orphaned itself under the cards.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/ui_background"
     android:orientation="vertical">
+
+    <!-- ═════════ Pass head: the brand band, flat, no gradient, no back arrow ═════════ -->
+    <include
+        android:id="@+id/passHead"
+        layout="@layout/include_pass_head_compact"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
     <com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout
         android:id="@+id/swipeRefreshProfile"

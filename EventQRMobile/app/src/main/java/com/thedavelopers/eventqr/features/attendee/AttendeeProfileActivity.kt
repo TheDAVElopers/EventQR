@@ -18,8 +18,10 @@ import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
 import com.thedavelopers.eventqr.ui.components.ListRowBinder
 import com.thedavelopers.eventqr.ui.components.MetricRowStacking
+import com.thedavelopers.eventqr.ui.components.PassHeadBinder
 import com.thedavelopers.eventqr.ui.components.asButtonRole
 import com.thedavelopers.eventqr.ui.icons.AppIcons
+import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -27,10 +29,12 @@ import kotlinx.coroutines.launch
 /**
  * Attendee profile (§6.2) - retires Gen A.
  *
- * Everything scrolls, identity block included. The identity is one TalkBack node (its name is the
- * heading) and the two sections are `list_row_icon` rows bound through [ListRowBinder]: ACCOUNT
- * first with Edit profile alone, then ACTIVITY. Every role reaches this screen, so it holds no
- * portal switch - the dashboard role tabs do that.
+ * A compact pass head (title `Profile`, no eyebrow, no count) owns the brand band and the
+ * status-bar inset, the same wiring as the attendee Rewards screen and the admin Accounts /
+ * Requests screens. Everything below the tear scrolls, identity block included. The identity is
+ * one TalkBack node (its name is the heading) and the two sections are `list_row_icon` rows bound
+ * through [ListRowBinder]: ACCOUNT first with Edit profile alone, then ACTIVITY. Every role
+ * reaches this screen, so it holds no portal switch - the dashboard role tabs do that.
  *
  * Transaction history shows no points balance: `PointBalanceResponse` is per (event, attendee) - the
  * Rewards screen reads it for the event it has selected - and there is no account-wide balance
@@ -68,8 +72,12 @@ class AttendeeProfileActivity : AppCompatActivity() {
         }
 
         setContentView(R.layout.activity_attendee_profile)
+        // Transparent status bar paints the head band behind it; the icons adapt to the band's
+        // luminance, exactly like the other pass-head screens.
+        applyEventQrSystemBarAppearance(lightStatusBars = false)
+        bindPassHead()
+
         headerProfile = findViewById(R.id.headerProfile)
-        headerProfile.applyEventQrTopInsetPadding()
 
         txtProfileName = findViewById(R.id.txtProfileName)
         txtProfileEmail = findViewById(R.id.txtProfileEmail)
@@ -100,6 +108,21 @@ class AttendeeProfileActivity : AppCompatActivity() {
 
         configureAttendeeBottomNav(AttendeeBottomNavItem.PROFILE)
         uiReady = true
+    }
+
+    /**
+     * The shared compact pass head: flat `ui_primary` band, tear as its bottom edge, status-bar
+     * inset on `passHeadIdentity` so the fill runs behind the system bar. No eyebrow (the role
+     * eyebrow is retired, v1.40), no count (a profile has no result set) and no back arrow (the
+     * bottom nav owns this destination).
+     */
+    private fun bindPassHead() {
+        val head = findViewById<View>(R.id.passHead)
+        head.findViewById<View>(R.id.passHeadIdentity).applyEventQrTopInsetPadding()
+        PassHeadBinder.bindCompact(
+            root = head,
+            title = getString(R.string.ui_attendee_profile_title),
+        )
     }
 
     private fun bindActivityRows() {

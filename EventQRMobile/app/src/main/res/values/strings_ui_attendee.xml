@@ -151,6 +151,8 @@
     <string name="ui_attendee_rejected">Rejected</string>
 
     <!-- ═════════ Profile (§6.2) ═════════ -->
+    <!-- Pass-head title. The nav item uses the same word; the head needs a resource. -->
+    <string name="ui_attendee_profile_title">Profile</string>
     <string name="ui_attendee_personal_details">Personal details</string>
     <string name="ui_attendee_activity">Activity</string>
     <string name="ui_attendee_account">Account</string>

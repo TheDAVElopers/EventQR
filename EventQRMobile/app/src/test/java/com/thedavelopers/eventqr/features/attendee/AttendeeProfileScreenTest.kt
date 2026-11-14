@@ -21,6 +21,7 @@ import com.thedavelopers.eventqr.ui.icons.AppIcons
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -111,6 +112,45 @@ class AttendeeProfileScreenTest {
         )
         // Positive control: the absence check above cannot pass vacuously.
         assertTrue(activity.resources.getIdentifier("txtProfileName", "id", activity.packageName) != 0)
+    }
+
+    /**
+     * v1.41: the page opens on the shared compact pass head. It is a sibling *above*
+     * `swipeRefreshProfile`, not inside its ScrollView - that is what pins it while the page moves -
+     * and it is the title-only variant: the role eyebrow stays retired (v1.40), so its slot stays
+     * `INVISIBLE` and row0 keeps its spacing, and a profile has no result set, so no count.
+     */
+    @Test
+    fun profileHead_isThePinnedCompactBandAboveTheScroll() {
+        val activity = launch()
+
+        val head = activity.findViewById<ViewGroup>(R.id.passHead)
+        val scroll = activity.findViewById<View>(R.id.swipeRefreshProfile)
+        assertNotNull(head)
+        assertNotNull(scroll)
+        assertSame("the head and the scroll share one parent", head.parent, scroll.parent)
+        assertFalse("the head must not scroll with the page", head.isInsideScrollView())
+        val siblings = (head.parent as ViewGroup).children()
+        assertTrue(
+            "the head is pinned above the scroll it titles",
+            siblings.indexOf(head) < siblings.indexOf(scroll),
+        )
+
+        assertEquals(
+            "the title is the page's own label, not the person's name",
+            activity.getString(R.string.ui_attendee_profile_title),
+            (head.find(R.id.passHeadTitle) as TextView).text.toString(),
+        )
+        assertEquals(
+            "the role eyebrow stays retired (v1.40)",
+            View.INVISIBLE,
+            head.find(R.id.passHeadEyebrow).visibility,
+        )
+        assertEquals(
+            "a profile has no result set, so the count slot stays GONE",
+            View.GONE,
+            head.find(R.id.passHeadTitleCount).visibility,
+        )
     }
 
     @Test
