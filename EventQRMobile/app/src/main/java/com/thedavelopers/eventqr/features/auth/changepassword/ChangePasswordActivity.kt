@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.auth.changepassword
 
+import android.graphics.Rect
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -8,17 +9,18 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.thedavelopers.eventqr.R
-import com.thedavelopers.eventqr.core.util.ScreenInsets
 import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.auth.AuthErrorStrip
 import com.thedavelopers.eventqr.features.auth.AuthFieldErrors
 import com.thedavelopers.eventqr.ui.components.EventQrDetailHeader
 import com.thedavelopers.eventqr.ui.icons.FieldIcons
 import com.thedavelopers.eventqr.ui.icons.RuleMarks
+import com.thedavelopers.eventqr.ui.theme.applyEventQrKeyboardAwareBottomInsetPadding
 
 open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.View {
     private lateinit var presenter: ChangePasswordPresenter
@@ -44,8 +46,9 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
         setContentView(R.layout.activity_change_password)
 
         // Edge to edge (EventQrApplication): the footer's fill runs behind the navigation bar,
-        // its content (the 52dp submit button) stays inside the safe area.
-        ScreenInsets.padForNavigationBar(findViewById(R.id.authFooter))
+        // its content (the 52dp submit button) stays inside the safe area. max(nav, ime) also
+        // lifts it above the keyboard, which edge to edge stops adjustResize from doing.
+        findViewById<View>(R.id.authFooter).applyEventQrKeyboardAwareBottomInsetPadding()
 
         presenter = ChangePasswordPresenter()
         presenter.attach(this, this)
@@ -76,11 +79,19 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
 
         // Requirements only show when new password field is focused or has text
         newPasswordInput.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) ensureVisible(newPasswordInput)
             if (hasFocus || newPasswordInput.text.toString().isNotEmpty()) {
                 updateRequirements(newPasswordInput.text.toString())
             } else {
                 requirementsLayout.visibility = View.GONE
             }
+        }
+
+        // The inset only shrinks the form; at a large font scale the focused field can still sit
+        // behind the footer, so each field scrolls itself (and its label) clear on focus. Same
+        // contract as Register / Edit event.
+        listOf(currentPasswordInput, confirmPasswordInput).forEach { input ->
+            input.setOnFocusChangeListener { view, hasFocus -> if (hasFocus) ensureVisible(view) }
         }
 
         newPasswordInput.addTextChangedListener(object : TextWatcher {
@@ -171,6 +182,18 @@ open class ChangePasswordActivity : AppCompatActivity(), ChangePasswordContract.
 
     override fun navigateBack() {
         finish()
+    }
+
+    /** Focus alone is not enough on a resized window: the field brings itself in, with slack above. */
+    private fun ensureVisible(field: View) {
+        field.post {
+            val slack = resources.getDimensionPixelSize(R.dimen.space_24)
+            findViewById<ScrollView>(R.id.formScroll).requestChildRectangleOnScreen(
+                field,
+                Rect(0, -slack, field.width, field.height + slack),
+                true,
+            )
+        }
     }
 
     private fun updateRequirements(password: String) {

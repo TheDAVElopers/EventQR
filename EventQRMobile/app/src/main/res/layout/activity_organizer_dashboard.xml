@@ -129,6 +129,8 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:maxLines="1"
                         android:text="@string/ui_organizer_active_events"
                         android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
 
@@ -137,6 +139,7 @@
                         style="@style/Widget.EventQR.Ui.SectionAction"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_8"
                         android:gravity="center_vertical|end"
                         android:text="@string/ui_organizer_see_all" />
                 </LinearLayout>

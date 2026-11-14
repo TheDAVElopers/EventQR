@@ -4,6 +4,7 @@ import android.app.Activity
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Rect
 import android.view.View
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
@@ -208,6 +209,17 @@ fun View.applyEventQrKeyboardAwareBottomInsetPadding() {
         val navBottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
         val imeBottom = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
         view.updatePadding(bottom = basePaddingBottom + maxOf(navBottom, imeBottom))
+        // A field's focus scroll can run before this inset lands; once the footer grows, the
+        // viewport shrinks under it, so re-reveal the focused field on the next frame. Re-scroll
+        // only: requesting insets here would re-enter this listener.
+        view.post {
+            val focused = view.rootView.findFocus() ?: return@post
+            val slack = view.resources.getDimensionPixelSize(R.dimen.space_24)
+            focused.requestRectangleOnScreen(
+                Rect(0, -slack, focused.width, focused.height + slack),
+                true,
+            )
+        }
         insets
     }
     if (isAttachedToWindow) ViewCompat.requestApplyInsets(this) else doOnAttach { ViewCompat.requestApplyInsets(it) }
