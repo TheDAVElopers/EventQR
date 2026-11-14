@@ -207,6 +207,28 @@ class OrganizerDashboardRenderTest {
     }
 
     @Test
+    fun theSeeAllAction_wearsTheSameSectionActionTreatmentAsRequestEvent() {
+        val activity = build()
+        val seeAll = activity.findViewById<TextView>(R.id.btnSeeAllEvents)
+
+        // v1.42: both row-level link actions are one treatment - the style's own ui_primary ink and
+        // an underline on the label - so See all never reads as a different control than the
+        // Request event action one section above it.
+        assertEquals(
+            "See all must inherit the section action's ui_primary ink",
+            ContextCompat.getColor(activity, R.color.ui_primary),
+            seeAll.currentTextColor,
+        )
+        val label = seeAll.text
+        assertEquals(activity.getString(R.string.ui_organizer_see_all), label.toString())
+        assertTrue(
+            "See all must be underlined",
+            label is Spanned &&
+                label.getSpans(0, label.length, UnderlineSpan::class.java).isNotEmpty(),
+        )
+    }
+
+    @Test
     fun failedLoad_doesNotClearTheSavedSelection() {
         val activity = build()
         OrganizerRepository(activity).saveSelectedEventId("saved-event")

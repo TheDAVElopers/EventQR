@@ -24,14 +24,18 @@
     <string name="ui_organizer_active_events">Active events</string>
     <string name="ui_organizer_metrics_upcoming">Upcoming</string>
     <string name="ui_organizer_metrics_ended">Ended</string>
-    <string name="ui_organizer_see_all">See all</string>
+    <!-- Underline markup is the section action's link affordance (plan 5.1), same as
+         ui_organizer_request_event. getString() strips it; only an android:text consumer sees it.
+         Any future translation must keep the <u>...</u> markup, or the underline silently disappears. -->
+    <string name="ui_organizer_see_all"><u>See all</u></string>
     <string name="ui_organizer_all_events">All events</string>
     <string name="ui_organizer_no_events">No events yet</string>
     <string name="ui_organizer_no_events_body">Request an event to start taking registrations.</string>
     <string name="ui_organizer_no_active_events">No active events</string>
     <string name="ui_organizer_no_active_events_body">Active events show up here once they start.</string>
     <!-- Underline markup is the section action's link affordance (plan 5.1). getString() strips it,
-         so only an android:text consumer sees the span. -->
+         so only an android:text consumer sees the span.
+         Any future translation must keep the <u>...</u> markup, or the underline silently disappears. -->
     <string name="ui_organizer_request_event"><u>Request event</u></string>
     <string name="ui_organizer_dashboard_error_title">Couldn\'t load your dashboard</string>
     <!-- Unit only: CountLabel.format() prefixes the compact number and uppercases the noun. -->

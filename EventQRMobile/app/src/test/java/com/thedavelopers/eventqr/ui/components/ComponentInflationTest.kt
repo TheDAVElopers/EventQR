@@ -281,6 +281,20 @@ class ComponentInflationTest {
                         drawable,
                     )
                 }
+                // v1.42: every row-level link action wears the same pair of affordances - the
+                // style's ui_primary ink and an underline on the label - so See all and Request
+                // event read as one treatment, not two.
+                assertEquals(
+                    "$host/$name must inherit the section action's ui_primary ink",
+                    ContextCompat.getColor(context, R.color.ui_primary),
+                    view.currentTextColor,
+                )
+                val label = view.text
+                assertTrue(
+                    "$host/$name must be underlined",
+                    label is Spanned &&
+                        label.getSpans(0, label.length, UnderlineSpan::class.java).isNotEmpty(),
+                )
                 // Painted boundary: at rest the section action paints nothing, while a chip fills
                 // its box with ui_surface and strokes a 1dp outline. Draw the real background at
                 // rest and read its centre pixel, so a chip drawable cannot hide here.
