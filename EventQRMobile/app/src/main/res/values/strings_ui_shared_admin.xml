@@ -29,8 +29,6 @@
     <string name="ui_admin_requests_title">Event requests</string>
     <!-- Unit only: CountLabel.format() prefixes the compact number and uppercases the noun. -->
     <string name="ui_admin_requests_count">request</string>
-    <string name="ui_admin_requests_empty_title">No event requests</string>
-    <string name="ui_admin_requests_empty_body">Requests from organizers will show up here.</string>
     <string name="ui_admin_requests_empty_pending_title">No pending requests</string>
     <string name="ui_admin_requests_empty_pending_body">Requests waiting for a decision show up here.</string>
     <string name="ui_admin_requests_empty_approved_title">No approved requests</string>
@@ -38,11 +36,13 @@
     <string name="ui_admin_requests_empty_rejected_title">No rejected requests</string>
     <string name="ui_admin_requests_empty_rejected_body">Rejected requests show up here.</string>
     <string name="ui_admin_requests_error_title">Couldn\'t load requests</string>
-    <string name="ui_admin_filter_all">All</string>
+    <!-- One TalkBack name per row, in reading order: event, status, requester, submitted. -->
+    <string name="ui_admin_request_row_description">%1$s. %2$s. %3$s. %4$s.</string>
+    <!-- The row's click action, so Voice Access offers the outcome, not "Activate". -->
+    <string name="ui_admin_requests_open">Open request</string>
     <string name="ui_admin_filter_pending">Pending</string>
     <string name="ui_admin_filter_approved">Approved</string>
     <string name="ui_admin_filter_rejected">Rejected</string>
-    <string name="ui_admin_filter_clear">Clear filter</string>
 
     <!-- Account management -->
     <string name="ui_admin_accounts_title">Accounts</string>

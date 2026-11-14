@@ -28,7 +28,6 @@ import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.core.util.addNearEndListener
 import com.thedavelopers.eventqr.features.admin.AdminBottomNavItem
 import com.thedavelopers.eventqr.features.admin.AdminRepository
-import com.thedavelopers.eventqr.features.admin.AdminRoleLabels
 import com.thedavelopers.eventqr.features.admin.configureAdminBottomNav
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
 import com.thedavelopers.eventqr.ui.components.CountLabel
@@ -101,9 +100,6 @@ class AdminAccountManagementActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // The token refresher persists a role change before it announces it, so re-reading the cached
-        // role keeps a screen left open current without another network call.
-        bindRoleEyebrow(sessionManager.getUserRole())
         loadAccounts()
     }
 
@@ -124,15 +120,8 @@ class AdminAccountManagementActivity : AppCompatActivity() {
         PassHeadBinder.bindCompact(
             root = head,
             title = getString(R.string.ui_admin_accounts_title),
-            eyebrow = getString(AdminRoleLabels.eyebrowRes(sessionManager.getUserRole())),
         )
         countView = head.findViewById<TextView>(R.id.passHeadTitleCount)
-    }
-
-    /** Paints the eyebrow from a role; the header's title and insets are bound once in [bindHeader]. */
-    private fun bindRoleEyebrow(role: String?) {
-        findViewById<TextView>(R.id.passHeadEyebrow)?.text =
-            getString(AdminRoleLabels.eyebrowRes(role))
     }
 
     private fun bindCreateRow() {
@@ -176,7 +165,7 @@ class AdminAccountManagementActivity : AppCompatActivity() {
     }
 
     private fun roleLabel(role: AccountRole?): String = when (role) {
-        null -> getString(R.string.ui_admin_filter_all)
+        null -> getString(R.string.common_all)
         AccountRole.ADMIN -> getString(R.string.ui_admin_role_admin)
         AccountRole.ORGANIZER -> getString(R.string.ui_admin_role_organizer)
         AccountRole.STAFF -> getString(R.string.ui_admin_role_staff)

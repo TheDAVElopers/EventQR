@@ -63,7 +63,6 @@ fun <T> FilterChipRow(
             .padding(start = grid.gutter, end = grid.gutter, top = grid.s8, bottom = grid.s8),
         horizontalArrangement = Arrangement.spacedBy(grid.chipGap),
         verticalArrangement = Arrangement.spacedBy(grid.chipGap),
-        maxItemsInEachRow = 3,
     ) {
         items.forEach { item ->
             FilterChipItem(

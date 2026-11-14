@@ -6,7 +6,6 @@ import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.thedavelopers.eventqr.ui.theme.applyEventQrTopInsetPadding
 import android.os.Bundle
 import android.view.View
-import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
@@ -25,7 +24,6 @@ import com.thedavelopers.eventqr.core.util.DateFormatters
 import com.thedavelopers.eventqr.core.util.RoleMapper
 import com.thedavelopers.eventqr.features.admin.AdminBottomNavItem
 import com.thedavelopers.eventqr.features.admin.AdminRepository
-import com.thedavelopers.eventqr.features.admin.AdminRoleLabels
 import com.thedavelopers.eventqr.features.admin.AuditCategory
 import com.thedavelopers.eventqr.features.admin.actionPrefix
 import com.thedavelopers.eventqr.features.admin.auditDayGroups
@@ -75,33 +73,19 @@ class AdminAuditLogsActivity : AppCompatActivity() {
         }
 
         adapter = AdminAuditLogAdapter()
-        bindHeader(normalizedRole)
+        bindHeader()
         bindViews()
         bindFilterChips()
         bindNav()
         loadLogs()
     }
 
-    override fun onResume() {
-        super.onResume()
-        // The token refresher persists a role change before it announces it, so re-reading the cached
-        // role keeps a screen left open current without another network call.
-        bindRoleEyebrow(SessionManager(this).getUserRole())
-    }
-
-    /** Paints the eyebrow from a role; the header's title and insets are bound once in [bindHeader]. */
-    private fun bindRoleEyebrow(role: String?) {
-        findViewById<TextView>(R.id.passHeadEyebrow)?.text =
-            getString(AdminRoleLabels.eyebrowRes(role))
-    }
-
-    private fun bindHeader(role: String?) {
+    private fun bindHeader() {
         val head = findViewById<View>(R.id.passHead)
         head.findViewById<View>(R.id.passHeadIdentity).applyEventQrTopInsetPadding()
         PassHeadBinder.bindCompact(
             root = head,
             title = getString(R.string.ui_admin_logs_title),
-            eyebrow = getString(AdminRoleLabels.eyebrowRes(role)),
         )
     }
 

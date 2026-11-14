@@ -7,12 +7,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -37,6 +42,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -116,6 +122,9 @@ fun EventRequestDetailScreen(
     val type = LocalType.current
     var showConfirmDialog by remember { mutableStateOf<ConfirmAction?>(null) }
     var remarksText by rememberSaveable { mutableStateOf("") }
+    // A decision in flight locks both controls: one request, one verdict, no double submit. A pull
+    // to refresh over loaded content is `isLoading` too, so the guard is narrowed to a live request.
+    val isSubmitting = isLoading && request != null
 
     Box(
         modifier = modifier
@@ -152,7 +161,7 @@ fun EventRequestDetailScreen(
                             color = UiTextPrimary,
                             maxLines = 3,
                             overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).semantics { heading() },
                         )
                         Spacer(modifier = Modifier.size(grid.s8))
                         StatusBadge(status = eventRequestBadgeStatus(request.status), showIcon = false)
@@ -184,6 +193,11 @@ fun EventRequestDetailScreen(
                         color = UiTextSecondary,
                         modifier = Modifier.padding(top = grid.s4),
                     )
+
+                    // An admin decides on the requester's own words, so they sit right under the
+                    // identity block instead of after the spec table. For an attendee the reason is
+                    // the last thing they wrote, so it stays at the end of the page.
+                    if (isAdmin) ReasonBlock(request.reasonForRequest)
 
                     // §6.8: a decision result stays in the flow; a toast would leave the screen silent.
                     if (!decisionMessage.isNullOrBlank()) {
@@ -248,16 +262,14 @@ fun EventRequestDetailScreen(
                     if (isAdmin && !request.contactNumber.isNullOrBlank()) {
                         SpecRow(label = stringResource(R.string.ui_request_detail_contact_phone), value = request.contactNumber)
                     }
-                    if (!request.reasonForRequest.isNullOrBlank()) {
-                        SectionEyebrow(stringResource(R.string.ui_request_detail_reason))
-                        Text(text = request.reasonForRequest, style = type.body, color = UiTextPrimary)
-                    }
+                    if (!isAdmin) ReasonBlock(request.reasonForRequest)
 
                     Spacer(modifier = Modifier.height(grid.s32))
                 }
 
                 if (isAdmin && request.status == EventRequestStatus.PENDING) {
                     ApprovalFooter(
+                        enabled = !isSubmitting,
                         onReject = {
                             remarksText = ""
                             showConfirmDialog = ConfirmAction.REJECT
@@ -276,6 +288,7 @@ fun EventRequestDetailScreen(
         ConfirmDialog(
             action = action,
             remarks = remarksText,
+            isSubmitting = isSubmitting,
             onRemarksChange = { remarksText = it },
             onDismiss = { showConfirmDialog = null },
             onConfirm = {
@@ -351,11 +364,19 @@ private fun DetailSkeleton() {
 /** 72dp sticky footer (§6.7): destructive-outline Reject, 8dp gap, primary Approve last. */
 @Composable
 private fun ApprovalFooter(
+    enabled: Boolean,
     onReject: () -> Unit,
     onApprove: () -> Unit,
 ) {
     val grid = LocalGrid.current
-    Column(modifier = Modifier.fillMaxWidth().background(UiSurface)) {
+    // The window is edge to edge, so the bar's fill has to run behind the gesture bar while its
+    // content stays above it - the XML form footers do the same with their navigation-bar inset.
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(UiSurface)
+            .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom)),
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -363,10 +384,12 @@ private fun ApprovalFooter(
                 .background(UiHairline),
         )
         Row(
+            // A minimum, not a fixed height: at a large font scale the bar grows instead of
+            // clipping its labels.
             modifier = Modifier
                 .fillMaxWidth()
-                .height(dimensionResource(R.dimen.ui_footer_height))
-                .padding(horizontal = grid.gutter),
+                .heightIn(min = dimensionResource(R.dimen.ui_footer_height))
+                .padding(horizontal = grid.gutter, vertical = grid.s12),
             horizontalArrangement = Arrangement.spacedBy(grid.s8),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -375,11 +398,13 @@ private fun ApprovalFooter(
                 onClick = onReject,
                 modifier = Modifier.weight(1f),
                 tone = UiButtonTone.DESTRUCTIVE,
+                enabled = enabled,
             )
             UiButton(
                 text = stringResource(R.string.ui_request_detail_approve),
                 onClick = onApprove,
                 modifier = Modifier.weight(1f),
+                enabled = enabled,
             )
         }
     }
@@ -412,20 +437,39 @@ private fun SectionEyebrow(text: String) {
         text = text,
         style = type.overline,
         color = UiTextSecondary,
-        modifier = Modifier.padding(top = grid.s24, bottom = grid.s8),
+        modifier = Modifier
+            .padding(top = grid.s24, bottom = grid.s8)
+            .semantics { heading() },
     )
 }
 
-/** One spec-table row (§6.5 / §5.9 form 2): label left, value right, hairline underneath. */
+/** The requester's own words, under its own section label. Absent copy draws nothing. */
+@Composable
+private fun ReasonBlock(reason: String?) {
+    if (reason.isNullOrBlank()) return
+    val type = LocalType.current
+    SectionEyebrow(stringResource(R.string.ui_request_detail_reason))
+    Text(text = reason, style = type.body, color = UiTextPrimary)
+}
+
+/**
+ * One spec-table row (§6.5 / §5.9 form 2): label left, value right, hairline underneath. The row is
+ * a minimum height, not a fixed one, so a long value or a large font scale wraps and grows.
+ */
 @Composable
 private fun SpecRow(label: String, value: String, showLabel: Boolean = true) {
     val grid = LocalGrid.current
     val type = LocalType.current
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics(mergeDescendants = true) {},
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(grid.metricRowHeight),
+                .heightIn(min = grid.metricRowHeight)
+                .padding(vertical = grid.s12),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (showLabel) {
@@ -445,9 +489,12 @@ private fun SpecRow(label: String, value: String, showLabel: Boolean = true) {
                 style = type.numericS,
                 color = UiTextPrimary,
                 textAlign = TextAlign.End,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(start = grid.s16),
+                // A long value wraps inside its share instead of ellipsizing the fact away. The
+                // share is filled, not shrunk to the text: that is what pins every value to the
+                // row's end edge, including a one-word one.
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = grid.s16),
             )
         }
         Box(modifier = Modifier.fillMaxWidth().height(dimensionResource(R.dimen.stroke_hairline)).background(UiHairline))
@@ -503,6 +550,7 @@ private fun NoteBlock(
 private fun ConfirmDialog(
     action: ConfirmAction,
     remarks: String,
+    isSubmitting: Boolean,
     onRemarksChange: (String) -> Unit,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
@@ -536,14 +584,19 @@ private fun ConfirmDialog(
         containerColor = UiSurface,
         title = { Text(text = title, style = type.title, color = UiTextPrimary, fontWeight = FontWeight.SemiBold) },
         text = {
-            Column {
+            // A keyboard on a short screen must not clip the dialog: the body scrolls, the actions
+            // stay pinned. The field grows with its text instead of trapping the caret.
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 Text(text = body, style = type.body, color = UiTextSecondary)
                 Spacer(modifier = Modifier.height(grid.s12))
                 RemarksField(value = remarks, onValueChange = onRemarksChange)
             }
         },
         confirmButton = {
-            TextButton(onClick = onConfirm) {
+            TextButton(
+                onClick = onConfirm,
+                enabled = !isSubmitting,
+            ) {
                 Text(
                     text = commitLabel,
                     style = type.label,

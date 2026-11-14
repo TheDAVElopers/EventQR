@@ -4,7 +4,13 @@
 
         88dp flat page row - no card, no per-request container, hairline divider inset 76dp.
         40dp neutral tile with the requester initial; event name in `Title`; requester and
-        submitted date as two meta lines; ONE trailing status badge.
+        submitted date as two meta lines; ONE trailing status badge, a sibling of the text column,
+        so the title owns the full column width.
+        `fontScale > 1.3`: the binder moves the badge under the meta lines (space_8 above) - a
+        trailing badge beside a grown title leaves too little for the name.
+
+    TalkBack: the whole row is one node (the requestRow's contentDescription set by the adapter);
+    every child is `importantForAccessibility="no"`, so the status word is read once, in order.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -38,37 +44,22 @@
             tools:text="J" />
 
         <LinearLayout
+            android:id="@+id/textRequestColumn"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/space_16"
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <LinearLayout
+            <TextView
+                android:id="@+id/textRequestTitle"
+                style="@style/Widget.EventQR.Ui.ListRow.Title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/textRequestTitle"
-                    style="@style/Widget.EventQR.Ui.ListRow.Title"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    tools:text="DevFest Manila" />
-
-                <TextView
-                    android:id="@+id/textRequestStatus"
-                    style="@style/Widget.EventQR.Ui.StatusBadge.Warning"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/space_8"
-                    android:minHeight="@dimen/ui_badge_height"
-                    tools:text="Pending review" />
-            </LinearLayout>
+                android:ellipsize="end"
+                android:importantForAccessibility="no"
+                android:maxLines="1"
+                tools:text="DevFest Manila" />
 
             <TextView
                 android:id="@+id/textRequestRequester"
@@ -77,6 +68,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_2"
                 android:ellipsize="end"
+                android:importantForAccessibility="no"
                 android:maxLines="1"
                 tools:text="Maria Santos" />
 
@@ -86,11 +78,25 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_2"
                 android:ellipsize="end"
+                android:importantForAccessibility="no"
                 android:maxLines="1"
                 android:textAppearance="@style/TextAppearance.EventQR.Type.Micro"
                 android:textColor="@color/ui_text_secondary"
                 tools:text="Submitted 12 Oct 2026" />
         </LinearLayout>
+
+        <!-- The trailing badge: its own cell, not the title row's tail, so the title keeps the
+             text column's full width. Moved under the meta lines above fontScale 1.3. -->
+        <TextView
+            android:id="@+id/textRequestStatus"
+            style="@style/Widget.EventQR.Ui.StatusBadge.Warning"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="@dimen/space_8"
+            android:importantForAccessibility="no"
+            android:minHeight="@dimen/ui_badge_height"
+            tools:text="Pending review" />
     </LinearLayout>
 
     <View

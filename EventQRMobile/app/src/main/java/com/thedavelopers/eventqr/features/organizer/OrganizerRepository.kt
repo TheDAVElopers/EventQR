@@ -239,8 +239,8 @@ open class OrganizerRepository(private val context: Context) {
      * Event detail for the editor's PATCH echo: `OrganizerEventResponse` has no category, but the PATCH
      * replaces it, so the current value has to come from the event detail.
      */
-    suspend fun fetchEventDetail(eventId: String) = safeApiCall { apiService.getEventById(eventId) }
-    suspend fun updateOrganizerEvent(eventId: String, request: com.thedavelopers.eventqr.features.events.model.dto.EventRequest) =
+    open suspend fun fetchEventDetail(eventId: String) = safeApiCall { apiService.getEventById(eventId) }
+    open suspend fun updateOrganizerEvent(eventId: String, request: com.thedavelopers.eventqr.features.events.model.dto.EventRequest) =
         safeApiCall { apiService.updateOrganizerEvent(eventId, request) }
     suspend fun uploadEventBanner(file: File): NetworkResult<com.thedavelopers.eventqr.features.uploads.model.dto.StoredFileResponse> = safeApiCall {
         val contentType = detectImageMediaType(file) ?: "image/jpeg"

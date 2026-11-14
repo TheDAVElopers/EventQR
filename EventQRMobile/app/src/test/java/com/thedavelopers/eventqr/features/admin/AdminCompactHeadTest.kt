@@ -3,7 +3,9 @@ package com.thedavelopers.eventqr.features.admin
 import android.app.Activity
 import android.content.Context
 import android.os.Looper
+import android.view.View
 import android.widget.TextView
+import androidx.annotation.StringRes
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.thedavelopers.eventqr.R
@@ -21,6 +23,7 @@ import com.thedavelopers.eventqr.features.events.model.dto.EventRequestResponse
 import com.thedavelopers.eventqr.features.users.model.dto.UserResponse
 import java.util.UUID
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -30,13 +33,13 @@ import org.robolectric.android.controller.ActivityController
 import org.robolectric.annotation.Config
 
 /**
- * Regression: the Requests / Accounts / Logs compact-head eyebrow hard-coded `ui_admin_tab`, so a
- * SUPER_ADMIN read ADMIN. [AdminRoleLabelsTest] covers only the map; these tests cover the call
- * sites, so reverting a screen to `getString(R.string.ui_admin_tab)` fails here.
+ * Regression: the Requests / Accounts / Logs compact head (§5.11) is title-only. It used to print a
+ * role eyebrow, which read `SUPER_ADMIN` on one screen and a stale `ADMIN` on another; the eyebrow
+ * slot stays in the layout for the head's row0 rhythm but must never carry text again.
  */
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [35], shadows = [ShadowMasterKeys::class, ShadowEncryptedSharedPreferences::class])
-class AdminRoleEyebrowTest {
+class AdminCompactHeadTest {
 
     private val context: Context get() = ApplicationProvider.getApplicationContext()
 
@@ -49,50 +52,35 @@ class AdminRoleEyebrowTest {
     }
 
     @Test
-    fun requests_eyebrowUsesTheAuthoritativeRoleOverTheStaleCachedOne() {
-        // Promoted server-side: prefs still say ADMIN, auth/me says SUPER_ADMIN and must win.
-        SessionManager(context).saveRole(AccountRole.ADMIN)
-        assertEquals(
-            "SUPER ADMIN",
-            requests(FakeAdminRepository(context).apply { role = AccountRole.SUPER_ADMIN }).eyebrow(),
-        )
-
-        // Demoted server-side: the cached SUPER_ADMIN must not survive auth/me either.
-        SessionManager(context).saveRole(AccountRole.SUPER_ADMIN)
-        assertEquals(
-            "ADMIN",
-            requests(FakeAdminRepository(context).apply { role = AccountRole.ADMIN }).eyebrow(),
-        )
-    }
+    fun requests_headShowsTitleOnly() =
+        assertCompactHead(requests(FakeAdminRepository(context)), R.string.ui_admin_requests_title)
 
     @Test
-    fun accounts_eyebrowShowsTheSignedInRoleAndRefreshesOnResume() {
-        val controller = accounts(FakeAdminRepository(context))
-        assertEquals("SUPER ADMIN", controller.get().eyebrow())
-
-        // A role change persisted while the screen sits in the back stack is picked up on resume.
-        SessionManager(context).saveRole(AccountRole.ADMIN)
-        controller.pause().resume()
-        shadowOf(Looper.getMainLooper()).idle()
-        assertEquals("ADMIN", controller.get().eyebrow())
-    }
+    fun accounts_headShowsTitleOnly() =
+        assertCompactHead(accounts(FakeAdminRepository(context)).get(), R.string.ui_admin_accounts_title)
 
     @Test
-    fun logs_eyebrowShowsTheSignedInRoleAndRefreshesOnResume() {
-        val controller = logs(FakeAdminRepository(context))
-        assertEquals("SUPER ADMIN", controller.get().eyebrow())
+    fun logs_headShowsTitleOnly() =
+        assertCompactHead(logs(FakeAdminRepository(context)).get(), R.string.ui_admin_logs_title)
 
-        SessionManager(context).saveRole(AccountRole.ADMIN)
-        controller.pause().resume()
-        shadowOf(Looper.getMainLooper()).idle()
-        assertEquals("ADMIN", controller.get().eyebrow())
+    @Test
+    fun requests_countStaysOnTheTitleRow() {
+        // The eyebrow is gone, so the count must not follow it out of the head.
+        val count = requests(FakeAdminRepository(context)).findViewById<View>(R.id.passHeadTitleCount)
+        assertEquals(View.VISIBLE, count.visibility)
     }
 
     // ---- helpers
 
-    /** The eyebrow is overline (all caps); [TextView.getText] keeps the sentence-case source. */
-    private fun Activity.eyebrow(): String =
-        findViewById<TextView>(R.id.passHeadEyebrow).text.toString().uppercase()
+    private fun assertCompactHead(activity: Activity, @StringRes titleRes: Int) {
+        assertEquals(
+            activity.getString(titleRes),
+            activity.findViewById<TextView>(R.id.passHeadTitle).text.toString(),
+        )
+        val eyebrow = activity.findViewById<TextView>(R.id.passHeadEyebrow)
+        assertEquals(View.INVISIBLE, eyebrow.visibility)
+        assertTrue(eyebrow.text.isNullOrBlank())
+    }
 
     private fun requests(repo: FakeAdminRepository): AdminEventApprovalBackendActivity {
         val controller = Robolectric.buildActivity(AdminEventApprovalBackendActivity::class.java)
@@ -120,15 +108,13 @@ class AdminRoleEyebrowTest {
 
     /** Only the calls these three screens make are faked; the rest of the repository is never reached. */
     private class FakeAdminRepository(context: Context) : AdminRepository(context) {
-        var role: AccountRole = AccountRole.SUPER_ADMIN
-
         override suspend fun getCurrentUser(): NetworkResult<UserResponse> =
             NetworkResult.Success(
                 UserResponse(
                     userId = UUID.randomUUID(),
                     email = "admin@example.com",
                     fullName = "Admin",
-                    role = role,
+                    role = AccountRole.SUPER_ADMIN,
                     status = AccountStatus.ACTIVE,
                 ),
             )

@@ -194,7 +194,7 @@ class ComponentInflationTest {
 
     /**
      * Item 2: the create/request entry point belongs to the screen, not to the empty state. Both
-     * organizer screens carry the same section action outside `EventQrEmptyState`, so it survives
+     * organizer screens carry the same request control outside `EventQrEmptyState`, so it survives
      * a populated, empty and failed list.
      */
     @Test
@@ -202,6 +202,7 @@ class ComponentInflationTest {
     fun organizerScreens_carryTheRequestActionOutsideTheEmptyState() {
         val context = themedContext()
         val touchMin = context.resources.getDimensionPixelSize(R.dimen.ui_touch_min)
+        val inlineHeight = context.resources.getDimensionPixelSize(R.dimen.ui_button_height_inline)
         val glyphSlots = arrayOf("start", "top", "end", "bottom")
         val layouts = intArrayOf(
             R.layout.activity_organizer_dashboard,
@@ -228,11 +229,42 @@ class ComponentInflationTest {
                 node = node.parent as? View
             }
 
-            // Section action, not a chip: text only, no glyph in any compound slot, zero horizontal
-            // padding (a chip pads its box by 8-12dp; the section action's zero padding is what puts
-            // the label on the gutter), and the 48dp floor that makes the label a touch target.
-            val actions = listOfNotNull(action, root.findViewById<android.widget.TextView>(R.id.btnSeeAllEvents))
-            for (view in actions) {
+            // v1.39: Request event is a real control, not a section action. It must read as one: a
+            // Button, the inline 48dp floor, no glyph in any compound slot, and a filled secondary
+            // paint, so it can never pass for the plain text sitting next to it.
+            assertTrue(
+                "$host/btnRequestEvent must be a Button, not a text-only section action",
+                action is Button,
+            )
+            assertEquals(
+                "$host/btnRequestEvent must sit on the inline 48dp floor",
+                inlineHeight,
+                action.minimumHeight,
+            )
+            action.compoundDrawablesRelative.forEachIndexed { index, drawable ->
+                assertNull(
+                    "$host/btnRequestEvent carries a glyph in the ${glyphSlots[index]} slot",
+                    drawable,
+                )
+            }
+            val requestBackground = requireNotNull(action.background) {
+                "$host/btnRequestEvent has no secondary fill"
+            }
+            val requestBitmap = Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888)
+            requestBackground.setState(action.drawableState)
+            requestBackground.setBounds(0, 0, 8, 8)
+            requestBackground.draw(Canvas(requestBitmap))
+            assertNotEquals(
+                "$host/btnRequestEvent must paint a filled control boundary",
+                0,
+                Color.alpha(requestBitmap.getPixel(4, 4)),
+            )
+
+            // See all stays the section action (dashboard only): text only, no glyph in any compound
+            // slot, zero horizontal padding (a chip pads its box by 8-12dp; the section action's zero
+            // padding is what puts the label on the gutter), and the 48dp floor.
+            val actionViews = listOfNotNull(root.findViewById<android.widget.TextView>(R.id.btnSeeAllEvents))
+            for (view in actionViews) {
                 val name = context.resources.getResourceEntryName(view.id)
                 assertEquals(
                     "$host/$name must stay a 48dp touch target",

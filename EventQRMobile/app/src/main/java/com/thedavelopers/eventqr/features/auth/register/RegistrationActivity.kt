@@ -2,12 +2,15 @@ package com.thedavelopers.eventqr.features.auth.register
 
 import com.thedavelopers.eventqr.core.util.UiStrings
 import android.content.Intent
+import android.graphics.Rect
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.View
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -23,6 +26,7 @@ import com.thedavelopers.eventqr.features.auth.login.LoginActivity
 import com.thedavelopers.eventqr.features.terms.TermsLink
 import com.thedavelopers.eventqr.ui.icons.FieldIcons
 import com.thedavelopers.eventqr.ui.icons.RuleMarks
+import com.thedavelopers.eventqr.ui.theme.applyEventQrKeyboardAwareBottomInsetPadding
 
 open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View {
     private lateinit var presenter: RegistrationPresenter
@@ -53,7 +57,9 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
         enableEdgeToEdge()
         ScreenInsets.padForStatusBar(findViewById(R.id.authTopBar))
         Wordmark.applyBarRules(this)
-        ScreenInsets.padForNavigationBar(findViewById(R.id.authFooter))
+        // max(nav, ime): edge to edge defeats adjustResize, so the footer lifts above the keyboard
+        // and the form's last field (confirm password) stays reachable.
+        findViewById<android.view.View>(R.id.authFooter).applyEventQrKeyboardAwareBottomInsetPadding()
 
         presenter = RegistrationPresenter(this, AuthRepository(this), UiStrings(this))
         firstNameInput = findViewById(R.id.edtFirstName)
@@ -88,6 +94,19 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
         FieldIcons.apply(passwordInput)
         FieldIcons.apply(confirmPasswordInput)
         configurePhoneInput()
+        // The inset only shrinks the form; at a large font scale the focused field can still sit
+        // behind the footer, so each field scrolls itself (and its label) clear on focus. Same
+        // contract as the organizer editor's fields.
+        listOf(
+            firstNameInput,
+            lastNameInput,
+            emailInput,
+            phoneInput,
+            passwordInput,
+            confirmPasswordInput,
+        ).forEach { input ->
+            input.setOnFocusChangeListener { view, hasFocus -> if (hasFocus) ensureVisible(view) }
+        }
         passwordInput.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -248,6 +267,18 @@ open class RegistrationActivity : AppCompatActivity(), RegistrationContract.View
                 }
             }
         })
+    }
+
+    /** Focus alone is not enough on a resized window: the field brings itself in, with slack above. */
+    private fun ensureVisible(field: View) {
+        field.post {
+            val slack = resources.getDimensionPixelSize(R.dimen.space_24)
+            findViewById<ScrollView>(R.id.authScroll).requestChildRectangleOnScreen(
+                field,
+                Rect(0, -slack, field.width, field.height + slack),
+                true,
+            )
+        }
     }
 
     private fun normalizePhoneDigits(input: String): String {

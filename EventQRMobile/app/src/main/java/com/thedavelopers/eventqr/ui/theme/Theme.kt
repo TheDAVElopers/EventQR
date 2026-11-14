@@ -193,3 +193,22 @@ fun View.applyEventQrBottomInsetPadding() {
     }
     if (isAttachedToWindow) ViewCompat.requestApplyInsets(this) else doOnAttach { ViewCompat.requestApplyInsets(it) }
 }
+
+/**
+ * Bottom inset for a bar the keyboard also pushes, on a form whose fields sit above it.
+ *
+ * The window is edge to edge, so `windowSoftInputMode="adjustResize"` never resizes it and the IME
+ * would otherwise cover the bar and the last field behind it. `max(nav, ime)` holds for both states:
+ * the gesture bar at rest, the keyboard while typing. Every form footer that can sit under the
+ * keyboard binds this helper; the host activity only has to keep `adjustResize` in the manifest.
+ */
+fun View.applyEventQrKeyboardAwareBottomInsetPadding() {
+    val basePaddingBottom = paddingBottom
+    ViewCompat.setOnApplyWindowInsetsListener(this) { view, insets ->
+        val navBottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+        val imeBottom = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+        view.updatePadding(bottom = basePaddingBottom + maxOf(navBottom, imeBottom))
+        insets
+    }
+    if (isAttachedToWindow) ViewCompat.requestApplyInsets(this) else doOnAttach { ViewCompat.requestApplyInsets(it) }
+}

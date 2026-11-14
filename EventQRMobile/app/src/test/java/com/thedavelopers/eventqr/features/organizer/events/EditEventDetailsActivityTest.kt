@@ -2,6 +2,7 @@ package com.thedavelopers.eventqr.features.organizer.events
 
 import android.content.Context
 import android.content.Intent
+import android.os.Looper
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -14,10 +15,14 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
+import com.thedavelopers.eventqr.core.api.dto.EventStatus
 import com.thedavelopers.eventqr.core.format.formatEventTime
 import com.thedavelopers.eventqr.core.format.formatRegistrationWindow
 import com.thedavelopers.eventqr.features.ShadowEncryptedSharedPreferences
 import com.thedavelopers.eventqr.features.ShadowMasterKeys
+import com.thedavelopers.eventqr.features.events.model.dto.AttendeeEventResponse
+import com.thedavelopers.eventqr.features.events.model.dto.EventRequest
+import com.thedavelopers.eventqr.features.events.model.dto.EventResponse
 import com.thedavelopers.eventqr.features.organizer.EXTRA_EVENT_ID
 import com.thedavelopers.eventqr.features.organizer.OrganizerRepository
 import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerEventDto
@@ -33,6 +38,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.android.controller.ActivityController
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowDialog
@@ -323,6 +329,59 @@ class EditEventDetailsActivityTest {
         assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.eeUnsaved).visibility)
     }
 
+    /**
+     * Regression: the save bar's button had no click listener, so an edit could enable it, look
+     * ready, and never leave the device. The listener is the only path from the bar to the PATCH,
+     * so the assertion is the request the repository was handed.
+     */
+    @Test
+    fun saveBarIssuesThePatchForTheEditedTitle() {
+        val activity = build()
+        val repository = RecordingRepository(activity)
+        activity.repository = repository
+
+        activity.populate(event())
+        activity.findViewById<EditText>(R.id.eeTitleInput).setText("DevFest Manila 2027")
+        val save = activity.findViewById<Button>(R.id.eeSaveButton)
+        assertTrue("a dirty field must enable the bar's button", save.isEnabled)
+
+        save.performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals(
+            "the PATCH must carry the event being edited",
+            EVENT_ID.toString(),
+            repository.savedEventId,
+        )
+        assertEquals(
+            "the PATCH must carry the typed title",
+            "DevFest Manila 2027",
+            repository.savedRequest?.title,
+        )
+        assertTrue("a successful save closes the screen", activity.isFinishing)
+    }
+
+    /**
+     * Back reaches the callback from more than one dispatch (the system gesture, the top bar's own
+     * arrow), and a repeat while the confirm is already up must not stack a second copy.
+     */
+    @Test
+    fun aSecondBackDispatchKeepsOneDiscardDialog() {
+        val activity = rotatable().get()
+        activity.populate(event())
+        activity.findViewById<EditText>(R.id.eeTitleInput).setText("DevFest Manila 2027")
+
+        activity.onBackPressedDispatcher.onBackPressed()
+        activity.onBackPressedDispatcher.onBackPressed()
+
+        assertEquals(
+            "one dialog at a time, whatever the dispatch source",
+            1,
+            ShadowDialog.getShownDialogs().count { it.isShowing },
+        )
+        assertFalse("the confirm keeps the screen up", activity.isFinishing)
+    }
+
     @Test
     fun runningEvent_locksTheFormAndHidesTheSaveBar() {
         val activity = build()
@@ -422,6 +481,47 @@ class EditEventDetailsActivityTest {
     private class LoadingRepository(context: Context) : OrganizerRepository(context) {
         override suspend fun fetchOrganizerEvent(eventId: String): NetworkResult<OrganizerEventDto> =
             NetworkResult.Loading
+    }
+
+    /**
+     * Same seam, but the PATCH is recorded instead of sent: the save bar's whole contract is what
+     * it hands [updateOrganizerEvent]. The category read is a success because a failed one blocks
+     * the save by design.
+     */
+    private class RecordingRepository(context: Context) : OrganizerRepository(context) {
+        var savedEventId: String? = null
+        var savedRequest: EventRequest? = null
+
+        override suspend fun fetchOrganizerEvent(eventId: String): NetworkResult<OrganizerEventDto> =
+            NetworkResult.Loading
+
+        override suspend fun fetchEventDetail(eventId: String): NetworkResult<AttendeeEventResponse> =
+            NetworkResult.Success(
+                AttendeeEventResponse(
+                    eventId = UUID.fromString(eventId),
+                    title = "DevFest Manila 2026",
+                    category = "Technology",
+                ),
+            )
+
+        override suspend fun updateOrganizerEvent(
+            eventId: String,
+            request: EventRequest,
+        ): NetworkResult<EventResponse> {
+            savedEventId = eventId
+            savedRequest = request
+            return NetworkResult.Success(
+                EventResponse(
+                    eventId = UUID.fromString(eventId),
+                    title = request.title,
+                    category = request.category,
+                    capacity = request.capacity,
+                    currentAttendeeCount = 0,
+                    status = EventStatus.APPROVED,
+                    rewardsEnabled = request.rewardsEnabled,
+                ),
+            )
+        }
     }
 
     private companion object {

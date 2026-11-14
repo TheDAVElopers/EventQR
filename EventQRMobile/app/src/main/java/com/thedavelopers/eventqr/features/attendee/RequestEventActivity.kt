@@ -48,7 +48,7 @@ import com.thedavelopers.eventqr.core.util.Validators
 import com.thedavelopers.eventqr.features.events.model.dto.EventCreationRequestDto
 import com.thedavelopers.eventqr.features.notifications.EventDecisionNotifier
 import com.thedavelopers.eventqr.ui.components.showInlineError
-import com.thedavelopers.eventqr.ui.theme.applyEventQrBottomInsetPadding
+import com.thedavelopers.eventqr.ui.theme.applyEventQrKeyboardAwareBottomInsetPadding
 import com.yalantis.ucrop.UCrop
 import kotlinx.coroutines.launch
 import java.io.File
@@ -182,7 +182,9 @@ class RequestEventActivity : AppCompatActivity() {
         bindViews()
         prefillRequester()
         applyPosterVisibility()
-        findViewById<View>(R.id.layoutSubmitBar).applyEventQrBottomInsetPadding()
+        // max(nav, ime): the window is edge to edge, so the sticky footer has to lift above the
+        // keyboard and the reason field keeps its room above it.
+        findViewById<View>(R.id.layoutSubmitBar).applyEventQrKeyboardAwareBottomInsetPadding()
 
         findViewById<View>(R.id.nav_header_back).setOnClickListener { finish() }
         findViewById<TextView>(R.id.nav_header_title).setOnClickListener { finish() }

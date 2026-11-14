@@ -126,14 +126,14 @@
             android:text="@string/ui_organizer_all_events"
             android:textAppearance="@style/TextAppearance.EventQR.Type.Eyebrow" />
 
-        <TextView
+        <Button
             android:id="@+id/btnRequestEvent"
-            style="@style/Widget.EventQR.Ui.SectionAction"
+            style="@style/Widget.EventQR.Ui.Button.Secondary.Inline"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/space_8"
             android:gravity="center_vertical|end"
-            android:minHeight="@dimen/ui_touch_min"
+            android:minHeight="@dimen/ui_button_height_inline"
             android:text="@string/ui_organizer_request_event" />
     </LinearLayout>
 

@@ -1,5 +1,6 @@
 package com.thedavelopers.eventqr.features.organizer.events
 
+import android.app.AlertDialog
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.graphics.Rect
@@ -21,10 +22,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
-import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
 import com.thedavelopers.eventqr.R
 import com.thedavelopers.eventqr.core.api.NetworkResult
@@ -41,6 +39,7 @@ import com.thedavelopers.eventqr.features.organizer.model.dto.OrganizerEventDto
 import com.thedavelopers.eventqr.features.organizer.showMissingEventScreen
 import com.thedavelopers.eventqr.ui.components.MetricRowStacking
 import com.thedavelopers.eventqr.ui.theme.applyEventQrBottomInsetPadding
+import com.thedavelopers.eventqr.ui.theme.applyEventQrKeyboardAwareBottomInsetPadding
 import com.thedavelopers.eventqr.ui.theme.applyEventQrSystemBarAppearance
 import com.yalantis.ucrop.UCrop
 import java.io.File
@@ -49,7 +48,6 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.math.max
 
 /**
  * Organizer event editor (§6.4 v1.7) - the Draft / Pending review / Approved screen.
@@ -154,7 +152,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
         applyEventQrSystemBarAppearance(lightStatusBars = true)
         repository = repositoryFactory(this)
         bindViews()
-        applySaveBarInsets()
+        saveBar.applyEventQrKeyboardAwareBottomInsetPadding()
         restoreDraft(savedInstanceState)
 
         eventId = intentEventId()
@@ -165,6 +163,7 @@ class EditEventDetailsActivity : AppCompatActivity() {
             onBackPressedDispatcher.onBackPressed()
         }
         bannerPickButton.setOnClickListener { bannerPicker.launch("image/*") }
+        saveButton.setOnClickListener { saveChanges() }
         wireInputs()
         onBackPressedDispatcher.addCallback(this, backCallback)
         loadEvent()
@@ -191,22 +190,6 @@ class EditEventDetailsActivity : AppCompatActivity() {
         saveError = findViewById(R.id.eeSaveError)
         unsavedLine = findViewById(R.id.eeUnsaved)
         lockedNote = findViewById(R.id.eeLockedNote)
-    }
-
-    /**
-     * The bar is the last block in normal layout flow, so the keyboard and the gesture bar push it
-     * up instead of hiding it. `max(nav, ime)` holds for both the resized and the edge-to-edge
-     * window, and `adjustResize` in the manifest covers the older path.
-     */
-    private fun applySaveBarInsets() {
-        val baseBottom = saveBar.paddingBottom
-        ViewCompat.setOnApplyWindowInsetsListener(saveBar) { view, insets ->
-            val nav = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
-            val ime = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
-            view.updatePadding(bottom = baseBottom + max(nav, ime))
-            insets
-        }
-        ViewCompat.requestApplyInsets(saveBar)
     }
 
     /** Focus alone is not enough on a resized window: every field brings itself (and its label) in. */
@@ -699,6 +682,19 @@ class EditEventDetailsActivity : AppCompatActivity() {
 
     // ---------------------------------------------------------------- back
 
+    /**
+     * One confirm at a time, whatever the dispatch source. Back reaches
+     * [OnBackPressedCallback.handleOnBackPressed] from the system gesture/button and from the top
+     * bar's own arrow, and both live on the same [OnBackPressedDispatcher]: a fast double-tap (or
+     * a repeated back) can deliver a second dispatch while the dialog is already up, which used to
+     * stack a second copy of it.
+     *
+     * The guard reads `isShowing` and [onDestroy] clears the field, so a `show()` that throws
+     * cannot latch the screen inert for the rest of the instance's life. A test that dispatches
+     * back twice and asserts exactly one shown dialog is how the guard is proven.
+     */
+    private var discardDialog: AlertDialog? = null
+
     private val backCallback = object : OnBackPressedCallback(true) {
         override fun handleOnBackPressed() {
             if (saving) return
@@ -706,8 +702,17 @@ class EditEventDetailsActivity : AppCompatActivity() {
                 finish()
                 return
             }
-            DiscardChangesDialog.create(this@EditEventDetailsActivity, onDiscard = { finish() }).show()
+            if (discardDialog?.isShowing == true) return
+            val dialog = DiscardChangesDialog.create(this@EditEventDetailsActivity, onDiscard = { finish() })
+            discardDialog = dialog
+            dialog.setOnDismissListener { discardDialog = null }
+            dialog.show()
         }
+    }
+
+    override fun onDestroy() {
+        discardDialog = null
+        super.onDestroy()
     }
 
     companion object {

@@ -2,8 +2,9 @@
 <!--
     ADMIN EVENT REQUESTS (§6.5 of MyFiles/EventQR-Redesign-Plan.md) - retires Gen A.
 
-        Compact pass head (eyebrow ADMIN, title Event requests, count in the trailing slot)
-        Chip row: All / Pending / Approved / Rejected - 36dp, radius 4, no check icon
+        Compact pass head (title Event requests, count on the title row)
+        Chip row: Pending / Approved / Rejected - 36dp, radius 4, no check icon, no All chip
+                 (Pending is the default filter, so a fourth chip would restate it)
         Rows: flat 88dp page rows (requester tile, event name, requester + submitted, one badge)
 
     Deleted: the EventQrTabHeader, `bg_organizer_events_screen`, the hand-styled 32dp chips with
@@ -39,21 +40,10 @@
             style="@style/Widget.EventQR.Ui.ChipFlow"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:constraint_referenced_ids="chipAll,chipPending,chipApproved,chipRejected"
+            app:constraint_referenced_ids="chipPending,chipApproved,chipRejected"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/chipAll"
-            style="@style/Widget.EventQR.Ui.Chip"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_ui_chip_inset"
-            android:minHeight="@dimen/ui_touch_min"
-            android:paddingTop="@dimen/space_sm"
-            android:paddingBottom="@dimen/space_sm"
-            android:text="@string/ui_admin_filter_all" />
 
         <TextView
             android:id="@+id/chipPending"
@@ -114,6 +104,7 @@
                 android:contentDescription="@string/ui_skeleton_loading"
                 android:focusable="true"
                 android:orientation="vertical"
+                android:paddingTop="@dimen/space_8"
                 android:visibility="gone">
 
                 <include
@@ -153,8 +144,8 @@
                 android:layout_height="match_parent"
                 android:visibility="gone"
                 app:icon="@drawable/ic_ui_pending_actions"
-                app:subtitle="@string/ui_admin_requests_empty_body"
-                app:title="@string/ui_admin_requests_empty_title" />
+                app:subtitle="@string/ui_admin_requests_empty_pending_body"
+                app:title="@string/ui_admin_requests_empty_pending_title" />
         </FrameLayout>
     </com.thedavelopers.eventqr.ui.components.EventQrSwipeRefreshLayout>
 

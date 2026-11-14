@@ -67,7 +67,7 @@ fun UiButton(
         tone == UiButtonTone.DESTRUCTIVE -> UiError
         else -> UiOnPrimary
     }
-    val border = if (tone == UiButtonTone.DESTRUCTIVE) {
+    val border = if (enabled && tone == UiButtonTone.DESTRUCTIVE) {
         Modifier.border(androidx.compose.ui.res.dimensionResource(com.thedavelopers.eventqr.R.dimen.stroke_hairline), UiError, shape)
     } else {
         Modifier
